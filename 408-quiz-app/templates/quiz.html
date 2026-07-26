@@ -1,0 +1,476 @@
+{% extends "base.html" %}
+{% block title %}{{ subject_name }} - 刷题{% endblock %}
+{% block content %}
+<div class="quiz-layout">
+    <aside class="chapter-sidebar">
+        <div class="sidebar-title" onclick="this.parentElement.classList.toggle('collapsed')">
+            章节导航 <span class="sidebar-toggle">▾</span>
+        </div>
+        <div class="chapter-tree" id="chapterTree">
+            <div class="loading">加载中...</div>
+        </div>
+    </aside>
+
+    <div class="quiz-container">
+        <div class="quiz-header">
+            <div class="quiz-info">
+                <h2>{{ subject_name }}</h2>
+                <span class="mode-badge" id="modeBadge"></span>
+            </div>
+            <div class="quiz-nav-info">
+                <span id="questionProgress">加载中...</span>
+            </div>
+        </div>
+
+        <!-- 题目区域 -->
+        <div class="question-area" id="questionArea">
+            <div class="loading">正在加载题目...</div>
+        </div>
+
+        <!-- 导航按钮 -->
+        <div class="quiz-footer">
+            <button class="btn btn-secondary" id="btnPrev" onclick="prevQuestion()" disabled>上一题</button>
+            <button class="btn btn-primary" id="btnSubmit" onclick="submitAnswer()">提交答案</button>
+            <button class="btn btn-secondary" id="btnNext" onclick="nextQuestion()">下一题</button>
+        </div>
+    </div>
+
+    <aside class="number-sidebar">
+        <div class="sidebar-title">题号</div>
+        <div class="number-panel" id="numberPanel"></div>
+    </aside>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    const SUBJECT = "{{ subject }}";
+    const MODE = "{{ mode }}";
+    const CHAPTER = "{{ chapter }}";
+    const SECTION = "{{ section }}";
+    let questions = [];
+    let currentIndex = 0;
+    let totalQuestions = 0;
+    let answered = {};  // {questionId: {answer, isCorrect}}
+    let explanationShown = false;  // 当前题解析面板是否展开
+    let noteShown = false;  // 当前题笔记面板是否展开
+
+    const modeNames = {
+        'sequential': '顺序模式',
+        'random': '随机模式',
+        'wrong': '错题模式',
+        'favorite': '收藏模式',
+        'unanswered': '未做模式',
+        'real': '真题模式'
+    };
+
+    document.getElementById('modeBadge').textContent = modeNames[MODE] || MODE;
+
+    // 初始化
+    async function init() {
+        loadChapterTree();
+        await loadQuestions();
+    }
+
+    async function loadQuestions() {
+        try {
+            const resp = await fetch(`/api/questions/${SUBJECT}?mode=${MODE}&page=1&per_page=9999`);
+            const data = await resp.json();
+            questions = data.questions;
+            totalQuestions = data.total;
+
+            // 从服务端恢复历史答题记录（last_status），刷新/跳转页面后不丢失
+            for (const q of questions) {
+                if (q.last_status && !answered[q.id]) {
+                    answered[q.id] = {
+                        answer: q.last_status.user_answer,
+                        isCorrect: q.answer ? !!q.last_status.is_correct : null,
+                        correctAnswer: q.answer || ''
+                    };
+                }
+            }
+
+            if (totalQuestions === 0) {
+                document.getElementById('questionArea').innerHTML = `
+                    <div class="empty-state">
+                        <h3>暂无题目</h3>
+                        <p>${MODE === 'wrong' ? '恭喜！没有错题需要复习' : MODE === 'favorite' ? '还没有收藏任何题目' : '题库为空'}</p>
+                        <a href="/" class="btn btn-primary">返回首页</a>
+                    </div>
+                `;
+                return;
+            }
+
+            // 章节定位：不限制筛选，直接跳到该章节首题，仍可顺序刷到后面的题
+            if (CHAPTER) {
+                const idx = questions.findIndex(q =>
+                    q.chapter === CHAPTER && (!SECTION || q.section === SECTION));
+                if (idx >= 0) currentIndex = idx;
+            }
+
+            // 指定题定位（搜索/错题本点击跳转）：?goto=题目ID，优先级高于章节定位
+            const GOTO = new URLSearchParams(location.search).get('goto');
+            if (GOTO) {
+                const gi = questions.findIndex(q => q.id === GOTO);
+                if (gi >= 0) currentIndex = gi;
+            }
+
+            renderQuestion();
+        } catch (e) {
+            document.getElementById('questionArea').innerHTML = `<div class="error">加载失败: ${e.message}</div>`;
+        }
+    }
+
+    // ============ 侧边栏章节树 ============
+    async function loadChapterTree() {
+        try {
+            const resp = await fetch('/api/chapters');
+            const data = await resp.json();
+            renderChapterTree(data);
+        } catch (e) {
+            document.getElementById('chapterTree').innerHTML = '<div class="error">章节加载失败</div>';
+        }
+    }
+
+    function chapterLink(subjectKey, chapterName, sectionName) {
+        // 保留当前模式（真题/未做等），点章节只收窄范围不退出模式
+        let url = `/quiz/${subjectKey}?mode=${MODE}&chapter=${encodeURIComponent(chapterName)}`;
+        if (sectionName) url += `&section=${encodeURIComponent(sectionName)}`;
+        return url;
+    }
+
+    function renderChapterTree(data) {
+        let treeHtml = '';
+        for (const [key, sub] of Object.entries(data)) {
+            const isCur = key === SUBJECT;
+            let chaptersHtml = '';
+            sub.chapters.forEach((ch, idx) => {
+                const numMatch = ch.name.match(/第(\d+)章/);
+                const chNum = String(numMatch ? numMatch[1] : idx + 1).padStart(2, '0');
+                const chActive = isCur && CHAPTER === ch.name;
+                let sectionsHtml = `
+                    <a class="tree-section ${chActive && !SECTION ? 'active' : ''}" href="${chapterLink(key, ch.name, '')}">本章全部<span class="tree-count">${ch.count}题</span></a>`;
+                for (const s of ch.sections) {
+                    const secActive = chActive && SECTION === s.name;
+                    sectionsHtml += `
+                    <a class="tree-section ${secActive ? 'active' : ''}" href="${chapterLink(key, ch.name, s.name)}">${s.name}<span class="tree-count">${s.count}题</span></a>`;
+                }
+                chaptersHtml += `
+                <div class="tree-chapter ${chActive ? 'open active' : ''}">
+                    <div class="tree-chapter-row" onclick="this.parentElement.classList.toggle('open')">
+                        <span class="tree-ch-num">${chNum}</span>
+                        <span class="tree-ch-name">${ch.name}</span>
+                        <span class="tree-count">${ch.count}题</span>
+                        <span class="tree-arrow">›</span>
+                    </div>
+                    <div class="tree-sections">${sectionsHtml}</div>
+                </div>`;
+            });
+            treeHtml += `
+            <div class="tree-subject ${isCur ? 'open' : ''}">
+                <div class="tree-subject-header" onclick="this.parentElement.classList.toggle('open')">
+                    <span class="tree-subject-name">${sub.name}</span>
+                    <span class="tree-count">${sub.total}题</span>
+                    <span class="tree-arrow">▾</span>
+                </div>
+                <div class="tree-chapters">${chaptersHtml}</div>
+            </div>`;
+        }
+        document.getElementById('chapterTree').innerHTML = treeHtml;
+        // 滚动到当前选中项
+        const active = document.querySelector('.tree-section.active');
+        if (active) active.scrollIntoView({block: 'center'});
+    }
+
+    function renderQuestion() {
+        if (currentIndex >= questions.length) return;
+
+        const q = questions[currentIndex];
+        const status = answered[q.id];
+        const isFav = q.is_favorited;
+
+        document.getElementById('questionProgress').textContent = `${currentIndex + 1} / ${totalQuestions}`;
+        document.getElementById('btnPrev').disabled = currentIndex === 0;
+
+        let optionsHtml = '';
+        for (const [key, value] of Object.entries(q.options)) {
+            let optClass = 'option-item';
+            if (status) {
+                if (key === status.correctAnswer) optClass += ' correct';
+                else if (key === status.answer && !status.isCorrect) optClass += ' wrong';
+            }
+            const checked = status && status.answer === key ? 'checked' : '';
+            const disabled = status ? 'disabled' : '';
+            optionsHtml += `
+                <label class="${optClass}">
+                    <input type="radio" name="answer" value="${key}" ${checked} ${disabled}>
+                    <span class="option-letter">${key}</span>
+                    <span class="option-text">${value}</span>
+                </label>
+            `;
+        }
+
+        let resultHtml = '';
+        if (status) {
+            if (status.isCorrect === true) {
+                resultHtml = '<div class="result-correct">回答正确!</div>';
+            } else if (status.isCorrect === false) {
+                resultHtml = `<div class="result-wrong">回答错误! 正确答案: ${status.correctAnswer}</div>`;
+            } else {
+                resultHtml = '<div class="result-info">该题暂无标准答案</div>';
+            }
+        }
+
+        // 解析面板（支持HTML格式解析内容）
+        let explanationHtml = '';
+        if (explanationShown) {
+            const expl = q.explanation
+                ? `<div class="explanation-body">${q.explanation}</div>`
+                : '<div class="explanation-empty">该题暂无详细解析</div>';
+            explanationHtml = `
+                <div class="explanation-panel">
+                    <div class="explanation-title">答案解析</div>
+                    <div class="explanation-meta">
+                        ${q.answer ? `<span class="expl-answer">正确答案：${q.answer}</span>` : '<span class="expl-answer">暂无标准答案</span>'}
+                        ${q.chapter ? `<span class="expl-kp">知识点：${q.chapter}${q.section ? ' · ' + q.section : ''}</span>` : ''}
+                    </div>
+                    ${expl}
+                </div>`;
+        }
+
+        // 笔记面板（内容用DOM赋值，避免HTML转义问题）
+        let noteHtml = '';
+        if (noteShown) {
+            noteHtml = `
+                <div class="note-panel">
+                    <div class="note-title">我的笔记</div>
+                    <textarea id="noteInput" class="note-input" rows="4" placeholder="记下你的解题思路、易错点...（清空内容保存即删除笔记）"></textarea>
+                    <div class="note-actions">
+                        <button class="btn btn-primary btn-sm" onclick="saveNote()">保存笔记</button>
+                        <span class="note-hint" id="noteHint"></span>
+                    </div>
+                </div>`;
+        }
+
+        document.getElementById('questionArea').innerHTML = `
+            <div class="question-card">
+                <div class="question-header">
+                    <div class="question-meta">
+                        <span class="question-number">题号 ${q.number}（本轮第 ${currentIndex + 1} 题）</span>
+                        ${q.is_real_exam ? `<span class="badge-real">${q.exam_year ? q.exam_year + ' ' : ''}统考真题</span>` : ''}
+                        ${q.chapter ? `<span class="chapter-badge" title="题目来源章节">${q.chapter}${q.section ? ' · ' + q.section : ''}</span>` : ''}
+                    </div>
+                    <button class="btn-icon ${isFav ? 'favorited' : ''}" onclick="toggleFavorite('${q.id}')" title="${isFav ? '取消收藏' : '收藏'}">
+                        ${isFav ? '★' : '☆'}
+                    </button>
+                </div>
+                <div class="question-content">${q.content}</div>
+                <div class="options-list">${optionsHtml}</div>
+                ${resultHtml}
+                <div class="question-tools">
+                    <button class="btn-explanation ${explanationShown ? 'active' : ''}" onclick="toggleExplanation()">
+                        ${explanationShown ? '收起解析 ▴' : '查看解析 ▾'}
+                    </button>
+                    <button class="btn-explanation ${noteShown ? 'active' : ''} ${q.note ? 'has-note' : ''}" onclick="toggleNote()">
+                        ${q.note ? '笔记 ●' : '笔记'} ${noteShown ? '▴' : '▾'}
+                    </button>
+                    ${status ? '<button class="btn-redo" onclick="redoQuestion()">重新作答 ↺</button>' : ''}
+                </div>
+                ${explanationHtml}
+                ${noteHtml}
+            </div>
+        `;
+
+        // 笔记内容用value赋值，防止笔记里的HTML字符被解析
+        const noteInput = document.getElementById('noteInput');
+        if (noteInput) noteInput.value = q.note || '';
+
+        // 更新提交按钮状态
+        document.getElementById('btnSubmit').disabled = !!status;
+        document.getElementById('btnSubmit').textContent = status ? '已提交' : '提交答案';
+
+        renderNumberPanel();
+    }
+
+    // ============ 右侧题号面板：只显示当前章，按小节分组，点击跳转 ============
+    function numBtnHtml(i, label) {
+        const st = answered[questions[i].id];
+        let cls = 'num-btn';
+        if (st) cls += st.isCorrect === true ? ' correct' : (st.isCorrect === false ? ' wrong' : ' done');
+        if (i === currentIndex) cls += ' current';
+        return `<button class="${cls}" onclick="gotoQuestion(${i})">${label}</button>`;
+    }
+
+    function renderNumberPanel() {
+        const panel = document.getElementById('numberPanel');
+        if (!questions.length) { panel.innerHTML = ''; return; }
+        const cur = questions[currentIndex];
+        let html = '';
+        if (cur.chapter) {
+            // 收集当前章的题，按小节分组（保持题序）
+            const groups = [];
+            let g = null;
+            questions.forEach((q, i) => {
+                if (q.chapter !== cur.chapter) return;
+                const sec = q.section || cur.chapter;
+                if (!g || g.sec !== sec) { g = {sec, items: []}; groups.push(g); }
+                g.items.push(i);
+            });
+            for (const grp of groups) {
+                html += `<div class="num-group-title">${grp.sec}</div><div class="num-grid">`;
+                grp.items.forEach((i, k) => { html += numBtnHtml(i, k + 1); });
+                html += '</div>';
+            }
+        } else {
+            // 无章节信息（如随机/错题模式）：按本轮序号平铺
+            html = '<div class="num-grid">'
+                + questions.map((q, i) => numBtnHtml(i, i + 1)).join('') + '</div>';
+        }
+        panel.innerHTML = html;
+        const curBtn = panel.querySelector('.num-btn.current');
+        if (curBtn) curBtn.scrollIntoView({block: 'nearest'});
+    }
+
+    function gotoQuestion(i) {
+        currentIndex = i;
+        explanationShown = false;
+        noteShown = false;
+        renderQuestion();
+    }
+
+    function toggleExplanation() {
+        explanationShown = !explanationShown;
+        renderQuestion();
+    }
+
+    function toggleNote() {
+        noteShown = !noteShown;
+        renderQuestion();
+    }
+
+    async function saveNote() {
+        const q = questions[currentIndex];
+        const content = document.getElementById('noteInput').value;
+        try {
+            const resp = await fetch(`/api/note/${q.id}`, {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({content})
+            });
+            const result = await resp.json();
+            q.note = result.note || '';
+            const hint = document.getElementById('noteHint');
+            hint.textContent = q.note ? '已保存 ✓' : '已删除笔记';
+            setTimeout(() => { if (hint) hint.textContent = ''; }, 2000);
+        } catch (e) {
+            alert('笔记保存失败: ' + e.message);
+        }
+    }
+
+    function redoQuestion() {
+        // 仅解锁当前题允许重新作答，历史记录仍保留在数据库中
+        const q = questions[currentIndex];
+        delete answered[q.id];
+        explanationShown = false;
+        renderQuestion();
+    }
+
+    async function submitAnswer() {
+        const selected = document.querySelector('input[name="answer"]:checked');
+        if (!selected) {
+            alert('请选择一个答案');
+            return;
+        }
+
+        const q = questions[currentIndex];
+        const userAnswer = selected.value;
+
+        try {
+            const resp = await fetch('/api/submit', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({question_id: q.id, answer: userAnswer})
+            });
+            const result = await resp.json();
+
+            answered[q.id] = {
+                answer: userAnswer,
+                isCorrect: result.is_correct,
+                correctAnswer: result.correct_answer,
+                explanation: result.explanation
+            };
+            // 提交后自动展开解析，并用服务端最新解析更新本地题目
+            if (result.explanation) q.explanation = result.explanation;
+            if (result.correct_answer) q.answer = result.correct_answer;
+
+            // 答对自动跳题：开关开启且答对时不展开解析，短暂显示结果后进入下一题
+            const autoJump = result.is_correct === true && isAutoNextOn()
+                && currentIndex < questions.length - 1;
+            if (!autoJump && (result.explanation || result.correct_answer)) {
+                explanationShown = true;
+            }
+
+            renderQuestion();
+
+            if (autoJump) {
+                setTimeout(() => {
+                    // 用户可能已手动翻题，仅当还停在当前题时才跳
+                    if (questions[currentIndex] && questions[currentIndex].id === q.id) {
+                        nextQuestion();
+                    }
+                }, 800);
+            }
+        } catch (e) {
+            alert('提交失败: ' + e.message);
+        }
+    }
+
+    function prevQuestion() {
+        if (currentIndex > 0) {
+            currentIndex--;
+            explanationShown = false;
+            noteShown = false;
+            renderQuestion();
+        }
+    }
+
+    function nextQuestion() {
+        if (currentIndex < questions.length - 1) {
+            currentIndex++;
+            explanationShown = false;
+            noteShown = false;
+            renderQuestion();
+        }
+    }
+
+    async function toggleFavorite(questionId) {
+        try {
+            const resp = await fetch(`/api/favorite/${questionId}`, {method: 'POST'});
+            const result = await resp.json();
+            // 更新当前题目的收藏状态
+            const q = questions[currentIndex];
+            if (q.id === questionId) {
+                q.is_favorited = result.is_favorited;
+                renderQuestion();
+            }
+        } catch (e) {
+            console.error('收藏失败:', e);
+        }
+    }
+
+    // 键盘快捷键（在笔记输入框内不触发，防止打字时误操作）
+    document.addEventListener('keydown', (e) => {
+        const tag = (e.target.tagName || '').toLowerCase();
+        if (tag === 'textarea' || tag === 'input') return;
+        if (e.key === 'ArrowLeft') prevQuestion();
+        else if (e.key === 'ArrowRight') nextQuestion();
+        else if (e.key === 'Enter') submitAnswer();
+        else if (['a','b','c','d','A','B','C','D'].includes(e.key)) {
+            const radio = document.querySelector(`input[name="answer"][value="${e.key.toUpperCase()}"]`);
+            if (radio && !radio.disabled) radio.checked = true;
+        }
+    });
+
+    init();
+</script>
+{% endblock %}

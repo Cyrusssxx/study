@@ -1,0 +1,53 @@
+{% extends "base.html" %}
+{% block title %}408刷题 - 首页{% endblock %}
+{% block content %}
+<div class="hero">
+    <h1>408 计算机考研刷题</h1>
+    <p class="subtitle">操作系统 · 计算机组成原理 · 数据结构 · 计算机网络</p>
+</div>
+
+<!-- 总体统计 -->
+<div class="stats-bar">
+    <div class="stat-item">
+        <span class="stat-number">{{ stats.total_answered }}</span>
+        <span class="stat-label">已做题目</span>
+    </div>
+    <div class="stat-item">
+        <span class="stat-number">{{ stats.accuracy }}%</span>
+        <span class="stat-label">正确率</span>
+    </div>
+    <div class="stat-item">
+        <span class="stat-number">{{ stats.wrong_count }}</span>
+        <span class="stat-label">错题数</span>
+    </div>
+    <div class="stat-item">
+        <span class="stat-number">{{ stats.favorite_count }}</span>
+        <span class="stat-label">收藏数</span>
+    </div>
+</div>
+
+<!-- 科目列表 -->
+<div class="subjects-grid">
+    {% for subject in subjects %}
+    <div class="subject-card">
+        <div class="card-header">
+            <h2>{{ subject.name }}</h2>
+            <span class="badge">{{ subject.total }} 题</span>
+        </div>
+        <div class="card-stats">
+            <div class="progress-bar">
+                <div class="progress-fill" style="width: {{ (subject.total_answered / subject.total * 100) if subject.total > 0 else 0 }}%"></div>
+            </div>
+            <p class="progress-text">已完成 {{ subject.total_answered }}/{{ subject.total }} · 正确率 {{ subject.accuracy }}%</p>
+        </div>
+        <div class="card-actions">
+            <a href="/quiz/{{ subject.key }}?mode=sequential" class="btn btn-primary">顺序刷题</a>
+            <a href="/quiz/{{ subject.key }}?mode=random" class="btn btn-secondary">随机抽题</a>
+            <a href="/quiz/{{ subject.key }}?mode=wrong" class="btn btn-danger">错题重刷 ({{ subject.wrong_count }})</a>
+            <a href="/quiz/{{ subject.key }}?mode=favorite" class="btn btn-warning">收藏练习</a>
+            <a href="/quiz/{{ subject.key }}?mode=real" class="btn btn-secondary">统考真题</a>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% endblock %}
