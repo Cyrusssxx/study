@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>学习统计 - 408刷题</title>
+    <link rel="manifest" href="manifest.webmanifest">
+    <meta name="theme-color" content="#4f46e5">
+    <link rel="apple-touch-icon" href="icons/icon-192.png">
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-container">
+            <a href="index.html" class="nav-brand">408刷题</a>
+            <div class="nav-links">
+                <a href="index.html" class="nav-link">首页</a>
+                <a href="wrong.html" class="nav-link">错题本</a>
+                <a href="favorites.html" class="nav-link">收藏夹</a>
+                <a href="exam.html" class="nav-link">模拟考试</a>
+                <a href="stats.html" class="nav-link">学习统计</a>
+                <a href="search.html" class="nav-link">搜题</a>
+            </div>
+            <div class="nav-tools">
+                <span class="nav-timer" id="navTimer" title="今日刷题时长（切换到其他窗口时暂停）">⏱ 00:00:00</span>
+                <button class="nav-switch" id="autoNextSwitch" onclick="toggleAutoNext()" title="开启后答对自动进入下一题">
+                    答对自动跳题 <span class="switch-state" id="autoNextState">关</span>
+                </button>
+            </div>
+        </div>
+    </nav>
+    <main class="container">
+        <div class="page-header">
+            <h1>学习统计</h1>
+            <p>刷题趋势与各科掌握度一目了然</p>
+        </div>
+
+        <!-- 今日概览 -->
+        <div class="stats-bar">
+            <div class="stat-item">
+                <span class="stat-number" id="todayTotal">-</span>
+                <span class="stat-label">今日刷题</span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-number" id="todayAccuracy">-</span>
+                <span class="stat-label">今日正确率</span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-number" id="todayTime">-</span>
+                <span class="stat-label">今日时长</span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-number" id="monthTotal">-</span>
+                <span class="stat-label">近30天刷题</span>
+            </div>
+        </div>
+
+        <!-- 每日刷题量柱状图 -->
+        <div class="stats-section">
+            <h2>近30天每日刷题量 <span class="chart-legend">柱高=题量，颜色=正确率（<span class="lg-low">低</span>/<span class="lg-mid">中</span>/<span class="lg-high">高</span>）</span></h2>
+            <div class="bar-chart" id="dailyChart">
+                <div class="loading">加载中...</div>
+            </div>
+        </div>
+
+        <!-- 各科掌握度 -->
+        <div class="stats-section">
+            <h2>各科掌握度 <span class="chart-legend">进度条=已做比例，绿色段=答对比例</span></h2>
+            <div id="masteryPanel">
+                <div class="loading">加载中...</div>
+            </div>
+        </div>
+    </main>
+    <script src="js/common.js"></script>
+    <script src="js/backend.js"></script>
+    <script>
+    function fmtTime(sec) {
+        const h = Math.floor(sec / 3600), m = Math.floor(sec % 3600 / 60);
+        return h > 0 ? `${h}小时${m}分` : `${m}分钟`;
+    }
+
+    async function loadDaily() {
+        const resp = await api('/api/stats/daily?days=30');
+        const { data } = await resp.json();
+        const byDay = {};
+        data.forEach(d => byDay[d.day] = d);
+
+        // 补齐没有记录的日期，保证30根柱子连续
+        const days = [];
+        const now = new Date();
+        for (let i = 29; i >= 0; i--) {
+            const d = new Date(now); d.setDate(now.getDate() - i);
+            const key = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+            days.push(byDay[key] || { day: key, total: 0, correct: 0 });
+        }
+
+        const max = Math.max(...days.map(d => d.total), 1);
+        let html = '';
+        days.forEach((d, i) => {
+            const h = d.total > 0 ? Math.max(4, Math.round(d.total / max * 100)) : 0;
+            const acc = d.total > 0 ? d.correct / d.total : 0;
+            const cls = d.total === 0 ? '' : acc >= 0.8 ? 'bar-high' : acc >= 0.5 ? 'bar-mid' : 'bar-low';
+            const label = (i % 5 === 0 || i === 29) ? d.day.slice(5) : '';
+            html += `
+                <div class="bar-col" title="${d.day}：${d.total} 题，正确率 ${d.total ? Math.round(acc*100) : 0}%">
+                    <div class="bar-value">${d.total || ''}</div>
+                    <div class="bar ${cls}" style="height: ${h}%"></div>
+                    <div class="bar-label">${label}</div>
+                </div>`;
+        });
+        document.getElementById('dailyChart').innerHTML = html;
+
+        // 今日概览
+        const today = days[days.length - 1];
+        document.getElementById('todayTotal').textContent = today.total;
+        document.getElementById('todayAccuracy').textContent = today.total ? Math.round(today.correct / today.total * 100) + '%' : '-';
+        document.getElementById('monthTotal').textContent = days.reduce((s, d) => s + d.total, 0);
+        // 今日时长来自顶栏计时器的 localStorage（按天重置）
+        const todayKey = new Date().toDateString();
+        const sec = localStorage.getItem('studyTimerDate') === todayKey ? parseInt(localStorage.getItem('studyTimerSec') || '0', 10) : 0;
+        document.getElementById('todayTime').textContent = fmtTime(sec);
+    }
+
+    async function loadMastery() {
+        const resp = await api('/api/stats/mastery');
+        const data = await resp.json();
+        let html = '';
+        for (const key of Object.keys(data)) {
+            const subj = data[key];
+            const total = subj.chapters.reduce((s, c) => s + c.total, 0);
+            const answered = subj.chapters.reduce((s, c) => s + c.answered, 0);
+            const correct = subj.chapters.reduce((s, c) => s + c.correct, 0);
+            html += `
+                <div class="mastery-subject">
+                    <h3>${subj.name} <span class="mastery-summary">已做 ${answered}/${total} · 答对 ${correct}</span></h3>
+                    <div class="mastery-chapters">`;
+            for (const c of subj.chapters) {
+                const ansPct = c.total ? Math.round(c.answered / c.total * 100) : 0;
+                const corPct = c.total ? Math.round(c.correct / c.total * 100) : 0;
+                const acc = c.answered ? Math.round(c.correct / c.answered * 100) : 0;
+                html += `
+                    <div class="mastery-row" title="${c.name}：已做 ${c.answered}/${c.total}，正确率 ${acc}%">
+                        <span class="mastery-name">${c.name}</span>
+                        <div class="mastery-track">
+                            <div class="mastery-fill" style="width: ${ansPct}%"></div>
+                            <div class="mastery-fill-correct" style="width: ${corPct}%"></div>
+                        </div>
+                        <span class="mastery-pct">${c.answered}/${c.total}${c.answered ? ' · ' + acc + '%' : ''}</span>
+                    </div>`;
+            }
+            html += `</div></div>`;
+        }
+        document.getElementById('masteryPanel').innerHTML = html;
+    }
+
+    loadDaily();
+    loadMastery();
+    </script>
+</body>
+</html>

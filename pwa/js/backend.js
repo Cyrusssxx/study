@@ -1,0 +1,582 @@
+/* 408刷题 PWA - 本地"后端"：题库加载 + IndexedDB 存储 + api() 路由
+ * 与 Flask 版 app.py/database.py 逐一对应，页面脚本用 api(url, opts) 代替 fetch(url, opts)。
+ */
+
+const SUBJECTS = {
+    os: { name: '操作系统', json: 'os.json' },
+    co: { name: '计算机组成原理', json: 'co.json' },
+    ds: { name: '数据结构', json: 'ds.json' },
+    cn: { name: '计算机网络', json: 'cn.json' }
+};
+
+// 真题标记：【2xxx统考真题】（容忍OCR空格与"年"字变体）
+const REAL_EXAM_RE = /【\s*(2\s*0\s*\d\s*\d)\s*年?\s*统\s*考\s*真\s*题\s*】/;
+const TAG_RE = /<[^>]+>/g;
+
+// ==================== 题库加载（内存缓存） ====================
+const _qCache = {};      // {subject: data}
+const _searchTexts = {}; // {subject: [(id, 小写去HTML文本)]}
+
+async function loadQuestions(key) {
+    if (_qCache[key]) return _qCache[key];
+    const resp = await fetch(`data/${SUBJECTS[key].json}`);
+    const data = await resp.json();
+    const texts = [];
+    for (const q of data.questions) {
+        const m = REAL_EXAM_RE.exec((q.content || '').slice(0, 80));
+        q.is_real_exam = !!m;
+        q.exam_year = m ? parseInt(m[1].replace(/\s/g, ''), 10) : null;
+        const raw = (q.content || '') + ' ' + Object.values(q.options || {}).join(' ') + ' ' + (q.explanation || '');
+        texts.push([q.id, raw.replace(TAG_RE, ' ').toLowerCase()]);
+    }
+    _searchTexts[key] = texts;
+    _qCache[key] = data;
+    return data;
+}
+
+async function getQuestionById(qid) {
+    const key = qid.split('_')[0];
+    if (!SUBJECTS[key]) return null;
+    const data = await loadQuestions(key);
+    return data.questions.find(q => q.id === qid) || null;
+}
+
+// ==================== IndexedDB ====================
+const DB_NAME = 'quiz408';
+const DB_VER = 1;
+let _dbPromise = null;
+
+function openDB() {
+    if (_dbPromise) return _dbPromise;
+    _dbPromise = new Promise((resolve, reject) => {
+        const req = indexedDB.open(DB_NAME, DB_VER);
+        req.onupgradeneeded = () => {
+            const db = req.result;
+            const prog = db.createObjectStore('progress', { keyPath: 'pk', autoIncrement: true });
+            prog.createIndex('by_qid', 'question_id');
+            prog.createIndex('by_subject', 'subject');
+            db.createObjectStore('wrong', { keyPath: 'question_id' });
+            db.createObjectStore('favorites', { keyPath: 'question_id' });
+            db.createObjectStore('notes', { keyPath: 'question_id' });
+            db.createObjectStore('exams', { keyPath: 'id', autoIncrement: true });
+        };
+        req.onsuccess = () => resolve(req.result);
+        req.onerror = () => reject(req.error);
+    });
+    return _dbPromise;
+}
+
+// Promise 化的通用读写
+async function dbAll(store) {
+    const db = await openDB();
+    return new Promise((res, rej) => {
+        const r = db.transaction(store).objectStore(store).getAll();
+        r.onsuccess = () => res(r.result);
+        r.onerror = () => rej(r.error);
+    });
+}
+
+async function dbGet(store, key) {
+    const db = await openDB();
+    return new Promise((res, rej) => {
+        const r = db.transaction(store).objectStore(store).get(key);
+        r.onsuccess = () => res(r.result);
+        r.onerror = () => rej(r.error);
+    });
+}
+
+async function dbPut(store, val) {
+    const db = await openDB();
+    return new Promise((res, rej) => {
+        const tx = db.transaction(store, 'readwrite');
+        const r = tx.objectStore(store).put(val);
+        r.onsuccess = () => res(r.result);
+        tx.onerror = () => rej(tx.error);
+    });
+}
+
+async function dbDelete(store, key) {
+    const db = await openDB();
+    return new Promise((res, rej) => {
+        const tx = db.transaction(store, 'readwrite');
+        tx.objectStore(store).delete(key);
+        tx.oncomplete = () => res();
+        tx.onerror = () => rej(tx.error);
+    });
+}
+
+function now() {
+    const d = new Date(), p = n => String(n).padStart(2, '0');
+    return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())} ${p(d.getHours())}:${p(d.getMinutes())}:${p(d.getSeconds())}`;
+}
+
+// ==================== 答题记录（对应 database._apply_answer） ====================
+async function applyAnswer(qid, subject, userAnswer, isCorrect, ts) {
+    await dbPut('progress', { question_id: qid, subject, user_answer: userAnswer, is_correct: isCorrect ? 1 : 0, answered_at: ts });
+    const w = await dbGet('wrong', qid);
+    if (!isCorrect) {
+        if (w) {
+            w.wrong_count += 1; w.last_wrong_at = ts; w.is_resolved = 0; w.correct_streak = 0;
+            await dbPut('wrong', w);
+        } else {
+            await dbPut('wrong', { question_id: qid, subject, wrong_count: 1, last_wrong_at: ts, is_resolved: 0, correct_streak: 0 });
+        }
+    } else if (w) {
+        // 答对：连对计数+1，连对满2次移出错题本（置已解决，保留记录）
+        w.correct_streak = (w.correct_streak || 0) + 1;
+        if (w.correct_streak >= 2) w.is_resolved = 1;
+        await dbPut('wrong', w);
+    }
+}
+
+// 每题最近一次作答 {qid: {user_answer, is_correct, answered_at}}
+async function latestStatuses(subject) {
+    const rows = await dbAll('progress');
+    const map = {};
+    for (const r of rows) {
+        if (subject && r.subject !== subject) continue;
+        const old = map[r.question_id];
+        if (!old || r.answered_at >= old.answered_at) {
+            map[r.question_id] = { user_answer: r.user_answer, is_correct: r.is_correct, answered_at: r.answered_at };
+        }
+    }
+    return map;
+}
+
+async function subjectStats(subject) {
+    const statuses = await latestStatuses(subject);
+    const ids = Object.keys(statuses);
+    const correct = ids.filter(k => statuses[k].is_correct).length;
+    const wrongs = (await dbAll('wrong')).filter(w => (!subject || w.subject === subject) && !w.is_resolved).length;
+    const favs = (await dbAll('favorites')).filter(f => !subject || f.subject === subject).length;
+    return {
+        total_answered: ids.length,
+        correct_count: correct,
+        wrong_count: wrongs,
+        favorite_count: favs,
+        accuracy: ids.length ? Math.round(correct / ids.length * 1000) / 10 : 0
+    };
+}
+
+// ==================== api() 路由 ====================
+function jsonResp(obj, status = 200) {
+    return { ok: status < 400, status, json: async () => obj };
+}
+
+async function api(url, opts = {}) {
+    const u = new URL(url, location.href);
+    const path = u.pathname.replace(/^.*\/api\//, '/api/');
+    const p = u.searchParams;
+    const body = opts.body ? JSON.parse(opts.body) : {};
+    const seg = path.split('/').filter(Boolean); // ['api', ...]
+
+    try {
+        // ---------- 题目列表 ----------
+        if (seg[1] === 'questions') {
+            const subject = seg[2];
+            if (!SUBJECTS[subject]) return jsonResp({ error: '科目不存在' }, 404);
+            const mode = p.get('mode') || 'sequential';
+            const page = parseInt(p.get('page') || '1', 10);
+            const perPage = parseInt(p.get('per_page') || '1', 10);
+            const chapter = p.get('chapter') || '';
+            const section = p.get('section') || '';
+
+            const data = await loadQuestions(subject);
+            let qs = data.questions;
+            if (chapter) qs = qs.filter(q => q.chapter === chapter);
+            if (section) qs = qs.filter(q => q.section === section);
+
+            const statuses = await latestStatuses(subject);
+            const favSet = new Set((await dbAll('favorites')).filter(f => f.subject === subject).map(f => f.question_id));
+
+            if (mode === 'random') {
+                qs = qs.slice();
+                for (let i = qs.length - 1; i > 0; i--) {
+                    const j = Math.floor(Math.random() * (i + 1));
+                    [qs[i], qs[j]] = [qs[j], qs[i]];
+                }
+            } else if (mode === 'real') {
+                qs = qs.filter(q => q.is_real_exam);
+            } else if (mode === 'wrong') {
+                const wrongIds = new Set((await dbAll('wrong')).filter(w => w.subject === subject && !w.is_resolved).map(w => w.question_id));
+                qs = qs.filter(q => wrongIds.has(q.id));
+            } else if (mode === 'favorite') {
+                qs = qs.filter(q => favSet.has(q.id));
+            } else if (mode === 'unanswered') {
+                qs = qs.filter(q => !statuses[q.id]);
+            }
+
+            const total = qs.length;
+            const pageQs = qs.slice((page - 1) * perPage, (page - 1) * perPage + perPage);
+            const notes = {};
+            for (const n of await dbAll('notes')) if (n.subject === subject) notes[n.question_id] = n.content;
+            const result = pageQs.map(q => ({
+                ...q,
+                is_favorited: favSet.has(q.id),
+                last_status: statuses[q.id] || null,
+                note: notes[q.id] || ''
+            }));
+            return jsonResp({ subject: data.subject, total, page, per_page: perPage, questions: result });
+        }
+
+        // ---------- 章节树 ----------
+        if (seg[1] === 'chapters') {
+            const result = {};
+            for (const [key, info] of Object.entries(SUBJECTS)) {
+                const data = await loadQuestions(key);
+                const chapters = [], chMap = {};
+                for (const q of data.questions) {
+                    const ch = q.chapter || '未分类', sec = q.section || '';
+                    if (!chMap[ch]) { chMap[ch] = { name: ch, count: 0, sections: [], smap: {} }; chapters.push(chMap[ch]); }
+                    const node = chMap[ch];
+                    node.count++;
+                    if (sec) {
+                        if (!node.smap[sec]) { node.smap[sec] = { name: sec, count: 0 }; node.sections.push(node.smap[sec]); }
+                        node.smap[sec].count++;
+                    }
+                }
+                chapters.forEach(n => delete n.smap);
+                result[key] = { name: info.name, total: data.total, chapters };
+            }
+            return jsonResp(result);
+        }
+
+        // ---------- 提交答案 ----------
+        if (seg[1] === 'submit') {
+            const qid = body.question_id;
+            const ua = (body.answer || '').toUpperCase();
+            if (!qid || !ua) return jsonResp({ error: '缺少参数' }, 400);
+            const q = await getQuestionById(qid);
+            if (!q) return jsonResp({ error: '题目不存在' }, 404);
+            const ca = q.answer || '';
+            if (!ca) {
+                return jsonResp({ question_id: qid, user_answer: ua, correct_answer: '', is_correct: null, message: '该题暂无标准答案，无法批改', explanation: q.explanation || '' });
+            }
+            const ok = ua === ca;
+            await applyAnswer(qid, qid.split('_')[0], ua, ok, now());
+            return jsonResp({ question_id: qid, user_answer: ua, correct_answer: ca, is_correct: ok, explanation: q.explanation || '' });
+        }
+
+        // ---------- 收藏切换 ----------
+        if (seg[1] === 'favorite') {
+            const qid = seg[2];
+            const subject = qid.split('_')[0];
+            if (!SUBJECTS[subject]) return jsonResp({ error: '无效的题目ID' }, 400);
+            const existing = await dbGet('favorites', qid);
+            if (existing) {
+                await dbDelete('favorites', qid);
+                return jsonResp({ question_id: qid, is_favorited: false });
+            }
+            await dbPut('favorites', { question_id: qid, subject, added_at: now() });
+            return jsonResp({ question_id: qid, is_favorited: true });
+        }
+
+        // ---------- 错题列表 ----------
+        if (seg[1] === 'wrong') {
+            const subject = p.get('subject') || null;
+            const includeResolved = p.get('include_resolved') === 'true';
+            const sort = p.get('sort') || 'recent';
+            const realOnly = p.get('real_only') === 'true';
+            let list = (await dbAll('wrong')).filter(w =>
+                (!subject || w.subject === subject) && (includeResolved || !w.is_resolved));
+            list.sort(sort === 'count'
+                ? (a, b) => b.wrong_count - a.wrong_count || (a.last_wrong_at < b.last_wrong_at ? -1 : 1)
+                : (a, b) => (a.last_wrong_at > b.last_wrong_at ? -1 : 1));
+            const result = [];
+            for (const w of list) {
+                const q = await getQuestionById(w.question_id);
+                if (!q) continue;
+                if (realOnly && !q.is_real_exam) continue;
+                result.push({ ...w, ...q });
+            }
+            return jsonResp({ wrong_questions: result, total: result.length });
+        }
+
+        // ---------- 收藏列表 ----------
+        if (seg[1] === 'favorites') {
+            const subject = p.get('subject') || null;
+            const list = (await dbAll('favorites')).filter(f => !subject || f.subject === subject);
+            list.sort((a, b) => (a.added_at > b.added_at ? -1 : 1));
+            const result = [];
+            for (const f of list) {
+                const q = await getQuestionById(f.question_id);
+                if (q) result.push({ ...f, ...q });
+            }
+            return jsonResp({ favorites: result, total: result.length });
+        }
+
+        // ---------- 统计 ----------
+        if (seg[1] === 'stats' && !seg[2]) {
+            const overall = await subjectStats(null);
+            const subjects = {};
+            for (const key of Object.keys(SUBJECTS)) {
+                const data = await loadQuestions(key);
+                subjects[key] = { ...(await subjectStats(key)), total_questions: data.total, name: SUBJECTS[key].name };
+            }
+            return jsonResp({ overall, subjects });
+        }
+
+        if (seg[1] === 'stats' && seg[2] === 'daily') {
+            const days = Math.min(parseInt(p.get('days') || '30', 10), 365);
+            const cutoff = new Date();
+            cutoff.setDate(cutoff.getDate() - (days - 1));
+            const cutStr = `${cutoff.getFullYear()}-${String(cutoff.getMonth() + 1).padStart(2, '0')}-${String(cutoff.getDate()).padStart(2, '0')}`;
+            const byDay = {};
+            for (const r of await dbAll('progress')) {
+                const day = r.answered_at.slice(0, 10);
+                if (day < cutStr) continue;
+                if (!byDay[day]) byDay[day] = { day, total: 0, correct: 0 };
+                byDay[day].total++;
+                byDay[day].correct += r.is_correct ? 1 : 0;
+            }
+            const data = Object.values(byDay).sort((a, b) => (a.day < b.day ? -1 : 1));
+            return jsonResp({ days, data });
+        }
+
+        if (seg[1] === 'stats' && seg[2] === 'mastery') {
+            const result = {};
+            for (const [key, info] of Object.entries(SUBJECTS)) {
+                const data = await loadQuestions(key);
+                const statuses = await latestStatuses(key);
+                const chMap = {}, chapters = [];
+                for (const q of data.questions) {
+                    const ch = q.chapter || '未分类';
+                    if (!chMap[ch]) { chMap[ch] = { name: ch, total: 0, answered: 0, correct: 0 }; chapters.push(chMap[ch]); }
+                    const node = chMap[ch];
+                    node.total++;
+                    const st = statuses[q.id];
+                    if (st) { node.answered++; if (st.is_correct) node.correct++; }
+                }
+                result[key] = { name: info.name, chapters };
+            }
+            return jsonResp(result);
+        }
+
+        // ---------- 搜题 ----------
+        if (seg[1] === 'search') {
+            const kw = (p.get('q') || '').trim().toLowerCase();
+            const subject = p.get('subject') || '';
+            if (!kw) return jsonResp({ results: [], total: 0 });
+            const keys = SUBJECTS[subject] ? [subject] : Object.keys(SUBJECTS);
+            const results = [];
+            outer:
+            for (const key of keys) {
+                const data = await loadQuestions(key);
+                const qmap = {};
+                for (const q of data.questions) qmap[q.id] = q;
+                for (const [qid, text] of _searchTexts[key]) {
+                    if (!text.includes(kw)) continue;
+                    const q = qmap[qid];
+                    results.push({
+                        id: qid, subject: key, subject_name: SUBJECTS[key].name,
+                        number: q.number, content: q.content || '', options: q.options,
+                        chapter: q.chapter || '', section: q.section || '',
+                        is_real_exam: q.is_real_exam || false
+                    });
+                    if (results.length >= 50) break outer;
+                }
+            }
+            return jsonResp({ results, total: results.length });
+        }
+
+        // ---------- 笔记 ----------
+        if (seg[1] === 'note') {
+            const qid = seg[2];
+            const subject = qid.split('_')[0];
+            if (!SUBJECTS[subject]) return jsonResp({ error: '无效的题目ID' }, 400);
+            if ((opts.method || 'GET') === 'GET') {
+                const n = await dbGet('notes', qid);
+                return jsonResp({ question_id: qid, note: n ? n.content : '' });
+            }
+            const content = (body.content || '').trim();
+            if (content) {
+                await dbPut('notes', { question_id: qid, subject, content, updated_at: now() });
+            } else {
+                await dbDelete('notes', qid);
+            }
+            return jsonResp({ success: true, note: content });
+        }
+
+        // ---------- 模拟考试 ----------
+        if (seg[1] === 'exam') return examApi(seg[2], body);
+
+        // ---------- 重置进度 ----------
+        if (seg[1] === 'reset_progress') {
+            const subject = body.subject;
+            const db = await openDB();
+            for (const store of ['progress', 'wrong']) {
+                const rows = await dbAll(store);
+                const tx = db.transaction(store, 'readwrite');
+                for (const r of rows) {
+                    if (!subject || r.subject === subject) tx.objectStore(store).delete(store === 'progress' ? r.pk : r.question_id);
+                }
+                await new Promise((res, rej) => { tx.oncomplete = res; tx.onerror = () => rej(tx.error); });
+            }
+            return jsonResp({ success: true });
+        }
+
+        return jsonResp({ error: '未知接口: ' + path }, 404);
+    } catch (e) {
+        console.error('api error', path, e);
+        return jsonResp({ error: e.message }, 500);
+    }
+}
+
+// ==================== 模拟考试（对应 app.py 考试 API） ====================
+const EXAM_RATIO = { ds: 45, co: 45, os: 35, cn: 25 };
+
+function stripAnswer(q) {
+    const { answer, explanation, ...rest } = q;
+    return rest;
+}
+
+async function gradeExam(exam, answers) {
+    const details = [];
+    let correct = 0;
+    const perSubject = {}, perChapter = {};
+    const ts = now();
+    let idx = 0;
+    for (const qid of exam.question_ids) {
+        const q = await getQuestionById(qid);
+        if (!q) continue;
+        const subj = qid.split('_')[0];
+        const ua = (answers[qid] || '').toUpperCase();
+        const ok = !!ua && ua === (q.answer || '');
+        if (ok) correct++;
+        if (!perSubject[subj]) perSubject[subj] = { key: subj, name: SUBJECTS[subj].name, total: 0, correct: 0 };
+        perSubject[subj].total++;
+        perSubject[subj].correct += ok ? 1 : 0;
+        const ch = q.chapter || '未分类';
+        const ck = subj + '|' + ch;
+        if (!perChapter[ck]) perChapter[ck] = { subject: SUBJECTS[subj].name, chapter: ch, total: 0, wrong: 0 };
+        perChapter[ck].total++;
+        if (!ok) perChapter[ck].wrong++;
+        details.push({
+            id: qid, number: q.number, content: q.content || '', options: q.options,
+            user_answer: ua, correct_answer: q.answer || '', is_correct: ok,
+            explanation: q.explanation || '', chapter: q.chapter || '', section: q.section || ''
+        });
+        // 错题照常进错题本、计入统计（时间戳错开保持顺序）
+        if (ua) await applyAnswer(qid, subj, ua, ok, `${ts}.${String(idx).padStart(3, '0')}`);
+        idx++;
+    }
+    const total = details.length;
+    const score = total ? Math.round(correct / total * 1000) / 10 : 0;
+    exam.answers = answers;
+    exam.correct_count = correct;
+    exam.score = score;
+    exam.status = 'submitted';
+    exam.submitted_at = now();
+    await dbPut('exams', exam);
+    return {
+        exam_id: exam.id, total, correct, score,
+        per_subject: Object.values(perSubject),
+        chapter_loss: Object.values(perChapter).filter(c => c.wrong > 0),
+        details
+    };
+}
+
+async function examApi(action, body) {
+    if (action === 'generate') {
+        const mode = body.mode || 'full';
+        const count = parseInt(body.count || 0, 10);
+        let picked = [];
+        const sample = (pool, n) => {
+            const arr = pool.slice();
+            for (let i = arr.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [arr[i], arr[j]] = [arr[j], arr[i]];
+            }
+            return arr.slice(0, Math.min(n, arr.length));
+        };
+        if (mode === 'full') {
+            const total = (count >= 10 && count <= 150) ? count : 40;
+            const ratioSum = Object.values(EXAM_RATIO).reduce((a, b) => a + b, 0);
+            const quotas = {};
+            for (const [k, v] of Object.entries(EXAM_RATIO)) quotas[k] = Math.floor(total * v / ratioSum);
+            const order = ['ds', 'co', 'os', 'cn'];
+            let i = 0;
+            while (Object.values(quotas).reduce((a, b) => a + b, 0) < total) { quotas[order[i % 4]]++; i++; }
+            for (const key of order) {
+                const pool = (await loadQuestions(key)).questions.filter(q => q.answer);
+                picked = picked.concat(sample(pool, quotas[key]));
+            }
+        } else if (SUBJECTS[mode]) {
+            const total = (count >= 5 && count <= 100) ? count : 20;
+            const pool = (await loadQuestions(mode)).questions.filter(q => q.answer);
+            picked = sample(pool, total);
+        } else {
+            return jsonResp({ error: '无效的考试模式' }, 400);
+        }
+        if (!picked.length) return jsonResp({ error: '题库为空，无法组卷' }, 400);
+        const duration = parseInt(body.duration_sec || 0, 10) || picked.length * 60;
+        // 废弃之前未交卷的会话
+        for (const e of await dbAll('exams')) {
+            if (e.status === 'in_progress') { e.status = 'abandoned'; await dbPut('exams', e); }
+        }
+        const examId = await dbPut('exams', {
+            mode, question_ids: picked.map(q => q.id), answers: {},
+            total_count: picked.length, correct_count: 0, score: 0,
+            duration_sec: duration, status: 'in_progress', started_at: now(), submitted_at: null
+        });
+        return jsonResp({ exam_id: examId, duration_sec: duration, questions: picked.map(stripAnswer) });
+    }
+
+    if (action === 'save') {
+        if (!body.exam_id) return jsonResp({ error: '缺少exam_id' }, 400);
+        const exam = await dbGet('exams', body.exam_id);
+        if (exam && exam.status === 'in_progress') {
+            exam.answers = body.answers || {};
+            await dbPut('exams', exam);
+        }
+        return jsonResp({ success: true });
+    }
+
+    if (action === 'active') {
+        const active = (await dbAll('exams')).filter(e => e.status === 'in_progress').pop();
+        if (!active) return jsonResp({ active: null });
+        const started = new Date(active.started_at.replace(' ', 'T'));
+        const remaining = active.duration_sec - Math.floor((Date.now() - started.getTime()) / 1000);
+        if (remaining <= 0) {
+            const result = await gradeExam(active, active.answers || {});
+            return jsonResp({ active: null, auto_submitted: result });
+        }
+        const questions = [];
+        for (const qid of active.question_ids) {
+            const q = await getQuestionById(qid);
+            if (q) questions.push(stripAnswer(q));
+        }
+        return jsonResp({ active: {
+            exam_id: active.id, mode: active.mode, remaining_sec: remaining,
+            duration_sec: active.duration_sec, answers: active.answers || {}, questions
+        }});
+    }
+
+    if (action === 'submit') {
+        const exam = body.exam_id ? await dbGet('exams', body.exam_id) : null;
+        if (!exam) return jsonResp({ error: '考试不存在' }, 404);
+        if (exam.status !== 'in_progress') return jsonResp({ error: '该考试已交卷' }, 400);
+        return jsonResp(await gradeExam(exam, body.answers || {}));
+    }
+
+    if (action === 'history') {
+        const records = (await dbAll('exams'))
+            .filter(e => e.status === 'submitted')
+            .sort((a, b) => (a.submitted_at > b.submitted_at ? -1 : 1))
+            .slice(0, 50)
+            .map(e => ({
+                id: e.id, mode: e.mode, total_count: e.total_count, correct_count: e.correct_count,
+                score: e.score, duration_sec: e.duration_sec, started_at: e.started_at, submitted_at: e.submitted_at
+            }));
+        return jsonResp({ records });
+    }
+
+    return jsonResp({ error: '未知考试接口' }, 404);
+}
+
+// ==================== Service Worker 注册 ====================
+if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+        navigator.serviceWorker.register('sw.js').catch(e => console.warn('SW注册失败（需HTTPS或localhost）', e));
+    });
+}

@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>收藏夹 - 408刷题</title>
+    <link rel="manifest" href="manifest.webmanifest">
+    <meta name="theme-color" content="#4f46e5">
+    <link rel="apple-touch-icon" href="icons/icon-192.png">
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-container">
+            <a href="index.html" class="nav-brand">408刷题</a>
+            <div class="nav-links">
+                <a href="index.html" class="nav-link">首页</a>
+                <a href="wrong.html" class="nav-link">错题本</a>
+                <a href="favorites.html" class="nav-link">收藏夹</a>
+                <a href="exam.html" class="nav-link">模拟考试</a>
+                <a href="stats.html" class="nav-link">学习统计</a>
+                <a href="search.html" class="nav-link">搜题</a>
+            </div>
+            <div class="nav-tools">
+                <span class="nav-timer" id="navTimer" title="今日刷题时长（切换到其他窗口时暂停）">⏱ 00:00:00</span>
+                <button class="nav-switch" id="autoNextSwitch" onclick="toggleAutoNext()" title="开启后答对自动进入下一题">
+                    答对自动跳题 <span class="switch-state" id="autoNextState">关</span>
+                </button>
+            </div>
+        </div>
+    </nav>
+    <main class="container">
+        <div class="page-header">
+            <h1>收藏夹</h1>
+            <p>收藏重要的题目，随时回顾</p>
+        </div>
+
+        <!-- 筛选栏 -->
+        <div class="filter-bar">
+            <select id="subjectFilter" onchange="loadFavorites()">
+                <option value="">全部科目</option>
+                <option value="os">操作系统</option>
+                <option value="co">计算机组成原理</option>
+                <option value="ds">数据结构</option>
+                <option value="cn">计算机网络</option>
+            </select>
+            <button class="btn btn-primary" onclick="startFavPractice()">开始收藏练习</button>
+        </div>
+
+        <!-- 收藏列表 -->
+        <div class="question-list" id="favList">
+            <div class="loading">加载中...</div>
+        </div>
+    </main>
+    <script src="js/common.js"></script>
+    <script src="js/backend.js"></script>
+    <script>
+    async function loadFavorites() {
+        const subject = document.getElementById('subjectFilter').value;
+        const params = new URLSearchParams();
+        if (subject) params.set('subject', subject);
+
+        try {
+            const resp = await api(`/api/favorites?${params}`);
+            const data = await resp.json();
+            renderFavList(data.favorites);
+        } catch (e) {
+            document.getElementById('favList').innerHTML = `<div class="error">加载失败</div>`;
+        }
+    }
+
+    function renderFavList(questions) {
+        const container = document.getElementById('favList');
+
+        if (questions.length === 0) {
+            container.innerHTML = `
+                <div class="empty-state">
+                    <h3>暂无收藏</h3>
+                    <p>在刷题时点击 ☆ 即可收藏题目</p>
+                </div>
+            `;
+            return;
+        }
+
+        let html = `<div class="list-header"><span>共 ${questions.length} 道收藏</span></div>`;
+
+        for (const q of questions) {
+            const subjectName = q.subject === 'os' ? '操作系统' :
+                               q.subject === 'co' ? '计算机组成原理' :
+                               q.subject === 'ds' ? '数据结构' : '计算机网络';
+            html += `
+                <div class="list-item">
+                    <div class="item-header">
+                        <span class="item-subject">${subjectName}</span>
+                        <button class="btn-icon favorited" onclick="removeFav('${q.question_id}')">★</button>
+                    </div>
+                    <div class="item-content">${q.content}</div>
+                    <div class="item-options">
+                        ${Object.entries(q.options || {}).map(([k,v]) => `<span class="mini-option">${k}. ${v}</span>`).join('')}
+                    </div>
+                    ${q.answer ? `<div class="item-answer">正确答案: ${q.answer}</div>` : ''}
+                </div>
+            `;
+        }
+
+        container.innerHTML = html;
+    }
+
+    async function removeFav(questionId) {
+        await api(`/api/favorite/${questionId}`, {method: 'POST'});
+        loadFavorites();
+    }
+
+    function startFavPractice() {
+        const subject = document.getElementById('subjectFilter').value;
+        if (subject) {
+            window.location.href = `quiz.html?subject=${subject}&mode=favorite`;
+        } else {
+            alert('请先选择一个科目');
+        }
+    }
+
+    loadFavorites();
+    </script>
+</body>
+</html>

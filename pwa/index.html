@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>408刷题 - 首页</title>
+    <link rel="manifest" href="manifest.webmanifest">
+    <meta name="theme-color" content="#4f46e5">
+    <link rel="apple-touch-icon" href="icons/icon-192.png">
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-container">
+            <a href="index.html" class="nav-brand">408刷题</a>
+            <div class="nav-links">
+                <a href="index.html" class="nav-link">首页</a>
+                <a href="wrong.html" class="nav-link">错题本</a>
+                <a href="favorites.html" class="nav-link">收藏夹</a>
+                <a href="exam.html" class="nav-link">模拟考试</a>
+                <a href="stats.html" class="nav-link">学习统计</a>
+                <a href="search.html" class="nav-link">搜题</a>
+            </div>
+            <div class="nav-tools">
+                <span class="nav-timer" id="navTimer" title="今日刷题时长（切换到其他窗口时暂停）">⏱ 00:00:00</span>
+                <button class="nav-switch" id="autoNextSwitch" onclick="toggleAutoNext()" title="开启后答对自动进入下一题">
+                    答对自动跳题 <span class="switch-state" id="autoNextState">关</span>
+                </button>
+            </div>
+        </div>
+    </nav>
+    <main class="container">
+        <div class="hero">
+            <h1>408 计算机考研刷题</h1>
+            <p class="subtitle">操作系统 · 计算机组成原理 · 数据结构 · 计算机网络</p>
+        </div>
+
+        <!-- 总体统计 -->
+        <div class="stats-bar" id="statsBar">
+            <div class="loading">加载中...</div>
+        </div>
+
+        <!-- 科目列表 -->
+        <div class="subjects-grid" id="subjectsGrid"></div>
+    </main>
+    <script src="js/common.js"></script>
+    <script src="js/backend.js"></script>
+    <script>
+        // 首页原为服务端渲染，PWA 版改为客户端调 /api/stats 渲染
+        const SUBJECT_ORDER = ['os', 'co', 'ds', 'cn'];
+
+        async function loadHome() {
+            try {
+                const resp = await api('/api/stats');
+                const data = await resp.json();
+                const s = data.overall;
+                document.getElementById('statsBar').innerHTML = `
+                    <div class="stat-item">
+                        <span class="stat-number">${s.total_answered}</span>
+                        <span class="stat-label">已做题目</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-number">${s.accuracy}%</span>
+                        <span class="stat-label">正确率</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-number">${s.wrong_count}</span>
+                        <span class="stat-label">错题数</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-number">${s.favorite_count}</span>
+                        <span class="stat-label">收藏数</span>
+                    </div>`;
+
+                let cards = '';
+                for (const key of SUBJECT_ORDER) {
+                    const sub = data.subjects[key];
+                    if (!sub) continue;
+                    const pct = sub.total_questions > 0 ? sub.total_answered / sub.total_questions * 100 : 0;
+                    cards += `
+                    <div class="subject-card">
+                        <div class="card-header">
+                            <h2>${sub.name}</h2>
+                            <span class="badge">${sub.total_questions} 题</span>
+                        </div>
+                        <div class="card-stats">
+                            <div class="progress-bar">
+                                <div class="progress-fill" style="width: ${pct}%"></div>
+                            </div>
+                            <p class="progress-text">已完成 ${sub.total_answered}/${sub.total_questions} · 正确率 ${sub.accuracy}%</p>
+                        </div>
+                        <div class="card-actions">
+                            <a href="quiz.html?subject=${key}&mode=sequential" class="btn btn-primary">顺序刷题</a>
+                            <a href="quiz.html?subject=${key}&mode=random" class="btn btn-secondary">随机抽题</a>
+                            <a href="quiz.html?subject=${key}&mode=wrong" class="btn btn-danger">错题重刷 (${sub.wrong_count})</a>
+                            <a href="quiz.html?subject=${key}&mode=favorite" class="btn btn-warning">收藏练习</a>
+                            <a href="quiz.html?subject=${key}&mode=real" class="btn btn-secondary">统考真题</a>
+                        </div>
+                    </div>`;
+                }
+                document.getElementById('subjectsGrid').innerHTML = cards;
+            } catch (e) {
+                document.getElementById('statsBar').innerHTML = `<div class="error">加载失败: ${e.message}</div>`;
+            }
+        }
+
+        loadHome();
+    </script>
+</body>
+</html>
