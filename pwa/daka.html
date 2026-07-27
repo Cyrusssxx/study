@@ -100,6 +100,15 @@
 
     function renderCard(q) {
         const done = !!dakaProgress[q.id];
+        const figs = q.figs || {content: [], answer: []};
+        const img = n => `<img src="data/daka_figs/${n}" loading="lazy" alt="教材原图">`;
+        const contentFigs = figs.content.length ? `
+                <details class="daka-figs">
+                    <summary>📖 教材原图（含题面插图/表格）</summary>
+                    ${figs.content.map(img).join('')}
+                </details>` : '';
+        const answerFigs = figs.answer.length ? `
+                    <div class="daka-figs-inline">📖 教材原解答：${figs.answer.map(img).join('')}</div>` : '';
         return `
             <div class="daka-card${done ? ' daka-done' : ''}" id="card-${q.id}">
                 <div class="daka-card-header">
@@ -110,10 +119,10 @@
                     </button>
                 </div>
                 <div class="daka-kaodian">${q.module} / ${q.kaodian}</div>
-                <div class="daka-content">${q.content}</div>
+                <div class="daka-content">${q.content}</div>${contentFigs}
                 <details class="daka-answer">
                     <summary>查看答案</summary>
-                    <div class="daka-answer-body">${q.answer || '（解答见教材）'}</div>
+                    <div class="daka-answer-body">${q.answer || '（解答见教材）'}${answerFigs}</div>
                 </details>
             </div>
         `;
