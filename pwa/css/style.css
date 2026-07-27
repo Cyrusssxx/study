@@ -2006,31 +2006,14 @@ mark {
 }
 
 /* 教材原图（PDF 区域截图，白底固定保证夜间可读） */
-.daka-figs {
-    margin-top: 8px;
-}
-
-.daka-figs > summary {
-    cursor: pointer;
-    color: var(--text-light);
-    font-size: 0.88rem;
-    user-select: none;
-}
-
-.daka-figs img,
-.daka-figs-inline img {
+.daka-content img,
+.daka-answer-body img {
     display: block;
     max-width: 100%;
     background: #fff;
     border: 1px solid var(--border);
     border-radius: var(--radius);
     margin: 8px 0;
-}
-
-.daka-figs-inline {
-    margin-top: 10px;
-    color: var(--text-light);
-    font-size: 0.88rem;
 }
 
 .daka-answer > summary {
