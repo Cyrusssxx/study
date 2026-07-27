@@ -51,3 +51,26 @@ function toggleAutoNext() {
 }
 
 renderAutoNextSwitch();
+
+// ============ 背题模式开关（quiz页读取 isReciteOn()，开启后直接显示答案解析） ============
+function isReciteOn() {
+    return localStorage.getItem('reciteMode') === '1';
+}
+
+function renderReciteSwitch() {
+    const btn = document.getElementById('reciteSwitch');
+    const state = document.getElementById('reciteState');
+    if (!btn || !state) return;
+    const on = isReciteOn();
+    btn.classList.toggle('on', on);
+    state.textContent = on ? '开' : '关';
+}
+
+function toggleRecite() {
+    localStorage.setItem('reciteMode', isReciteOn() ? '0' : '1');
+    renderReciteSwitch();
+    // quiz页定义此钩子：切换后即时重渲染当前题
+    if (typeof onReciteModeChange === 'function') onReciteModeChange();
+}
+
+renderReciteSwitch();

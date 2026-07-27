@@ -122,6 +122,19 @@
     }
 
     // ============ 侧边栏章节树 ============
+    // 仅在容器内部滚动到目标元素，不带动整页（手机上 scrollIntoView 会把页面拽到侧栏区）
+    function scrollInContainer(container, el, center) {
+        const cRect = container.getBoundingClientRect();
+        const eRect = el.getBoundingClientRect();
+        if (center) {
+            container.scrollTop += eRect.top - cRect.top - (container.clientHeight - eRect.height) / 2;
+        } else if (eRect.top < cRect.top || eRect.bottom > cRect.bottom) {
+            container.scrollTop += eRect.top < cRect.top
+                ? eRect.top - cRect.top
+                : eRect.bottom - cRect.bottom;
+        }
+    }
+
     async function loadChapterTree() {
         try {
             const resp = await fetch('/api/chapters');
@@ -177,9 +190,9 @@
             </div>`;
         }
         document.getElementById('chapterTree').innerHTML = treeHtml;
-        // 滚动到当前选中项
+        // 滚动到当前选中项（只滚树容器，不滚页面）
         const active = document.querySelector('.tree-section.active');
-        if (active) active.scrollIntoView({block: 'center'});
+        if (active) scrollInContainer(document.getElementById('chapterTree'), active, true);
     }
 
     function renderQuestion() {
@@ -188,6 +201,7 @@
         const q = questions[currentIndex];
         const status = answered[q.id];
         const isFav = q.is_favorited;
+        const recite = isReciteOn();  // 背题模式：直接显示答案解析，不可作答
 
         document.getElementById('questionProgress').textContent = `${currentIndex + 1} / ${totalQuestions}`;
         document.getElementById('btnPrev').disabled = currentIndex === 0;
@@ -198,9 +212,11 @@
             if (status) {
                 if (key === status.correctAnswer) optClass += ' correct';
                 else if (key === status.answer && !status.isCorrect) optClass += ' wrong';
+            } else if (recite && key === q.answer) {
+                optClass += ' correct';  // 背题模式：未作答也直接标出正确选项
             }
             const checked = status && status.answer === key ? 'checked' : '';
-            const disabled = status ? 'disabled' : '';
+            const disabled = (status || recite) ? 'disabled' : '';
             optionsHtml += `
                 <label class="${optClass}">
                     <input type="radio" name="answer" value="${key}" ${checked} ${disabled}>
@@ -221,9 +237,9 @@
             }
         }
 
-        // 解析面板（支持HTML格式解析内容）
+        // 解析面板（支持HTML格式解析内容；背题模式下常驻展开）
         let explanationHtml = '';
-        if (explanationShown) {
+        if (explanationShown || recite) {
             const expl = q.explanation
                 ? `<div class="explanation-body">${q.explanation}</div>`
                 : '<div class="explanation-empty">该题暂无详细解析</div>';
@@ -268,9 +284,9 @@
                 <div class="options-list">${optionsHtml}</div>
                 ${resultHtml}
                 <div class="question-tools">
-                    <button class="btn-explanation ${explanationShown ? 'active' : ''}" onclick="toggleExplanation()">
+                    ${recite ? '' : `<button class="btn-explanation ${explanationShown ? 'active' : ''}" onclick="toggleExplanation()">
                         ${explanationShown ? '收起解析 ▴' : '查看解析 ▾'}
-                    </button>
+                    </button>`}
                     <button class="btn-explanation ${noteShown ? 'active' : ''} ${q.note ? 'has-note' : ''}" onclick="toggleNote()">
                         ${q.note ? '笔记 ●' : '笔记'} ${noteShown ? '▴' : '▾'}
                     </button>
@@ -285,9 +301,11 @@
         const noteInput = document.getElementById('noteInput');
         if (noteInput) noteInput.value = q.note || '';
 
-        // 更新提交按钮状态
-        document.getElementById('btnSubmit').disabled = !!status;
-        document.getElementById('btnSubmit').textContent = status ? '已提交' : '提交答案';
+        // 更新提交按钮状态（背题模式下隐藏，不允许作答）
+        const btnSubmit = document.getElementById('btnSubmit');
+        btnSubmit.style.display = recite ? 'none' : '';
+        btnSubmit.disabled = !!status;
+        btnSubmit.textContent = status ? '已提交' : '提交答案';
 
         renderNumberPanel();
     }
@@ -328,7 +346,7 @@
         }
         panel.innerHTML = html;
         const curBtn = panel.querySelector('.num-btn.current');
-        if (curBtn) curBtn.scrollIntoView({block: 'nearest'});
+        if (curBtn) scrollInContainer(panel, curBtn, false);
     }
 
     function gotoQuestion(i) {
@@ -376,6 +394,7 @@
     }
 
     async function submitAnswer() {
+        if (isReciteOn()) return;  // 背题模式不作答（含 Enter 快捷键）
         const selected = document.querySelector('input[name="answer"]:checked');
         if (!selected) {
             alert('请选择一个答案');
@@ -470,6 +489,11 @@
             if (radio && !radio.disabled) radio.checked = true;
         }
     });
+
+    // 背题模式开关切换时即时刷新当前题（app.js 的 toggleRecite 调用）
+    function onReciteModeChange() {
+        if (questions.length) renderQuestion();
+    }
 
     init();
 </script>

@@ -23,6 +23,9 @@
             </div>
             <div class="nav-tools">
                 <span class="nav-timer" id="navTimer" title="今日刷题时长（切换到其他窗口时暂停）">⏱ 00:00:00</span>
+                <button class="nav-switch" id="reciteSwitch" onclick="toggleRecite()" title="开启后直接显示答案与解析，不计入答题记录">
+                    背题模式 <span class="switch-state" id="reciteState">关</span>
+                </button>
                 <button class="nav-switch" id="autoNextSwitch" onclick="toggleAutoNext()" title="开启后答对自动进入下一题">
                     答对自动跳题 <span class="switch-state" id="autoNextState">关</span>
                 </button>
