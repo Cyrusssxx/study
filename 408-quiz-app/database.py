@@ -478,6 +478,66 @@ def get_exam_records(limit=50):
     return [dict(r) for r in rows]
 
 
+# ==================== 数据备份 ====================
+
+def export_all():
+    """导出全部学习数据（与PWA版统一结构，不含自增主键；exam的JSON字段解析成对象）"""
+    conn = get_db()
+    progress = [dict(r) for r in conn.execute(
+        'SELECT question_id, subject, user_answer, is_correct, answered_at FROM user_progress').fetchall()]
+    wrong = [dict(r) for r in conn.execute(
+        'SELECT question_id, subject, wrong_count, last_wrong_at, is_resolved, correct_streak FROM wrong_questions').fetchall()]
+    favorites = [dict(r) for r in conn.execute(
+        'SELECT question_id, subject, added_at FROM favorites').fetchall()]
+    notes = [dict(r) for r in conn.execute(
+        'SELECT question_id, subject, content, updated_at FROM notes').fetchall()]
+    exams = []
+    for r in conn.execute(
+            'SELECT mode, question_ids, answers, total_count, correct_count, score, duration_sec, status, started_at, submitted_at '
+            'FROM exam_records').fetchall():
+        e = dict(r)
+        e['question_ids'] = json.loads(e['question_ids'] or '[]')
+        e['answers'] = json.loads(e['answers'] or '{}')
+        exams.append(e)
+    conn.close()
+    return {'progress': progress, 'wrong': wrong, 'favorites': favorites, 'notes': notes, 'exams': exams}
+
+
+def import_all(payload):
+    """导入备份（全量覆盖5张表，单事务），返回各表导入条数"""
+    conn = get_db()
+    for table in ('user_progress', 'wrong_questions', 'favorites', 'notes', 'exam_records'):
+        conn.execute(f'DELETE FROM {table}')
+    for r in payload.get('progress') or []:
+        conn.execute(
+            'INSERT OR IGNORE INTO user_progress (question_id, subject, user_answer, is_correct, answered_at) VALUES (?, ?, ?, ?, ?)',
+            (r.get('question_id'), r.get('subject'), r.get('user_answer', ''),
+             int(r.get('is_correct') or 0), r.get('answered_at', '')))
+    for r in payload.get('wrong') or []:
+        conn.execute(
+            'INSERT OR IGNORE INTO wrong_questions (question_id, subject, wrong_count, last_wrong_at, is_resolved, correct_streak) VALUES (?, ?, ?, ?, ?, ?)',
+            (r.get('question_id'), r.get('subject'), int(r.get('wrong_count') or 1), r.get('last_wrong_at', ''),
+             int(r.get('is_resolved') or 0), int(r.get('correct_streak') or 0)))
+    for r in payload.get('favorites') or []:
+        conn.execute(
+            'INSERT OR IGNORE INTO favorites (question_id, subject, added_at) VALUES (?, ?, ?)',
+            (r.get('question_id'), r.get('subject'), r.get('added_at', '')))
+    for r in payload.get('notes') or []:
+        conn.execute(
+            'INSERT OR IGNORE INTO notes (question_id, subject, content, updated_at) VALUES (?, ?, ?, ?)',
+            (r.get('question_id'), r.get('subject'), r.get('content', ''), r.get('updated_at', '')))
+    for r in payload.get('exams') or []:
+        conn.execute(
+            'INSERT INTO exam_records (mode, question_ids, answers, total_count, correct_count, score, duration_sec, status, started_at, submitted_at) '
+            'VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
+            (r.get('mode', 'full'), json.dumps(r.get('question_ids') or []), json.dumps(r.get('answers') or {}),
+             int(r.get('total_count') or 0), int(r.get('correct_count') or 0), float(r.get('score') or 0),
+             int(r.get('duration_sec') or 0), r.get('status', 'submitted'), r.get('started_at', ''), r.get('submitted_at')))
+    conn.commit()
+    conn.close()
+    return {k: len(payload.get(k) or []) for k in ('progress', 'wrong', 'favorites', 'notes', 'exams')}
+
+
 # 初始化数据库
 if not os.path.exists(DB_PATH):
     init_db()

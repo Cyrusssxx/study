@@ -16,6 +16,7 @@
             <div class="quiz-info">
                 <h2>{{ subject_name }}</h2>
                 <span class="mode-badge" id="modeBadge"></span>
+                <button class="opt-shuffle-btn" id="shuffleBtn" onclick="toggleShuffle()" title="打乱选项显示顺序（字母跟随内容，答案字母不变）">选项乱序 <span id="shuffleState">关</span></button>
             </div>
             <div class="quiz-nav-info">
                 <span id="questionProgress">加载中...</span>
@@ -54,6 +55,7 @@
     let answered = {};  // {questionId: {answer, isCorrect}}
     let explanationShown = false;  // 当前题解析面板是否展开
     let noteShown = false;  // 当前题笔记面板是否展开
+    let optionOrder = {};  // {qid: [key,...]} 选项乱序开启时每题的显示顺序缓存
 
     const modeNames = {
         'sequential': '顺序模式',
@@ -61,7 +63,8 @@
         'wrong': '错题模式',
         'favorite': '收藏模式',
         'unanswered': '未做模式',
-        'real': '真题模式'
+        'real': '真题模式',
+        'smart': '智能模式'
     };
 
     document.getElementById('modeBadge').textContent = modeNames[MODE] || MODE;
@@ -207,7 +210,8 @@
         document.getElementById('btnPrev').disabled = currentIndex === 0;
 
         let optionsHtml = '';
-        for (const [key, value] of Object.entries(q.options)) {
+        for (const key of getOptionOrder(q)) {
+            const value = q.options[key];
             let optClass = 'option-item';
             if (status) {
                 if (key === status.correctAnswer) optClass += ' correct';
@@ -219,7 +223,7 @@
             const disabled = (status || recite) ? 'disabled' : '';
             optionsHtml += `
                 <label class="${optClass}">
-                    <input type="radio" name="answer" value="${key}" ${checked} ${disabled}>
+                    <input type="radio" name="answer" value="${key}" ${checked} ${disabled} onchange="onOptionPicked()">
                     <span class="option-letter">${key}</span>
                     <span class="option-text">${value}</span>
                 </label>
@@ -301,9 +305,9 @@
         const noteInput = document.getElementById('noteInput');
         if (noteInput) noteInput.value = q.note || '';
 
-        // 更新提交按钮状态（背题模式下隐藏，不允许作答）
+        // 更新提交按钮状态（背题/快刷模式下隐藏：背题不可作答，快刷点选即判）
         const btnSubmit = document.getElementById('btnSubmit');
-        btnSubmit.style.display = recite ? 'none' : '';
+        btnSubmit.style.display = (recite || isQuickOn()) ? 'none' : '';
         btnSubmit.disabled = !!status;
         btnSubmit.textContent = status ? '已提交' : '提交答案';
 
@@ -486,9 +490,56 @@
         else if (e.key === 'Enter') submitAnswer();
         else if (['a','b','c','d','A','B','C','D'].includes(e.key)) {
             const radio = document.querySelector(`input[name="answer"][value="${e.key.toUpperCase()}"]`);
-            if (radio && !radio.disabled) radio.checked = true;
+            if (radio && !radio.disabled) {
+                radio.checked = true;
+                if (isQuickOn()) submitAnswer();  // 快刷：按键选中即判
+            }
         }
     });
+
+    // ============ 选项乱序：只乱显示顺序，字母跟随内容，答案字母不变 ============
+    function isShuffleOn() {
+        return localStorage.getItem('shuffleOpts') === '1';
+    }
+
+    function renderShuffleBtn() {
+        const btn = document.getElementById('shuffleBtn');
+        btn.classList.toggle('on', isShuffleOn());
+        document.getElementById('shuffleState').textContent = isShuffleOn() ? '开' : '关';
+    }
+
+    function toggleShuffle() {
+        localStorage.setItem('shuffleOpts', isShuffleOn() ? '0' : '1');
+        optionOrder = {};  // 重新洗牌
+        renderShuffleBtn();
+        if (questions.length) renderQuestion();
+    }
+
+    function getOptionOrder(q) {
+        const keys = Object.keys(q.options);
+        if (!isShuffleOn()) return keys;
+        if (!optionOrder[q.id]) {
+            const arr = keys.slice();
+            for (let i = arr.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [arr[i], arr[j]] = [arr[j], arr[i]];
+            }
+            optionOrder[q.id] = arr;  // 缓存：展开解析/笔记重渲染时顺序不变
+        }
+        return optionOrder[q.id];
+    }
+
+    renderShuffleBtn();
+
+    // ============ 快刷模式：点选项直接判对错 ============
+    function onOptionPicked() {
+        if (isQuickOn() && !answered[questions[currentIndex].id]) submitAnswer();
+    }
+
+    // 快刷开关切换时即时显隐提交按钮（app.js 的 toggleQuick 调用）
+    function onQuickModeChange() {
+        if (questions.length) renderQuestion();
+    }
 
     // 背题模式开关切换时即时刷新当前题（app.js 的 toggleRecite 调用）
     function onReciteModeChange() {

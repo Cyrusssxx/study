@@ -7,6 +7,7 @@
     <link rel="manifest" href="manifest.webmanifest">
     <meta name="theme-color" content="#4f46e5">
     <link rel="apple-touch-icon" href="icons/icon-192.png">
+    <script>if (localStorage.getItem('darkMode') === '1') document.documentElement.classList.add('dark');</script>
     <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
@@ -23,11 +24,17 @@
             </div>
             <div class="nav-tools">
                 <span class="nav-timer" id="navTimer" title="今日刷题时长（切换到其他窗口时暂停）">⏱ 00:00:00</span>
-                <button class="nav-switch" id="reciteSwitch" onclick="toggleRecite()" title="开启后直接显示答案与解析，不计入答题记录">
-                    背题模式 <span class="switch-state" id="reciteState">关</span>
+                <button class="nav-switch" id="reciteSwitch" onclick="toggleRecite()" title="背题模式：直接显示答案与解析，不计入答题记录">
+                    背题 <span class="switch-state" id="reciteState">关</span>
                 </button>
-                <button class="nav-switch" id="autoNextSwitch" onclick="toggleAutoNext()" title="开启后答对自动进入下一题">
-                    答对自动跳题 <span class="switch-state" id="autoNextState">关</span>
+                <button class="nav-switch" id="autoNextSwitch" onclick="toggleAutoNext()" title="答对自动进入下一题">
+                    跳题 <span class="switch-state" id="autoNextState">关</span>
+                </button>
+                <button class="nav-switch" id="quickSwitch" onclick="toggleQuick()" title="快刷模式：点选项直接判对错，免按提交">
+                    快刷 <span class="switch-state" id="quickState">关</span>
+                </button>
+                <button class="nav-switch" id="darkSwitch" onclick="toggleDark()" title="夜间模式：深色主题护眼">
+                    夜间 <span class="switch-state" id="darkState">关</span>
                 </button>
             </div>
         </div>
@@ -48,6 +55,7 @@
                     <div class="quiz-info">
                         <h2 id="subjectTitle"></h2>
                         <span class="mode-badge" id="modeBadge"></span>
+                        <button class="opt-shuffle-btn" id="shuffleBtn" onclick="toggleShuffle()" title="打乱选项显示顺序（字母跟随内容，答案字母不变）">选项乱序 <span id="shuffleState">关</span></button>
                     </div>
                     <div class="quiz-nav-info">
                         <span id="questionProgress">加载中...</span>
@@ -88,6 +96,7 @@
     let answered = {};  // {questionId: {answer, isCorrect}}
     let explanationShown = false;  // 当前题解析面板是否展开
     let noteShown = false;  // 当前题笔记面板是否展开
+    let optionOrder = {};  // {qid: [key,...]} 选项乱序开启时每题的显示顺序缓存
 
     const modeNames = {
         'sequential': '顺序模式',
@@ -95,7 +104,8 @@
         'wrong': '错题模式',
         'favorite': '收藏模式',
         'unanswered': '未做模式',
-        'real': '真题模式'
+        'real': '真题模式',
+        'smart': '智能模式'
     };
 
     const SUBJECT_NAME = (SUBJECTS[SUBJECT] || {}).name || SUBJECT;
@@ -244,7 +254,8 @@
         document.getElementById('btnPrev').disabled = currentIndex === 0;
 
         let optionsHtml = '';
-        for (const [key, value] of Object.entries(q.options)) {
+        for (const key of getOptionOrder(q)) {
+            const value = q.options[key];
             let optClass = 'option-item';
             if (status) {
                 if (key === status.correctAnswer) optClass += ' correct';
@@ -256,7 +267,7 @@
             const disabled = (status || recite) ? 'disabled' : '';
             optionsHtml += `
                 <label class="${optClass}">
-                    <input type="radio" name="answer" value="${key}" ${checked} ${disabled}>
+                    <input type="radio" name="answer" value="${key}" ${checked} ${disabled} onchange="onOptionPicked()">
                     <span class="option-letter">${key}</span>
                     <span class="option-text">${value}</span>
                 </label>
@@ -338,9 +349,9 @@
         const noteInput = document.getElementById('noteInput');
         if (noteInput) noteInput.value = q.note || '';
 
-        // 更新提交按钮状态（背题模式下隐藏，不允许作答）
+        // 更新提交按钮状态（背题/快刷模式下隐藏：背题不可作答，快刷点选即判）
         const btnSubmit = document.getElementById('btnSubmit');
-        btnSubmit.style.display = recite ? 'none' : '';
+        btnSubmit.style.display = (recite || isQuickOn()) ? 'none' : '';
         btnSubmit.disabled = !!status;
         btnSubmit.textContent = status ? '已提交' : '提交答案';
 
@@ -523,9 +534,56 @@
         else if (e.key === 'Enter') submitAnswer();
         else if (['a','b','c','d','A','B','C','D'].includes(e.key)) {
             const radio = document.querySelector(`input[name="answer"][value="${e.key.toUpperCase()}"]`);
-            if (radio && !radio.disabled) radio.checked = true;
+            if (radio && !radio.disabled) {
+                radio.checked = true;
+                if (isQuickOn()) submitAnswer();  // 快刷：按键选中即判
+            }
         }
     });
+
+    // ============ 选项乱序：只乱显示顺序，字母跟随内容，答案字母不变 ============
+    function isShuffleOn() {
+        return localStorage.getItem('shuffleOpts') === '1';
+    }
+
+    function renderShuffleBtn() {
+        const btn = document.getElementById('shuffleBtn');
+        btn.classList.toggle('on', isShuffleOn());
+        document.getElementById('shuffleState').textContent = isShuffleOn() ? '开' : '关';
+    }
+
+    function toggleShuffle() {
+        localStorage.setItem('shuffleOpts', isShuffleOn() ? '0' : '1');
+        optionOrder = {};  // 重新洗牌
+        renderShuffleBtn();
+        if (questions.length) renderQuestion();
+    }
+
+    function getOptionOrder(q) {
+        const keys = Object.keys(q.options);
+        if (!isShuffleOn()) return keys;
+        if (!optionOrder[q.id]) {
+            const arr = keys.slice();
+            for (let i = arr.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [arr[i], arr[j]] = [arr[j], arr[i]];
+            }
+            optionOrder[q.id] = arr;  // 缓存：展开解析/笔记重渲染时顺序不变
+        }
+        return optionOrder[q.id];
+    }
+
+    renderShuffleBtn();
+
+    // ============ 快刷模式：点选项直接判对错 ============
+    function onOptionPicked() {
+        if (isQuickOn() && !answered[questions[currentIndex].id]) submitAnswer();
+    }
+
+    // 快刷开关切换时即时显隐提交按钮（common.js 的 toggleQuick 调用）
+    function onQuickModeChange() {
+        if (questions.length) renderQuestion();
+    }
 
     // 背题模式开关切换时即时刷新当前题（common.js 的 toggleRecite 调用）
     function onReciteModeChange() {

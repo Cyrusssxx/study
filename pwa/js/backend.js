@@ -204,6 +204,24 @@ async function api(url, opts = {}) {
                 qs = qs.filter(q => favSet.has(q.id));
             } else if (mode === 'unanswered') {
                 qs = qs.filter(q => !statuses[q.id]);
+            } else if (mode === 'smart') {
+                // 智能推题：按章节正确率加权乱序，正确率越低、未做题越多的章节越先出现
+                const chStat = {};
+                for (const q of data.questions) {
+                    const ch = q.chapter || '未分类';
+                    if (!chStat[ch]) chStat[ch] = { answered: 0, correct: 0 };
+                    const st = statuses[q.id];
+                    if (st) { chStat[ch].answered++; if (st.is_correct) chStat[ch].correct++; }
+                }
+                const weight = q => {
+                    const st = chStat[q.chapter || '未分类'] || { answered: 0, correct: 0 };
+                    const acc = st.answered ? st.correct / st.answered : 0;
+                    return Math.max((1 - acc) + (statuses[q.id] ? 0 : 0.3), 0.05);
+                };
+                // 加权随机洗牌（Efraimidis-Spirakis）：权重越大排序键越大、越靠前
+                qs = qs.map(q => [Math.pow(Math.random(), 1 / weight(q)), q])
+                    .sort((a, b) => b[0] - a[0])
+                    .map(x => x[1]);
             }
 
             const total = qs.length;
@@ -399,6 +417,39 @@ async function api(url, opts = {}) {
 
         // ---------- 模拟考试 ----------
         if (seg[1] === 'exam') return examApi(seg[2], body);
+
+        // ---------- 数据备份 ----------
+        if (seg[1] === 'backup' && seg[2] === 'export') {
+            const strip = (rows, key) => rows.map(r => { const o = { ...r }; delete o[key]; return o; });
+            return jsonResp({
+                version: 1, exported_at: now(), source: 'pwa',
+                progress: strip(await dbAll('progress'), 'pk'),
+                wrong: await dbAll('wrong'),
+                favorites: await dbAll('favorites'),
+                notes: await dbAll('notes'),
+                exams: strip(await dbAll('exams'), 'id')
+            });
+        }
+        if (seg[1] === 'backup' && seg[2] === 'import') {
+            if (!Array.isArray(body.progress)) return jsonResp({ error: '备份文件格式不正确' }, 400);
+            const db = await openDB();
+            const counts = {};
+            for (const store of ['progress', 'wrong', 'favorites', 'notes', 'exams']) {
+                const rows = Array.isArray(body[store]) ? body[store] : [];
+                await new Promise((res, rej) => {
+                    const tx = db.transaction(store, 'readwrite');
+                    tx.objectStore(store).clear();
+                    for (const r of rows) {
+                        // 剥离外来自增主键，由本库重新分配
+                        const o = { ...r }; delete o.pk; delete o.id;
+                        tx.objectStore(store).put(o);
+                    }
+                    tx.oncomplete = res; tx.onerror = () => rej(tx.error);
+                });
+                counts[store] = rows.length;
+            }
+            return jsonResp({ success: true, counts });
+        }
 
         // ---------- 重置进度 ----------
         if (seg[1] === 'reset_progress') {

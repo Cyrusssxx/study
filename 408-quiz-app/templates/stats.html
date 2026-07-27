@@ -41,6 +41,17 @@
         <div class="loading">加载中...</div>
     </div>
 </div>
+
+<!-- 数据备份/导入 -->
+<div class="stats-section">
+    <h2>数据管理 <span class="chart-legend">手机 ↔ 电脑互迁：导出JSON后在另一端导入（导入会全量覆盖当前数据）</span></h2>
+    <div class="backup-actions">
+        <button class="btn btn-primary" onclick="exportBackup()">导出学习数据</button>
+        <button class="btn btn-secondary" onclick="document.getElementById('importFile').click()">导入备份文件</button>
+        <input type="file" id="importFile" accept=".json,application/json" style="display:none" onchange="importBackup(this.files[0]); this.value='';">
+        <span class="backup-hint" id="backupHint"></span>
+    </div>
+</div>
 {% endblock %}
 
 {% block scripts %}
@@ -126,5 +137,38 @@
 
     loadDaily();
     loadMastery();
+
+    // ==================== 数据备份/导入 ====================
+    async function exportBackup() {
+        const resp = await fetch('/api/backup/export');
+        const data = await resp.json();
+        const blob = new Blob([JSON.stringify(data)], { type: 'application/json' });
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(blob);
+        const d = new Date(), p = n => String(n).padStart(2, '0');
+        a.download = `408quiz-backup-${d.getFullYear()}${p(d.getMonth() + 1)}${p(d.getDate())}.json`;
+        a.click();
+        URL.revokeObjectURL(a.href);
+        document.getElementById('backupHint').textContent = `已导出：答题 ${data.progress.length} 条 / 错题 ${data.wrong.length} / 收藏 ${data.favorites.length} / 笔记 ${data.notes.length} / 考试 ${data.exams.length}`;
+    }
+
+    async function importBackup(file) {
+        if (!file) return;
+        let data;
+        try { data = JSON.parse(await file.text()); } catch { alert('文件不是有效的JSON'); return; }
+        if (!Array.isArray(data.progress)) { alert('备份文件格式不正确'); return; }
+        const msg = `将全量覆盖当前数据：答题 ${data.progress.length} 条、错题 ${(data.wrong || []).length}、收藏 ${(data.favorites || []).length}、笔记 ${(data.notes || []).length}、考试 ${(data.exams || []).length}。确定导入？`;
+        if (!confirm(msg)) return;
+        const resp = await fetch('/api/backup/import', {
+            method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data)
+        });
+        const r = await resp.json();
+        if (resp.ok && r.success) {
+            document.getElementById('backupHint').textContent = '导入成功，页面即将刷新';
+            setTimeout(() => location.reload(), 800);
+        } else {
+            alert('导入失败：' + (r.error || '未知错误'));
+        }
+    }
 </script>
 {% endblock %}

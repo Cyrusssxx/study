@@ -7,6 +7,7 @@
     <link rel="manifest" href="manifest.webmanifest">
     <meta name="theme-color" content="#4f46e5">
     <link rel="apple-touch-icon" href="icons/icon-192.png">
+    <script>if (localStorage.getItem('darkMode') === '1') document.documentElement.classList.add('dark');</script>
     <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
@@ -23,11 +24,17 @@
             </div>
             <div class="nav-tools">
                 <span class="nav-timer" id="navTimer" title="今日刷题时长（切换到其他窗口时暂停）">⏱ 00:00:00</span>
-                <button class="nav-switch" id="reciteSwitch" onclick="toggleRecite()" title="开启后直接显示答案与解析，不计入答题记录">
-                    背题模式 <span class="switch-state" id="reciteState">关</span>
+                <button class="nav-switch" id="reciteSwitch" onclick="toggleRecite()" title="背题模式：直接显示答案与解析，不计入答题记录">
+                    背题 <span class="switch-state" id="reciteState">关</span>
                 </button>
-                <button class="nav-switch" id="autoNextSwitch" onclick="toggleAutoNext()" title="开启后答对自动进入下一题">
-                    答对自动跳题 <span class="switch-state" id="autoNextState">关</span>
+                <button class="nav-switch" id="autoNextSwitch" onclick="toggleAutoNext()" title="答对自动进入下一题">
+                    跳题 <span class="switch-state" id="autoNextState">关</span>
+                </button>
+                <button class="nav-switch" id="quickSwitch" onclick="toggleQuick()" title="快刷模式：点选项直接判对错，免按提交">
+                    快刷 <span class="switch-state" id="quickState">关</span>
+                </button>
+                <button class="nav-switch" id="darkSwitch" onclick="toggleDark()" title="夜间模式：深色主题护眼">
+                    夜间 <span class="switch-state" id="darkState">关</span>
                 </button>
             </div>
         </div>
@@ -71,6 +78,17 @@
             <h2>各科掌握度 <span class="chart-legend">进度条=已做比例，绿色段=答对比例</span></h2>
             <div id="masteryPanel">
                 <div class="loading">加载中...</div>
+            </div>
+        </div>
+
+        <!-- 数据备份/导入 -->
+        <div class="stats-section">
+            <h2>数据管理 <span class="chart-legend">手机 ↔ 电脑互迁：导出JSON后在另一端导入（导入会全量覆盖当前数据）</span></h2>
+            <div class="backup-actions">
+                <button class="btn btn-primary" onclick="exportBackup()">导出学习数据</button>
+                <button class="btn btn-secondary" onclick="document.getElementById('importFile').click()">导入备份文件</button>
+                <input type="file" id="importFile" accept=".json,application/json" style="display:none" onchange="importBackup(this.files[0]); this.value='';">
+                <span class="backup-hint" id="backupHint"></span>
             </div>
         </div>
     </main>
@@ -158,6 +176,39 @@
 
     loadDaily();
     loadMastery();
+
+    // ==================== 数据备份/导入 ====================
+    async function exportBackup() {
+        const resp = await api('/api/backup/export');
+        const data = await resp.json();
+        const blob = new Blob([JSON.stringify(data)], { type: 'application/json' });
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(blob);
+        const d = new Date(), p = n => String(n).padStart(2, '0');
+        a.download = `408quiz-backup-${d.getFullYear()}${p(d.getMonth() + 1)}${p(d.getDate())}.json`;
+        a.click();
+        URL.revokeObjectURL(a.href);
+        document.getElementById('backupHint').textContent = `已导出：答题 ${data.progress.length} 条 / 错题 ${data.wrong.length} / 收藏 ${data.favorites.length} / 笔记 ${data.notes.length} / 考试 ${data.exams.length}`;
+    }
+
+    async function importBackup(file) {
+        if (!file) return;
+        let data;
+        try { data = JSON.parse(await file.text()); } catch { alert('文件不是有效的JSON'); return; }
+        if (!Array.isArray(data.progress)) { alert('备份文件格式不正确'); return; }
+        const msg = `将全量覆盖当前数据：答题 ${data.progress.length} 条、错题 ${(data.wrong || []).length}、收藏 ${(data.favorites || []).length}、笔记 ${(data.notes || []).length}、考试 ${(data.exams || []).length}。确定导入？`;
+        if (!confirm(msg)) return;
+        const resp = await api('/api/backup/import', {
+            method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data)
+        });
+        const r = await resp.json();
+        if (resp.ok && r.success) {
+            document.getElementById('backupHint').textContent = '导入成功，页面即将刷新';
+            setTimeout(() => location.reload(), 800);
+        } else {
+            alert('导入失败：' + (r.error || '未知错误'));
+        }
+    }
     </script>
 </body>
 </html>

@@ -166,6 +166,27 @@ def api_get_questions(subject):
     elif mode == 'unanswered':
         answered_ids = db.get_answered_ids(subject)
         questions = [q for q in questions if q['id'] not in answered_ids]
+    elif mode == 'smart':
+        # 智能推题：按章节正确率加权乱序，正确率越低、未做题越多的章节越先出现
+        statuses_all, _ = db.get_statuses_and_favs(subject)
+        ch_stat = {}
+        for q in data['questions']:
+            ch = q.get('chapter') or '未分类'
+            st = ch_stat.setdefault(ch, {'answered': 0, 'correct': 0})
+            s = statuses_all.get(q['id'])
+            if s:
+                st['answered'] += 1
+                if s['is_correct']:
+                    st['correct'] += 1
+
+        def _weight(q):
+            st = ch_stat.get(q.get('chapter') or '未分类', {'answered': 0, 'correct': 0})
+            acc = st['correct'] / st['answered'] if st['answered'] else 0
+            w = (1 - acc) + (0 if q['id'] in statuses_all else 0.3)
+            return max(w, 0.05)
+
+        # 加权随机洗牌（Efraimidis-Spirakis）：权重越大排序键越大、越靠前
+        questions = sorted(questions, key=lambda q: random.random() ** (1 / _weight(q)), reverse=True)
     
     total = len(questions)
     start = (page - 1) * per_page
@@ -604,6 +625,28 @@ def api_update_answer(question_id):
         return jsonify({"success": True, "message": "答案已更新"})
     
     return jsonify({"error": "题目未找到"}), 404
+
+
+@app.route('/api/backup/export')
+def api_backup_export():
+    """导出全部学习数据（统一JSON格式，可导入PWA版）"""
+    payload = db.export_all()
+    payload['version'] = 1
+    payload['exported_at'] = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+    payload['source'] = 'flask'
+    resp = jsonify(payload)
+    resp.headers['Content-Disposition'] = f"attachment; filename=408quiz-backup-{datetime.now().strftime('%Y%m%d')}.json"
+    return resp
+
+
+@app.route('/api/backup/import', methods=['POST'])
+def api_backup_import():
+    """导入备份文件（全量覆盖本地数据）"""
+    payload = request.get_json(silent=True)
+    if not payload or not isinstance(payload.get('progress'), list):
+        return jsonify({"error": "备份文件格式不正确"}), 400
+    counts = db.import_all(payload)
+    return jsonify({"success": True, "counts": counts})
 
 
 @app.route('/api/reset_progress', methods=['POST'])
