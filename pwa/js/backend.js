@@ -154,8 +154,39 @@ async function subjectStats(subject) {
         correct_count: correct,
         wrong_count: wrongs,
         favorite_count: favs,
-        accuracy: ids.length ? Math.round(correct / ids.length * 1000) / 10 : 0
+        accuracy: ids.length ? Math.round(correct / ids.length * 1000) / 10 : 0,
+        due_review_count: (await getDueReview(subject)).count
     };
+}
+
+// ==================== 艾宾浩斯复习（对应 database.get_due_review，改动需双端同步） ====================
+// 复习间隔（天）：连续答对 N 次后，隔 REVIEW_INTERVALS[N] 天到期再复习；streak>=5 毕业
+const REVIEW_INTERVALS = [1, 2, 4, 7, 15];
+
+async function getDueReview(subject) {
+    const wrongs = (await dbAll('wrong')).filter(w =>
+        (!subject || w.subject === subject) && (!w.is_resolved || (w.correct_streak || 0) < 5));
+    const statuses = await latestStatuses(subject);
+    const nowMs = Date.now();
+    const due = [];
+    for (const w of wrongs) {
+        const streak = w.correct_streak || 0;
+        const st = statuses[w.question_id];
+        const la = st ? st.answered_at || '' : '';
+        // 基准时间取最近一次动态（做错或作答），只取前19位规避考试批量提交的 .NNN 后缀
+        const baseStr = ((w.last_wrong_at || '') > la ? w.last_wrong_at || '' : la).slice(0, 19);
+        if (!baseStr) continue;
+        // 用 T 分隔符解析，规避 Safari 不认空格分隔的日期格式
+        const base = new Date(baseStr.replace(' ', 'T')).getTime();
+        if (isNaN(base)) continue;
+        // 历史迁移豁免：已解决且超过30天无动态的老错题视为已毕业，防止存量数据涌入队列
+        if (w.is_resolved && nowMs - base > 30 * 86400000) continue;
+        const dueAt = base + REVIEW_INTERVALS[Math.min(streak, 4)] * 86400000;
+        if (nowMs >= dueAt) due.push([nowMs - dueAt, w.question_id]);
+    }
+    // 逾期越久越靠前；同逾期时长按题ID稳定排序
+    due.sort((a, b) => b[0] - a[0] || (a[1] < b[1] ? -1 : 1));
+    return { ids: due.map(x => x[1]), count: due.length };
 }
 
 // ==================== api() 路由 ====================
@@ -204,6 +235,11 @@ async function api(url, opts = {}) {
                 qs = qs.filter(q => favSet.has(q.id));
             } else if (mode === 'unanswered') {
                 qs = qs.filter(q => !statuses[q.id]);
+            } else if (mode === 'review') {
+                // 艾宾浩斯复习：只出今日到期的错题，保持逾期时长降序
+                const { ids } = await getDueReview(subject);
+                const order = new Map(ids.map((id, i) => [id, i]));
+                qs = qs.filter(q => order.has(q.id)).sort((a, b) => order.get(a.id) - order.get(b.id));
             } else if (mode === 'smart') {
                 // 智能推题：按章节正确率加权乱序，正确率越低、未做题越多的章节越先出现
                 const chStat = {};
@@ -213,10 +249,20 @@ async function api(url, opts = {}) {
                     const st = statuses[q.id];
                     if (st) { chStat[ch].answered++; if (st.is_correct) chStat[ch].correct++; }
                 }
+                const wrongMap = {};
+                for (const w of await dbAll('wrong')) if (w.subject === subject) wrongMap[w.question_id] = w;
+                const wd = new Date(Date.now() - 7 * 86400000), wp = n => String(n).padStart(2, '0');
+                const weekAgo = `${wd.getFullYear()}-${wp(wd.getMonth() + 1)}-${wp(wd.getDate())} ${wp(wd.getHours())}:${wp(wd.getMinutes())}:${wp(wd.getSeconds())}`;
                 const weight = q => {
                     const st = chStat[q.chapter || '未分类'] || { answered: 0, correct: 0 };
                     const acc = st.answered ? st.correct / st.answered : 0;
-                    return Math.max((1 - acc) + (statuses[q.id] ? 0 : 0.3), 0.05);
+                    let w = (1 - acc) + (statuses[q.id] ? 0 : 0.3);
+                    // 题目级加权：反复错的题更优先；久未碰的题适当提权
+                    const wr = wrongMap[q.id];
+                    if (wr && !wr.is_resolved && wr.wrong_count >= 2) w += 0.5;
+                    const s = statuses[q.id];
+                    if (s && (s.answered_at || '') < weekAgo) w += 0.3;
+                    return Math.max(w, 0.05);
                 };
                 // 加权随机洗牌（Efraimidis-Spirakis）：权重越大排序键越大、越靠前
                 qs = qs.map(q => [Math.pow(Math.random(), 1 / weight(q)), q])

@@ -1216,6 +1216,7 @@ body {
 
 .mastery-track {
     flex: 1;
+    min-width: 0;  /* 防止窄屏下 flex 子项撑破容器横向溢出 */
     position: relative;
     height: 10px;
     background: var(--light);
@@ -1248,6 +1249,13 @@ body {
     .mastery-name { flex-basis: 130px; }
     .mastery-pct { flex-basis: 80px; }
     .bar-value { display: none; }
+}
+
+@media (max-width: 480px) {
+    /* 超窄屏：章节名独占一行，进度条与百分比换行排列，避免横向溢出 */
+    .mastery-row { flex-wrap: wrap; row-gap: 2px; }
+    .mastery-name { flex-basis: 100%; }
+    .mastery-pct { flex: 0 1 auto; }
 }
 
 /* ==================== 搜题页 ==================== */
@@ -1539,6 +1547,22 @@ mark {
     color: white;
 }
 
+/* ==================== 今日复习入口（艾宾浩斯） ==================== */
+.btn-review {
+    background: linear-gradient(90deg, #0d9488, #14b8a6);
+    color: white;
+    opacity: 0.75;
+}
+
+.btn-review.has-due {
+    opacity: 1;
+    box-shadow: 0 0 0 2px rgba(20, 184, 166, 0.25);
+}
+
+.btn-review:hover {
+    opacity: 0.88;
+}
+
 .btn-smart:hover {
     opacity: 0.88;
 }
@@ -1641,6 +1665,14 @@ mark {
 
 .dark .btn-warning:hover {
     background: #40351f;
+}
+
+.dark .btn-review {
+    background: linear-gradient(90deg, #0f766e, #0d9488);
+}
+
+.dark .btn-review.has-due {
+    box-shadow: 0 0 0 2px rgba(13, 148, 136, 0.35);
 }
 
 /* 选项与判题反馈 */

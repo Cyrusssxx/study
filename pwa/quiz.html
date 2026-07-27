@@ -105,7 +105,8 @@
         'favorite': '收藏模式',
         'unanswered': '未做模式',
         'real': '真题模式',
-        'smart': '智能模式'
+        'smart': '智能模式',
+        'review': '复习模式'
     };
 
     const SUBJECT_NAME = (SUBJECTS[SUBJECT] || {}).name || SUBJECT;
@@ -141,7 +142,7 @@
                 document.getElementById('questionArea').innerHTML = `
                     <div class="empty-state">
                         <h3>暂无题目</h3>
-                        <p>${MODE === 'wrong' ? '恭喜！没有错题需要复习' : MODE === 'favorite' ? '还没有收藏任何题目' : '题库为空'}</p>
+                        <p>${MODE === 'wrong' ? '恭喜！没有错题需要复习' : MODE === 'review' ? '今日没有到期的复习题 🎉' : MODE === 'favorite' ? '还没有收藏任何题目' : '题库为空'}</p>
                         <a href="index.html" class="btn btn-primary">返回首页</a>
                     </div>
                 `;

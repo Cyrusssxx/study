@@ -21,6 +21,10 @@
         <span class="stat-label">错题数</span>
     </div>
     <div class="stat-item">
+        <span class="stat-number">{{ stats.due_review_count }}</span>
+        <span class="stat-label">今日待复习</span>
+    </div>
+    <div class="stat-item">
         <span class="stat-number">{{ stats.favorite_count }}</span>
         <span class="stat-label">收藏数</span>
     </div>
@@ -45,6 +49,7 @@
             <a href="/quiz/{{ subject.key }}?mode=smart" class="btn btn-smart" title="薄弱章节优先：正确率越低、未做题越多的章节越先出题">智能刷题</a>
             <a href="/quiz/{{ subject.key }}?mode=random" class="btn btn-secondary">随机抽题</a>
             <a href="/quiz/{{ subject.key }}?mode=wrong" class="btn btn-danger">错题重刷 ({{ subject.wrong_count }})</a>
+            <a href="/quiz/{{ subject.key }}?mode=review" class="btn btn-review {{ 'has-due' if subject.due_review_count > 0 }}" title="艾宾浩斯记忆曲线：错题按1/2/4/7/15天间隔到期复习，连对5次毕业">今日复习 ({{ subject.due_review_count }})</a>
             <a href="/quiz/{{ subject.key }}?mode=favorite" class="btn btn-warning">收藏练习</a>
             <a href="/quiz/{{ subject.key }}?mode=real" class="btn btn-secondary">统考真题</a>
         </div>

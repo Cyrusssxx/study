@@ -4,7 +4,7 @@
 import os
 import json
 import sqlite3
-from datetime import datetime
+from datetime import datetime, timedelta
 from config import DB_PATH
 
 
@@ -298,7 +298,8 @@ def get_subject_stats(subject):
         'correct_count': correct_count,
         'wrong_count': wrong_count,
         'favorite_count': fav_count,
-        'accuracy': round(correct_count / total_answered * 100, 1) if total_answered > 0 else 0
+        'accuracy': round(correct_count / total_answered * 100, 1) if total_answered > 0 else 0,
+        'due_review_count': get_due_review(subject)[1]
     }
 
 
@@ -322,7 +323,8 @@ def get_overall_stats():
         'correct_count': correct,
         'wrong_count': wrong,
         'favorite_count': favs,
-        'accuracy': round(correct / total * 100, 1) if total > 0 else 0
+        'accuracy': round(correct / total * 100, 1) if total > 0 else 0,
+        'due_review_count': get_due_review()[1]
     }
 
 
@@ -358,6 +360,57 @@ def get_statuses_and_favs(subject):
         'answered_at': r['answered_at']
     } for r in rows}
     return statuses, fav_ids
+
+
+# ==================== 艾宾浩斯复习 ====================
+
+# 复习间隔（天）：连续答对 N 次后，隔 REVIEW_INTERVALS[N] 天到期再复习；streak>=5 毕业
+REVIEW_INTERVALS = [1, 2, 4, 7, 15]
+
+
+def get_due_review(subject=None):
+    """获取今日到期的复习题ID列表（按逾期时长降序）与数量。
+
+    零schema方案：复用 wrong_questions.correct_streak 作为复习阶段计数，
+    到期时间运行时推算。与 pwa/js/backend.js 的 getDueReview 逻辑镜像，改动需双端同步。
+    """
+    conn = get_db()
+    sql = '''
+        SELECT w.question_id, w.last_wrong_at, w.is_resolved, w.correct_streak,
+               (SELECT MAX(answered_at) FROM user_progress p
+                WHERE p.question_id = w.question_id) AS last_answered_at
+        FROM wrong_questions w
+        WHERE (w.is_resolved = 0 OR w.correct_streak < 5)
+    '''
+    params = ()
+    if subject:
+        sql += ' AND w.subject = ?'
+        params = (subject,)
+    rows = conn.execute(sql, params).fetchall()
+    conn.close()
+
+    now = datetime.now()
+    due = []
+    for r in rows:
+        streak = r['correct_streak'] or 0
+        # 基准时间取最近一次动态（做错或作答），只取前19位规避考试批量提交的 .NNN 后缀
+        base_str = max(r['last_wrong_at'] or '', r['last_answered_at'] or '')[:19]
+        if not base_str:
+            continue
+        try:
+            base = datetime.strptime(base_str, '%Y-%m-%d %H:%M:%S')
+        except ValueError:
+            continue
+        # 历史迁移豁免：已解决且超过30天无动态的老错题视为已毕业，防止存量数据涌入队列
+        if r['is_resolved'] and (now - base).days > 30:
+            continue
+        due_at = base + timedelta(days=REVIEW_INTERVALS[min(streak, 4)])
+        if now >= due_at:
+            due.append((now - due_at, r['question_id']))
+    # 逾期越久越靠前；同逾期时长按题ID稳定排序
+    due.sort(key=lambda x: (-x[0].total_seconds(), x[1]))
+    ids = [qid for _, qid in due]
+    return ids, len(ids)
 
 
 def get_daily_stats(days=30):

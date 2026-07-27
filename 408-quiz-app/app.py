@@ -5,7 +5,7 @@ import os
 import re
 import json
 import random
-from datetime import datetime
+from datetime import datetime, timedelta
 from flask import Flask, render_template, jsonify, request
 from config import BASE_DIR, FROZEN, QUESTIONS_DIR, SUBJECTS, SECRET_KEY, HOST, PORT
 import database as db
@@ -166,9 +166,17 @@ def api_get_questions(subject):
     elif mode == 'unanswered':
         answered_ids = db.get_answered_ids(subject)
         questions = [q for q in questions if q['id'] not in answered_ids]
+    elif mode == 'review':
+        # 艾宾浩斯复习：只出今日到期的错题，保持逾期时长降序
+        due_ids, _ = db.get_due_review(subject)
+        order = {qid: i for i, qid in enumerate(due_ids)}
+        questions = sorted([q for q in questions if q['id'] in order],
+                           key=lambda q: order[q['id']])
     elif mode == 'smart':
         # 智能推题：按章节正确率加权乱序，正确率越低、未做题越多的章节越先出现
         statuses_all, _ = db.get_statuses_and_favs(subject)
+        wrong_map = {w['question_id']: w for w in db.get_wrong_questions(subject)}
+        week_ago = (datetime.now() - timedelta(days=7)).strftime('%Y-%m-%d %H:%M:%S')
         ch_stat = {}
         for q in data['questions']:
             ch = q.get('chapter') or '未分类'
@@ -183,6 +191,13 @@ def api_get_questions(subject):
             st = ch_stat.get(q.get('chapter') or '未分类', {'answered': 0, 'correct': 0})
             acc = st['correct'] / st['answered'] if st['answered'] else 0
             w = (1 - acc) + (0 if q['id'] in statuses_all else 0.3)
+            # 题目级加权：反复错的题更优先；久未碰的题适当提权
+            w_rec = wrong_map.get(q['id'])
+            if w_rec and not w_rec['is_resolved'] and w_rec['wrong_count'] >= 2:
+                w += 0.5
+            s = statuses_all.get(q['id'])
+            if s and (s['answered_at'] or '') < week_ago:
+                w += 0.3
             return max(w, 0.05)
 
         # 加权随机洗牌（Efraimidis-Spirakis）：权重越大排序键越大、越靠前
