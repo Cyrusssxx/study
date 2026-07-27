@@ -52,6 +52,16 @@
 
         <!-- 科目列表 -->
         <div class="subjects-grid" id="subjectsGrid"></div>
+
+        <!-- 数据结构强化打卡 -->
+        <div class="daka-home-section">
+            <div class="daka-home-info">
+                <h2>📌 数据结构强化打卡</h2>
+                <p>王道打卡表精选代码大题，必做与高优先级置顶</p>
+                <p class="daka-home-progress" id="dakaHomeProgress">已打卡 - / - 题</p>
+            </div>
+            <a href="daka.html" class="btn btn-primary">进入打卡</a>
+        </div>
     </main>
     <script src="js/common.js"></script>
     <script src="js/backend.js"></script>
@@ -111,6 +121,7 @@
                             <a href="quiz.html?subject=${key}&mode=review" class="btn btn-review ${sub.due_review_count > 0 ? 'has-due' : ''}" title="艾宾浩斯记忆曲线：错题按1/2/4/7/15天间隔到期复习，连对5次毕业">今日复习 (${sub.due_review_count})</a>
                             <a href="quiz.html?subject=${key}&mode=favorite" class="btn btn-warning">收藏练习</a>
                             <a href="quiz.html?subject=${key}&mode=real" class="btn btn-secondary">统考真题</a>
+                            <a href="quiz.html?subject=${key}&mode=code" class="btn btn-secondary" title="只刷含代码的题目">代码专项</a>
                         </div>
                     </div>`;
                 }
@@ -118,6 +129,21 @@
             } catch (e) {
                 document.getElementById('statsBar').innerHTML = `<div class="error">加载失败: ${e.message}</div>`;
             }
+            loadDakaHome();
+        }
+
+        // 打卡板块进度：题库总数 + IndexedDB 完成数
+        async function loadDakaHome() {
+            try {
+                const [qResp, pResp] = await Promise.all([
+                    fetch('data/ds_daka.json'),
+                    api('/api/daka/progress')
+                ]);
+                const total = (await qResp.json()).total;
+                const progress = (await pResp.json()).progress || {};
+                document.getElementById('dakaHomeProgress').innerHTML =
+                    `已打卡 <b>${Object.keys(progress).length}</b> / ${total} 题`;
+            } catch (e) { /* 题库缺失时保持占位 */ }
         }
 
         loadHome();

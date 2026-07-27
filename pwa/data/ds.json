@@ -156,7 +156,7 @@
     {
       "id": "ds_0011",
       "number": 11,
-      "content": "下列算法的时间复杂度为( )。 voidfun(intn){ inti=1; while(i<=n) i=i*2; }",
+      "content": "下列算法的时间复杂度为( )。\n<pre class=\"code-block\">void fun(int n){\n    int i=1;\n    while(i&lt;=n) i=i*2;\n}</pre>",
       "options": {
         "A": "O(n)",
         "B": "O(n²)",
@@ -171,7 +171,7 @@
     {
       "id": "ds_0012",
       "number": 12,
-      "content": "下列算法的时间复杂度为( )。 voidfun(intn){ inti=0; while(i*i*i<=n){ i++; } }",
+      "content": "下列算法的时间复杂度为( )。\n<pre class=\"code-block\">void fun(int n){\n    int i=0;\n    while(i*i*i&lt;=n){\n        i++;\n    }\n}</pre>",
       "options": {
         "A": "O(n)",
         "B": "O(nlog₂n)",
@@ -186,7 +186,7 @@
     {
       "id": "ds_0013",
       "number": 13,
-      "content": "某个程序段如下: for(i=n-1;i>1;i--) for(j=1;j<i;j++) if(A[j]>A[j+1]) A[j]与A[j+1]对换; 其中n为正整数,则最后一行语句的频度在最坏情况下是( )。",
+      "content": "某个程序段如下:\n<pre class=\"code-block\">for(i=n-1;i&gt;1;i--)\n    for(j=1;j&lt;i;j++)\n        if(A[j]&gt;A[j+1]) A[j]与A[j+1]对换;</pre>\n其中n为正整数,则最后一行语句的频度在最坏情况下是( )。",
       "options": {
         "A": "O(n)",
         "B": "O(nlog₂n)",
@@ -201,7 +201,7 @@
     {
       "id": "ds_0014",
       "number": 14,
-      "content": "下列程序段的时间复杂度为( )。 if(n>=0){ for(inti=0;i<n;i++) for(intj=0;j<n;j++) printf(\"输入数据大于或等于零\\n\") } else{ for(intj=0;j<n;j++) printf(\"输入数据小于零\\n\") }",
+      "content": "下列程序段的时间复杂度为( )。\n<pre class=\"code-block\">if(n&gt;=0){\n    for(int i=0;i&lt;n;i++)\n        for(int j=0;j&lt;n;j++) printf(\"输入数据大于或等于零\\n\")\n}\nelse{\n    for(int j=0;j&lt;n;j++) printf(\"输入数据小于零\\n\")\n}</pre>",
       "options": {
         "A": "O(n²)",
         "B": "O(n)",
@@ -216,7 +216,7 @@
     {
       "id": "ds_0015",
       "number": 15,
-      "content": "下列算法中加下划线的语句的执行次数为( )。 intm=0,i,j; for(i=1;i<=n;i++) for(j=1;j<=2*i;j++) m++;",
+      "content": "下列算法中加下划线的语句的执行次数为( )。\n<pre class=\"code-block\">int m=0,i,j;\nfor(i=1;i&lt;=n;i++)\n    for(j=1;j&lt;=2*i;j++) m++;</pre>",
       "options": {
         "A": "n(n+1)",
         "B": "n",
@@ -231,7 +231,7 @@
     {
       "id": "ds_0016",
       "number": 16,
-      "content": "下列函数代码的时间复杂度是( )。 intFunc(intn){ if(n==1)return1; elsereturn2*Func(n/2)+n; }",
+      "content": "下列函数代码的时间复杂度是( )。\n<pre class=\"code-block\">int Func(int n){\n    if(n==1)return 1;\n    else return 2*Func(n/2)+n;\n}</pre>",
       "options": {
         "A": "O(n)",
         "B": "O(nlog₂n)",
@@ -246,7 +246,7 @@
     {
       "id": "ds_0017",
       "number": 17,
-      "content": "【2011统考真题】设n是描述问题规模的非负整数，下列程序段的时间复杂度是( )。 x=2; while(x<n/2) x=2*x;",
+      "content": "【2011统考真题】设n是描述问题规模的非负整数，下列程序段的时间复杂度是( )。\n<pre class=\"code-block\">x=2;\nwhile(x&lt;n/2) x=2*x;</pre>",
       "options": {
         "A": "O(log₂n)",
         "B": "O(n)",
@@ -261,7 +261,7 @@
     {
       "id": "ds_0018",
       "number": 18,
-      "content": "【2012统考真题】求整数n(n≥0)的阶乘的算法如下,其时间复杂度是( )。 intfact(intn){ if(n<=1)return1; returnn*fact(n-1); }",
+      "content": "【2012统考真题】求整数n(n≥0)的阶乘的算法如下,其时间复杂度是( )。\n<pre class=\"code-block\">int fact(int n){\n    if(n&lt;=1)return 1;\n    return n*fact(n-1);\n}</pre>",
       "options": {
         "A": "O(log₂n)",
         "B": "O(n)",
@@ -276,7 +276,7 @@
     {
       "id": "ds_0019",
       "number": 19,
-      "content": "【2014统考真题】下列程序段的时间复杂度是( )。 count=0; for(k=1;k<=n;k*=2) for(j=1;j<=n;j++) count++;",
+      "content": "【2014统考真题】下列程序段的时间复杂度是( )。\n<pre class=\"code-block\">count=0;\nfor(k=1;k&lt;=n;k*=2)\n    for(j=1;j&lt;=n;j++) count++;</pre>",
       "options": {
         "A": "O(log₂n)",
         "B": "O(n)",
@@ -291,7 +291,7 @@
     {
       "id": "ds_0020",
       "number": 20,
-      "content": "【2017统考真题】下列函数的时间复杂度是( )。 intfunc(intn){ inti=0,sum=0; while(sum<n)sum+=++i; returni; }",
+      "content": "【2017统考真题】下列函数的时间复杂度是( )。\n<pre class=\"code-block\">int func(int n){\n    int i=0,sum=0;\n    while(sum&lt;n)sum+=++i;\n    return i;\n}</pre>",
       "options": {
         "A": "O(log₂n)",
         "B": "O(n1/2)",
@@ -306,7 +306,7 @@
     {
       "id": "ds_0021",
       "number": 21,
-      "content": "【2019统考真题】设n是描述问题规模的非负整数，下列程序段的时间复杂度是( )。 x=0; while(n>=(x+1)*(x+1)) x=x+1;",
+      "content": "【2019统考真题】设n是描述问题规模的非负整数，下列程序段的时间复杂度是( )。\n<pre class=\"code-block\">x=0;\nwhile(n&gt;=(x+1)*(x+1)) x=x+1;</pre>",
       "options": {
         "A": "O(log₂n)",
         "B": "O(n1/2)",
@@ -321,7 +321,7 @@
     {
       "id": "ds_0022",
       "number": 22,
-      "content": "【2022统考真题】下列程序段的时间复杂度是( )。 intsum=0; for(inti=1;i<n;i*=2) for(intj=0;j<i;j++) sum++;",
+      "content": "【2022统考真题】下列程序段的时间复杂度是( )。\n<pre class=\"code-block\">int sum=0;\nfor(int i=1;i&lt;n;i*=2)\n    for(int j=0;j&lt;i;j++) sum++;</pre>",
       "options": {
         "A": "O(log₂n)",
         "B": "O(n)",
@@ -336,7 +336,7 @@
     {
       "id": "ds_0023",
       "number": 23,
-      "content": "【2025统考真题】下列程序段的时间复杂度是( )。 intcount=0,i,j; for(i=1;i*i<=n;i++) for(j=1;j<=i;j++) count++;",
+      "content": "【2025统考真题】下列程序段的时间复杂度是( )。\n<pre class=\"code-block\">int count=0,i,j;\nfor(i=1;i*i&lt;=n;i++)\n    for(j=1;j&lt;=i;j++) count++;</pre>",
       "options": {
         "A": "O(log₂n)",
         "B": "O(n)",
@@ -2031,7 +2031,7 @@
     {
       "id": "ds_0136",
       "number": 136,
-      "content": "执行下列语句段后,i的值为( )。 intf(intx){ return(x>0)?x*f(x-1):2; } inti; i=f(f(1));",
+      "content": "执行下列语句段后,i的值为( )。\n<pre class=\"code-block\">int f(int x){\n    return (x&gt;0)?x*f(x-1):2;\n}\nint i;\ni=f(f(1));</pre>",
       "options": {
         "A": "2",
         "B": "4",
@@ -2046,7 +2046,7 @@
     {
       "id": "ds_0137",
       "number": 137,
-      "content": "设有如下递归函数，则计算F(8)需要调用该递归函数的次数为( )。 intF(intn){ if(n<=3)return1; elsereturnF(n-2)+F(n-4)+1; }",
+      "content": "设有如下递归函数，则计算F(8)需要调用该递归函数的次数为( )。\n<pre class=\"code-block\">int F(int n){\n    if(n&lt;=3)return 1;\n    else return F(n-2)+F(n-4)+1;\n}</pre>",
       "options": {
         "A": "7",
         "B": "8",
@@ -2061,7 +2061,7 @@
     {
       "id": "ds_0138",
       "number": 138,
-      "content": "设有如下递归函数,在func(func(5))的执行过程中,第4个被执行的func函数是( )。 intfunc(intx){ if(x<=3)return2; elsereturnfunc(x-2)+func(x-4); }",
+      "content": "设有如下递归函数,在func(func(5))的执行过程中,第4个被执行的func函数是( )。\n<pre class=\"code-block\">int func(int x){\n    if(x&lt;=3)return 2;\n    else return func(x-2)+func(x-4);\n}</pre>",
       "options": {
         "A": "func(2)",
         "B": "func(3)",
@@ -2181,7 +2181,7 @@
     {
       "id": "ds_0146",
       "number": 146,
-      "content": "【2015统考真题】已知程序如下: intS(intn) { return(n<=0)?0:S(n-1)+n; } voidmain() { cout<<S(1); } 程序运行时使用栈来保存调用过程的信息，自栈底到栈顶保存的信息依次对应的是( )。",
+      "content": "【2015统考真题】已知程序如下:\n<pre class=\"code-block\">int S(int n) {\n    return (n&lt;=0)?0:S(n-1)+n;\n}\nvoid main() {\n    cout&lt;&lt;S(1);\n}</pre>\n程序运行时使用栈来保存调用过程的信息，自栈底到栈顶保存的信息依次对应的是( )。",
       "options": {
         "A": "main( )→S(1) →S(0)",
         "B": "S(0) →S(1) →main()",
@@ -6411,7 +6411,7 @@
     {
       "id": "ds_0428",
       "number": 428,
-      "content": "【2016统考真题】在有n(n>1000)个元素的升序数组A中查找关键字x。查找算法的伪代码如 下所示。 k=0; while(k<n且A[k]<x)k=k+3; if(k<n且A[k]==x)查找成功; elseif(k-1<n且A[k-1]==x)查找成功; elseif(k-2<n且A[k-2]==x)查找成功; else查找失败; 本算法与折半查找算法相比，有可能具有更少比较次数的情形是( )。",
+      "content": "【2016统考真题】在有n(n>1000)个元素的升序数组A中查找关键字x。查找算法的伪代码如 下所示。\n<pre class=\"code-block\">k=0;\nwhile(k&lt;n且A[k]&lt;x)k=k+3;\nif(k&lt;n且A[k]==x)查找成功;\nelse if(k-1&lt;n且A[k-1]==x)查找成功;\nelse if(k-2&lt;n且A[k-2]==x)查找成功;\nelse 查找失败;</pre>\n本算法与折半查找算法相比，有可能具有更少比较次数的情形是( )。",
       "options": {
         "A": "当X不在数组中",
         "B": "当x接近数组开头处",

@@ -43,7 +43,7 @@ async function getQuestionById(qid) {
 
 // ==================== IndexedDB ====================
 const DB_NAME = 'quiz408';
-const DB_VER = 1;
+const DB_VER = 2;
 let _dbPromise = null;
 
 function openDB() {
@@ -52,13 +52,21 @@ function openDB() {
         const req = indexedDB.open(DB_NAME, DB_VER);
         req.onupgradeneeded = () => {
             const db = req.result;
-            const prog = db.createObjectStore('progress', { keyPath: 'pk', autoIncrement: true });
-            prog.createIndex('by_qid', 'question_id');
-            prog.createIndex('by_subject', 'subject');
-            db.createObjectStore('wrong', { keyPath: 'question_id' });
-            db.createObjectStore('favorites', { keyPath: 'question_id' });
-            db.createObjectStore('notes', { keyPath: 'question_id' });
-            db.createObjectStore('exams', { keyPath: 'id', autoIncrement: true });
+            // 幂等建库：只新增缺失的 store，不动老数据（v2 新增 daka_progress）
+            if (!db.objectStoreNames.contains('progress')) {
+                const prog = db.createObjectStore('progress', { keyPath: 'pk', autoIncrement: true });
+                prog.createIndex('by_qid', 'question_id');
+                prog.createIndex('by_subject', 'subject');
+            }
+            for (const s of ['wrong', 'favorites', 'notes']) {
+                if (!db.objectStoreNames.contains(s)) db.createObjectStore(s, { keyPath: 'question_id' });
+            }
+            if (!db.objectStoreNames.contains('exams')) {
+                db.createObjectStore('exams', { keyPath: 'id', autoIncrement: true });
+            }
+            if (!db.objectStoreNames.contains('daka_progress')) {
+                db.createObjectStore('daka_progress', { keyPath: 'question_id' });
+            }
         };
         req.onsuccess = () => resolve(req.result);
         req.onerror = () => reject(req.error);
@@ -228,6 +236,9 @@ async function api(url, opts = {}) {
                 }
             } else if (mode === 'real') {
                 qs = qs.filter(q => q.is_real_exam);
+            } else if (mode === 'code') {
+                // 代码专项：只出含代码块的题
+                qs = qs.filter(q => (q.content || '').includes('<pre class="code-block"'));
             } else if (mode === 'wrong') {
                 const wrongIds = new Set((await dbAll('wrong')).filter(w => w.subject === subject && !w.is_resolved).map(w => w.question_id));
                 qs = qs.filter(q => wrongIds.has(q.id));
@@ -461,6 +472,24 @@ async function api(url, opts = {}) {
             return jsonResp({ success: true, note: content });
         }
 
+        // ---------- 数据结构强化打卡 ----------
+        if (seg[1] === 'daka' && seg[2] === 'progress') {
+            if ((opts.method || 'GET') === 'GET') {
+                const rows = await dbAll('daka_progress');
+                const progress = {};
+                for (const r of rows) if (r.done) progress[r.question_id] = r.done_at;
+                return jsonResp({ progress });
+            }
+            const qid = body.question_id || '';
+            if (!qid.startsWith('ds_daka_')) return jsonResp({ error: '无效的题目ID' }, 400);
+            if (body.done) {
+                await dbPut('daka_progress', { question_id: qid, done: 1, done_at: now() });
+            } else {
+                await dbDelete('daka_progress', qid);
+            }
+            return jsonResp({ success: true });
+        }
+
         // ---------- 模拟考试 ----------
         if (seg[1] === 'exam') return examApi(seg[2], body);
 
@@ -473,15 +502,18 @@ async function api(url, opts = {}) {
                 wrong: await dbAll('wrong'),
                 favorites: await dbAll('favorites'),
                 notes: await dbAll('notes'),
-                exams: strip(await dbAll('exams'), 'id')
+                exams: strip(await dbAll('exams'), 'id'),
+                daka: await dbAll('daka_progress')
             });
         }
         if (seg[1] === 'backup' && seg[2] === 'import') {
             if (!Array.isArray(body.progress)) return jsonResp({ error: '备份文件格式不正确' }, 400);
             const db = await openDB();
             const counts = {};
-            for (const store of ['progress', 'wrong', 'favorites', 'notes', 'exams']) {
-                const rows = Array.isArray(body[store]) ? body[store] : [];
+            // daka 存于备份的 'daka' 键，落库到 daka_progress store
+            const storeMap = { progress: 'progress', wrong: 'wrong', favorites: 'favorites', notes: 'notes', exams: 'exams', daka: 'daka_progress' };
+            for (const [key, store] of Object.entries(storeMap)) {
+                const rows = Array.isArray(body[key]) ? body[key] : [];
                 await new Promise((res, rej) => {
                     const tx = db.transaction(store, 'readwrite');
                     tx.objectStore(store).clear();
@@ -492,7 +524,7 @@ async function api(url, opts = {}) {
                     }
                     tx.oncomplete = res; tx.onerror = () => rej(tx.error);
                 });
-                counts[store] = rows.length;
+                counts[key] = rows.length;
             }
             return jsonResp({ success: true, counts });
         }
