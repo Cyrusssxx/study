@@ -2,7 +2,7 @@
  * 预缓存全部页面/样式/脚本/题库/图标，安装后完全离线可用。
  * 升级题库或代码后：改 CACHE_VER 版本号即可让客户端自动换新缓存。
  */
-const CACHE_VER = 'quiz408-v8';
+const CACHE_VER = 'quiz408-v9';
 
 const PRECACHE = [
     'index.html',
@@ -29,7 +29,8 @@ const PRECACHE = [
 self.addEventListener('install', (e) => {
     e.waitUntil(
         caches.open(CACHE_VER)
-            .then(cache => cache.addAll(PRECACHE))
+            // Request(reload)：预缓存绕过浏览器HTTP缓存，确保升版本后拿到的是服务器最新文件
+            .then(cache => cache.addAll(PRECACHE.map(u => new Request(u, { cache: 'reload' }))))
             .then(() => self.skipWaiting())
     );
 });

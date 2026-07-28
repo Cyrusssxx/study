@@ -119,10 +119,11 @@ function now() {
 }
 
 // ==================== 答题记录（对应 database._apply_answer） ====================
-async function applyAnswer(qid, subject, userAnswer, isCorrect, ts) {
+async function applyAnswer(qid, subject, userAnswer, isCorrect, ts, trackWrong = true) {
     await dbPut('progress', { question_id: qid, subject, user_answer: userAnswer, is_correct: isCorrect ? 1 : 0, answered_at: ts });
     const w = await dbGet('wrong', qid);
     if (!isCorrect) {
+        if (!trackWrong) return; // 错题不入错题本（考试可选关闭）
         if (w) {
             w.wrong_count += 1; w.last_wrong_at = ts; w.is_resolved = 0; w.correct_streak = 0;
             await dbPut('wrong', w);
@@ -603,8 +604,8 @@ async function gradeExam(exam, answers) {
             user_answer: ua, correct_answer: q.answer || '', is_correct: ok,
             explanation: q.explanation || '', chapter: q.chapter || '', section: q.section || ''
         });
-        // 错题照常进错题本、计入统计（时间戳错开保持顺序）
-        if (ua) await applyAnswer(qid, subj, ua, ok, `${ts}.${String(idx).padStart(3, '0')}`);
+        // 错题是否入错题本由组卷时的开关决定（答题记录照常计入统计，时间戳错开保持顺序）
+        if (ua) await applyAnswer(qid, subj, ua, ok, `${ts}.${String(idx).padStart(3, '0')}`, exam.record_wrong !== 0);
         idx++;
     }
     const total = details.length;
@@ -637,7 +638,7 @@ async function examApi(action, body, arg) {
             return arr.slice(0, Math.min(n, arr.length));
         };
         if (mode === 'full') {
-            const total = (count >= 10 && count <= 150) ? count : 40;
+            const total = count ? Math.min(Math.max(count, 10), 150) : 40; // 越界收拢到范围内
             const ratioSum = Object.values(EXAM_RATIO).reduce((a, b) => a + b, 0);
             const quotas = {};
             for (const [k, v] of Object.entries(EXAM_RATIO)) quotas[k] = Math.floor(total * v / ratioSum);
@@ -649,7 +650,7 @@ async function examApi(action, body, arg) {
                 picked = picked.concat(sample(pool, quotas[key]));
             }
         } else if (SUBJECTS[mode]) {
-            const total = (count >= 5 && count <= 100) ? count : 20;
+            const total = count ? Math.min(Math.max(count, 5), 100) : 20;
             const pool = (await loadQuestions(mode)).questions.filter(q => q.answer);
             picked = sample(pool, total);
         } else {
@@ -664,7 +665,8 @@ async function examApi(action, body, arg) {
         const examId = await dbPut('exams', {
             mode, question_ids: picked.map(q => q.id), answers: {},
             total_count: picked.length, correct_count: 0, score: 0,
-            duration_sec: duration, status: 'in_progress', started_at: now(), submitted_at: null
+            duration_sec: duration, status: 'in_progress', started_at: now(), submitted_at: null,
+            record_wrong: body.record_wrong === false ? 0 : 1
         });
         return jsonResp({ exam_id: examId, duration_sec: duration, questions: picked.map(stripAnswer) });
     }

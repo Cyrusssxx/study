@@ -543,7 +543,8 @@ def _grade_exam(exam, answers):
     
     total = len(details)
     score = round(correct / total * 100, 1) if total else 0
-    db.record_answers_batch(batch)  # 错题照常进错题本、计入统计
+    # 错题是否自动入错题本由组卷时的开关决定（答题记录照常计入统计）
+    db.record_answers_batch(batch, track_wrong=bool(exam.get('record_wrong', 1)))
     db.finish_exam_record(exam['id'], answers, correct, score)
     return {
         'exam_id': exam['id'],
@@ -562,10 +563,12 @@ def api_exam_generate():
     payload = request.get_json() or {}
     mode = payload.get('mode', 'full')
     count = int(payload.get('count') or 0)
+    record_wrong = bool(payload.get('record_wrong', True))
     
     picked = []
     if mode == 'full':
-        total = count if 10 <= count <= 150 else 40
+        # 越界题量收拢到范围内（不再静默回落默认值，避免"改了没反应"）
+        total = min(max(count, 10), 150) if count else 40
         ratio_sum = sum(EXAM_RATIO.values())
         quotas = {k: total * v // ratio_sum for k, v in EXAM_RATIO.items()}
         order = ['ds', 'co', 'os', 'cn']
@@ -577,7 +580,7 @@ def api_exam_generate():
             pool = [q for q in load_questions(key)['questions'] if q.get('answer')]
             picked += random.sample(pool, min(quotas[key], len(pool)))
     elif mode in SUBJECTS:
-        total = count if 5 <= count <= 100 else 20
+        total = min(max(count, 5), 100) if count else 20
         pool = [q for q in load_questions(mode)['questions'] if q.get('answer')]
         picked = random.sample(pool, min(total, len(pool)))
     else:
@@ -587,7 +590,7 @@ def api_exam_generate():
         return jsonify({"error": "题库为空，无法组卷"}), 400
     
     duration = int(payload.get('duration_sec') or 0) or len(picked) * 60
-    exam_id = db.save_exam_record(mode, [q['id'] for q in picked], duration)
+    exam_id = db.save_exam_record(mode, [q['id'] for q in picked], duration, record_wrong)
     return jsonify({
         "exam_id": exam_id,
         "duration_sec": duration,

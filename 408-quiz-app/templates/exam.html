@@ -5,7 +5,7 @@
 <div id="setupView">
     <div class="page-header">
         <h1>模拟考试</h1>
-        <p>限时作答，交卷统一评分，错题自动进错题本</p>
+        <p>限时作答，交卷统一评分</p>
     </div>
 
     <div class="exam-setup-card">
@@ -27,6 +27,13 @@
             <label>考试时长</label>
             <input type="number" id="examMinutes" placeholder="留空 = 每题1分钟">
             <span class="setup-hint">单位：分钟</span>
+        </div>
+        <div class="setup-row">
+            <label>错题入本</label>
+            <label class="checkbox-label">
+                <input type="checkbox" id="recordWrong" checked onchange="localStorage.setItem('examRecordWrong', this.checked ? '1' : '0')">
+                错题自动记入错题本
+            </label>
         </div>
         <button class="btn btn-primary btn-lg" onclick="startExam()">开始考试</button>
     </div>
@@ -87,16 +94,22 @@
     function onModeChange() {
         const mode = document.getElementById('examMode').value;
         const isFull = mode === 'full';
-        document.getElementById('examCount').value = isFull ? 40 : 20;
+        const cnt = document.getElementById('examCount');
+        cnt.min = isFull ? 10 : 5;
+        cnt.max = isFull ? 150 : 100;
+        cnt.value = isFull ? 40 : 20;
         document.getElementById('countHint').textContent = isFull ? '完整模拟 10-150 题，默认 40' : '单科 5-100 题，默认 20';
     }
 
     // ============ 组卷 / 恢复 ============
     async function startExam() {
         const mode = document.getElementById('examMode').value;
-        const count = parseInt(document.getElementById('examCount').value || '0', 10);
+        // 越界题量直接收拢到范围内并回写输入框，避免后端静默修正造成"改了没反应"
+        const [lo, hi, dft] = mode === 'full' ? [10, 150, 40] : [5, 100, 20];
+        const count = Math.min(Math.max(parseInt(document.getElementById('examCount').value, 10) || dft, lo), hi);
+        document.getElementById('examCount').value = count;
         const minutes = parseInt(document.getElementById('examMinutes').value || '0', 10);
-        const body = { mode, count };
+        const body = { mode, count, record_wrong: document.getElementById('recordWrong').checked };
         if (minutes > 0) body.duration_sec = minutes * 60;
 
         const resp = await fetch('/api/exam/generate', {
@@ -366,6 +379,8 @@
         loadHistory();
     }
 
+    // 恢复上次的"错题入本"选择（默认开启）
+    document.getElementById('recordWrong').checked = localStorage.getItem('examRecordWrong') !== '0';
     checkActive();
 </script>
 {% endblock %}

@@ -1533,6 +1533,13 @@ mark {
     text-decoration: underline;
 }
 
+/* 错题卡片右上角"去练习"按钮（仿收藏夹 ★ 位置） */
+.item-goto {
+    margin-left: auto;
+    flex-shrink: 0;
+    white-space: nowrap;
+}
+
 .history-table {
     width: 100%;
     border-collapse: collapse;

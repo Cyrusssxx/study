@@ -87,6 +87,7 @@
                         ${q.is_real_exam ? `<span class="badge-real">${q.exam_year ? q.exam_year + ' ' : ''}统考真题</span>` : ''}
                         <span class="item-info">错误 ${q.wrong_count} 次</span>
                         ${q.is_resolved ? '<span class="badge-resolved">已解决</span>' : `<span class="badge-streak">还需连对 ${needMore} 次</span>`}
+                        <button class="btn btn-sm btn-secondary item-goto" onclick="event.stopPropagation(); location.href='/quiz/${q.subject}?mode=sequential&goto=${q.question_id}'">去练习 →</button>
                     </div>
                     <div class="item-content">${q.content}</div>
                     <div class="item-options">

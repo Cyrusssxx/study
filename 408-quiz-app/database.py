@@ -97,12 +97,26 @@ def init_db():
         )
     ''')
     
+    # 数据结构强化打卡完成状态
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS daka_progress (
+            question_id TEXT PRIMARY KEY,
+            done INTEGER NOT NULL DEFAULT 1,
+            done_at TEXT NOT NULL
+        )
+    ''')
+    
     # 幂等迁移：wrong_questions 加连对计数列（做对2次才移出错题本）
     wrong_cols = {r[1] for r in cursor.execute('PRAGMA table_info(wrong_questions)').fetchall()}
     if 'correct_streak' not in wrong_cols:
         cursor.execute('ALTER TABLE wrong_questions ADD COLUMN correct_streak INTEGER DEFAULT 0')
         # 存量已解决错题视为已掌握，streak直接置2，避免语义突变后"复活"
         cursor.execute('UPDATE wrong_questions SET correct_streak = 2 WHERE is_resolved = 1')
+
+    # 幂等迁移：exam_records 加"错题是否自动入错题本"开关列（组卷时定，交卷/超时自动交卷都照此执行）
+    exam_cols = {r[1] for r in cursor.execute('PRAGMA table_info(exam_records)').fetchall()}
+    if 'record_wrong' not in exam_cols:
+        cursor.execute('ALTER TABLE exam_records ADD COLUMN record_wrong INTEGER DEFAULT 1')
     
     # 创建索引
     cursor.execute('CREATE INDEX IF NOT EXISTS idx_progress_qid ON user_progress(question_id)')
@@ -118,14 +132,17 @@ def init_db():
     conn.close()
 
 
-def _apply_answer(conn, question_id, subject, user_answer, is_correct, now):
-    """在已有连接上写入一次答题记录并维护错题表（供单题/批量共用）"""
+def _apply_answer(conn, question_id, subject, user_answer, is_correct, now, track_wrong=True):
+    """在已有连接上写入一次答题记录并维护错题表（供单题/批量共用）
+    track_wrong=False 时答错不记入错题本（答对仍正常推进存量错题的连对计数）"""
     conn.execute(
         'INSERT INTO user_progress (question_id, subject, user_answer, is_correct, answered_at) VALUES (?, ?, ?, ?, ?)',
         (question_id, subject, user_answer, int(is_correct), now)
     )
     
     if not is_correct:
+        if not track_wrong:
+            return
         existing = conn.execute(
             'SELECT id, wrong_count FROM wrong_questions WHERE question_id = ?',
             (question_id,)
@@ -162,9 +179,10 @@ def record_answer(question_id, subject, user_answer, is_correct):
     conn.close()
 
 
-def record_answers_batch(items):
+def record_answers_batch(items, track_wrong=True):
     """批量记录答题（考试交卷用），单连接单事务
     items: [(question_id, subject, user_answer, is_correct), ...]
+    track_wrong=False 时错题不入错题本
     """
     if not items:
         return
@@ -173,7 +191,7 @@ def record_answers_batch(items):
     for idx, (question_id, subject, user_answer, is_correct) in enumerate(items):
         # answered_at 有 UNIQUE(question_id, answered_at) 约束，同秒批量写入需错开
         ts = f"{now}.{idx:03d}"
-        _apply_answer(conn, question_id, subject, user_answer, is_correct, ts)
+        _apply_answer(conn, question_id, subject, user_answer, is_correct, ts, track_wrong)
     conn.commit()
     conn.close()
 
@@ -463,14 +481,14 @@ def get_notes_map(subject):
 
 # ==================== 模拟考试 ====================
 
-def save_exam_record(mode, question_ids, duration_sec):
+def save_exam_record(mode, question_ids, duration_sec, record_wrong=True):
     """创建考试会话，返回会话ID；同时废弃之前未交卷的会话"""
     conn = get_db()
     now = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
     conn.execute("UPDATE exam_records SET status = 'abandoned' WHERE status = 'in_progress'")
     cur = conn.execute(
-        'INSERT INTO exam_records (mode, question_ids, total_count, duration_sec, started_at) VALUES (?, ?, ?, ?, ?)',
-        (mode, json.dumps(question_ids), len(question_ids), duration_sec, now)
+        'INSERT INTO exam_records (mode, question_ids, total_count, duration_sec, started_at, record_wrong) VALUES (?, ?, ?, ?, ?, ?)',
+        (mode, json.dumps(question_ids), len(question_ids), duration_sec, now, int(record_wrong))
     )
     exam_id = cur.lastrowid
     conn.commit()
@@ -531,6 +549,31 @@ def get_exam_records(limit=50):
     return [dict(r) for r in rows]
 
 
+# ==================== 打卡完成状态 ====================
+
+def get_daka_progress():
+    """全部已打卡题：{question_id: done_at}"""
+    conn = get_db()
+    rows = conn.execute('SELECT question_id, done_at FROM daka_progress WHERE done = 1').fetchall()
+    conn.close()
+    return {r['question_id']: r['done_at'] for r in rows}
+
+
+def set_daka_progress(question_id, done):
+    """打卡/取消打卡"""
+    conn = get_db()
+    if done:
+        now = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+        conn.execute(
+            'INSERT INTO daka_progress (question_id, done, done_at) VALUES (?, 1, ?) '
+            'ON CONFLICT(question_id) DO UPDATE SET done = 1, done_at = ?',
+            (question_id, now, now))
+    else:
+        conn.execute('DELETE FROM daka_progress WHERE question_id = ?', (question_id,))
+    conn.commit()
+    conn.close()
+
+
 # ==================== 数据备份 ====================
 
 def export_all():
@@ -546,20 +589,23 @@ def export_all():
         'SELECT question_id, subject, content, updated_at FROM notes').fetchall()]
     exams = []
     for r in conn.execute(
-            'SELECT mode, question_ids, answers, total_count, correct_count, score, duration_sec, status, started_at, submitted_at '
+            'SELECT mode, question_ids, answers, total_count, correct_count, score, duration_sec, status, started_at, submitted_at, record_wrong '
             'FROM exam_records').fetchall():
         e = dict(r)
         e['question_ids'] = json.loads(e['question_ids'] or '[]')
         e['answers'] = json.loads(e['answers'] or '{}')
         exams.append(e)
+    daka = [dict(r) for r in conn.execute(
+        'SELECT question_id, done, done_at FROM daka_progress').fetchall()]
     conn.close()
-    return {'progress': progress, 'wrong': wrong, 'favorites': favorites, 'notes': notes, 'exams': exams}
+    return {'progress': progress, 'wrong': wrong, 'favorites': favorites, 'notes': notes,
+            'exams': exams, 'daka': daka}
 
 
 def import_all(payload):
-    """导入备份（全量覆盖5张表，单事务），返回各表导入条数"""
+    """导入备份（全量覆盖6张表，单事务），返回各表导入条数"""
     conn = get_db()
-    for table in ('user_progress', 'wrong_questions', 'favorites', 'notes', 'exam_records'):
+    for table in ('user_progress', 'wrong_questions', 'favorites', 'notes', 'exam_records', 'daka_progress'):
         conn.execute(f'DELETE FROM {table}')
     for r in payload.get('progress') or []:
         conn.execute(
@@ -581,14 +627,19 @@ def import_all(payload):
             (r.get('question_id'), r.get('subject'), r.get('content', ''), r.get('updated_at', '')))
     for r in payload.get('exams') or []:
         conn.execute(
-            'INSERT INTO exam_records (mode, question_ids, answers, total_count, correct_count, score, duration_sec, status, started_at, submitted_at) '
-            'VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
+            'INSERT INTO exam_records (mode, question_ids, answers, total_count, correct_count, score, duration_sec, status, started_at, submitted_at, record_wrong) '
+            'VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
             (r.get('mode', 'full'), json.dumps(r.get('question_ids') or []), json.dumps(r.get('answers') or {}),
              int(r.get('total_count') or 0), int(r.get('correct_count') or 0), float(r.get('score') or 0),
-             int(r.get('duration_sec') or 0), r.get('status', 'submitted'), r.get('started_at', ''), r.get('submitted_at')))
+             int(r.get('duration_sec') or 0), r.get('status', 'submitted'), r.get('started_at', ''), r.get('submitted_at'),
+             int(r.get('record_wrong', 1) or 0)))
+    for r in payload.get('daka') or []:
+        conn.execute(
+            'INSERT OR IGNORE INTO daka_progress (question_id, done, done_at) VALUES (?, ?, ?)',
+            (r.get('question_id'), int(r.get('done') or 1), r.get('done_at', '')))
     conn.commit()
     conn.close()
-    return {k: len(payload.get(k) or []) for k in ('progress', 'wrong', 'favorites', 'notes', 'exams')}
+    return {k: len(payload.get(k) or []) for k in ('progress', 'wrong', 'favorites', 'notes', 'exams', 'daka')}
 
 
 # 初始化数据库
