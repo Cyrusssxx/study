@@ -17,6 +17,7 @@
                 <h2>{{ subject_name }}</h2>
                 <span class="mode-badge" id="modeBadge"></span>
                 <button class="opt-shuffle-btn" id="shuffleBtn" onclick="toggleShuffle()" title="打乱选项显示顺序（字母跟随内容，答案字母不变）">选项乱序 <span id="shuffleState">关</span></button>
+                <button class="opt-shuffle-btn" id="favResetBtn" style="display:none" onclick="resetFavProgress()" title="清空收藏题的作答与错题记录，重新刷一遍（收藏保留）">清空重做 ⟳</button>
             </div>
             <div class="quiz-nav-info">
                 <span id="questionProgress">加载中...</span>
@@ -64,6 +65,7 @@
         'favorite': '收藏模式',
         'unanswered': '未做模式',
         'real': '真题模式',
+        'code': '代码专项',
         'smart': '智能模式',
         'review': '复习模式'
     };
@@ -98,12 +100,15 @@
                 document.getElementById('questionArea').innerHTML = `
                     <div class="empty-state">
                         <h3>暂无题目</h3>
-                        <p>${MODE === 'wrong' ? '恭喜！没有错题需要复习' : MODE === 'review' ? '今日没有到期的复习题 🎉' : MODE === 'favorite' ? '还没有收藏任何题目' : '题库为空'}</p>
+                        <p>${MODE === 'wrong' ? '恭喜！没有错题需要复习' : MODE === 'review' ? '今日没有到期的复习题 🎉' : MODE === 'favorite' ? '还没有收藏任何题目' : MODE === 'code' ? '该科目暂无含代码的题目' : '题库为空'}</p>
                         <a href="/" class="btn btn-primary">返回首页</a>
                     </div>
                 `;
                 return;
             }
+
+            // 收藏模式：显示「清空重做」按钮
+            if (MODE === 'favorite') document.getElementById('favResetBtn').style.display = '';
 
             // 章节定位：不限制筛选，直接跳到该章节首题，仍可顺序刷到后面的题
             if (CHAPTER) {
@@ -119,6 +124,7 @@
                 if (gi >= 0) currentIndex = gi;
             }
 
+            noteShown = !!questions[currentIndex].note;  // 有笔记的题默认展开笔记面板
             renderQuestion();
         } catch (e) {
             document.getElementById('questionArea').innerHTML = `<div class="error">加载失败: ${e.message}</div>`;
@@ -357,7 +363,7 @@
     function gotoQuestion(i) {
         currentIndex = i;
         explanationShown = false;
-        noteShown = false;
+        noteShown = !!questions[i].note;  // 有笔记默认展开，没有不展开
         renderQuestion();
     }
 
@@ -453,7 +459,7 @@
         if (currentIndex > 0) {
             currentIndex--;
             explanationShown = false;
-            noteShown = false;
+            noteShown = !!questions[currentIndex].note;
             renderQuestion();
         }
     }
@@ -462,7 +468,7 @@
         if (currentIndex < questions.length - 1) {
             currentIndex++;
             explanationShown = false;
-            noteShown = false;
+            noteShown = !!questions[currentIndex].note;
             renderQuestion();
         }
     }
@@ -479,6 +485,19 @@
             }
         } catch (e) {
             console.error('收藏失败:', e);
+        }
+    }
+
+    async function resetFavProgress() {
+        // 收藏模式清空重做：只清收藏题的作答记录，收藏本身保留
+        if (!confirm('清空所有收藏题的作答记录，重新刷一遍？（收藏保留，不影响其他题）')) return;
+        try {
+            await fetch(`/api/favorites/reset/${SUBJECT}`, {method: 'POST'});
+            answered = {};
+            questions.forEach(q => { q.last_status = null; });
+            gotoQuestion(0);
+        } catch (e) {
+            alert('清空失败: ' + e.message);
         }
     }
 

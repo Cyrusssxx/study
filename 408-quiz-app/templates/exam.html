@@ -56,14 +56,14 @@
     </div>
 </div>
 
-<!-- 成绩单视图 -->
+<!-- 成绩单 / 历史试卷回顾视图 -->
 <div id="resultView" style="display:none">
     <div class="page-header">
-        <h1>考试成绩单</h1>
+        <h1 id="resultTitle">考试成绩单</h1>
     </div>
     <div id="resultArea"></div>
     <div class="exam-nav">
-        <button class="btn btn-primary" onclick="backToSetup()">再来一场</button>
+        <button class="btn btn-primary" id="btnResultBack" onclick="backToSetup()">再来一场</button>
     </div>
 </div>
 {% endblock %}
@@ -114,6 +114,7 @@
         const data = await resp.json();
         if (data.auto_submitted) {
             // 上次考试超时，服务端已自动交卷，直接看成绩
+            resultWrongOnly = true;
             renderResult(data.auto_submitted);
             show('resultView');
             return;
@@ -243,16 +244,35 @@
         });
         const result = await resp.json();
         if (result.error) { alert(result.error); backToSetup(); return; }
+        resultWrongOnly = true;
         renderResult(result);
         show('resultView');
     }
 
-    // ============ 成绩单 ============
-    function renderResult(r) {
+    // ============ 成绩单 / 历史试卷回顾（同一套渲染） ============
+    let lastResult = null;       // 当前展示的成绩数据（交卷成绩单或历史明细）
+    let lastFromHistory = false; // true=从历史成绩进入的回顾视图
+    let resultWrongOnly = true;  // 逐题回顾默认只看错题
+
+    function practiceLink(d) {
+        // 跳到练习页对应题（复用 quiz 页 ?goto= 定位）
+        return `/quiz/${d.id.split('_')[0]}?mode=sequential&goto=${d.id}`;
+    }
+
+    function setResultFilter(wrongOnly) {
+        resultWrongOnly = wrongOnly;
+        renderResult(lastResult, lastFromHistory);
+    }
+
+    function renderResult(r, fromHistory) {
+        lastResult = r;
+        lastFromHistory = !!fromHistory;
+        document.getElementById('resultTitle').textContent = fromHistory ? '试卷回顾' : '考试成绩单';
+        document.getElementById('btnResultBack').textContent = fromHistory ? '← 返回历史成绩' : '再来一场';
         let html = `
             <div class="result-score-card">
                 <div class="score-big">${r.score}<span class="score-unit">分</span></div>
-                <div class="score-sub">答对 ${r.correct} / ${r.total} 题</div>
+                <div class="score-sub">答对 ${r.correct} / ${r.total} 题${fromHistory ? ` · ${MODE_NAMES[r.mode] || r.mode} · ${r.submitted_at || ''}` : ''}</div>
             </div>`;
 
         if (r.per_subject && r.per_subject.length > 1) {
@@ -277,19 +297,30 @@
             html += `</div></div>`;
         }
 
-        html += `<div class="stats-section"><h2>逐题回顾（错题已自动记入错题本）</h2>`;
+        // 逐题回顾：默认只看错题，可切全部；错题一律可看解析 + 跳转练习
+        const wrongCnt = r.details.filter(d => !d.is_correct).length;
+        html += `<div class="stats-section"><h2>逐题回顾${fromHistory ? '' : '（错题已自动记入错题本）'}</h2>
+            <div class="result-filter">
+                <button class="btn btn-sm ${resultWrongOnly ? 'btn-primary' : 'btn-secondary'}" onclick="setResultFilter(true)">只看错题 ${wrongCnt}</button>
+                <button class="btn btn-sm ${resultWrongOnly ? 'btn-secondary' : 'btn-primary'}" onclick="setResultFilter(false)">全部 ${r.details.length}</button>
+            </div>`;
+        if (resultWrongOnly && !wrongCnt) {
+            html += `<div class="empty-state"><p>本场全对，没有错题 🎉</p></div>`;
+        }
         r.details.forEach((d, i) => {
+            if (resultWrongOnly && d.is_correct) return;
             html += `
                 <div class="list-item ${d.is_correct ? '' : 'exam-wrong'}">
                     <div class="item-header">
                         <span class="item-info">第 ${i + 1} 题${d.chapter ? ' · ' + d.chapter : ''}</span>
-                        <span class="${d.is_correct ? 'badge-resolved' : 'badge-wrong'}">${d.is_correct ? '✓ 答对' : (d.user_answer ? `✗ 你选 ${d.user_answer}` : '未作答')} · 正确答案 ${d.correct_answer}</span>
+                        <span class="${d.is_correct ? 'badge-resolved' : 'badge-wrong'}">${d.is_correct ? '✓ 答对' : (d.user_answer ? `✗ 你选 ${d.user_answer}` : '未作答')} · 正确答案 ${d.correct_answer || '—'}</span>
                     </div>
                     <div class="item-content">${d.content}</div>
                     <div class="item-options">
                         ${Object.entries(d.options || {}).map(([k,v]) => `<span class="mini-option">${k}. ${v}</span>`).join('')}
                     </div>
-                    ${!d.is_correct && d.explanation ? `<details class="exam-expl"><summary>查看解析</summary><div>${d.explanation}</div></details>` : ''}
+                    ${!d.is_correct && d.number != null ? `<details class="exam-expl"><summary>查看解析</summary><div>${d.explanation || '（该题暂无详细解析）'}</div></details>` : ''}
+                    ${!d.is_correct && d.number != null ? `<a class="btn-goto" href="${practiceLink(d)}">去练习该题 →</a>` : ''}
                 </div>`;
         });
         html += `</div>`;
@@ -305,7 +336,7 @@
             el.innerHTML = '<div class="empty-state"><p>还没有考试记录，来一场试试</p></div>';
             return;
         }
-        let html = '<table class="history-table"><tr><th>时间</th><th>模式</th><th>得分</th><th>答对</th><th>时长</th></tr>';
+        let html = '<table class="history-table"><tr><th>时间</th><th>模式</th><th>得分</th><th>答对</th><th>时长</th><th>回顾</th></tr>';
         for (const rec of records) {
             html += `<tr>
                 <td>${rec.submitted_at || rec.started_at}</td>
@@ -313,9 +344,21 @@
                 <td class="score-cell">${rec.score}</td>
                 <td>${rec.correct_count}/${rec.total_count}</td>
                 <td>${Math.round(rec.duration_sec / 60)} 分钟</td>
+                <td><button class="btn btn-sm btn-secondary" onclick="viewDetail(${rec.id})">查看</button></td>
             </tr>`;
         }
         el.innerHTML = html + '</table>';
+    }
+
+    // 按场次回看试卷：默认只看错题，可切全部看答过的每一题
+    async function viewDetail(id) {
+        const resp = await fetch(`/api/exam/detail/${id}`);
+        const r = await resp.json();
+        if (r.error) { alert(r.error); return; }
+        resultWrongOnly = true;
+        renderResult(r, true);
+        show('resultView');
+        window.scrollTo(0, 0);
     }
 
     function backToSetup() {

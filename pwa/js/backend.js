@@ -367,8 +367,26 @@ async function api(url, opts = {}) {
             return jsonResp({ wrong_questions: result, total: result.length });
         }
 
-        // ---------- 收藏列表 ----------
+        // ---------- 收藏列表 / 收藏清空重做 ----------
         if (seg[1] === 'favorites') {
+            if (seg[2] === 'reset') {
+                // 只清收藏题的作答与错题记录，收藏本身保留（对应 app.py /api/favorites/reset）
+                const subject = seg[3];
+                if (!SUBJECTS[subject]) return jsonResp({ error: '科目不存在' }, 404);
+                const favIds = new Set((await dbAll('favorites')).filter(f => f.subject === subject).map(f => f.question_id));
+                if (favIds.size) {
+                    const db = await openDB();
+                    for (const store of ['progress', 'wrong']) {
+                        const rows = await dbAll(store);
+                        const tx = db.transaction(store, 'readwrite');
+                        for (const r of rows) {
+                            if (favIds.has(r.question_id)) tx.objectStore(store).delete(store === 'progress' ? r.pk : r.question_id);
+                        }
+                        await new Promise((res, rej) => { tx.oncomplete = res; tx.onerror = () => rej(tx.error); });
+                    }
+                }
+                return jsonResp({ success: true, cleared: favIds.size });
+            }
             const subject = p.get('subject') || null;
             const list = (await dbAll('favorites')).filter(f => !subject || f.subject === subject);
             list.sort((a, b) => (a.added_at > b.added_at ? -1 : 1));
@@ -491,7 +509,7 @@ async function api(url, opts = {}) {
         }
 
         // ---------- 模拟考试 ----------
-        if (seg[1] === 'exam') return examApi(seg[2], body);
+        if (seg[1] === 'exam') return examApi(seg[2], body, seg[3]);
 
         // ---------- 数据备份 ----------
         if (seg[1] === 'backup' && seg[2] === 'export') {
@@ -605,7 +623,7 @@ async function gradeExam(exam, answers) {
     };
 }
 
-async function examApi(action, body) {
+async function examApi(action, body, arg) {
     if (action === 'generate') {
         const mode = body.mode || 'full';
         const count = parseInt(body.count || 0, 10);
@@ -698,6 +716,34 @@ async function examApi(action, body) {
                 score: e.score, duration_sec: e.duration_sec, started_at: e.started_at, submitted_at: e.submitted_at
             }));
         return jsonResp({ records });
+    }
+
+    if (action === 'detail') {
+        // 按场次回看逐题明细：用留存的 question_ids+answers 与题库比对还原对错
+        const exam = await dbGet('exams', parseInt(arg, 10));
+        if (!exam || exam.status !== 'submitted') return jsonResp({ error: '考试记录不存在' }, 404);
+        const answers = exam.answers || {};
+        const details = [];
+        for (const qid of exam.question_ids) {
+            const q = await getQuestionById(qid);
+            const ua = (answers[qid] || '').toUpperCase();
+            if (!q) {
+                // 题库更新后题目可能已不存在，留占位不参与比对
+                details.push({ id: qid, number: null, content: '（该题已从题库移除）', options: {},
+                    user_answer: ua, correct_answer: '', is_correct: false, explanation: '', chapter: '', section: '' });
+                continue;
+            }
+            details.push({
+                id: qid, number: q.number, content: q.content || '', options: q.options,
+                user_answer: ua, correct_answer: q.answer || '',
+                is_correct: !!ua && ua === (q.answer || ''),
+                explanation: q.explanation || '', chapter: q.chapter || '', section: q.section || ''
+            });
+        }
+        return jsonResp({
+            exam_id: exam.id, mode: exam.mode, submitted_at: exam.submitted_at,
+            total: exam.total_count, correct: exam.correct_count, score: exam.score, details
+        });
     }
 
     return jsonResp({ error: '未知考试接口' }, 404);

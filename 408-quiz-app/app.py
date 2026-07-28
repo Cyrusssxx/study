@@ -67,6 +67,24 @@ def get_question_by_id(question_id):
     return None
 
 
+_daka_cache = {'data': None, 'mtime': None}
+
+
+def load_daka():
+    """加载打卡题库（独立于 SUBJECTS，同样带 mtime 缓存）"""
+    json_file = os.path.join(QUESTIONS_DIR, 'ds_daka.json')
+    if not os.path.exists(json_file):
+        return {"subject": "ds_daka", "name": "数据结构强化打卡", "questions": [], "total": 0}
+    mtime = os.path.getmtime(json_file)
+    if _daka_cache['data'] is not None and _daka_cache['mtime'] == mtime:
+        return _daka_cache['data']
+    with open(json_file, 'r', encoding='utf-8') as f:
+        data = json.load(f)
+    _daka_cache['data'] = data
+    _daka_cache['mtime'] = mtime
+    return data
+
+
 # ==================== 页面路由 ====================
 
 @app.route('/')
@@ -83,7 +101,9 @@ def index():
             'total': data['total'],
             **subject_stats
         })
-    return render_template('index.html', subjects=subjects_info, stats=stats)
+    return render_template('index.html', subjects=subjects_info, stats=stats,
+                           daka_total=load_daka()['total'],
+                           daka_done=len(db.get_daka_progress()))
 
 
 @app.route('/quiz/<subject>')
@@ -108,6 +128,12 @@ def wrong_page():
 def favorites_page():
     """收藏页面"""
     return render_template('favorites.html', subjects=SUBJECTS)
+
+
+@app.route('/daka')
+def daka_page():
+    """数据结构强化打卡页面"""
+    return render_template('daka.html')
 
 
 @app.route('/stats')
@@ -155,6 +181,9 @@ def api_get_questions(subject):
         questions = random.sample(questions, len(questions))
     elif mode == 'real':
         questions = [q for q in questions if q.get('is_real_exam')]
+    elif mode == 'code':
+        # 代码专项：只出含代码块的题
+        questions = [q for q in questions if '<pre class="code-block"' in q.get('content', '')]
     elif mode == 'wrong':
         wrong_list = db.get_wrong_questions(subject)
         wrong_ids = {w['question_id'] for w in wrong_list}
@@ -442,6 +471,25 @@ def api_note(question_id):
     return jsonify({"success": True, "note": content.strip()})
 
 
+@app.route('/api/daka')
+def api_daka():
+    """打卡题库（已按优先级预排序）"""
+    return jsonify(load_daka())
+
+
+@app.route('/api/daka/progress', methods=['GET', 'POST'])
+def api_daka_progress():
+    """打卡完成状态：GET 全量读，POST 单题打卡/取消"""
+    if request.method == 'GET':
+        return jsonify({"progress": db.get_daka_progress()})
+    body = request.get_json() or {}
+    qid = body.get('question_id', '')
+    if not qid.startswith('ds_daka_'):
+        return jsonify({"error": "无效的题目ID"}), 400
+    db.set_daka_progress(qid, bool(body.get('done')))
+    return jsonify({"success": True})
+
+
 # ==================== 模拟考试 API ====================
 
 # 408分值比例：数据结45' 组成45' 操作系统35' 网络25'
@@ -606,6 +654,46 @@ def api_exam_history():
     return jsonify({"records": db.get_exam_records()})
 
 
+@app.route('/api/exam/detail/<int:record_id>')
+def api_exam_detail(record_id):
+    """按场次回看逐题明细：用留存的 question_ids+answers 与题库比对还原对错"""
+    exam = db.get_exam_record(record_id)
+    if not exam or exam['status'] != 'submitted':
+        return jsonify({"error": "考试记录不存在"}), 404
+    answers = json.loads(exam['answers'] or '{}')
+    details = []
+    for qid in json.loads(exam['question_ids']):
+        q = get_question_by_id(qid)
+        ua = (answers.get(qid) or '').upper()
+        if not q:
+            # 题库更新后题目可能已不存在，留占位不参与比对
+            details.append({'id': qid, 'number': None, 'content': '（该题已从题库移除）',
+                            'options': {}, 'user_answer': ua, 'correct_answer': '',
+                            'is_correct': False, 'explanation': '', 'chapter': '', 'section': ''})
+            continue
+        details.append({
+            'id': qid,
+            'number': q.get('number'),
+            'content': q.get('content', ''),
+            'options': q.get('options'),
+            'user_answer': ua,
+            'correct_answer': q.get('answer', ''),
+            'is_correct': bool(ua) and ua == q.get('answer', ''),
+            'explanation': q.get('explanation', ''),
+            'chapter': q.get('chapter', ''),
+            'section': q.get('section', ''),
+        })
+    return jsonify({
+        'exam_id': exam['id'],
+        'mode': exam['mode'],
+        'submitted_at': exam['submitted_at'],
+        'total': exam['total_count'],
+        'correct': exam['correct_count'],
+        'score': exam['score'],
+        'details': details,
+    })
+
+
 @app.route('/api/answer/<question_id>', methods=['POST'])
 def api_update_answer(question_id):
     """修改题目答案（人工校验用）"""
@@ -678,6 +766,22 @@ def api_reset_progress():
     conn.commit()
     conn.close()
     return jsonify({"success": True})
+
+
+@app.route('/api/favorites/reset/<subject>', methods=['POST'])
+def api_favorites_reset(subject):
+    """收藏模式清空重做：只清收藏题的作答与错题记录，收藏本身保留"""
+    if subject not in SUBJECTS:
+        return jsonify({"error": "科目不存在"}), 404
+    fav_ids = [f['question_id'] for f in db.get_favorites(subject)]
+    if fav_ids:
+        conn = db.get_db()
+        ph = ','.join('?' * len(fav_ids))
+        conn.execute(f'DELETE FROM user_progress WHERE question_id IN ({ph})', fav_ids)
+        conn.execute(f'DELETE FROM wrong_questions WHERE question_id IN ({ph})', fav_ids)
+        conn.commit()
+        conn.close()
+    return jsonify({"success": True, "cleared": len(fav_ids)})
 
 
 if __name__ == '__main__':

@@ -1513,6 +1513,26 @@ mark {
     font-size: 0.82rem;
 }
 
+/* 逐题回顾：只看错题/全部切换 + 去练习跳转 */
+.result-filter {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 12px;
+}
+
+.btn-goto {
+    display: inline-block;
+    margin-top: 8px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--primary);
+    text-decoration: none;
+}
+
+.btn-goto:hover {
+    text-decoration: underline;
+}
+
 .history-table {
     width: 100%;
     border-collapse: collapse;
