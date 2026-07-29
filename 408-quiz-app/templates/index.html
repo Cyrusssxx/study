@@ -6,6 +6,9 @@
     <p class="subtitle">操作系统 · 计算机组成原理 · 数据结构 · 计算机网络</p>
 </div>
 
+<!-- 继续上次练习 / 最近练习（本机 localStorage 记录，做过题才显示） -->
+<div class="resume-section" id="resumeSection" style="display:none"></div>
+
 <!-- 总体统计 -->
 <div class="stats-bar">
     <div class="stat-item">
@@ -52,8 +55,62 @@
             <a href="/quiz/{{ subject.key }}?mode=review" class="btn btn-review {{ 'has-due' if subject.due_review_count > 0 }}" title="艾宾浩斯记忆曲线：错题按1/2/4/7/15天间隔到期复习，连对5次毕业">今日复习 ({{ subject.due_review_count }})</a>
             <a href="/quiz/{{ subject.key }}?mode=favorite" class="btn btn-warning">收藏练习</a>
             <a href="/quiz/{{ subject.key }}?mode=real" class="btn btn-secondary">统考真题</a>
+            <a href="/quiz/{{ subject.key }}?mode=code" class="btn btn-secondary" title="只刷含代码的题目">代码专项</a>
         </div>
     </div>
     {% endfor %}
 </div>
+
+<!-- 数据结构强化打卡 -->
+<div class="daka-home-section">
+    <div class="daka-home-info">
+        <h2>📌 数据结构强化打卡</h2>
+        <p>王道打卡表精选代码大题，必做与高优先级置顶</p>
+        <p class="daka-home-progress">已打卡 <b>{{ daka_done }}</b> / {{ daka_total }} 题</p>
+    </div>
+    <a href="/daka" class="btn btn-primary">进入打卡</a>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    // 首页「继续上次练习」+「最近练习」：读做题页记录的 practiceHistory（本机 localStorage）
+    (function renderResume() {
+        const SUBJ_NAMES = { os: '操作系统', co: '计算机组成原理', ds: '数据结构', cn: '计算机网络' };
+        const MODE_NAMES = { sequential: '顺序模式', random: '随机模式', wrong: '错题模式', favorite: '收藏模式', unanswered: '未做模式', real: '真题模式', code: '代码专项', smart: '智能模式', review: '复习模式' };
+        let list = [];
+        try { list = JSON.parse(localStorage.getItem('practiceHistory')) || []; } catch (e) {}
+        if (!list.length) return;
+        const ago = ts => {
+            const m = Math.floor((Date.now() - ts) / 60000);
+            if (m < 1) return '刚刚';
+            if (m < 60) return `${m} 分钟前`;
+            if (m < 1440) return `${Math.floor(m / 60)} 小时前`;
+            return `${Math.floor(m / 1440)} 天前`;
+        };
+        const link = e => `/quiz/${e.subject}?mode=${e.mode}${e.chapter ? '&chapter=' + encodeURIComponent(e.chapter) : ''}${e.section ? '&section=' + encodeURIComponent(e.section) : ''}&goto=${e.qid}`;
+        const label = e => `${SUBJ_NAMES[e.subject] || e.subject} · ${MODE_NAMES[e.mode] || e.mode}${e.chapter ? ' · ' + e.chapter : ''}`;
+        const cur = list[0];
+        const pct = cur.total ? Math.round((cur.idx + 1) / cur.total * 100) : 0;
+        let html = `
+            <div class="resume-card">
+                <div class="resume-info">
+                    <div class="resume-title">⏵ 继续上次练习</div>
+                    <div class="resume-desc">${label(cur)} — 上次做到第 ${cur.idx + 1} / ${cur.total} 题 · ${ago(cur.ts)}</div>
+                    <div class="progress-bar"><div class="progress-fill" style="width:${pct}%"></div></div>
+                </div>
+                <a class="btn btn-primary" href="${link(cur)}">继续刷题</a>
+            </div>`;
+        if (list.length > 1) {
+            html += '<div class="resume-history">' + list.slice(1).map(e => `
+                <a class="resume-history-item" href="${link(e)}">
+                    <span>${label(e)}</span>
+                    <span class="rh-meta">第 ${e.idx + 1}/${e.total} 题 · ${ago(e.ts)} · 继续 →</span>
+                </a>`).join('') + '</div>';
+        }
+        const box = document.getElementById('resumeSection');
+        box.innerHTML = html;
+        box.style.display = '';
+    })();
+</script>
 {% endblock %}

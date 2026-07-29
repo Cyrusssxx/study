@@ -315,7 +315,7 @@
             noteHtml = `
                 <div class="note-panel">
                     <div class="note-title">我的笔记</div>
-                    <textarea id="noteInput" class="note-input" rows="4" placeholder="记下你的解题思路、易错点...（清空内容保存即删除笔记）"></textarea>
+                    <textarea id="noteInput" class="note-input" rows="4" onfocus="this.closest('.note-panel').classList.remove('note-dim')" placeholder="记下你的解题思路、易错点...（清空内容保存即删除笔记）"></textarea>
                     <div class="note-actions">
                         <button class="btn btn-primary btn-sm" onclick="saveNote()">保存笔记</button>
                         <span class="note-hint" id="noteHint"></span>
@@ -363,6 +363,20 @@
         btnSubmit.textContent = status ? '已提交' : '提交答案';
 
         renderNumberPanel();
+        trackPractice();
+    }
+
+    // 记录练习位置：供首页「继续上次练习」与最近练习历史展示（本机 localStorage，同科目+模式+章节去重，最多留 6 条）
+    function trackPractice() {
+        const q = questions[currentIndex];
+        if (!q) return;
+        try {
+            const key = [SUBJECT, MODE, CHAPTER, SECTION].join('|');
+            const list = (JSON.parse(localStorage.getItem('practiceHistory')) || [])
+                .filter(e => [e.subject, e.mode, e.chapter || '', e.section || ''].join('|') !== key);
+            list.unshift({ subject: SUBJECT, mode: MODE, chapter: CHAPTER, section: SECTION, qid: q.id, idx: currentIndex, total: totalQuestions, ts: Date.now() });
+            localStorage.setItem('practiceHistory', JSON.stringify(list.slice(0, 6)));
+        } catch (e) { /* 存储异常不影响做题 */ }
     }
 
     // ============ 右侧题号面板：只显示当前章，按小节分组，点击跳转 ============
@@ -435,6 +449,9 @@
             const hint = document.getElementById('noteHint');
             hint.textContent = q.note ? '已保存 ✓' : '已删除笔记';
             setTimeout(() => { if (hint) hint.textContent = ''; }, 2000);
+            // 保存成功后淡化笔记框，再次聚焦编辑时恢复
+            const panel = document.querySelector('.note-panel');
+            if (panel) panel.classList.toggle('note-dim', !!q.note);
         } catch (e) {
             alert('笔记保存失败: ' + e.message);
         }
