@@ -50,28 +50,42 @@
         <div class="card-actions">
             <a href="/quiz/{{ subject.key }}?mode=sequential" class="btn btn-primary">顺序刷题</a>
             <a href="/quiz/{{ subject.key }}?mode=smart" class="btn btn-smart" title="薄弱章节优先：正确率越低、未做题越多的章节越先出题">智能刷题</a>
-            <a href="/quiz/{{ subject.key }}?mode=random" class="btn btn-secondary">随机抽题</a>
             <a href="/quiz/{{ subject.key }}?mode=wrong" class="btn btn-danger">错题重刷 ({{ subject.wrong_count }})</a>
             <a href="/quiz/{{ subject.key }}?mode=review" class="btn btn-review {{ 'has-due' if subject.due_review_count > 0 }}" title="艾宾浩斯记忆曲线：错题按1/2/4/7/15天间隔到期复习，连对5次毕业">今日复习 ({{ subject.due_review_count }})</a>
-            <a href="/quiz/{{ subject.key }}?mode=favorite" class="btn btn-warning">收藏练习</a>
-            <a href="/quiz/{{ subject.key }}?mode=real" class="btn btn-secondary">统考真题</a>
-            <a href="/quiz/{{ subject.key }}?mode=code" class="btn btn-secondary" title="只刷含代码的题目">代码专项</a>
-            {% if subject.key == 'co' %}
-            <a href="/notes/co" class="btn btn-notes" title="按考纲章节整理的 27 节考点笔记，做题时点知识点徽章可直达对应节">📖 知识笔记</a>
-            {% endif %}
+            <details class="card-more">
+                <summary>更多 ▾</summary>
+                <div class="card-more-actions">
+                    <a href="/quiz/{{ subject.key }}?mode=random" class="btn btn-secondary">随机抽题</a>
+                    <a href="/quiz/{{ subject.key }}?mode=favorite" class="btn btn-warning">收藏练习</a>
+                    <a href="/quiz/{{ subject.key }}?mode=real" class="btn btn-secondary">统考真题</a>
+                    <a href="/quiz/{{ subject.key }}?mode=code" class="btn btn-secondary" title="只刷含代码的题目">代码专项</a>
+                </div>
+            </details>
         </div>
     </div>
     {% endfor %}
 </div>
 
-<!-- 数据结构强化打卡 -->
-<div class="daka-home-section">
-    <div class="daka-home-info">
-        <h2>📌 数据结构强化打卡</h2>
-        <p>王道打卡表精选代码大题，必做与高优先级置顶</p>
-        <p class="daka-home-progress">已打卡 <b>{{ daka_done }}</b> / {{ daka_total }} 题</p>
+<!-- 学习工具 -->
+<div class="tools-section">
+    <h2>📚 学习工具</h2>
+    <div class="tools-grid">
+        <div class="tool-card tool-card--notes">
+            <div class="daka-home-info">
+                <h2>📖 计组知识笔记</h2>
+                <p>按考纲 7 章 27 节整理的考点笔记，做题时点知识点徽章可直达对应节</p>
+            </div>
+            <a href="/notes/co" class="btn btn-primary">进入笔记</a>
+        </div>
+        <div class="tool-card">
+            <div class="daka-home-info">
+                <h2>📌 数据结构强化打卡</h2>
+                <p>王道打卡表精选代码大题，必做与高优先级置顶</p>
+                <p class="daka-home-progress">已打卡 <b>{{ daka_done }}</b> / {{ daka_total }} 题</p>
+            </div>
+            <a href="/daka" class="btn btn-primary">进入打卡</a>
+        </div>
     </div>
-    <a href="/daka" class="btn btn-primary">进入打卡</a>
 </div>
 {% endblock %}
 
