@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>考点笔记 - 408刷题</title>
+    <link rel="manifest" href="manifest.webmanifest">
+    <meta name="theme-color" content="#4f46e5">
+    <link rel="apple-touch-icon" href="icons/icon-192.png">
+    <script>if (localStorage.getItem('darkMode') === '1') document.documentElement.classList.add('dark');</script>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-container">
+            <a href="index.html" class="nav-brand">408刷题</a>
+            <div class="nav-links">
+                <a href="index.html" class="nav-link">首页</a>
+                <a href="wrong.html" class="nav-link">错题本</a>
+                <a href="favorites.html" class="nav-link">收藏夹</a>
+                <a href="exam.html" class="nav-link">模拟考试</a>
+                <a href="stats.html" class="nav-link">学习统计</a>
+                <a href="search.html" class="nav-link">搜题</a>
+            </div>
+            <div class="nav-tools">
+                <span class="nav-timer" id="navTimer" title="今日刷题时长（切换到其他窗口时暂停）">⏱ 00:00:00</span>
+                <button class="nav-switch" id="darkSwitch" onclick="toggleDark()" title="夜间模式：深色主题护眼">
+                    夜间 <span class="switch-state" id="darkState">关</span>
+                </button>
+            </div>
+        </div>
+    </nav>
+    <main class="container">
+        <div class="notes-header" id="notesHeader">
+            <h1>📖 考点笔记</h1>
+            <p class="notes-source">加载中...</p>
+        </div>
+        <div class="notes-layout">
+            <aside class="notes-toc" id="notesToc"></aside>
+            <div class="notes-content" id="notesContent"></div>
+        </div>
+    </main>
+    <script src="js/common.js"></script>
+    <script>
+        // PWA 版：客户端 fetch 笔记 JSON 渲染（Flask 版为服务端 Jinja 渲染的镜像）
+        const _params = new URLSearchParams(location.search);
+        const SUBJECT = _params.get('subject') || 'co';
+        const GOTO = _params.get('goto');
+
+        // 章节名含 / 等字符，锚点定位统一走 data-sec 属性匹配，不用 id 选择器
+        function jumpTo(name, highlight) {
+            const sections = Array.from(document.querySelectorAll('.notes-section'));
+            const target = sections.find(s => s.dataset.sec === name);
+            if (!target) return;
+            target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            document.querySelectorAll('.notes-toc-sec').forEach(l =>
+                l.classList.toggle('active', l.dataset.sec === name));
+            if (highlight) {
+                target.classList.remove('goto-highlight');
+                void target.offsetWidth;
+                target.classList.add('goto-highlight');
+            }
+        }
+
+        async function loadNotes() {
+            let notes;
+            try {
+                const resp = await fetch(`data/notes/${SUBJECT}_notes.json`);
+                if (!resp.ok) throw new Error(resp.status);
+                notes = await resp.json();
+            } catch (e) {
+                document.getElementById('notesHeader').innerHTML =
+                    '<h1>📖 考点笔记</h1><p class="notes-source">该科目暂无考点笔记</p>';
+                return;
+            }
+            document.getElementById('notesHeader').innerHTML =
+                `<h1>📖 ${notes.title}</h1><p class="notes-source">${notes.source}</p>`;
+            document.title = `${notes.title} - 408刷题`;
+
+            let toc = '', body = '';
+            for (const ch of notes.chapters) {
+                toc += `<div class="notes-toc-ch">${ch.chapter}</div>`;
+                body += `<h2 class="notes-ch-title">${ch.chapter}</h2>`;
+                for (const sec of ch.sections) {
+                    toc += `<a class="notes-toc-sec" data-sec="${sec.section}">${sec.section}</a>`;
+                    body += `
+                    <section class="notes-section" data-sec="${sec.section}">
+                        <h3 class="notes-sec-title">${sec.section}</h3>
+                        <div class="notes-body">${sec.html}</div>
+                    </section>`;
+                }
+            }
+            document.getElementById('notesToc').innerHTML = toc;
+            document.getElementById('notesContent').innerHTML = body;
+
+            document.querySelectorAll('.notes-toc-sec').forEach(l =>
+                l.addEventListener('click', () => jumpTo(l.dataset.sec, false)));
+
+            // 滚动时目录跟随高亮
+            const sections = Array.from(document.querySelectorAll('.notes-section'));
+            const tocLinks = Array.from(document.querySelectorAll('.notes-toc-sec'));
+            let ticking = false;
+            window.addEventListener('scroll', () => {
+                if (ticking) return;
+                ticking = true;
+                requestAnimationFrame(() => {
+                    ticking = false;
+                    let current = null;
+                    for (const s of sections) {
+                        if (s.getBoundingClientRect().top <= 90) current = s.dataset.sec;
+                    }
+                    if (current) tocLinks.forEach(l => l.classList.toggle('active', l.dataset.sec === current));
+                });
+            }, { passive: true });
+
+            if (GOTO) setTimeout(() => jumpTo(GOTO, true), 100);
+        }
+
+        loadNotes();
+        if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js');
+    </script>
+</body>
+</html>

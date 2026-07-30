@@ -125,6 +125,7 @@
                             <a href="quiz.html?subject=${key}&mode=favorite" class="btn btn-warning">收藏练习</a>
                             <a href="quiz.html?subject=${key}&mode=real" class="btn btn-secondary">统考真题</a>
                             <a href="quiz.html?subject=${key}&mode=code" class="btn btn-secondary" title="只刷含代码的题目">代码专项</a>
+                            ${key === 'co' ? '<a href="notes.html?subject=co" class="btn btn-notes" title="按考纲章节整理的 27 节考点笔记，做题时点知识点徽章可直达对应节">📖 知识笔记</a>' : ''}
                         </div>
                     </div>`;
                 }

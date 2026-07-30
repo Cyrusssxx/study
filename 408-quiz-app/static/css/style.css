@@ -2224,3 +2224,231 @@ mark {
     background: #262a31;
     color: #6f7883;
 }
+
+/* ==================== 考点笔记页 ==================== */
+.notes-header {
+    margin-bottom: 20px;
+}
+
+.notes-header h1 {
+    font-size: 1.6rem;
+    margin-bottom: 6px;
+}
+
+.notes-source {
+    color: var(--text-light);
+    font-size: 0.88rem;
+}
+
+.notes-layout {
+    display: flex;
+    gap: 20px;
+    align-items: flex-start;
+}
+
+/* 左侧目录树：吸顶跟随滚动 */
+.notes-toc {
+    position: sticky;
+    top: 76px;
+    width: 230px;
+    flex-shrink: 0;
+    max-height: calc(100vh - 96px);
+    overflow-y: auto;
+    background: var(--card-bg);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    padding: 12px 8px;
+}
+
+.notes-toc-ch {
+    font-weight: 600;
+    font-size: 0.88rem;
+    padding: 8px 10px 4px;
+    color: var(--text);
+}
+
+.notes-toc-sec {
+    display: block;
+    padding: 5px 10px 5px 20px;
+    font-size: 0.85rem;
+    color: var(--text-light);
+    border-radius: 6px;
+    cursor: pointer;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.notes-toc-sec:hover {
+    background: var(--light);
+    color: var(--primary);
+}
+
+.notes-toc-sec.active {
+    background: #eef5fd;
+    color: var(--primary);
+    font-weight: 600;
+}
+
+/* 右侧内容区 */
+.notes-content {
+    flex: 1;
+    min-width: 0;
+}
+
+.notes-ch-title {
+    font-size: 1.25rem;
+    margin: 26px 0 12px;
+    padding-left: 12px;
+    border-left: 4px solid var(--primary);
+}
+
+.notes-ch-title:first-child {
+    margin-top: 0;
+}
+
+.notes-section {
+    background: var(--card-bg);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    padding: 20px 24px;
+    margin-bottom: 16px;
+    scroll-margin-top: 76px;
+}
+
+.notes-sec-title {
+    font-size: 1.1rem;
+    color: var(--primary);
+    margin-bottom: 12px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid var(--border);
+}
+
+/* 跳转直达高亮：黄底淡出 */
+.notes-section.goto-highlight {
+    animation: notesFlash 2.4s ease-out;
+}
+
+@keyframes notesFlash {
+    0%, 30% { background: #fff8dc; }
+    100% { background: var(--card-bg); }
+}
+
+/* 笔记正文排版（JSON 里只用无属性的 h4/p/ul/ol/li/b/table 标签） */
+.notes-body {
+    font-size: 0.95rem;
+    line-height: 1.9;
+}
+
+.notes-body h4 {
+    font-size: 1rem;
+    margin: 14px 0 6px;
+    color: var(--text);
+}
+
+.notes-body h4:first-child {
+    margin-top: 0;
+}
+
+.notes-body p {
+    margin: 6px 0;
+}
+
+.notes-body ul, .notes-body ol {
+    margin: 6px 0;
+    padding-left: 24px;
+}
+
+.notes-body li {
+    margin: 4px 0;
+}
+
+.notes-body b {
+    color: var(--primary-dark);
+}
+
+.notes-body table {
+    border-collapse: collapse;
+    margin: 10px 0;
+    font-size: 0.88rem;
+    width: 100%;
+}
+
+.notes-body th, .notes-body td {
+    border: 1px solid var(--border);
+    padding: 6px 10px;
+    text-align: left;
+}
+
+.notes-body th {
+    background: var(--light);
+}
+
+/* 做题页知识点徽章变链接（仅计组） */
+a.chapter-badge-link {
+    text-decoration: none;
+    cursor: pointer;
+}
+
+a.chapter-badge-link:hover {
+    background: var(--primary);
+    color: #fff;
+}
+
+/* 首页科目卡笔记入口 */
+.btn-notes {
+    background: #e8f4ea;
+    color: #2e7d32;
+    border: 1px solid #a5d6a7;
+}
+
+.btn-notes:hover {
+    background: #2e7d32;
+    color: #fff;
+}
+
+/* 笔记页夜间适配 */
+.dark .notes-toc-sec.active {
+    background: #1f3a5f;
+}
+
+.dark .notes-body b {
+    color: #7db3e8;
+}
+
+.dark .notes-body th {
+    background: #2c313a;
+}
+
+.dark .notes-section.goto-highlight {
+    animation: notesFlashDark 2.4s ease-out;
+}
+
+@keyframes notesFlashDark {
+    0%, 30% { background: #3a361c; }
+    100% { background: var(--card-bg); }
+}
+
+.dark .btn-notes {
+    background: #1e3323;
+    color: #81c784;
+    border-color: #2e5235;
+}
+
+.dark .btn-notes:hover {
+    background: #2e7d32;
+    color: #fff;
+}
+
+/* 窄屏：目录收起到顶部横向滚动 */
+@media (max-width: 800px) {
+    .notes-layout {
+        flex-direction: column;
+    }
+
+    .notes-toc {
+        position: static;
+        width: 100%;
+        max-height: 180px;
+    }
+}

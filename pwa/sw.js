@@ -2,7 +2,7 @@
  * 预缓存全部页面/样式/脚本/题库/图标，安装后完全离线可用。
  * 升级题库或代码后：改 CACHE_VER 版本号即可让客户端自动换新缓存。
  */
-const CACHE_VER = 'quiz408-v12';
+const CACHE_VER = 'quiz408-v13';
 
 const PRECACHE = [
     'index.html',
@@ -13,6 +13,7 @@ const PRECACHE = [
     'stats.html',
     'exam.html',
     'daka.html',
+    'notes.html',
     'manifest.webmanifest',
     'css/style.css',
     'js/common.js',
@@ -22,6 +23,7 @@ const PRECACHE = [
     'data/ds.json',
     'data/cn.json',
     'data/ds_daka.json',
+    'data/notes/co_notes.json',
     'icons/icon-192.png',
     'icons/icon-512.png'
 ];

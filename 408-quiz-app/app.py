@@ -7,7 +7,7 @@ import json
 import random
 from datetime import datetime, timedelta
 from flask import Flask, render_template, jsonify, request
-from config import BASE_DIR, FROZEN, QUESTIONS_DIR, SUBJECTS, SECRET_KEY, HOST, PORT
+from config import BASE_DIR, FROZEN, DATA_DIR, QUESTIONS_DIR, SUBJECTS, SECRET_KEY, HOST, PORT
 import database as db
 
 # 显式指定模板/静态目录，兼容PyInstaller打包后从_MEIPASS加载
@@ -152,6 +152,24 @@ def search_page():
 def exam_page():
     """模拟考试页面"""
     return render_template('exam.html', subjects=SUBJECTS)
+
+
+_notes_cache = {}
+_notes_mtime = {}
+
+
+@app.route('/notes/<subject>')
+def notes_page(subject):
+    """考点笔记页面（目前仅计组，按考纲章节组织）"""
+    notes_file = os.path.join(DATA_DIR, 'notes', f'{subject}_notes.json')
+    if subject not in SUBJECTS or not os.path.exists(notes_file):
+        return "该科目暂无考点笔记", 404
+    mtime = os.path.getmtime(notes_file)
+    if _notes_mtime.get(subject) != mtime:
+        with open(notes_file, 'r', encoding='utf-8') as f:
+            _notes_cache[subject] = json.load(f)
+        _notes_mtime[subject] = mtime
+    return render_template('notes.html', subject=subject, notes=_notes_cache[subject])
 
 
 # ==================== API 路由 ====================

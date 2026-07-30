@@ -1,0 +1,76 @@
+{% extends "base.html" %}
+{% block title %}{{ notes.title }} - 408刷题{% endblock %}
+{% block content %}
+<div class="notes-header">
+    <h1>📖 {{ notes.title }}</h1>
+    <p class="notes-source">{{ notes.source }}</p>
+</div>
+
+<div class="notes-layout">
+    <!-- 左侧章节目录树 -->
+    <aside class="notes-toc" id="notesToc">
+        {% for ch in notes.chapters %}
+        <div class="notes-toc-ch">{{ ch.chapter }}</div>
+        {% for sec in ch.sections %}
+        <a class="notes-toc-sec" data-sec="{{ sec.section }}">{{ sec.section }}</a>
+        {% endfor %}
+        {% endfor %}
+    </aside>
+
+    <!-- 右侧笔记内容 -->
+    <div class="notes-content" id="notesContent">
+        {% for ch in notes.chapters %}
+        <h2 class="notes-ch-title">{{ ch.chapter }}</h2>
+        {% for sec in ch.sections %}
+        <section class="notes-section" data-sec="{{ sec.section }}">
+            <h3 class="notes-sec-title">{{ sec.section }}</h3>
+            <div class="notes-body">{{ sec.html | safe }}</div>
+        </section>
+        {% endfor %}
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    // 目录点击定位 + ?goto=节名 直达高亮（做题页知识点徽章跳转入口）
+    (function () {
+        const tocLinks = Array.from(document.querySelectorAll('.notes-toc-sec'));
+        const sections = Array.from(document.querySelectorAll('.notes-section'));
+
+        function jumpTo(name, highlight) {
+            const target = sections.find(s => s.dataset.sec === name);
+            if (!target) return false;
+            target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            tocLinks.forEach(l => l.classList.toggle('active', l.dataset.sec === name));
+            if (highlight) {
+                target.classList.remove('goto-highlight');
+                void target.offsetWidth;  // 重触发动画
+                target.classList.add('goto-highlight');
+            }
+            return true;
+        }
+
+        tocLinks.forEach(l => l.addEventListener('click', () => jumpTo(l.dataset.sec, false)));
+
+        // 滚动时目录跟随高亮
+        let ticking = false;
+        window.addEventListener('scroll', () => {
+            if (ticking) return;
+            ticking = true;
+            requestAnimationFrame(() => {
+                ticking = false;
+                let current = null;
+                for (const s of sections) {
+                    if (s.getBoundingClientRect().top <= 90) current = s.dataset.sec;
+                }
+                if (current) tocLinks.forEach(l => l.classList.toggle('active', l.dataset.sec === current));
+            });
+        }, { passive: true });
+
+        const goto = new URLSearchParams(location.search).get('goto');
+        if (goto) setTimeout(() => jumpTo(goto, true), 100);
+    })();
+</script>
+{% endblock %}
