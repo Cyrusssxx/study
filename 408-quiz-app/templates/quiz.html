@@ -47,6 +47,7 @@
 {% block scripts %}
 <script>
     const SUBJECT = "{{ subject }}";
+    const NOTES_SUBJECTS = ['os', 'co', 'ds', 'cn'];  // 已有考点笔记的科目，徽章白名单化防死链
     const MODE = "{{ mode }}";
     const CHAPTER = "{{ chapter }}";
     const SECTION = "{{ section }}";
@@ -287,8 +288,8 @@
                     <div class="question-meta">
                         <span class="question-number">题号 ${q.number}（本轮第 ${currentIndex + 1} 题）</span>
                         ${q.is_real_exam ? `<span class="badge-real">${q.exam_year ? q.exam_year + ' ' : ''}统考真题</span>` : ''}
-                        ${q.chapter ? (SUBJECT === 'co' && q.section
-                            ? `<a class="chapter-badge chapter-badge-link" href="/notes/co?goto=${encodeURIComponent(q.section)}" target="_blank" title="点击新窗口查看该节考点笔记">${q.chapter} · ${q.section} 📖</a>`
+                        ${q.chapter ? (NOTES_SUBJECTS.includes(SUBJECT) && q.section
+                            ? `<a class="chapter-badge chapter-badge-link" href="/notes/${SUBJECT}?goto=${encodeURIComponent(q.section)}" target="_blank" title="点击新窗口查看该节考点笔记">${q.chapter} · ${q.section} 📖</a>`
                             : `<span class="chapter-badge" title="题目来源章节">${q.chapter}${q.section ? ' · ' + q.section : ''}</span>`) : ''}
                     </div>
                     <button class="btn-icon ${isFav ? 'favorited' : ''}" onclick="toggleFavorite('${q.id}')" title="${isFav ? '取消收藏' : '收藏'}">

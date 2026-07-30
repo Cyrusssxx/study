@@ -160,7 +160,7 @@ _notes_mtime = {}
 
 @app.route('/notes/<subject>')
 def notes_page(subject):
-    """考点笔记页面（目前仅计组，按考纲章节组织）"""
+    """考点笔记页面（四科，按考纲章节组织）"""
     notes_file = os.path.join(DATA_DIR, 'notes', f'{subject}_notes.json')
     if subject not in SUBJECTS or not os.path.exists(notes_file):
         return "该科目暂无考点笔记", 404
