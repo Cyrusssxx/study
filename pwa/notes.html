@@ -41,11 +41,14 @@
         </div>
     </main>
     <script src="js/common.js"></script>
+    <script src="js/backend.js"></script>
     <script>
         // PWA 版：客户端 fetch 笔记 JSON 渲染（Flask 版为服务端 Jinja 渲染的镜像）
         const _params = new URLSearchParams(location.search);
         const SUBJECT = _params.get('subject') || 'co';
         const GOTO = _params.get('goto');
+        // 笔记批注 / 高亮持久化走现有笔记链路（api() 拦截 IndexedDB）
+        const noteApi = (url, opts) => api(url, opts);
 
         // 章节名含 / 等字符，锚点定位统一走 data-sec 属性匹配，不用 id 选择器
         function jumpTo(name, highlight) {
@@ -114,6 +117,322 @@
             }, { passive: true });
 
             if (GOTO) setTimeout(() => jumpTo(GOTO, true), 100);
+            initAnnoAndHl();
+        }
+
+        // ==================== 考点笔记：批注块 + 划词高亮 ====================
+        // 合成 question_id 复用做题笔记链路：批注每节一条、高亮整科一条，走 /api/note
+        const annoState = {};   // sec -> {content, images, loaded}
+        let hlItems = [];       // [{sec, start, end, color, text}]
+        let hlSaveTimer = null;
+
+        // 节名 slug 化（Flask 路由 <question_id> 不匹配 /，只留 [0-9A-Za-z-]）
+        const kpKey = sec => SUBJECT + '_kn_' + sec.replace(/[^0-9A-Za-z]+/g, '-');
+        const hlKey = () => SUBJECT + '_hl';
+
+        // ---------- 批注块 ----------
+        function initAnnoAndHl() {
+            document.querySelectorAll('.notes-section').forEach(section => {
+                const sec = section.dataset.sec;
+                annoState[sec] = { content: '', images: [], loaded: false };
+                const anno = document.createElement('div');
+                anno.className = 'note-anno';
+                anno.dataset.sec = sec;
+                anno.innerHTML = `
+                    <button type="button" class="note-anno-toggle">✍ 批注</button>
+                    <div class="note-anno-panel" style="display:none">
+                        <textarea class="note-input note-anno-input" placeholder="写下你的批注，可 Ctrl+V 粘贴截图…"></textarea>
+                        <div class="note-images note-anno-images"></div>
+                        <div class="note-anno-bar">
+                            <button type="button" class="btn btn-primary note-anno-save">保存批注</button>
+                            <span class="note-anno-hint"></span>
+                        </div>
+                    </div>`;
+                section.appendChild(anno);
+
+                const toggle = anno.querySelector('.note-anno-toggle');
+                const panel = anno.querySelector('.note-anno-panel');
+                const input = anno.querySelector('.note-anno-input');
+                toggle.addEventListener('click', async () => {
+                    const open = panel.style.display === 'none';
+                    panel.style.display = open ? '' : 'none';
+                    if (open && !annoState[sec].loaded) {
+                        annoState[sec].loaded = true;
+                        try {
+                            const resp = await noteApi('/api/note/' + encodeURIComponent(kpKey(sec)));
+                            const d = await resp.json();
+                            annoState[sec].content = d.note || '';
+                            annoState[sec].images = d.images || [];
+                            input.value = annoState[sec].content;
+                            renderAnnoImages(sec);
+                            refreshAnnoToggle(sec);
+                        } catch (e) { /* 首次拉取失败不阻断编辑 */ }
+                    }
+                });
+                input.addEventListener('paste', e => pasteAnnoImage(e, sec));
+                anno.querySelector('.note-anno-save').addEventListener('click', () => {
+                    annoState[sec].content = input.value;
+                    saveAnno(sec);
+                });
+            });
+            initHighlight();
+            loadHighlights();
+        }
+
+        function annoEl(sec) { return document.querySelector('.note-anno[data-sec="' + CSS.escape(sec) + '"]'); }
+
+        // 有批注内容时按钮标黄点，提示该节已批注
+        function refreshAnnoToggle(sec) {
+            const el = annoEl(sec); if (!el) return;
+            const has = !!(annoState[sec].content || annoState[sec].images.length);
+            el.querySelector('.note-anno-toggle').classList.toggle('has-anno', has);
+        }
+
+        function renderAnnoImages(sec) {
+            const el = annoEl(sec); if (!el) return;
+            const box = el.querySelector('.note-anno-images');
+            const imgs = annoState[sec].images || [];
+            box.innerHTML = imgs.map((src, i) => `
+                <div class="note-img-item">
+                    <img src="${src}" alt="批注图片" onclick="viewAnnoImage('${encodeURIComponent(sec)}', ${i})">
+                    <span class="note-img-del" onclick="delAnnoImage('${encodeURIComponent(sec)}', ${i})" title="删除图片">×</span>
+                </div>`).join('');
+        }
+
+        // 压缩成最长边1200px的JPEG，控制入库体积（透明底先铺白）
+        function compressImage(file) {
+            return new Promise((resolve, reject) => {
+                const img = new Image();
+                img.onload = () => {
+                    const scale = Math.min(1, 1200 / Math.max(img.width, img.height));
+                    const canvas = document.createElement('canvas');
+                    canvas.width = Math.round(img.width * scale);
+                    canvas.height = Math.round(img.height * scale);
+                    const ctx = canvas.getContext('2d');
+                    ctx.fillStyle = '#fff';
+                    ctx.fillRect(0, 0, canvas.width, canvas.height);
+                    ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+                    URL.revokeObjectURL(img.src);
+                    resolve(canvas.toDataURL('image/jpeg', 0.85));
+                };
+                img.onerror = () => reject(new Error('图片读取失败'));
+                img.src = URL.createObjectURL(file);
+            });
+        }
+
+        // 从剪贴板粘贴图片（截图后在批注框 Ctrl+V），压缩后随批注入库
+        async function pasteAnnoImage(event, sec) {
+            const files = [...(event.clipboardData ? event.clipboardData.items : [])]
+                .filter(it => it.type.startsWith('image/'))
+                .map(it => it.getAsFile())
+                .filter(Boolean);
+            if (!files.length) return;
+            event.preventDefault();
+            try {
+                for (const f of files) {
+                    (annoState[sec].images = annoState[sec].images || []).push(await compressImage(f));
+                }
+            } catch (e) { alert(e.message); }
+            renderAnnoImages(sec);
+            saveAnno(sec);
+        }
+
+        function delAnnoImage(secEnc, i) {
+            const sec = decodeURIComponent(secEnc);
+            (annoState[sec].images || []).splice(i, 1);
+            renderAnnoImages(sec);
+            saveAnno(sec);
+        }
+
+        function viewAnnoImage(secEnc, i) {
+            const sec = decodeURIComponent(secEnc);
+            const src = (annoState[sec].images || [])[i];
+            if (!src) return;
+            const ov = document.createElement('div');
+            ov.className = 'img-lightbox';
+            ov.innerHTML = `<img src="${src}" alt="批注图片">`;
+            ov.onclick = () => ov.remove();
+            document.body.appendChild(ov);
+        }
+
+        async function saveAnno(sec) {
+            const el = annoEl(sec);
+            const content = annoState[sec].content || '';
+            const images = annoState[sec].images || [];
+            try {
+                const resp = await noteApi('/api/note/' + encodeURIComponent(kpKey(sec)), {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ content, images })
+                });
+                const d = await resp.json();
+                annoState[sec].content = d.note || '';
+                annoState[sec].images = d.images || [];
+                if (el) {
+                    const hint = el.querySelector('.note-anno-hint');
+                    const has = !!(annoState[sec].content || annoState[sec].images.length);
+                    hint.textContent = has ? '已保存 ✓' : '批注已清空删除';
+                    setTimeout(() => { if (hint) hint.textContent = ''; }, 2000);
+                }
+                refreshAnnoToggle(sec);
+            } catch (e) { alert('批注保存失败: ' + e.message); }
+        }
+
+        // ---------- 划词高亮 ----------
+        const HL_COLORS = ['yellow', 'green', 'blue', 'pink'];
+
+        // 选区端点相对 root 的纯文本字符偏移（与 Range.toString 、TreeWalker 计数一致）
+        function offsetInRoot(root, container, offset) {
+            const r = document.createRange();
+            r.selectNodeContents(root);
+            r.setEnd(container, offset);
+            return r.toString().length;
+        }
+
+        // 将 [start,end) 内的文本节点片段包进 span（逐片段包裹，支持跨内联标签）
+        function wrapRange(root, start, end, cls, ds) {
+            const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
+            let pos = 0, node;
+            const pieces = [];
+            while ((node = walker.nextNode())) {
+                const len = node.nodeValue.length;
+                const ns = pos, ne = pos + len;
+                pos = ne;
+                if (ne <= start || ns >= end) continue;
+                pieces.push({ node, s: Math.max(start, ns) - ns, e: Math.min(end, ne) - ns });
+            }
+            // 从后往前包，避免已收集节点偏移失效
+            for (let i = pieces.length - 1; i >= 0; i--) {
+                const p = pieces[i];
+                const range = document.createRange();
+                range.setStart(p.node, p.s);
+                range.setEnd(p.node, p.e);
+                const span = document.createElement('span');
+                span.className = cls;
+                if (ds) { span.dataset.start = ds.start; span.dataset.color = ds.color; }
+                range.surroundContents(span);   // 单文本节点区间，包裹安全
+            }
+        }
+
+        function bodyOf(n) {
+            const el = n.nodeType === 1 ? n : n.parentElement;
+            return el ? el.closest('.notes-body') : null;
+        }
+
+        let hlToolbar = null;
+        function initHighlight() {
+            const content = document.getElementById('notesContent');
+            // 点已有高亮→就地取消
+            content.addEventListener('click', e => {
+                const span = e.target.closest && e.target.closest('.note-hl');
+                if (span) { e.stopPropagation(); removeHighlight(span); }
+            });
+            content.addEventListener('mouseup', () => setTimeout(showHlToolbar, 0));
+            document.addEventListener('mousedown', e => {
+                if (hlToolbar && !hlToolbar.contains(e.target)) hideHlToolbar();
+            });
+        }
+
+        function hideHlToolbar() { if (hlToolbar) { hlToolbar.remove(); hlToolbar = null; } }
+
+        function showHlToolbar() {
+            const sel = window.getSelection();
+            if (!sel || sel.isCollapsed || !sel.rangeCount) { hideHlToolbar(); return; }
+            const range = sel.getRangeAt(0);
+            const body = bodyOf(range.startContainer);
+            // 选区必须完全落在同一 .notes-body 内
+            if (!body || bodyOf(range.endContainer) !== body) { hideHlToolbar(); return; }
+            hideHlToolbar();
+            const rect = range.getBoundingClientRect();
+            hlToolbar = document.createElement('div');
+            hlToolbar.className = 'hl-toolbar';
+            hlToolbar.innerHTML = HL_COLORS.map(c =>
+                `<span class="hl-dot hl-dot-${c}" data-color="${c}" title="${c}"></span>`).join('') +
+                '<span class="hl-cancel" title="取消高亮">✕</span>';
+            document.body.appendChild(hlToolbar);
+            hlToolbar.style.top = (window.scrollY + rect.top - hlToolbar.offsetHeight - 8) + 'px';
+            hlToolbar.style.left = (window.scrollX + rect.left) + 'px';
+            hlToolbar.querySelectorAll('.hl-dot').forEach(dot =>
+                dot.addEventListener('click', () => applyHighlight(body, range, dot.dataset.color)));
+            hlToolbar.querySelector('.hl-cancel').addEventListener('click', () => {
+                // 选区内已有高亮则取消
+                const span = (range.startContainer.parentElement || range.startContainer).closest
+                    ? (range.startContainer.parentElement || range.startContainer).closest('.note-hl') : null;
+                if (span) removeHighlight(span);
+                hideHlToolbar();
+            });
+        }
+
+        function applyHighlight(body, range, color) {
+            const start = offsetInRoot(body, range.startContainer, range.startOffset);
+            const end = offsetInRoot(body, range.endContainer, range.endOffset);
+            if (end <= start) { hideHlToolbar(); return; }
+            const text = range.toString();
+            const sec = body.closest('.notes-section').dataset.sec;
+            hlItems.push({ sec, start, end, color, text });
+            wrapRange(body, start, end, 'note-hl note-hl-' + color, { start, color });
+            window.getSelection().removeAllRanges();
+            hideHlToolbar();
+            saveHl();
+        }
+
+        function removeHighlight(span) {
+            const sec = span.closest('.notes-section').dataset.sec;
+            const start = +span.dataset.start;
+            const color = span.dataset.color;
+            hlItems = hlItems.filter(it => !(it.sec === sec && it.start === start && it.color === color));
+            const parent = span.parentNode;
+            while (span.firstChild) parent.insertBefore(span.firstChild, span);
+            parent.removeChild(span);
+            parent.normalize();
+            saveHl();
+        }
+
+        function saveHl() {
+            clearTimeout(hlSaveTimer);
+            hlSaveTimer = setTimeout(async () => {
+                try {
+                    await noteApi('/api/note/' + encodeURIComponent(hlKey()), {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ content: JSON.stringify(hlItems), images: [] })
+                    });
+                } catch (e) { /* 高亮保存失败静默，不阻断阅读 */ }
+            }, 500);
+        }
+
+        // 整科一次 GET 还原所有节高亮
+        async function loadHighlights() {
+            let items = [];
+            try {
+                const resp = await noteApi('/api/note/' + encodeURIComponent(hlKey()));
+                const d = await resp.json();
+                items = d.note ? JSON.parse(d.note) : [];
+            } catch (e) { return; }
+            if (!Array.isArray(items) || !items.length) return;
+            hlItems = [];
+            // 按节分桶
+            const bySec = {};
+            for (const it of items) (bySec[it.sec] = bySec[it.sec] || []).push(it);
+            document.querySelectorAll('.notes-section').forEach(section => {
+                const sec = section.dataset.sec;
+                const list = bySec[sec];
+                if (!list) return;
+                const body = section.querySelector('.notes-body');
+                const full = body.textContent;
+                list.sort((a, b) => a.start - b.start);
+                for (const it of list) {
+                    let { start, end } = it;
+                    // 偏移漂移降级：校验不符则 indexOf 兑底，仍失败静默跳过
+                    if (full.slice(start, end) !== it.text) {
+                        const idx = full.indexOf(it.text);
+                        if (idx < 0 || !it.text) continue;
+                        start = idx; end = idx + it.text.length;
+                    }
+                    wrapRange(body, start, end, 'note-hl note-hl-' + it.color, { start, color: it.color });
+                    hlItems.push({ sec, start, end, color: it.color, text: it.text });
+                }
+            });
         }
 
         loadNotes();
