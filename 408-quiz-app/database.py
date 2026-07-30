@@ -117,6 +117,11 @@ def init_db():
     exam_cols = {r[1] for r in cursor.execute('PRAGMA table_info(exam_records)').fetchall()}
     if 'record_wrong' not in exam_cols:
         cursor.execute('ALTER TABLE exam_records ADD COLUMN record_wrong INTEGER DEFAULT 1')
+
+    # 幂等迁移：notes 加图片列（JSON数组存压缩后的dataURL，笔记支持贴图）
+    note_cols = {r[1] for r in cursor.execute('PRAGMA table_info(notes)').fetchall()}
+    if 'images' not in note_cols:
+        cursor.execute("ALTER TABLE notes ADD COLUMN images TEXT DEFAULT '[]'")
     
     # 创建索引
     cursor.execute('CREATE INDEX IF NOT EXISTS idx_progress_qid ON user_progress(question_id)')
@@ -448,15 +453,16 @@ def get_daily_stats(days=30):
 
 # ==================== 笔记 ====================
 
-def upsert_note(question_id, subject, content):
-    """新建/更新笔记；content为空则删除"""
+def upsert_note(question_id, subject, content, images=None):
+    """新建/更新笔记；文字和图片都为空则删除"""
     conn = get_db()
-    if content and content.strip():
+    imgs = images or []
+    if (content and content.strip()) or imgs:
         now = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
         conn.execute('''
-            INSERT INTO notes (question_id, subject, content, updated_at) VALUES (?, ?, ?, ?)
-            ON CONFLICT(question_id) DO UPDATE SET content = excluded.content, updated_at = excluded.updated_at
-        ''', (question_id, subject, content.strip(), now))
+            INSERT INTO notes (question_id, subject, content, images, updated_at) VALUES (?, ?, ?, ?, ?)
+            ON CONFLICT(question_id) DO UPDATE SET content = excluded.content, images = excluded.images, updated_at = excluded.updated_at
+        ''', (question_id, subject, (content or '').strip(), json.dumps(imgs), now))
     else:
         conn.execute('DELETE FROM notes WHERE question_id = ?', (question_id,))
     conn.commit()
@@ -464,19 +470,21 @@ def upsert_note(question_id, subject, content):
 
 
 def get_note(question_id):
-    """获取单题笔记内容，无则返回空串"""
+    """获取单题笔记 {'content':文字, 'images':[dataURL]}，无则空"""
     conn = get_db()
-    row = conn.execute('SELECT content FROM notes WHERE question_id = ?', (question_id,)).fetchone()
+    row = conn.execute('SELECT content, images FROM notes WHERE question_id = ?', (question_id,)).fetchone()
     conn.close()
-    return row['content'] if row else ''
+    if not row:
+        return {'content': '', 'images': []}
+    return {'content': row['content'], 'images': json.loads(row['images'] or '[]')}
 
 
 def get_notes_map(subject):
-    """某科目全部笔记 {question_id: content}"""
+    """某科目全部笔记 {question_id: {'content':..., 'images':[...]}}"""
     conn = get_db()
-    rows = conn.execute('SELECT question_id, content FROM notes WHERE subject = ?', (subject,)).fetchall()
+    rows = conn.execute('SELECT question_id, content, images FROM notes WHERE subject = ?', (subject,)).fetchall()
     conn.close()
-    return {r['question_id']: r['content'] for r in rows}
+    return {r['question_id']: {'content': r['content'], 'images': json.loads(r['images'] or '[]')} for r in rows}
 
 
 # ==================== 模拟考试 ====================
@@ -585,8 +593,11 @@ def export_all():
         'SELECT question_id, subject, wrong_count, last_wrong_at, is_resolved, correct_streak FROM wrong_questions').fetchall()]
     favorites = [dict(r) for r in conn.execute(
         'SELECT question_id, subject, added_at FROM favorites').fetchall()]
-    notes = [dict(r) for r in conn.execute(
-        'SELECT question_id, subject, content, updated_at FROM notes').fetchall()]
+    notes = []
+    for r in conn.execute('SELECT question_id, subject, content, images, updated_at FROM notes').fetchall():
+        n = dict(r)
+        n['images'] = json.loads(n['images'] or '[]')
+        notes.append(n)
     exams = []
     for r in conn.execute(
             'SELECT mode, question_ids, answers, total_count, correct_count, score, duration_sec, status, started_at, submitted_at, record_wrong '
@@ -623,8 +634,9 @@ def import_all(payload):
             (r.get('question_id'), r.get('subject'), r.get('added_at', '')))
     for r in payload.get('notes') or []:
         conn.execute(
-            'INSERT OR IGNORE INTO notes (question_id, subject, content, updated_at) VALUES (?, ?, ?, ?)',
-            (r.get('question_id'), r.get('subject'), r.get('content', ''), r.get('updated_at', '')))
+            'INSERT OR IGNORE INTO notes (question_id, subject, content, images, updated_at) VALUES (?, ?, ?, ?, ?)',
+            (r.get('question_id'), r.get('subject'), r.get('content', ''),
+             json.dumps(r.get('images') or []), r.get('updated_at', '')))
     for r in payload.get('exams') or []:
         conn.execute(
             'INSERT INTO exam_records (mode, question_ids, answers, total_count, correct_count, score, duration_sec, status, started_at, submitted_at, record_wrong) '

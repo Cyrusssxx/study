@@ -265,15 +265,19 @@
                 </div>`;
         }
 
-        // 笔记面板（内容用DOM赋值，避免HTML转义问题）
+        // 笔记面板（内容用DOM赋值，避免HTML转义问题）；已有笔记时整体淡化（含按钮），聚焦编辑恢复
         let noteHtml = '';
         if (noteShown) {
+            const hasNote = !!(q.note || (q.note_images || []).length);
             noteHtml = `
-                <div class="note-panel">
+                <div class="note-panel${hasNote ? ' note-dim' : ''}">
                     <div class="note-title">我的笔记</div>
                     <textarea id="noteInput" class="note-input" rows="4" onfocus="this.closest('.note-panel').classList.remove('note-dim')" placeholder="记下你的解题思路、易错点...（清空内容保存即删除笔记）"></textarea>
+                    <div class="note-images" id="noteImages"></div>
                     <div class="note-actions">
                         <button class="btn btn-primary btn-sm" onclick="saveNote()">保存笔记</button>
+                        <button class="btn btn-secondary btn-sm" onclick="document.getElementById('noteImgFile').click()">📷 上传图片</button>
+                        <input type="file" id="noteImgFile" accept="image/*" multiple style="display:none" onchange="addNoteImages(this.files)">
                         <span class="note-hint" id="noteHint"></span>
                     </div>
                 </div>`;
@@ -298,8 +302,8 @@
                     ${recite ? '' : `<button class="btn-explanation ${explanationShown ? 'active' : ''}" onclick="toggleExplanation()">
                         ${explanationShown ? '收起解析 ▴' : '查看解析 ▾'}
                     </button>`}
-                    <button class="btn-explanation ${noteShown ? 'active' : ''} ${q.note ? 'has-note' : ''}" onclick="toggleNote()">
-                        ${q.note ? '笔记 ●' : '笔记'} ${noteShown ? '▴' : '▾'}
+                    <button class="btn-explanation ${noteShown ? 'active' : ''} ${(q.note || (q.note_images || []).length) ? 'has-note' : ''}" onclick="toggleNote()">
+                        ${(q.note || (q.note_images || []).length) ? '笔记 ●' : '笔记'} ${noteShown ? '▴' : '▾'}
                     </button>
                     ${status ? '<button class="btn-redo" onclick="redoQuestion()">重新作答 ↺</button>' : ''}
                 </div>
@@ -311,6 +315,7 @@
         // 笔记内容用value赋值，防止笔记里的HTML字符被解析
         const noteInput = document.getElementById('noteInput');
         if (noteInput) noteInput.value = q.note || '';
+        renderNoteImages();
 
         // 更新提交按钮状态（背题/快刷模式下隐藏：背题不可作答，快刷点选即判）
         const btnSubmit = document.getElementById('btnSubmit');
@@ -398,19 +403,84 @@
             const resp = await fetch(`/api/note/${q.id}`, {
                 method: 'POST',
                 headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({content})
+                body: JSON.stringify({content, images: q.note_images || []})
             });
             const result = await resp.json();
             q.note = result.note || '';
-                        const hint = document.getElementById('noteHint');
-            hint.textContent = q.note ? '已保存 ✓' : '已删除笔记';
+            q.note_images = result.images || [];
+            const hasNote = !!(q.note || q.note_images.length);
+            const hint = document.getElementById('noteHint');
+            hint.textContent = hasNote ? '已保存 ✓' : '已删除笔记';
             setTimeout(() => { if (hint) hint.textContent = ''; }, 2000);
-            // 保存成功后淡化笔记框，再次聚焦编辑时恢复
+            // 保存成功后整个笔记框（含保存按钮）淡化，再次聚焦编辑时恢复
             const panel = document.querySelector('.note-panel');
-            if (panel) panel.classList.toggle('note-dim', !!q.note);
+            if (panel) panel.classList.toggle('note-dim', hasNote);
         } catch (e) {
             alert('笔记保存失败: ' + e.message);
         }
+    }
+
+    // ==================== 笔记贴图 ====================
+
+    function renderNoteImages() {
+        const box = document.getElementById('noteImages');
+        if (!box) return;
+        const imgs = questions[currentIndex].note_images || [];
+        box.innerHTML = imgs.map((src, i) => `
+            <div class="note-img-item">
+                <img src="${src}" alt="笔记图片" onclick="viewNoteImage(${i})">
+                <span class="note-img-del" onclick="delNoteImage(${i})" title="删除图片">×</span>
+            </div>`).join('');
+    }
+
+    // 压缩成最长边1200px的JPEG，控制入库体积（透明底先铺白）
+    function compressImage(file) {
+        return new Promise((resolve, reject) => {
+            const img = new Image();
+            img.onload = () => {
+                const scale = Math.min(1, 1200 / Math.max(img.width, img.height));
+                const canvas = document.createElement('canvas');
+                canvas.width = Math.round(img.width * scale);
+                canvas.height = Math.round(img.height * scale);
+                const ctx = canvas.getContext('2d');
+                ctx.fillStyle = '#fff';
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+                ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+                URL.revokeObjectURL(img.src);
+                resolve(canvas.toDataURL('image/jpeg', 0.85));
+            };
+            img.onerror = () => reject(new Error('图片读取失败'));
+            img.src = URL.createObjectURL(file);
+        });
+    }
+
+    async function addNoteImages(files) {
+        if (!files || !files.length) return;
+        const q = questions[currentIndex];
+        try {
+            for (const f of files) {
+                (q.note_images = q.note_images || []).push(await compressImage(f));
+            }
+        } catch (e) { alert(e.message); }
+        document.getElementById('noteImgFile').value = '';
+        renderNoteImages();
+        saveNote();   // 贴图后立即随笔记入库
+    }
+
+    function delNoteImage(i) {
+        (questions[currentIndex].note_images || []).splice(i, 1);
+        renderNoteImages();
+        saveNote();
+    }
+
+    function viewNoteImage(i) {
+        const src = (questions[currentIndex].note_images || [])[i];
+        if (!src) return;
+        const ov = document.createElement('div');
+        ov.className = 'img-lightbox';
+        ov.innerHTML = `<img src="${src}" alt="笔记图片">`;
+        ov.onclick = () => ov.remove();
+        document.body.appendChild(ov);
     }
 
     function redoQuestion() {

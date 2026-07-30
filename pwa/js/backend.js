@@ -285,12 +285,13 @@ async function api(url, opts = {}) {
             const total = qs.length;
             const pageQs = qs.slice((page - 1) * perPage, (page - 1) * perPage + perPage);
             const notes = {};
-            for (const n of await dbAll('notes')) if (n.subject === subject) notes[n.question_id] = n.content;
+            for (const n of await dbAll('notes')) if (n.subject === subject) notes[n.question_id] = n;
             const result = pageQs.map(q => ({
                 ...q,
                 is_favorited: favSet.has(q.id),
                 last_status: statuses[q.id] || null,
-                note: notes[q.id] || ''
+                note: notes[q.id] ? notes[q.id].content : '',
+                note_images: (notes[q.id] && notes[q.id].images) || []
             }));
             return jsonResp({ subject: data.subject, total, page, per_page: perPage, questions: result });
         }
@@ -480,15 +481,16 @@ async function api(url, opts = {}) {
             if (!SUBJECTS[subject]) return jsonResp({ error: '无效的题目ID' }, 400);
             if ((opts.method || 'GET') === 'GET') {
                 const n = await dbGet('notes', qid);
-                return jsonResp({ question_id: qid, note: n ? n.content : '' });
+                return jsonResp({ question_id: qid, note: n ? n.content : '', images: (n && n.images) || [] });
             }
             const content = (body.content || '').trim();
-            if (content) {
-                await dbPut('notes', { question_id: qid, subject, content, updated_at: now() });
+            const images = Array.isArray(body.images) ? body.images : [];
+            if (content || images.length) {
+                await dbPut('notes', { question_id: qid, subject, content, images, updated_at: now() });
             } else {
                 await dbDelete('notes', qid);
             }
-            return jsonResp({ success: true, note: content });
+            return jsonResp({ success: true, note: content, images });
         }
 
         // ---------- 数据结构强化打卡 ----------

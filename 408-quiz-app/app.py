@@ -245,7 +245,9 @@ def api_get_questions(subject):
         q_data = dict(q)
         q_data['is_favorited'] = q['id'] in fav_ids_all
         q_data['last_status'] = statuses.get(q['id'])
-        q_data['note'] = notes_map.get(q['id'], '')
+        n = notes_map.get(q['id'])
+        q_data['note'] = n['content'] if n else ''
+        q_data['note_images'] = n['images'] if n else []
         result.append(q_data)
     
     return jsonify({
@@ -464,11 +466,14 @@ def api_note(question_id):
         return jsonify({"error": "无效的题目ID"}), 400
     
     if request.method == 'GET':
-        return jsonify({"question_id": question_id, "note": db.get_note(question_id)})
+        n = db.get_note(question_id)
+        return jsonify({"question_id": question_id, "note": n['content'], "images": n['images']})
     
-    content = (request.get_json() or {}).get('content', '')
-    db.upsert_note(question_id, subject_key, content)
-    return jsonify({"success": True, "note": content.strip()})
+    body = request.get_json() or {}
+    content = body.get('content', '')
+    images = body.get('images') or []
+    db.upsert_note(question_id, subject_key, content, images)
+    return jsonify({"success": True, "note": content.strip(), "images": images})
 
 
 @app.route('/api/daka')
