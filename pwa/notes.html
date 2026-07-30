@@ -120,83 +120,143 @@
             initAnnoAndHl();
         }
 
-        // ==================== 考点笔记：批注块 + 划词高亮 ====================
-        // 合成 question_id 复用做题笔记链路：批注每节一条、高亮整科一条，走 /api/note
-        const annoState = {};   // sec -> {content, images, loaded}
+        // ==================== 考点笔记：行级批注 + 划词高亮 ====================
+        // 合成 question_id 复用做题笔记链路：批注整科一条(_kn)、高亮整科一条(_hl)，走 /api/note
+        let annoItems = [];     // [{sec, line, text, images}]，一行至多一条批注
+        let annoSaveTimer = null;
+        let annoEditor = null;  // 当前打开的编辑器 {el, sec, line, images}
         let hlItems = [];       // [{sec, start, end, color, text}]
         let hlSaveTimer = null;
 
-        // 节名 slug 化（Flask 路由 <question_id> 不匹配 /，只留 [0-9A-Za-z-]）
-        const kpKey = sec => SUBJECT + '_kn_' + sec.replace(/[^0-9A-Za-z]+/g, '-');
+        const annoKey = () => SUBJECT + '_kn';
         const hlKey = () => SUBJECT + '_hl';
 
-        // ---------- 批注块 ----------
-        function initAnnoAndHl() {
-            document.querySelectorAll('.notes-section').forEach(section => {
-                const sec = section.dataset.sec;
-                annoState[sec] = { content: '', images: [], loaded: false };
-                const anno = document.createElement('div');
-                anno.className = 'note-anno';
-                anno.dataset.sec = sec;
-                anno.innerHTML = `
-                    <button type="button" class="note-anno-toggle">✍ 批注</button>
-                    <div class="note-anno-panel" style="display:none">
-                        <textarea class="note-input note-anno-input" placeholder="写下你的批注，可 Ctrl+V 粘贴截图…"></textarea>
-                        <div class="note-images note-anno-images"></div>
-                        <div class="note-anno-bar">
-                            <button type="button" class="btn btn-primary note-anno-save">保存批注</button>
-                            <span class="note-anno-hint"></span>
-                        </div>
-                    </div>`;
-                section.appendChild(anno);
+        // 批注块混排在正文里，高亮的偏移/文本计算一律跳过批注子树，保证批注增删不影响高亮定位
+        function inAnno(n) {
+            const el = n.nodeType === 1 ? n : n.parentElement;
+            return !!(el && el.closest('.line-anno'));
+        }
+        const hlWalkFilter = { acceptNode: n => inAnno(n) ? NodeFilter.FILTER_REJECT : NodeFilter.FILTER_ACCEPT };
 
-                const toggle = anno.querySelector('.note-anno-toggle');
-                const panel = anno.querySelector('.note-anno-panel');
-                const input = anno.querySelector('.note-anno-input');
-                toggle.addEventListener('click', async () => {
-                    const open = panel.style.display === 'none';
-                    panel.style.display = open ? '' : 'none';
-                    if (open && !annoState[sec].loaded) {
-                        annoState[sec].loaded = true;
-                        try {
-                            const resp = await noteApi('/api/note/' + encodeURIComponent(kpKey(sec)));
-                            const d = await resp.json();
-                            annoState[sec].content = d.note || '';
-                            annoState[sec].images = d.images || [];
-                            input.value = annoState[sec].content;
-                            renderAnnoImages(sec);
-                            refreshAnnoToggle(sec);
-                        } catch (e) { /* 首次拉取失败不阻断编辑 */ }
-                    }
-                });
-                input.addEventListener('paste', e => pasteAnnoImage(e, sec));
-                anno.querySelector('.note-anno-save').addEventListener('click', () => {
-                    annoState[sec].content = input.value;
-                    saveAnno(sec);
+        // 过滤批注后的正文纯文本（与 offsetInRoot / wrapRange 同一计数口径）
+        function cleanTextOf(root) {
+            const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, hlWalkFilter);
+            let t = '', node;
+            while ((node = walker.nextNode())) t += node.nodeValue;
+            return t;
+        }
+
+        // ---------- 行级批注：悬停行点 ✍，批注挂在该行正下方 ----------
+        function initAnnoAndHl() {
+            // 给正文里的 li / p 编行号作批注锚点（笔记内容静态，行号稳定）
+            document.querySelectorAll('.notes-section').forEach(section => {
+                section.querySelectorAll('.notes-body li, .notes-body p').forEach((el, i) => {
+                    el.classList.add('anno-line');
+                    el.dataset.line = i;
                 });
             });
+            initAnnoAddBtn();
             initHighlight();
+            loadAnnos();
             loadHighlights();
         }
 
-        function annoEl(sec) { return document.querySelector('.note-anno[data-sec="' + CSS.escape(sec) + '"]'); }
-
-        // 有批注内容时按钮标黄点，提示该节已批注
-        function refreshAnnoToggle(sec) {
-            const el = annoEl(sec); if (!el) return;
-            const has = !!(annoState[sec].content || annoState[sec].images.length);
-            el.querySelector('.note-anno-toggle').classList.toggle('has-anno', has);
+        function lineEl(sec, line) {
+            const section = Array.from(document.querySelectorAll('.notes-section')).find(s => s.dataset.sec === sec);
+            return section ? section.querySelector('.anno-line[data-line="' + line + '"]') : null;
         }
 
-        function renderAnnoImages(sec) {
-            const el = annoEl(sec); if (!el) return;
-            const box = el.querySelector('.note-anno-images');
-            const imgs = annoState[sec].images || [];
-            box.innerHTML = imgs.map((src, i) => `
+        function annoBlockEl(sec, line) {
+            return document.querySelector('.line-anno-block[data-sec="' + CSS.escape(sec) + '"][data-line="' + line + '"]');
+        }
+
+        // li 的批注放行内末尾（跟随缩进），p 等其它行放元素后面
+        function attachBelow(line, el) {
+            if (line.tagName === 'LI') line.appendChild(el);
+            else line.insertAdjacentElement('afterend', el);
+        }
+
+        // 悬停行时行尾浮出 ✍ 按钮（全局唯一，不插进正文，避免污染高亮偏移）
+        let annoAddBtn = null, annoHoverLine = null;
+        function initAnnoAddBtn() {
+            annoAddBtn = document.createElement('button');
+            annoAddBtn.type = 'button';
+            annoAddBtn.className = 'anno-add-btn';
+            annoAddBtn.textContent = '✍';
+            annoAddBtn.title = '批注此行';
+            annoAddBtn.style.display = 'none';
+            document.body.appendChild(annoAddBtn);
+            const content = document.getElementById('notesContent');
+            content.addEventListener('mouseover', e => {
+                if (e.target.closest('.line-anno')) return;
+                const line = e.target.closest('.anno-line');
+                if (!line) return;
+                annoHoverLine = line;
+                const rect = line.getBoundingClientRect();
+                annoAddBtn.style.display = '';
+                annoAddBtn.style.top = (window.scrollY + rect.top - 2) + 'px';
+                annoAddBtn.style.left = Math.min(window.scrollX + rect.right + 8,
+                    window.scrollX + document.documentElement.clientWidth - 36) + 'px';
+            });
+            content.addEventListener('mouseleave', e => {
+                if (e.relatedTarget !== annoAddBtn) annoAddBtn.style.display = 'none';
+            });
+            window.addEventListener('scroll', () => { annoAddBtn.style.display = 'none'; }, { passive: true });
+            annoAddBtn.addEventListener('click', () => {
+                if (!annoHoverLine) return;
+                annoAddBtn.style.display = 'none';
+                const sec = annoHoverLine.closest('.notes-section').dataset.sec;
+                const line = +annoHoverLine.dataset.line;
+                openAnnoEditor(annoHoverLine, annoItems.find(it => it.sec === sec && it.line === line) || null);
+            });
+        }
+
+        function openAnnoEditor(line, item) {
+            closeAnnoEditor();
+            const sec = line.closest('.notes-section').dataset.sec;
+            const idx = +line.dataset.line;
+            const el = document.createElement('div');
+            el.className = 'line-anno line-anno-editor';
+            el.innerHTML = `
+                <textarea class="note-input line-anno-input" placeholder="写批注，可 Ctrl+V 粘贴截图…"></textarea>
+                <div class="note-images line-anno-editor-imgs"></div>
+                <div class="line-anno-bar">
+                    <button type="button" class="btn btn-primary line-anno-save">保存</button>
+                    <button type="button" class="btn btn-secondary line-anno-cancel">取消</button>
+                </div>`;
+            annoEditor = { el, sec, line: idx, images: item ? (item.images || []).slice() : [] };
+            const blk = annoBlockEl(sec, idx);
+            if (blk) blk.style.display = 'none';   // 编辑期间隐藏原批注块
+            attachBelow(line, el);
+            const input = el.querySelector('.line-anno-input');
+            input.value = item ? (item.text || '') : '';
+            renderEditorImages();
+            input.addEventListener('paste', pasteAnnoImage);
+            el.querySelector('.line-anno-save').addEventListener('click', saveAnnoEditor);
+            el.querySelector('.line-anno-cancel').addEventListener('click', () => closeAnnoEditor());
+            input.focus();
+        }
+
+        function closeAnnoEditor() {
+            if (!annoEditor) return;
+            const blk = annoBlockEl(annoEditor.sec, annoEditor.line);
+            if (blk) blk.style.display = '';
+            annoEditor.el.remove();
+            annoEditor = null;
+        }
+
+        function renderEditorImages() {
+            const box = annoEditor.el.querySelector('.line-anno-editor-imgs');
+            box.innerHTML = annoEditor.images.map((src, i) => `
                 <div class="note-img-item">
-                    <img src="${src}" alt="批注图片" onclick="viewAnnoImage('${encodeURIComponent(sec)}', ${i})">
-                    <span class="note-img-del" onclick="delAnnoImage('${encodeURIComponent(sec)}', ${i})" title="删除图片">×</span>
+                    <img src="${src}" alt="批注图片">
+                    <span class="note-img-del" data-i="${i}" title="删除图片">×</span>
                 </div>`).join('');
+            box.querySelectorAll('img').forEach(img => img.onclick = () => viewAnnoImage(img.src));
+            box.querySelectorAll('.note-img-del').forEach(d => d.onclick = () => {
+                annoEditor.images.splice(+d.dataset.i, 1);
+                renderEditorImages();
+            });
         }
 
         // 压缩成最长边1200px的JPEG，控制入库体积（透明底先铺白）
@@ -221,7 +281,8 @@
         }
 
         // 从剪贴板粘贴图片（截图后在批注框 Ctrl+V），压缩后随批注入库
-        async function pasteAnnoImage(event, sec) {
+        async function pasteAnnoImage(event) {
+            if (!annoEditor) return;
             const files = [...(event.clipboardData ? event.clipboardData.items : [])]
                 .filter(it => it.type.startsWith('image/'))
                 .map(it => it.getAsFile())
@@ -229,24 +290,12 @@
             if (!files.length) return;
             event.preventDefault();
             try {
-                for (const f of files) {
-                    (annoState[sec].images = annoState[sec].images || []).push(await compressImage(f));
-                }
+                for (const f of files) annoEditor.images.push(await compressImage(f));
             } catch (e) { alert(e.message); }
-            renderAnnoImages(sec);
-            saveAnno(sec);
+            renderEditorImages();
         }
 
-        function delAnnoImage(secEnc, i) {
-            const sec = decodeURIComponent(secEnc);
-            (annoState[sec].images || []).splice(i, 1);
-            renderAnnoImages(sec);
-            saveAnno(sec);
-        }
-
-        function viewAnnoImage(secEnc, i) {
-            const sec = decodeURIComponent(secEnc);
-            const src = (annoState[sec].images || [])[i];
+        function viewAnnoImage(src) {
             if (!src) return;
             const ov = document.createElement('div');
             ov.className = 'img-lightbox';
@@ -255,43 +304,104 @@
             document.body.appendChild(ov);
         }
 
-        async function saveAnno(sec) {
-            const el = annoEl(sec);
-            const content = annoState[sec].content || '';
-            const images = annoState[sec].images || [];
+        function saveAnnoEditor() {
+            if (!annoEditor) return;
+            const { sec, line, images } = annoEditor;
+            const text = annoEditor.el.querySelector('.line-anno-input').value.trim();
+            annoItems = annoItems.filter(it => !(it.sec === sec && it.line === line));
+            const old = annoBlockEl(sec, line);
+            if (old) old.remove();
+            if (text || images.length) {
+                const item = { sec, line, text, images };
+                annoItems.push(item);
+                renderAnnoBlock(item);
+            }
+            annoEditor.el.remove();
+            annoEditor = null;
+            saveAnnos();
+        }
+
+        // 已保存批注条：📝 + 文字/贴图 + 改/删（常驻显示在行下方）
+        function renderAnnoBlock(item) {
+            const line = lineEl(item.sec, item.line);
+            if (!line) return;
+            const el = document.createElement('div');
+            el.className = 'line-anno line-anno-block';
+            el.dataset.sec = item.sec;
+            el.dataset.line = item.line;
+            const imgs = (item.images || []).map(src =>
+                `<img class="line-anno-img" src="${src}" alt="批注图片">`).join('');
+            el.innerHTML = `
+                <span class="line-anno-icon">📝</span>
+                <div class="line-anno-body">
+                    ${item.text ? `<div class="line-anno-text"></div>` : ''}
+                    ${imgs}
+                </div>
+                <div class="line-anno-ops">
+                    <button type="button" class="line-anno-op line-anno-edit">改</button>
+                    <button type="button" class="line-anno-op line-anno-del">删</button>
+                </div>`;
+            if (item.text) el.querySelector('.line-anno-text').textContent = item.text;  // textContent 防注入
+            el.querySelectorAll('.line-anno-img').forEach(img => img.onclick = () => viewAnnoImage(img.src));
+            el.querySelector('.line-anno-edit').onclick = () => openAnnoEditor(line, item);
+            el.querySelector('.line-anno-del').onclick = () => {
+                if (!confirm('删除这条批注？')) return;
+                annoItems = annoItems.filter(it => !(it.sec === item.sec && it.line === item.line));
+                el.remove();
+                saveAnnos();
+            };
+            attachBelow(line, el);
+        }
+
+        function saveAnnos() {
+            clearTimeout(annoSaveTimer);
+            annoSaveTimer = setTimeout(async () => {
+                try {
+                    await noteApi('/api/note/' + encodeURIComponent(annoKey()), {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ content: JSON.stringify(annoItems), images: [] })
+                    });
+                } catch (e) { alert('批注保存失败: ' + e.message); }
+            }, 300);
+        }
+
+        // 整科一次 GET 还原所有行批注
+        async function loadAnnos() {
+            let items = [];
             try {
-                const resp = await noteApi('/api/note/' + encodeURIComponent(kpKey(sec)), {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ content, images })
-                });
+                const resp = await noteApi('/api/note/' + encodeURIComponent(annoKey()));
                 const d = await resp.json();
-                annoState[sec].content = d.note || '';
-                annoState[sec].images = d.images || [];
-                if (el) {
-                    const hint = el.querySelector('.note-anno-hint');
-                    const has = !!(annoState[sec].content || annoState[sec].images.length);
-                    hint.textContent = has ? '已保存 ✓' : '批注已清空删除';
-                    setTimeout(() => { if (hint) hint.textContent = ''; }, 2000);
-                }
-                refreshAnnoToggle(sec);
-            } catch (e) { alert('批注保存失败: ' + e.message); }
+                items = d.note ? JSON.parse(d.note) : [];
+            } catch (e) { return; }
+            if (!Array.isArray(items) || !items.length) return;
+            annoItems = items.filter(it => it && typeof it.line === 'number');
+            annoItems.forEach(renderAnnoBlock);
         }
 
         // ---------- 划词高亮 ----------
         const HL_COLORS = ['yellow', 'green', 'blue', 'pink'];
 
-        // 选区端点相对 root 的纯文本字符偏移（与 Range.toString 、TreeWalker 计数一致）
+        // 选区端点相对 root 的纯文本字符偏移（跳过批注子树，与 cleanTextOf / wrapRange 同口径）
         function offsetInRoot(root, container, offset) {
-            const r = document.createRange();
-            r.selectNodeContents(root);
-            r.setEnd(container, offset);
-            return r.toString().length;
+            const target = container.nodeType === 3 ? container
+                : (container.childNodes[offset] || null);   // 元素端点取子节点边界
+            const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, hlWalkFilter);
+            let pos = 0, node;
+            while ((node = walker.nextNode())) {
+                if (container.nodeType === 3) {
+                    if (node === container) return pos + offset;
+                } else if (target && (target === node || (target.contains && target.contains(node)))) {
+                    return pos;   // 落到边界子节点起点
+                }
+                pos += node.nodeValue.length;
+            }
+            return pos;
         }
 
-        // 将 [start,end) 内的文本节点片段包进 span（逐片段包裹，支持跨内联标签）
+        // 将 [start,end) 内的文本节点片段包进 span（逐片段包裹，支持跨内联标签，跳过批注子树）
         function wrapRange(root, start, end, cls, ds) {
-            const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
+            const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, hlWalkFilter);
             let pos = 0, node;
             const pieces = [];
             while ((node = walker.nextNode())) {
@@ -340,8 +450,9 @@
             if (!sel || sel.isCollapsed || !sel.rangeCount) { hideHlToolbar(); return; }
             const range = sel.getRangeAt(0);
             const body = bodyOf(range.startContainer);
-            // 选区必须完全落在同一 .notes-body 内
+            // 选区必须完全落在同一 .notes-body 内，且不落进批注块
             if (!body || bodyOf(range.endContainer) !== body) { hideHlToolbar(); return; }
+            if (inAnno(range.startContainer) || inAnno(range.endContainer)) { hideHlToolbar(); return; }
             hideHlToolbar();
             const rect = range.getBoundingClientRect();
             hlToolbar = document.createElement('div');
@@ -419,7 +530,7 @@
                 const list = bySec[sec];
                 if (!list) return;
                 const body = section.querySelector('.notes-body');
-                const full = body.textContent;
+                const full = cleanTextOf(body);
                 list.sort((a, b) => a.start - b.start);
                 for (const it of list) {
                     let { start, end } = it;

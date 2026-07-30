@@ -2406,54 +2406,110 @@ a.chapter-badge-link:hover {
 
 /* ==================== 首页科目卡按钮平铺 ==================== */
 
-/* ==================== 考点笔记：批注块 + 划词高亮 ==================== */
-.note-anno {
-    margin-top: 14px;
-    padding-top: 12px;
-    border-top: 1px dashed var(--border);
+/* ==================== 考点笔记：行级批注 + 划词高亮 ==================== */
+/* 悬停行尾浮出的 ✍ 按钮 */
+.anno-add-btn {
+    position: absolute;
+    z-index: 2500;
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    border: 1px solid var(--border);
+    background: var(--card-bg);
+    color: var(--primary);
+    font-size: 0.95rem;
+    line-height: 1;
+    cursor: pointer;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
 }
 
-.note-anno-toggle {
-    background: none;
+.anno-add-btn:hover {
+    background: var(--primary);
+    color: #fff;
+}
+
+/* 行下方批注条：📝 + 内容 + 改/删 */
+.line-anno {
+    margin: 8px 0 6px;
+    font-size: 0.92rem;
+}
+
+.line-anno-block {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    padding: 10px 12px;
+    background: #fdf8e8;
+    border: 1px solid #eadfb8;
+    border-left: 3px solid #e0c65a;
+    border-radius: 8px;
+}
+
+.line-anno-icon { flex: none; }
+
+.line-anno-body {
+    flex: 1;
+    min-width: 0;
+}
+
+.line-anno-text {
+    white-space: pre-wrap;
+    word-break: break-word;
+    color: var(--text);
+}
+
+.line-anno-img {
+    display: block;
+    max-width: min(640px, 100%);
     border: 1px solid var(--border);
     border-radius: 6px;
-    color: var(--text-light);
-    font-size: 0.85rem;
-    padding: 4px 12px;
+    margin-top: 6px;
+    cursor: zoom-in;
+}
+
+.line-anno-body > :first-child { margin-top: 0; }
+
+.line-anno-ops {
+    flex: none;
+    display: flex;
+    gap: 6px;
+}
+
+.line-anno-op {
+    border: 1px solid var(--border);
+    background: var(--card-bg);
+    color: var(--primary);
+    border-radius: 6px;
+    font-size: 0.82rem;
+    padding: 2px 10px;
     cursor: pointer;
 }
 
-.note-anno-toggle:hover {
-    color: var(--primary);
-    border-color: var(--primary);
+.line-anno-op:hover { border-color: var(--primary); }
+
+.line-anno-del:hover {
+    color: var(--danger);
+    border-color: var(--danger);
 }
 
-.note-anno-toggle.has-anno {
-    color: #b8860b;
-    border-color: #e0c65a;
-    background: #fff8dc;
+/* 行内批注编辑器 */
+.line-anno-editor {
+    padding: 10px 12px;
+    background: var(--bg);
+    border: 1px dashed var(--border);
+    border-radius: 8px;
 }
 
-.note-anno-panel {
-    margin-top: 10px;
-}
-
-.note-anno-input {
+.line-anno-input {
     width: 100%;
-    min-height: 72px;
+    min-height: 64px;
     box-sizing: border-box;
 }
 
-.note-anno-bar {
+.line-anno-bar {
     display: flex;
-    align-items: center;
-    gap: 12px;
+    gap: 10px;
     margin-top: 8px;
-}
-
-.note-anno-hint {
-    font-size: 0.85rem;
-    color: var(--text-light);
 }
 
 /* 划词高亮色块 */
@@ -2507,10 +2563,14 @@ a.chapter-badge-link:hover {
 .hl-cancel:hover { color: var(--danger); }
 
 /* 批注 + 高亮夜间适配 */
-.dark .note-anno-toggle.has-anno {
-    color: #e0c65a;
-    border-color: #6b5e1a;
-    background: #3a361c;
+.dark .line-anno-block {
+    background: #35301d;
+    border-color: #59512c;
+    border-left-color: #b8a23a;
+}
+
+.dark .line-anno-editor {
+    background: #23272e;
 }
 
 .dark .note-hl-yellow { background: #6b5e1a; color: #f5f2e0; }
