@@ -2407,27 +2407,6 @@ a.chapter-badge-link:hover {
 /* ==================== 首页科目卡按钮平铺 ==================== */
 
 /* ==================== 考点笔记：行级批注 + 划词高亮 ==================== */
-/* 悬停行尾浮出的 ✍ 按钮 */
-.anno-add-btn {
-    position: absolute;
-    z-index: 2500;
-    width: 28px;
-    height: 28px;
-    border-radius: 50%;
-    border: 1px solid var(--border);
-    background: var(--card-bg);
-    color: var(--primary);
-    font-size: 0.95rem;
-    line-height: 1;
-    cursor: pointer;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
-}
-
-.anno-add-btn:hover {
-    background: var(--primary);
-    color: #fff;
-}
-
 /* 行下方批注条：📝 + 内容 + 改/删 */
 .line-anno {
     margin: 8px 0 6px;
@@ -2551,6 +2530,23 @@ a.chapter-badge-link:hover {
 .hl-dot-green  { background: #b8e6c0; }
 .hl-dot-blue   { background: #b3d9f2; }
 .hl-dot-pink   { background: #f5c2d5; }
+
+/* 工具条内的 📝批注 按钮 */
+.hl-anno-btn {
+    cursor: pointer;
+    font-size: 0.85rem;
+    color: var(--text);
+    padding: 2px 8px;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    white-space: nowrap;
+    margin-left: 2px;
+}
+
+.hl-anno-btn:hover {
+    color: var(--primary);
+    border-color: var(--primary);
+}
 
 .hl-cancel {
     cursor: pointer;

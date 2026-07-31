@@ -146,7 +146,7 @@
             return t;
         }
 
-        // ---------- 行级批注：悬停行点 ✍，批注挂在该行正下方 ----------
+        // ---------- 行级批注：划词后工具条点 📝批注，批注挂在该行正下方 ----------
         function initAnnoAndHl() {
             // 给正文里的 li / p 编行号作批注锚点（笔记内容静态，行号稳定）
             document.querySelectorAll('.notes-section').forEach(section => {
@@ -155,7 +155,6 @@
                     el.dataset.line = i;
                 });
             });
-            initAnnoAddBtn();
             initHighlight();
             loadAnnos();
             loadHighlights();
@@ -174,41 +173,6 @@
         function attachBelow(line, el) {
             if (line.tagName === 'LI') line.appendChild(el);
             else line.insertAdjacentElement('afterend', el);
-        }
-
-        // 悬停行时行尾浮出 ✍ 按钮（全局唯一，不插进正文，避免污染高亮偏移）
-        let annoAddBtn = null, annoHoverLine = null;
-        function initAnnoAddBtn() {
-            annoAddBtn = document.createElement('button');
-            annoAddBtn.type = 'button';
-            annoAddBtn.className = 'anno-add-btn';
-            annoAddBtn.textContent = '✍';
-            annoAddBtn.title = '批注此行';
-            annoAddBtn.style.display = 'none';
-            document.body.appendChild(annoAddBtn);
-            const content = document.getElementById('notesContent');
-            content.addEventListener('mouseover', e => {
-                if (e.target.closest('.line-anno')) return;
-                const line = e.target.closest('.anno-line');
-                if (!line) return;
-                annoHoverLine = line;
-                const rect = line.getBoundingClientRect();
-                annoAddBtn.style.display = '';
-                annoAddBtn.style.top = (window.scrollY + rect.top - 2) + 'px';
-                annoAddBtn.style.left = Math.min(window.scrollX + rect.right + 8,
-                    window.scrollX + document.documentElement.clientWidth - 36) + 'px';
-            });
-            content.addEventListener('mouseleave', e => {
-                if (e.relatedTarget !== annoAddBtn) annoAddBtn.style.display = 'none';
-            });
-            window.addEventListener('scroll', () => { annoAddBtn.style.display = 'none'; }, { passive: true });
-            annoAddBtn.addEventListener('click', () => {
-                if (!annoHoverLine) return;
-                annoAddBtn.style.display = 'none';
-                const sec = annoHoverLine.closest('.notes-section').dataset.sec;
-                const line = +annoHoverLine.dataset.line;
-                openAnnoEditor(annoHoverLine, annoItems.find(it => it.sec === sec && it.line === line) || null);
-            });
         }
 
         function openAnnoEditor(line, item) {
@@ -459,12 +423,25 @@
             hlToolbar.className = 'hl-toolbar';
             hlToolbar.innerHTML = HL_COLORS.map(c =>
                 `<span class="hl-dot hl-dot-${c}" data-color="${c}" title="${c}"></span>`).join('') +
+                '<span class="hl-anno-btn" title="批注此行">📝批注</span>' +
                 '<span class="hl-cancel" title="取消高亮">✕</span>';
             document.body.appendChild(hlToolbar);
             hlToolbar.style.top = (window.scrollY + rect.top - hlToolbar.offsetHeight - 8) + 'px';
             hlToolbar.style.left = (window.scrollX + rect.left) + 'px';
             hlToolbar.querySelectorAll('.hl-dot').forEach(dot =>
                 dot.addEventListener('click', () => applyHighlight(body, range, dot.dataset.color)));
+            // 划词后点📝批注：定位到选区起点所在行，在其正下方开编辑框
+            hlToolbar.querySelector('.hl-anno-btn').addEventListener('click', () => {
+                const el = range.startContainer.nodeType === 1
+                    ? range.startContainer : range.startContainer.parentElement;
+                const line = el && el.closest('.anno-line');
+                window.getSelection().removeAllRanges();
+                hideHlToolbar();
+                if (!line) return;
+                const sec = line.closest('.notes-section').dataset.sec;
+                const idx = +line.dataset.line;
+                openAnnoEditor(line, annoItems.find(it => it.sec === sec && it.line === idx) || null);
+            });
             hlToolbar.querySelector('.hl-cancel').addEventListener('click', () => {
                 // 选区内已有高亮则取消
                 const span = (range.startContainer.parentElement || range.startContainer).closest
