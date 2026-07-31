@@ -45,6 +45,8 @@
             <aside class="notes-toc" id="notesToc"></aside>
             <div class="notes-content" id="notesContent"></div>
         </div>
+        <button class="notes-top-btn" id="notesTopBtn" title="回到开头" hidden
+            onclick="window.scrollTo({ top: 0, behavior: 'smooth' })">↑</button>
     </main>
     <script src="js/common.js"></script>
     <script src="js/backend.js"></script>
@@ -664,6 +666,15 @@
                 }
             });
         }
+
+        // 悬浮回顶按钮：下滑超过 400px 才出现，避免开头就挡内容
+        (function () {
+            const topBtn = document.getElementById('notesTopBtn');
+            if (!topBtn) return;
+            window.addEventListener('scroll', () => {
+                topBtn.hidden = window.scrollY < 400;
+            }, { passive: true });
+        })();
 
         loadNotes();
         if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js');

@@ -2641,3 +2641,31 @@ a.chapter-badge-link:hover {
 .dark .note-hl-green  { background: #1e4d2b; color: #e0f2e4; }
 .dark .note-hl-blue   { background: #1e3a5f; color: #e0ecf7; }
 .dark .note-hl-pink   { background: #5f2440; color: #f7e0eb; }
+
+/* 笔记页悬浮回顶按钮 */
+.notes-top-btn {
+    position: fixed;
+    right: 22px;
+    bottom: 26px;
+    z-index: 2300;
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    border: 1px solid var(--border);
+    background: var(--card-bg);
+    color: var(--primary);
+    font-size: 1.3rem;
+    line-height: 1;
+    cursor: pointer;
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.18);
+    transition: transform 0.15s, box-shadow 0.15s;
+}
+
+.notes-top-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 18px rgba(0, 0, 0, 0.25);
+}
+
+.dark .notes-top-btn {
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.5);
+}
