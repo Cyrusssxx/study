@@ -35,6 +35,11 @@
             <h1>📖 考点笔记</h1>
             <p class="notes-source">加载中...</p>
         </div>
+        <div class="notes-search" id="notesSearchBox" hidden>
+            <input type="search" id="notesSearchInput" placeholder="🔍 搜索本科考点、章节、我的批注…" autocomplete="off"
+                oninput="doNoteSearch(this.value)" onfocus="doNoteSearch(this.value)">
+            <div class="notes-search-results" id="notesSearchResults" hidden></div>
+        </div>
         <div class="notes-layout">
             <aside class="notes-toc" id="notesToc"></aside>
             <div class="notes-content" id="notesContent"></div>
@@ -146,6 +151,139 @@
             return t;
         }
 
+        // ==================== 本科考点搜索：标题/章节/正文行 + 我的批注，命中精确定位 ====================
+        let noteIndex = [], lastNoteHits = [];
+        const NOTE_HIST_KEY = 'notesSearchHistory';
+
+        function nsEsc(s) {
+            return String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+        }
+
+        // 渲染后建索引：章标题(w=0)、节标题(w=1)、正文行(w=2)；批注在搜索时实时读 annoItems
+        function buildNoteIndex() {
+            noteIndex = [];
+            let order = 0;
+            document.querySelectorAll('.notes-content > .notes-ch-title, .notes-content > .notes-section').forEach(node => {
+                if (node.classList.contains('notes-ch-title')) {
+                    noteIndex.push({ text: node.textContent.trim(), path: '章', w: 0, r: 0, order: order++ });
+                    return;
+                }
+                const sec = node.dataset.sec;
+                const t = node.querySelector('.notes-sec-title');
+                if (t) noteIndex.push({ text: t.textContent.trim(), path: '节', sec, w: 1, r: 0, order: order++ });
+                node.querySelectorAll('.notes-body li, .notes-body p').forEach(el => {
+                    const txt = cleanTextOf(el).trim().replace(/\s+/g, ' ');   // 跳过批注子树
+                    if (txt) noteIndex.push({ text: txt, path: sec, sec, w: 2, r: 0, order: order++ });
+                });
+            });
+        }
+
+        function doNoteSearch(q) {
+            const box = document.getElementById('notesSearchResults');
+            if (!box) return;
+            q = q.trim().toLowerCase();
+            if (!q) { showNoteHistory(); return; }
+            const hits = [];
+            // 我的批注排最前（r=-1）
+            annoItems.forEach(it => {
+                if (it.text && it.text.toLowerCase().includes(q))
+                    hits.push({ text: '📝 ' + it.text, path: '我的批注', sec: it.sec, w: 0, r: -1, order: 0 });
+            });
+            noteIndex.forEach(it => { if (it.text.toLowerCase().includes(q)) hits.push(it); });
+            // 排序：批注在前 → 章/节/正文 → 原文顺序，取前 40 条
+            hits.sort((a, b) => a.r - b.r || a.w - b.w || a.order - b.order);
+            const top = hits.slice(0, 40);
+            lastNoteHits = top;
+            box.hidden = false;
+            box.innerHTML = top.length === 0 ? '<div class="notes-sr-empty">无结果</div>' :
+                top.map((h, i) => `<div class="notes-sr-item" onclick="locateNoteHit(${i})">
+                    <span class="notes-sr-path">${nsEsc(h.path || '')}</span>
+                    <span class="notes-sr-text">${nsEsc(h.text.slice(0, 60))}</span></div>`).join('');
+        }
+
+        // 点结果：记历史 + 收起下拉 + 定位到命中块
+        function locateNoteHit(i) {
+            const h = lastNoteHits[i];
+            if (!h) return;
+            saveNoteHist(document.getElementById('notesSearchInput').value);
+            clearNoteSearch();
+            locateNoteBlock(h.text);
+        }
+
+        // 找文本最短的命中块(=最精确)，瞬时滚到屏幕中央并闪烁 1.8s
+        function locateNoteBlock(text) {
+            const plain = text.replace(/^📝 /, '').trim();
+            if (plain.length < 2) return;
+            let best = null;
+            document.querySelectorAll('.notes-content h2, .notes-content .notes-sec-title, .notes-content .notes-body li, .notes-content .notes-body p, .notes-content .notes-body td, .line-anno-text').forEach(b => {
+                if (b.textContent.includes(plain) && (!best || b.textContent.length < best.textContent.length)) best = b;
+            });
+            if (!best) return;
+            best.scrollIntoView({ block: 'center', behavior: 'instant' });
+            best.classList.add('locate-flash');
+            setTimeout(() => best.classList.remove('locate-flash'), 1800);
+        }
+
+        function clearNoteSearch() {
+            const input = document.getElementById('notesSearchInput');
+            if (input) input.value = '';
+            const box = document.getElementById('notesSearchResults');
+            if (box) { box.hidden = true; box.innerHTML = ''; }
+        }
+
+        // ---------- 搜索历史（localStorage 最多 5 条，可单删/清空） ----------
+        const getNoteHist = () => { try { return JSON.parse(localStorage.getItem(NOTE_HIST_KEY)) || []; } catch (e) { return []; } };
+
+        function saveNoteHist(term) {
+            term = (term || '').trim();
+            if (!term) return;
+            const h = getNoteHist().filter(t => t !== term);   // 去重后提到最前
+            h.unshift(term);
+            localStorage.setItem(NOTE_HIST_KEY, JSON.stringify(h.slice(0, 5)));
+        }
+
+        // 输入框为空时展示历史列表（聚焦/清空输入时触发）
+        function showNoteHistory() {
+            const box = document.getElementById('notesSearchResults');
+            if (!box) return;
+            const h = getNoteHist();
+            if (!h.length) { box.hidden = true; box.innerHTML = ''; return; }
+            box.hidden = false;
+            box.innerHTML = `<div class="notes-sh-head">搜索历史<button class="notes-sh-clear" onclick="clearNoteHist()">清空</button></div>` +
+                h.slice(0, 5).map((t, i) => `<div class="notes-sh-item" onclick="useNoteHist(${i})">
+                    <span class="notes-sh-term">${nsEsc(t)}</span>
+                    <button class="notes-sh-del" onclick="delNoteHist(event, ${i})" title="删除这条">×</button></div>`).join('');
+        }
+
+        function useNoteHist(i) {
+            const t = getNoteHist()[i];
+            if (t == null) return;
+            document.getElementById('notesSearchInput').value = t;
+            doNoteSearch(t);
+        }
+
+        function delNoteHist(e, i) {
+            e.stopPropagation();   // 别触发整行的 useNoteHist
+            const h = getNoteHist();
+            h.splice(i, 1);
+            localStorage.setItem(NOTE_HIST_KEY, JSON.stringify(h));
+            showNoteHistory();
+        }
+
+        function clearNoteHist() {
+            localStorage.removeItem(NOTE_HIST_KEY);
+            const box = document.getElementById('notesSearchResults');
+            if (box) { box.hidden = true; box.innerHTML = ''; }
+        }
+
+        // 点搜索区外部 → 收起下拉
+        document.addEventListener('click', e => {
+            if (!e.target.closest('.notes-search')) {
+                const box = document.getElementById('notesSearchResults');
+                if (box) box.hidden = true;
+            }
+        });
+
         // ---------- 行级批注：划词后工具条点 📝批注，批注挂在该行正下方 ----------
         function initAnnoAndHl() {
             // 给正文里的 li / p 编行号作批注锚点（笔记内容静态，行号稳定）
@@ -155,6 +293,9 @@
                     el.dataset.line = i;
                 });
             });
+            buildNoteIndex();
+            const sb = document.getElementById('notesSearchBox');
+            if (sb) sb.hidden = false;
             initHighlight();
             loadAnnos();
             loadHighlights();

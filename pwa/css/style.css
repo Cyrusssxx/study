@@ -2407,6 +2407,74 @@ a.chapter-badge-link:hover {
 /* ==================== 首页科目卡按钮平铺 ==================== */
 
 /* ==================== 考点笔记：行级批注 + 划词高亮 ==================== */
+/* 本科考点搜索框 + 命中定位 */
+.notes-search {
+    position: relative;
+    margin: 0 0 16px;
+    max-width: 520px;
+}
+
+.notes-search input {
+    width: 100%;
+    padding: 9px 14px;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    background: var(--card-bg);
+    color: var(--text);
+    font-size: 0.95rem;
+    outline: none;
+}
+
+.notes-search input:focus { border-color: var(--primary); }
+
+.notes-search-results {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: calc(100% + 4px);
+    max-height: 60vh;
+    overflow-y: auto;
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    box-shadow: var(--shadow);
+    z-index: 2400;
+}
+
+.notes-sr-item {
+    display: block;
+    padding: 8px 14px;
+    border-bottom: 1px solid var(--border);
+    cursor: pointer;
+}
+
+.notes-sr-item:last-child { border-bottom: none; }
+.notes-sr-item:hover { background: var(--bg); }
+.notes-sr-path { display: block; font-size: 0.72rem; color: var(--primary); margin-bottom: 2px; }
+.notes-sr-text { display: block; font-size: 0.86rem; color: var(--text-light); }
+.notes-sr-empty { padding: 12px 14px; font-size: 0.86rem; color: var(--text-light); }
+
+.notes-sh-head { display: flex; justify-content: space-between; align-items: center; padding: 6px 14px 2px; font-size: 0.72rem; color: var(--text-light); }
+.notes-sh-clear { border: none; background: none; color: var(--text-light); cursor: pointer; font-size: 0.78rem; }
+.notes-sh-clear:hover { color: var(--danger); }
+.notes-sh-item { display: flex; justify-content: space-between; align-items: center; padding: 5px 14px; cursor: pointer; font-size: 0.88rem; color: var(--text); }
+.notes-sh-item:hover { background: var(--bg); }
+.notes-sh-term { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.notes-sh-del { border: none; background: none; color: var(--text-light); cursor: pointer; font-size: 1rem; line-height: 1; padding: 0 4px; }
+.notes-sh-del:hover { color: var(--danger); }
+
+/* 搜索命中块闪烁提示 */
+.locate-flash { animation: noteLocateFlash 1.8s ease-out; }
+@keyframes noteLocateFlash {
+    0%, 55% { background: #fff3a3; }
+    100% { background: transparent; }
+}
+.dark .locate-flash { animation: noteLocateFlashDark 1.8s ease-out; }
+@keyframes noteLocateFlashDark {
+    0%, 55% { background: #5a5320; }
+    100% { background: transparent; }
+}
+
 /* 行下方批注条：📝 + 内容 + 改/删 */
 .line-anno {
     margin: 8px 0 6px;
