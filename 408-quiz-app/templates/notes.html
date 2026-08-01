@@ -48,8 +48,9 @@
         const tocLinks = Array.from(document.querySelectorAll('.notes-toc-sec'));
         const sections = Array.from(document.querySelectorAll('.notes-section'));
 
-        // 题目旧 section 名（王道）→ 笔记新 section 名（袁书）映射表
+        // 题目旧 section 名（王道）→ 笔记新 section 名（袁书/新版）映射表
         const SEC_ALIASES = {
+            // 计组（CO）映射
             "1.2 计算机系统层次结构": "1.3 计算机系统层次结构",
             "1.3 计算机的性能指标": "1.2 计算机系统的基本组成",
             "2.1 数制与编码": "2.1 数制和编码",
@@ -76,7 +77,13 @@
             "6.2 总线事务和定时": "8.2 总线",
             "7.1 I/O系统基本概念": "8.1 系统互连及I/O系统概述",
             "7.2 I/O接口": "8.1 系统互连及I/O系统概述",
-            "7.3 I/O方式": "8.3 I/O控制方式"
+            "7.3 I/O方式": "8.3 I/O控制方式",
+            // 计算机网络（CN）映射
+            "4.7 网络层设备": "4.8 本章小结及疑难点",
+            // 操作系统（OS）映射
+            "1.1 操作系统的基本概念": "1.2 操作系统发展历程",
+            "2.1 进程与线程简介": "2.2 CPU调度",
+            "71.3 文件系统": "4.3 文件系统",
         };
 
         function jumpTo(name, highlight) {
