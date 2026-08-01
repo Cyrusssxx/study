@@ -2211,6 +2211,25 @@ mark {
     padding: 12px 8px;
 }
 
+/* 搜索框：侧边栏内紧凑样式 */
+.notes-search {
+    position: relative;
+    margin: 0 0 8px;
+}
+
+.notes-search input {
+    width: 100%;
+    padding: 8px 10px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    background: var(--card-bg);
+    font-size: 0.85rem;
+    color: var(--text);
+    outline: none;
+}
+
+.notes-search input:focus { border-color: var(--primary); }
+
 .notes-toc-ch {
     font-weight: 600;
     font-size: 0.88rem;
@@ -2413,37 +2432,6 @@ a.chapter-badge-link:hover {
 /* ==================== 首页科目卡按钮平铺 ==================== */
 
 /* ==================== 考点笔记：行级批注 + 划词高亮 ==================== */
-/* 本科考点搜索框 + 命中定位 */
-.notes-search {
-    position: relative;
-    margin: 0 0 16px;
-    max-width: 520px;
-}
-
-.notes-search-wrap {
-    position: sticky;
-    top: 60px;
-    z-index: 50;
-    background: var(--bg);
-    padding: 12px 0 8px;
-    margin: -12px -8px 0;
-    padding-left: 8px;
-    padding-right: 8px;
-    border-bottom: 1px solid var(--border);
-}
-
-.notes-search input {
-    width: 100%;
-    padding: 9px 14px;
-    border: 1px solid var(--border);
-    border-radius: 10px;
-    background: var(--card-bg);
-    color: var(--text);
-    font-size: 0.95rem;
-    outline: none;
-}
-
-.notes-search input:focus { border-color: var(--primary); }
 
 .notes-search-results {
     position: absolute;
@@ -2455,8 +2443,9 @@ a.chapter-badge-link:hover {
     background: var(--card-bg);
     border: 1px solid var(--border);
     border-radius: 10px;
-    box-shadow: var(--shadow);
-    z-index: 2400;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.15);
+    z-index: 200;
+    padding: 4px;
 }
 
 .notes-sr-item {

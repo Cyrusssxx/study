@@ -32,19 +32,18 @@
         </div>
     </nav>
     <main class="container">
-        <div class="notes-search-wrap">
-            <div class="notes-search" id="notesSearchBox" hidden>
-                <input type="search" id="notesSearchInput" placeholder="🔍 搜索本科考点、章节、我的批注…" autocomplete="off"
-                    oninput="doNoteSearch(this.value)" onfocus="doNoteSearch(this.value)">
-                <div class="notes-search-results" id="notesSearchResults" hidden></div>
-            </div>
-        </div>
         <div class="notes-header" id="notesHeader">
             <h1>📖 考点笔记</h1>
             <p class="notes-source">加载中...</p>
         </div>
         <div class="notes-layout">
-            <aside class="notes-toc" id="notesToc"></aside>
+            <aside class="notes-toc" id="notesToc">
+                <div class="notes-search" id="notesSearchBox" hidden>
+                    <input type="search" id="notesSearchInput" placeholder="🔍 搜索考点、章节、批注…" autocomplete="off"
+                        oninput="doNoteSearch(this.value)" onfocus="doNoteSearch(this.value)">
+                    <div class="notes-search-results" id="notesSearchResults" hidden></div>
+                </div>
+            </aside>
             <div class="notes-content" id="notesContent"></div>
         </div>
         <button class="notes-top-btn" id="notesTopBtn" title="回到开头" hidden
