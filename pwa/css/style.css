@@ -2318,11 +2318,17 @@ mark {
     color: var(--primary-dark);
 }
 
+.notes-table-wrap {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    margin: 10px 0;
+}
 .notes-body table {
     border-collapse: collapse;
-    margin: 10px 0;
+    margin: 0;
     font-size: 0.88rem;
     width: 100%;
+    min-width: 480px;
 }
 
 .notes-body th, .notes-body td {
@@ -2412,6 +2418,18 @@ a.chapter-badge-link:hover {
     position: relative;
     margin: 0 0 16px;
     max-width: 520px;
+}
+
+.notes-search-wrap {
+    position: sticky;
+    top: 60px;
+    z-index: 50;
+    background: var(--bg);
+    padding: 12px 0 8px;
+    margin: -12px -8px 0;
+    padding-left: 8px;
+    padding-right: 8px;
+    border-bottom: 1px solid var(--border);
 }
 
 .notes-search input {
@@ -2664,6 +2682,18 @@ a.chapter-badge-link:hover {
 .notes-top-btn:hover {
     transform: translateY(-2px);
     box-shadow: 0 6px 18px rgba(0, 0, 0, 0.25);
+}
+
+/* 搜索关键词高亮 */
+.notes-hl-kw {
+    background: #fde047;
+    color: #000;
+    padding: 0 2px;
+    border-radius: 2px;
+}
+.dark .notes-hl-kw {
+    background: #a16207;
+    color: #fef9c3;
 }
 
 .dark .notes-top-btn {

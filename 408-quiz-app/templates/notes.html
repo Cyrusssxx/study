@@ -1,15 +1,16 @@
 {% extends "base.html" %}
 {% block title %}{{ notes.title }} - 408刷题{% endblock %}
 {% block content %}
+<div class="notes-search-wrap">
+    <div class="notes-search" id="notesSearchBox" hidden>
+        <input type="search" id="notesSearchInput" placeholder="🔍 搜索本科考点、章节、我的批注…" autocomplete="off"
+            oninput="doNoteSearch(this.value)" onfocus="doNoteSearch(this.value)">
+        <div class="notes-search-results" id="notesSearchResults" hidden></div>
+    </div>
+</div>
 <div class="notes-header">
     <h1>📖 {{ notes.title }}</h1>
     <p class="notes-source">{{ notes.source }}</p>
-</div>
-
-<div class="notes-search" id="notesSearchBox" hidden>
-    <input type="search" id="notesSearchInput" placeholder="🔍 搜索本科考点、章节、我的批注…" autocomplete="off"
-        oninput="doNoteSearch(this.value)" onfocus="doNoteSearch(this.value)">
-    <div class="notes-search-results" id="notesSearchResults" hidden></div>
 </div>
 
 <div class="notes-layout">
@@ -47,14 +48,85 @@
         const tocLinks = Array.from(document.querySelectorAll('.notes-toc-sec'));
         const sections = Array.from(document.querySelectorAll('.notes-section'));
 
+        // 题目旧 section 名（王道）→ 笔记新 section 名（袁书）映射表
+        const SEC_ALIASES = {
+            "1.2 计算机系统层次结构": "1.3 计算机系统层次结构",
+            "1.3 计算机的性能指标": "1.2 计算机系统的基本组成",
+            "2.1 数制与编码": "2.1 数制和编码",
+            "2.2 运算方法和运算电路": "3.2 定点数运算",
+            "2.3 浮点数的表示与运算": "2.3 浮点数表示与运算",
+            "3.1 存储器概述": "7.1 存储器层次结构概述",
+            "3.2 主存储器": "7.2 主存储器",
+            "3.3 主存储器与CPU的连接": "7.2 主存储器",
+            "3.4 外部存储器": "8.4 外部存储器",
+            "3.5 高速缓冲存储器": "7.3 高速缓冲存储器(Cache)",
+            "3.6 虚拟存储器": "7.4 虚拟存储器",
+            "4.1 指令系统": "4.1 指令格式和指令系统",
+            "4.2 指令的寻址方式": "4.2 指令寻址方式",
+            "4.3 程序的机器级代码表示": "4.3 程序的机器级代码表示",
+            "4.4 CISC和RISC的基本概念": "4.4 指令集结构设计",
+            "5.1 CPU的功能和基本结构": "5.1 CPU的基本组成",
+            "5.2 指令执行过程": "5.3 指令执行过程",
+            "5.3 数据通路的功能和基本结构": "5.2 数据通路",
+            "5.4 控制器的功能和工作原理": "5.4 控制单元",
+            "5.5 异常和中断机制": "8.3 I/O控制方式",
+            "5.6 指令流水线": "6.1 流水线概念与分类",
+            "5.7 多处理器的基本概念": "9.2 多处理器系统",
+            "6.1 总线概述": "8.2 总线",
+            "6.2 总线事务和定时": "8.2 总线",
+            "7.1 I/O系统基本概念": "8.1 系统互连及I/O系统概述",
+            "7.2 I/O接口": "8.1 系统互连及I/O系统概述",
+            "7.3 I/O方式": "8.3 I/O控制方式"
+        };
+
         function jumpTo(name, highlight) {
-            const target = sections.find(s => s.dataset.sec === name);
+            const tocLinks = Array.from(document.querySelectorAll('.notes-toc-sec'));
+            const sections = Array.from(document.querySelectorAll('.notes-section'));
+
+            const mapped = SEC_ALIASES[name] || name;
+
+            // 1) 精确匹配
+            let target = sections.find(s => s.dataset.sec === name)
+                      || sections.find(s => s.dataset.sec === mapped);
+
+            // 2) 按编号前缀模糊匹配
+            if (!target) {
+                const numMatch = (mapped || name).match(/^(\d+\.\d+)/);
+                if (numMatch) {
+                    const prefix = numMatch[1];
+                    const candidates = sections.filter(s => s.dataset.sec.startsWith(prefix));
+                    if (candidates.length === 1) {
+                        target = candidates[0];
+                    } else if (candidates.length > 1) {
+                        const titleKw = (mapped || name).replace(/^(\d+\.\d+\s*)+/, '').replace(/[的与及和和或]+/g, ' ').trim().split(/\s+/).filter(w => w.length > 1);
+                        let bestScore = 0;
+                        for (const c of candidates) {
+                            const secTitle = c.dataset.sec.replace(/^\d+\.\d+\s*/, '');
+                            let score = 0;
+                            for (const kw of titleKw) {
+                                if (secTitle.includes(kw)) score += kw.length;
+                            }
+                            if (score > bestScore) { bestScore = score; target = c; }
+                        }
+                        if (bestScore === 0) target = candidates[0];
+                    }
+                }
+            }
+
+            // 3) 关键词兜底匹配
+            if (!target) {
+                const kw = (mapped || name).replace(/^\d+\.[\d\s]*/, '').trim();
+                if (kw.length >= 2) {
+                    target = sections.find(s => s.dataset.sec.includes(kw));
+                }
+            }
+
             if (!target) return false;
             target.scrollIntoView({ behavior: 'smooth', block: 'start' });
-            tocLinks.forEach(l => l.classList.toggle('active', l.dataset.sec === name));
+            tocLinks.forEach(l => l.classList.toggle('active', l.dataset.sec === target.dataset.sec));
             if (highlight) {
                 target.classList.remove('goto-highlight');
-                void target.offsetWidth;  // 重触发动画
+                void target.offsetWidth;
                 target.classList.add('goto-highlight');
             }
             return true;
@@ -79,6 +151,13 @@
 
         const goto = new URLSearchParams(location.search).get('goto');
         if (goto) setTimeout(() => jumpTo(goto, true), 100);
+        // 长表格加横向滚动包裹，防止移动端列被压扁
+        document.querySelectorAll('.notes-body table').forEach(t => {
+            const wrap = document.createElement('div');
+            wrap.className = 'notes-table-wrap';
+            t.parentNode.insertBefore(wrap, t);
+            wrap.appendChild(t);
+        });
     })();
 
     // ==================== 考点笔记：行级批注 + 划词高亮 ====================
@@ -110,29 +189,57 @@
     }
 
     // ==================== 本科考点搜索：标题/章节/正文行 + 我的批注，命中精确定位 ====================
-    let noteIndex = [], lastNoteHits = [];
+    let noteIndex = [], invertedIndex = new Map(), lastNoteHits = [];
     const NOTE_HIST_KEY = 'notesSearchHistory';
 
     function nsEsc(s) {
         return String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
     }
 
+    // 高亮关键词（安全转义后用 <mark> 包裹）
+    function hlKeyword(text, kw) {
+        if (!kw) return nsEsc(text);
+        const safeKw = kw.replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+        const re = new RegExp(`(${safeKw.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'gi');
+        return nsEsc(text).replace(re, '<mark class="notes-hl-kw">$1</mark>');
+    }
+
     // 渲染后建索引：章标题(w=0)、节标题(w=1)、正文行(w=2)；批注在搜索时实时读 annoItems
     function buildNoteIndex() {
         noteIndex = [];
+        invertedIndex = new Map();
         let order = 0;
         document.querySelectorAll('.notes-content > .notes-ch-title, .notes-content > .notes-section').forEach(node => {
             if (node.classList.contains('notes-ch-title')) {
-                noteIndex.push({ text: node.textContent.trim(), path: '章', w: 0, r: 0, order: order++ });
+                const txt = node.textContent.trim();
+                noteIndex.push({ text: txt, path: '章', w: 0, r: 0, order: order++ });
+                addToInverted(txt, noteIndex[noteIndex.length - 1]);
                 return;
             }
             const sec = node.dataset.sec;
             const t = node.querySelector('.notes-sec-title');
-            if (t) noteIndex.push({ text: t.textContent.trim(), path: '节', sec, w: 1, r: 0, order: order++ });
+            if (t) {
+                const txt = t.textContent.trim();
+                noteIndex.push({ text: txt, path: '节', sec, w: 1, r: 0, order: order++ });
+                addToInverted(txt, noteIndex[noteIndex.length - 1]);
+            }
             node.querySelectorAll('.notes-body li, .notes-body p').forEach(el => {
-                const txt = cleanTextOf(el).trim().replace(/\s+/g, ' ');   // 跳过批注子树
-                if (txt) noteIndex.push({ text: txt, path: sec, sec, w: 2, r: 0, order: order++ });
+                const txt = cleanTextOf(el).trim().replace(/\s+/g, ' ');
+                if (txt) {
+                    noteIndex.push({ text: txt, path: sec, sec, w: 2, r: 0, order: order++ });
+                    addToInverted(txt, noteIndex[noteIndex.length - 1]);
+                }
             });
+        });
+    }
+
+    // 倒排索引：分词后建立词项到索引项的映射
+    function addToInverted(text, item) {
+        const words = text.toLowerCase().split(/[\s,，。、；：！？""''（）()【】]+/);
+        words.forEach(w => {
+            if (w.length < 2) return;
+            if (!invertedIndex.has(w)) invertedIndex.set(w, []);
+            invertedIndex.get(w).push(item);
         });
     }
 
@@ -142,12 +249,32 @@
         q = q.trim().toLowerCase();
         if (!q) { showNoteHistory(); return; }
         const hits = [];
+        const seen = new Set();
         // 我的批注排最前（r=-1）
         annoItems.forEach(it => {
-            if (it.text && it.text.toLowerCase().includes(q))
-                hits.push({ text: '📝 ' + it.text, path: '我的批注', sec: it.sec, w: 0, r: -1, order: 0 });
+            if (it.text && it.text.toLowerCase().includes(q)) {
+                const key = 'anno:' + it.sec + ':' + it.line;
+                if (!seen.has(key)) {
+                    hits.push({ text: '📝 ' + it.text, path: '我的批注', sec: it.sec, w: 0, r: -1, order: 0 });
+                    seen.add(key);
+                }
+            }
         });
-        noteIndex.forEach(it => { if (it.text.toLowerCase().includes(q)) hits.push(it); });
+        // 倒排索引命中 + 回退子串匹配（兼顾模糊）
+        const candidates = invertedIndex.get(q);
+        if (candidates) {
+            candidates.forEach(it => {
+                const key = it.order;
+                if (!seen.has(key)) { hits.push(it); seen.add(key); }
+            });
+        } else {
+            noteIndex.forEach(it => {
+                if (it.text.toLowerCase().includes(q)) {
+                    const key = it.order;
+                    if (!seen.has(key)) { hits.push(it); seen.add(key); }
+                }
+            });
+        }
         // 排序：批注在前 → 章/节/正文 → 原文顺序，取前 40 条
         hits.sort((a, b) => a.r - b.r || a.w - b.w || a.order - b.order);
         const top = hits.slice(0, 40);
@@ -156,7 +283,7 @@
         box.innerHTML = top.length === 0 ? '<div class="notes-sr-empty">无结果</div>' :
             top.map((h, i) => `<div class="notes-sr-item" onclick="locateNoteHit(${i})">
                 <span class="notes-sr-path">${nsEsc(h.path || '')}</span>
-                <span class="notes-sr-text">${nsEsc(h.text.slice(0, 60))}</span></div>`).join('');
+                <span class="notes-sr-text">${hlKeyword(h.text.slice(0, 80), q)}</span></div>`).join('');
     }
 
     // 点结果：记历史 + 收起下拉 + 定位到命中块
