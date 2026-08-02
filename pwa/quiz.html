@@ -318,7 +318,7 @@
             noteHtml = `
                 <div class="note-panel">
                     <div class="note-title">我的笔记</div>
-                    <textarea id="noteInput" class="note-input" rows="4" onfocus="onNoteEdit()" onpaste="pasteNoteImage(event)" placeholder="记下你的解题思路、易错点...（Ctrl+V 可直接粘贴截图；清空内容保存即删除笔记）"></textarea>
+                    <textarea id="noteInput" class="note-input" rows="4" onfocus="onNoteEdit()" oninput="autoResizeNote(this)" onpaste="pasteNoteImage(event)" placeholder="记下你的解题思路、易错点...（Ctrl+V 可直接粘贴截图；清空内容保存即删除笔记）"></textarea>
                     <div class="note-images" id="noteImages"></div>
                     <div class="note-actions">
                         <button class="btn btn-primary btn-sm note-save-btn${hasNote ? ' saved' : ''}" id="noteSaveBtn" onclick="saveNote()">保存笔记</button>
@@ -360,7 +360,10 @@
 
         // 笔记内容用value赋值，防止笔记里的HTML字符被解析
         const noteInput = document.getElementById('noteInput');
-        if (noteInput) noteInput.value = q.note || '';
+        if (noteInput) {
+            noteInput.value = q.note || '';
+            autoResizeNote(noteInput);
+        }
         renderNoteImages();
 
         // 更新提交按钮状态（背题/快刷模式下隐藏：背题不可作答，快刷点选即判）
@@ -446,6 +449,15 @@
     function onNoteEdit() {
         const btn = document.getElementById('noteSaveBtn');
         if (btn) btn.classList.remove('saved');
+    }
+
+    // 笔记输入框高度自适应：随内容自动增高，超过 60% 视口高时出现滚动条
+    function autoResizeNote(el) {
+        if (!el) return;
+        el.style.height = 'auto';
+        const maxH = Math.round(window.innerHeight * 0.6);
+        el.style.height = Math.min(el.scrollHeight, maxH) + 'px';
+        el.style.overflowY = el.scrollHeight > maxH ? 'auto' : 'hidden';
     }
 
     async function saveNote() {
