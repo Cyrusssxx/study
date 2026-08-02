@@ -9,11 +9,6 @@
 <div class="notes-layout">
     <!-- 左侧章节目录树 -->
     <aside class="notes-toc" id="notesToc">
-        <div class="notes-search" id="notesSearchBox" hidden>
-            <input type="search" id="notesSearchInput" placeholder="🔍 搜索考点、章节、批注…" autocomplete="off"
-                oninput="doNoteSearch(this.value)" onfocus="doNoteSearch(this.value)">
-            <div class="notes-search-results" id="notesSearchResults" hidden></div>
-        </div>
         {% for ch in notes.chapters %}
         <div class="notes-toc-ch">{{ ch.chapter }}</div>
         {% for sec in ch.sections %}

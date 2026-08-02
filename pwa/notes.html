@@ -37,13 +37,7 @@
             <p class="notes-source">加载中...</p>
         </div>
         <div class="notes-layout">
-            <aside class="notes-toc" id="notesToc">
-                <div class="notes-search" id="notesSearchBox" hidden>
-                    <input type="search" id="notesSearchInput" placeholder="🔍 搜索考点、章节、批注…" autocomplete="off"
-                        oninput="doNoteSearch(this.value)" onfocus="doNoteSearch(this.value)">
-                    <div class="notes-search-results" id="notesSearchResults" hidden></div>
-                </div>
-            </aside>
+            <aside class="notes-toc" id="notesToc"></aside>
             <div class="notes-content" id="notesContent"></div>
         </div>
         <button class="notes-top-btn" id="notesTopBtn" title="回到开头" hidden
@@ -167,7 +161,12 @@
                 `<h1>📖 ${notes.title}</h1><p class="notes-source">${notes.source}</p>`;
             document.title = `${notes.title} - 408刷题`;
 
-            let toc = '', body = '';
+            let toc = `<div class="notes-search" id="notesSearchBox" hidden>
+                <input type="search" id="notesSearchInput" placeholder="🔍 搜索考点、章节、批注…" autocomplete="off"
+                    oninput="doNoteSearch(this.value)" onfocus="doNoteSearch(this.value)">
+                <div class="notes-search-results" id="notesSearchResults" hidden></div>
+            </div>`;
+            let body = '';
             for (const ch of notes.chapters) {
                 toc += `<div class="notes-toc-ch">${ch.chapter}</div>`;
                 body += `<h2 class="notes-ch-title">${ch.chapter}</h2>`;
