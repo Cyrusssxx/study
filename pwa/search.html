@@ -119,7 +119,7 @@
                         ${q.is_real_exam ? '<span class="badge-real">统考真题</span>' : ''}
                         <span class="item-info">${q.chapter || ''}${q.section ? ' · ' + q.section : ''}</span>
                     </div>
-                    <div class="item-content">${highlight(q.content, kw)}</div>
+                    <div class="item-content">${fmtContent(highlight(q.content, kw))}</div>
                     <div class="item-options">
                         ${Object.entries(q.options || {}).map(([k,v]) => `<span class="mini-option">${k}. ${highlight(v, kw)}</span>`).join('')}
                     </div>

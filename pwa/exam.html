@@ -240,7 +240,7 @@
                         ${q.chapter ? `<span class="chapter-badge">${q.chapter}</span>` : ''}
                     </div>
                 </div>
-                <div class="question-content">${q.content}</div>
+                <div class="question-content">${fmtContent(q.content)}</div>
                 <div class="options-list">${optionsHtml}</div>
             </div>`;
         renderExamNumbers();
@@ -369,7 +369,7 @@
                         <span class="item-info">第 ${i + 1} 题${d.chapter ? ' · ' + d.chapter : ''}</span>
                         <span class="${d.is_correct ? 'badge-resolved' : 'badge-wrong'}">${d.is_correct ? '✓ 答对' : (d.user_answer ? `✗ 你选 ${d.user_answer}` : '未作答')} · 正确答案 ${d.correct_answer || '—'}</span>
                     </div>
-                    <div class="item-content">${d.content}</div>
+                    <div class="item-content">${fmtContent(d.content)}</div>
                     <div class="item-options">
                         ${Object.entries(d.options || {}).map(([k,v]) => `<span class="mini-option">${k}. ${v}</span>`).join('')}
                     </div>

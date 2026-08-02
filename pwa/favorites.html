@@ -105,7 +105,7 @@
                         <span class="item-subject">${subjectName}</span>
                         <button class="btn-icon favorited" onclick="removeFav('${q.question_id}')">★</button>
                     </div>
-                    <div class="item-content">${q.content}</div>
+                    <div class="item-content">${fmtContent(q.content)}</div>
                     <div class="item-options">
                         ${Object.entries(q.options || {}).map(([k,v]) => `<span class="mini-option">${k}. ${v}</span>`).join('')}
                     </div>
