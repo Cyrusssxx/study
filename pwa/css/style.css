@@ -2317,13 +2317,13 @@ mark {
 
 .notes-body h4 {
     font-size: 1rem;
-    margin: 32px 0 10px;
+    margin: 56px 0 12px;
     color: var(--text);
 }
 
 .notes-body h5 {
     font-size: 0.95rem;
-    margin: 26px 0 10px;
+    margin: 46px 0 12px;
     color: var(--text);
 }
 
@@ -2332,16 +2332,16 @@ mark {
 }
 
 .notes-body p {
-    margin: 10px 0;
+    margin: 12px 0;
 }
 
 .notes-body ul, .notes-body ol {
-    margin: 10px 0;
+    margin: 12px 0;
     padding-left: 24px;
 }
 
 .notes-body li {
-    margin: 7px 0;
+    margin: 10px 0;
 }
 
 .notes-body li > ul, .notes-body li > ol {
