@@ -1540,16 +1540,16 @@ mark {
     white-space: nowrap;
 }
 
-/* 保存笔记后淡化笔记框（再次聚焦编辑时恢复） */
-.note-panel {
+/* 保存笔记后淡化保存按钮（再次编辑时恢复） */
+.note-save-btn {
     transition: opacity 0.35s;
 }
 
-.note-panel.note-dim {
+.note-save-btn.saved {
     opacity: 0.45;
 }
 
-.note-panel.note-dim:hover {
+.note-save-btn.saved:hover {
     opacity: 0.8;
 }
 
