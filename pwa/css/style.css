@@ -2307,12 +2307,12 @@ mark {
 /* 笔记正文排版（JSON 里只用无属性的 h4/p/ul/ol/li/b/table 标签） */
 .notes-body {
     font-size: 0.95rem;
-    line-height: 1.9;
+    line-height: 2.0;
 }
 
 .notes-body h4 {
     font-size: 1rem;
-    margin: 14px 0 6px;
+    margin: 16px 0 8px;
     color: var(--text);
 }
 
@@ -2321,16 +2321,24 @@ mark {
 }
 
 .notes-body p {
-    margin: 6px 0;
+    margin: 10px 0;
 }
 
 .notes-body ul, .notes-body ol {
-    margin: 6px 0;
+    margin: 10px 0;
     padding-left: 24px;
 }
 
 .notes-body li {
-    margin: 4px 0;
+    margin: 7px 0;
+}
+
+.notes-body li > ul, .notes-body li > ol {
+    margin: 7px 0;
+}
+
+.notes-body li > ul > li, .notes-body li > ol > li {
+    margin: 6px 0;
 }
 
 .notes-body b {
