@@ -11,14 +11,44 @@
     <script>if (localStorage.getItem('darkMode') === '1') document.documentElement.classList.add('dark');</script>
     <link rel="stylesheet" href="css/style.css">
     <style>
-        .dati-tabs { display: flex; gap: 8px; flex-wrap: wrap; margin: 12px 0 20px; }
+        .dati-tabs { display: flex; gap: 8px; flex-wrap: wrap; margin: 12px 0 16px; }
         .dati-tab { flex: 1; min-width: 120px; }
         .dati-tab.active { background: #4f46e5; color: #fff; }
         .dati-subject { display: none; }
         .dati-subject.active { display: block; }
-        .dati-section-name { font-weight: 600; }
-        .dati-count { color: #888; font-size: 12px; margin-left: 8px; }
-        .dark .dati-count { color: #999; }
+        .dati-filters { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-bottom: 18px; }
+        .dati-chip {
+            padding: 6px 14px; border-radius: 999px; border: 1px solid #ccc; cursor: pointer;
+            background: #fff; color: #444; font-size: 13px; line-height: 1.4;
+        }
+        .dark .dati-chip { background: #1e1e2e; border-color: #444; color: #ccc; }
+        .dati-chip.active { background: #4f46e5; border-color: #4f46e5; color: #fff; }
+        .dati-chip .dati-count { font-size: 11px; opacity: .8; margin-left: 2px; }
+        .dati-year { padding: 6px 10px; border-radius: 8px; border: 1px solid #ccc; font-size: 13px; }
+        .dark .dati-year { background: #1e1e2e; border-color: #444; color: #ccc; }
+        .dati-qcard {
+            border: 1px solid #eee; border-radius: 10px; padding: 12px; margin-bottom: 14px;
+            background: #fff;
+        }
+        .dark .dati-qcard { background: #1e1e2e; border-color: #333; }
+        .dati-qhead { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; flex-wrap: wrap; }
+        .dati-qnum { font-weight: 700; }
+        .dati-real {
+            background: #fde68a; color: #92400e; border-radius: 6px; padding: 2px 8px; font-size: 12px; font-weight: 600;
+        }
+        .dark .dati-real { background: #4d3800; color: #fde68a; }
+        .dati-fav {
+            margin-left: auto; border: none; background: none; font-size: 20px; cursor: pointer; color: #cbd5e1;
+            line-height: 1; padding: 2px 6px;
+        }
+        .dati-fav.on { color: #f59e0b; }
+        .dati-qbody img, .dati-abody img { max-width: 100%; height: auto; display: block; margin-bottom: 6px; border-radius: 6px; }
+        .dati-ans-btn { margin-top: 4px; }
+        .dati-abody { margin-top: 10px; border-top: 1px dashed #ddd; padding-top: 10px; display: none; }
+        .dark .dati-abody { border-color: #444; }
+        .dati-abody.open { display: block; }
+        .dati-none { color: #888; padding: 20px 0; text-align: center; }
+        .dark .dati-none { color: #999; }
     </style>
 </head>
 <body>
@@ -44,70 +74,187 @@
     <main class="container">
         <div class="page-header">
             <h1>📝 大题专项</h1>
-            <p>王道综合应用题真题截图（操作系统 / 计算机组成原理 / 计算机网络），题目与答案分开查看</p>
+            <p>王道综合应用题真题截图（操作系统 / 计算机组成原理 / 计算机网络），一题一图、题目与答案分开查看，可收藏</p>
         </div>
 
         <div class="dati-tabs" id="datiTabs"></div>
+        <div class="dati-filters" id="datiFilters">
+            <button class="dati-chip" id="fAll" onclick="setFilter('all')">全部 <span class="dati-count" id="cntAll"></span></button>
+            <button class="dati-chip" id="fReal" onclick="setFilter('real')">统考真题 <span class="dati-count" id="cntReal"></span></button>
+            <button class="dati-chip" id="fFav" onclick="setFilter('fav')">★ 我的收藏 <span class="dati-count" id="cntFav"></span></button>
+            <select class="dati-year" id="yearSel" onchange="setYear(this.value)" style="display:none"></select>
+        </div>
         <div id="datiRoot">
             <div class="loading">加载中...</div>
         </div>
     </main>
     <script src="js/common.js"></script>
+    <script src="js/backend.js"></script>
     <script>
     let DATI = null;
     let activeSubject = localStorage.getItem('datiSubject') || 'os';
+    let filter = 'all';          // all | real | fav
+    let year = '';               // '' = 全部年份
+    let favSet = new Set();      // 当前科目已收藏的题 id
+    const ansTpl = {};           // 答案图片 HTML 模板，首次展开时注入
 
+    const img = (key, fn) => `<img src="data/dati_figs/${key}/${fn}" loading="lazy" alt="大题截图">`;
+
+    // ==================== 数据与收藏 ====================
     async function loadDati() {
         try {
             const resp = await fetch('data/dati.json');
             DATI = (await resp.json()).subjects;
+            await loadFavs();
             renderTabs();
+            renderYearOptions();
             render();
         } catch (e) {
             document.getElementById('datiRoot').innerHTML = `<div class="error">加载失败</div>`;
         }
     }
 
+    async function loadFavs() {
+        const rows = await dbAll('favorites');
+        favSet = new Set(rows.filter(r => (r.question_id || '').startsWith('dati_')).map(r => r.question_id));
+    }
+
+    async function toggleFav(qid, subKey) {
+        const ex = await dbGet('favorites', qid);
+        if (ex) {
+            await dbDelete('favorites', qid);
+            favSet.delete(qid);
+        } else {
+            await dbPut('favorites', { question_id: qid, subject: subKey, added_at: now() });
+            favSet.add(qid);
+        }
+        const btn = document.querySelector(`.dati-fav[data-qid="${qid}"]`);
+        if (btn) {
+            btn.textContent = favSet.has(qid) ? '★' : '☆';
+            btn.classList.toggle('on', favSet.has(qid));
+        }
+        updateCounts();
+        if (filter === 'fav') render();
+    }
+
+    // ==================== 渲染 ====================
     function renderTabs() {
-        const tabs = DATI.map(s => `
+        document.getElementById('datiTabs').innerHTML = DATI.map(s => `
             <button class="btn btn-secondary dati-tab${s.key === activeSubject ? ' active' : ''}"
                     onclick="switchSubject('${s.key}')">${s.name}</button>`).join('');
-        document.getElementById('datiTabs').innerHTML = tabs;
     }
 
     function switchSubject(key) {
         activeSubject = key;
         localStorage.setItem('datiSubject', key);
         renderTabs();
+        loadFavs().then(() => { updateCounts(); render(); });
+    }
+
+    function renderYearOptions() {
+        const years = new Set();
+        for (const s of DATI) for (const c of s.chapters) for (const sec of c.sections)
+            for (const q of sec.questions) if (q.real && q.year) years.add(q.year);
+        const sel = document.getElementById('yearSel');
+        sel.innerHTML = `<option value="">全部年份</option>` +
+            [...years].sort((a, b) => b - a).map(y => `<option value="${y}">${y}年</option>`).join('');
+    }
+
+    function setFilter(f) {
+        filter = f;
+        document.getElementById('yearSel').style.display = f === 'real' ? '' : 'none';
+        document.getElementById('fAll').classList.toggle('active', f === 'all');
+        document.getElementById('fReal').classList.toggle('active', f === 'real');
+        document.getElementById('fFav').classList.toggle('active', f === 'fav');
         render();
     }
 
-    const img = (key, dir, n) => `<img src="data/dati_figs/${key}/${dir}/${n}" loading="lazy" alt="大题截图">`;
+    function setYear(v) { year = v; render(); }
+
+    function passFilter(q) {
+        if (filter === 'real') return q.real && (!year || String(q.year) === String(year));
+        if (filter === 'fav') return favSet.has(q.id);
+        return true;
+    }
+
+    function visibleQuestionsOf(sub, pred) {
+        const list = [];
+        for (const c of sub.chapters) for (const sec of c.sections) for (const q of sec.questions)
+            if (pred(q)) list.push(q);
+        return list;
+    }
+
+    function updateCounts() {
+        const sub = DATI.find(s => s.key === activeSubject);
+        if (!sub) return;
+        document.getElementById('cntAll').textContent = visibleQuestionsOf(sub, () => true).length;
+        document.getElementById('cntReal').textContent = visibleQuestionsOf(sub, q => q.real).length;
+        document.getElementById('cntFav').textContent = visibleQuestionsOf(sub, q => favSet.has(q.id)).length;
+    }
+
+    function questionCard(subKey, secName, q, isFav) {
+        const qid = q.id;
+        ansTpl[qid] = q.a.length ? q.a.map(fn => img(subKey, fn)).join('') : '<div class="dati-none">本题暂无答案截图</div>';
+        return `
+        <div class="dati-qcard">
+            <div class="dati-qhead">
+                <span class="dati-qnum">第 ${q.num} 题</span>
+                ${q.real ? `<span class="dati-real">【${q.year}统考真题】</span>` : ''}
+                <button class="dati-fav${isFav ? ' on' : ''}" data-qid="${qid}" title="收藏本题"
+                        onclick="toggleFav('${qid}', '${subKey}')">${isFav ? '★' : '☆'}</button>
+            </div>
+            <div class="dati-qbody">${q.q.map(fn => img(subKey, fn)).join('')}</div>
+            <button class="btn btn-secondary dati-ans-btn" data-qid="${qid}" onclick="toggleAnswer('${qid}')">查看答案</button>
+            <div class="dati-abody" data-ans="${qid}"></div>
+        </div>`;
+    }
+
+    function toggleAnswer(qid) {
+        const box = document.querySelector(`.dati-abody[data-ans="${qid}"]`);
+        const btn = document.querySelector(`.dati-ans-btn[data-qid="${qid}"]`);
+        if (!box) return;
+        if (box.classList.contains('open')) {
+            box.classList.remove('open');
+            if (btn) btn.textContent = '查看答案';
+            return;
+        }
+        if (!box.dataset.filled) {
+            box.innerHTML = ansTpl[qid] || '';
+            box.dataset.filled = '1';
+        }
+        box.classList.add('open');
+        if (btn) btn.textContent = '收起答案';
+        box.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }
 
     function render() {
         const sub = DATI.find(s => s.key === activeSubject);
-        if (!sub) return;
         const root = document.getElementById('datiRoot');
-        const chaptersHtml = sub.chapters.map(ch => {
-            const secs = ch.sections.map(sec => `
-                <div class="daka-card">
-                    <div class="daka-card-header">
-                        <span class="dati-section-name">${sec.name}</span>
-                        <span class="dati-count">题目 ${sec.q.length} 页 · 答案 ${sec.a.length} 页</span>
-                    </div>
-                    <div class="daka-content">${sec.q.map(n => img(sub.key, sec.q_dir, n)).join('')}</div>
-                    ${sec.a.length ? `<details class="daka-answer">
-                        <summary>查看答案</summary>
-                        <div class="daka-answer-body">${sec.a.map(n => img(sub.key, sec.a_dir, n)).join('')}</div>
-                    </details>` : ''}
-                </div>`).join('');
-            const totalQ = ch.sections.reduce((s, x) => s + x.q.length, 0);
-            return `<details class="daka-group" open>
-                <summary class="daka-group-title">${ch.name}（${totalQ} 页）</summary>
-                ${secs}
-            </details>`;
-        }).join('');
-        root.innerHTML = chaptersHtml;
+        if (!sub) return;
+        updateCounts();
+        const chaptersHtml = [];
+        for (const ch of sub.chapters) {
+            const secHtml = [];
+            for (const sec of ch.sections) {
+                const qs = sec.questions.filter(q => passFilter(q));
+                if (!qs.length) continue;
+                const qcards = qs.map(q => questionCard(sub.key, sec.name, q, favSet.has(q.id))).join('');
+                secHtml.push(`<div class="daka-card">
+                    <div class="daka-card-header"><span class="dati-section-name">${sec.name}</span>
+                        <span class="dati-count">${qs.length} 题</span></div>
+                    ${qcards}
+                </div>`);
+            }
+            if (!secHtml.length) continue;
+            const n = secHtml.length;
+            chaptersHtml.push(`<details class="daka-group" ${filter === 'all' ? 'open' : ''}>
+                <summary class="daka-group-title">${ch.name}（${n} 节）</summary>
+                ${secHtml.join('')}
+            </details>`);
+        }
+        root.innerHTML = chaptersHtml.length
+            ? chaptersHtml.join('')
+            : `<div class="dati-none">该筛选条件下暂无题目</div>`;
     }
 
     loadDati();
