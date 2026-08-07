@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>大题专项 - 408刷题</title>
+    <link rel="manifest" href="manifest.webmanifest">
+    <meta name="theme-color" content="#4f46e5">
+    <link rel="icon" type="image/png" href="icons/icon-192.png">
+    <link rel="apple-touch-icon" href="icons/icon-192.png">
+    <script>if (localStorage.getItem('darkMode') === '1') document.documentElement.classList.add('dark');</script>
+    <link rel="stylesheet" href="css/style.css">
+    <style>
+        .dati-tabs { display: flex; gap: 8px; flex-wrap: wrap; margin: 12px 0 20px; }
+        .dati-tab { flex: 1; min-width: 120px; }
+        .dati-tab.active { background: #4f46e5; color: #fff; }
+        .dati-subject { display: none; }
+        .dati-subject.active { display: block; }
+        .dati-section-name { font-weight: 600; }
+        .dati-count { color: #888; font-size: 12px; margin-left: 8px; }
+        .dark .dati-count { color: #999; }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-container">
+            <a href="index.html" class="nav-brand">408刷题</a>
+            <div class="nav-links">
+                <a href="index.html" class="nav-link">首页</a>
+                <a href="wrong.html" class="nav-link">错题本</a>
+                <a href="favorites.html" class="nav-link">收藏夹</a>
+                <a href="exam.html" class="nav-link">模拟考试</a>
+                <a href="stats.html" class="nav-link">学习统计</a>
+                <a href="search.html" class="nav-link">搜题</a>
+            </div>
+            <div class="nav-tools">
+                <span class="nav-timer" id="navTimer" title="今日刷题时长（切换到其他窗口时暂停）">⏱ 00:00:00</span>
+                <button class="nav-switch" id="darkSwitch" onclick="toggleDark()" title="夜间模式：深色主题护眼">
+                    夜间 <span class="switch-state" id="darkState">关</span>
+                </button>
+            </div>
+        </div>
+    </nav>
+    <main class="container">
+        <div class="page-header">
+            <h1>📝 大题专项</h1>
+            <p>王道综合应用题真题截图（操作系统 / 计算机组成原理 / 计算机网络），题目与答案分开查看</p>
+        </div>
+
+        <div class="dati-tabs" id="datiTabs"></div>
+        <div id="datiRoot">
+            <div class="loading">加载中...</div>
+        </div>
+    </main>
+    <script src="js/common.js"></script>
+    <script>
+    let DATI = null;
+    let activeSubject = localStorage.getItem('datiSubject') || 'os';
+
+    async function loadDati() {
+        try {
+            const resp = await fetch('data/dati.json');
+            DATI = (await resp.json()).subjects;
+            renderTabs();
+            render();
+        } catch (e) {
+            document.getElementById('datiRoot').innerHTML = `<div class="error">加载失败</div>`;
+        }
+    }
+
+    function renderTabs() {
+        const tabs = DATI.map(s => `
+            <button class="btn btn-secondary dati-tab${s.key === activeSubject ? ' active' : ''}"
+                    onclick="switchSubject('${s.key}')">${s.name}</button>`).join('');
+        document.getElementById('datiTabs').innerHTML = tabs;
+    }
+
+    function switchSubject(key) {
+        activeSubject = key;
+        localStorage.setItem('datiSubject', key);
+        renderTabs();
+        render();
+    }
+
+    const img = (key, dir, n) => `<img src="data/dati_figs/${key}/${dir}/${n}" loading="lazy" alt="大题截图">`;
+
+    function render() {
+        const sub = DATI.find(s => s.key === activeSubject);
+        if (!sub) return;
+        const root = document.getElementById('datiRoot');
+        const chaptersHtml = sub.chapters.map(ch => {
+            const secs = ch.sections.map(sec => `
+                <div class="daka-card">
+                    <div class="daka-card-header">
+                        <span class="dati-section-name">${sec.name}</span>
+                        <span class="dati-count">题目 ${sec.q.length} 页 · 答案 ${sec.a.length} 页</span>
+                    </div>
+                    <div class="daka-content">${sec.q.map(n => img(sub.key, sec.q_dir, n)).join('')}</div>
+                    ${sec.a.length ? `<details class="daka-answer">
+                        <summary>查看答案</summary>
+                        <div class="daka-answer-body">${sec.a.map(n => img(sub.key, sec.a_dir, n)).join('')}</div>
+                    </details>` : ''}
+                </div>`).join('');
+            const totalQ = ch.sections.reduce((s, x) => s + x.q.length, 0);
+            return `<details class="daka-group" open>
+                <summary class="daka-group-title">${ch.name}（${totalQ} 页）</summary>
+                ${secs}
+            </details>`;
+        }).join('');
+        root.innerHTML = chaptersHtml;
+    }
+
+    loadDati();
+    </script>
+</body>
+</html>
