@@ -375,6 +375,8 @@ body {
 .question-content {
     font-size: 1.1rem;
     line-height: 1.8;
+    letter-spacing: 0.03em;
+    text-align: justify;
     margin-bottom: 24px;
     padding-bottom: 16px;
     border-bottom: 1px solid var(--border);
@@ -617,7 +619,9 @@ body {
 
 .item-content {
     font-size: 1rem;
-    line-height: 1.6;
+    line-height: 1.7;
+    letter-spacing: 0.02em;
+    text-align: justify;
     margin-bottom: 10px;
 }
 
@@ -1025,6 +1029,8 @@ body {
     font-size: 0.9rem;
     color: var(--text);
     line-height: 1.8;
+    letter-spacing: 0.02em;
+    text-align: justify;
 }
 
 .explanation-body p {
@@ -2126,6 +2132,9 @@ mark {
 
 .daka-content {
     margin-top: 6px;
+    line-height: 1.8;
+    letter-spacing: 0.02em;
+    text-align: justify;
 }
 
 /* 答案折叠 */

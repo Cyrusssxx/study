@@ -247,7 +247,7 @@
             }
             if (!secHtml.length) continue;
             const n = secHtml.length;
-            chaptersHtml.push(`<details class="daka-group" ${filter === 'all' ? 'open' : ''}>
+            chaptersHtml.push(`<details class="daka-group" open>
                 <summary class="daka-group-title">${ch.name}（${n} 节）</summary>
                 ${secHtml.join('')}
             </details>`);
