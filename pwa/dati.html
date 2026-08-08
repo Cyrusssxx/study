@@ -55,6 +55,54 @@
         .dati-abody.open { display: block; }
         .dati-none { color: #888; padding: 20px 0; text-align: center; }
         .dark .dati-none { color: #999; }
+
+        /* ============ 题目导航 ============ */
+        .dati-layout { display: flex; gap: 16px; align-items: flex-start; }
+        #datiRoot { flex: 1; min-width: 0; }
+        .dati-nav {
+            width: 220px; flex: 0 0 220px;
+            position: sticky; top: 76px;
+            max-height: calc(100vh - 96px);
+            overflow-y: auto;
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+        }
+        .dati-nav-head {
+            padding: 10px 14px; font-weight: 600; font-size: 0.92rem;
+            border-bottom: 1px solid var(--border);
+            display: flex; justify-content: space-between; align-items: center;
+            cursor: pointer; user-select: none;
+        }
+        .dati-nav-toggle { color: var(--text-light); transition: transform 0.2s; }
+        .dati-nav.collapsed .dati-nav-toggle { transform: rotate(-90deg); }
+        .dati-nav.collapsed .dati-nav-body { display: none; }
+        .dati-nav-body { padding: 4px 12px 14px; }
+        .dati-nav-sec {
+            font-size: 0.82rem; color: var(--primary); font-weight: 600;
+            margin: 12px 0 6px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+        }
+        .dati-nav-sec .dati-count { color: var(--text-light); font-weight: 400; margin-left: 4px; }
+        .dati-flash { outline: 3px solid var(--primary); outline-offset: 2px; border-radius: 8px; }
+        .dati-nav-fab {
+            display: none; position: fixed; right: 14px; bottom: 20px; z-index: 300;
+            border: none; background: var(--primary); color: #fff;
+            padding: 10px 16px; border-radius: 24px; font-size: 0.9rem;
+            box-shadow: 0 4px 14px rgba(74,144,217,.4); cursor: pointer;
+        }
+        .dati-nav-mask { display: none; position: fixed; inset: 0; background: rgba(0,0,0,.4); z-index: 200; }
+        @media (max-width: 900px) {
+            .dati-nav {
+                position: fixed; top: 0; right: 0; bottom: 0; left: auto;
+                width: 280px; max-height: none; height: 100%;
+                z-index: 300; border-radius: 0;
+                transform: translateX(100%); transition: transform 0.25s;
+            }
+            .dati-nav.open { transform: translateX(0); }
+            .dati-nav-fab { display: block; }
+            .dati-nav-mask.open { display: block; }
+        }
     </style>
 </head>
 <body>
@@ -90,10 +138,15 @@
             <button class="dati-chip" id="fFav" onclick="setFilter('fav')">★ 我的收藏 <span class="dati-count" id="cntFav"></span></button>
             <select class="dati-year" id="yearSel" onchange="setYear(this.value)" style="display:none"></select>
         </div>
-        <div id="datiRoot">
-            <div class="loading">加载中...</div>
+        <div class="dati-layout">
+            <div id="datiRoot">
+                <div class="loading">加载中...</div>
+            </div>
+            <aside class="dati-nav" id="datiNav"></aside>
         </div>
     </main>
+    <button class="dati-nav-fab" id="datiNavFab" onclick="openNavMobile()" title="题目导航">☰ 导航</button>
+    <div class="dati-nav-mask" id="datiNavMask" onclick="closeNavMobile()"></div>
     <script src="js/common.js"></script>
     <script src="js/backend.js"></script>
     <script>
@@ -105,6 +158,7 @@
     const ansTpl = {};           // 答案图片 HTML 模板，首次展开时注入
     let noteMap = {};            // qid -> {content, images}，dati 题笔记
     let noteOpen = new Set();    // 展开中的笔记面板 qid
+    let navCollapsed = localStorage.getItem('datiNavCollapsed') === '1';  // 桌面端导航是否收起
 
     const img = (key, fn) => `<img src="data/dati_figs/${key}/${fn}" loading="lazy" alt="大题截图">`;
 
@@ -215,7 +269,7 @@
         const note = noteMap[qid] || {};
         const hasNote = !!(note.content || (note.images || []).length);
         return `
-        <div class="dati-qcard">
+        <div class="dati-qcard" id="q${qid}">
             <div class="dati-qhead">
                 <span class="dati-qnum">第 ${q.num} 题</span>
                 ${q.real ? `<span class="dati-real">【${q.year}统考真题】</span>` : ''}
@@ -290,6 +344,59 @@
             ? chaptersHtml.join('')
             : `<div class="dati-none">该筛选条件下暂无题目</div>`;
         afterRender();
+        renderNav();
+    }
+
+    // ==================== 题目导航栏 ====================
+
+    function renderNav() {
+        const sub = DATI.find(s => s.key === activeSubject);
+        const nav = document.getElementById('datiNav');
+        if (!sub) return;
+        const body = [];
+        for (const ch of sub.chapters) {
+            const secs = [];
+            for (const sec of ch.sections) {
+                const qs = sec.questions.filter(q => passFilter(q));
+                if (!qs.length) continue;
+                const chips = qs.map(q =>
+                    `<button class="num-btn" data-jump="${q.id}" onclick="jumpTo('${q.id}')" title="${sec.name}">${q.num}</button>`
+                ).join('');
+                secs.push(`<div class="dati-nav-sec">${sec.name}<span class="dati-count">${qs.length}</span></div>
+                    <div class="num-grid">${chips}</div>`);
+            }
+            if (secs.length) body.push(`<div class="num-group-title">${ch.name}</div>${secs.join('')}`);
+        }
+        nav.innerHTML = `<div class="dati-nav-head" onclick="toggleNav()">题目导航<span class="dati-nav-toggle">▾</span></div>
+            <div class="dati-nav-body">${body.join('')}</div>`;
+        nav.classList.toggle('collapsed', navCollapsed);
+    }
+
+    function toggleNav() {
+        navCollapsed = !navCollapsed;
+        localStorage.setItem('datiNavCollapsed', navCollapsed ? '1' : '0');
+        const nav = document.getElementById('datiNav');
+        if (nav) nav.classList.toggle('collapsed', navCollapsed);
+    }
+
+    function jumpTo(qid) {
+        const el = document.getElementById('q' + qid);
+        if (el) {
+            el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            el.classList.add('dati-flash');
+            setTimeout(() => el.classList.remove('dati-flash'), 1500);
+        }
+        closeNavMobile();
+    }
+
+    function openNavMobile() {
+        document.getElementById('datiNav').classList.add('open');
+        document.getElementById('datiNavMask').classList.add('open');
+    }
+
+    function closeNavMobile() {
+        document.getElementById('datiNav').classList.remove('open');
+        document.getElementById('datiNavMask').classList.remove('open');
     }
 
     // ==================== 笔记功能（与刷题页同款：文本框 + Ctrl+V 贴图 + 保存） ====================
