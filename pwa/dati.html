@@ -42,12 +42,9 @@
             line-height: 1; padding: 2px 6px;
         }
         .dati-fav.on { color: #f59e0b; }
-        .dati-note-btn {
-            border: none; background: none; font-size: 15px; cursor: pointer; color: #94a3b8;
-            line-height: 1; padding: 2px 6px; margin-right: 4px;
-        }
-        .dati-note-btn.has-note { color: #8a6d1a; }
-        .dati-note-btn.active { color: var(--primary); }
+        .dati-actions { display: flex; align-items: center; gap: 8px; margin-top: 4px; flex-wrap: wrap; }
+        .dati-note-btn.has-note { color: #8a6d1a; border-color: #e6d9a8; }
+        .dati-note-btn.active { color: var(--primary); border-color: var(--primary); }
         .dati-qbody img, .dati-abody img { max-width: 100%; height: auto; display: block; margin-bottom: 6px; border-radius: 6px; }
         .dati-ans-btn { margin-top: 4px; }
         .dati-abody { margin-top: 10px; border-top: 1px dashed #ddd; padding-top: 10px; display: none; }
@@ -273,13 +270,15 @@
             <div class="dati-qhead">
                 <span class="dati-qnum">第 ${q.num} 题</span>
                 ${q.real ? `<span class="dati-real">【${q.year}统考真题】</span>` : ''}
-                <button class="dati-note-btn${hasNote ? ' has-note' : ''}" data-qid="${qid}" title="我的笔记"
-                        onclick="toggleNotePanel('${qid}')">📝${hasNote ? ' ●' : ''}</button>
                 <button class="dati-fav${isFav ? ' on' : ''}" data-qid="${qid}" title="收藏本题"
                         onclick="toggleFav('${qid}', '${subKey}')">${isFav ? '★' : '☆'}</button>
             </div>
             <div class="dati-qbody">${q.q.map(fn => img(subKey, fn)).join('')}</div>
-            <button class="btn btn-secondary dati-ans-btn" data-qid="${qid}" onclick="toggleAnswer('${qid}')">查看答案</button>
+            <div class="dati-actions">
+                <button class="btn btn-secondary dati-ans-btn" data-qid="${qid}" onclick="toggleAnswer('${qid}')">查看答案</button>
+                <button class="btn btn-secondary dati-note-btn${hasNote ? ' has-note' : ''}" data-qid="${qid}" title="我的笔记"
+                        onclick="toggleNotePanel('${qid}')">📝 笔记${hasNote ? ' ●' : ''}</button>
+            </div>
             <div class="dati-abody" data-ans="${qid}"></div>
             <div class="note-panel dati-note-panel" data-note="${qid}" style="${noteOpen.has(qid) ? '' : 'display:none'}">
                 <div class="note-title">我的笔记</div>
@@ -471,7 +470,7 @@
             const nbtn = document.querySelector(`.dati-note-btn[data-qid="${qid}"]`);
             if (nbtn) {
                 nbtn.classList.toggle('has-note', hasNote);
-                nbtn.textContent = '📝' + (hasNote ? ' ●' : '');
+                nbtn.textContent = '📝 笔记' + (hasNote ? ' ●' : '');
             }
         } catch (e) {
             alert('笔记保存失败: ' + e.message);
