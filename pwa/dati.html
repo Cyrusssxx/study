@@ -42,6 +42,12 @@
             line-height: 1; padding: 2px 6px;
         }
         .dati-fav.on { color: #f59e0b; }
+        .dati-note-btn {
+            border: none; background: none; font-size: 15px; cursor: pointer; color: #94a3b8;
+            line-height: 1; padding: 2px 6px; margin-right: 4px;
+        }
+        .dati-note-btn.has-note { color: #8a6d1a; }
+        .dati-note-btn.active { color: var(--primary); }
         .dati-qbody img, .dati-abody img { max-width: 100%; height: auto; display: block; margin-bottom: 6px; border-radius: 6px; }
         .dati-ans-btn { margin-top: 4px; }
         .dati-abody { margin-top: 10px; border-top: 1px dashed #ddd; padding-top: 10px; display: none; }
@@ -97,6 +103,8 @@
     let year = '';               // '' = 全部年份
     let favSet = new Set();      // 当前科目已收藏的题 id
     const ansTpl = {};           // 答案图片 HTML 模板，首次展开时注入
+    let noteMap = {};            // qid -> {content, images}，dati 题笔记
+    let noteOpen = new Set();    // 展开中的笔记面板 qid
 
     const img = (key, fn) => `<img src="data/dati_figs/${key}/${fn}" loading="lazy" alt="大题截图">`;
 
@@ -106,6 +114,7 @@
             const resp = await fetch('data/dati.json');
             DATI = (await resp.json()).subjects;
             await loadFavs();
+            await loadNotes();
             renderTabs();
             renderYearOptions();
             render();
@@ -117,6 +126,14 @@
     async function loadFavs() {
         const rows = await dbAll('favorites');
         favSet = new Set(rows.filter(r => (r.question_id || '').startsWith('dati_')).map(r => r.question_id));
+    }
+
+    async function loadNotes() {
+        const rows = await dbAll('notes');
+        noteMap = {};
+        for (const n of rows) if ((n.question_id || '').startsWith('dati_')) {
+            noteMap[n.question_id] = { content: n.content || '', images: n.images || [] };
+        }
     }
 
     async function toggleFav(qid, subKey) {
@@ -195,17 +212,34 @@
     function questionCard(subKey, secName, q, isFav) {
         const qid = q.id;
         ansTpl[qid] = q.a.length ? q.a.map(fn => img(subKey, fn)).join('') : '<div class="dati-none">本题暂无答案截图</div>';
+        const note = noteMap[qid] || {};
+        const hasNote = !!(note.content || (note.images || []).length);
         return `
         <div class="dati-qcard">
             <div class="dati-qhead">
                 <span class="dati-qnum">第 ${q.num} 题</span>
                 ${q.real ? `<span class="dati-real">【${q.year}统考真题】</span>` : ''}
+                <button class="dati-note-btn${hasNote ? ' has-note' : ''}" data-qid="${qid}" title="我的笔记"
+                        onclick="toggleNotePanel('${qid}')">📝${hasNote ? ' ●' : ''}</button>
                 <button class="dati-fav${isFav ? ' on' : ''}" data-qid="${qid}" title="收藏本题"
                         onclick="toggleFav('${qid}', '${subKey}')">${isFav ? '★' : '☆'}</button>
             </div>
             <div class="dati-qbody">${q.q.map(fn => img(subKey, fn)).join('')}</div>
             <button class="btn btn-secondary dati-ans-btn" data-qid="${qid}" onclick="toggleAnswer('${qid}')">查看答案</button>
             <div class="dati-abody" data-ans="${qid}"></div>
+            <div class="note-panel dati-note-panel" data-note="${qid}" style="${noteOpen.has(qid) ? '' : 'display:none'}">
+                <div class="note-title">我的笔记</div>
+                <textarea class="note-input dati-note-input" data-note-input="${qid}" rows="4"
+                    placeholder="记下你的解题思路、易错点...（Ctrl+V 可直接粘贴截图；清空内容保存即删除笔记）"
+                    onfocus="onNoteEdit('${qid}')" oninput="autoResizeNote(this)"
+                    onpaste="pasteNoteImage(event, '${qid}')"></textarea>
+                <div class="note-images" data-note-imgs="${qid}"></div>
+                <div class="note-actions">
+                    <button class="btn btn-primary btn-sm note-save-btn${hasNote ? ' saved' : ''}" data-note-save="${qid}"
+                            onclick="saveNote('${qid}')">保存笔记</button>
+                    <span class="note-hint" data-note-hint="${qid}"></span>
+                </div>
+            </div>
         </div>`;
     }
 
@@ -255,6 +289,160 @@
         root.innerHTML = chaptersHtml.length
             ? chaptersHtml.join('')
             : `<div class="dati-none">该筛选条件下暂无题目</div>`;
+        afterRender();
+    }
+
+    // ==================== 笔记功能（与刷题页同款：文本框 + Ctrl+V 贴图 + 保存） ====================
+
+    // 渲染后回填各笔记面板的文本与图片、恢复展开状态
+    function afterRender() {
+        const root = document.getElementById('datiRoot');
+        root.querySelectorAll('.dati-note-panel').forEach(p => {
+            const qid = p.dataset.note;
+            const note = noteMap[qid] || {};
+            const ta = p.querySelector('.dati-note-input');
+            if (ta) { ta.value = note.content || ''; autoResizeNote(ta); }
+            renderNoteImages(qid, p.querySelector('[data-note-imgs]'));
+        });
+    }
+
+    function toggleNotePanel(qid) {
+        const p = document.querySelector(`.dati-note-panel[data-note="${qid}"]`);
+        const btn = document.querySelector(`.dati-note-btn[data-qid="${qid}"]`);
+        if (!p) return;
+        if (p.style.display === 'none') {
+            p.style.display = 'block';
+            noteOpen.add(qid);
+            if (btn) btn.classList.add('active');
+            const ta = p.querySelector('.dati-note-input');
+            if (ta) { ta.focus(); autoResizeNote(ta); }
+        } else {
+            p.style.display = 'none';
+            noteOpen.delete(qid);
+            if (btn) btn.classList.remove('active');
+        }
+    }
+
+    // 进入编辑态：恢复保存按钮（取消淡化）
+    function onNoteEdit(qid) {
+        const btn = document.querySelector(`[data-note-save="${qid}"]`);
+        if (btn) btn.classList.remove('saved');
+    }
+
+    // 笔记输入框高度自适应：随内容自动增高，超过 60% 视口高时出现滚动条
+    function autoResizeNote(el) {
+        if (!el) return;
+        el.style.height = 'auto';
+        const maxH = Math.round(window.innerHeight * 0.6);
+        el.style.height = Math.min(el.scrollHeight, maxH) + 'px';
+        el.style.overflowY = el.scrollHeight > maxH ? 'auto' : 'hidden';
+    }
+
+    async function saveNote(qid) {
+        const ta = document.querySelector(`[data-note-input="${qid}"]`);
+        if (!ta) return;
+        const content = ta.value;
+        const cur = noteMap[qid] || { content: '', images: [] };
+        const images = cur.images || [];
+        const hadNote = !!(cur.content || images.length);
+        try {
+            if (content.trim() || images.length) {
+                await dbPut('notes', { question_id: qid, subject: 'dati', content, images, updated_at: now() });
+                noteMap[qid] = { content, images };
+            } else {
+                await dbDelete('notes', qid);
+                delete noteMap[qid];
+            }
+            const hasNote = !!(content.trim() || images.length);
+            const hint = document.querySelector(`[data-note-hint="${qid}"]`);
+            if (hint) {
+                hint.textContent = hasNote ? '已保存 ✓' : (hadNote ? '已删除笔记' : '笔记是空的，没有保存');
+                setTimeout(() => { if (hint) hint.textContent = ''; }, 2000);
+            }
+            const btn = document.querySelector(`[data-note-save="${qid}"]`);
+            if (btn) btn.classList.toggle('saved', hasNote);
+            const nbtn = document.querySelector(`.dati-note-btn[data-qid="${qid}"]`);
+            if (nbtn) {
+                nbtn.classList.toggle('has-note', hasNote);
+                nbtn.textContent = '📝' + (hasNote ? ' ●' : '');
+            }
+        } catch (e) {
+            alert('笔记保存失败: ' + e.message);
+        }
+    }
+
+    function renderNoteImages(qid, box) {
+        if (!box) box = document.querySelector(`[data-note-imgs="${qid}"]`);
+        if (!box) return;
+        const note = noteMap[qid] || {};
+        const imgs = note.images || [];
+        box.innerHTML = imgs.map((src, i) => `
+            <div class="note-img-item">
+                <img src="${src}" alt="笔记图片" onclick="viewNoteImage('${qid}', ${i})">
+                <span class="note-img-del" onclick="delNoteImage('${qid}', ${i})" title="删除图片">×</span>
+            </div>`).join('');
+    }
+
+    // 压缩成最长边1200px的JPEG，控制入库体积（透明底先铺白）
+    function compressImage(file) {
+        return new Promise((resolve, reject) => {
+            const img = new Image();
+            img.onload = () => {
+                const scale = Math.min(1, 1200 / Math.max(img.width, img.height));
+                const canvas = document.createElement('canvas');
+                canvas.width = Math.round(img.width * scale);
+                canvas.height = Math.round(img.height * scale);
+                const ctx = canvas.getContext('2d');
+                ctx.fillStyle = '#fff';
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+                ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+                URL.revokeObjectURL(img.src);
+                resolve(canvas.toDataURL('image/jpeg', 0.85));
+            };
+            img.onerror = () => reject(new Error('图片读取失败'));
+            img.src = URL.createObjectURL(file);
+        });
+    }
+
+    // 从剪贴板粘贴图片（截图后在笔记框 Ctrl+V），压缩后随笔记入库；纯文字粘贴不受影响
+    async function pasteNoteImage(event, qid) {
+        const files = [...(event.clipboardData ? event.clipboardData.items : [])]
+            .filter(it => it.type.startsWith('image/'))
+            .map(it => it.getAsFile())
+            .filter(Boolean);
+        if (!files.length) return;
+        event.preventDefault();
+        try {
+            const cur = noteMap[qid] || { content: '', images: [] };
+            for (const f of files) {
+                cur.images = cur.images || [];
+                cur.images.push(await compressImage(f));
+            }
+            noteMap[qid] = cur;
+        } catch (e) { alert(e.message); }
+        renderNoteImages(qid);
+        saveNote(qid);   // 贴图后立即随笔记入库
+    }
+
+    function delNoteImage(qid, i) {
+        const cur = noteMap[qid];
+        if (!cur || !cur.images) return;
+        cur.images.splice(i, 1);
+        noteMap[qid] = cur;
+        renderNoteImages(qid);
+        saveNote(qid);
+    }
+
+    function viewNoteImage(qid, i) {
+        const cur = noteMap[qid];
+        if (!cur || !cur.images) return;
+        const src = cur.images[i];
+        if (!src) return;
+        const ov = document.createElement('div');
+        ov.className = 'img-lightbox';
+        ov.innerHTML = `<img src="${src}" alt="笔记图片">`;
+        ov.onclick = () => ov.remove();
+        document.body.appendChild(ov);
     }
 
     loadDati();
