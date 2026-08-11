@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>数据结构强化打卡 - 408刷题</title>
+    <link rel="manifest" href="manifest.webmanifest">
+    <meta name="theme-color" content="#4f46e5">
+    <link rel="icon" type="image/png" href="icons/icon-192.png">
+    <link rel="apple-touch-icon" href="icons/icon-192.png">
+    <script>if (localStorage.getItem('darkMode') === '1') document.documentElement.classList.add('dark');</script>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-container">
+            <a href="index.html" class="nav-brand">408刷题</a>
+            <div class="nav-links">
+                <a href="index.html" class="nav-link">首页</a>
+                <a href="wrong.html" class="nav-link">错题本</a>
+                <a href="favorites.html" class="nav-link">收藏夹</a>
+                <a href="exam.html" class="nav-link">模拟考试</a>
+                <a href="stats.html" class="nav-link">学习统计</a>
+                <a href="search.html" class="nav-link">搜题</a>
+                <a href="dati.html" class="nav-link">大题专项</a>
+            </div>
+            <div class="nav-tools">
+                <span class="nav-timer" id="navTimer" title="今日刷题时长（切换到其他窗口时暂停）">⏱ 00:00:00</span>
+                <button class="nav-switch" id="reciteSwitch" onclick="toggleRecite()" title="背题模式：直接显示答案与解析，不计入答题记录">
+                    背题 <span class="switch-state" id="reciteState">关</span>
+                </button>
+                <button class="nav-switch" id="autoNextSwitch" onclick="toggleAutoNext()" title="答对自动进入下一题">
+                    跳题 <span class="switch-state" id="autoNextState">关</span>
+                </button>
+                <button class="nav-switch" id="quickSwitch" onclick="toggleQuick()" title="快刷模式：点选项直接判对错，免按提交">
+                    快刷 <span class="switch-state" id="quickState">关</span>
+                </button>
+                <button class="nav-switch" id="darkSwitch" onclick="toggleDark()" title="夜间模式：深色主题护眼">
+                    夜间 <span class="switch-state" id="darkState">关</span>
+                </button>
+            </div>
+        </div>
+    </nav>
+    <main class="container">
+        <div class="page-header">
+            <h1>📌 数据结构强化打卡</h1>
+            <p>王道打卡表精选代码大题，按优先级排序，完成一题打卡一题</p>
+        </div>
+
+        <div class="daka-summary" id="dakaSummary"></div>
+
+        <div class="question-list" id="dakaList">
+            <div class="loading">加载中...</div>
+        </div>
+    </main>
+    <script src="js/common.js"></script>
+    <script src="js/backend.js"></script>
+    <script>
+    let dakaQuestions = [];
+    let dakaProgress = {};
+
+    async function loadDaka() {
+        try {
+            const [qResp, pResp] = await Promise.all([
+                fetch('data/ds_daka.json'),
+                api('/api/daka/progress')
+            ]);
+            dakaQuestions = (await qResp.json()).questions;
+            dakaProgress = (await pResp.json()).progress || {};
+            renderDaka();
+        } catch (e) {
+            document.getElementById('dakaList').innerHTML = `<div class="error">加载失败</div>`;
+        }
+    }
+
+    function renderDaka() {
+        const doneCount = dakaQuestions.filter(q => dakaProgress[q.id]).length;
+        document.getElementById('dakaSummary').innerHTML =
+            `已打卡 <b>${doneCount}</b> / ${dakaQuestions.length} 题`;
+
+        // 按优先级分组，必做与高优先级默认展开
+        const groups = new Map();
+        for (const q of dakaQuestions) {
+            if (!groups.has(q.priority_label)) groups.set(q.priority_label, []);
+            groups.get(q.priority_label).push(q);
+        }
+        let html = '';
+        for (const [label, qs] of groups) {
+            const open = (label === '必做' || label === '高优先级') ? ' open' : '';
+            const gDone = qs.filter(q => dakaProgress[q.id]).length;
+            html += `<details class="daka-group"${open}>
+                <summary class="daka-group-title">${label}（${gDone}/${qs.length}）</summary>
+                ${qs.map(renderCard).join('')}
+            </details>`;
+        }
+        document.getElementById('dakaList').innerHTML = html;
+    }
+
+    function badgeClass(p) {
+        return p === 0 ? 'badge-must' : p === 1 ? 'badge-high' : p === 4 ? 'badge-low' : 'badge-mid';
+    }
+
+    function renderCard(q) {
+        const done = !!dakaProgress[q.id];
+        const figs = q.figs || {content: [], answer: []};
+        const img = n => `<img src="data/daka_figs/${n}" loading="lazy" alt="教材原图">`;
+        // 题面/解答直接用教材原图，无图时才回退到提取文本
+        const content = figs.content.length ? figs.content.map(img).join('') : q.content;
+        const answer = figs.answer.length ? figs.answer.map(img).join('') : (q.answer || '（解答见教材）');
+        return `
+            <div class="daka-card${done ? ' daka-done' : ''}" id="card-${q.id}">
+                <div class="daka-card-header">
+                    <span class="daka-badge ${badgeClass(q.priority)}">${q.priority_label}</span>
+                    <span class="daka-source">${q.source}${q.real ? ' · ' + q.real : ''}</span>
+                    <button class="btn-daka${done ? ' checked' : ''}" onclick="toggleDaka('${q.id}')">
+                        ${done ? '已打卡 ✓' : '打卡'}
+                    </button>
+                </div>
+                <div class="daka-kaodian">${q.module} / ${q.kaodian}</div>
+                <div class="daka-content">${fmtContent(content)}</div>
+                <details class="daka-answer">
+                    <summary>查看答案</summary>
+                    <div class="daka-answer-body">${answer}</div>
+                </details>
+            </div>
+        `;
+    }
+
+    async function toggleDaka(qid) {
+        const done = !dakaProgress[qid];
+        try {
+            await api('/api/daka/progress', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({question_id: qid, done: done})
+            });
+            if (done) dakaProgress[qid] = new Date().toISOString();
+            else delete dakaProgress[qid];
+            renderDaka();
+        } catch (e) {
+            alert('打卡失败，请重试');
+        }
+    }
+
+    loadDaka();
+    </script>
+</body>
+</html>

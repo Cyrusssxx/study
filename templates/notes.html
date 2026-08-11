@@ -1,0 +1,763 @@
+{% extends "base.html" %}
+{% block title %}{{ notes.title }} - 408刷题{% endblock %}
+{% block content %}
+<div class="notes-header">
+    <h1>📖 {{ notes.title }}</h1>
+    <p class="notes-source">{{ notes.source }}</p>
+</div>
+
+<div class="notes-layout">
+    <!-- 左侧章节目录树 -->
+    <aside class="notes-toc" id="notesToc">
+        {% for ch in notes.chapters %}
+        <div class="notes-toc-ch">{{ ch.chapter }}</div>
+        {% for sec in ch.sections %}
+        <a class="notes-toc-sec" data-sec="{{ sec.section }}">{{ sec.section }}</a>
+        {% endfor %}
+        {% endfor %}
+    </aside>
+
+    <!-- 右侧笔记内容 -->
+    <div class="notes-content" id="notesContent">
+        {% for ch in notes.chapters %}
+        <h2 class="notes-ch-title">{{ ch.chapter }}</h2>
+        {% for sec in ch.sections %}
+        <section class="notes-section" data-sec="{{ sec.section }}">
+            <h3 class="notes-sec-title">{{ sec.section }}</h3>
+            <div class="notes-body">{{ sec.html | safe }}</div>
+        </section>
+        {% endfor %}
+        {% endfor %}
+    </div>
+</div>
+<button class="notes-top-btn" id="notesTopBtn" title="回到开头" hidden
+    onclick="window.scrollTo({ top: 0, behavior: 'smooth' })">↑</button>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    // 目录点击定位 + ?goto=节名 直达高亮（做题页知识点徽章跳转入口）
+    (function () {
+        const tocLinks = Array.from(document.querySelectorAll('.notes-toc-sec'));
+        const sections = Array.from(document.querySelectorAll('.notes-section'));
+
+        // 题目旧 section 名（王道）→ 笔记新 section 名（袁书/新版）映射表
+        const SEC_ALIASES = {
+            // 计组（CO）映射
+            "1.2 计算机系统层次结构": "1.3 计算机系统层次结构",
+            "1.3 计算机的性能指标": "1.2 计算机系统的基本组成",
+            "2.1 数制与编码": "2.1 数制和编码",
+            "2.2 运算方法和运算电路": "3.2 定点数运算",
+            "2.3 浮点数的表示与运算": "2.3 浮点数表示与运算",
+            "3.1 存储器概述": "7.1 存储器层次结构概述",
+            "3.2 主存储器": "7.2 主存储器",
+            "3.3 主存储器与CPU的连接": "7.2 主存储器",
+            "3.4 外部存储器": "8.4 外部存储器",
+            "3.5 高速缓冲存储器": "7.3 高速缓冲存储器(Cache)",
+            "3.6 虚拟存储器": "7.4 虚拟存储器",
+            "4.1 指令系统": "4.1 指令格式和指令系统",
+            "4.2 指令的寻址方式": "4.2 指令寻址方式",
+            "4.3 程序的机器级代码表示": "4.3 程序的机器级代码表示",
+            "4.4 CISC和RISC的基本概念": "4.4 指令集结构设计",
+            "5.1 CPU的功能和基本结构": "5.1 CPU的基本组成",
+            "5.2 指令执行过程": "5.3 指令执行过程",
+            "5.3 数据通路的功能和基本结构": "5.2 数据通路",
+            "5.4 控制器的功能和工作原理": "5.4 控制单元",
+            "5.5 异常和中断机制": "8.3 I/O控制方式",
+            "5.6 指令流水线": "6.1 流水线概念与分类",
+            "5.7 多处理器的基本概念": "9.2 多处理器系统",
+            "6.1 总线概述": "8.2 总线",
+            "6.2 总线事务和定时": "8.2 总线",
+            "7.1 I/O系统基本概念": "8.1 系统互连及I/O系统概述",
+            "7.2 I/O接口": "8.1 系统互连及I/O系统概述",
+            "7.3 I/O方式": "8.3 I/O控制方式",
+            // 计算机网络（CN）映射
+            "4.7 网络层设备": "4.8 本章小结及疑难点",
+            // 操作系统（OS）映射
+            "1.1 操作系统的基本概念": "1.2 操作系统发展历程",
+            "2.1 进程与线程简介": "2.2 CPU调度",
+            "71.3 文件系统": "4.3 文件系统",
+        };
+
+        function jumpTo(name, highlight) {
+            const tocLinks = Array.from(document.querySelectorAll('.notes-toc-sec'));
+            const sections = Array.from(document.querySelectorAll('.notes-section'));
+
+            const mapped = SEC_ALIASES[name] || name;
+
+            // 1) 精确匹配
+            let target = sections.find(s => s.dataset.sec === name)
+                      || sections.find(s => s.dataset.sec === mapped);
+
+            // 2) 按编号前缀模糊匹配
+            if (!target) {
+                const numMatch = (mapped || name).match(/^(\d+\.\d+)/);
+                if (numMatch) {
+                    const prefix = numMatch[1];
+                    const candidates = sections.filter(s => s.dataset.sec.startsWith(prefix));
+                    if (candidates.length === 1) {
+                        target = candidates[0];
+                    } else if (candidates.length > 1) {
+                        const titleKw = (mapped || name).replace(/^(\d+\.\d+\s*)+/, '').replace(/[的与及和和或]+/g, ' ').trim().split(/\s+/).filter(w => w.length > 1);
+                        let bestScore = 0;
+                        for (const c of candidates) {
+                            const secTitle = c.dataset.sec.replace(/^\d+\.\d+\s*/, '');
+                            let score = 0;
+                            for (const kw of titleKw) {
+                                if (secTitle.includes(kw)) score += kw.length;
+                            }
+                            if (score > bestScore) { bestScore = score; target = c; }
+                        }
+                        if (bestScore === 0) target = candidates[0];
+                    }
+                }
+            }
+
+            // 3) 关键词兜底匹配
+            if (!target) {
+                const kw = (mapped || name).replace(/^\d+\.[\d\s]*/, '').trim();
+                if (kw.length >= 2) {
+                    target = sections.find(s => s.dataset.sec.includes(kw));
+                }
+            }
+
+            if (!target) return false;
+            target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            tocLinks.forEach(l => l.classList.toggle('active', l.dataset.sec === target.dataset.sec));
+            if (highlight) {
+                target.classList.remove('goto-highlight');
+                void target.offsetWidth;
+                target.classList.add('goto-highlight');
+            }
+            return true;
+        }
+
+        tocLinks.forEach(l => l.addEventListener('click', () => jumpTo(l.dataset.sec, false)));
+
+        // 滚动时目录跟随高亮
+        let ticking = false;
+        window.addEventListener('scroll', () => {
+            if (ticking) return;
+            ticking = true;
+            requestAnimationFrame(() => {
+                ticking = false;
+                let current = null;
+                for (const s of sections) {
+                    if (s.getBoundingClientRect().top <= 90) current = s.dataset.sec;
+                }
+                if (current) tocLinks.forEach(l => l.classList.toggle('active', l.dataset.sec === current));
+            });
+        }, { passive: true });
+
+        const goto = new URLSearchParams(location.search).get('goto');
+        if (goto) setTimeout(() => jumpTo(goto, true), 100);
+        // 长表格加横向滚动包裹，防止移动端列被压扁
+        document.querySelectorAll('.notes-body table').forEach(t => {
+            const wrap = document.createElement('div');
+            wrap.className = 'notes-table-wrap';
+            t.parentNode.insertBefore(wrap, t);
+            wrap.appendChild(t);
+        });
+    })();
+
+    // ==================== 考点笔记：行级批注 + 划词高亮 ====================
+    // 合成 question_id 复用做题笔记链路：批注整科一条(_kn)、高亮整科一条(_hl)，走 /api/note（与 PWA 版镜像，仅 api→fetch）
+    const SUBJECT = "{{ subject }}";
+    const noteApi = (url, opts) => fetch(url, opts);
+    let annoItems = [];     // [{sec, line, text, images}]，一行至多一条批注
+    let annoSaveTimer = null;
+    let annoEditor = null;  // 当前打开的编辑器 {el, sec, line, images}
+    let hlItems = [];       // [{sec, start, end, color, text}]
+    let hlSaveTimer = null;
+
+    const annoKey = () => SUBJECT + '_kn';
+    const hlKey = () => SUBJECT + '_hl';
+
+    // 批注块混排在正文里，高亮的偏移/文本计算一律跳过批注子树，保证批注增删不影响高亮定位
+    function inAnno(n) {
+        const el = n.nodeType === 1 ? n : n.parentElement;
+        return !!(el && el.closest('.line-anno'));
+    }
+    const hlWalkFilter = { acceptNode: n => inAnno(n) ? NodeFilter.FILTER_REJECT : NodeFilter.FILTER_ACCEPT };
+
+    // 过滤批注后的正文纯文本（与 offsetInRoot / wrapRange 同一计数口径）
+    function cleanTextOf(root) {
+        const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, hlWalkFilter);
+        let t = '', node;
+        while ((node = walker.nextNode())) t += node.nodeValue;
+        return t;
+    }
+
+    // ==================== 本科考点搜索：标题/章节/正文行 + 我的批注，命中精确定位 ====================
+    let noteIndex = [], invertedIndex = new Map(), lastNoteHits = [];
+    const NOTE_HIST_KEY = 'notesSearchHistory';
+
+    function nsEsc(s) {
+        return String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+    }
+
+    // 高亮关键词（安全转义后用 <mark> 包裹）
+    function hlKeyword(text, kw) {
+        if (!kw) return nsEsc(text);
+        const safeKw = kw.replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+        const re = new RegExp(`(${safeKw.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'gi');
+        return nsEsc(text).replace(re, '<mark class="notes-hl-kw">$1</mark>');
+    }
+
+    // 渲染后建索引：章标题(w=0)、节标题(w=1)、正文行(w=2)；批注在搜索时实时读 annoItems
+    function buildNoteIndex() {
+        noteIndex = [];
+        invertedIndex = new Map();
+        let order = 0;
+        document.querySelectorAll('.notes-content > .notes-ch-title, .notes-content > .notes-section').forEach(node => {
+            if (node.classList.contains('notes-ch-title')) {
+                const txt = node.textContent.trim();
+                noteIndex.push({ text: txt, path: '章', w: 0, r: 0, order: order++ });
+                addToInverted(txt, noteIndex[noteIndex.length - 1]);
+                return;
+            }
+            const sec = node.dataset.sec;
+            const t = node.querySelector('.notes-sec-title');
+            if (t) {
+                const txt = t.textContent.trim();
+                noteIndex.push({ text: txt, path: '节', sec, w: 1, r: 0, order: order++ });
+                addToInverted(txt, noteIndex[noteIndex.length - 1]);
+            }
+            node.querySelectorAll('.notes-body li, .notes-body p').forEach(el => {
+                const txt = cleanTextOf(el).trim().replace(/\s+/g, ' ');
+                if (txt) {
+                    noteIndex.push({ text: txt, path: sec, sec, w: 2, r: 0, order: order++ });
+                    addToInverted(txt, noteIndex[noteIndex.length - 1]);
+                }
+            });
+        });
+    }
+
+    // 倒排索引：分词后建立词项到索引项的映射
+    function addToInverted(text, item) {
+        const words = text.toLowerCase().split(/[\s,，。、；：！？""''（）()【】]+/);
+        words.forEach(w => {
+            if (w.length < 2) return;
+            if (!invertedIndex.has(w)) invertedIndex.set(w, []);
+            invertedIndex.get(w).push(item);
+        });
+    }
+
+    function doNoteSearch(q) {
+        const box = document.getElementById('notesSearchResults');
+        if (!box) return;
+        q = q.trim().toLowerCase();
+        if (!q) { showNoteHistory(); return; }
+        const hits = [];
+        const seen = new Set();
+        // 我的批注排最前（r=-1）
+        annoItems.forEach(it => {
+            if (it.text && it.text.toLowerCase().includes(q)) {
+                const key = 'anno:' + it.sec + ':' + it.line;
+                if (!seen.has(key)) {
+                    hits.push({ text: '📝 ' + it.text, path: '我的批注', sec: it.sec, w: 0, r: -1, order: 0 });
+                    seen.add(key);
+                }
+            }
+        });
+        // 倒排索引命中 + 回退子串匹配（兼顾模糊）
+        const candidates = invertedIndex.get(q);
+        if (candidates) {
+            candidates.forEach(it => {
+                const key = it.order;
+                if (!seen.has(key)) { hits.push(it); seen.add(key); }
+            });
+        } else {
+            noteIndex.forEach(it => {
+                if (it.text.toLowerCase().includes(q)) {
+                    const key = it.order;
+                    if (!seen.has(key)) { hits.push(it); seen.add(key); }
+                }
+            });
+        }
+        // 排序：批注在前 → 章/节/正文 → 原文顺序，取前 40 条
+        hits.sort((a, b) => a.r - b.r || a.w - b.w || a.order - b.order);
+        const top = hits.slice(0, 40);
+        lastNoteHits = top;
+        box.hidden = false;
+        box.innerHTML = top.length === 0 ? '<div class="notes-sr-empty">无结果</div>' :
+            top.map((h, i) => `<div class="notes-sr-item" onclick="locateNoteHit(${i})">
+                <span class="notes-sr-path">${nsEsc(h.path || '')}</span>
+                <span class="notes-sr-text">${hlKeyword(h.text.slice(0, 80), q)}</span></div>`).join('');
+    }
+
+    // 点结果：记历史 + 收起下拉 + 定位到命中块
+    function locateNoteHit(i) {
+        const h = lastNoteHits[i];
+        if (!h) return;
+        saveNoteHist(document.getElementById('notesSearchInput').value);
+        clearNoteSearch();
+        locateNoteBlock(h.text);
+    }
+
+    // 找文本最短的命中块(=最精确)，瞬时滚到屏幕中央并闪烁 1.8s
+    function locateNoteBlock(text) {
+        const plain = text.replace(/^📝 /, '').trim();
+        if (plain.length < 2) return;
+        let best = null;
+        document.querySelectorAll('.notes-content h2, .notes-content .notes-sec-title, .notes-content .notes-body li, .notes-content .notes-body p, .notes-content .notes-body td, .line-anno-text').forEach(b => {
+            if (b.textContent.includes(plain) && (!best || b.textContent.length < best.textContent.length)) best = b;
+        });
+        if (!best) return;
+        best.scrollIntoView({ block: 'center', behavior: 'instant' });
+        best.classList.add('locate-flash');
+        setTimeout(() => best.classList.remove('locate-flash'), 1800);
+    }
+
+    function clearNoteSearch() {
+        const input = document.getElementById('notesSearchInput');
+        if (input) input.value = '';
+        const box = document.getElementById('notesSearchResults');
+        if (box) { box.hidden = true; box.innerHTML = ''; }
+    }
+
+    // ---------- 搜索历史（localStorage 最多 5 条，可单删/清空） ----------
+    const getNoteHist = () => { try { return JSON.parse(localStorage.getItem(NOTE_HIST_KEY)) || []; } catch (e) { return []; } };
+
+    function saveNoteHist(term) {
+        term = (term || '').trim();
+        if (!term) return;
+        const h = getNoteHist().filter(t => t !== term);   // 去重后提到最前
+        h.unshift(term);
+        localStorage.setItem(NOTE_HIST_KEY, JSON.stringify(h.slice(0, 5)));
+    }
+
+    // 输入框为空时展示历史列表（聚焦/清空输入时触发）
+    function showNoteHistory() {
+        const box = document.getElementById('notesSearchResults');
+        if (!box) return;
+        const h = getNoteHist();
+        if (!h.length) { box.hidden = true; box.innerHTML = ''; return; }
+        box.hidden = false;
+        box.innerHTML = `<div class="notes-sh-head">搜索历史<button class="notes-sh-clear" onclick="clearNoteHist()">清空</button></div>` +
+            h.slice(0, 5).map((t, i) => `<div class="notes-sh-item" onclick="useNoteHist(${i})">
+                <span class="notes-sh-term">${nsEsc(t)}</span>
+                <button class="notes-sh-del" onclick="delNoteHist(event, ${i})" title="删除这条">×</button></div>`).join('');
+    }
+
+    function useNoteHist(i) {
+        const t = getNoteHist()[i];
+        if (t == null) return;
+        document.getElementById('notesSearchInput').value = t;
+        doNoteSearch(t);
+    }
+
+    function delNoteHist(e, i) {
+        e.stopPropagation();   // 别触发整行的 useNoteHist
+        const h = getNoteHist();
+        h.splice(i, 1);
+        localStorage.setItem(NOTE_HIST_KEY, JSON.stringify(h));
+        showNoteHistory();
+    }
+
+    function clearNoteHist() {
+        localStorage.removeItem(NOTE_HIST_KEY);
+        const box = document.getElementById('notesSearchResults');
+        if (box) { box.hidden = true; box.innerHTML = ''; }
+    }
+
+    // 点搜索区外部 → 收起下拉
+    document.addEventListener('click', e => {
+        if (!e.target.closest('.notes-search')) {
+            const box = document.getElementById('notesSearchResults');
+            if (box) box.hidden = true;
+        }
+    });
+
+    // ---------- 行级批注：划词后工具条点 📝批注，批注挂在该行正下方 ----------
+    function initAnnoAndHl() {
+        // 给正文里的 li / p 编行号作批注锚点（笔记内容静态，行号稳定）
+        document.querySelectorAll('.notes-section').forEach(section => {
+            section.querySelectorAll('.notes-body li, .notes-body p').forEach((el, i) => {
+                el.classList.add('anno-line');
+                el.dataset.line = i;
+            });
+        });
+        buildNoteIndex();
+        const sb = document.getElementById('notesSearchBox');
+        if (sb) sb.hidden = false;
+        initHighlight();
+        loadAnnos();
+        loadHighlights();
+    }
+
+    function lineEl(sec, line) {
+        const section = Array.from(document.querySelectorAll('.notes-section')).find(s => s.dataset.sec === sec);
+        return section ? section.querySelector('.anno-line[data-line="' + line + '"]') : null;
+    }
+
+    function annoBlockEl(sec, line) {
+        return document.querySelector('.line-anno-block[data-sec="' + CSS.escape(sec) + '"][data-line="' + line + '"]');
+    }
+
+    // li 的批注放行内末尾（跟随缩进），p 等其它行放元素后面
+    function attachBelow(line, el) {
+        if (line.tagName === 'LI') line.appendChild(el);
+        else line.insertAdjacentElement('afterend', el);
+    }
+
+    function openAnnoEditor(line, item) {
+        closeAnnoEditor();
+        const sec = line.closest('.notes-section').dataset.sec;
+        const idx = +line.dataset.line;
+        const el = document.createElement('div');
+        el.className = 'line-anno line-anno-editor';
+        el.innerHTML = `
+            <textarea class="note-input line-anno-input" placeholder="写批注，可 Ctrl+V 粘贴截图…"></textarea>
+            <div class="note-images line-anno-editor-imgs"></div>
+            <div class="line-anno-bar">
+                <button type="button" class="btn btn-primary line-anno-save">保存</button>
+                <button type="button" class="btn btn-secondary line-anno-cancel">取消</button>
+            </div>`;
+        annoEditor = { el, sec, line: idx, images: item ? (item.images || []).slice() : [] };
+        const blk = annoBlockEl(sec, idx);
+        if (blk) blk.style.display = 'none';   // 编辑期间隐藏原批注块
+        attachBelow(line, el);
+        const input = el.querySelector('.line-anno-input');
+        input.value = item ? (item.text || '') : '';
+        renderEditorImages();
+        input.addEventListener('paste', pasteAnnoImage);
+        el.querySelector('.line-anno-save').addEventListener('click', saveAnnoEditor);
+        el.querySelector('.line-anno-cancel').addEventListener('click', () => closeAnnoEditor());
+        input.focus();
+    }
+
+    function closeAnnoEditor() {
+        if (!annoEditor) return;
+        const blk = annoBlockEl(annoEditor.sec, annoEditor.line);
+        if (blk) blk.style.display = '';
+        annoEditor.el.remove();
+        annoEditor = null;
+    }
+
+    function renderEditorImages() {
+        const box = annoEditor.el.querySelector('.line-anno-editor-imgs');
+        box.innerHTML = annoEditor.images.map((src, i) => `
+            <div class="note-img-item">
+                <img src="${src}" alt="批注图片">
+                <span class="note-img-del" data-i="${i}" title="删除图片">×</span>
+            </div>`).join('');
+        box.querySelectorAll('img').forEach(img => img.onclick = () => viewAnnoImage(img.src));
+        box.querySelectorAll('.note-img-del').forEach(d => d.onclick = () => {
+            annoEditor.images.splice(+d.dataset.i, 1);
+            renderEditorImages();
+        });
+    }
+
+    // 压缩成最长边1200px的JPEG，控制入库体积（透明底先铺白）
+    function compressImage(file) {
+        return new Promise((resolve, reject) => {
+            const img = new Image();
+            img.onload = () => {
+                const scale = Math.min(1, 1200 / Math.max(img.width, img.height));
+                const canvas = document.createElement('canvas');
+                canvas.width = Math.round(img.width * scale);
+                canvas.height = Math.round(img.height * scale);
+                const ctx = canvas.getContext('2d');
+                ctx.fillStyle = '#fff';
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+                ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+                URL.revokeObjectURL(img.src);
+                resolve(canvas.toDataURL('image/jpeg', 0.85));
+            };
+            img.onerror = () => reject(new Error('图片读取失败'));
+            img.src = URL.createObjectURL(file);
+        });
+    }
+
+    // 从剪贴板粘贴图片（截图后在批注框 Ctrl+V），压缩后随批注入库
+    async function pasteAnnoImage(event) {
+        if (!annoEditor) return;
+        const files = [...(event.clipboardData ? event.clipboardData.items : [])]
+            .filter(it => it.type.startsWith('image/'))
+            .map(it => it.getAsFile())
+            .filter(Boolean);
+        if (!files.length) return;
+        event.preventDefault();
+        try {
+            for (const f of files) annoEditor.images.push(await compressImage(f));
+        } catch (e) { alert(e.message); }
+        renderEditorImages();
+    }
+
+    function viewAnnoImage(src) {
+        if (!src) return;
+        const ov = document.createElement('div');
+        ov.className = 'img-lightbox';
+        ov.innerHTML = `<img src="${src}" alt="批注图片">`;
+        ov.onclick = () => ov.remove();
+        document.body.appendChild(ov);
+    }
+
+    function saveAnnoEditor() {
+        if (!annoEditor) return;
+        const { sec, line, images } = annoEditor;
+        const text = annoEditor.el.querySelector('.line-anno-input').value.trim();
+        annoItems = annoItems.filter(it => !(it.sec === sec && it.line === line));
+        const old = annoBlockEl(sec, line);
+        if (old) old.remove();
+        if (text || images.length) {
+            const item = { sec, line, text, images };
+            annoItems.push(item);
+            renderAnnoBlock(item);
+        }
+        annoEditor.el.remove();
+        annoEditor = null;
+        saveAnnos();
+    }
+
+    // 已保存批注条：📝 + 文字/贴图 + 改/删（常驻显示在行下方）
+    function renderAnnoBlock(item) {
+        const line = lineEl(item.sec, item.line);
+        if (!line) return;
+        const el = document.createElement('div');
+        el.className = 'line-anno line-anno-block';
+        el.dataset.sec = item.sec;
+        el.dataset.line = item.line;
+        const imgs = (item.images || []).map(src =>
+            `<img class="line-anno-img" src="${src}" alt="批注图片">`).join('');
+        el.innerHTML = `
+            <span class="line-anno-icon">📝</span>
+            <div class="line-anno-body">
+                ${item.text ? `<div class="line-anno-text"></div>` : ''}
+                ${imgs}
+            </div>
+            <div class="line-anno-ops">
+                <button type="button" class="line-anno-op line-anno-edit">改</button>
+                <button type="button" class="line-anno-op line-anno-del">删</button>
+            </div>`;
+        if (item.text) el.querySelector('.line-anno-text').textContent = item.text;  // textContent 防注入
+        el.querySelectorAll('.line-anno-img').forEach(img => img.onclick = () => viewAnnoImage(img.src));
+        el.querySelector('.line-anno-edit').onclick = () => openAnnoEditor(line, item);
+        el.querySelector('.line-anno-del').onclick = () => {
+            if (!confirm('删除这条批注？')) return;
+            annoItems = annoItems.filter(it => !(it.sec === item.sec && it.line === item.line));
+            el.remove();
+            saveAnnos();
+        };
+        attachBelow(line, el);
+    }
+
+    function saveAnnos() {
+        clearTimeout(annoSaveTimer);
+        annoSaveTimer = setTimeout(async () => {
+            try {
+                await noteApi('/api/note/' + encodeURIComponent(annoKey()), {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ content: JSON.stringify(annoItems), images: [] })
+                });
+            } catch (e) { alert('批注保存失败: ' + e.message); }
+        }, 300);
+    }
+
+    // 整科一次 GET 还原所有行批注
+    async function loadAnnos() {
+        let items = [];
+        try {
+            const resp = await noteApi('/api/note/' + encodeURIComponent(annoKey()));
+            const d = await resp.json();
+            items = d.note ? JSON.parse(d.note) : [];
+        } catch (e) { return; }
+        if (!Array.isArray(items) || !items.length) return;
+        annoItems = items.filter(it => it && typeof it.line === 'number');
+        annoItems.forEach(renderAnnoBlock);
+    }
+
+    // ---------- 划词高亮 ----------
+    const HL_COLORS = ['yellow', 'green', 'blue', 'pink'];
+
+    // 选区端点相对 root 的纯文本字符偏移（跳过批注子树，与 cleanTextOf / wrapRange 同口径）
+    function offsetInRoot(root, container, offset) {
+        const target = container.nodeType === 3 ? container
+            : (container.childNodes[offset] || null);   // 元素端点取子节点边界
+        const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, hlWalkFilter);
+        let pos = 0, node;
+        while ((node = walker.nextNode())) {
+            if (container.nodeType === 3) {
+                if (node === container) return pos + offset;
+            } else if (target && (target === node || (target.contains && target.contains(node)))) {
+                return pos;   // 落到边界子节点起点
+            }
+            pos += node.nodeValue.length;
+        }
+        return pos;
+    }
+
+    // 将 [start,end) 内的文本节点片段包进 span（逐片段包裹，支持跨内联标签，跳过批注子树）
+    function wrapRange(root, start, end, cls, ds) {
+        const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, hlWalkFilter);
+        let pos = 0, node;
+        const pieces = [];
+        while ((node = walker.nextNode())) {
+            const len = node.nodeValue.length;
+            const ns = pos, ne = pos + len;
+            pos = ne;
+            if (ne <= start || ns >= end) continue;
+            pieces.push({ node, s: Math.max(start, ns) - ns, e: Math.min(end, ne) - ns });
+        }
+        // 从后往前包，避免已收集节点偏移失效
+        for (let i = pieces.length - 1; i >= 0; i--) {
+            const p = pieces[i];
+            const range = document.createRange();
+            range.setStart(p.node, p.s);
+            range.setEnd(p.node, p.e);
+            const span = document.createElement('span');
+            span.className = cls;
+            if (ds) { span.dataset.start = ds.start; span.dataset.color = ds.color; }
+            range.surroundContents(span);   // 单文本节点区间，包裹安全
+        }
+    }
+
+    function bodyOf(n) {
+        const el = n.nodeType === 1 ? n : n.parentElement;
+        return el ? el.closest('.notes-body') : null;
+    }
+
+    let hlToolbar = null;
+    function initHighlight() {
+        const content = document.getElementById('notesContent');
+        // 点已有高亮→就地取消
+        content.addEventListener('click', e => {
+            const span = e.target.closest && e.target.closest('.note-hl');
+            if (span) { e.stopPropagation(); removeHighlight(span); }
+        });
+        content.addEventListener('mouseup', () => setTimeout(showHlToolbar, 0));
+        document.addEventListener('mousedown', e => {
+            if (hlToolbar && !hlToolbar.contains(e.target)) hideHlToolbar();
+        });
+    }
+
+    function hideHlToolbar() { if (hlToolbar) { hlToolbar.remove(); hlToolbar = null; } }
+
+    function showHlToolbar() {
+        const sel = window.getSelection();
+        if (!sel || sel.isCollapsed || !sel.rangeCount) { hideHlToolbar(); return; }
+        const range = sel.getRangeAt(0);
+        const body = bodyOf(range.startContainer);
+        // 选区必须完全落在同一 .notes-body 内，且不落进批注块
+        if (!body || bodyOf(range.endContainer) !== body) { hideHlToolbar(); return; }
+        if (inAnno(range.startContainer) || inAnno(range.endContainer)) { hideHlToolbar(); return; }
+        hideHlToolbar();
+        const rect = range.getBoundingClientRect();
+        hlToolbar = document.createElement('div');
+        hlToolbar.className = 'hl-toolbar';
+        hlToolbar.innerHTML = HL_COLORS.map(c =>
+            `<span class="hl-dot hl-dot-${c}" data-color="${c}" title="${c}"></span>`).join('') +
+            '<span class="hl-anno-btn" title="批注此行">📝批注</span>' +
+            '<span class="hl-cancel" title="取消高亮">✕</span>';
+        document.body.appendChild(hlToolbar);
+        hlToolbar.style.top = (window.scrollY + rect.top - hlToolbar.offsetHeight - 8) + 'px';
+        hlToolbar.style.left = (window.scrollX + rect.left) + 'px';
+        hlToolbar.querySelectorAll('.hl-dot').forEach(dot =>
+            dot.addEventListener('click', () => applyHighlight(body, range, dot.dataset.color)));
+        // 划词后点📝批注：定位到选区起点所在行，在其正下方开编辑框
+        hlToolbar.querySelector('.hl-anno-btn').addEventListener('click', () => {
+            const el = range.startContainer.nodeType === 1
+                ? range.startContainer : range.startContainer.parentElement;
+            const line = el && el.closest('.anno-line');
+            window.getSelection().removeAllRanges();
+            hideHlToolbar();
+            if (!line) return;
+            const sec = line.closest('.notes-section').dataset.sec;
+            const idx = +line.dataset.line;
+            openAnnoEditor(line, annoItems.find(it => it.sec === sec && it.line === idx) || null);
+        });
+        hlToolbar.querySelector('.hl-cancel').addEventListener('click', () => {
+            // 选区内已有高亮则取消
+            const span = (range.startContainer.parentElement || range.startContainer).closest
+                ? (range.startContainer.parentElement || range.startContainer).closest('.note-hl') : null;
+            if (span) removeHighlight(span);
+            hideHlToolbar();
+        });
+    }
+
+    function applyHighlight(body, range, color) {
+        const start = offsetInRoot(body, range.startContainer, range.startOffset);
+        const end = offsetInRoot(body, range.endContainer, range.endOffset);
+        if (end <= start) { hideHlToolbar(); return; }
+        const text = range.toString();
+        const sec = body.closest('.notes-section').dataset.sec;
+        hlItems.push({ sec, start, end, color, text });
+        wrapRange(body, start, end, 'note-hl note-hl-' + color, { start, color });
+        window.getSelection().removeAllRanges();
+        hideHlToolbar();
+        saveHl();
+    }
+
+    function removeHighlight(span) {
+        const sec = span.closest('.notes-section').dataset.sec;
+        const start = +span.dataset.start;
+        const color = span.dataset.color;
+        hlItems = hlItems.filter(it => !(it.sec === sec && it.start === start && it.color === color));
+        const parent = span.parentNode;
+        while (span.firstChild) parent.insertBefore(span.firstChild, span);
+        parent.removeChild(span);
+        parent.normalize();
+        saveHl();
+    }
+
+    function saveHl() {
+        clearTimeout(hlSaveTimer);
+        hlSaveTimer = setTimeout(async () => {
+            try {
+                await noteApi('/api/note/' + encodeURIComponent(hlKey()), {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ content: JSON.stringify(hlItems), images: [] })
+                });
+            } catch (e) { /* 高亮保存失败静默，不阻断阅读 */ }
+        }, 500);
+    }
+
+    // 整科一次 GET 还原所有节高亮
+    async function loadHighlights() {
+        let items = [];
+        try {
+            const resp = await noteApi('/api/note/' + encodeURIComponent(hlKey()));
+            const d = await resp.json();
+            items = d.note ? JSON.parse(d.note) : [];
+        } catch (e) { return; }
+        if (!Array.isArray(items) || !items.length) return;
+        hlItems = [];
+        // 按节分桶
+        const bySec = {};
+        for (const it of items) (bySec[it.sec] = bySec[it.sec] || []).push(it);
+        document.querySelectorAll('.notes-section').forEach(section => {
+            const sec = section.dataset.sec;
+            const list = bySec[sec];
+            if (!list) return;
+            const body = section.querySelector('.notes-body');
+            const full = cleanTextOf(body);
+            list.sort((a, b) => a.start - b.start);
+            for (const it of list) {
+                let { start, end } = it;
+                // 偏移漂移降级：校验不符则 indexOf 兑底，仍失败静默跳过
+                if (full.slice(start, end) !== it.text) {
+                    const idx = full.indexOf(it.text);
+                    if (idx < 0 || !it.text) continue;
+                    start = idx; end = idx + it.text.length;
+                }
+                wrapRange(body, start, end, 'note-hl note-hl-' + it.color, { start, color: it.color });
+                hlItems.push({ sec, start, end, color: it.color, text: it.text });
+            }
+        });
+    }
+
+    // 悬浮回顶按钮：下滑超过 400px 才出现，避免开头就挡内容
+    (function () {
+        const topBtn = document.getElementById('notesTopBtn');
+        if (!topBtn) return;
+        window.addEventListener('scroll', () => {
+            topBtn.hidden = window.scrollY < 400;
+        }, { passive: true });
+    })();
+
+    initAnnoAndHl();
+</script>
+{% endblock %}

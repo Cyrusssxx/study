@@ -1,0 +1,3705 @@
+{
+ "subjects": [
+  {
+   "key": "co",
+   "name": "计算机组成原理",
+   "chapters": [
+    {
+     "name": "第1章  计算机系统概述",
+     "sections": [
+      {
+       "name": "1.3 计算机的性能指标",
+       "questions": [
+        {
+         "id": "dati_co_1_3_01",
+         "num": 1,
+         "real": false,
+         "year": null,
+         "q": [
+          "dati_co_1_3_01_q_01.jpg"
+         ],
+         "a": [
+          "dati_co_1_3_01_a_01.jpg",
+          "dati_co_1_3_01_a_02.jpg"
+         ]
+        },
+        {
+         "id": "dati_co_1_3_02",
+         "num": 2,
+         "real": false,
+         "year": null,
+         "q": [
+          "dati_co_1_3_02_q_01.jpg"
+         ],
+         "a": [
+          "dati_co_1_3_02_a_01.jpg"
+         ]
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "name": "第2章  数据的表示和运算",
+     "sections": [
+      {
+       "name": "2.2 运算方法和运算电路",
+       "questions": [
+        {
+         "id": "dati_co_2_2_01",
+         "num": 1,
+         "real": false,
+         "year": null,
+         "q": [
+          "dati_co_2_2_01_q_01.jpg"
+         ],
+         "a": [
+          "dati_co_2_2_01_a_01.jpg"
+         ]
+        },
+        {
+         "id": "dati_co_2_2_02",
+         "num": 2,
+         "real": false,
+         "year": null,
+         "q": [
+          "dati_co_2_2_02_q_01.jpg",
+          "dati_co_2_2_02_q_02.jpg"
+         ],
+         "a": [
+          "dati_co_2_2_02_a_01.jpg"
+         ]
+        },
+        {
+         "id": "dati_co_2_2_03",
+         "num": 3,
+         "real": true,
+         "year": 2011,
+         "q": [
+          "dati_co_2_2_03_q_01.jpg"
+         ],
+         "a": [
+          "dati_co_2_2_03_a_01.jpg",
+          "dati_co_2_2_03_a_02.jpg"
+         ]
+        },
+        {
+         "id": "dati_co_2_2_04",
+         "num": 4,
+         "real": true,
+         "year": 2020,
+         "q": [
+          "dati_co_2_2_04_q_01.jpg"
+         ],
+         "a": [
+          "dati_co_2_2_04_a_01.jpg"
+         ]
+        }
+       ]
+      },
+      {
+       "name": "2.3 浮点数的表示与运算",
+       "questions": [
+        {
+         "id": "dati_co_2_3_01",
+         "num": 1,
+         "real": false,
+         "year": null,
+         "q": [
+          "dati_co_2_3_01_q_01.jpg"
+         ],
+         "a": [
+          "dati_co_2_3_01_a_01.jpg",
+          "dati_co_2_3_01_a_02.jpg"
+         ]
+        },
+        {
+         "id": "dati_co_2_3_02",
+         "num": 2,
+         "real": false,
+         "year": null,
+         "q": [
+          "dati_co_2_3_02_q_01.jpg"
+         ],
+         "a": [
+          "dati_co_2_3_02_a_01.jpg"
+         ]
+        },
+        {
+         "id": "dati_co_2_3_03",
+         "num": 3,
+         "real": false,
+         "year": null,
+         "q": [
+          "dati_co_2_3_03_q_01.jpg",
+          "dati_co_2_3_03_q_02.jpg"
+         ],
+         "a": [
+          "dati_co_2_3_03_a_01.jpg",
+          "dati_co_2_3_03_a_02.jpg"
+         ]
+        },
+        {
+         "id": "dati_co_2_3_04",
+         "num": 4,
+         "real": false,
+         "year": null,
+         "q": [
+          "dati_co_2_3_04_q_01.jpg"
+         ],
+         "a": [
+          "dati_co_2_3_04_a_01.jpg"
+         ]
+        },
+        {
+         "id": "dati_co_2_3_05",
+         "num": 5,
+         "real": true,
+         "year": 2017,
+         "q": [
+          "dati_co_2_3_05_q_01.jpg"
+         ],
+         "a": [
+          "dati_co_2_3_05_a_01.jpg",
+          "dati_co_2_3_05_a_02.jpg"
+         ]
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "name": "第3章  存储系统",
+     "sections": [
+      {
+       "name": "3.2 主存储器",
+       "questions": [
+        {
+         "id": "dati_co_3_2_01",
+         "num": 1,
+         "real": false,
+         "year": null,
+         "q": [
+          "dati_co_3_2_01_q_01.jpg"
+         ],
+         "a": [
+          "dati_co_3_2_01_a_01.jpg"
+         ]
+        },
+        {
+         "id": "dati_co_3_2_02",
+         "num": 2,
+         "real": false,
+         "year": null,
+         "q": [
+          "dati_co_3_2_02_q_01.jpg"
+         ],
+         "a": [
+          "dati_co_3_2_02_a_01.jpg"
+         ]
+        },
+        {
+         "id": "dati_co_3_2_03",
+         "num": 3,
+         "real": false,
+         "year": null,
+         "q": [
+          "dati_co_3_2_03_q_01.jpg"
+         ],
+         "a": [
+          "dati_co_3_2_03_a_01.jpg"
+         ]
+        },
+        {
+         "id": "dati_co_3_2_04",
+         "num": 4,
+         "real": false,
+         "year": null,
+         "q": [
+          "dati_co_3_2_04_q_01.jpg",
+          "dati_co_3_2_04_q_02.jpg"
+         ],
+         "a": [
+          "dati_co_3_2_04_a_01.jpg",
+          "dati_co_3_2_04_a_02.jpg"
+         ]
+        },
+        {
+         "id": "dati_co_3_2_05",
+         "num": 5,
+         "real": false,
+         "year": null,
+         "q": [
+          "dati_co_3_2_05_q_01.jpg"
+         ],
+         "a": [
+          "dati_co_3_2_05_a_01.jpg"
+         ]
+        }
+       ]
+      },
+      {
+       "name": "3.3 主存储器与CPU的连接",
+       "questions": [
+        {
+         "id": "dati_co_3_3_01",
+         "num": 1,
+         "real": false,
+         "year": null,
+         "q": [
+          "dati_co_3_3_01_q_01.jpg"
+         ],
+         "a": [
+          "dati_co_3_3_01_a_01.jpg"
+         ]
+        }
+       ]
+      },
+      {
+       "name": "3.4 外部存储器",
+       "questions": [
+        {
+         "id": "dati_co_3_4_01",
+         "num": 1,
+         "real": false,
+         "year": null,
+         "q": [
+          "dati_co_3_4_01_q_01.jpg"
+         ],
+         "a": [
+          "dati_co_3_4_01_a_01.jpg",
+          "dati_co_3_4_01_a_02.jpg"
+         ]
+        }
+       ]
+      },
+      {
+       "name": "3.5 高速缓冲存储器",
+       "questions": [
+        {
+         "id": "dati_co_3_5_01",
+         "num": 1,
+         "real": false,
+         "year": null,
+         "q": [
+          "dati_co_3_5_01_q_01.jpg"
+         ],
+         "a": [
+          "dati_co_3_5_01_a_01.jpg"
+         ]
+        },
+        {
+         "id": "dati_co_3_5_02",
+         "num": 2,
+         "real": false,
+         "year": null,
+         "q": [
+          "dati_co_3_5_02_q_01.jpg"
+         ],
+         "a": [
+          "dati_co_3_5_02_a_01.jpg"
+         ]
+        },
+        {
+         "id": "dati_co_3_5_03",
+         "num": 3,
+         "real": false,
+         "year": null,
+         "q": [
+          "dati_co_3_5_03_q_01.jpg"
+         ],
+         "a": [
+          "dati_co_3_5_03_a_01.jpg",
+          "dati_co_3_5_03_a_02.jpg"
+         ]
+        },
+        {
+         "id": "dati_co_3_5_04",
+         "num": 4,
+         "real": true,
+         "year": 2010,
+         "q": [
+          "dati_co_3_5_04_q_01.jpg",
+          "dati_co_3_5_04_q_02.jpg"
+         ],
+         "a": [
+          "dati_co_3_5_04_a_01.jpg",
+          "dati_co_3_5_04_a_02.jpg"
+         ]
+        },
+        {
+         "id": "dati_co_3_5_05",
+         "num": 5,
+         "real": true,
+         "year": 2013,
+         "q": [
+          "dati_co_3_5_05_q_01.jpg"
+         ],
+         "a": [
+          "dati_co_3_5_05_a_01.jpg"
+         ]
+        },
+        {
+         "id": "dati_co_3_5_06",
+         "num": 6,
+         "real": true,
+         "year": 2020,
+         "q": [
+          "dati_co_3_5_06_q_01.jpg"
+         ],
+         "a": [
+          "dati_co_3_5_06_a_01.jpg",
+          "dati_co_3_5_06_a_02.jpg"
+         ]
+        }
+       ]
+      },
+      {
+       "name": "3.6 虚拟存储器",
+       "questions": [
+        {
+         "id": "dati_co_3_6_01",
+         "num": 1,
+         "real": false,
+         "year": null,
+         "q": [
+          "dati_co_3_6_01_q_01.jpg"
+         ],
+         "a": [
+          "dati_co_3_6_01_a_01.jpg"
+         ]
+        },
+        {
+         "id": "dati_co_3_6_02",
+         "num": 2,
+         "real": false,
+         "year": null,
+         "q": [
+          "dati_co_3_6_02_q_01.jpg",
+          "dati_co_3_6_02_q_02.jpg"
+         ],
+         "a": [
+          "dati_co_3_6_02_a_01.jpg"
+         ]
+        },
+        {
+         "id": "dati_co_3_6_03",
+         "num": 3,
+         "real": false,
+         "year": null,
+         "q": [
+          "dati_co_3_6_03_q_01.jpg"
+         ],
+         "a": [
+          "dati_co_3_6_03_a_01.jpg",
+          "dati_co_3_6_03_a_02.jpg"
+         ]
+        },
+        {
+         "id": "dati_co_3_6_04",
+         "num": 4,
+         "real": true,
+         "year": 2011,
+         "q": [
+          "dati_co_3_6_04_q_01.jpg"
+         ],
+         "a": [
+          "dati_co_3_6_04_a_01.jpg"
+         ]
+        },
+        {
+         "id": "dati_co_3_6_05",
+         "num": 5,
+         "real": true,
+         "year": 2016,
+         "q": [
+          "dati_co_3_6_05_q_01.jpg",
+          "dati_co_3_6_05_q_02.jpg"
+         ],
+         "a": [
+          "dati_co_3_6_05_a_01.jpg"
+         ]
+        },
+        {
+         "id": "dati_co_3_6_06",
+         "num": 6,
+         "real": true,
+         "year": 2018,
+         "q": [
+          "dati_co_3_6_06_q_01.jpg",
+          "dati_co_3_6_06_q_02.jpg"
+         ],
+         "a": [
+          "dati_co_3_6_06_a_01.jpg",
+          "dati_co_3_6_06_a_02.jpg"
+         ]
+        },
+        {
+         "id": "dati_co_3_6_07",
+         "num": 7,
+         "real": true,
+         "year": 2021,
+         "q": [
+          "dati_co_3_6_07_q_01.jpg"
+         ],
+         "a": [
+          "dati_co_3_6_07_a_01.jpg"
+         ]
+        },
+        {
+         "id": "dati_co_3_6_08",
+         "num": 8,
+         "real": true,
+         "year": 2023,
+         "q": [
+          "dati_co_3_6_08_q_01.jpg"
+         ],
+         "a": [
+          "dati_co_3_6_08_a_01.jpg",
+          "dati_co_3_6_08_a_02.jpg"
+         ]
+        },
+        {
+         "id": "dati_co_3_6_09",
+         "num": 9,
+         "real": true,
+         "year": 2025,
+         "q": [
+          "dati_co_3_6_09_q_01.jpg",
+          "dati_co_3_6_09_q_02.jpg"
+         ],
+         "a": [
+          "dati_co_3_6_09_a_01.jpg"
+         ]
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "name": "第4章  指令系统",
+     "sections": [
+      {
+       "name": "4.1 指令系统",
+       "questions": [
+        {
+         "id": "dati_co_4_1_01",
+         "num": 1,
+         "real": false,
+         "year": null,
+         "q": [
+          "dati_co_4_1_01_q_01.jpg"
+         ],
+         "a": [
+          "dati_co_4_1_01_a_01.jpg"
+         ]
+        },
+        {
+         "id": "dati_co_4_1_02",
+         "num": 2,
+         "real": false,
+         "year": null,
+         "q": [
+          "dati_co_4_1_02_q_01.jpg"
+         ],
+         "a": [
+          "dati_co_4_1_02_a_01.jpg"
+         ]
+        },
+        {
+         "id": "dati_co_4_1_03",
+         "num": 3,
+         "real": false,
+         "year": null,
+         "q": [
+          "dati_co_4_1_03_q_01.jpg"
+         ],
+         "a": [
+          "dati_co_4_1_03_a_01.jpg",
+          "dati_co_4_1_03_a_02.jpg"
+         ]
+        }
+       ]
+      },
+      {
+       "name": "4.2 寻址方式",
+       "questions": [
+        {
+         "id": "dati_co_4_2_01",
+         "num": 1,
+         "real": false,
+         "year": null,
+         "q": [
+          "dati_co_4_2_01_q_01.jpg"
+         ],
+         "a": [
+          "dati_co_4_2_01_a_01.jpg"
+         ]
+        },
+        {
+         "id": "dati_co_4_2_02",
+         "num": 2,
+         "real": false,
+         "year": null,
+         "q": [
+          "dati_co_4_2_02_q_01.jpg"
+         ],
+         "a": [
+          "dati_co_4_2_02_a_01.jpg"
+         ]
+        },
+        {
+         "id": "dati_co_4_2_03",
+         "num": 3,
+         "real": true,
+         "year": 2010,
+         "q": [
+          "dati_co_4_2_03_q_01.jpg",
+          "dati_co_4_2_03_q_02.jpg"
+         ],
+         "a": [
+          "dati_co_4_2_03_a_01.jpg"
+         ]
+        },
+        {
+         "id": "dati_co_4_2_04",
+         "num": 4,
+         "real": true,
+         "year": 2013,
+         "q": [
+          "dati_co_4_2_04_q_01.jpg"
+         ],
+         "a": [
+          "dati_co_4_2_04_a_01.jpg",
+          "dati_co_4_2_04_a_02.jpg"
+         ]
+        },
+        {
+         "id": "dati_co_4_2_05",
+         "num": 5,
+         "real": true,
+         "year": 2021,
+         "q": [
+          "dati_co_4_2_05_q_01.jpg",
+          "dati_co_4_2_05_q_02.jpg"
+         ],
+         "a": [
+          "dati_co_4_2_05_a_01.jpg"
+         ]
+        }
+       ]
+      },
+      {
+       "name": "4.3 程序的机器级代码表示",
+       "questions": [
+        {
+         "id": "dati_co_4_3_01",
+         "num": 1,
+         "real": true,
+         "year": 2017,
+         "q": [
+          "dati_co_4_3_01_q_01.jpg"
+         ],
+         "a": [
+          "dati_co_4_3_01_a_01.jpg"
+         ]
+        },
+        {
+         "id": "dati_co_4_3_02",
+         "num": 2,
+         "real": true,
+         "year": 2019,
+         "q": [
+          "dati_co_4_3_02_q_01.jpg",
+          "dati_co_4_3_02_q_02.jpg"
+         ],
+         "a": [
+          "dati_co_4_3_02_a_01.jpg",
+          "dati_co_4_3_02_a_02.jpg"
+         ]
+        },
+        {
+         "id": "dati_co_4_3_03",
+         "num": 3,
+         "real": true,
+         "year": 2019,
+         "q": [
+          "dati_co_4_3_03_q_01.jpg"
+         ],
+         "a": [
+          "dati_co_4_3_03_a_01.jpg"
+         ]
+        },
+        {
+         "id": "dati_co_4_3_04",
+         "num": 4,
+         "real": true,
+         "year": 2023,
+         "q": [
+          "dati_co_4_3_04_q_01.jpg",
+          "dati_co_4_3_04_q_02.jpg"
+         ],
+         "a": [
+          "dati_co_4_3_04_a_01.jpg"
+         ]
+        },
+        {
+         "id": "dati_co_4_3_05",
+         "num": 5,
+         "real": true,
+         "year": 2024,
+         "q": [
+          "dati_co_4_3_05_q_01.jpg",
+          "dati_co_4_3_05_q_02.jpg"
+         ],
+         "a": [
+          "dati_co_4_3_05_a_01.jpg",
+          "dati_co_4_3_05_a_02.jpg"
+         ]
+        },
+        {
+         "id": "dati_co_4_3_06",
+         "num": 6,
+         "real": true,
+         "year": 2024,
+         "q": [
+          "dati_co_4_3_06_q_01.jpg",
+          "dati_co_4_3_06_q_02.jpg"
+         ],
+         "a": [
+          "dati_co_4_3_06_a_01.jpg"
+         ]
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "name": "第5章  中央处理器",
+     "sections": [
+      {
+       "name": "5.3 数据通路的功能和基本结构",
+       "questions": [
+        {
+         "id": "dati_co_5_3_01",
+         "num": 1,
+         "real": false,
+         "year": null,
+         "q": [
+          "dati_co_5_3_01_q_01.jpg",
+          "dati_co_5_3_01_q_02.jpg"
+         ],
+         "a": [
+          "dati_co_5_3_01_a_01.jpg"
+         ]
+        },
+        {
+         "id": "dati_co_5_3_02",
+         "num": 2,
+         "real": false,
+         "year": null,
+         "q": [
+          "dati_co_5_3_02_q_01.jpg"
+         ],
+         "a": [
+          "dati_co_5_3_02_a_01.jpg",
+          "dati_co_5_3_02_a_02.jpg"
+         ]
+        },
+        {
+         "id": "dati_co_5_3_03",
+         "num": 3,
+         "real": false,
+         "year": null,
+         "q": [
+          "dati_co_5_3_03_q_01.jpg",
+          "dati_co_5_3_03_q_02.jpg"
+         ],
+         "a": [
+          "dati_co_5_3_03_a_01.jpg"
+         ]
+        },
+        {
+         "id": "dati_co_5_3_04",
+         "num": 4,
+         "real": false,
+         "year": null,
+         "q": [
+          "dati_co_5_3_04_q_01.jpg"
+         ],
+         "a": [
+          "dati_co_5_3_04_a_01.jpg",
+          "dati_co_5_3_04_a_02.jpg"
+         ]
+        },
+        {
+         "id": "dati_co_5_3_05",
+         "num": 5,
+         "real": false,
+         "year": null,
+         "q": [
+          "dati_co_5_3_05_q_01.jpg",
+          "dati_co_5_3_05_q_02.jpg"
+         ],
+         "a": [
+          "dati_co_5_3_05_a_01.jpg"
+         ]
+        },
+        {
+         "id": "dati_co_5_3_06",
+         "num": 6,
+         "real": false,
+         "year": null,
+         "q": [
+          "dati_co_5_3_06_q_01.jpg"
+         ],
+         "a": [
+          "dati_co_5_3_06_a_01.jpg",
+          "dati_co_5_3_06_a_02.jpg"
+         ]
+        },
+        {
+         "id": "dati_co_5_3_07",
+         "num": 7,
+         "real": true,
+         "year": 2009,
+         "q": [
+          "dati_co_5_3_07_q_01.jpg",
+          "dati_co_5_3_07_q_02.jpg"
+         ],
+         "a": [
+          "dati_co_5_3_07_a_01.jpg",
+          "dati_co_5_3_07_a_02.jpg"
+         ]
+        },
+        {
+         "id": "dati_co_5_3_08",
+         "num": 8,
+         "real": true,
+         "year": 2015,
+         "q": [
+          "dati_co_5_3_08_q_01.jpg"
+         ],
+         "a": [
+          "dati_co_5_3_08_a_01.jpg"
+         ]
+        },
+        {
+         "id": "dati_co_5_3_09",
+         "num": 9,
+         "real": true,
+         "year": 2015,
+         "q": [
+          "dati_co_5_3_09_q_01.jpg",
+          "dati_co_5_3_09_q_02.jpg"
+         ],
+         "a": [
+          "dati_co_5_3_09_a_01.jpg"
+         ]
+        },
+        {
+         "id": "dati_co_5_3_10",
+         "num": 10,
+         "real": true,
+         "year": 2022,
+         "q": [
+          "dati_co_5_3_10_q_01.jpg",
+          "dati_co_5_3_10_q_02.jpg"
+         ],
+         "a": [
+          "dati_co_5_3_10_a_01.jpg",
+          "dati_co_5_3_10_a_02.jpg"
+         ]
+        }
+       ]
+      },
+      {
+       "name": "5.4 控制器的功能和工作原理",
+       "questions": [
+        {
+         "id": "dati_co_5_4_01",
+         "num": 1,
+         "real": false,
+         "year": null,
+         "q": [
+          "dati_co_5_4_01_q_01.jpg"
+         ],
+         "a": [
+          "dati_co_5_4_01_a_01.jpg"
+         ]
+        },
+        {
+         "id": "dati_co_5_4_02",
+         "num": 2,
+         "real": false,
+         "year": null,
+         "q": [
+          "dati_co_5_4_02_q_01.jpg"
+         ],
+         "a": [
+          "dati_co_5_4_02_a_01.jpg"
+         ]
+        },
+        {
+         "id": "dati_co_5_4_03",
+         "num": 3,
+         "real": false,
+         "year": null,
+         "q": [
+          "dati_co_5_4_03_q_01.jpg"
+         ],
+         "a": [
+          "dati_co_5_4_03_a_01.jpg"
+         ]
+        },
+        {
+         "id": "dati_co_5_4_04",
+         "num": 4,
+         "real": false,
+         "year": null,
+         "q": [
+          "dati_co_5_4_04_q_01.jpg",
+          "dati_co_5_4_04_q_02.jpg"
+         ],
+         "a": [
+          "dati_co_5_4_04_a_01.jpg"
+         ]
+        },
+        {
+         "id": "dati_co_5_4_05",
+         "num": 5,
+         "real": false,
+         "year": null,
+         "q": [
+          "dati_co_5_4_05_q_01.jpg"
+         ],
+         "a": [
+          "dati_co_5_4_05_a_01.jpg",
+          "dati_co_5_4_05_a_02.jpg"
+         ]
+        }
+       ]
+      },
+      {
+       "name": "5.6 指令流水线",
+       "questions": [
+        {
+         "id": "dati_co_5_6_01",
+         "num": 1,
+         "real": true,
+         "year": 2012,
+         "q": [
+          "dati_co_5_6_01_q_01.jpg",
+          "dati_co_5_6_01_q_02.jpg"
+         ],
+         "a": [
+          "dati_co_5_6_01_a_01.jpg"
+         ]
+        },
+        {
+         "id": "dati_co_5_6_02",
+         "num": 2,
+         "real": true,
+         "year": 2014,
+         "q": [
+          "dati_co_5_6_02_q_01.jpg"
+         ],
+         "a": [
+          "dati_co_5_6_02_a_01.jpg",
+          "dati_co_5_6_02_a_02.jpg"
+         ]
+        },
+        {
+         "id": "dati_co_5_6_03",
+         "num": 3,
+         "real": true,
+         "year": 2014,
+         "q": [
+          "dati_co_5_6_03_q_01.jpg"
+         ],
+         "a": [
+          "dati_co_5_6_03_a_01.jpg",
+          "dati_co_5_6_03_a_02.jpg"
+         ]
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "name": "第6章  总线",
+     "sections": [
+      {
+       "name": "6.1 总线概述",
+       "questions": [
+        {
+         "id": "dati_co_6_1_01",
+         "num": 1,
+         "real": false,
+         "year": null,
+         "q": [
+          "dati_co_6_1_01_q_01.jpg"
+         ],
+         "a": [
+          "dati_co_6_1_01_a_01.jpg"
+         ]
+        },
+        {
+         "id": "dati_co_6_1_02",
+         "num": 2,
+         "real": false,
+         "year": null,
+         "q": [
+          "dati_co_6_1_02_q_01.jpg"
+         ],
+         "a": [
+          "dati_co_6_1_02_a_01.jpg"
+         ]
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "name": "第7章  输入/输出系统",
+     "sections": [
+      {
+       "name": "7.3 I/O方式",
+       "questions": [
+        {
+         "id": "dati_co_7_3_01",
+         "num": 1,
+         "real": false,
+         "year": null,
+         "q": [
+          "dati_co_7_3_01_q_01.jpg"
+         ],
+         "a": [
+          "dati_co_7_3_01_a_01.jpg"
+         ]
+        },
+        {
+         "id": "dati_co_7_3_02",
+         "num": 2,
+         "real": false,
+         "year": null,
+         "q": [
+          "dati_co_7_3_02_q_01.jpg"
+         ],
+         "a": [
+          "dati_co_7_3_02_a_01.jpg"
+         ]
+        },
+        {
+         "id": "dati_co_7_3_03",
+         "num": 3,
+         "real": false,
+         "year": null,
+         "q": [
+          "dati_co_7_3_03_q_01.jpg"
+         ],
+         "a": [
+          "dati_co_7_3_03_a_01.jpg"
+         ]
+        },
+        {
+         "id": "dati_co_7_3_04",
+         "num": 4,
+         "real": false,
+         "year": null,
+         "q": [
+          "dati_co_7_3_04_q_01.jpg"
+         ],
+         "a": [
+          "dati_co_7_3_04_a_01.jpg",
+          "dati_co_7_3_04_a_02.jpg"
+         ]
+        },
+        {
+         "id": "dati_co_7_3_05",
+         "num": 5,
+         "real": false,
+         "year": null,
+         "q": [
+          "dati_co_7_3_05_q_01.jpg"
+         ],
+         "a": [
+          "dati_co_7_3_05_a_01.jpg"
+         ]
+        },
+        {
+         "id": "dati_co_7_3_06",
+         "num": 6,
+         "real": false,
+         "year": null,
+         "q": [
+          "dati_co_7_3_06_q_01.jpg"
+         ],
+         "a": [
+          "dati_co_7_3_06_a_01.jpg"
+         ]
+        },
+        {
+         "id": "dati_co_7_3_07",
+         "num": 7,
+         "real": true,
+         "year": 2009,
+         "q": [
+          "dati_co_7_3_07_q_01.jpg",
+          "dati_co_7_3_07_q_02.jpg"
+         ],
+         "a": [
+          "dati_co_7_3_07_a_01.jpg",
+          "dati_co_7_3_07_a_02.jpg"
+         ]
+        },
+        {
+         "id": "dati_co_7_3_08",
+         "num": 8,
+         "real": true,
+         "year": 2012,
+         "q": [
+          "dati_co_7_3_08_q_01.jpg"
+         ],
+         "a": [
+          "dati_co_7_3_08_a_01.jpg"
+         ]
+        },
+        {
+         "id": "dati_co_7_3_09",
+         "num": 9,
+         "real": true,
+         "year": 2016,
+         "q": [
+          "dati_co_7_3_09_q_01.jpg"
+         ],
+         "a": [
+          "dati_co_7_3_09_a_01.jpg"
+         ]
+        },
+        {
+         "id": "dati_co_7_3_10",
+         "num": 10,
+         "real": true,
+         "year": 2018,
+         "q": [
+          "dati_co_7_3_10_q_01.jpg",
+          "dati_co_7_3_10_q_02.jpg"
+         ],
+         "a": [
+          "dati_co_7_3_10_a_01.jpg"
+         ]
+        },
+        {
+         "id": "dati_co_7_3_11",
+         "num": 11,
+         "real": true,
+         "year": 2022,
+         "q": [
+          "dati_co_7_3_11_q_01.jpg"
+         ],
+         "a": [
+          "dati_co_7_3_11_a_01.jpg",
+          "dati_co_7_3_11_a_02.jpg"
+         ]
+        }
+       ]
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "key": "os",
+   "name": "操作系统",
+   "chapters": [
+    {
+     "name": "第1章 计算机系统概述",
+     "sections": [
+      {
+       "name": "1.2 操作系统发展历程",
+       "questions": [
+        {
+         "id": "dati_os_1_2_01",
+         "num": 1,
+         "real": false,
+         "year": null,
+         "q": [
+          "dati_os_1_2_01_q_01.jpg"
+         ],
+         "a": [
+          "dati_os_1_2_01_a_01.jpg"
+         ]
+        },
+        {
+         "id": "dati_os_1_2_02",
+         "num": 2,
+         "real": false,
+         "year": null,
+         "q": [
+          "dati_os_1_2_02_q_01.jpg"
+         ],
+         "a": [
+          "dati_os_1_2_02_a_01.jpg",
+          "dati_os_1_2_02_a_02.jpg"
+         ]
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "name": "第2章 进程与线程",
+     "sections": [
+      {
+       "name": "2.1 进程与线程简介",
+       "questions": [
+        {
+         "id": "dati_os_2_1_01",
+         "num": 1,
+         "real": true,
+         "year": 2025,
+         "q": [
+          "dati_os_2_1_01_q_01.jpg",
+          "dati_os_2_1_01_q_02.jpg"
+         ],
+         "a": [
+          "dati_os_2_1_01_a_01.jpg"
+         ]
+        }
+       ]
+      },
+      {
+       "name": "2.2 CPU调度",
+       "questions": [
+        {
+         "id": "dati_os_2_2_01",
+         "num": 1,
+         "real": false,
+         "year": null,
+         "q": [
+          "dati_os_2_2_01_q_01.jpg"
+         ],
+         "a": [
+          "dati_os_2_2_01_a_01.jpg"
+         ]
+        },
+        {
+         "id": "dati_os_2_2_02",
+         "num": 2,
+         "real": false,
+         "year": null,
+         "q": [
+          "dati_os_2_2_02_q_01.jpg",
+          "dati_os_2_2_02_q_02.jpg"
+         ],
+         "a": [
+          "dati_os_2_2_02_a_01.jpg",
+          "dati_os_2_2_02_a_02.jpg"
+         ]
+        },
+        {
+         "id": "dati_os_2_2_03",
+         "num": 3,
+         "real": false,
+         "year": null,
+         "q": [
+          "dati_os_2_2_03_q_01.jpg"
+         ],
+         "a": [
+          "dati_os_2_2_03_a_01.jpg"
+         ]
+        },
+        {
+         "id": "dati_os_2_2_04",
+         "num": 4,
+         "real": false,
+         "year": null,
+         "q": [
+          "dati_os_2_2_04_q_01.jpg"
+         ],
+         "a": [
+          "dati_os_2_2_04_a_01.jpg",
+          "dati_os_2_2_04_a_02.jpg"
+         ]
+        },
+        {
+         "id": "dati_os_2_2_05",
+         "num": 5,
+         "real": false,
+         "year": null,
+         "q": [
+          "dati_os_2_2_05_q_01.jpg",
+          "dati_os_2_2_05_q_02.jpg"
+         ],
+         "a": [
+          "dati_os_2_2_05_a_01.jpg"
+         ]
+        },
+        {
+         "id": "dati_os_2_2_06",
+         "num": 6,
+         "real": false,
+         "year": null,
+         "q": [
+          "dati_os_2_2_06_q_01.jpg"
+         ],
+         "a": [
+          "dati_os_2_2_06_a_01.jpg",
+          "dati_os_2_2_06_a_02.jpg"
+         ]
+        },
+        {
+         "id": "dati_os_2_2_07",
+         "num": 7,
+         "real": false,
+         "year": null,
+         "q": [
+          "dati_os_2_2_07_q_01.jpg"
+         ],
+         "a": [
+          "dati_os_2_2_07_a_01.jpg"
+         ]
+        },
+        {
+         "id": "dati_os_2_2_08",
+         "num": 8,
+         "real": false,
+         "year": null,
+         "q": [
+          "dati_os_2_2_08_q_01.jpg"
+         ],
+         "a": [
+          "dati_os_2_2_08_a_01.jpg"
+         ]
+        },
+        {
+         "id": "dati_os_2_2_09",
+         "num": 9,
+         "real": false,
+         "year": null,
+         "q": [
+          "dati_os_2_2_09_q_01.jpg"
+         ],
+         "a": [
+          "dati_os_2_2_09_a_01.jpg",
+          "dati_os_2_2_09_a_02.jpg"
+         ]
+        },
+        {
+         "id": "dati_os_2_2_10",
+         "num": 10,
+         "real": true,
+         "year": 2016,
+         "q": [
+          "dati_os_2_2_10_q_01.jpg",
+          "dati_os_2_2_10_q_02.jpg"
+         ],
+         "a": [
+          "dati_os_2_2_10_a_01.jpg",
+          "dati_os_2_2_10_a_02.jpg"
+         ]
+        }
+       ]
+      },
+      {
+       "name": "2.3 同步与互斥",
+       "questions": [
+        {
+         "id": "dati_os_2_3_01",
+         "num": 1,
+         "real": false,
+         "year": null,
+         "q": [
+          "dati_os_2_3_01_q_01.jpg"
+         ],
+         "a": [
+          "dati_os_2_3_01_a_01.jpg",
+          "dati_os_2_3_01_a_02.jpg"
+         ]
+        },
+        {
+         "id": "dati_os_2_3_02",
+         "num": 2,
+         "real": false,
+         "year": null,
+         "q": [
+          "dati_os_2_3_02_q_01.jpg"
+         ],
+         "a": [
+          "dati_os_2_3_02_a_01.jpg"
+         ]
+        },
+        {
+         "id": "dati_os_2_3_03",
+         "num": 3,
+         "real": false,
+         "year": null,
+         "q": [
+          "dati_os_2_3_03_q_01.jpg"
+         ],
+         "a": [
+          "dati_os_2_3_03_a_01.jpg"
+         ]
+        },
+        {
+         "id": "dati_os_2_3_04",
+         "num": 4,
+         "real": false,
+         "year": null,
+         "q": [
+          "dati_os_2_3_04_q_01.jpg"
+         ],
+         "a": [
+          "dati_os_2_3_04_a_01.jpg",
+          "dati_os_2_3_04_a_02.jpg"
+         ]
+        },
+        {
+         "id": "dati_os_2_3_05",
+         "num": 5,
+         "real": false,
+         "year": null,
+         "q": [
+          "dati_os_2_3_05_q_01.jpg"
+         ],
+         "a": [
+          "dati_os_2_3_05_a_01.jpg",
+          "dati_os_2_3_05_a_02.jpg"
+         ]
+        },
+        {
+         "id": "dati_os_2_3_06",
+         "num": 6,
+         "real": false,
+         "year": null,
+         "q": [
+          "dati_os_2_3_06_q_01.jpg"
+         ],
+         "a": [
+          "dati_os_2_3_06_a_01.jpg"
+         ]
+        },
+        {
+         "id": "dati_os_2_3_07",
+         "num": 7,
+         "real": false,
+         "year": null,
+         "q": [
+          "dati_os_2_3_07_q_01.jpg",
+          "dati_os_2_3_07_q_02.jpg"
+         ],
+         "a": [
+          "dati_os_2_3_07_a_01.jpg",
+          "dati_os_2_3_07_a_02.jpg"
+         ]
+        },
+        {
+         "id": "dati_os_2_3_08",
+         "num": 8,
+         "real": false,
+         "year": null,
+         "q": [
+          "dati_os_2_3_08_q_01.jpg"
+         ],
+         "a": [
+          "dati_os_2_3_08_a_01.jpg",
+          "dati_os_2_3_08_a_02.jpg"
+         ]
+        },
+        {
+         "id": "dati_os_2_3_09",
+         "num": 9,
+         "real": false,
+         "year": null,
+         "q": [
+          "dati_os_2_3_09_q_01.jpg"
+         ],
+         "a": [
+          "dati_os_2_3_09_a_01.jpg",
+          "dati_os_2_3_09_a_02.jpg"
+         ]
+        },
+        {
+         "id": "dati_os_2_3_10",
+         "num": 10,
+         "real": false,
+         "year": null,
+         "q": [
+          "dati_os_2_3_10_q_01.jpg"
+         ],
+         "a": [
+          "dati_os_2_3_10_a_01.jpg"
+         ]
+        },
+        {
+         "id": "dati_os_2_3_11",
+         "num": 11,
+         "real": false,
+         "year": null,
+         "q": [
+          "dati_os_2_3_11_q_01.jpg"
+         ],
+         "a": [
+          "dati_os_2_3_11_a_01.jpg",
+          "dati_os_2_3_11_a_02.jpg"
+         ]
+        },
+        {
+         "id": "dati_os_2_3_12",
+         "num": 12,
+         "real": false,
+         "year": null,
+         "q": [
+          "dati_os_2_3_12_q_01.jpg"
+         ],
+         "a": [
+          "dati_os_2_3_12_a_01.jpg",
+          "dati_os_2_3_12_a_02.jpg"
+         ]
+        },
+        {
+         "id": "dati_os_2_3_13",
+         "num": 13,
+         "real": false,
+         "year": null,
+         "q": [
+          "dati_os_2_3_13_q_01.jpg",
+          "dati_os_2_3_13_q_02.jpg"
+         ],
+         "a": [
+          "dati_os_2_3_13_a_01.jpg"
+         ]
+        },
+        {
+         "id": "dati_os_2_3_14",
+         "num": 14,
+         "real": false,
+         "year": null,
+         "q": [
+          "dati_os_2_3_14_q_01.jpg"
+         ],
+         "a": [
+          "dati_os_2_3_14_a_01.jpg",
+          "dati_os_2_3_14_a_02.jpg"
+         ]
+        },
+        {
+         "id": "dati_os_2_3_15",
+         "num": 15,
+         "real": false,
+         "year": null,
+         "q": [
+          "dati_os_2_3_15_q_01.jpg"
+         ],
+         "a": [
+          "dati_os_2_3_15_a_01.jpg"
+         ]
+        },
+        {
+         "id": "dati_os_2_3_16",
+         "num": 16,
+         "real": false,
+         "year": null,
+         "q": [
+          "dati_os_2_3_16_q_01.jpg"
+         ],
+         "a": [
+          "dati_os_2_3_16_a_01.jpg",
+          "dati_os_2_3_16_a_02.jpg"
+         ]
+        },
+        {
+         "id": "dati_os_2_3_17",
+         "num": 17,
+         "real": true,
+         "year": 2009,
+         "q": [
+          "dati_os_2_3_17_q_01.jpg"
+         ],
+         "a": [
+          "dati_os_2_3_17_a_01.jpg",
+          "dati_os_2_3_17_a_02.jpg"
+         ]
+        },
+        {
+         "id": "dati_os_2_3_18",
+         "num": 18,
+         "real": true,
+         "year": 2011,
+         "q": [
+          "dati_os_2_3_18_q_01.jpg",
+          "dati_os_2_3_18_q_02.jpg"
+         ],
+         "a": [
+          "dati_os_2_3_18_a_01.jpg"
+         ]
+        },
+        {
+         "id": "dati_os_2_3_19",
+         "num": 19,
+         "real": true,
+         "year": 2013,
+         "q": [
+          "dati_os_2_3_19_q_01.jpg"
+         ],
+         "a": [
+          "dati_os_2_3_19_a_01.jpg",
+          "dati_os_2_3_19_a_02.jpg"
+         ]
+        },
+        {
+         "id": "dati_os_2_3_20",
+         "num": 20,
+         "real": true,
+         "year": 2014,
+         "q": [
+          "dati_os_2_3_20_q_01.jpg"
+         ],
+         "a": [
+          "dati_os_2_3_20_a_01.jpg"
+         ]
+        },
+        {
+         "id": "dati_os_2_3_21",
+         "num": 21,
+         "real": true,
+         "year": 2015,
+         "q": [
+          "dati_os_2_3_21_q_01.jpg",
+          "dati_os_2_3_21_q_02.jpg"
+         ],
+         "a": [
+          "dati_os_2_3_21_a_01.jpg",
+          "dati_os_2_3_21_a_02.jpg"
+         ]
+        },
+        {
+         "id": "dati_os_2_3_22",
+         "num": 22,
+         "real": true,
+         "year": 2017,
+         "q": [
+          "dati_os_2_3_22_q_01.jpg"
+         ],
+         "a": [
+          "dati_os_2_3_22_a_01.jpg",
+          "dati_os_2_3_22_a_02.jpg"
+         ]
+        },
+        {
+         "id": "dati_os_2_3_23",
+         "num": 23,
+         "real": true,
+         "year": 2019,
+         "q": [
+          "dati_os_2_3_23_q_01.jpg"
+         ],
+         "a": [
+          "dati_os_2_3_23_a_01.jpg",
+          "dati_os_2_3_23_a_02.jpg"
+         ]
+        },
+        {
+         "id": "dati_os_2_3_24",
+         "num": 24,
+         "real": true,
+         "year": 2020,
+         "q": [
+          "dati_os_2_3_24_q_01.jpg"
+         ],
+         "a": [
+          "dati_os_2_3_24_a_01.jpg"
+         ]
+        },
+        {
+         "id": "dati_os_2_3_25",
+         "num": 25,
+         "real": true,
+         "year": 2021,
+         "q": [
+          "dati_os_2_3_25_q_01.jpg",
+          "dati_os_2_3_25_q_02.jpg"
+         ],
+         "a": [
+          "dati_os_2_3_25_a_01.jpg",
+          "dati_os_2_3_25_a_02.jpg"
+         ]
+        },
+        {
+         "id": "dati_os_2_3_26",
+         "num": 26,
+         "real": true,
+         "year": 2022,
+         "q": [
+          "dati_os_2_3_26_q_01.jpg"
+         ],
+         "a": [
+          "dati_os_2_3_26_a_01.jpg"
+         ]
+        },
+        {
+         "id": "dati_os_2_3_27",
+         "num": 27,
+         "real": true,
+         "year": 2023,
+         "q": [
+          "dati_os_2_3_27_q_01.jpg"
+         ],
+         "a": [
+          "dati_os_2_3_27_a_01.jpg"
+         ]
+        },
+        {
+         "id": "dati_os_2_3_28",
+         "num": 28,
+         "real": true,
+         "year": 2024,
+         "q": [
+          "dati_os_2_3_28_q_01.jpg"
+         ],
+         "a": [
+          "dati_os_2_3_28_a_01.jpg",
+          "dati_os_2_3_28_a_02.jpg"
+         ]
+        },
+        {
+         "id": "dati_os_2_3_29",
+         "num": 29,
+         "real": true,
+         "year": 2025,
+         "q": [
+          "dati_os_2_3_29_q_01.jpg",
+          "dati_os_2_3_29_q_02.jpg"
+         ],
+         "a": [
+          "dati_os_2_3_29_a_01.jpg"
+         ]
+        }
+       ]
+      },
+      {
+       "name": "2.4 死锁",
+       "questions": [
+        {
+         "id": "dati_os_2_4_01",
+         "num": 1,
+         "real": false,
+         "year": null,
+         "q": [
+          "dati_os_2_4_01_q_01.jpg"
+         ],
+         "a": [
+          "dati_os_2_4_01_a_01.jpg"
+         ]
+        },
+        {
+         "id": "dati_os_2_4_02",
+         "num": 2,
+         "real": false,
+         "year": null,
+         "q": [
+          "dati_os_2_4_02_q_01.jpg"
+         ],
+         "a": [
+          "dati_os_2_4_02_a_01.jpg"
+         ]
+        },
+        {
+         "id": "dati_os_2_4_03",
+         "num": 3,
+         "real": false,
+         "year": null,
+         "q": [
+          "dati_os_2_4_03_q_01.jpg"
+         ],
+         "a": [
+          "dati_os_2_4_03_a_01.jpg",
+          "dati_os_2_4_03_a_02.jpg"
+         ]
+        },
+        {
+         "id": "dati_os_2_4_04",
+         "num": 4,
+         "real": false,
+         "year": null,
+         "q": [
+          "dati_os_2_4_04_q_01.jpg",
+          "dati_os_2_4_04_q_02.jpg"
+         ],
+         "a": [
+          "dati_os_2_4_04_a_01.jpg",
+          "dati_os_2_4_04_a_02.jpg"
+         ]
+        },
+        {
+         "id": "dati_os_2_4_05",
+         "num": 5,
+         "real": false,
+         "year": null,
+         "q": [
+          "dati_os_2_4_05_q_01.jpg"
+         ],
+         "a": [
+          "dati_os_2_4_05_a_01.jpg",
+          "dati_os_2_4_05_a_02.jpg"
+         ]
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "name": "第3章 内存管理",
+     "sections": [
+      {
+       "name": "3.1 内存管理概念",
+       "questions": [
+        {
+         "id": "dati_os_3_1_01",
+         "num": 1,
+         "real": false,
+         "year": null,
+         "q": [
+          "dati_os_3_1_01_q_01.jpg"
+         ],
+         "a": [
+          "dati_os_3_1_01_a_01.jpg"
+         ]
+        },
+        {
+         "id": "dati_os_3_1_02",
+         "num": 2,
+         "real": false,
+         "year": null,
+         "q": [
+          "dati_os_3_1_02_q_01.jpg"
+         ],
+         "a": [
+          "dati_os_3_1_02_a_01.jpg",
+          "dati_os_3_1_02_a_02.jpg"
+         ]
+        },
+        {
+         "id": "dati_os_3_1_03",
+         "num": 3,
+         "real": false,
+         "year": null,
+         "q": [
+          "dati_os_3_1_03_q_01.jpg"
+         ],
+         "a": [
+          "dati_os_3_1_03_a_01.jpg"
+         ]
+        },
+        {
+         "id": "dati_os_3_1_04",
+         "num": 4,
+         "real": false,
+         "year": null,
+         "q": [
+          "dati_os_3_1_04_q_01.jpg",
+          "dati_os_3_1_04_q_02.jpg"
+         ],
+         "a": [
+          "dati_os_3_1_04_a_01.jpg"
+         ]
+        },
+        {
+         "id": "dati_os_3_1_05",
+         "num": 5,
+         "real": false,
+         "year": null,
+         "q": [
+          "dati_os_3_1_05_q_01.jpg"
+         ],
+         "a": [
+          "dati_os_3_1_05_a_01.jpg"
+         ]
+        },
+        {
+         "id": "dati_os_3_1_06",
+         "num": 6,
+         "real": false,
+         "year": null,
+         "q": [
+          "dati_os_3_1_06_q_01.jpg"
+         ],
+         "a": [
+          "dati_os_3_1_06_a_01.jpg",
+          "dati_os_3_1_06_a_02.jpg"
+         ]
+        },
+        {
+         "id": "dati_os_3_1_07",
+         "num": 7,
+         "real": false,
+         "year": null,
+         "q": [
+          "dati_os_3_1_07_q_01.jpg"
+         ],
+         "a": [
+          "dati_os_3_1_07_a_01.jpg"
+         ]
+        },
+        {
+         "id": "dati_os_3_1_08",
+         "num": 8,
+         "real": false,
+         "year": null,
+         "q": [
+          "dati_os_3_1_08_q_01.jpg"
+         ],
+         "a": [
+          "dati_os_3_1_08_a_01.jpg"
+         ]
+        },
+        {
+         "id": "dati_os_3_1_09",
+         "num": 9,
+         "real": false,
+         "year": null,
+         "q": [
+          "dati_os_3_1_09_q_01.jpg"
+         ],
+         "a": [
+          "dati_os_3_1_09_a_01.jpg",
+          "dati_os_3_1_09_a_02.jpg"
+         ]
+        },
+        {
+         "id": "dati_os_3_1_10",
+         "num": 10,
+         "real": false,
+         "year": null,
+         "q": [
+          "dati_os_3_1_10_q_01.jpg",
+          "dati_os_3_1_10_q_02.jpg"
+         ],
+         "a": [
+          "dati_os_3_1_10_a_01.jpg"
+         ]
+        },
+        {
+         "id": "dati_os_3_1_11",
+         "num": 11,
+         "real": true,
+         "year": 2013,
+         "q": [
+          "dati_os_3_1_11_q_01.jpg"
+         ],
+         "a": [
+          "dati_os_3_1_11_a_01.jpg",
+          "dati_os_3_1_11_a_02.jpg"
+         ]
+        }
+       ]
+      },
+      {
+       "name": "3.2 虚拟内存管理",
+       "questions": [
+        {
+         "id": "dati_os_3_2_01",
+         "num": 1,
+         "real": false,
+         "year": null,
+         "q": [
+          "dati_os_3_2_01_q_01.jpg"
+         ],
+         "a": [
+          "dati_os_3_2_01_a_01.jpg"
+         ]
+        },
+        {
+         "id": "dati_os_3_2_02",
+         "num": 2,
+         "real": false,
+         "year": null,
+         "q": [
+          "dati_os_3_2_02_q_01.jpg"
+         ],
+         "a": [
+          "dati_os_3_2_02_a_01.jpg"
+         ]
+        },
+        {
+         "id": "dati_os_3_2_03",
+         "num": 3,
+         "real": false,
+         "year": null,
+         "q": [
+          "dati_os_3_2_03_q_01.jpg"
+         ],
+         "a": [
+          "dati_os_3_2_03_a_01.jpg",
+          "dati_os_3_2_03_a_02.jpg"
+         ]
+        },
+        {
+         "id": "dati_os_3_2_04",
+         "num": 4,
+         "real": false,
+         "year": null,
+         "q": [
+          "dati_os_3_2_04_q_01.jpg"
+         ],
+         "a": [
+          "dati_os_3_2_04_a_01.jpg",
+          "dati_os_3_2_04_a_02.jpg"
+         ]
+        },
+        {
+         "id": "dati_os_3_2_05",
+         "num": 5,
+         "real": false,
+         "year": null,
+         "q": [
+          "dati_os_3_2_05_q_01.jpg",
+          "dati_os_3_2_05_q_02.jpg"
+         ],
+         "a": [
+          "dati_os_3_2_05_a_01.jpg"
+         ]
+        },
+        {
+         "id": "dati_os_3_2_06",
+         "num": 6,
+         "real": false,
+         "year": null,
+         "q": [
+          "dati_os_3_2_06_q_01.jpg"
+         ],
+         "a": [
+          "dati_os_3_2_06_a_01.jpg"
+         ]
+        },
+        {
+         "id": "dati_os_3_2_07",
+         "num": 7,
+         "real": false,
+         "year": null,
+         "q": [
+          "dati_os_3_2_07_q_01.jpg"
+         ],
+         "a": [
+          "dati_os_3_2_07_a_01.jpg",
+          "dati_os_3_2_07_a_02.jpg"
+         ]
+        },
+        {
+         "id": "dati_os_3_2_08",
+         "num": 8,
+         "real": false,
+         "year": null,
+         "q": [
+          "dati_os_3_2_08_q_01.jpg"
+         ],
+         "a": [
+          "dati_os_3_2_08_a_01.jpg"
+         ]
+        },
+        {
+         "id": "dati_os_3_2_09",
+         "num": 9,
+         "real": false,
+         "year": null,
+         "q": [
+          "dati_os_3_2_09_q_01.jpg"
+         ],
+         "a": [
+          "dati_os_3_2_09_a_01.jpg"
+         ]
+        },
+        {
+         "id": "dati_os_3_2_10",
+         "num": 10,
+         "real": false,
+         "year": null,
+         "q": [
+          "dati_os_3_2_10_q_01.jpg"
+         ],
+         "a": [
+          "dati_os_3_2_10_a_01.jpg",
+          "dati_os_3_2_10_a_02.jpg"
+         ]
+        },
+        {
+         "id": "dati_os_3_2_11",
+         "num": 11,
+         "real": false,
+         "year": null,
+         "q": [
+          "dati_os_3_2_11_q_01.jpg"
+         ],
+         "a": [
+          "dati_os_3_2_11_a_01.jpg"
+         ]
+        },
+        {
+         "id": "dati_os_3_2_12",
+         "num": 12,
+         "real": false,
+         "year": null,
+         "q": [
+          "dati_os_3_2_12_q_01.jpg",
+          "dati_os_3_2_12_q_02.jpg"
+         ],
+         "a": [
+          "dati_os_3_2_12_a_01.jpg"
+         ]
+        },
+        {
+         "id": "dati_os_3_2_13",
+         "num": 13,
+         "real": false,
+         "year": null,
+         "q": [
+          "dati_os_3_2_13_q_01.jpg"
+         ],
+         "a": [
+          "dati_os_3_2_13_a_01.jpg",
+          "dati_os_3_2_13_a_02.jpg"
+         ]
+        },
+        {
+         "id": "dati_os_3_2_14",
+         "num": 14,
+         "real": false,
+         "year": null,
+         "q": [
+          "dati_os_3_2_14_q_01.jpg"
+         ],
+         "a": [
+          "dati_os_3_2_14_a_01.jpg"
+         ]
+        },
+        {
+         "id": "dati_os_3_2_15",
+         "num": 15,
+         "real": true,
+         "year": 2009,
+         "q": [
+          "dati_os_3_2_15_q_01.jpg"
+         ],
+         "a": [
+          "dati_os_3_2_15_a_01.jpg"
+         ]
+        },
+        {
+         "id": "dati_os_3_2_16",
+         "num": 16,
+         "real": true,
+         "year": 2010,
+         "q": [
+          "dati_os_3_2_16_q_01.jpg",
+          "dati_os_3_2_16_q_02.jpg"
+         ],
+         "a": [
+          "dati_os_3_2_16_a_01.jpg"
+         ]
+        },
+        {
+         "id": "dati_os_3_2_17",
+         "num": 17,
+         "real": true,
+         "year": 2012,
+         "q": [
+          "dati_os_3_2_17_q_01.jpg"
+         ],
+         "a": [
+          "dati_os_3_2_17_a_01.jpg",
+          "dati_os_3_2_17_a_02.jpg"
+         ]
+        },
+        {
+         "id": "dati_os_3_2_18",
+         "num": 18,
+         "real": true,
+         "year": 2015,
+         "q": [
+          "dati_os_3_2_18_q_01.jpg"
+         ],
+         "a": [
+          "dati_os_3_2_18_a_01.jpg"
+         ]
+        },
+        {
+         "id": "dati_os_3_2_19",
+         "num": 19,
+         "real": true,
+         "year": 2017,
+         "q": [
+          "dati_os_3_2_19_q_01.jpg",
+          "dati_os_3_2_19_q_02.jpg"
+         ],
+         "a": [
+          "dati_os_3_2_19_a_01.jpg"
+         ]
+        },
+        {
+         "id": "dati_os_3_2_20",
+         "num": 20,
+         "real": true,
+         "year": 2018,
+         "q": [
+          "dati_os_3_2_20_q_01.jpg"
+         ],
+         "a": [
+          "dati_os_3_2_20_a_01.jpg"
+         ]
+        },
+        {
+         "id": "dati_os_3_2_21",
+         "num": 21,
+         "real": true,
+         "year": 2020,
+         "q": [
+          "dati_os_3_2_21_q_01.jpg"
+         ],
+         "a": [
+          "dati_os_3_2_21_a_01.jpg",
+          "dati_os_3_2_21_a_02.jpg"
+         ]
+        },
+        {
+         "id": "dati_os_3_2_22",
+         "num": 22,
+         "real": true,
+         "year": 2024,
+         "q": [
+          "dati_os_3_2_22_q_01.jpg",
+          "dati_os_3_2_22_q_02.jpg"
+         ],
+         "a": [
+          "dati_os_3_2_22_a_01.jpg"
+         ]
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "name": "第4章 文件管理",
+     "sections": [
+      {
+       "name": "4.2 目录与文件",
+       "questions": [
+        {
+         "id": "dati_os_4_2_01",
+         "num": 1,
+         "real": false,
+         "year": null,
+         "q": [
+          "dati_os_4_2_01_q_01.jpg"
+         ],
+         "a": [
+          "dati_os_4_2_01_a_01.jpg"
+         ]
+        },
+        {
+         "id": "dati_os_4_2_02",
+         "num": 2,
+         "real": false,
+         "year": null,
+         "q": [
+          "dati_os_4_2_02_q_01.jpg"
+         ],
+         "a": [
+          "dati_os_4_2_02_a_01.jpg",
+          "dati_os_4_2_02_a_02.jpg"
+         ]
+        },
+        {
+         "id": "dati_os_4_2_03",
+         "num": 3,
+         "real": false,
+         "year": null,
+         "q": [
+          "dati_os_4_2_03_q_01.jpg",
+          "dati_os_4_2_03_q_02.jpg"
+         ],
+         "a": [
+          "dati_os_4_2_03_a_01.jpg"
+         ]
+        },
+        {
+         "id": "dati_os_4_2_04",
+         "num": 4,
+         "real": false,
+         "year": null,
+         "q": [
+          "dati_os_4_2_04_q_01.jpg"
+         ],
+         "a": [
+          "dati_os_4_2_04_a_01.jpg"
+         ]
+        },
+        {
+         "id": "dati_os_4_2_05",
+         "num": 5,
+         "real": false,
+         "year": null,
+         "q": [
+          "dati_os_4_2_05_q_01.jpg",
+          "dati_os_4_2_05_q_02.jpg"
+         ],
+         "a": [
+          "dati_os_4_2_05_a_01.jpg",
+          "dati_os_4_2_05_a_02.jpg"
+         ]
+        },
+        {
+         "id": "dati_os_4_2_06",
+         "num": 6,
+         "real": false,
+         "year": null,
+         "q": [
+          "dati_os_4_2_06_q_01.jpg"
+         ],
+         "a": [
+          "dati_os_4_2_06_a_01.jpg"
+         ]
+        },
+        {
+         "id": "dati_os_4_2_07",
+         "num": 7,
+         "real": false,
+         "year": null,
+         "q": [
+          "dati_os_4_2_07_q_01.jpg"
+         ],
+         "a": [
+          "dati_os_4_2_07_a_01.jpg"
+         ]
+        },
+        {
+         "id": "dati_os_4_2_08",
+         "num": 8,
+         "real": false,
+         "year": null,
+         "q": [
+          "dati_os_4_2_08_q_01.jpg",
+          "dati_os_4_2_08_q_02.jpg"
+         ],
+         "a": [
+          "dati_os_4_2_08_a_01.jpg"
+         ]
+        },
+        {
+         "id": "dati_os_4_2_09",
+         "num": 9,
+         "real": false,
+         "year": null,
+         "q": [
+          "dati_os_4_2_09_q_01.jpg"
+         ],
+         "a": [
+          "dati_os_4_2_09_a_01.jpg",
+          "dati_os_4_2_09_a_02.jpg"
+         ]
+        },
+        {
+         "id": "dati_os_4_2_10",
+         "num": 10,
+         "real": true,
+         "year": 2014,
+         "q": [
+          "dati_os_4_2_10_q_01.jpg"
+         ],
+         "a": [
+          "dati_os_4_2_10_a_01.jpg"
+         ]
+        },
+        {
+         "id": "dati_os_4_2_11",
+         "num": 11,
+         "real": true,
+         "year": 2016,
+         "q": [
+          "dati_os_4_2_11_q_01.jpg",
+          "dati_os_4_2_11_q_02.jpg"
+         ],
+         "a": [
+          "dati_os_4_2_11_a_01.jpg"
+         ]
+        },
+        {
+         "id": "dati_os_4_2_12",
+         "num": 12,
+         "real": true,
+         "year": 2011,
+         "q": [
+          "dati_os_4_2_12_q_01.jpg"
+         ],
+         "a": [
+          "dati_os_4_2_12_a_01.jpg"
+         ]
+        },
+        {
+         "id": "dati_os_4_2_13",
+         "num": 13,
+         "real": true,
+         "year": 2012,
+         "q": [
+          "dati_os_4_2_13_q_01.jpg"
+         ],
+         "a": [
+          "dati_os_4_2_13_a_01.jpg",
+          "dati_os_4_2_13_a_02.jpg"
+         ]
+        },
+        {
+         "id": "dati_os_4_2_14",
+         "num": 14,
+         "real": true,
+         "year": 2018,
+         "q": [
+          "dati_os_4_2_14_q_01.jpg"
+         ],
+         "a": [
+          "dati_os_4_2_14_a_01.jpg"
+         ]
+        },
+        {
+         "id": "dati_os_4_2_15",
+         "num": 15,
+         "real": true,
+         "year": 2022,
+         "q": [
+          "dati_os_4_2_15_q_01.jpg",
+          "dati_os_4_2_15_q_02.jpg"
+         ],
+         "a": [
+          "dati_os_4_2_15_a_01.jpg",
+          "dati_os_4_2_15_a_02.jpg"
+         ]
+        }
+       ]
+      },
+      {
+       "name": "4.3 文件系统",
+       "questions": [
+        {
+         "id": "dati_os_4_3_01",
+         "num": 1,
+         "real": false,
+         "year": null,
+         "q": [
+          "dati_os_4_3_01_q_01.jpg",
+          "dati_os_4_3_01_q_02.jpg"
+         ],
+         "a": [
+          "dati_os_4_3_01_a_01.jpg"
+         ]
+        },
+        {
+         "id": "dati_os_4_3_02",
+         "num": 2,
+         "real": false,
+         "year": null,
+         "q": [
+          "dati_os_4_3_02_q_01.jpg"
+         ],
+         "a": [
+          "dati_os_4_3_02_a_01.jpg"
+         ]
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "name": "第5章 输入/输出管理",
+     "sections": [
+      {
+       "name": "5.1 I/O管理概述",
+       "questions": [
+        {
+         "id": "dati_os_5_1_01",
+         "num": 1,
+         "real": false,
+         "year": null,
+         "q": [
+          "dati_os_5_1_01_q_01.jpg"
+         ],
+         "a": [
+          "dati_os_5_1_01_a_01.jpg",
+          "dati_os_5_1_01_a_02.jpg"
+         ]
+        },
+        {
+         "id": "dati_os_5_1_02",
+         "num": 2,
+         "real": false,
+         "year": null,
+         "q": [
+          "dati_os_5_1_02_q_01.jpg"
+         ],
+         "a": [
+          "dati_os_5_1_02_a_01.jpg"
+         ]
+        }
+       ]
+      },
+      {
+       "name": "5.2 设备独立性软件",
+       "questions": [
+        {
+         "id": "dati_os_5_2_01",
+         "num": 1,
+         "real": false,
+         "year": null,
+         "q": [
+          "dati_os_5_2_01_q_01.jpg"
+         ],
+         "a": [
+          "dati_os_5_2_01_a_01.jpg"
+         ]
+        },
+        {
+         "id": "dati_os_5_2_02",
+         "num": 2,
+         "real": false,
+         "year": null,
+         "q": [
+          "dati_os_5_2_02_q_01.jpg",
+          "dati_os_5_2_02_q_02.jpg"
+         ],
+         "a": [
+          "dati_os_5_2_02_a_01.jpg"
+         ]
+        },
+        {
+         "id": "dati_os_5_2_03",
+         "num": 3,
+         "real": true,
+         "year": 2023,
+         "q": [
+          "dati_os_5_2_03_q_01.jpg"
+         ],
+         "a": [
+          "dati_os_5_2_03_a_01.jpg",
+          "dati_os_5_2_03_a_02.jpg"
+         ]
+        }
+       ]
+      },
+      {
+       "name": "5.3 磁盘和固态硬盘",
+       "questions": [
+        {
+         "id": "dati_os_5_3_01",
+         "num": 1,
+         "real": false,
+         "year": null,
+         "q": [
+          "dati_os_5_3_01_q_01.jpg"
+         ],
+         "a": [
+          "dati_os_5_3_01_a_01.jpg"
+         ]
+        },
+        {
+         "id": "dati_os_5_3_02",
+         "num": 2,
+         "real": false,
+         "year": null,
+         "q": [
+          "dati_os_5_3_02_q_01.jpg"
+         ],
+         "a": [
+          "dati_os_5_3_02_a_01.jpg",
+          "dati_os_5_3_02_a_02.jpg"
+         ]
+        },
+        {
+         "id": "dati_os_5_3_03",
+         "num": 3,
+         "real": false,
+         "year": null,
+         "q": [
+          "dati_os_5_3_03_q_01.jpg"
+         ],
+         "a": [
+          "dati_os_5_3_03_a_01.jpg"
+         ]
+        },
+        {
+         "id": "dati_os_5_3_04",
+         "num": 4,
+         "real": false,
+         "year": null,
+         "q": [
+          "dati_os_5_3_04_q_01.jpg"
+         ],
+         "a": [
+          "dati_os_5_3_04_a_01.jpg"
+         ]
+        },
+        {
+         "id": "dati_os_5_3_05",
+         "num": 5,
+         "real": false,
+         "year": null,
+         "q": [
+          "dati_os_5_3_05_q_01.jpg"
+         ],
+         "a": [
+          "dati_os_5_3_05_a_01.jpg"
+         ]
+        },
+        {
+         "id": "dati_os_5_3_06",
+         "num": 6,
+         "real": true,
+         "year": 2010,
+         "q": [
+          "dati_os_5_3_06_q_01.jpg",
+          "dati_os_5_3_06_q_02.jpg"
+         ],
+         "a": [
+          "dati_os_5_3_06_a_01.jpg",
+          "dati_os_5_3_06_a_02.jpg"
+         ]
+        },
+        {
+         "id": "dati_os_5_3_07",
+         "num": 7,
+         "real": true,
+         "year": 2019,
+         "q": [
+          "dati_os_5_3_07_q_01.jpg"
+         ],
+         "a": [
+          "dati_os_5_3_07_a_01.jpg"
+         ]
+        },
+        {
+         "id": "dati_os_5_3_08",
+         "num": 8,
+         "real": true,
+         "year": 2021,
+         "q": [
+          "dati_os_5_3_08_q_01.jpg"
+         ],
+         "a": [
+          "dati_os_5_3_08_a_01.jpg",
+          "dati_os_5_3_08_a_02.jpg"
+         ]
+        }
+       ]
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "key": "cn",
+   "name": "计算机网络",
+   "chapters": [
+    {
+     "name": "第1章 计算机网络体系结构",
+     "sections": [
+      {
+       "name": "1.1 计算机网络概述",
+       "questions": [
+        {
+         "id": "dati_cn_1_1_01",
+         "num": 1,
+         "real": false,
+         "year": null,
+         "q": [
+          "dati_cn_1_1_01_q_01.jpg"
+         ],
+         "a": [
+          "dati_cn_1_1_01_a_01.jpg"
+         ]
+        },
+        {
+         "id": "dati_cn_1_1_02",
+         "num": 2,
+         "real": false,
+         "year": null,
+         "q": [
+          "dati_cn_1_1_02_q_01.jpg"
+         ],
+         "a": [
+          "dati_cn_1_1_02_a_01.jpg",
+          "dati_cn_1_1_02_a_02.jpg"
+         ]
+        },
+        {
+         "id": "dati_cn_1_1_03",
+         "num": 3,
+         "real": false,
+         "year": null,
+         "q": [
+          "dati_cn_1_1_03_q_01.jpg",
+          "dati_cn_1_1_03_q_02.jpg"
+         ],
+         "a": [
+          "dati_cn_1_1_03_a_01.jpg"
+         ]
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "name": "第2章 物理层",
+     "sections": [
+      {
+       "name": "2.1 通信基础",
+       "questions": [
+        {
+         "id": "dati_cn_2_1_01",
+         "num": 1,
+         "real": false,
+         "year": null,
+         "q": [
+          "dati_cn_2_1_01_q_01.jpg"
+         ],
+         "a": [
+          "dati_cn_2_1_01_a_01.jpg"
+         ]
+        },
+        {
+         "id": "dati_cn_2_1_02",
+         "num": 2,
+         "real": false,
+         "year": null,
+         "q": [
+          "dati_cn_2_1_02_q_01.jpg"
+         ],
+         "a": [
+          "dati_cn_2_1_02_a_01.jpg",
+          "dati_cn_2_1_02_a_02.jpg"
+         ]
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "name": "第3章 数据链路层",
+     "sections": [
+      {
+       "name": "3.2 组帧",
+       "questions": [
+        {
+         "id": "dati_cn_3_2_01",
+         "num": 1,
+         "real": false,
+         "year": null,
+         "q": [
+          "dati_cn_3_2_01_q_01.jpg"
+         ],
+         "a": [
+          "dati_cn_3_2_01_a_01.jpg"
+         ]
+        }
+       ]
+      },
+      {
+       "name": "3.3 差错控制",
+       "questions": [
+        {
+         "id": "dati_cn_3_3_01",
+         "num": 1,
+         "real": false,
+         "year": null,
+         "q": [
+          "dati_cn_3_3_01_q_01.jpg"
+         ],
+         "a": [
+          "dati_cn_3_3_01_a_01.jpg"
+         ]
+        }
+       ]
+      },
+      {
+       "name": "3.4 流量控制与可靠传输机制",
+       "questions": [
+        {
+         "id": "dati_cn_3_4_01",
+         "num": 1,
+         "real": false,
+         "year": null,
+         "q": [
+          "dati_cn_3_4_01_q_01.jpg"
+         ],
+         "a": [
+          "dati_cn_3_4_01_a_01.jpg",
+          "dati_cn_3_4_01_a_02.jpg"
+         ]
+        },
+        {
+         "id": "dati_cn_3_4_02",
+         "num": 2,
+         "real": false,
+         "year": null,
+         "q": [
+          "dati_cn_3_4_02_q_01.jpg"
+         ],
+         "a": [
+          "dati_cn_3_4_02_a_01.jpg"
+         ]
+        },
+        {
+         "id": "dati_cn_3_4_03",
+         "num": 3,
+         "real": false,
+         "year": null,
+         "q": [
+          "dati_cn_3_4_03_q_01.jpg"
+         ],
+         "a": [
+          "dati_cn_3_4_03_a_01.jpg"
+         ]
+        },
+        {
+         "id": "dati_cn_3_4_04",
+         "num": 4,
+         "real": false,
+         "year": null,
+         "q": [
+          "dati_cn_3_4_04_q_01.jpg",
+          "dati_cn_3_4_04_q_02.jpg"
+         ],
+         "a": [
+          "dati_cn_3_4_04_a_01.jpg",
+          "dati_cn_3_4_04_a_02.jpg"
+         ]
+        },
+        {
+         "id": "dati_cn_3_4_05",
+         "num": 5,
+         "real": false,
+         "year": null,
+         "q": [
+          "dati_cn_3_4_05_q_01.jpg"
+         ],
+         "a": [
+          "dati_cn_3_4_05_a_01.jpg"
+         ]
+        },
+        {
+         "id": "dati_cn_3_4_06",
+         "num": 6,
+         "real": false,
+         "year": null,
+         "q": [
+          "dati_cn_3_4_06_q_01.jpg"
+         ],
+         "a": [
+          "dati_cn_3_4_06_a_01.jpg"
+         ]
+        },
+        {
+         "id": "dati_cn_3_4_07",
+         "num": 7,
+         "real": true,
+         "year": 2017,
+         "q": [
+          "dati_cn_3_4_07_q_01.jpg",
+          "dati_cn_3_4_07_q_02.jpg"
+         ],
+         "a": [
+          "dati_cn_3_4_07_a_01.jpg"
+         ]
+        }
+       ]
+      },
+      {
+       "name": "3.6 局域网",
+       "questions": [
+        {
+         "id": "dati_cn_3_6_01",
+         "num": 1,
+         "real": false,
+         "year": null,
+         "q": [
+          "dati_cn_3_6_01_q_01.jpg"
+         ],
+         "a": [
+          "dati_cn_3_6_01_a_01.jpg",
+          "dati_cn_3_6_01_a_02.jpg"
+         ]
+        },
+        {
+         "id": "dati_cn_3_6_02",
+         "num": 2,
+         "real": false,
+         "year": null,
+         "q": [
+          "dati_cn_3_6_02_q_01.jpg"
+         ],
+         "a": [
+          "dati_cn_3_6_02_a_01.jpg"
+         ]
+        },
+        {
+         "id": "dati_cn_3_6_03",
+         "num": 3,
+         "real": false,
+         "year": null,
+         "q": [
+          "dati_cn_3_6_03_q_01.jpg"
+         ],
+         "a": [
+          "dati_cn_3_6_03_a_01.jpg"
+         ]
+        },
+        {
+         "id": "dati_cn_3_6_04",
+         "num": 4,
+         "real": false,
+         "year": null,
+         "q": [
+          "dati_cn_3_6_04_q_01.jpg"
+         ],
+         "a": [
+          "dati_cn_3_6_04_a_01.jpg"
+         ]
+        },
+        {
+         "id": "dati_cn_3_6_05",
+         "num": 5,
+         "real": true,
+         "year": 2010,
+         "q": [
+          "dati_cn_3_6_05_q_01.jpg",
+          "dati_cn_3_6_05_q_02.jpg"
+         ],
+         "a": [
+          "dati_cn_3_6_05_a_01.jpg",
+          "dati_cn_3_6_05_a_02.jpg"
+         ]
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "name": "第4章 网络层",
+     "sections": [
+      {
+       "name": "4.2 IPv4",
+       "questions": [
+        {
+         "id": "dati_cn_4_2_01",
+         "num": 1,
+         "real": false,
+         "year": null,
+         "q": [
+          "dati_cn_4_2_01_q_01.jpg"
+         ],
+         "a": [
+          "dati_cn_4_2_01_a_01.jpg"
+         ]
+        },
+        {
+         "id": "dati_cn_4_2_02",
+         "num": 2,
+         "real": false,
+         "year": null,
+         "q": [
+          "dati_cn_4_2_02_q_01.jpg"
+         ],
+         "a": [
+          "dati_cn_4_2_02_a_01.jpg"
+         ]
+        },
+        {
+         "id": "dati_cn_4_2_03",
+         "num": 3,
+         "real": false,
+         "year": null,
+         "q": [
+          "dati_cn_4_2_03_q_01.jpg",
+          "dati_cn_4_2_03_q_02.jpg"
+         ],
+         "a": [
+          "dati_cn_4_2_03_a_01.jpg"
+         ]
+        },
+        {
+         "id": "dati_cn_4_2_04",
+         "num": 4,
+         "real": false,
+         "year": null,
+         "q": [
+          "dati_cn_4_2_04_q_01.jpg"
+         ],
+         "a": [
+          "dati_cn_4_2_04_a_01.jpg",
+          "dati_cn_4_2_04_a_02.jpg"
+         ]
+        },
+        {
+         "id": "dati_cn_4_2_05",
+         "num": 5,
+         "real": false,
+         "year": null,
+         "q": [
+          "dati_cn_4_2_05_q_01.jpg"
+         ],
+         "a": [
+          "dati_cn_4_2_05_a_01.jpg"
+         ]
+        },
+        {
+         "id": "dati_cn_4_2_06",
+         "num": 6,
+         "real": false,
+         "year": null,
+         "q": [
+          "dati_cn_4_2_06_q_01.jpg"
+         ],
+         "a": [
+          "dati_cn_4_2_06_a_01.jpg",
+          "dati_cn_4_2_06_a_02.jpg"
+         ]
+        },
+        {
+         "id": "dati_cn_4_2_07",
+         "num": 7,
+         "real": false,
+         "year": null,
+         "q": [
+          "dati_cn_4_2_07_q_01.jpg"
+         ],
+         "a": [
+          "dati_cn_4_2_07_a_01.jpg"
+         ]
+        },
+        {
+         "id": "dati_cn_4_2_08",
+         "num": 8,
+         "real": false,
+         "year": null,
+         "q": [
+          "dati_cn_4_2_08_q_01.jpg"
+         ],
+         "a": [
+          "dati_cn_4_2_08_a_01.jpg"
+         ]
+        },
+        {
+         "id": "dati_cn_4_2_09",
+         "num": 9,
+         "real": false,
+         "year": null,
+         "q": [
+          "dati_cn_4_2_09_q_01.jpg",
+          "dati_cn_4_2_09_q_02.jpg"
+         ],
+         "a": [
+          "dati_cn_4_2_09_a_01.jpg"
+         ]
+        },
+        {
+         "id": "dati_cn_4_2_10",
+         "num": 10,
+         "real": false,
+         "year": null,
+         "q": [
+          "dati_cn_4_2_10_q_01.jpg"
+         ],
+         "a": [
+          "dati_cn_4_2_10_a_01.jpg",
+          "dati_cn_4_2_10_a_02.jpg"
+         ]
+        },
+        {
+         "id": "dati_cn_4_2_11",
+         "num": 11,
+         "real": false,
+         "year": null,
+         "q": [
+          "dati_cn_4_2_11_q_01.jpg"
+         ],
+         "a": [
+          "dati_cn_4_2_11_a_01.jpg"
+         ]
+        },
+        {
+         "id": "dati_cn_4_2_12",
+         "num": 12,
+         "real": false,
+         "year": null,
+         "q": [
+          "dati_cn_4_2_12_q_01.jpg"
+         ],
+         "a": [
+          "dati_cn_4_2_12_a_01.jpg",
+          "dati_cn_4_2_12_a_02.jpg"
+         ]
+        },
+        {
+         "id": "dati_cn_4_2_13",
+         "num": 13,
+         "real": true,
+         "year": 2009,
+         "q": [
+          "dati_cn_4_2_13_q_01.jpg",
+          "dati_cn_4_2_13_q_02.jpg"
+         ],
+         "a": [
+          "dati_cn_4_2_13_a_01.jpg",
+          "dati_cn_4_2_13_a_02.jpg"
+         ]
+        },
+        {
+         "id": "dati_cn_4_2_14",
+         "num": 14,
+         "real": true,
+         "year": 2015,
+         "q": [
+          "dati_cn_4_2_14_q_01.jpg"
+         ],
+         "a": [
+          "dati_cn_4_2_14_a_01.jpg"
+         ]
+        },
+        {
+         "id": "dati_cn_4_2_15",
+         "num": 15,
+         "real": true,
+         "year": 2018,
+         "q": [
+          "dati_cn_4_2_15_q_01.jpg",
+          "dati_cn_4_2_15_q_02.jpg"
+         ],
+         "a": [
+          "dati_cn_4_2_15_a_01.jpg"
+         ]
+        },
+        {
+         "id": "dati_cn_4_2_16",
+         "num": 16,
+         "real": true,
+         "year": 2020,
+         "q": [
+          "dati_cn_4_2_16_q_01.jpg"
+         ],
+         "a": [
+          "dati_cn_4_2_16_a_01.jpg",
+          "dati_cn_4_2_16_a_02.jpg"
+         ]
+        },
+        {
+         "id": "dati_cn_4_2_17",
+         "num": 17,
+         "real": true,
+         "year": 2022,
+         "q": [
+          "dati_cn_4_2_17_q_01.jpg",
+          "dati_cn_4_2_17_q_02.jpg"
+         ],
+         "a": [
+          "dati_cn_4_2_17_a_01.jpg"
+         ]
+        },
+        {
+         "id": "dati_cn_4_2_18",
+         "num": 18,
+         "real": true,
+         "year": 2025,
+         "q": [
+          "dati_cn_4_2_18_q_01.jpg",
+          "dati_cn_4_2_18_q_02.jpg"
+         ],
+         "a": [
+          "dati_cn_4_2_18_a_01.jpg",
+          "dati_cn_4_2_18_a_02.jpg"
+         ]
+        }
+       ]
+      },
+      {
+       "name": "4.4 路由算法与路由协议",
+       "questions": [
+        {
+         "id": "dati_cn_4_4_01",
+         "num": 1,
+         "real": false,
+         "year": null,
+         "q": [
+          "dati_cn_4_4_01_q_01.jpg"
+         ],
+         "a": [
+          "dati_cn_4_4_01_a_01.jpg"
+         ]
+        },
+        {
+         "id": "dati_cn_4_4_02",
+         "num": 2,
+         "real": false,
+         "year": null,
+         "q": [
+          "dati_cn_4_4_02_q_01.jpg"
+         ],
+         "a": [
+          "dati_cn_4_4_02_a_01.jpg"
+         ]
+        },
+        {
+         "id": "dati_cn_4_4_03",
+         "num": 3,
+         "real": false,
+         "year": null,
+         "q": [
+          "dati_cn_4_4_03_q_01.jpg"
+         ],
+         "a": [
+          "dati_cn_4_4_03_a_01.jpg",
+          "dati_cn_4_4_03_a_02.jpg"
+         ]
+        },
+        {
+         "id": "dati_cn_4_4_04",
+         "num": 4,
+         "real": true,
+         "year": 2013,
+         "q": [
+          "dati_cn_4_4_04_q_01.jpg",
+          "dati_cn_4_4_04_q_02.jpg"
+         ],
+         "a": [
+          "dati_cn_4_4_04_a_01.jpg"
+         ]
+        },
+        {
+         "id": "dati_cn_4_4_05",
+         "num": 5,
+         "real": true,
+         "year": 2014,
+         "q": [
+          "dati_cn_4_4_05_q_01.jpg",
+          "dati_cn_4_4_05_q_02.jpg"
+         ],
+         "a": [
+          "dati_cn_4_4_05_a_01.jpg"
+         ]
+        },
+        {
+         "id": "dati_cn_4_4_06",
+         "num": 6,
+         "real": true,
+         "year": 2024,
+         "q": [
+          "dati_cn_4_4_06_q_01.jpg",
+          "dati_cn_4_4_06_q_02.jpg"
+         ],
+         "a": [
+          "dati_cn_4_4_06_a_01.jpg",
+          "dati_cn_4_4_06_a_02.jpg"
+         ]
+        }
+       ]
+      },
+      {
+       "name": "4.5 IP多播",
+       "questions": [
+        {
+         "id": "dati_cn_4_5_01",
+         "num": 1,
+         "real": false,
+         "year": null,
+         "q": [
+          "dati_cn_4_5_01_q_01.jpg"
+         ],
+         "a": [
+          "dati_cn_4_5_01_a_01.jpg",
+          "dati_cn_4_5_01_a_02.jpg"
+         ]
+        }
+       ]
+      },
+      {
+       "name": "4.7 网络层设备",
+       "questions": [
+        {
+         "id": "dati_cn_4_7_01",
+         "num": 1,
+         "real": false,
+         "year": null,
+         "q": [
+          "dati_cn_4_7_01_q_01.jpg"
+         ],
+         "a": [
+          "dati_cn_4_7_01_a_01.jpg",
+          "dati_cn_4_7_01_a_02.jpg"
+         ]
+        },
+        {
+         "id": "dati_cn_4_7_02",
+         "num": 2,
+         "real": false,
+         "year": null,
+         "q": [
+          "dati_cn_4_7_02_q_01.jpg"
+         ],
+         "a": [
+          "dati_cn_4_7_02_a_01.jpg"
+         ]
+        },
+        {
+         "id": "dati_cn_4_7_03",
+         "num": 3,
+         "real": true,
+         "year": 2019,
+         "q": [
+          "dati_cn_4_7_03_q_01.jpg",
+          "dati_cn_4_7_03_q_02.jpg"
+         ],
+         "a": [
+          "dati_cn_4_7_03_a_01.jpg",
+          "dati_cn_4_7_03_a_02.jpg"
+         ]
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "name": "第5章 传输层",
+     "sections": [
+      {
+       "name": "5.2 UDP",
+       "questions": [
+        {
+         "id": "dati_cn_5_2_01",
+         "num": 1,
+         "real": false,
+         "year": null,
+         "q": [
+          "dati_cn_5_2_01_q_01.jpg"
+         ],
+         "a": [
+          "dati_cn_5_2_01_a_01.jpg"
+         ]
+        },
+        {
+         "id": "dati_cn_5_2_02",
+         "num": 2,
+         "real": false,
+         "year": null,
+         "q": [
+          "dati_cn_5_2_02_q_01.jpg"
+         ],
+         "a": [
+          "dati_cn_5_2_02_a_01.jpg"
+         ]
+        },
+        {
+         "id": "dati_cn_5_2_03",
+         "num": 3,
+         "real": false,
+         "year": null,
+         "q": [
+          "dati_cn_5_2_03_q_01.jpg"
+         ],
+         "a": [
+          "dati_cn_5_2_03_a_01.jpg"
+         ]
+        },
+        {
+         "id": "dati_cn_5_2_04",
+         "num": 4,
+         "real": false,
+         "year": null,
+         "q": [
+          "dati_cn_5_2_04_q_01.jpg"
+         ],
+         "a": [
+          "dati_cn_5_2_04_a_01.jpg"
+         ]
+        },
+        {
+         "id": "dati_cn_5_2_05",
+         "num": 5,
+         "real": false,
+         "year": null,
+         "q": [
+          "dati_cn_5_2_05_q_01.jpg"
+         ],
+         "a": [
+          "dati_cn_5_2_05_a_01.jpg",
+          "dati_cn_5_2_05_a_02.jpg"
+         ]
+        }
+       ]
+      },
+      {
+       "name": "5.3 TCP",
+       "questions": [
+        {
+         "id": "dati_cn_5_3_01",
+         "num": 1,
+         "real": false,
+         "year": null,
+         "q": [
+          "dati_cn_5_3_01_q_01.jpg"
+         ],
+         "a": [
+          "dati_cn_5_3_01_a_01.jpg"
+         ]
+        },
+        {
+         "id": "dati_cn_5_3_02",
+         "num": 2,
+         "real": false,
+         "year": null,
+         "q": [
+          "dati_cn_5_3_02_q_01.jpg"
+         ],
+         "a": [
+          "dati_cn_5_3_02_a_01.jpg"
+         ]
+        },
+        {
+         "id": "dati_cn_5_3_03",
+         "num": 3,
+         "real": false,
+         "year": null,
+         "q": [
+          "dati_cn_5_3_03_q_01.jpg"
+         ],
+         "a": [
+          "dati_cn_5_3_03_a_01.jpg",
+          "dati_cn_5_3_03_a_02.jpg"
+         ]
+        },
+        {
+         "id": "dati_cn_5_3_04",
+         "num": 4,
+         "real": false,
+         "year": null,
+         "q": [
+          "dati_cn_5_3_04_q_01.jpg"
+         ],
+         "a": [
+          "dati_cn_5_3_04_a_01.jpg"
+         ]
+        },
+        {
+         "id": "dati_cn_5_3_05",
+         "num": 5,
+         "real": false,
+         "year": null,
+         "q": [
+          "dati_cn_5_3_05_q_01.jpg"
+         ],
+         "a": [
+          "dati_cn_5_3_05_a_01.jpg"
+         ]
+        },
+        {
+         "id": "dati_cn_5_3_06",
+         "num": 6,
+         "real": false,
+         "year": null,
+         "q": [
+          "dati_cn_5_3_06_q_01.jpg"
+         ],
+         "a": [
+          "dati_cn_5_3_06_a_01.jpg"
+         ]
+        },
+        {
+         "id": "dati_cn_5_3_07",
+         "num": 7,
+         "real": false,
+         "year": null,
+         "q": [
+          "dati_cn_5_3_07_q_01.jpg"
+         ],
+         "a": [
+          "dati_cn_5_3_07_a_01.jpg"
+         ]
+        },
+        {
+         "id": "dati_cn_5_3_08",
+         "num": 8,
+         "real": false,
+         "year": null,
+         "q": [
+          "dati_cn_5_3_08_q_01.jpg"
+         ],
+         "a": [
+          "dati_cn_5_3_08_a_01.jpg"
+         ]
+        },
+        {
+         "id": "dati_cn_5_3_09",
+         "num": 9,
+         "real": false,
+         "year": null,
+         "q": [
+          "dati_cn_5_3_09_q_01.jpg"
+         ],
+         "a": [
+          "dati_cn_5_3_09_a_01.jpg"
+         ]
+        },
+        {
+         "id": "dati_cn_5_3_10",
+         "num": 10,
+         "real": false,
+         "year": null,
+         "q": [
+          "dati_cn_5_3_10_q_01.jpg",
+          "dati_cn_5_3_10_q_02.jpg"
+         ],
+         "a": [
+          "dati_cn_5_3_10_a_01.jpg",
+          "dati_cn_5_3_10_a_02.jpg"
+         ]
+        },
+        {
+         "id": "dati_cn_5_3_11",
+         "num": 11,
+         "real": false,
+         "year": null,
+         "q": [
+          "dati_cn_5_3_11_q_01.jpg"
+         ],
+         "a": [
+          "dati_cn_5_3_11_a_01.jpg"
+         ]
+        },
+        {
+         "id": "dati_cn_5_3_12",
+         "num": 12,
+         "real": false,
+         "year": null,
+         "q": [
+          "dati_cn_5_3_12_q_01.jpg"
+         ],
+         "a": [
+          "dati_cn_5_3_12_a_01.jpg"
+         ]
+        },
+        {
+         "id": "dati_cn_5_3_13",
+         "num": 13,
+         "real": true,
+         "year": 2012,
+         "q": [
+          "dati_cn_5_3_13_q_01.jpg",
+          "dati_cn_5_3_13_q_02.jpg"
+         ],
+         "a": [
+          "dati_cn_5_3_13_a_01.jpg"
+         ]
+        },
+        {
+         "id": "dati_cn_5_3_14",
+         "num": 14,
+         "real": true,
+         "year": 2016,
+         "q": [
+          "dati_cn_5_3_14_q_01.jpg",
+          "dati_cn_5_3_14_q_02.jpg"
+         ],
+         "a": [
+          "dati_cn_5_3_14_a_01.jpg",
+          "dati_cn_5_3_14_a_02.jpg"
+         ]
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "name": "第6章 应用层",
+     "sections": [
+      {
+       "name": "6.2 域名系统",
+       "questions": [
+        {
+         "id": "dati_cn_6_2_01",
+         "num": 1,
+         "real": false,
+         "year": null,
+         "q": [
+          "dati_cn_6_2_01_q_01.jpg"
+         ],
+         "a": [
+          "dati_cn_6_2_01_a_01.jpg"
+         ]
+        },
+        {
+         "id": "dati_cn_6_2_02",
+         "num": 2,
+         "real": false,
+         "year": null,
+         "q": [
+          "dati_cn_6_2_02_q_01.jpg"
+         ],
+         "a": [
+          "dati_cn_6_2_02_a_01.jpg"
+         ]
+        }
+       ]
+      },
+      {
+       "name": "6.3 文件传输协议",
+       "questions": [
+        {
+         "id": "dati_cn_6_3_01",
+         "num": 1,
+         "real": false,
+         "year": null,
+         "q": [
+          "dati_cn_6_3_01_q_01.jpg"
+         ],
+         "a": [
+          "dati_cn_6_3_01_a_01.jpg"
+         ]
+        },
+        {
+         "id": "dati_cn_6_3_02",
+         "num": 2,
+         "real": false,
+         "year": null,
+         "q": [
+          "dati_cn_6_3_02_q_01.jpg"
+         ],
+         "a": [
+          "dati_cn_6_3_02_a_01.jpg"
+         ]
+        },
+        {
+         "id": "dati_cn_6_3_03",
+         "num": 3,
+         "real": false,
+         "year": null,
+         "q": [
+          "dati_cn_6_3_03_q_01.jpg"
+         ],
+         "a": [
+          "dati_cn_6_3_03_a_01.jpg"
+         ]
+        },
+        {
+         "id": "dati_cn_6_3_04",
+         "num": 4,
+         "real": true,
+         "year": 2023,
+         "q": [
+          "dati_cn_6_3_04_q_01.jpg"
+         ],
+         "a": [
+          "dati_cn_6_3_04_a_01.jpg",
+          "dati_cn_6_3_04_a_02.jpg"
+         ]
+        }
+       ]
+      },
+      {
+       "name": "6.4 电子邮件",
+       "questions": [
+        {
+         "id": "dati_cn_6_4_01",
+         "num": 1,
+         "real": false,
+         "year": null,
+         "q": [
+          "dati_cn_6_4_01_q_01.jpg"
+         ],
+         "a": [
+          "dati_cn_6_4_01_a_01.jpg"
+         ]
+        },
+        {
+         "id": "dati_cn_6_4_02",
+         "num": 2,
+         "real": false,
+         "year": null,
+         "q": [
+          "dati_cn_6_4_02_q_01.jpg"
+         ],
+         "a": [
+          "dati_cn_6_4_02_a_01.jpg"
+         ]
+        },
+        {
+         "id": "dati_cn_6_4_03",
+         "num": 3,
+         "real": false,
+         "year": null,
+         "q": [
+          "dati_cn_6_4_03_q_01.jpg",
+          "dati_cn_6_4_03_q_02.jpg"
+         ],
+         "a": [
+          "dati_cn_6_4_03_a_01.jpg"
+         ]
+        }
+       ]
+      },
+      {
+       "name": "6.5 万维网",
+       "questions": [
+        {
+         "id": "dati_cn_6_5_01",
+         "num": 1,
+         "real": false,
+         "year": null,
+         "q": [
+          "dati_cn_6_5_01_q_01.jpg"
+         ],
+         "a": [
+          "dati_cn_6_5_01_a_01.jpg"
+         ]
+        },
+        {
+         "id": "dati_cn_6_5_02",
+         "num": 2,
+         "real": false,
+         "year": null,
+         "q": [
+          "dati_cn_6_5_02_q_01.jpg"
+         ],
+         "a": [
+          "dati_cn_6_5_02_a_01.jpg"
+         ]
+        },
+        {
+         "id": "dati_cn_6_5_03",
+         "num": 3,
+         "real": true,
+         "year": 2011,
+         "q": [
+          "dati_cn_6_5_03_q_01.jpg",
+          "dati_cn_6_5_03_q_02.jpg"
+         ],
+         "a": [
+          "dati_cn_6_5_03_a_01.jpg",
+          "dati_cn_6_5_03_a_02.jpg"
+         ]
+        },
+        {
+         "id": "dati_cn_6_5_04",
+         "num": 4,
+         "real": true,
+         "year": 2021,
+         "q": [
+          "dati_cn_6_5_04_q_01.jpg"
+         ],
+         "a": [
+          "dati_cn_6_5_04_a_01.jpg",
+          "dati_cn_6_5_04_a_02.jpg"
+         ]
+        }
+       ]
+      }
+     ]
+    }
+   ]
+  }
+ ]
+}

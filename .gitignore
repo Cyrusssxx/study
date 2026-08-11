@@ -1,0 +1,19 @@
+__pycache__/
+*.pyc
+build/
+dist/
+data/quiz.db
+*.db
+NUL
+
+# 开发草稿与截图（根目录）
+screenshot.png
+nat_page.png
+_*.txt
+_*.png
+t*.png
+*_log.txt
+*_log*.txt
+*_dump*.txt
+*_scan*.txt
+*.log

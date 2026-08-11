@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>搜题 - 408刷题</title>
+    <link rel="manifest" href="manifest.webmanifest">
+    <meta name="theme-color" content="#4f46e5">
+    <link rel="icon" type="image/png" href="icons/icon-192.png">
+    <link rel="apple-touch-icon" href="icons/icon-192.png">
+    <script>if (localStorage.getItem('darkMode') === '1') document.documentElement.classList.add('dark');</script>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-container">
+            <a href="index.html" class="nav-brand">408刷题</a>
+            <div class="nav-links">
+                <a href="index.html" class="nav-link">首页</a>
+                <a href="wrong.html" class="nav-link">错题本</a>
+                <a href="favorites.html" class="nav-link">收藏夹</a>
+                <a href="exam.html" class="nav-link">模拟考试</a>
+                <a href="stats.html" class="nav-link">学习统计</a>
+                <a href="search.html" class="nav-link">搜题</a>
+                <a href="dati.html" class="nav-link">大题专项</a>
+            </div>
+            <div class="nav-tools">
+                <span class="nav-timer" id="navTimer" title="今日刷题时长（切换到其他窗口时暂停）">⏱ 00:00:00</span>
+                <button class="nav-switch" id="reciteSwitch" onclick="toggleRecite()" title="背题模式：直接显示答案与解析，不计入答题记录">
+                    背题 <span class="switch-state" id="reciteState">关</span>
+                </button>
+                <button class="nav-switch" id="autoNextSwitch" onclick="toggleAutoNext()" title="答对自动进入下一题">
+                    跳题 <span class="switch-state" id="autoNextState">关</span>
+                </button>
+                <button class="nav-switch" id="quickSwitch" onclick="toggleQuick()" title="快刷模式：点选项直接判对错，免按提交">
+                    快刷 <span class="switch-state" id="quickState">关</span>
+                </button>
+                <button class="nav-switch" id="darkSwitch" onclick="toggleDark()" title="夜间模式：深色主题护眼">
+                    夜间 <span class="switch-state" id="darkState">关</span>
+                </button>
+            </div>
+        </div>
+    </nav>
+    <main class="container">
+        <div class="page-header">
+            <h1>搜题</h1>
+            <p>按关键词搜索题干、选项和解析</p>
+        </div>
+
+        <!-- 搜索栏 -->
+        <div class="filter-bar">
+            <input type="text" id="searchInput" class="search-input" placeholder="输入关键词，如：页面置换 / TCP拥塞 / 哈夫曼..." onkeydown="if(event.key==='Enter')doSearch()">
+            <select id="subjectFilter" onchange="doSearch()">
+                <option value="">全部科目</option>
+                <option value="os">操作系统</option>
+                <option value="co">计算机组成原理</option>
+                <option value="ds">数据结构</option>
+                <option value="cn">计算机网络</option>
+            </select>
+            <button class="btn btn-primary" onclick="doSearch()">搜索</button>
+        </div>
+
+        <!-- 结果列表 -->
+        <div class="question-list" id="searchResults">
+            <div class="empty-state">
+                <h3>输入关键词开始搜索</h3>
+                <p>支持题干、选项、解析全文匹配，最多显示 50 条结果</p>
+            </div>
+        </div>
+    </main>
+    <script src="js/common.js"></script>
+    <script src="js/backend.js"></script>
+    <script>
+    async function doSearch() {
+        const kw = document.getElementById('searchInput').value.trim();
+        const subject = document.getElementById('subjectFilter').value;
+        const container = document.getElementById('searchResults');
+        if (!kw) return;
+
+        container.innerHTML = '<div class="loading">搜索中...</div>';
+        try {
+            const params = new URLSearchParams({ q: kw });
+            if (subject) params.set('subject', subject);
+            const resp = await api(`/api/search?${params}`);
+            const data = await resp.json();
+            renderResults(data.results, kw);
+        } catch (e) {
+            container.innerHTML = '<div class="error">搜索失败</div>';
+        }
+    }
+
+    function escapeReg(s) {
+        return s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    }
+
+    // 在纯文本节点里高亮关键词（结果内容本身可能带HTML标签，先粗暴替换文本）
+    function highlight(html, kw) {
+        try {
+            return html.replace(new RegExp(escapeReg(kw), 'gi'), m => `<mark>${m}</mark>`);
+        } catch (e) { return html; }
+    }
+
+    function renderResults(results, kw) {
+        const container = document.getElementById('searchResults');
+        if (results.length === 0) {
+            container.innerHTML = `
+                <div class="empty-state">
+                    <h3>没有找到相关题目</h3>
+                    <p>换个关键词试试，比如更短的词</p>
+                </div>`;
+            return;
+        }
+
+        let html = `<div class="list-header"><span>找到 ${results.length} 道题${results.length >= 50 ? '（已达上限，可换更精确的关键词）' : ''}，点击进入对应题目</span></div>`;
+        for (const q of results) {
+            html += `
+                <div class="list-item list-item-link" onclick="location.href='quiz.html?subject=${q.subject}&mode=sequential&goto=${q.id}'">
+                    <div class="item-header">
+                        <span class="item-subject">${q.subject_name}</span>
+                        ${q.is_real_exam ? '<span class="badge-real">统考真题</span>' : ''}
+                        <span class="item-info">${q.chapter || ''}${q.section ? ' · ' + q.section : ''}</span>
+                    </div>
+                    <div class="item-content">${fmtContent(highlight(q.content, kw))}</div>
+                    <div class="item-options">
+                        ${Object.entries(q.options || {}).map(([k,v]) => `<span class="mini-option">${k}. ${highlight(v, kw)}</span>`).join('')}
+                    </div>
+                </div>`;
+        }
+        container.innerHTML = html;
+    }
+
+    document.getElementById('searchInput').focus();
+    </script>
+</body>
+</html>

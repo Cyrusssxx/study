@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>错题本 - 408刷题</title>
+    <link rel="manifest" href="manifest.webmanifest">
+    <meta name="theme-color" content="#4f46e5">
+    <link rel="icon" type="image/png" href="icons/icon-192.png">
+    <link rel="apple-touch-icon" href="icons/icon-192.png">
+    <script>if (localStorage.getItem('darkMode') === '1') document.documentElement.classList.add('dark');</script>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-container">
+            <a href="index.html" class="nav-brand">408刷题</a>
+            <div class="nav-links">
+                <a href="index.html" class="nav-link">首页</a>
+                <a href="wrong.html" class="nav-link">错题本</a>
+                <a href="favorites.html" class="nav-link">收藏夹</a>
+                <a href="exam.html" class="nav-link">模拟考试</a>
+                <a href="stats.html" class="nav-link">学习统计</a>
+                <a href="search.html" class="nav-link">搜题</a>
+                <a href="dati.html" class="nav-link">大题专项</a>
+            </div>
+            <div class="nav-tools">
+                <span class="nav-timer" id="navTimer" title="今日刷题时长（切换到其他窗口时暂停）">⏱ 00:00:00</span>
+                <button class="nav-switch" id="reciteSwitch" onclick="toggleRecite()" title="背题模式：直接显示答案与解析，不计入答题记录">
+                    背题 <span class="switch-state" id="reciteState">关</span>
+                </button>
+                <button class="nav-switch" id="autoNextSwitch" onclick="toggleAutoNext()" title="答对自动进入下一题">
+                    跳题 <span class="switch-state" id="autoNextState">关</span>
+                </button>
+                <button class="nav-switch" id="quickSwitch" onclick="toggleQuick()" title="快刷模式：点选项直接判对错，免按提交">
+                    快刷 <span class="switch-state" id="quickState">关</span>
+                </button>
+                <button class="nav-switch" id="darkSwitch" onclick="toggleDark()" title="夜间模式：深色主题护眼">
+                    夜间 <span class="switch-state" id="darkState">关</span>
+                </button>
+            </div>
+        </div>
+    </nav>
+    <main class="container">
+        <div class="page-header">
+            <h1>错题本</h1>
+            <p>记录你答错的题目，反复练习直到掌握</p>
+        </div>
+
+        <!-- 筛选栏 -->
+        <div class="filter-bar">
+            <select id="subjectFilter" onchange="loadWrongQuestions()">
+                <option value="">全部科目</option>
+                <option value="os">操作系统</option>
+                <option value="co">计算机组成原理</option>
+                <option value="ds">数据结构</option>
+                <option value="cn">计算机网络</option>
+            </select>
+            <select id="sortFilter" onchange="loadWrongQuestions()">
+                <option value="recent">最近答错优先</option>
+                <option value="count">错误次数多优先</option>
+            </select>
+            <label class="checkbox-label">
+                <input type="checkbox" id="realOnly" onchange="loadWrongQuestions()">
+                只看统考真题
+            </label>
+            <label class="checkbox-label">
+                <input type="checkbox" id="showResolved" onchange="loadWrongQuestions()">
+                显示已解决
+            </label>
+            <button class="btn btn-primary" onclick="startWrongPractice()">开始错题练习</button>
+        </div>
+
+        <!-- 错题列表 -->
+        <div class="question-list" id="wrongList">
+            <div class="loading">加载中...</div>
+        </div>
+    </main>
+    <script src="js/common.js"></script>
+    <script src="js/backend.js"></script>
+    <script>
+    async function loadWrongQuestions() {
+        const subject = document.getElementById('subjectFilter').value;
+        const includeResolved = document.getElementById('showResolved').checked;
+        const sort = document.getElementById('sortFilter').value;
+        const realOnly = document.getElementById('realOnly').checked;
+
+        const params = new URLSearchParams();
+        if (subject) params.set('subject', subject);
+        if (includeResolved) params.set('include_resolved', 'true');
+        if (sort !== 'recent') params.set('sort', sort);
+        if (realOnly) params.set('real_only', 'true');
+
+        try {
+            const resp = await api(`/api/wrong?${params}`);
+            const data = await resp.json();
+            renderWrongList(data.wrong_questions);
+        } catch (e) {
+            document.getElementById('wrongList').innerHTML = `<div class="error">加载失败</div>`;
+        }
+    }
+
+    function renderWrongList(questions) {
+        const container = document.getElementById('wrongList');
+
+        if (questions.length === 0) {
+            container.innerHTML = `
+                <div class="empty-state">
+                    <h3>暂无错题</h3>
+                    <p>继续刷题，答错的题目会自动记录在这里</p>
+                </div>
+            `;
+            return;
+        }
+
+        let html = `<div class="list-header"><span>共 ${questions.length} 道错题</span></div>`;
+
+        for (const q of questions) {
+            const subjectName = q.subject === 'os' ? '操作系统' :
+                               q.subject === 'co' ? '计算机组成原理' :
+                               q.subject === 'ds' ? '数据结构' : '计算机网络';
+            // 连对满2次才移出错题本，提示还差几次
+            const streak = q.correct_streak || 0;
+            const needMore = Math.max(0, 2 - streak);
+            html += `
+                <div class="list-item list-item-link ${q.is_resolved ? 'resolved' : ''}" onclick="location.href='quiz.html?subject=${q.subject}&mode=sequential&goto=${q.question_id}'">
+                    <div class="item-header">
+                        <span class="item-subject">${subjectName}</span>
+                        ${q.is_real_exam ? `<span class="badge-real">${q.exam_year ? q.exam_year + ' ' : ''}统考真题</span>` : ''}
+                        <span class="item-info">错误 ${q.wrong_count} 次</span>
+                        ${q.is_resolved ? '<span class="badge-resolved">已解决</span>' : `<span class="badge-streak">还需连对 ${needMore} 次</span>`}
+                        <button class="btn btn-sm btn-secondary item-goto" onclick="event.stopPropagation(); location.href='quiz.html?subject=${q.subject}&mode=sequential&goto=${q.question_id}'">去练习 →</button>
+                    </div>
+                    <div class="item-content">${fmtContent(q.content)}</div>
+                    <div class="item-options">
+                        ${Object.entries(q.options || {}).map(([k,v]) => `<span class="mini-option">${k}. ${v}</span>`).join('')}
+                    </div>
+                    ${q.answer ? `<div class="item-answer">正确答案: ${q.multi_blank ? [...q.answer].join('、') : q.answer}</div>` : ''}
+                </div>
+            `;
+        }
+
+        container.innerHTML = html;
+    }
+
+    function startWrongPractice() {
+        const subject = document.getElementById('subjectFilter').value;
+        if (subject) {
+            window.location.href = `quiz.html?subject=${subject}&mode=wrong`;
+        } else {
+            alert('请先选择一个科目');
+        }
+    }
+
+    loadWrongQuestions();
+    </script>
+</body>
+</html>

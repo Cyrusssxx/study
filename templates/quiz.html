@@ -1,0 +1,684 @@
+{% extends "base.html" %}
+{% block title %}{{ subject_name }} - 刷题{% endblock %}
+{% block content %}
+<div class="quiz-layout">
+    <aside class="chapter-sidebar">
+        <div class="sidebar-title" onclick="this.parentElement.classList.toggle('collapsed')">
+            章节导航 <span class="sidebar-toggle">▾</span>
+        </div>
+        <div class="chapter-tree" id="chapterTree">
+            <div class="loading">加载中...</div>
+        </div>
+    </aside>
+
+    <div class="quiz-container">
+        <div class="quiz-header">
+            <div class="quiz-info">
+                <h2>{{ subject_name }}</h2>
+                <span class="mode-badge" id="modeBadge"></span>
+                <button class="opt-shuffle-btn" id="shuffleBtn" onclick="toggleShuffle()" title="打乱选项显示顺序（字母跟随内容，答案字母不变）">选项乱序 <span id="shuffleState">关</span></button>
+                <button class="opt-shuffle-btn" id="favResetBtn" style="display:none" onclick="resetFavProgress()" title="清空收藏题的作答与错题记录，重新刷一遍（收藏保留）">清空重做 ⟳</button>
+            </div>
+            <div class="quiz-nav-info">
+                <span id="questionProgress">加载中...</span>
+            </div>
+        </div>
+
+        <!-- 题目区域 -->
+        <div class="question-area" id="questionArea">
+            <div class="loading">正在加载题目...</div>
+        </div>
+
+        <!-- 导航按钮 -->
+        <div class="quiz-footer">
+            <button class="btn btn-secondary" id="btnPrev" onclick="prevQuestion()" disabled>上一题</button>
+            <button class="btn btn-primary" id="btnSubmit" onclick="submitAnswer()">提交答案</button>
+            <button class="btn btn-secondary" id="btnNext" onclick="nextQuestion()">下一题</button>
+        </div>
+    </div>
+
+    <aside class="number-sidebar">
+        <div class="sidebar-title">题号</div>
+        <div class="number-panel" id="numberPanel"></div>
+    </aside>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    const SUBJECT = "{{ subject }}";
+    const NOTES_SUBJECTS = ['os', 'co', 'ds', 'cn'];  // 已有考点笔记的科目，徽章白名单化防死链
+    const MODE = "{{ mode }}";
+    const CHAPTER = "{{ chapter }}";
+    const SECTION = "{{ section }}";
+    let questions = [];
+    let currentIndex = 0;
+    let totalQuestions = 0;
+    let answered = {};  // {questionId: {answer, isCorrect}}
+    let explanationShown = false;  // 当前题解析面板是否展开
+    let noteShown = false;  // 当前题笔记面板是否展开
+    let optionOrder = {};  // {qid: [key,...]} 选项乱序开启时每题的显示顺序缓存
+
+    const modeNames = {
+        'sequential': '顺序模式',
+        'random': '随机模式',
+        'wrong': '错题模式',
+        'favorite': '收藏模式',
+        'unanswered': '未做模式',
+        'real': '真题模式',
+        'code': '代码专项',
+        'smart': '智能模式',
+        'review': '复习模式'
+    };
+
+    document.getElementById('modeBadge').textContent = modeNames[MODE] || MODE;
+
+    // 初始化
+    async function init() {
+        loadChapterTree();
+        await loadQuestions();
+    }
+
+    async function loadQuestions() {
+        try {
+            const resp = await fetch(`/api/questions/${SUBJECT}?mode=${MODE}&page=1&per_page=9999`);
+            const data = await resp.json();
+            questions = data.questions;
+            totalQuestions = data.total;
+
+            // 从服务端恢复历史答题记录（last_status），刷新/跳转页面后不丢失
+            for (const q of questions) {
+                if (q.last_status && !answered[q.id]) {
+                    answered[q.id] = {
+                        answer: q.last_status.user_answer,
+                        isCorrect: q.answer ? !!q.last_status.is_correct : null,
+                        correctAnswer: q.answer || ''
+                    };
+                }
+            }
+
+            if (totalQuestions === 0) {
+                document.getElementById('questionArea').innerHTML = `
+                    <div class="empty-state">
+                        <h3>暂无题目</h3>
+                        <p>${MODE === 'wrong' ? '恭喜！没有错题需要复习' : MODE === 'review' ? '今日没有到期的复习题 🎉' : MODE === 'favorite' ? '还没有收藏任何题目' : MODE === 'code' ? '该科目暂无含代码的题目' : '题库为空'}</p>
+                        <a href="/" class="btn btn-primary">返回首页</a>
+                    </div>
+                `;
+                return;
+            }
+
+            // 收藏模式：显示「清空重做」按钮
+            if (MODE === 'favorite') document.getElementById('favResetBtn').style.display = '';
+
+            // 章节定位：不限制筛选，直接跳到该章节首题，仍可顺序刷到后面的题
+            if (CHAPTER) {
+                const idx = questions.findIndex(q =>
+                    q.chapter === CHAPTER && (!SECTION || q.section === SECTION));
+                if (idx >= 0) currentIndex = idx;
+            }
+
+            // 指定题定位（搜索/错题本点击跳转）：?goto=题目ID，优先级高于章节定位
+            const GOTO = new URLSearchParams(location.search).get('goto');
+            if (GOTO) {
+                const gi = questions.findIndex(q => q.id === GOTO);
+                if (gi >= 0) currentIndex = gi;
+            }
+
+            noteShown = !!questions[currentIndex].note;  // 有笔记的题默认展开笔记面板
+            renderQuestion();
+        } catch (e) {
+            document.getElementById('questionArea').innerHTML = `<div class="error">加载失败: ${e.message}</div>`;
+        }
+    }
+
+    // ============ 侧边栏章节树 ============
+    // 仅在容器内部滚动到目标元素，不带动整页（手机上 scrollIntoView 会把页面拽到侧栏区）
+    function scrollInContainer(container, el, center) {
+        const cRect = container.getBoundingClientRect();
+        const eRect = el.getBoundingClientRect();
+        if (center) {
+            container.scrollTop += eRect.top - cRect.top - (container.clientHeight - eRect.height) / 2;
+        } else if (eRect.top < cRect.top || eRect.bottom > cRect.bottom) {
+            container.scrollTop += eRect.top < cRect.top
+                ? eRect.top - cRect.top
+                : eRect.bottom - cRect.bottom;
+        }
+    }
+
+    async function loadChapterTree() {
+        try {
+            const resp = await fetch('/api/chapters');
+            const data = await resp.json();
+            renderChapterTree(data);
+        } catch (e) {
+            document.getElementById('chapterTree').innerHTML = '<div class="error">章节加载失败</div>';
+        }
+    }
+
+    function chapterLink(subjectKey, chapterName, sectionName) {
+        // 保留当前模式（真题/未做等），点章节只收窄范围不退出模式
+        let url = `/quiz/${subjectKey}?mode=${MODE}&chapter=${encodeURIComponent(chapterName)}`;
+        if (sectionName) url += `&section=${encodeURIComponent(sectionName)}`;
+        return url;
+    }
+
+    function renderChapterTree(data) {
+        let treeHtml = '';
+        for (const [key, sub] of Object.entries(data)) {
+            const isCur = key === SUBJECT;
+            let chaptersHtml = '';
+            sub.chapters.forEach((ch, idx) => {
+                const numMatch = ch.name.match(/第(\d+)章/);
+                const chNum = String(numMatch ? numMatch[1] : idx + 1).padStart(2, '0');
+                const chActive = isCur && CHAPTER === ch.name;
+                let sectionsHtml = `
+                    <a class="tree-section ${chActive && !SECTION ? 'active' : ''}" href="${chapterLink(key, ch.name, '')}">本章全部<span class="tree-count">${ch.count}题</span></a>`;
+                for (const s of ch.sections) {
+                    const secActive = chActive && SECTION === s.name;
+                    sectionsHtml += `
+                    <a class="tree-section ${secActive ? 'active' : ''}" href="${chapterLink(key, ch.name, s.name)}">${s.name}<span class="tree-count">${s.count}题</span></a>`;
+                }
+                chaptersHtml += `
+                <div class="tree-chapter ${chActive ? 'open active' : ''}">
+                    <div class="tree-chapter-row" onclick="this.parentElement.classList.toggle('open')">
+                        <span class="tree-ch-num">${chNum}</span>
+                        <span class="tree-ch-name">${ch.name}</span>
+                        <span class="tree-count">${ch.count}题</span>
+                        <span class="tree-arrow">›</span>
+                    </div>
+                    <div class="tree-sections">${sectionsHtml}</div>
+                </div>`;
+            });
+            treeHtml += `
+            <div class="tree-subject ${isCur ? 'open' : ''}">
+                <div class="tree-subject-header" onclick="this.parentElement.classList.toggle('open')">
+                    <span class="tree-subject-name">${sub.name}</span>
+                    <span class="tree-count">${sub.total}题</span>
+                    <span class="tree-arrow">▾</span>
+                </div>
+                <div class="tree-chapters">${chaptersHtml}</div>
+            </div>`;
+        }
+        document.getElementById('chapterTree').innerHTML = treeHtml;
+        // 滚动到当前选中项（只滚树容器，不滚页面）
+        const active = document.querySelector('.tree-section.active');
+        if (active) scrollInContainer(document.getElementById('chapterTree'), active, true);
+    }
+
+    function renderQuestion() {
+        if (currentIndex >= questions.length) return;
+
+        const q = questions[currentIndex];
+        const status = answered[q.id];
+        const isFav = q.is_favorited;
+        const recite = isReciteOn();  // 背题模式：直接显示答案解析，不可作答
+
+        document.getElementById('questionProgress').textContent = `${currentIndex + 1} / ${totalQuestions}`;
+        document.getElementById('btnPrev').disabled = currentIndex === 0;
+
+        let optionsHtml = '';
+        for (const key of getOptionOrder(q)) {
+            const value = q.options[key];
+            let optClass = 'option-item';
+            if (status) {
+                if (key === status.correctAnswer) optClass += ' correct';
+                else if (key === status.answer && !status.isCorrect) optClass += ' wrong';
+            } else if (recite && key === q.answer) {
+                optClass += ' correct';  // 背题模式：未作答也直接标出正确选项
+            }
+            const checked = status && status.answer === key ? 'checked' : '';
+            const disabled = (status || recite) ? 'disabled' : '';
+            optionsHtml += `
+                <label class="${optClass}">
+                    <input type="radio" name="answer" value="${key}" ${checked} ${disabled} onchange="onOptionPicked()">
+                    <span class="option-letter">${key}</span>
+                    <span class="option-text">${value}</span>
+                </label>
+            `;
+        }
+
+        let resultHtml = '';
+        if (status) {
+            if (status.isCorrect === true) {
+                resultHtml = '<div class="result-correct">回答正确!</div>';
+            } else if (status.isCorrect === false) {
+                resultHtml = `<div class="result-wrong">回答错误! 正确答案: ${status.correctAnswer}</div>`;
+            } else {
+                resultHtml = '<div class="result-info">该题暂无标准答案</div>';
+            }
+        }
+
+        // 解析面板（支持HTML格式解析内容；背题模式下常驻展开）
+        let explanationHtml = '';
+        if (explanationShown || recite) {
+            const expl = q.explanation
+                ? `<div class="explanation-body">${q.explanation}</div>`
+                : '<div class="explanation-empty">该题暂无详细解析</div>';
+            explanationHtml = `
+                <div class="explanation-panel">
+                    <div class="explanation-title">答案解析</div>
+                    <div class="explanation-meta">
+                        ${q.answer ? `<span class="expl-answer">正确答案：${q.answer}</span>` : '<span class="expl-answer">暂无标准答案</span>'}
+                        ${q.chapter ? `<span class="expl-kp">知识点：${q.chapter}${q.section ? ' · ' + q.section : ''}</span>` : ''}
+                    </div>
+                    ${expl}
+                </div>`;
+        }
+
+        // 笔记面板（内容用DOM赋值，避免HTML转义问题）；已有笔记时仅淡化保存按钮，聚焦编辑恢复
+        let noteHtml = '';
+        if (noteShown) {
+            const hasNote = !!(q.note || (q.note_images || []).length);
+            noteHtml = `
+                <div class="note-panel">
+                    <div class="note-title">我的笔记</div>
+                    <textarea id="noteInput" class="note-input" rows="4" onfocus="onNoteEdit()" oninput="autoResizeNote(this)" onpaste="pasteNoteImage(event)" placeholder="记下你的解题思路、易错点...（Ctrl+V 可直接粘贴截图；清空内容保存即删除笔记）"></textarea>
+                    <div class="note-images" id="noteImages"></div>
+                    <div class="note-actions">
+                        <button class="btn btn-primary btn-sm note-save-btn${hasNote ? ' saved' : ''}" id="noteSaveBtn" onclick="saveNote()">保存笔记</button>
+                        <span class="note-hint" id="noteHint"></span>
+                    </div>
+                </div>`;
+        }
+
+        document.getElementById('questionArea').innerHTML = `
+            <div class="question-card">
+                <div class="question-header">
+                    <div class="question-meta">
+                        <span class="question-number">题号 ${q.number}（本轮第 ${currentIndex + 1} 题）</span>
+                        ${q.is_real_exam ? `<span class="badge-real">${q.exam_year ? q.exam_year + ' ' : ''}统考真题</span>` : ''}
+                        ${q.chapter ? (NOTES_SUBJECTS.includes(SUBJECT) && q.section
+                            ? `<a class="chapter-badge chapter-badge-link" href="/notes/${SUBJECT}?goto=${encodeURIComponent(q.section)}" target="_blank" title="点击新窗口查看该节考点笔记">${q.chapter} · ${q.section} 📖</a>`
+                            : `<span class="chapter-badge" title="题目来源章节">${q.chapter}${q.section ? ' · ' + q.section : ''}</span>`) : ''}
+                    </div>
+                    <button class="btn-icon ${isFav ? 'favorited' : ''}" onclick="toggleFavorite('${q.id}')" title="${isFav ? '取消收藏' : '收藏'}">
+                        ${isFav ? '★' : '☆'}
+                    </button>
+                </div>
+                <div class="question-content">${fmtContent(q.content)}</div>
+                <div class="options-list">${optionsHtml}</div>
+                ${resultHtml}
+                <div class="question-tools">
+                    ${recite ? '' : `<button class="btn-explanation ${explanationShown ? 'active' : ''}" onclick="toggleExplanation()">
+                        ${explanationShown ? '收起解析 ▴' : '查看解析 ▾'}
+                    </button>`}
+                    <button class="btn-explanation ${noteShown ? 'active' : ''} ${(q.note || (q.note_images || []).length) ? 'has-note' : ''}" onclick="toggleNote()">
+                        ${(q.note || (q.note_images || []).length) ? '笔记 ●' : '笔记'} ${noteShown ? '▴' : '▾'}
+                    </button>
+                    ${status ? '<button class="btn-redo" onclick="redoQuestion()">重新作答 ↺</button>' : ''}
+                </div>
+                ${explanationHtml}
+                ${noteHtml}
+            </div>
+        `;
+
+        // 笔记内容用value赋值，防止笔记里的HTML字符被解析
+        const noteInput = document.getElementById('noteInput');
+        if (noteInput) {
+            noteInput.value = q.note || '';
+            autoResizeNote(noteInput);
+        }
+        renderNoteImages();
+
+        // 更新提交按钮状态（背题/快刷模式下隐藏：背题不可作答，快刷点选即判）
+        const btnSubmit = document.getElementById('btnSubmit');
+        btnSubmit.style.display = (recite || isQuickOn()) ? 'none' : '';
+        btnSubmit.disabled = !!status;
+        btnSubmit.textContent = status ? '已提交' : '提交答案';
+
+        renderNumberPanel();
+        trackPractice();
+    }
+
+    // 记录练习位置：供首页「继续上次练习」与最近练习历史展示（本机 localStorage，同科目+模式+章节去重，最多留 6 条）
+    function trackPractice() {
+        const q = questions[currentIndex];
+        if (!q) return;
+        try {
+            const key = [SUBJECT, MODE, CHAPTER, SECTION].join('|');
+            const list = (JSON.parse(localStorage.getItem('practiceHistory')) || [])
+                .filter(e => [e.subject, e.mode, e.chapter || '', e.section || ''].join('|') !== key);
+            list.unshift({ subject: SUBJECT, mode: MODE, chapter: CHAPTER, section: SECTION, qid: q.id, idx: currentIndex, total: totalQuestions, ts: Date.now() });
+            localStorage.setItem('practiceHistory', JSON.stringify(list.slice(0, 6)));
+        } catch (e) { /* 存储异常不影响做题 */ }
+    }
+
+    // ============ 右侧题号面板：只显示当前章，按小节分组，点击跳转 ============
+    function numBtnHtml(i, label) {
+        const st = answered[questions[i].id];
+        let cls = 'num-btn';
+        if (st) cls += st.isCorrect === true ? ' correct' : (st.isCorrect === false ? ' wrong' : ' done');
+        if (i === currentIndex) cls += ' current';
+        return `<button class="${cls}" onclick="gotoQuestion(${i})">${label}</button>`;
+    }
+
+    function renderNumberPanel() {
+        const panel = document.getElementById('numberPanel');
+        if (!questions.length) { panel.innerHTML = ''; return; }
+        const cur = questions[currentIndex];
+        let html = '';
+        if (cur.chapter) {
+            // 收集当前章的题，按小节分组（保持题序）
+            const groups = [];
+            let g = null;
+            questions.forEach((q, i) => {
+                if (q.chapter !== cur.chapter) return;
+                const sec = q.section || cur.chapter;
+                if (!g || g.sec !== sec) { g = {sec, items: []}; groups.push(g); }
+                g.items.push(i);
+            });
+            for (const grp of groups) {
+                html += `<div class="num-group-title">${grp.sec}</div><div class="num-grid">`;
+                grp.items.forEach((i, k) => { html += numBtnHtml(i, k + 1); });
+                html += '</div>';
+            }
+        } else {
+            // 无章节信息（如随机/错题模式）：按本轮序号平铺
+            html = '<div class="num-grid">'
+                + questions.map((q, i) => numBtnHtml(i, i + 1)).join('') + '</div>';
+        }
+        panel.innerHTML = html;
+        const curBtn = panel.querySelector('.num-btn.current');
+        if (curBtn) scrollInContainer(panel, curBtn, false);
+    }
+
+    function gotoQuestion(i) {
+        currentIndex = i;
+        explanationShown = false;
+        noteShown = !!questions[i].note;  // 有笔记默认展开，没有不展开
+        renderQuestion();
+    }
+
+    function toggleExplanation() {
+        explanationShown = !explanationShown;
+        renderQuestion();
+    }
+
+    function toggleNote() {
+        noteShown = !noteShown;
+        renderQuestion();
+    }
+
+    // 进入编辑态：恢复保存按钮（取消淡化）
+    function onNoteEdit() {
+        const btn = document.getElementById('noteSaveBtn');
+        if (btn) btn.classList.remove('saved');
+    }
+
+    // 笔记输入框高度自适应：随内容自动增高，超过 60% 视口高时出现滚动条
+    function autoResizeNote(el) {
+        if (!el) return;
+        el.style.height = 'auto';
+        const maxH = Math.round(window.innerHeight * 0.6);
+        el.style.height = Math.min(el.scrollHeight, maxH) + 'px';
+        el.style.overflowY = el.scrollHeight > maxH ? 'auto' : 'hidden';
+    }
+
+    async function saveNote() {
+        const q = questions[currentIndex];
+        const content = document.getElementById('noteInput').value;
+        // 保存前是否已有笔记：用于区分「已删除」和「本来就是空的」
+        const hadNote = !!(q.note || (q.note_images || []).length);
+        try {
+            const resp = await fetch(`/api/note/${q.id}`, {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({content, images: q.note_images || []})
+            });
+            const result = await resp.json();
+            q.note = result.note || '';
+            q.note_images = result.images || [];
+            const hasNote = !!(q.note || q.note_images.length);
+            const hint = document.getElementById('noteHint');
+            hint.textContent = hasNote ? '已保存 ✓' : (hadNote ? '已删除笔记' : '笔记是空的，没有保存');
+            setTimeout(() => { if (hint) hint.textContent = ''; }, 2000);
+            // 保存成功后淡化保存按钮（提示已保存），再次编辑时恢复
+            const btn = document.getElementById('noteSaveBtn');
+            if (btn) btn.classList.toggle('saved', hasNote);
+        } catch (e) {
+            alert('笔记保存失败: ' + e.message);
+        }
+    }
+
+    // ==================== 笔记贴图 ====================
+
+    function renderNoteImages() {
+        const box = document.getElementById('noteImages');
+        if (!box) return;
+        const imgs = questions[currentIndex].note_images || [];
+        box.innerHTML = imgs.map((src, i) => `
+            <div class="note-img-item">
+                <img src="${src}" alt="笔记图片" onclick="viewNoteImage(${i})">
+                <span class="note-img-del" onclick="delNoteImage(${i})" title="删除图片">×</span>
+            </div>`).join('');
+    }
+
+    // 压缩成最长边1200px的JPEG，控制入库体积（透明底先铺白）
+    function compressImage(file) {
+        return new Promise((resolve, reject) => {
+            const img = new Image();
+            img.onload = () => {
+                const scale = Math.min(1, 1200 / Math.max(img.width, img.height));
+                const canvas = document.createElement('canvas');
+                canvas.width = Math.round(img.width * scale);
+                canvas.height = Math.round(img.height * scale);
+                const ctx = canvas.getContext('2d');
+                ctx.fillStyle = '#fff';
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+                ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+                URL.revokeObjectURL(img.src);
+                resolve(canvas.toDataURL('image/jpeg', 0.85));
+            };
+            img.onerror = () => reject(new Error('图片读取失败'));
+            img.src = URL.createObjectURL(file);
+        });
+    }
+
+    // 从剪贴板粘贴图片（截图后在笔记框 Ctrl+V），压缩后随笔记入库；纯文字粘贴不受影响
+    async function pasteNoteImage(event) {
+        const files = [...(event.clipboardData ? event.clipboardData.items : [])]
+            .filter(it => it.type.startsWith('image/'))
+            .map(it => it.getAsFile())
+            .filter(Boolean);
+        if (!files.length) return;
+        event.preventDefault();
+        const q = questions[currentIndex];
+        try {
+            for (const f of files) {
+                (q.note_images = q.note_images || []).push(await compressImage(f));
+            }
+        } catch (e) { alert(e.message); }
+        renderNoteImages();
+        saveNote();   // 贴图后立即随笔记入库
+    }
+
+    function delNoteImage(i) {
+        (questions[currentIndex].note_images || []).splice(i, 1);
+        renderNoteImages();
+        saveNote();
+    }
+
+    function viewNoteImage(i) {
+        const src = (questions[currentIndex].note_images || [])[i];
+        if (!src) return;
+        const ov = document.createElement('div');
+        ov.className = 'img-lightbox';
+        ov.innerHTML = `<img src="${src}" alt="笔记图片">`;
+        ov.onclick = () => ov.remove();
+        document.body.appendChild(ov);
+    }
+
+    function redoQuestion() {
+        // 仅解锁当前题允许重新作答，历史记录仍保留在数据库中
+        const q = questions[currentIndex];
+        delete answered[q.id];
+        explanationShown = false;
+        renderQuestion();
+    }
+
+    async function submitAnswer() {
+        if (isReciteOn()) return;  // 背题模式不作答（含 Enter 快捷键）
+        const selected = document.querySelector('input[name="answer"]:checked');
+        if (!selected) {
+            alert('请选择一个答案');
+            return;
+        }
+
+        const q = questions[currentIndex];
+        const userAnswer = selected.value;
+
+        try {
+            const resp = await fetch('/api/submit', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({question_id: q.id, answer: userAnswer})
+            });
+            const result = await resp.json();
+
+            answered[q.id] = {
+                answer: userAnswer,
+                isCorrect: result.is_correct,
+                correctAnswer: result.correct_answer,
+                explanation: result.explanation
+            };
+            // 提交后自动展开解析，并用服务端最新解析更新本地题目
+            if (result.explanation) q.explanation = result.explanation;
+            if (result.correct_answer) q.answer = result.correct_answer;
+
+            // 答对自动跳题：开关开启且答对时不展开解析，短暂显示结果后进入下一题
+            const autoJump = result.is_correct === true && isAutoNextOn()
+                && currentIndex < questions.length - 1;
+            if (!autoJump && (result.explanation || result.correct_answer)) {
+                explanationShown = true;
+            }
+
+            renderQuestion();
+
+            if (autoJump) {
+                setTimeout(() => {
+                    // 用户可能已手动翻题，仅当还停在当前题时才跳
+                    if (questions[currentIndex] && questions[currentIndex].id === q.id) {
+                        nextQuestion();
+                    }
+                }, 800);
+            }
+        } catch (e) {
+            alert('提交失败: ' + e.message);
+        }
+    }
+
+    function prevQuestion() {
+        if (currentIndex > 0) {
+            currentIndex--;
+            explanationShown = false;
+            noteShown = !!questions[currentIndex].note;
+            renderQuestion();
+        }
+    }
+
+    function nextQuestion() {
+        if (currentIndex < questions.length - 1) {
+            currentIndex++;
+            explanationShown = false;
+            noteShown = !!questions[currentIndex].note;
+            renderQuestion();
+        }
+    }
+
+    async function toggleFavorite(questionId) {
+        try {
+            const resp = await fetch(`/api/favorite/${questionId}`, {method: 'POST'});
+            const result = await resp.json();
+            // 更新当前题目的收藏状态
+            const q = questions[currentIndex];
+            if (q.id === questionId) {
+                q.is_favorited = result.is_favorited;
+                renderQuestion();
+            }
+        } catch (e) {
+            console.error('收藏失败:', e);
+        }
+    }
+
+    async function resetFavProgress() {
+        // 收藏模式清空重做：只清收藏题的作答记录，收藏本身保留
+        if (!confirm('清空所有收藏题的作答记录，重新刷一遍？（收藏保留，不影响其他题）')) return;
+        try {
+            await fetch(`/api/favorites/reset/${SUBJECT}`, {method: 'POST'});
+            answered = {};
+            questions.forEach(q => { q.last_status = null; });
+            gotoQuestion(0);
+        } catch (e) {
+            alert('清空失败: ' + e.message);
+        }
+    }
+
+    // 键盘快捷键（在笔记输入框内不触发，防止打字时误操作）
+    document.addEventListener('keydown', (e) => {
+        const tag = (e.target.tagName || '').toLowerCase();
+        if (tag === 'textarea' || tag === 'input') return;
+        if (e.key === 'ArrowLeft') prevQuestion();
+        else if (e.key === 'ArrowRight') nextQuestion();
+        else if (e.key === 'Enter') submitAnswer();
+        else if (['a','b','c','d','A','B','C','D'].includes(e.key)) {
+            const radio = document.querySelector(`input[name="answer"][value="${e.key.toUpperCase()}"]`);
+            if (radio && !radio.disabled) {
+                radio.checked = true;
+                if (isQuickOn()) submitAnswer();  // 快刷：按键选中即判
+            }
+        }
+    });
+
+    // ============ 选项乱序：只乱显示顺序，字母跟随内容，答案字母不变 ============
+    function isShuffleOn() {
+        return localStorage.getItem('shuffleOpts') === '1';
+    }
+
+    function renderShuffleBtn() {
+        const btn = document.getElementById('shuffleBtn');
+        btn.classList.toggle('on', isShuffleOn());
+        document.getElementById('shuffleState').textContent = isShuffleOn() ? '开' : '关';
+    }
+
+    function toggleShuffle() {
+        localStorage.setItem('shuffleOpts', isShuffleOn() ? '0' : '1');
+        optionOrder = {};  // 重新洗牌
+        renderShuffleBtn();
+        if (questions.length) renderQuestion();
+    }
+
+    function getOptionOrder(q) {
+        const keys = Object.keys(q.options);
+        if (!isShuffleOn()) return keys;
+        if (!optionOrder[q.id]) {
+            const arr = keys.slice();
+            for (let i = arr.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [arr[i], arr[j]] = [arr[j], arr[i]];
+            }
+            optionOrder[q.id] = arr;  // 缓存：展开解析/笔记重渲染时顺序不变
+        }
+        return optionOrder[q.id];
+    }
+
+    renderShuffleBtn();
+
+    // ============ 快刷模式：点选项直接判对错 ============
+    function onOptionPicked() {
+        if (isQuickOn() && !answered[questions[currentIndex].id]) submitAnswer();
+    }
+
+    // 快刷开关切换时即时显隐提交按钮（app.js 的 toggleQuick 调用）
+    function onQuickModeChange() {
+        if (questions.length) renderQuestion();
+    }
+
+    // 背题模式开关切换时即时刷新当前题（app.js 的 toggleRecite 调用）
+    function onReciteModeChange() {
+        if (questions.length) renderQuestion();
+    }
+
+    init();
+</script>
+{% endblock %}

@@ -1,0 +1,106 @@
+{% extends "base.html" %}
+{% block title %}数据结构强化打卡 - 408刷题{% endblock %}
+{% block content %}
+<div class="page-header">
+    <h1>📌 数据结构强化打卡</h1>
+    <p>王道打卡表精选代码大题，按优先级排序，完成一题打卡一题</p>
+</div>
+
+<div class="daka-summary" id="dakaSummary"></div>
+
+<div class="question-list" id="dakaList">
+    <div class="loading">加载中...</div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    let dakaQuestions = [];
+    let dakaProgress = {};
+
+    async function loadDaka() {
+        try {
+            const [qResp, pResp] = await Promise.all([
+                fetch('/api/daka'),
+                fetch('/api/daka/progress')
+            ]);
+            dakaQuestions = (await qResp.json()).questions;
+            dakaProgress = (await pResp.json()).progress || {};
+            renderDaka();
+        } catch (e) {
+            document.getElementById('dakaList').innerHTML = `<div class="error">加载失败</div>`;
+        }
+    }
+
+    function renderDaka() {
+        const doneCount = dakaQuestions.filter(q => dakaProgress[q.id]).length;
+        document.getElementById('dakaSummary').innerHTML =
+            `已打卡 <b>${doneCount}</b> / ${dakaQuestions.length} 题`;
+
+        // 按优先级分组，必做与高优先级默认展开
+        const groups = new Map();
+        for (const q of dakaQuestions) {
+            if (!groups.has(q.priority_label)) groups.set(q.priority_label, []);
+            groups.get(q.priority_label).push(q);
+        }
+        let html = '';
+        for (const [label, qs] of groups) {
+            const open = (label === '必做' || label === '高优先级') ? ' open' : '';
+            const gDone = qs.filter(q => dakaProgress[q.id]).length;
+            html += `<details class="daka-group"${open}>
+                <summary class="daka-group-title">${label}（${gDone}/${qs.length}）</summary>
+                ${qs.map(renderCard).join('')}
+            </details>`;
+        }
+        document.getElementById('dakaList').innerHTML = html;
+    }
+
+    function badgeClass(p) {
+        return p === 0 ? 'badge-must' : p === 1 ? 'badge-high' : p === 4 ? 'badge-low' : 'badge-mid';
+    }
+
+    function renderCard(q) {
+        const done = !!dakaProgress[q.id];
+        const figs = q.figs || {content: [], answer: []};
+        const img = n => `<img src="/static/daka_figs/${n}" loading="lazy" alt="教材原图">`;
+        // 题面/解答直接用教材原图，无图时才回退到提取文本
+        const content = figs.content.length ? figs.content.map(img).join('') : q.content;
+        const answer = figs.answer.length ? figs.answer.map(img).join('') : (q.answer || '（解答见教材）');
+        return `
+            <div class="daka-card${done ? ' daka-done' : ''}" id="card-${q.id}">
+                <div class="daka-card-header">
+                    <span class="daka-badge ${badgeClass(q.priority)}">${q.priority_label}</span>
+                    <span class="daka-source">${q.source}${q.real ? ' · ' + q.real : ''}</span>
+                    <button class="btn-daka${done ? ' checked' : ''}" onclick="toggleDaka('${q.id}')">
+                        ${done ? '已打卡 ✓' : '打卡'}
+                    </button>
+                </div>
+                <div class="daka-kaodian">${q.module} / ${q.kaodian}</div>
+                <div class="daka-content">${fmtContent(content)}</div>
+                <details class="daka-answer">
+                    <summary>查看答案</summary>
+                    <div class="daka-answer-body">${answer}</div>
+                </details>
+            </div>
+        `;
+    }
+
+    async function toggleDaka(qid) {
+        const done = !dakaProgress[qid];
+        try {
+            await fetch('/api/daka/progress', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({question_id: qid, done: done})
+            });
+            if (done) dakaProgress[qid] = new Date().toISOString();
+            else delete dakaProgress[qid];
+            renderDaka();
+        } catch (e) {
+            alert('打卡失败，请重试');
+        }
+    }
+
+    loadDaka();
+</script>
+{% endblock %}
