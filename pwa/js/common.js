@@ -147,32 +147,3 @@ function toggleDark() {
 }
 
 renderDarkSwitch();
-
-// ============ 辅助函数 ============
-// 从数组中随机选择n个项目（避免重复）
-function getRandomItems(array, n) {
-    if (n >= array.length) return [...array];
-    const shuffled = [...array].sort(() => 0.5 - Math.random());
-    return shuffled.slice(0, n);
-}
-
-// 从IndexedDB获取错题数据
-function getWrongQuestionsFromDB() {
-    return new Promise((resolve) => {
-        const request = indexedDB.open('408QuizDB', 1);
-        request.onerror = () => resolve([]);
-        request.onsuccess = (event) => {
-            const db = event.target.result;
-            const transaction = db.transaction(['wrong'], 'readonly');
-            const store = transaction.objectStore('wrong');
-            const getAll = store.getAll();
-            
-            getAll.onsuccess = () => {
-                const wrongQuestions = getAll.result.map(item => item.question);
-                resolve(wrongQuestions);
-            };
-            
-            getAll.onerror = () => resolve([]);
-        };
-    });
-}

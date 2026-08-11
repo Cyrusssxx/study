@@ -656,6 +656,26 @@ async function examApi(action, body, arg) {
             const total = count ? Math.min(Math.max(count, 5), 100) : 20;
             const pool = (await loadQuestions(mode)).questions.filter(q => q.answer);
             picked = sample(pool, total);
+        } else if (mode === 'favorites') {
+            // 仅收藏题：从收藏夹中随机抽取
+            const favs = await dbAll('favorites');
+            const pool = [];
+            for (const f of favs) {
+                const q = await getQuestionById(f.question_id);
+                if (q && q.answer) pool.push(q);
+            }
+            const total = count ? Math.min(Math.max(count, 5), Math.max(pool.length, 5)) : Math.min(20, pool.length);
+            picked = sample(pool, total);
+        } else if (mode === 'wrong') {
+            // 仅错题：从错题本（未解决的）中随机抽取
+            const wrongs = (await dbAll('wrong')).filter(w => !w.is_resolved);
+            const pool = [];
+            for (const w of wrongs) {
+                const q = await getQuestionById(w.question_id);
+                if (q && q.answer) pool.push(q);
+            }
+            const total = count ? Math.min(Math.max(count, 5), Math.max(pool.length, 5)) : Math.min(20, pool.length);
+            picked = sample(pool, total);
         } else {
             return jsonResp({ error: '无效的考试模式' }, 400);
         }

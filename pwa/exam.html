@@ -189,49 +189,28 @@
     async function startExam() {
         const mode = document.getElementById('examMode').value;
         
-        // 检查特殊模式是否有足够的题目
-        if (mode === 'favorites') {
-            // 获取收藏题目
-            const resp = await api('/api/favorites');
-            const data = await resp.json();
-            const favorites = data.favorites || [];
-            
-            if (favorites.length === 0) {
-                alert('您还没有收藏任何题目，无法进行收藏题考试。');
+        // 收藏题/错题模式：检查是否有足够的题目
+        if (mode === 'favorites' || mode === 'wrong') {
+            const checkUrl = mode === 'favorites' ? '/api/favorites' : '/api/wrong';
+            const checkResp = await api(checkUrl);
+            const checkData = await checkResp.json();
+            const pool = mode === 'favorites' ? (checkData.favorites || []) : (checkData.wrong_questions || []);
+            if (pool.length === 0) {
+                alert(mode === 'favorites' ? '您还没有收藏任何题目，无法进行收藏题考试。' : '您还没有错题，无法进行错题考试。');
                 return;
             }
-            const count = Math.min(Math.max(parseInt(document.getElementById('examCount').value, 10) || 20, 5), favorites.length);
-            document.getElementById('examCount').value = count;
-            
-            // 从收藏题目中随机抽取
-            const selectedFavorites = getRandomItems(favorites, count);
-            const questions = selectedFavorites.map(fav => fav);
-            enterExam(null, questions, {}, null);
-            return;
         }
         
-        if (mode === 'wrong') {
-            const wrongQuestions = await getWrongQuestionsFromDB();
-            if (wrongQuestions.length === 0) {
-                alert('您还没有错题，无法进行错题考试。');
-                return;
-            }
-            const count = Math.min(Math.max(parseInt(document.getElementById('examCount').value, 10) || 20, 5), wrongQuestions.length);
-            document.getElementById('examCount').value = count;
-            
-            // 从错题中随机抽取
-            const selectedWrong = getRandomItems(wrongQuestions, count);
-            enterExam(null, selectedWrong, {}, null);
-            return;
-        }
-        
-        // 原有逻辑处理常规模式
-        const [lo, hi, dft] = mode === 'full' ? [10, 150, 40] : [5, 100, 20];
+        // 越界题量直接收拢到范围内并回写输入框，避免后端静默修正造成"改了没反应"
+        const isSpecial = mode === 'favorites' || mode === 'wrong';
+        const [lo, hi, dft] = (mode === 'full') ? [10, 150, 40] : [5, 100, 20];
         const count = Math.min(Math.max(parseInt(document.getElementById('examCount').value, 10) || dft, lo), hi);
         document.getElementById('examCount').value = count;
         const minutes = parseInt(document.getElementById('examMinutes').value || '0', 10);
-        const body = { mode, count, record_wrong: document.getElementById('recordWrong').checked };
+        const body = { mode, count, record_wrong: isSpecial ? true : document.getElementById('recordWrong').checked };
         if (minutes > 0) body.duration_sec = minutes * 60;
+        // 特殊模式默认每题1分钟
+        if (isSpecial && !minutes) body.duration_sec = count * 60;
 
         const resp = await api('/api/exam/generate', {
             method: 'POST',
