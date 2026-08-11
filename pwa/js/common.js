@@ -156,13 +156,6 @@ function getRandomItems(array, n) {
     return shuffled.slice(0, n);
 }
 
-// 从数组中随机选择n个项目（避免重复）
-function getRandomItems(array, n) {
-    if (n >= array.length) return [...array];
-    const shuffled = [...array].sort(() => 0.5 - Math.random());
-    return shuffled.slice(0, n);
-}
-
 // 从IndexedDB获取错题数据
 function getWrongQuestionsFromDB() {
     return new Promise((resolve) => {
