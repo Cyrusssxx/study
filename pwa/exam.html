@@ -150,9 +150,11 @@
     function onModeChange() {
         const mode = document.getElementById('examMode').value;
         const isFull = mode === 'full';
+        const isSpecial = mode === 'favorites' || mode === 'wrong';
         const cnt = document.getElementById('examCount');
         const sourceInfo = document.getElementById('sourceInfo');
         const sourceText = document.getElementById('sourceText');
+        const durationRow = document.querySelectorAll('.setup-row')[3]; // 考试时长的行
         
         if (mode === 'favorites') {
             cnt.min = 5;
@@ -161,6 +163,8 @@
             document.getElementById('countHint').textContent = '收藏题 5-100 题，默认 20';
             sourceInfo.style.display = 'flex';
             sourceText.textContent = '从您收藏的题目中组卷';
+            durationRow.style.display = 'none';
+            document.getElementById('recordWrong').parentElement.parentElement.style.display = 'none';
         } else if (mode === 'wrong') {
             cnt.min = 5;
             cnt.max = 100;
@@ -168,12 +172,16 @@
             document.getElementById('countHint').textContent = '错题 5-100 题，默认 20';
             sourceInfo.style.display = 'flex';
             sourceText.textContent = '从您的错题本中组卷';
+            durationRow.style.display = 'none';
+            document.getElementById('recordWrong').parentElement.parentElement.style.display = 'none';
         } else {
             cnt.min = isFull ? 10 : 5;
             cnt.max = isFull ? 150 : 100;
             cnt.value = isFull ? 40 : 20;
             document.getElementById('countHint').textContent = isFull ? '完整模拟 10-150 题，默认 40' : '单科 5-100 题，默认 20';
             sourceInfo.style.display = 'none';
+            durationRow.style.display = 'flex';
+            document.getElementById('recordWrong').parentElement.parentElement.style.display = 'flex';
         }
     }
 
@@ -183,7 +191,11 @@
         
         // 检查特殊模式是否有足够的题目
         if (mode === 'favorites') {
-            const favorites = JSON.parse(localStorage.getItem('favorites') || '[]');
+            // 获取收藏题目
+            const resp = await api('/api/favorites');
+            const data = await resp.json();
+            const favorites = data.favorites || [];
+            
             if (favorites.length === 0) {
                 alert('您还没有收藏任何题目，无法进行收藏题考试。');
                 return;
@@ -193,7 +205,7 @@
             
             // 从收藏题目中随机抽取
             const selectedFavorites = getRandomItems(favorites, count);
-            const questions = selectedFavorites.map(fav => fav.q);
+            const questions = selectedFavorites.map(fav => fav);
             enterExam(null, questions, {}, null);
             return;
         }
