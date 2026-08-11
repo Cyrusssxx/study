@@ -147,6 +147,62 @@
             }
         }
 
+        // ---------- 笔记排版优化：序号分行 / 例题卡片 ----------
+        const ENUM_MARK = '[①②③④⑤⑥⑦⑧⑨⑩⑪⑫]';
+        const SPLIT_RE = new RegExp(
+            '^(?=' + ENUM_MARK + ')|' +
+            '(?<![\\u4e00-\\u9fffA-Za-z0-9])' +
+            '(?=' + ENUM_MARK + '|（\\d+）|\\(\\d+\\)|\\d{1,2}[.、．])'
+        );
+        function fmtNotes(html) {
+            if (!html) return html;
+            // 1) 内联序号（①②…、1.…、（1）…）单独成行
+            html = html.replace(/<p>[\s\S]*?<\/p>/g, pt => {
+                const inner = pt.slice(3, -4);
+                if (!SPLIT_RE.test(inner)) return pt;
+                const parts = inner.split(SPLIT_RE);
+                let out = '';
+                parts.forEach((seg, i) => {
+                    seg = seg.replace(/^[\s\u3000]+/, '').replace(/[\s\u3000]+$/, '');
+                    if (!seg) return;
+                    out += i === 0 ? '<p>' + seg + '</p>' : '<p class="note-li">' + seg + '</p>';
+                });
+                return out;
+            });
+            // 2) 例题段 → 结构化卡片
+            html = html.replace(/<p(?:\s+[^>]*)?>[\s\S]*?<\/p>/g, pt => {
+                const m = pt.match(/^\s*<(?:p\b[^>]*)>\s*(?:<b[^>]*>\s*)?(?:【\s*)?例[　\s]*([0-9０-９]+)(?:\s*】)?\s*(?:<\/b>)?/);
+                if (!m) return pt;
+                const num = '例' + m[1];
+                let rest = pt.replace(/^\s*<p[^>]*>\s*(?:<b[^>]*>\s*)?(?:【\s*)?例[　\s]*[0-9０-９]+(?:\s*】)?\s*(?:<\/b>)?/, '');
+                rest = rest.replace(/<\/p>\s*$/, '');
+                let year = '';
+                const ym = rest.match(/【[^】]*】/);
+                if (ym) {
+                    year = '<span class="note-example-year">' + ym[0] + '</span>';
+                    rest = rest.replace(/\s*【[^】]*】/, '');
+                }
+                let expl = '';
+                const explIdx = rest.search(/(?:推理|解析)[：:]/);
+                if (explIdx >= 0) {
+                    expl = rest.slice(explIdx);
+                    rest = rest.slice(0, explIdx);
+                }
+                rest = rest.replace(/<\/?b>/g, '');
+                const stem = rest.replace(/([A-EＡ-Ｅ])\s*([.．、])(?=\s*[^\s<])/g, '<br>$1$2');
+                expl = expl
+                    .replace(/<b>(选[A-EＡ-Ｅ])<\/b>/g, '$1')
+                    .replace(/(选)([A-EＡ-Ｅ])/g, '<b class="note-ans">$1$2</b>');
+                return '<div class="note-example">'
+                    + '<div class="note-example-head"><span class="note-example-num">' + num + '</span>'
+                    + year + '</div>'
+                    + '<p class="note-example-stem">' + stem + '</p>'
+                    + (expl ? '<p class="note-example-expl">' + expl + '</p>' : '')
+                    + '</div>';
+            });
+            return html;
+        }
+
         async function loadNotes() {
             let notes;
             try {
@@ -176,7 +232,7 @@
                     body += `
                     <section class="notes-section" data-sec="${sec.section}">
                         <h3 class="notes-sec-title">${sec.section}</h3>
-                        <div class="notes-body">${sec.html}</div>
+                        <div class="notes-body">${fmtNotes(sec.html)}</div>
                     </section>`;
                 }
             }
