@@ -1,6 +1,19 @@
 // ============ 全局变量 ============
 let isDarkOn = () => localStorage.getItem('darkMode') === '1';
 
+// ============ 题干排版：判断组合题（I. II. III. IV. 陈述挤在一行）自动分行 ============
+function fmtContent(html) {
+    if (!html || typeof html !== 'string') return html;
+    return html.replace(/<[^>]*>|(I{1,3}|IV|V)\./g, (m, num, off, src) => {
+        if (!num) return m;  // HTML 标签原样保留（如图片/代码块，不误插）
+        if (off === 0) return m;  // 题干首字符就是编号时不加
+        // 前面紧邻 <br>（已分行）不再重复插入
+        const prev = src.slice(Math.max(0, off - 6), off).toLowerCase();
+        if (prev.endsWith('<br>') || prev.endsWith('<br/>')) return m;
+        return '<br>' + m;
+    });
+}
+
 function applyDark() {
     if (isDarkOn()) {
         document.documentElement.classList.add('dark');
@@ -144,6 +157,52 @@ function toggleDark() {
     localStorage.setItem('darkMode', isDarkOn() ? '0' : '1');
     applyDark();
     renderDarkSwitch();
+
+// ============ 跳题模式开关（quiz页读取 isAutoNextOn()，答对自动进入下一题） ============
+function isAutoNextOn() {
+    return localStorage.getItem('autoNext') === '1';
+}
+
+function renderAutoNextSwitch() {
+    const btn = document.getElementById('autoNextSwitch');
+    const state = document.getElementById('autoNextState');
+    if (!btn || !state) return;
+    const on = isAutoNextOn();
+    btn.classList.toggle('on', on);
+    state.textContent = on ? '开' : '关';
+}
+
+function toggleAutoNext() {
+    localStorage.setItem('autoNext', isAutoNextOn() ? '0' : '1');
+    renderAutoNextSwitch();
+    // quiz页定义此钩子：切换后即时显隐提交按钮
+    if (typeof onAutoNextModeChange === 'function') onAutoNextModeChange();
+}
+
+renderAutoNextSwitch();
 }
 
 renderDarkSwitch();
+
+// ============ 跳题模式开关（quiz页读取 isAutoNextOn()，答对自动进入下一题） ============
+function isAutoNextOn() {
+    return localStorage.getItem('autoNext') === '1';
+}
+
+function renderAutoNextSwitch() {
+    const btn = document.getElementById('autoNextSwitch');
+    const state = document.getElementById('autoNextState');
+    if (!btn || !state) return;
+    const on = isAutoNextOn();
+    btn.classList.toggle('on', on);
+    state.textContent = on ? '开' : '关';
+}
+
+function toggleAutoNext() {
+    localStorage.setItem('autoNext', isAutoNextOn() ? '0' : '1');
+    renderAutoNextSwitch();
+    // quiz页定义此钩子：切换后即时显隐提交按钮
+    if (typeof onAutoNextModeChange === 'function') onAutoNextModeChange();
+}
+
+renderAutoNextSwitch();
