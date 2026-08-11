@@ -2910,14 +2910,6 @@ a.chapter-badge-link:hover {
 }
 
 /* ============ 模拟考试特殊模式样式 ============ */
-.setup-row {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin: 16px 0;
-    padding: 8px 0;
-    border-bottom: 1px solid var(--border);
-}
 
 /* 题目来源信息样式 */
 #sourceInfo {
@@ -2947,16 +2939,6 @@ a.chapter-badge-link:hover {
     text-align: center;
     font-weight: 500;
     box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
-}
-
-.setup-row:last-child {
-    border-bottom: none;
-}
-
-.setup-row label {
-    font-weight: 500;
-    color: var(--text);
-    min-width: 100px;
 }
 
 .setup-row select,
