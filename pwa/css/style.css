@@ -2899,3 +2899,149 @@ a.chapter-badge-link:hover {
     border-radius: 2px;
     background: var(--primary);
 }
+
+/* ==================== 增强的笔记排版样式 ==================== */
+/* 分层结构显示优化 */
+.hierarchy-levels {
+    background: var(--card-bg);
+    border-radius: var(--radius);
+    padding: 16px 20px;
+    margin: 16px 0;
+    border-left: 4px solid var(--primary);
+}
+
+.hierarchy-title {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: var(--primary);
+    margin-bottom: 12px;
+    padding-bottom: 6px;
+    border-bottom: 1px solid var(--border);
+}
+
+.hierarchy-list {
+    list-style: none;
+    padding: 0;
+    margin: 12px 0;
+}
+
+.hierarchy-item {
+    display: flex;
+    align-items: flex-start;
+    margin: 8px 0;
+    padding: 8px 12px;
+    background: var(--light);
+    border-radius: 8px;
+    border-left: 3px solid var(--primary);
+}
+
+.hierarchy-item::before {
+    content: "▸";
+    color: var(--primary);
+    font-weight: bold;
+    margin-right: 8px;
+    flex-shrink: 0;
+}
+
+/* 要点列表样式 */
+.key-points {
+    background: var(--card-bg);
+    border-radius: var(--radius);
+    padding: 16px 20px;
+    margin: 16px 0;
+    border: 1px solid var(--border);
+}
+
+.key-points-title {
+    font-size: 1.05rem;
+    font-weight: 600;
+    color: var(--primary);
+    margin-bottom: 12px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.key-points-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.key-points-item {
+    position: relative;
+    padding: 6px 0 6px 20px;
+    margin: 4px 0;
+    line-height: 1.6;
+}
+
+.key-points-item::before {
+    content: "•";
+    color: var(--primary);
+    position: absolute;
+    left: 0;
+    top: 8px;
+    font-weight: bold;
+}
+
+/* 重要概念样式 */
+.important-concept {
+    background: linear-gradient(135deg, var(--light), transparent);
+    border-radius: var(--radius);
+    padding: 12px 16px;
+    margin: 12px 0;
+    border-left: 3px solid var(--primary);
+    border: 1px solid var(--border);
+}
+
+.concept-title {
+    font-weight: 600;
+    color: var(--primary);
+    margin-bottom: 6px;
+    font-size: 1rem;
+}
+
+.concept-description {
+    color: var(--text);
+    line-height: 1.6;
+}
+
+/* 提示/警告样式 */
+.note-warning {
+    background: #fff8dc;
+    border: 1px solid #eadfb8;
+    border-left: 3px solid #e0c65a;
+    border-radius: var(--radius);
+    padding: 12px 16px;
+    margin: 12px 0;
+}
+
+.note-warning-title {
+    font-weight: 600;
+    color: #b8860b;
+    margin-bottom: 6px;
+}
+
+/* 分隔线样式 */
+.note-divider {
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--border), transparent);
+    margin: 20px 0;
+}
+
+/* 响应式优化 */
+@media (max-width: 768px) {
+    .hierarchy-item {
+        padding: 6px 10px;
+        font-size: 0.9rem;
+    }
+    
+    .key-points-item {
+        padding: 4px 0 4px 16px;
+        font-size: 0.9rem;
+    }
+    
+    .important-concept {
+        padding: 10px 12px;
+    }
+}
