@@ -1,35 +1,18 @@
-/* 408刷题应用 - 前端通用JS：顶栏计时器 + 导航栏各开关（跳题/背题/快刷/夜间） */
-
-// ============ 题干排版：判断组合题（I. II. III. IV. 陈述挤在一行）自动分行 ============
-function fmtContent(html) {
-    if (!html || typeof html !== 'string') return html;
-    return html.replace(/<[^>]*>|(I{1,3}|IV|V)\./g, (m, num, off, src) => {
-        if (!num) return m;  // HTML 标签原样保留（如图片/代码块，不误插）
-        if (off === 0) return m;  // 题干首字符就是编号时不加
-        // 前面紧邻 <br>（已分行）不再重复插入
-        const prev = src.slice(Math.max(0, off - 6), off).toLowerCase();
-        if (prev.endsWith('<br>') || prev.endsWith('<br/>')) return m;
-        return '<br>' + m;
-    });
-}
-
-// ============ 夜间模式：尽早给 <html> 加 .dark，减少闪白 ============
-function isDarkOn() {
-    return localStorage.getItem('darkMode') === '1';
-}
+// ============ 全局变量 ============
+let isDarkOn = () => localStorage.getItem('darkMode') === '1';
 
 function applyDark() {
-    document.documentElement.classList.toggle('dark', isDarkOn());
+    if (isDarkOn()) {
+        document.documentElement.classList.add('dark');
+    } else {
+        document.documentElement.classList.remove('dark');
+    }
 }
-
 applyDark();
 
 // ============ 今日刷题计时器（按天累计，存localStorage，页面不可见时暂停） ============
 (function () {
     const el = document.getElementById('navTimer');
-    const pauseBtn = document.getElementById('timerPauseBtn');
-    let isPaused = false;
-    let timerInterval;
     if (!el) return;
 
     const today = new Date().toISOString().slice(0, 10);
@@ -40,31 +23,20 @@ applyDark();
 
     function fmt(sec) {
         const h = String(Math.floor(sec / 3600)).padStart(2, '0');
-        const m = String(Math.floor(sec % 3600 / 60)).padStart(2, '0');
+        const m = String(Math.floor((sec % 3600) / 60)).padStart(2, '0');
         const s = String(sec % 60).padStart(2, '0');
         return `${h}:${m}:${s}`;
     }
 
     function render() {
-        el.textContent = '⏱ ' + fmt(parseInt(localStorage.getItem('studyTimerSec') || '0', 10));
-    }
-
-    function updatePauseButton() {
-        if (!pauseBtn) return;
-        if (isPaused) {
-            pauseBtn.textContent = '▶️ 继续';
-            pauseBtn.title = '继续计时';
-        } else {
-            pauseBtn.textContent = '⏸️ 暂停';
-            pauseBtn.title = '暂停计时';
-        }
+        const sec = parseInt(localStorage.getItem('studyTimerSec') || '0', 10);
+        el.textContent = `⏱ ${fmt(sec)}`;
     }
 
     function startTimer() {
         if (timerInterval) return;
         timerInterval = setInterval(() => {
-            if (document.hidden) return;  // 切走标签页/窗口时暂停计时
-            if (isPaused) return;
+            if (document.hidden || isPaused) return;
             const sec = parseInt(localStorage.getItem('studyTimerSec') || '0', 10) + 1;
             localStorage.setItem('studyTimerSec', String(sec));
             render();
@@ -78,9 +50,11 @@ applyDark();
         }
     }
 
+    let timerInterval = null;
+    let isPaused = false;
+
     // 初始化
     render();
-    updatePauseButton();
     startTimer();
 
     // 页面可见性变化处理
@@ -110,28 +84,7 @@ applyDark();
     };
 })();
 
-// ============ 答对自动跳题开关（quiz页答题逻辑读取 isAutoNextOn()） ============
-function isAutoNextOn() {
-    return localStorage.getItem('autoNext') === '1';
-}
-
-function renderAutoNextSwitch() {
-    const btn = document.getElementById('autoNextSwitch');
-    const state = document.getElementById('autoNextState');
-    if (!btn || !state) return;
-    const on = isAutoNextOn();
-    btn.classList.toggle('on', on);
-    state.textContent = on ? '开' : '关';
-}
-
-function toggleAutoNext() {
-    localStorage.setItem('autoNext', isAutoNextOn() ? '0' : '1');
-    renderAutoNextSwitch();
-}
-
-renderAutoNextSwitch();
-
-// ============ 背题模式开关（quiz页读取 isReciteOn()，开启后直接显示答案解析） ============
+// ============ 背题模式开关（quiz页读取 isReciteOn()，直接显示答案与解析） ============
 function isReciteOn() {
     return localStorage.getItem('reciteMode') === '1';
 }
@@ -194,3 +147,32 @@ function toggleDark() {
 }
 
 renderDarkSwitch();
+
+// ============ 辅助函数 ============
+// 从数组中随机选择n个项目（避免重复）
+function getRandomItems(array, n) {
+    if (n >= array.length) return [...array];
+    const shuffled = [...array].sort(() => 0.5 - Math.random());
+    return shuffled.slice(0, n);
+}
+
+// 从IndexedDB获取错题数据
+function getWrongQuestionsFromDB() {
+    return new Promise((resolve) => {
+        const request = indexedDB.open('408QuizDB', 1);
+        request.onerror = () => resolve([]);
+        request.onsuccess = (event) => {
+            const db = event.target.result;
+            const transaction = db.transaction(['wrong'], 'readonly');
+            const store = transaction.objectStore('wrong');
+            const getAll = store.getAll();
+            
+            getAll.onsuccess = () => {
+                const wrongQuestions = getAll.result.map(item => item.question);
+                resolve(wrongQuestions);
+            };
+            
+            getAll.onerror = () => resolve([]);
+        };
+    });
+}
