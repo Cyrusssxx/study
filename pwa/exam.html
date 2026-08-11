@@ -58,12 +58,18 @@
                         <option value="co">单科：计算机组成原理</option>
                         <option value="ds">单科：数据结构</option>
                         <option value="cn">单科：计算机网络</option>
+                        <option value="favorites">仅收藏题</option>
+                        <option value="wrong">仅错题</option>
                     </select>
                 </div>
                 <div class="setup-row">
                     <label>题目数量</label>
                     <input type="number" id="examCount" value="40" min="5" max="150">
                     <span class="setup-hint" id="countHint">完整模拟 10-150 题，默认 40</span>
+                </div>
+                <div class="setup-row" id="sourceInfo" style="display:none;">
+                    <label>题目来源</label>
+                    <span class="source-text" id="sourceText"></span>
                 </div>
                 <div class="setup-row">
                     <label>考试时长</label>
@@ -119,7 +125,15 @@
     <script src="js/common.js"></script>
     <script src="js/backend.js"></script>
     <script>
-    const MODE_NAMES = { full: '完整408模拟', os: '操作系统', co: '计算机组成原理', ds: '数据结构', cn: '计算机网络' };
+    const MODE_NAMES = { 
+        full: '完整408模拟', 
+        os: '操作系统', 
+        co: '计算机组成原理', 
+        ds: '数据结构', 
+        cn: '计算机网络',
+        favorites: '仅收藏题',
+        wrong: '仅错题'
+    };
     let examId = null;
     let examQuestions = [];
     let examAnswers = {};   // {qid: 'A'}
@@ -137,16 +151,69 @@
         const mode = document.getElementById('examMode').value;
         const isFull = mode === 'full';
         const cnt = document.getElementById('examCount');
-        cnt.min = isFull ? 10 : 5;
-        cnt.max = isFull ? 150 : 100;
-        cnt.value = isFull ? 40 : 20;
-        document.getElementById('countHint').textContent = isFull ? '完整模拟 10-150 题，默认 40' : '单科 5-100 题，默认 20';
+        const sourceInfo = document.getElementById('sourceInfo');
+        const sourceText = document.getElementById('sourceText');
+        
+        if (mode === 'favorites') {
+            cnt.min = 5;
+            cnt.max = 100;
+            cnt.value = 20;
+            document.getElementById('countHint').textContent = '收藏题 5-100 题，默认 20';
+            sourceInfo.style.display = 'flex';
+            sourceText.textContent = '从您收藏的题目中组卷';
+        } else if (mode === 'wrong') {
+            cnt.min = 5;
+            cnt.max = 100;
+            cnt.value = 20;
+            document.getElementById('countHint').textContent = '错题 5-100 题，默认 20';
+            sourceInfo.style.display = 'flex';
+            sourceText.textContent = '从您的错题本中组卷';
+        } else {
+            cnt.min = isFull ? 10 : 5;
+            cnt.max = isFull ? 150 : 100;
+            cnt.value = isFull ? 40 : 20;
+            document.getElementById('countHint').textContent = isFull ? '完整模拟 10-150 题，默认 40' : '单科 5-100 题，默认 20';
+            sourceInfo.style.display = 'none';
+        }
     }
 
     // ============ 组卷 / 恢复 ============
     async function startExam() {
         const mode = document.getElementById('examMode').value;
-        // 越界题量直接收拢到范围内并回写输入框，避免后端静默修正造成"改了没反应"
+        
+        // 检查特殊模式是否有足够的题目
+        if (mode === 'favorites') {
+            const favorites = JSON.parse(localStorage.getItem('favorites') || '[]');
+            if (favorites.length === 0) {
+                alert('您还没有收藏任何题目，无法进行收藏题考试。');
+                return;
+            }
+            const count = Math.min(Math.max(parseInt(document.getElementById('examCount').value, 10) || 20, 5), favorites.length);
+            document.getElementById('examCount').value = count;
+            
+            // 从收藏题目中随机抽取
+            const selectedFavorites = getRandomItems(favorites, count);
+            const questions = selectedFavorites.map(fav => fav.q);
+            enterExam(null, questions, {}, null);
+            return;
+        }
+        
+        if (mode === 'wrong') {
+            const wrongQuestions = getWrongQuestionsFromDB();
+            if (wrongQuestions.length === 0) {
+                alert('您还没有错题，无法进行错题考试。');
+                return;
+            }
+            const count = Math.min(Math.max(parseInt(document.getElementById('examCount').value, 10) || 20, 5), wrongQuestions.length);
+            document.getElementById('examCount').value = count;
+            
+            // 从错题中随机抽取
+            const selectedWrong = getRandomItems(wrongQuestions, count);
+            enterExam(null, selectedWrong, {}, null);
+            return;
+        }
+        
+        // 原有逻辑处理常规模式
         const [lo, hi, dft] = mode === 'full' ? [10, 150, 40] : [5, 100, 20];
         const count = Math.min(Math.max(parseInt(document.getElementById('examCount').value, 10) || dft, lo), hi);
         document.getElementById('examCount').value = count;
@@ -191,6 +258,11 @@
         examAnswers = answers;
         examIndex = 0;
         remainingSec = remaining;
+        
+        // 更新考试标题
+        const mode = document.getElementById('examMode').value;
+        const examTitle = getExamTitle(mode);
+        document.getElementById('resultTitle').textContent = examTitle + ' - 成绩单';
         show('examView');
         renderExamQuestion();
         startTimer();
@@ -451,6 +523,45 @@
     // 恢复上次的"错题入本"选择（默认开启）
     document.getElementById('recordWrong').checked = localStorage.getItem('examRecordWrong') !== '0';
     checkActive();
-    </script>
+    
+    // ============ 辅助函数 ============
+    function getRandomItems(array, count) {
+        const shuffled = [...array].sort(() => 0.5 - Math.random());
+        return shuffled.slice(0, count);
+    }
+    
+    function getWrongQuestionsFromDB() {
+        // 从IndexedDB获取错题数据
+        return new Promise((resolve) => {
+            const request = indexedDB.open('wrong_db', 1);
+            request.onsuccess = function(event) {
+                const db = event.target.result;
+                const transaction = db.transaction(['wrong'], 'readonly');
+                const store = transaction.objectStore('wrong');
+                const getAll = store.getAll();
+                
+                getAll.onsuccess = function() {
+                    const wrongQuestions = getAll.result.map(item => item.q);
+                    resolve(wrongQuestions);
+                };
+                
+                getAll.onerror = function() {
+                    resolve([]); // 获取失败返回空数组
+                };
+            };
+            
+            request.onerror = function() {
+                resolve([]); // 数据库打开失败返回空数组
+            };
+        });
+    }
+    
+    // 处理特殊模式的考试标题
+    function getExamTitle(mode) {
+        if (mode === 'favorites') return '收藏题考试';
+        if (mode === 'wrong') return '错题考试';
+        return MODE_NAMES[mode] || '模拟考试';
+    }
+</script>
 </body>
 </html>
