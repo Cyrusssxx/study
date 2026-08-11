@@ -2848,3 +2848,54 @@ a.chapter-badge-link:hover {
 .dark .notes-top-btn {
     box-shadow: 0 4px 14px rgba(0, 0, 0, 0.5);
 }
+
+/* ==================== 优化笔记显示样式 ==================== */
+/* 新增的section-title和section-content样式支持 */
+.section-title {
+    font-size: 1.1rem;
+    color: var(--primary);
+    margin-bottom: 12px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid var(--border);
+    font-weight: 600;
+}
+
+.section-content {
+    font-size: 1rem;
+    line-height: 2.0;
+    text-align: justify;
+    margin-bottom: 20px;
+}
+
+/* 新样式支持：优化笔记页面显示 */
+.notes-section .section-title {
+    font-size: 1.15rem;
+    margin: 16px 0 10px;
+    padding-left: 8px;
+    border-left: 3px solid var(--primary);
+    border-bottom: 1px solid var(--border);
+}
+
+.notes-section .section-content {
+    margin: 12px 0;
+}
+
+/* 笔记内容中的小标题优化 */
+.notes-section .section-content h4 {
+    font-size: 1rem;
+    margin: 24px 0 8px;
+    padding-left: 8px;
+    position: relative;
+    color: var(--text);
+}
+
+.notes-section .section-content h4::before {
+    content: "";
+    position: absolute;
+    left: 0;
+    top: 3px;
+    bottom: 3px;
+    width: 3px;
+    border-radius: 2px;
+    background: var(--primary);
+}
