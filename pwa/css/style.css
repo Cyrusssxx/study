@@ -2849,6 +2849,81 @@ a.chapter-badge-link:hover {
     box-shadow: 0 4px 14px rgba(0, 0, 0, 0.5);
 }
 
+/* ==================== 计时器控制按钮样式 ==================== */
+.timer-controls {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+}
+
+.timer-btn {
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 4px 10px;
+    font-size: 0.85rem;
+    color: var(--text);
+    cursor: pointer;
+    transition: all 0.2s;
+    white-space: nowrap;
+}
+
+.timer-btn:hover {
+    background: var(--primary);
+    color: white;
+    border-color: var(--primary);
+    transform: translateY(-1px);
+}
+
+.timer-btn:active {
+    transform: translateY(0);
+}
+
+.dark .timer-btn {
+    background: #2c313a;
+    border-color: #4a4f58;
+}
+
+.dark .timer-btn:hover {
+    background: var(--primary);
+    color: white;
+    border-color: var(--primary);
+}
+
+/* 导航栏工具区域优化 */
+.nav-tools {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+/* 响应式适配 */
+@media (max-width: 768px) {
+    .timer-controls {
+        gap: 6px;
+    }
+    
+    .timer-btn {
+        padding: 3px 8px;
+        font-size: 0.8rem;
+    }
+}
+
+/* 计时器重置动画 */
+@keyframes pulse {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.05); }
+    100% { transform: scale(1); }
+}
+
+.nav-timer {
+    transition: all 0.3s ease;
+}
+
+.nav-timer.pulse {
+    animation: pulse 0.5s ease-in-out;
+}
+
 /* ==================== 优化笔记显示样式 ==================== */
 /* 新增的section-title和section-content样式支持 */
 .section-title {

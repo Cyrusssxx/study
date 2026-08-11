@@ -26,6 +26,10 @@
             </div>
             <div class="nav-tools">
                 <span class="nav-timer" id="navTimer" title="今日刷题时长（切换到其他窗口时暂停）">⏱ 00:00:00</span>
+                <div class="timer-controls">
+                    <button class="timer-btn" id="timerPauseBtn" onclick="toggleTimer()" title="暂停/继续计时">⏸️ 暂停</button>
+                    <button class="timer-btn" onclick="resetTimer()" title="重置计时器">🔄 重置</button>
+                </div>
                 <button class="nav-switch" id="darkSwitch" onclick="toggleDark()" title="夜间模式：深色主题护眼">
                     夜间 <span class="switch-state" id="darkState">关</span>
                 </button>

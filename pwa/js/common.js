@@ -27,6 +27,9 @@ applyDark();
 // ============ 今日刷题计时器（按天累计，存localStorage，页面不可见时暂停） ============
 (function () {
     const el = document.getElementById('navTimer');
+    const pauseBtn = document.getElementById('timerPauseBtn');
+    let isPaused = false;
+    let timerInterval;
     if (!el) return;
 
     const today = new Date().toISOString().slice(0, 10);
@@ -46,13 +49,65 @@ applyDark();
         el.textContent = '⏱ ' + fmt(parseInt(localStorage.getItem('studyTimerSec') || '0', 10));
     }
 
+    function updatePauseButton() {
+        if (!pauseBtn) return;
+        if (isPaused) {
+            pauseBtn.textContent = '▶️ 继续';
+            pauseBtn.title = '继续计时';
+        } else {
+            pauseBtn.textContent = '⏸️ 暂停';
+            pauseBtn.title = '暂停计时';
+        }
+    }
+
+    function startTimer() {
+        if (timerInterval) return;
+        timerInterval = setInterval(() => {
+            if (document.hidden) return;  // 切走标签页/窗口时暂停计时
+            if (isPaused) return;
+            const sec = parseInt(localStorage.getItem('studyTimerSec') || '0', 10) + 1;
+            localStorage.setItem('studyTimerSec', String(sec));
+            render();
+        }, 1000);
+    }
+
+    function stopTimer() {
+        if (timerInterval) {
+            clearInterval(timerInterval);
+            timerInterval = null;
+        }
+    }
+
+    // 初始化
     render();
-    setInterval(() => {
-        if (document.hidden) return;  // 切走标签页/窗口时暂停计时
-        const sec = parseInt(localStorage.getItem('studyTimerSec') || '0', 10) + 1;
-        localStorage.setItem('studyTimerSec', String(sec));
-        render();
-    }, 1000);
+    updatePauseButton();
+    startTimer();
+
+    // 页面可见性变化处理
+    document.addEventListener('visibilitychange', () => {
+        if (document.hidden) {
+            stopTimer();
+        } else {
+            startTimer();
+        }
+    });
+
+    // 导出全局函数供按钮调用
+    window.toggleTimer = function() {
+        isPaused = !isPaused;
+        updatePauseButton();
+    };
+
+    window.resetTimer = function() {
+        if (confirm('确定要重置计时器吗？当前时长将被清零。')) {
+            localStorage.setItem('studyTimerSec', '0');
+            render();
+            // 添加重置动画效果
+            el.style.animation = 'none';
+            el.offsetHeight; // 触发重排
+            el.style.animation = 'pulse 0.5s ease-in-out';
+        }
+    };
 })();
 
 // ============ 答对自动跳题开关（quiz页答题逻辑读取 isAutoNextOn()） ============
