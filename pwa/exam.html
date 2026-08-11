@@ -199,7 +199,7 @@
         }
         
         if (mode === 'wrong') {
-            const wrongQuestions = getWrongQuestionsFromDB();
+            const wrongQuestions = await getWrongQuestionsFromDB();
             if (wrongQuestions.length === 0) {
                 alert('您还没有错题，无法进行错题考试。');
                 return;
