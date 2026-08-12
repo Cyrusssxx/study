@@ -204,6 +204,22 @@
                     + (expl ? '<p class="note-example-expl">' + expl + '</p>' : '')
                     + '</div>';
             });
+            // 3) 超长段落按全角分号（；）分行，避免整段挤成一坨（ASCII ; 不受影响）
+            html = html.replace(/<p>[\s\S]*?<\/p>/g, pt => {
+                const inner = pt.slice(3, -4);
+                if (/<(?:pre|table|ul|ol|li)\b|br\s*\/?>/i.test(inner)) return pt;
+                const text = inner.replace(/<[^>]*>/g, '');
+                if (text.length < 40 || !text.includes('；')) return pt;
+                const parts = inner.split(/(?<=；)/);
+                if (parts.length < 2) return pt;
+                let out = '';
+                parts.forEach((seg, i) => {
+                    seg = seg.replace(/^[\s\u3000]+/, '').replace(/[\s\u3000]+$/, '');
+                    if (!seg) return;
+                    out += i === 0 ? '<p>' + seg + '</p>' : '<p class="note-li">' + seg + '</p>';
+                });
+                return out;
+            });
             return html;
         }
 
