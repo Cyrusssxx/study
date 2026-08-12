@@ -156,7 +156,7 @@
         const SPLIT_RE = new RegExp(
             '^(?=' + ENUM_MARK + ')|' +
             '(?<![\\u4e00-\\u9fffA-Za-z0-9])' +
-            '(?=' + ENUM_MARK + '|（\\d+）|\\(\\d+\\)|\\d{1,2}[.、．])'
+            '(?=' + ENUM_MARK + '|（\\d+）|\\(\\d+\\)|\\d{1,2}(?:[.、．](?![0-9])))'
         );
         function fmtNotes(html) {
             if (!html) return html;
