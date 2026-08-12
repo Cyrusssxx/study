@@ -147,7 +147,7 @@
         }
     }
 
-    function onModeChange() {
+    async function onModeChange() {
         const mode = document.getElementById('examMode').value;
         const isFull = mode === 'full';
         const isSpecial = mode === 'favorites' || mode === 'wrong';
@@ -156,24 +156,28 @@
         const sourceText = document.getElementById('sourceText');
         const durationRow = document.querySelectorAll('.setup-row')[3]; // 考试时长的行
         
-        if (mode === 'favorites') {
+        if (mode === 'favorites' || mode === 'wrong') {
             cnt.min = 5;
             cnt.max = 100;
             cnt.value = 20;
-            document.getElementById('countHint').textContent = '收藏题 5-100 题，默认 20';
+            document.getElementById('countHint').textContent = mode === 'favorites' ? '收藏题 5-100 题，默认 20' : '错题 5-100 题，默认 20';
             sourceInfo.style.display = 'flex';
-            sourceText.textContent = '从您收藏的题目中组卷';
+            sourceText.textContent = '正在读取…';
             durationRow.style.display = 'none';
             document.getElementById('recordWrong').parentElement.parentElement.style.display = 'none';
-        } else if (mode === 'wrong') {
-            cnt.min = 5;
-            cnt.max = 100;
-            cnt.value = 20;
-            document.getElementById('countHint').textContent = '错题 5-100 题，默认 20';
-            sourceInfo.style.display = 'flex';
-            sourceText.textContent = '从您的错题本中组卷';
-            durationRow.style.display = 'none';
-            document.getElementById('recordWrong').parentElement.parentElement.style.display = 'none';
+            try {
+                const isFav = mode === 'favorites';
+                const resp = await api(isFav ? '/api/favorites' : '/api/wrong');
+                const d = await resp.json();
+                const n = (isFav ? (d.favorites || []) : (d.wrong_questions || [])).length;
+                sourceText.textContent = isFav
+                    ? `从您收藏的题目中组卷（本浏览器当前可组 ${n} 题）`
+                    : `从您的错题本中组卷（本浏览器当前 ${n} 题）`;
+                cnt.max = Math.max(5, n);
+                if (cnt.value > cnt.max) cnt.value = cnt.max;
+            } catch (e) {
+                sourceText.textContent = '读取失败';
+            }
         } else {
             cnt.min = isFull ? 10 : 5;
             cnt.max = isFull ? 150 : 100;
