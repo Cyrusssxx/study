@@ -155,7 +155,7 @@
         const ENUM_MARK = '[①②③④⑤⑥⑦⑧⑨⑩⑪⑫]';
         const SPLIT_RE = new RegExp(
             '^(?=' + ENUM_MARK + ')|' +
-            '(?<![\\u4e00-\\u9fffA-Za-z0-9=×*/−—\\-])' +
+            '(?<=^|[\\s\\u3000：；。，、！？:;])' +
             '(?=' + ENUM_MARK + '|（\\d+）|\\(\\d+\\)|\\d{1,2}(?:[.、．](?![0-9])))'
         );
         // ---------- 例题卡片辅助：识别前缀、吸收解答步骤、校正碎 <b> ----------
@@ -272,9 +272,11 @@
             });
             // 2) 例题段 → 结构化卡片（题目与全部解答步骤都包进框里）
             html = wrapExamples(html);
-            // 3) 超长段落按全角分号（；）分行，避免整段挤成一坨（ASCII ; 不受影响）
-            html = html.replace(/<p>[\s\S]*?<\/p>/g, pt => {
-                const inner = pt.slice(3, -4);
+            // 3) 超长段落按全角分号（；）分行，避免整段挤成一坨（ASCII ; 不受影响）。
+            //    例题卡片内的步骤段落（note-example-step）同样分行，保持类名以便解析按步展示。
+            html = html.replace(/<p(?:\s+class="note-example-step")?>[\s\S]*?<\/p>/g, pt => {
+                const isStep = /note-example-step/.test(pt);
+                const inner = pt.slice(pt.indexOf('>') + 1, -4);
                 if (/<(?:pre|table|ul|ol|li)\b|br\s*\/?>/i.test(inner)) return pt;
                 const text = inner.replace(/<[^>]*>/g, '');
                 if (text.length < 40 || !text.includes('；')) return pt;
@@ -284,7 +286,8 @@
                 parts.forEach((seg, i) => {
                     seg = seg.replace(/^[\s\u3000]+/, '').replace(/[\s\u3000]+$/, '');
                     if (!seg) return;
-                    out += i === 0 ? '<p>' + seg + '</p>' : '<p class="note-li">' + seg + '</p>';
+                    if (isStep) out += '<p class="note-example-step">' + seg + '</p>';
+                    else out += i === 0 ? '<p>' + seg + '</p>' : '<p class="note-li">' + seg + '</p>';
                 });
                 return out;
             });
