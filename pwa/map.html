@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>计组强化思维导图 - 408刷题</title>
+    <link rel="manifest" href="manifest.webmanifest">
+    <meta name="theme-color" content="#4f46e5">
+    <link rel="icon" type="image/png" href="icons/icon-192.png">
+    <link rel="apple-touch-icon" href="icons/icon-192.png">
+    <script>if (localStorage.getItem('darkMode') === '1') document.documentElement.classList.add('dark');</script>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-container">
+            <a href="index.html" class="nav-brand">408刷题</a>
+            <div class="nav-links">
+                <a href="index.html" class="nav-link">首页</a>
+                <a href="wrong.html" class="nav-link">错题本</a>
+                <a href="favorites.html" class="nav-link">收藏夹</a>
+                <a href="exam.html" class="nav-link">模拟考试</a>
+                <a href="stats.html" class="nav-link">学习统计</a>
+                <a href="search.html" class="nav-link">搜题</a>
+                <a href="dati.html" class="nav-link">大题专项</a>
+            </div>
+            <div class="nav-tools">
+                <span class="nav-timer" id="navTimer" title="今日刷题时长（切换到其他窗口时暂停）">⏱ 00:00:00</span>
+                <div class="timer-controls">
+                    <button class="timer-btn" id="timerPauseBtn" onclick="toggleTimer()" title="暂停/继续计时">⏸️ 暂停</button>
+                    <button class="timer-btn" onclick="resetTimer()" title="重置计时器">🔄 重置</button>
+                </div>
+                <button class="nav-switch" id="darkSwitch" onclick="toggleDark()" title="夜间模式：深色主题护眼">
+                    夜间 <span class="switch-state" id="darkState">关</span>
+                </button>
+            </div>
+        </div>
+    </nav>
+    <main class="container">
+        <div class="map-header">
+            <h1>🗺️ 计组强化思维导图</h1>
+            <p class="notes-source" id="mapSubtitle">加载中...</p>
+            <div class="map-stats" id="mapStats"></div>
+        </div>
+        <div class="map-toolbar">
+            <input class="search-input map-search" id="mapSearch" type="search"
+                placeholder="🔍 搜索知识点 / 真题年份 / 硬件编号（如 ALU、CF、Tag）…" oninput="onMapSearch()">
+            <button class="btn btn-secondary btn-sm" onclick="mapExpandAll(true)">展开全部</button>
+            <button class="btn btn-secondary btn-sm" onclick="mapExpandAll(false)">收起全部</button>
+            <button class="btn btn-secondary btn-sm" onclick="clearMastered()">清空掌握</button>
+            <div class="map-progress" id="mapProgress"><div class="map-progress-bar" id="mapProgressBar"></div></div>
+        </div>
+        <div class="map-layout">
+            <div class="map-tree" id="mapTree"><div class="map-empty">加载中…</div></div>
+            <aside class="map-detail" id="mapDetail">
+                <div class="map-detail-hint">👆 点击左侧节点查看详情</div>
+            </aside>
+        </div>
+    </main>
+    <script src="js/common.js"></script>
+    <script src="js/backend.js"></script>
+    <script>
+        const _params = new URLSearchParams(location.search);
+        const SUBJECT = _params.get('subject') || 'co';
+
+        let MAP = null;
+        let expanded = new Set();
+        let mastered = {};
+        let currentId = null;
+        let totalNodes = 0;
+        let searchQ = '';
+        let matchIds = new Set();
+        let forcedOpen = new Set();
+
+        function esc(s) {
+            return String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+        }
+
+        function assignIds(node, parent, parentNode) {
+            node._id = parent == null ? String(node._idx) : parent + '-' + node._idx;
+            node._parent = parentNode;
+            totalNodes++;
+            (node.c || []).forEach((ch, i) => { ch._idx = i; assignIds(ch, node._id, node); });
+        }
+
+        function findNode(id) {
+            for (const r of MAP.roots) { const f = findInNode(r, id); if (f) return f; }
+            return null;
+        }
+        function findInNode(node, id) {
+            if (node._id === id) return node;
+            for (const c of (node.c || [])) { const f = findInNode(c, id); if (f) return f; }
+            return null;
+        }
+
+        function getPath(node) {
+            const path = [];
+            let n = node;
+            while (n) { path.unshift(n.n); n = n._parent; }
+            return path;
+        }
+
+        function countMastered(node) {
+            let c = mastered[node._id] ? 1 : 0;
+            for (const k of (node.c || [])) c += countMastered(k);
+            return c;
+        }
+        function countTotal(node) {
+            return 1 + (node.c || []).reduce((s, k) => s + countTotal(k), 0);
+        }
+
+        function loadMastered() {
+            try { mastered = JSON.parse(localStorage.getItem('comap_mastered') || '{}'); } catch { mastered = {}; }
+            // 清理已不存在的节点
+            for (const id of Object.keys(mastered)) if (!findNode(id)) delete mastered[id];
+        }
+
+        function saveMastered() {
+            localStorage.setItem('comap_mastered', JSON.stringify(mastered));
+        }
+
+        function updateStats() {
+            let n = 0;
+            for (const id of Object.keys(mastered)) if (findNode(id)) n++;
+            const pct = totalNodes ? Math.round(n / totalNodes * 100) : 0;
+            document.getElementById('mapStats').textContent = `共 ${totalNodes} 个知识点 · 已掌握 ${n}（${pct}%）`;
+            document.getElementById('mapProgressBar').style.width = pct + '%';
+        }
+
+        function shouldOpen(node) {
+            if (searchQ) return forcedOpen.has(node._id);
+            return expanded.has(node._id);
+        }
+
+        function renderChildren(node, parentDim) {
+            const kids = node.c || [];
+            if (!kids.length) return '';
+            const open = shouldOpen(node);
+            return `<ul class="map-list">` + kids.map(k => renderNode(k, parentDim)).join('') + `</ul>`;
+        }
+
+        function renderNode(node, parentDim) {
+            const hasKids = (node.c || []).length > 0;
+            const isMastered = mastered[node._id];
+            const isSelected = currentId === node._id;
+            const isMatch = matchIds.has(node._id);
+            const isAncestor = forcedOpen.has(node._id);
+            let cls = 'map-node';
+            if (isSelected) cls += ' selected';
+            if (isMastered) cls += ' mastered';
+            if (searchQ) {
+                if (isMatch) cls += ' hit';
+                else if (!isAncestor) cls += ' map-dim';
+            }
+            if (parentDim) cls += ' map-dim';
+            const open = shouldOpen(node);
+            return `<li class="map-item">
+                <div class="${cls}" onclick="toggleNode('${node._id}')" title="${esc(node.d || node.n)}">
+                    <span class="map-caret">${hasKids ? (open ? '▾' : '▸') : ''}</span>
+                    <span class="map-master" onclick="event.stopPropagation();toggleMastered('${node._id}')"
+                        title="${isMastered ? '已掌握，点击取消' : '标记为已掌握'}">${isMastered ? '✔' : '○'}</span>
+                    <span class="map-name">${esc(node.n)}</span>
+                    ${node.d ? '<span class="map-dot" title="有详情"></span>' : ''}
+                </div>
+                ${hasKids ? `<div class="map-children" style="${open ? '' : 'display:none'}">${renderChildren(node, parentDim || (searchQ && !isMatch && !isAncestor))}</div>` : ''}
+            </li>`;
+        }
+
+        function renderRoot(r) {
+            const isMastered = countMastered(r) === countTotal(r);
+            const isSelected = currentId === r._id;
+            const isMatch = matchIds.has(r._id);
+            const isAncestor = forcedOpen.has(r._id);
+            let cls = 'map-root-head';
+            if (isSelected) cls += ' selected';
+            if (isMastered) cls += ' mastered';
+            if (searchQ && !isMatch && !isAncestor) cls += ' map-dim';
+            const open = shouldOpen(r);
+            const mc = countMastered(r), tc = countTotal(r);
+            return `<div class="map-root">
+                <div class="${cls}" onclick="toggleNode('${r._id}')">
+                    <span class="map-caret">${open ? '▾' : '▸'}</span>
+                    <span class="map-root-title">${esc(r.n)}</span>
+                    ${r.tag ? `<span class="map-root-tag">${esc(r.tag)}</span>` : ''}
+                    <span class="map-root-progress">✔ ${mc}/${tc}</span>
+                </div>
+                <div class="map-children" style="${open ? '' : 'display:none'}">${renderChildren(r, searchQ && !isMatch && !isAncestor)}</div>
+            </div>`;
+        }
+
+        function renderTree() {
+            const tree = document.getElementById('mapTree');
+            if (!MAP) { tree.innerHTML = '<div class="map-empty">加载失败，请检查网络后刷新。</div>'; return; }
+            if (!searchQ) { matchIds.clear(); forcedOpen.clear(); }
+            tree.innerHTML = MAP.roots.map(renderRoot).join('');
+        }
+
+        function toggleNode(id) {
+            const node = findNode(id);
+            if (!node) return;
+            if (searchQ) {
+                searchQ = '';
+                document.getElementById('mapSearch').value = '';
+                matchIds.clear(); forcedOpen.clear();
+            }
+            if ((node.c || []).length) {
+                if (expanded.has(id)) expanded.delete(id); else expanded.add(id);
+            }
+            currentId = id;
+            renderTree();
+            renderDetail(node);
+        }
+
+        function gotoNode(id) {
+            const node = findNode(id);
+            if (!node) return;
+            // 展开所有祖先
+            let n = node;
+            while (n) { expanded.add(n._id); n = n._parent; }
+            currentId = id;
+            renderTree();
+            renderDetail(node);
+            document.getElementById('mapTree').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        }
+
+        function toggleMastered(id) {
+            const node = findNode(id);
+            if (!node) return;
+            if (mastered[id]) delete mastered[id]; else mastered[id] = true;
+            saveMastered();
+            renderTree();
+            updateStats();
+            if (currentId) renderDetail(findNode(currentId));
+        }
+
+        function clearMastered() {
+            if (!confirm('确定清空所有“已掌握”标记吗？')) return;
+            mastered = {};
+            saveMastered();
+            renderTree();
+            updateStats();
+        }
+
+        function mapExpandAll(open) {
+            const all = [];
+            (function walk(nodes) { nodes.forEach(n => { all.push(n._id); walk(n.c || []); }); })(MAP.roots);
+            if (open) all.forEach(id => expanded.add(id));
+            else expanded.clear();
+            renderTree();
+        }
+
+        function onMapSearch() {
+            searchQ = document.getElementById('mapSearch').value.trim().toLowerCase();
+            matchIds.clear(); forcedOpen.clear();
+            if (searchQ) {
+                (function walk(nodes) {
+                    nodes.forEach(n => {
+                        const s = (n.n + ' ' + (n.d || '')).toLowerCase();
+                        if (s.includes(searchQ)) matchIds.add(n._id);
+                        walk(n.c || []);
+                    });
+                })(MAP.roots);
+                // 命中节点的所有祖先强制展开
+                (function build(nodes, path) {
+                    nodes.forEach(n => {
+                        const p = path.concat(n._id);
+                        if (matchIds.has(n._id)) p.forEach(id => forcedOpen.add(id));
+                        build(n.c || [], p);
+                    });
+                })(MAP.roots, []);
+            }
+            renderTree();
+        }
+
+        function renderDetail(node) {
+            const el = document.getElementById('mapDetail');
+            const path = getPath(node);
+            const kids = node.c || [];
+            el.innerHTML = `
+                <div class="map-detail-path">${path.map(p => `<span>${esc(p)}</span>`).join('<span class="map-path-sep">›</span>')}</div>
+                <h3 class="map-detail-title">${esc(node.n)}</h3>
+                ${node.d ? `<div class="map-detail-text">${esc(node.d)}</div>` : (kids.length ? '<div class="map-detail-empty">（分类节点，无正文）</div>' : '<div class="map-detail-empty">（叶节点，无正文）</div>')}
+                ${kids.length ? `<div class="map-detail-kids">${kids.map(k =>
+                    `<button class="btn btn-secondary btn-sm map-detail-kid" onclick="gotoNode('${k._id}')">${esc(k.n)}</button>`
+                ).join('')}</div>` : ''}
+            `;
+        }
+
+        async function loadMap() {
+            try {
+                const resp = await fetch(`data/${SUBJECT}_map.json`);
+                if (!resp.ok) throw new Error(resp.status);
+                MAP = await resp.json();
+                document.getElementById('mapSubtitle').textContent = MAP.subtitle || '';
+                MAP.roots.forEach((r, i) => { r._idx = i; assignIds(r, null, null); });
+                loadMastered();
+                MAP.roots.forEach(r => expanded.add(r._id));
+                renderTree();
+                updateStats();
+            } catch (err) {
+                document.getElementById('mapSubtitle').textContent = '导图数据加载失败：' + err.message;
+                document.getElementById('mapTree').innerHTML = '<div class="map-empty">加载失败，请检查网络后刷新。</div>';
+            }
+        }
+
+        loadMap();
+    </script>
+</body>
+</html>
