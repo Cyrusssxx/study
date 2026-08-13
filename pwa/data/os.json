@@ -2800,7 +2800,7 @@
   {
    "id": "os_0187",
    "number": 187,
-   "content": "使用抢占式最短剩余时间优先调度算法对下列进程进行调度，总周转时间是( )<br>进程名 到达时间 运行时间<br>P₀ 3 1<br>P₁ 1 2<br>P₂ 4 3<br>P₃ 5 4<br>P₄ 2 5",
+   "content": "使用抢占式最短剩余时间优先调度算法对下列进程进行调度，总周转时间是( )<table class=\"q-table\"><thead><tr><th>进程名</th><th>到达时间</th><th>运行时间</th></tr></thead><tbody><tr><td>P₀</td><td>3</td><td>1</td></tr><tr><td>P₁</td><td>1</td><td>2</td></tr><tr><td>P₂</td><td>4</td><td>3</td></tr><tr><td>P₃</td><td>5</td><td>4</td></tr><tr><td>P₄</td><td>2</td><td>5</td></tr></tbody></table>",
    "options": {
     "A": "25h",
     "B": "26h",
@@ -3010,7 +3010,7 @@
   {
    "id": "os_0201",
    "number": 201,
-   "content": "【2013统考真题】某系统正在执行三个进程P₁，P₂和P₃，各进程的计算(CPU)时间和I/O时间比例如下表所示。为提高系统资源利用率，合理的进程优先级设置应为( )<br>进程名 计算时间 I/O时间<br>P₁ 90% 10%<br>P₂ 50% 50%<br>P₃ 15% 85%",
+   "content": "【2013统考真题】某系统正在执行三个进程P₁，P₂和P₃，各进程的计算(CPU)时间和I/O时间比例如下表所示。为提高系统资源利用率，合理的进程优先级设置应为( )<table class=\"q-table\"><thead><tr><th>进程名</th><th>计算时间</th><th>I/O时间</th></tr></thead><tbody><tr><td>P₁</td><td>90%</td><td>10%</td></tr><tr><td>P₂</td><td>50%</td><td>50%</td></tr><tr><td>P₃</td><td>15%</td><td>85%</td></tr></tbody></table>",
    "options": {
     "A": "P₁>P₂>P₃",
     "B": "P₃>P₂>P₁",
@@ -3055,7 +3055,7 @@
   {
    "id": "os_0204",
    "number": 204,
-   "content": "【2017统考真题】假设4个作业到达系统的时刻和运行时间如下表所示。系统在t=2时开始作业调度。若分别采用先来先服务和短作业优先调度算法，则选中的作业分别是( )<br>作业 到达时刻t 运行时间<br>J₁ 0 3<br>J₂ 1 3<br>J₃ 1 2<br>J₄ 3 1",
+   "content": "【2017统考真题】假设4个作业到达系统的时刻和运行时间如下表所示。系统在t=2时开始作业调度。若分别采用先来先服务和短作业优先调度算法，则选中的作业分别是( )<table class=\"q-table\"><thead><tr><th>作业</th><th>到达时刻t</th><th>运行时间</th></tr></thead><tbody><tr><td>J₁</td><td>0</td><td>3</td></tr><tr><td>J₂</td><td>1</td><td>3</td></tr><tr><td>J₃</td><td>1</td><td>2</td></tr><tr><td>J₄</td><td>3</td><td>1</td></tr></tbody></table>",
    "options": {
     "A": "J₂、J₃",
     "B": "J₁、J₄",
@@ -3085,7 +3085,7 @@
   {
    "id": "os_0206",
    "number": 206,
-   "content": "【2018统考真题】某系统采用基于优先权的非抢占式进程调度策略，完成一次进程调度和进程切换的系统时间开销为1μs。在T时刻就绪队列中有3个进程P₁、P₂和P₃，其在就绪队列中的等待时间、需要的CPU时间和优先权如下表所示。若优先权值大的进程优先获得CPU，从T时刻起系统开始进程调度，则系统的平均周转时间为( )<br>进程名 等待时间 需要的CPU时间 优先权<br>P₁ 30μs 12μs 10<br>P₂ 15μs 24μs 30<br>P₃ 18μs 36μs 20",
+   "content": "【2018统考真题】某系统采用基于优先权的非抢占式进程调度策略，完成一次进程调度和进程切换的系统时间开销为1μs。在T时刻就绪队列中有3个进程P₁、P₂和P₃，其在就绪队列中的等待时间、需要的CPU时间和优先权如下表所示。若优先权值大的进程优先获得CPU，从T时刻起系统开始进程调度，则系统的平均周转时间为( )<table class=\"q-table\"><thead><tr><th>进程名</th><th>等待时间</th><th>需要的CPU时间</th><th>优先权</th></tr></thead><tbody><tr><td>P₁</td><td>30μs</td><td>12μs</td><td>10</td></tr><tr><td>P₂</td><td>15μs</td><td>24μs</td><td>30</td></tr><tr><td>P₃</td><td>18μs</td><td>36μs</td><td>20</td></tr></tbody></table>",
    "options": {
     "A": "54μs",
     "B": "73μs",
@@ -3160,7 +3160,7 @@
   {
    "id": "os_0211",
    "number": 211,
-   "content": "【2022统考真题】进程P₀、P₁、P₂和P₃进入就绪队列的时刻、优先级(值越小优先权越高)及CPU执行时间如下表所示。若系统采用基于优先权的抢占式进程调度算法，则从0ms时刻开始调度，到4个进程都运行结束为止，发生进程调度的总次数为( )<br>进程名 进入就绪队列的时刻 优先级 CPU执行时间<br>P₀ 0ms 15 100ms<br>P₁ 10ms 20 60ms<br>P₂ 10ms 10 20ms<br>P₃ 15ms 6 10ms",
+   "content": "【2022统考真题】进程P₀、P₁、P₂和P₃进入就绪队列的时刻、优先级(值越小优先权越高)及CPU执行时间如下表所示。若系统采用基于优先权的抢占式进程调度算法，则从0ms时刻开始调度，到4个进程都运行结束为止，发生进程调度的总次数为( )<table class=\"q-table\"><thead><tr><th>进程名</th><th>进入就绪队列的时刻</th><th>优先级</th><th>CPU执行时间</th></tr></thead><tbody><tr><td>P₀</td><td>0ms</td><td>15</td><td>100ms</td></tr><tr><td>P₁</td><td>10ms</td><td>20</td><td>60ms</td></tr><tr><td>P₂</td><td>10ms</td><td>10</td><td>20ms</td></tr><tr><td>P₃</td><td>15ms</td><td>6</td><td>10ms</td></tr></tbody></table>",
    "options": {
     "A": "4",
     "B": "5",
@@ -3175,7 +3175,7 @@
   {
    "id": "os_0212",
    "number": 212,
-   "content": "【2023统考真题】进程P₁、P₂和P₃进入就绪队列的时刻、优先级(值越大优先权越高)和CPU执行时间如下表所示。若系统采用基于优先权的抢占式CPU调度算法，从0ms时刻开始进行调度，则P₁、P₂和P₃的平均周转时间为( )<br>进程名 进入就绪队列的时刻 优先级 CPU执行时间<br>P₁ 0ms 1 60ms<br>P₂ 20ms 10 42ms<br>P₃ 30ms 100 13ms",
+   "content": "【2023统考真题】进程P₁、P₂和P₃进入就绪队列的时刻、优先级(值越大优先权越高)和CPU执行时间如下表所示。若系统采用基于优先权的抢占式CPU调度算法，从0ms时刻开始进行调度，则P₁、P₂和P₃的平均周转时间为( )<table class=\"q-table\"><thead><tr><th>进程名</th><th>进入就绪队列的时刻</th><th>优先级</th><th>CPU执行时间</th></tr></thead><tbody><tr><td>P₁</td><td>0ms</td><td>1</td><td>60ms</td></tr><tr><td>P₂</td><td>20ms</td><td>10</td><td>42ms</td></tr><tr><td>P₃</td><td>30ms</td><td>100</td><td>13ms</td></tr></tbody></table>",
    "options": {
     "A": "60ms",
     "B": "61ms",

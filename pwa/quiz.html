@@ -745,7 +745,7 @@
         const optHtml = ['<option value=""></option>']
             .concat(Object.entries(q.options || {}).map(([k, v]) => `<option value="${k}">${k}. ${v}</option>`))
             .join('');
-        const selHtml = `<select class="blank-select" ${locked ? 'disabled' : ''}>${optHtml}</select>`;
+        const selHtml = `<select class="blank-select" ${locked ? 'disabled' : ''} onchange="onMultiBlankPicked()">${optHtml}</select>`;
         return fmtContent(q.content).replace(/<pre\b[\s\S]*?<\/pre>|(?<![A-Za-z0-9_])\(\s*\)/g, m =>
             /^<pre/i.test(m) ? m : selHtml);
     }
@@ -755,6 +755,16 @@
     // ============ 快刷模式：点选项直接判对错 ============
     function onOptionPicked() {
         if (isQuickOn() && !answered[questions[currentIndex].id]) submitAnswer();
+    }
+
+    // 多空题：全部空选满后自动提交（与考试页 pickMultiAnswer 一致，选完即存）
+    function onMultiBlankPicked() {
+        const q = questions[currentIndex];
+        if (!q || answered[q.id]) return;
+        const sels = document.querySelectorAll('.blank-select');
+        if (!sels.length) return;
+        if ([...sels].some(s => !s.value)) return;  // 还有空未选，等用户选满
+        submitAnswer();
     }
 
     // 快刷开关切换时即时显隐提交按钮（common.js 的 toggleQuick 调用）

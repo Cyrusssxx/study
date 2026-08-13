@@ -382,6 +382,33 @@ body {
     border-bottom: 1px solid var(--border);
 }
 
+/* 题干内嵌表格 */
+.question-content table.q-table,
+.item-content table.q-table,
+.daka-content table.q-table {
+    border-collapse: collapse;
+    margin: 10px auto;
+    font-size: 0.88rem;
+    letter-spacing: 0;
+    text-align: center;
+}
+.question-content table.q-table th,
+.item-content table.q-table th,
+.daka-content table.q-table th,
+.question-content table.q-table td,
+.item-content table.q-table td,
+.daka-content table.q-table td {
+    border: 1px solid var(--border);
+    padding: 4px 10px;
+    line-height: 1.5;
+}
+.question-content table.q-table th,
+.item-content table.q-table th,
+.daka-content table.q-table th {
+    background: var(--light);
+    font-weight: 600;
+}
+
 /* 选项 */
 .options-list {
     display: flex;

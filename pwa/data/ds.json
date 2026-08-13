@@ -3353,7 +3353,7 @@
   {
    "id": "ds_0224",
    "number": 224,
-   "content": "某非空二叉树采用顺序存储结构，树中的结点信息按完全二叉树的层次序列依次存放在如下所示的一维数组中，则该二叉树的后序遍历序列为( )。<br>下标　0　1　2　3　4　5　6　7　8　9　10　11　12<br>值　　 a　b　c　d　e　f　g　h",
+   "content": "某非空二叉树采用顺序存储结构，树中的结点信息按完全二叉树的层次序列依次存放在如下所示的一维数组中，则该二叉树的后序遍历序列为( )。<table class=\"q-table\"><tbody><tr><td>下标</td><td>0</td><td>1</td><td>2</td><td>3</td><td>4</td><td>5</td><td>6</td><td>7</td><td>8</td><td>9</td><td>10</td><td>11</td><td>12</td></tr><tr><td>值</td><td>a</td><td>b</td><td>c</td><td>d</td><td>e</td><td>f</td><td>g</td><td>h</td><td></td><td></td><td></td><td></td><td></td></tr></tbody></table>",
    "options": {
     "A": "ghbefhca",
     "B": "gbdehcfa",
@@ -5094,7 +5094,7 @@
   {
    "id": "ds_0340",
    "number": 340,
-   "content": "【2013统考真题】设图的邻接矩阵A如下所示，各顶点的度依次是( )。<br>|0　1　0　1|<br>|0　0　1　1|<br>A=|0　1　0　0|<br>|1　0　0　0|",
+   "content": "【2013统考真题】设图的邻接矩阵A如下所示，各顶点的度依次是( )。<br>A=<table class=\"q-table\"><tbody><tr><td>0</td><td>1</td><td>0</td><td>1</td></tr><tr><td>0</td><td>0</td><td>1</td><td>1</td></tr><tr><td>0</td><td>1</td><td>0</td><td>0</td></tr><tr><td>1</td><td>0</td><td>0</td><td>0</td></tr></tbody></table>",
    "options": {
     "A": "1,2,1,2",
     "B": "2,2,1,1",
