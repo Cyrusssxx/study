@@ -155,9 +155,102 @@
         const ENUM_MARK = '[①②③④⑤⑥⑦⑧⑨⑩⑪⑫]';
         const SPLIT_RE = new RegExp(
             '^(?=' + ENUM_MARK + ')|' +
-            '(?<![\\u4e00-\\u9fffA-Za-z0-9])' +
+            '(?<![\\u4e00-\\u9fffA-Za-z0-9=×*/−—\\-])' +
             '(?=' + ENUM_MARK + '|（\\d+）|\\(\\d+\\)|\\d{1,2}(?:[.、．](?![0-9])))'
         );
+        // ---------- 例题卡片辅助：识别前缀、吸收解答步骤、校正碎 <b> ----------
+        function stripTags(s) { return (s || '').replace(/<[^>]*>/g, ''); }
+
+        function isExampleOpener(pHtml) {
+            const text = stripTags(pHtml).trim();
+            return /^(?:【\s*)?(?:例题\s*(?:[0-9０-９]+|[一二三四五六七八九十])?|经典例题\s*(?:[0-9０-９]+|[①-⑫])?|经典题|典例演算|例\s*[0-9０-９]+)/.test(text);
+        }
+
+        function isSolutionPara(pHtml) {
+            const text = stripTags(pHtml).trim();
+            if (!text) return false;
+            return /^[①②③④⑤⑥⑦⑧⑨⑩⑪⑫]|^（[0-9０-９]+）|^\([0-9０-９]+\)|^解[：:]/.test(text);
+        }
+
+        function fmtExampleText(s) {
+            return (s || '').replace(/<\/?b>/g, '')
+                .replace(/([A-EＡ-Ｅ])\s*([.．、])(?=\s*[^\s<])/g, '<br>$1$2');
+        }
+
+        function buildExampleCard(parts) {
+            const first = parts[0];
+            const nm = stripTags(first).match(/^(?:【\s*)?(例题|经典例题|经典题|典例演算|例)\s*([0-9０-９]+|[一二三四五六七八九十]|[①-⑫])?/);
+            const num = nm ? (nm[1] === '例' ? '例' + (nm[2] || '') : nm[1] + (nm[2] || '')) : '例题';
+            let rest = first.replace(/^\s*<p\b[^>]*>\s*(?:<b[^>]*>\s*)?/, '');
+            const bracketed = /^【/.test(rest);
+            rest = rest.replace(/^(?:【\s*)?(?:例题\s*(?:[0-9０-９]+|[一二三四五六七八九十])?|经典例题\s*(?:[0-9０-９]+|[①-⑫])?|经典题|典例演算|例\s*[0-9０-９]+)\s*/, '');
+            rest = bracketed
+                ? rest.replace(/^[^】]*】/, '')
+                : rest.replace(/^[·:：、]?\s*/, '');
+            rest = rest.replace(/<\/p>\s*$/, '');
+            let year = '';
+            const ym = rest.match(/【[^】]*】/);
+            if (ym) {
+                year = '<span class="note-example-year">' + ym[0] + '</span>';
+                rest = rest.replace(/\s*【[^】]*】/, '');
+            }
+            let expl = '';
+            const explIdx = rest.search(/(?:推理|解析)[：:]/);
+            if (explIdx >= 0) {
+                expl = rest.slice(explIdx);
+                rest = rest.slice(0, explIdx);
+            }
+            const ansify = s => s
+                .replace(/<b>(选[A-EＡ-Ｅ])<\/b>/g, '$1')
+                .replace(/(选)([A-EＡ-Ｅ])/g, '<b class="note-ans">$1$2</b>');
+            const stem = fmtExampleText(rest);
+            expl = ansify(fmtExampleText(expl));
+            const steps = parts.slice(1).map(p => {
+                const s = p.replace(/^\s*<p(?:\s+[^>]*)?>\s*/, '').replace(/\s*<\/p>\s*$/, '');
+                const step = ansify(fmtExampleText(s));
+                if (!step.trim()) return '';
+                return '<p class="note-example-step">' + step + '</p>';
+            }).join('');
+            return '<div class="note-example">'
+                + '<div class="note-example-head"><span class="note-example-num">' + num + '</span>'
+                + year + '</div>'
+                + '<p class="note-example-stem">' + stem + '</p>'
+                + (expl ? '<p class="note-example-expl">' + expl + '</p>' : '')
+                + (steps ? '<div class="note-example-steps">' + steps + '</div>' : '')
+                + '</div>';
+        }
+
+        function wrapExamples(html) {
+            const tokens = [];
+            const pRe = /<p(?:\s+[^>]*)?>[\s\S]*?<\/p>/g;
+            let last = 0, m;
+            while ((m = pRe.exec(html))) {
+                if (m.index > last) tokens.push(html.slice(last, m.index));
+                tokens.push(m[0]);
+                last = m.index + m[0].length;
+            }
+            if (last < html.length) tokens.push(html.slice(last));
+            let out = '';
+            for (let i = 0; i < tokens.length; i++) {
+                const t = tokens[i];
+                const isP = /^<p/.test(t) && /<\/p>$/.test(t);
+                if (isP && isExampleOpener(t)) {
+                    const parts = [t];
+                    let j = i + 1;
+                    while (j < tokens.length && /^<p/.test(tokens[j]) && /<\/p>$/.test(tokens[j])
+                           && isSolutionPara(tokens[j]) && !isExampleOpener(tokens[j])) {
+                        parts.push(tokens[j]);
+                        j++;
+                    }
+                    out += buildExampleCard(parts);
+                    i = j - 1;
+                } else {
+                    out += t;
+                }
+            }
+            return out;
+        }
+
         function fmtNotes(html) {
             if (!html) return html;
             // 1) 内联序号（①②…、1.…、（1）…）单独成行
@@ -165,45 +258,20 @@
                 const inner = pt.slice(3, -4);
                 if (!SPLIT_RE.test(inner)) return pt;
                 const parts = inner.split(SPLIT_RE);
-                let out = '';
+                let out = '', carry = '';
                 parts.forEach((seg, i) => {
+                    seg = carry + seg; carry = '';
                     seg = seg.replace(/^[\s\u3000]+/, '').replace(/[\s\u3000]+$/, '');
+                    if (!seg) return;
+                    // 段尾被切开的未闭合 <b> 移到下一段，避免出现 <b></p> 碎标签
+                    if (/<b>\s*$/.test(seg)) { carry = '<b>'; seg = seg.replace(/<b>\s*$/, ''); }
                     if (!seg) return;
                     out += i === 0 ? '<p>' + seg + '</p>' : '<p class="note-li">' + seg + '</p>';
                 });
-                return out;
+                return out || pt;
             });
-            // 2) 例题段 → 结构化卡片
-            html = html.replace(/<p(?:\s+[^>]*)?>[\s\S]*?<\/p>/g, pt => {
-                const m = pt.match(/^\s*<(?:p\b[^>]*)>\s*(?:<b[^>]*>\s*)?(?:【\s*)?例[　\s]*([0-9０-９]+)(?:\s*】)?\s*(?:<\/b>)?/);
-                if (!m) return pt;
-                const num = '例' + m[1];
-                let rest = pt.replace(/^\s*<p[^>]*>\s*(?:<b[^>]*>\s*)?(?:【\s*)?例[　\s]*[0-9０-９]+(?:\s*】)?\s*(?:<\/b>)?/, '');
-                rest = rest.replace(/<\/p>\s*$/, '');
-                let year = '';
-                const ym = rest.match(/【[^】]*】/);
-                if (ym) {
-                    year = '<span class="note-example-year">' + ym[0] + '</span>';
-                    rest = rest.replace(/\s*【[^】]*】/, '');
-                }
-                let expl = '';
-                const explIdx = rest.search(/(?:推理|解析)[：:]/);
-                if (explIdx >= 0) {
-                    expl = rest.slice(explIdx);
-                    rest = rest.slice(0, explIdx);
-                }
-                rest = rest.replace(/<\/?b>/g, '');
-                const stem = rest.replace(/([A-EＡ-Ｅ])\s*([.．、])(?=\s*[^\s<])/g, '<br>$1$2');
-                expl = expl
-                    .replace(/<b>(选[A-EＡ-Ｅ])<\/b>/g, '$1')
-                    .replace(/(选)([A-EＡ-Ｅ])/g, '<b class="note-ans">$1$2</b>');
-                return '<div class="note-example">'
-                    + '<div class="note-example-head"><span class="note-example-num">' + num + '</span>'
-                    + year + '</div>'
-                    + '<p class="note-example-stem">' + stem + '</p>'
-                    + (expl ? '<p class="note-example-expl">' + expl + '</p>' : '')
-                    + '</div>';
-            });
+            // 2) 例题段 → 结构化卡片（题目与全部解答步骤都包进框里）
+            html = wrapExamples(html);
             // 3) 超长段落按全角分号（；）分行，避免整段挤成一坨（ASCII ; 不受影响）
             html = html.replace(/<p>[\s\S]*?<\/p>/g, pt => {
                 const inner = pt.slice(3, -4);

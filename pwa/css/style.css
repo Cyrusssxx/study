@@ -2516,6 +2516,19 @@ mark {
     font-size: 0.92rem;
 }
 
+.notes-body .note-example-steps {
+    margin-top: 8px;
+    padding-top: 6px;
+    border-top: 1px dashed var(--border);
+}
+
+.notes-body .note-example-step {
+    margin: 6px 0 0;
+    font-size: 0.92rem;
+    padding-left: 1.4em;
+    text-indent: -1.4em;
+}
+
 .notes-body .note-ans {
     color: #d93025;
     font-weight: 700;
