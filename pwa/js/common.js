@@ -157,29 +157,6 @@ function toggleDark() {
     localStorage.setItem('darkMode', isDarkOn() ? '0' : '1');
     applyDark();
     renderDarkSwitch();
-
-// ============ 跳题模式开关（quiz页读取 isAutoNextOn()，答对自动进入下一题） ============
-function isAutoNextOn() {
-    return localStorage.getItem('autoNext') === '1';
-}
-
-function renderAutoNextSwitch() {
-    const btn = document.getElementById('autoNextSwitch');
-    const state = document.getElementById('autoNextState');
-    if (!btn || !state) return;
-    const on = isAutoNextOn();
-    btn.classList.toggle('on', on);
-    state.textContent = on ? '开' : '关';
-}
-
-function toggleAutoNext() {
-    localStorage.setItem('autoNext', isAutoNextOn() ? '0' : '1');
-    renderAutoNextSwitch();
-    // quiz页定义此钩子：切换后即时显隐提交按钮
-    if (typeof onAutoNextModeChange === 'function') onAutoNextModeChange();
-}
-
-renderAutoNextSwitch();
 }
 
 renderDarkSwitch();

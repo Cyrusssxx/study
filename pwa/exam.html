@@ -304,7 +304,7 @@
         let multiTpl = '';
         if (isMulti) {
             const optHtml = ['<option value=""></option>']
-                .concat(Object.keys(q.options || {}).map(k => `<option value="${k}">${k}</option>`))
+                .concat(Object.entries(q.options || {}).map(([k, v]) => `<option value="${k}">${k}. ${v}</option>`))
                 .join('');
             const selHtml = `<select class="blank-select" onchange="pickMultiAnswer()">${optHtml}</select>`;
             multiTpl = fmtContent(q.content).replace(/<pre\b[\s\S]*?<\/pre>|(?<![A-Za-z0-9_])\(\s*\)/g, m =>

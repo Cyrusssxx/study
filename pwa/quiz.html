@@ -743,7 +743,7 @@
     // 多空题：把题干里每个 ( ) 替换成 A-D 下拉选择（跳过 <pre> 代码块与 malloc() 等函数调用）
     function fmtMultiContent(q, locked) {
         const optHtml = ['<option value=""></option>']
-            .concat(Object.keys(q.options || {}).map(k => `<option value="${k}">${k}</option>`))
+            .concat(Object.entries(q.options || {}).map(([k, v]) => `<option value="${k}">${k}. ${v}</option>`))
             .join('');
         const selHtml = `<select class="blank-select" ${locked ? 'disabled' : ''}>${optHtml}</select>`;
         return fmtContent(q.content).replace(/<pre\b[\s\S]*?<\/pre>|(?<![A-Za-z0-9_])\(\s*\)/g, m =>
