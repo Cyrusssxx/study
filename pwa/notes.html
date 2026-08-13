@@ -291,6 +291,38 @@
                 });
                 return out;
             });
+            // 4) 长代码片段（≥50字符）提升为独立代码块，短代码保持内联；段首尾空白修剪。
+            html = html.replace(/<p[^>]*>[\s\S]*?<\/p>|<li>[\s\S]*?<\/li>/g, seg => {
+                const m = seg.match(/^<([a-z]+)([^>]*)>/);
+                if (!m) return seg;
+                const tag = m[1], open = m[0], close = '</' + tag + '>';
+                const inner = seg.slice(open.length, seg.length - close.length);
+                if (tag === 'li' && /<(?:ul|ol|li)\b/.test(inner)) return seg;
+                if (!/<code>[\s\S]*?<\/code>/.test(inner)) return seg;
+                const pieces = inner.split(/(<code>[\s\S]*?<\/code>)/);
+                let changed = false;
+                const parts = pieces.map(piece => {
+                    const cm = piece.match(/^<code>([\s\S]*?)<\/code>$/);
+                    if (!cm) return piece;
+                    if (cm[1].replace(/<[^>]*>/g, '').length < 50) return piece;
+                    changed = true;
+                    return '\u0000' + cm[1] + '\u0001';
+                });
+                if (!changed) return seg;
+                let out = '', buf = '';
+                const flush = () => {
+                    let t = buf.replace(/^[\s\u3000]+|[\s\u3000]+$/g, '');
+                    if (/<\/div>$/.test(out)) t = t.replace(/^[。；，、：:；]+/, '');
+                    if (t) out += open + t + close;
+                    buf = '';
+                };
+                for (const piece of parts) {
+                    if (piece.startsWith('\u0000')) { flush(); out += '<div class="code-block">' + piece.slice(1, -1) + '</div>'; }
+                    else buf += piece;
+                }
+                flush();
+                return out;
+            });
             return html;
         }
 

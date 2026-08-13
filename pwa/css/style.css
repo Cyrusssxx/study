@@ -2447,6 +2447,16 @@ mark {
     margin: 12px 0;
 }
 
+.notes-body code {
+    background: var(--light);
+    padding: 1px 6px;
+    border-radius: 4px;
+    font-family: Consolas, 'Courier New', monospace;
+    font-size: 0.85em;
+    white-space: pre-wrap;
+    word-break: break-all;
+}
+
 .notes-body ul, .notes-body ol {
     margin: 12px 0;
     padding-left: 24px;
