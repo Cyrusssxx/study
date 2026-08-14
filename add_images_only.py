@@ -4,8 +4,10 @@ import json, sys, os, glob
 if sys.stdout.encoding != 'utf-8':
     sys.stdout = open(sys.stdout.fileno(), mode='w', encoding='utf-8', buffering=1)
 
-IMG_DIR = r'D:/ai code/408-quiz-app/data/notes/images'
-NOTES_DIR = r'D:/ai code/408-quiz-app/data/notes'
+ROOT = os.path.dirname(os.path.abspath(__file__))
+# notes 唯一真源现已统一到 pwa/data/notes（见 项目评估/单源改造）
+NOTES_DIR = os.path.join(ROOT, 'pwa', 'data', 'notes')
+IMG_DIR = os.path.join(NOTES_DIR, 'images')
 
 for subj in ['cn', 'os']:
     img_dir = os.path.join(IMG_DIR, subj)

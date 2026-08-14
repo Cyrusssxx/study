@@ -1,15 +1,20 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-import json, sys
+import json, sys, os
 if sys.stdout.encoding != 'utf-8':
     sys.stdout = open(sys.stdout.fileno(), mode='w', encoding='utf-8', buffering=1)
 
+ROOT = os.path.dirname(os.path.abspath(__file__))
+# notes 唯一真源现已统一到 pwa/data/notes
+NOTES_DIR = os.path.join(ROOT, 'pwa', 'data', 'notes')
+QDIR = os.path.join(ROOT, 'pwa', 'data')
+
 # 读取题目数据
-q_data = json.load(open(r'D:/ai code/408-quiz-app/pwa/data/co.json', 'r', encoding='utf-8'))
+q_data = json.load(open(os.path.join(QDIR, 'co.json'), 'r', encoding='utf-8'))
 questions = q_data.get('questions', q_data) if isinstance(q_data, dict) else q_data
 
 # 读取笔记数据
-n_data = json.load(open(r'D:/ai code/408-quiz-app/pwa/data/notes/co_notes.json', 'r', encoding='utf-8'))
+n_data = json.load(open(os.path.join(NOTES_DIR, 'co_notes.json'), 'r', encoding='utf-8'))
 
 # 收集题目中的所有 section
 q_sections = set()
