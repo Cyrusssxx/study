@@ -1,8 +1,10 @@
 /* 408刷题 PWA - Service Worker
  * 预缓存全部页面/样式/脚本/题库/图标，安装后完全离线可用。
- * 升级题库或代码后：改 CACHE_VER 版本号即可让客户端自动换新缓存。
+ * CACHE_VER 由构建脚本 tools/build_sw.py 依据 PRECACHE 资源内容自动算哈希生成，
+ * 预缓存资源（页面/样式/题库/图标）任意改动后重新构建即可让客户端自动换新缓存，
+ * 无需手动改版本号。手动编辑本行会被下次构建覆盖。
  */
-const CACHE_VER = 'quiz408-v71';
+const CACHE_VER = 'quiz408-f345543752';
 
 const PRECACHE = [
     'index.html',
