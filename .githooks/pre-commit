@@ -1,0 +1,33 @@
+#!/usr/bin/env bash
+# pre-commit 钩子：提交前自动重建 PWA 构建产物，保证进仓库的一定是最新。
+#
+# 作用：
+#   1) tools/build_sw.py  —— 按预缓存资源内容重算 CACHE_VER 哈希写入 pwa/sw.js，
+#      避免“改了题库/页面却忘跑构建、客户端长期用旧缓存”的问题。
+#   2) tools/sync_questions.py --apply —— 以 pwa/data 为真源刷新 data/questions 镜像
+#      （gitignored 构建产物，供静态服务使用，不进版本库）。
+# 若重建使 pwa/sw.js 变化，自动重新加入暂存区，使本次提交包含最新哈希。
+set -e
+
+ROOT="$(git rev-parse --show-toplevel)"
+
+# 解析 python 解释器：优先 python3，其次 python，再回退 WorkBuddy 托管路径
+PY=""
+if command -v python3 >/dev/null 2>&1; then
+  PY=python3
+elif command -v python >/dev/null 2>&1; then
+  PY=python
+else
+  PY="C:/Users/cjx/.workbuddy/binaries/python/versions/3.13.12/python.exe"
+fi
+
+# 1) 刷新题库镜像（gitignored，不影响提交内容）
+"$PY" "$ROOT/tools/sync_questions.py" --apply >/dev/null
+
+# 2) 重建 sw.js 的 CACHE_VER 哈希（内容不变则幂等、无改动）
+"$PY" "$ROOT/tools/build_sw.py"
+
+# 3) 若 sw.js 因重建发生变化，重新加入暂存区
+if ! git diff --quiet -- "$ROOT/pwa/sw.js"; then
+  git add "$ROOT/pwa/sw.js"
+fi
