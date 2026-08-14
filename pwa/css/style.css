@@ -3564,6 +3564,43 @@ a.chapter-badge-link:hover {
     opacity: 0.3;
 }
 
+/* 行级批注（复用笔记页 line-anno 样式，缩进跟随节点行） */
+.map-anno-tip {
+    color: var(--text-light);
+    font-size: 0.82rem;
+    margin: 2px 0 0;
+}
+
+.ol-anno-btn {
+    border: none;
+    background: transparent;
+    cursor: pointer;
+    font-size: 0.82rem;
+    line-height: 1;
+    padding: 0 3px;
+    opacity: 0.4;
+    flex-shrink: 0;
+    align-self: center;
+}
+
+.ol-anno-btn:hover {
+    opacity: 1;
+}
+
+.ol-anno-btn.has {
+    opacity: 1;
+    color: var(--primary);
+}
+
+.ol-node:hover .ol-anno-btn {
+    opacity: 0.85;
+}
+
+#mapRoot .line-anno-block,
+#mapRoot .line-anno-editor {
+    margin-left: calc(var(--d, 0) * 20px + 10px);
+}
+
 /* 暗色模式适配 */
 .dark .ol-node.hit .ol-name {
     background: #6b4f00;
@@ -3600,7 +3637,14 @@ a.chapter-badge-link:hover {
     .ol-nav-fab {
         display: block;
     }
-    .ol-node {
+.ol-node {
         margin-left: calc(var(--d, 0) * 12px);
+    }
+    .ol-anno-btn {
+        opacity: 1;
+    }
+    #mapRoot .line-anno-block,
+    #mapRoot .line-anno-editor {
+        margin-left: calc(var(--d, 0) * 12px + 8px);
     }
 }

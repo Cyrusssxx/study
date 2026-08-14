@@ -40,6 +40,7 @@
         <div class="map-header">
             <h1>🗺️ 计组强化思维导图</h1>
             <p class="notes-source" id="mapSubtitle">加载中...</p>
+            <p class="map-anno-tip">📝 每个知识点行尾的 📝 可添加批注（支持 Ctrl+V 粘贴截图，与笔记页同款）</p>
         </div>
         <div class="map-toolbar">
             <input class="search-input map-search" id="mapSearch" type="search"
@@ -65,6 +66,12 @@
         let matchIds = new Set();
         let forcedOpen = new Set();
         let olNavCollapsed = localStorage.getItem('comap_nav_collapsed') === '1';
+
+        // 行级批注（复用笔记界面批注方式）：按节点 id 锚定，走 /api/note 持久化
+        let annoItems = [];        // [{id, text, images}]
+        let annoSaveTimer = null;
+        let annoEditor = null;     // {id, el, images}
+        const annoKey = () => SUBJECT + '_map_anno';
 
         function esc(s) {
             return String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
@@ -96,17 +103,20 @@
             let inner;
             const isLeaf = !(node.c || []).length;
             const dot = isLeaf ? '<span class="ol-dot"></span>' : '';
+            const hasAnno = !!annoOf(node._id);
+            const annoBtn = `<button type="button" class="ol-anno-btn${hasAnno ? ' has' : ''}" title="批注（可粘贴截图）" onclick="openAnnoEditor('${node._id}')">📝</button>`;
             if (segs.length > 1) {
                 cls += ' multi';
                 inner = `<div class="ol-main">${dot}<span class="ol-name">${esc(node.n)}</span>
-                    ${node.tag ? `<span class="ol-tag">${esc(node.tag)}</span>` : ''}</div>
+                    ${node.tag ? `<span class="ol-tag">${esc(node.tag)}</span>` : ''}${annoBtn}</div>
                     <div class="ol-detail">${segs.map(s => `<div class="ol-dline">${esc(s)}</div>`).join('')}</div>`;
             } else {
                 inner = `${dot}<span class="ol-name">${esc(node.n)}</span>
                     ${node.tag ? `<span class="ol-tag">${esc(node.tag)}</span>` : ''}
-                    ${node.d ? `<span class="ol-detail">${esc(node.d)}</span>` : ''}`;
+                    ${node.d ? `<span class="ol-detail">${esc(node.d)}</span>` : ''}${annoBtn}`;
             }
             return `<div class="${cls}" style="--d:${depth}" data-id="${node._id}">${inner}</div>`
+                + annoBlockHtml(node._id, depth)
                 + (node.c || []).map(k => renderNode(k, depth + 1)).join('');
         }
 
@@ -215,10 +225,185 @@
                 MAP.roots.forEach((r, i) => { r._idx = i; assignIds(r, null); });
                 document.getElementById('mapSubtitle').textContent = (MAP.subtitle ? MAP.subtitle + ' · ' : '') + `共 ${totalNodes} 个知识点`;
                 renderAll();
+                loadAnnos();
             } catch (err) {
                 document.getElementById('mapSubtitle').textContent = '导图数据加载失败：' + err.message;
                 document.getElementById('mapRoot').innerHTML = '<div class="map-empty">加载失败，请检查网络后刷新。</div>';
             }
+        }
+
+        // ==================== 行级批注（与笔记页同款） ====================
+
+        function annoOf(id) {
+            return annoItems.find(a => a.id === id);
+        }
+
+        // 已保存批注条：📝 + 文字/贴图 + 改/删，常驻显示在节点行下方
+        function annoBlockHtml(id, depth) {
+            const item = annoOf(id);
+            if (!item) return '';
+            const imgs = (item.images || []).map((src, i) =>
+                `<img class="line-anno-img" src="${src}" alt="批注图片" onclick="viewAnnoImage('${id}', ${i})">`).join('');
+            return `<div class="line-anno line-anno-block" data-id="${CSS.escape(id)}" style="--d:${depth}">
+                <span class="line-anno-icon">📝</span>
+                <div class="line-anno-body">
+                    ${item.text ? `<div class="line-anno-text">${esc(item.text)}</div>` : ''}
+                    ${imgs}
+                </div>
+                <div class="line-anno-ops">
+                    <button type="button" class="line-anno-op" onclick="openAnnoEditor('${id}')">改</button>
+                    <button type="button" class="line-anno-op line-anno-del" onclick="delAnno('${id}')">删</button>
+                </div>
+            </div>`;
+        }
+
+        function annoNodeEl(id) {
+            return document.querySelector(`.ol-node[data-id="${CSS.escape(id)}"]`);
+        }
+        function annoBlockEl(id) {
+            return document.querySelector(`.line-anno-block[data-id="${CSS.escape(id)}"]`);
+        }
+
+        function openAnnoEditor(id) {
+            closeAnnoEditor();
+            const row = annoNodeEl(id);
+            if (!row) return;
+            const item = annoOf(id);
+            const el = document.createElement('div');
+            el.className = 'line-anno line-anno-editor';
+            el.style.setProperty('--d', row.style.getPropertyValue('--d') || 0);
+            el.innerHTML = `
+                <textarea class="note-input line-anno-input" placeholder="写批注，可 Ctrl+V 粘贴截图…"></textarea>
+                <div class="note-images line-anno-editor-imgs"></div>
+                <div class="line-anno-bar">
+                    <button type="button" class="btn btn-primary line-anno-save">保存</button>
+                    <button type="button" class="btn btn-secondary line-anno-cancel">取消</button>
+                </div>`;
+            annoEditor = { id, el, images: item ? (item.images || []).slice() : [] };
+            const blk = annoBlockEl(id);
+            if (blk) blk.style.display = 'none';
+            row.insertAdjacentElement('afterend', el);
+            const input = el.querySelector('.line-anno-input');
+            input.value = item ? (item.text || '') : '';
+            renderEditorImages();
+            input.addEventListener('paste', pasteAnnoImage);
+            el.querySelector('.line-anno-save').addEventListener('click', saveAnnoEditor);
+            el.querySelector('.line-anno-cancel').addEventListener('click', () => closeAnnoEditor());
+            input.focus();
+        }
+
+        function closeAnnoEditor() {
+            if (!annoEditor) return;
+            const blk = annoBlockEl(annoEditor.id);
+            if (blk) blk.style.display = '';
+            annoEditor.el.remove();
+            annoEditor = null;
+        }
+
+        function renderEditorImages() {
+            if (!annoEditor) return;
+            const box = annoEditor.el.querySelector('.line-anno-editor-imgs');
+            box.innerHTML = annoEditor.images.map((src, i) => `
+                <div class="note-img-item">
+                    <img src="${src}" alt="批注图片">
+                    <span class="note-img-del" data-i="${i}" title="删除图片">×</span>
+                </div>`).join('');
+            box.querySelectorAll('.note-img-del').forEach(d => d.onclick = () => {
+                annoEditor.images.splice(+d.dataset.i, 1);
+                renderEditorImages();
+            });
+        }
+
+        // 压缩成最长边1200px的JPEG，控制入库体积（透明底先铺白）
+        function compressImage(file) {
+            return new Promise((resolve, reject) => {
+                const img = new Image();
+                img.onload = () => {
+                    const scale = Math.min(1, 1200 / Math.max(img.width, img.height));
+                    const canvas = document.createElement('canvas');
+                    canvas.width = Math.round(img.width * scale);
+                    canvas.height = Math.round(img.height * scale);
+                    const ctx = canvas.getContext('2d');
+                    ctx.fillStyle = '#fff';
+                    ctx.fillRect(0, 0, canvas.width, canvas.height);
+                    ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+                    URL.revokeObjectURL(img.src);
+                    resolve(canvas.toDataURL('image/jpeg', 0.85));
+                };
+                img.onerror = () => reject(new Error('图片读取失败'));
+                img.src = URL.createObjectURL(file);
+            });
+        }
+
+        async function pasteAnnoImage(event) {
+            if (!annoEditor) return;
+            const files = [...(event.clipboardData ? event.clipboardData.items : [])]
+                .filter(it => it.type.startsWith('image/'))
+                .map(it => it.getAsFile())
+                .filter(Boolean);
+            if (!files.length) return;
+            event.preventDefault();
+            try {
+                for (const f of files) annoEditor.images.push(await compressImage(f));
+            } catch (e) { alert(e.message); }
+            renderEditorImages();
+        }
+
+        function viewAnnoImage(id, i) {
+            const item = annoOf(id);
+            if (!item || !item.images) return;
+            const src = item.images[i];
+            if (!src) return;
+            const ov = document.createElement('div');
+            ov.className = 'img-lightbox';
+            ov.innerHTML = `<img src="${src}" alt="批注图片">`;
+            ov.onclick = () => ov.remove();
+            document.body.appendChild(ov);
+        }
+
+        function saveAnnoEditor() {
+            if (!annoEditor) return;
+            const id = annoEditor.id;
+            const text = annoEditor.el.querySelector('.line-anno-input').value.trim();
+            const images = annoEditor.images;
+            annoItems = annoItems.filter(a => a.id !== id);
+            if (text || images.length) annoItems.push({ id, text, images });
+            annoEditor.el.remove();
+            annoEditor = null;
+            renderAll();
+            saveAnnos();
+        }
+
+        function delAnno(id) {
+            if (!confirm('删除这条批注？')) return;
+            annoItems = annoItems.filter(a => a.id !== id);
+            renderAll();
+            saveAnnos();
+        }
+
+        function saveAnnos() {
+            clearTimeout(annoSaveTimer);
+            annoSaveTimer = setTimeout(async () => {
+                try {
+                    await api('/api/note/' + encodeURIComponent(annoKey()), {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ content: JSON.stringify(annoItems), images: [] })
+                    });
+                } catch (e) { alert('批注保存失败: ' + e.message); }
+            }, 300);
+        }
+
+        async function loadAnnos() {
+            let items = [];
+            try {
+                const resp = await api('/api/note/' + encodeURIComponent(annoKey()));
+                const d = await resp.json();
+                items = d.note ? JSON.parse(d.note) : [];
+            } catch (e) { return; }
+            if (!Array.isArray(items) || !items.length) return;
+            annoItems = items.filter(it => it && typeof it.id === 'string');
+            renderAll();
         }
 
         loadMap();
