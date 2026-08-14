@@ -380,11 +380,17 @@
         function gotoNode(target) {
             const el = document.getElementById(target) || document.querySelector(`[data-id="${target}"]`);
             if (el) {
-                el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                scrollToEl(el);
                 el.classList.add('map-flash');
                 setTimeout(() => el.classList.remove('map-flash'), 1500);
             }
             closeOlNav();
+        }
+
+        // 手动定位：避开顶部 sticky 导航栏（约60px），保证标题可见
+        function scrollToEl(el) {
+            const top = el.getBoundingClientRect().top + window.scrollY - 76;
+            window.scrollTo({ top: Math.max(0, top), behavior: 'smooth' });
         }
 
         // ==================== 搜索 ====================

@@ -159,7 +159,8 @@
         const det = document.getElementById('group-' + idx);
         if (det) {
             det.open = !det.open;
-            det.scrollIntoView({behavior: 'smooth', block: 'start'});
+            void det.offsetHeight;
+            scrollToEl(det);
         }
     }
 
@@ -167,12 +168,21 @@
         const card = document.getElementById(target);
         if (card) {
             const det = card.closest('details.daka-group');
-            if (det && !det.open) det.open = true;
-            card.scrollIntoView({behavior: 'smooth', block: 'start'});
+            if (det && !det.open) {
+                det.open = true;
+                void det.offsetHeight;
+            }
+            scrollToEl(card);
             card.classList.add('map-flash');
             setTimeout(() => card.classList.remove('map-flash'), 1500);
         }
         closeDakaNav();
+    }
+
+    // 手动定位：避开顶部 sticky 导航栏（约60px），保证标题可见
+    function scrollToEl(el) {
+        const top = el.getBoundingClientRect().top + window.scrollY - 76;
+        window.scrollTo({ top: Math.max(0, top), behavior: 'smooth' });
     }
 
     function badgeClass(p) {
