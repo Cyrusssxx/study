@@ -4,7 +4,7 @@
 仅作用于 <p class="paragraph"> 内部。
   1. ① ② ③ … 枚举 → <ol>（≥2 个、按序、前为分隔符）
   2. <strong>术语</strong>：…；<strong>… 并列要点 → <ul>（≥3 个）
-  3. 超长段（纯文本 ≥300 字）且无可列表化结构 → 按句子切短段
+  3. 超长段（纯文本 ≥200 字）且无可列表化结构 → 按句子切短段
 
 切分时用「内联标签栈携带」方式：跨段时先闭合再重开，保证每段标签平衡。
 """
@@ -16,7 +16,7 @@ import sys
 CIRCLED = '①②③④⑤⑥⑦⑧⑨'
 LIST_MIN_CIRCLE = 2
 LIST_MIN_STRONG = 3
-SPLIT_LEN = 300
+SPLIT_LEN = 200
 
 INLINE_TAGS = {
     'strong', 'b', 'em', 'i', 'u', 'sub', 'sup', 'code', 'span',
@@ -246,22 +246,54 @@ def build_ul_from_strongs(inner, strongs):
     return parts
 
 
+def _balanced_split_html(html):
+    """对单个仍过长(>=SPLIT_LEN)的段落，按 clause 标点（，、；：）在中间点平衡切分。
+    处理"一长串句子"（整段只有一个超长句、无句末标点）的情况。"""
+    toks = tokenize(html)
+    if len(plain_text(toks)) < SPLIT_LEN:
+        return [html]
+    # 建立 (idx,ci) -> 全局文本偏移，收集 clause 切分点
+    off_map = {}
+    bounds = []
+    text_off = 0
+    for idx, (kind, name, raw) in enumerate(toks):
+        if kind == 'text':
+            for ci, ch in enumerate(raw):
+                off_map[(idx, ci)] = text_off + ci
+                if ch in '，、；：':
+                    bounds.append((idx, ci))
+            text_off += len(raw)
+    if not bounds:
+        return [html]  # 无任何可切分标点，无法再拆
+    total = len(plain_text(toks))
+    mid = total / 2
+    best = min(bounds, key=lambda b: abs(off_map[b] - mid))
+    parts = split_at_bounds(toks, {best}, after_char=True)
+    res = []
+    for p in parts:
+        p = p.strip()
+        if p:
+            res.extend(_balanced_split_html(p))
+    return res
+
+
 def split_long(tokens):
+    # 1) 主切分：句末标点 。；！？（标点留上段）
     boundaries = set()
     for idx, (kind, name, raw) in enumerate(tokens):
         if kind == 'text':
             for ci, ch in enumerate(raw):
                 if ch in '。；！？':
                     boundaries.add((idx, ci))
-    if not boundaries:
-        return ['<p class="paragraph">%s</p>' % render(tokens)]
-    segments = split_at_bounds(tokens, boundaries, after_char=True)
+    if boundaries:
+        segments = split_at_bounds(tokens, boundaries, after_char=True)
+    else:
+        segments = [render(tokens)]
+    # 2) 对仍过长(>=SPLIT_LEN)的段，按 clause 标点平衡切分（解决"一长串句子"）
     parts = []
     for seg in segments:
-        t = seg.strip()
-        if t:
-            parts.append('<p class="paragraph">%s</p>' % t)
-    return parts
+        parts.extend(_balanced_split_html(seg))
+    return ['<p class="paragraph">%s</p>' % p for p in parts if p.strip()]
 
 
 def process_paragraph(inner):
