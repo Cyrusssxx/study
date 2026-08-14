@@ -1,0 +1,16 @@
+# 统一文本文件行尾为 LF，消除 Windows/Mac 间 CRLF 噪声（曾导致整库 git status 失真）
+* text=auto eol=lf
+
+# 显式二进制，不参与行尾转换、不参与文本 diff
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.ico binary
+*.webp binary
+*.woff binary
+*.woff2 binary
+*.ttf binary
+*.eot binary
+*.sqlite binary
+*.db binary
