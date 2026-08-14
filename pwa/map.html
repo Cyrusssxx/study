@@ -40,7 +40,7 @@
         <div class="map-header">
             <h1>🗺️ 计组强化思维导图</h1>
             <p class="notes-source" id="mapSubtitle">加载中...</p>
-            <p class="map-anno-tip">📝 每个知识点行尾的 📝 可添加批注（支持 Ctrl+V 粘贴截图，与笔记页同款）</p>
+            <p class="map-anno-tip">📝 选中文字会弹出工具条：可划词高亮（黄/绿/蓝/粉）或点「📝批注」添加批注（可 Ctrl+V 粘贴截图，与笔记页同款）</p>
         </div>
         <div class="map-toolbar">
             <input class="search-input map-search" id="mapSearch" type="search"
@@ -67,11 +67,198 @@
         let forcedOpen = new Set();
         let olNavCollapsed = localStorage.getItem('comap_nav_collapsed') === '1';
 
-        // 行级批注（复用笔记界面批注方式）：按节点 id 锚定，走 /api/note 持久化
+        // 行级批注 + 划词高亮（复用笔记界面批注方式）：批注按节点 id 锚定，高亮按节内字符偏移，均走 /api/note 持久化
         let annoItems = [];        // [{id, text, images}]
         let annoSaveTimer = null;
         let annoEditor = null;     // {id, el, images}
         const annoKey = () => SUBJECT + '_map_anno';
+        let hlItems = [];          // [{sec, start, end, color, text}]
+        let hlSaveTimer = null;
+        let hlToolbar = null;
+        const hlKey = () => SUBJECT + '_map_hl';
+
+        // 批注块混排在大纲里，高亮的偏移/文本计算一律跳过批注子树，保证批注增删不影响高亮定位
+        function inAnno(n) {
+            const el = n.nodeType === 1 ? n : n.parentElement;
+            return !!(el && el.closest('.line-anno'));
+        }
+        const hlWalkFilter = { acceptNode: n => inAnno(n) ? NodeFilter.FILTER_REJECT : NodeFilter.FILTER_ACCEPT };
+
+        function cleanTextOf(root) {
+            const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, hlWalkFilter);
+            let t = '', node;
+            while ((node = walker.nextNode())) t += node.nodeValue;
+            return t;
+        }
+
+        function offsetInRoot(root, container, offset) {
+            const target = container.nodeType === 3 ? container
+                : (container.childNodes[offset] || null);
+            const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, hlWalkFilter);
+            let pos = 0, node;
+            while ((node = walker.nextNode())) {
+                if (container.nodeType === 3) {
+                    if (node === container) return pos + offset;
+                } else if (target && (target === node || (target.contains && target.contains(node)))) {
+                    return pos;
+                }
+                pos += node.nodeValue.length;
+            }
+            return pos;
+        }
+
+        function wrapRange(root, start, end, cls, ds) {
+            const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, hlWalkFilter);
+            let pos = 0, node;
+            const pieces = [];
+            while ((node = walker.nextNode())) {
+                const len = node.nodeValue.length;
+                const ns = pos, ne = pos + len;
+                pos = ne;
+                if (ne <= start || ns >= end) continue;
+                pieces.push({ node, s: Math.max(start, ns) - ns, e: Math.min(end, ne) - ns });
+            }
+            for (let i = pieces.length - 1; i >= 0; i--) {
+                const p = pieces[i];
+                const range = document.createRange();
+                range.setStart(p.node, p.s);
+                range.setEnd(p.node, p.e);
+                const span = document.createElement('span');
+                span.className = cls;
+                if (ds) { span.dataset.start = ds.start; span.dataset.color = ds.color; }
+                range.surroundContents(span);
+            }
+        }
+
+        function bodyOf(n) {
+            const el = n.nodeType === 1 ? n : n.parentElement;
+            return el ? el.closest('.ol-sec-body') : null;
+        }
+
+        // ==================== 划词工具条：高亮 + 📝批注 ====================
+        const HL_COLORS = ['yellow', 'green', 'blue', 'pink'];
+
+        function initHl() {
+            const root = document.getElementById('mapRoot');
+            root.addEventListener('click', e => {
+                const span = e.target.closest && e.target.closest('.note-hl');
+                if (span) { e.stopPropagation(); removeHighlight(span); }
+            });
+            root.addEventListener('mouseup', () => setTimeout(showHlToolbar, 0));
+            document.addEventListener('mousedown', e => {
+                if (hlToolbar && !hlToolbar.contains(e.target)) hideHlToolbar();
+            });
+        }
+
+        function hideHlToolbar() { if (hlToolbar) { hlToolbar.remove(); hlToolbar = null; } }
+
+        function showHlToolbar() {
+            const sel = window.getSelection();
+            if (!sel || sel.isCollapsed || !sel.rangeCount) { hideHlToolbar(); return; }
+            const range = sel.getRangeAt(0);
+            const body = bodyOf(range.startContainer);
+            if (!body || bodyOf(range.endContainer) !== body) { hideHlToolbar(); return; }
+            if (inAnno(range.startContainer) || inAnno(range.endContainer)) { hideHlToolbar(); return; }
+            hideHlToolbar();
+            const rect = range.getBoundingClientRect();
+            hlToolbar = document.createElement('div');
+            hlToolbar.className = 'hl-toolbar';
+            hlToolbar.innerHTML = HL_COLORS.map(c =>
+                `<span class="hl-dot hl-dot-${c}" data-color="${c}" title="${c}"></span>`).join('') +
+                '<span class="hl-anno-btn" title="批注此行">📝批注</span>' +
+                '<span class="hl-cancel" title="取消高亮">✕</span>';
+            document.body.appendChild(hlToolbar);
+            hlToolbar.style.top = (window.scrollY + rect.top - hlToolbar.offsetHeight - 8) + 'px';
+            hlToolbar.style.left = (window.scrollX + rect.left) + 'px';
+            hlToolbar.querySelectorAll('.hl-dot').forEach(dot =>
+                dot.addEventListener('click', () => applyHighlight(body, range, dot.dataset.color)));
+            hlToolbar.querySelector('.hl-anno-btn').addEventListener('click', () => {
+                const el = range.startContainer.nodeType === 1
+                    ? range.startContainer : range.startContainer.parentElement;
+                const row = el && el.closest('.ol-node');
+                window.getSelection().removeAllRanges();
+                hideHlToolbar();
+                if (!row) return;
+                openAnnoEditor(row.dataset.id);
+            });
+            hlToolbar.querySelector('.hl-cancel').addEventListener('click', () => {
+                const span = (range.startContainer.parentElement || range.startContainer).closest
+                    ? (range.startContainer.parentElement || range.startContainer).closest('.note-hl') : null;
+                if (span) removeHighlight(span);
+                hideHlToolbar();
+            });
+        }
+
+        function applyHighlight(body, range, color) {
+            const start = offsetInRoot(body, range.startContainer, range.startOffset);
+            const end = offsetInRoot(body, range.endContainer, range.endOffset);
+            if (end <= start) { hideHlToolbar(); return; }
+            const text = range.toString();
+            const sec = body.parentElement.id;
+            hlItems.push({ sec, start, end, color, text });
+            wrapRange(body, start, end, 'note-hl note-hl-' + color, { start, color });
+            window.getSelection().removeAllRanges();
+            hideHlToolbar();
+            saveHl();
+        }
+
+        function removeHighlight(span) {
+            const sec = span.closest('.ol-sec-body').parentElement.id;
+            const start = +span.dataset.start;
+            const color = span.dataset.color;
+            hlItems = hlItems.filter(it => !(it.sec === sec && it.start === start && it.color === color));
+            const parent = span.parentNode;
+            while (span.firstChild) parent.insertBefore(span.firstChild, span);
+            parent.removeChild(span);
+            parent.normalize();
+            saveHl();
+        }
+
+        function saveHl() {
+            clearTimeout(hlSaveTimer);
+            hlSaveTimer = setTimeout(async () => {
+                try {
+                    await api('/api/note/' + encodeURIComponent(hlKey()), {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ content: JSON.stringify(hlItems), images: [] })
+                    });
+                } catch (e) { /* 高亮保存失败静默，不阻断阅读 */ }
+            }, 500);
+        }
+
+        // 重渲染后按偏移重新上色（导图内容静态，偏移稳定）
+        function reapplyHighlights() {
+            document.querySelectorAll('.ol-sec').forEach(section => {
+                const sec = section.id;
+                const list = hlItems.filter(it => it.sec === sec);
+                if (!list.length) return;
+                const body = section.querySelector('.ol-sec-body');
+                const full = cleanTextOf(body);
+                list.sort((a, b) => a.start - b.start);
+                for (const it of list) {
+                    let { start, end } = it;
+                    if (full.slice(start, end) !== it.text) {
+                        const idx = full.indexOf(it.text);
+                        if (idx < 0 || !it.text) continue;
+                        start = idx; end = idx + it.text.length;
+                    }
+                    wrapRange(body, start, end, 'note-hl note-hl-' + it.color, { start, color: it.color });
+                }
+            });
+        }
+
+        async function loadHighlights() {
+            let items = [];
+            try {
+                const resp = await api('/api/note/' + encodeURIComponent(hlKey()));
+                const d = await resp.json();
+                items = d.note ? JSON.parse(d.note) : [];
+            } catch (e) { return; }
+            if (!Array.isArray(items) || !items.length) return;
+            hlItems = items.filter(it => it && typeof it.sec === 'string');
+            reapplyHighlights();
+        }
 
         function esc(s) {
             return String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
@@ -103,17 +290,15 @@
             let inner;
             const isLeaf = !(node.c || []).length;
             const dot = isLeaf ? '<span class="ol-dot"></span>' : '';
-            const hasAnno = !!annoOf(node._id);
-            const annoBtn = `<button type="button" class="ol-anno-btn${hasAnno ? ' has' : ''}" title="批注（可粘贴截图）" onclick="openAnnoEditor('${node._id}')">📝</button>`;
             if (segs.length > 1) {
                 cls += ' multi';
                 inner = `<div class="ol-main">${dot}<span class="ol-name">${esc(node.n)}</span>
-                    ${node.tag ? `<span class="ol-tag">${esc(node.tag)}</span>` : ''}${annoBtn}</div>
+                    ${node.tag ? `<span class="ol-tag">${esc(node.tag)}</span>` : ''}</div>
                     <div class="ol-detail">${segs.map(s => `<div class="ol-dline">${esc(s)}</div>`).join('')}</div>`;
             } else {
                 inner = `${dot}<span class="ol-name">${esc(node.n)}</span>
                     ${node.tag ? `<span class="ol-tag">${esc(node.tag)}</span>` : ''}
-                    ${node.d ? `<span class="ol-detail">${esc(node.d)}</span>` : ''}${annoBtn}`;
+                    ${node.d ? `<span class="ol-detail">${esc(node.d)}</span>` : ''}`;
             }
             return `<div class="${cls}" style="--d:${depth}" data-id="${node._id}">${inner}</div>`
                 + annoBlockHtml(node._id, depth)
@@ -132,6 +317,7 @@
             const root = document.getElementById('mapRoot');
             if (!MAP) { root.innerHTML = '<div class="map-empty">加载失败，请检查网络后刷新。</div>'; return; }
             root.innerHTML = MAP.roots.map(renderSection).join('');
+            reapplyHighlights();
             renderNav();
             const hint = document.getElementById('mapSearchHint');
             if (searchQ) {
@@ -225,7 +411,9 @@
                 MAP.roots.forEach((r, i) => { r._idx = i; assignIds(r, null); });
                 document.getElementById('mapSubtitle').textContent = (MAP.subtitle ? MAP.subtitle + ' · ' : '') + `共 ${totalNodes} 个知识点`;
                 renderAll();
+                initHl();
                 loadAnnos();
+                loadHighlights();
             } catch (err) {
                 document.getElementById('mapSubtitle').textContent = '导图数据加载失败：' + err.message;
                 document.getElementById('mapRoot').innerHTML = '<div class="map-empty">加载失败，请检查网络后刷新。</div>';
