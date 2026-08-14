@@ -1,24 +1,19 @@
-import os
-import sys
+"""
+408刷题应用 - 共享路径与科目配置
 
-# PyInstaller打包后：只读资源（题库/模板/静态文件）在解压目录_MEIPASS，
-# 可写数据（答题记录数据库）放在exe旁边，避免重启丢失
-FROZEN = getattr(sys, 'frozen', False)
-BASE_DIR = sys._MEIPASS if FROZEN else os.path.dirname(os.path.abspath(__file__))
-APP_DIR = os.path.dirname(sys.executable) if FROZEN else BASE_DIR
+说明：项目已废弃 exe / Flask 路径，PWA（pwa/）为唯一前端。
+本文件仅被一次性数据生成脚本（parse_pdf.py / add_chapters.py /
+generate_answers.py 等）复用，提供题库/PDF 路径与科目映射。
+"""
+import os
+
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
 DATA_DIR = os.path.join(BASE_DIR, 'data')
 QUESTIONS_DIR = os.path.join(DATA_DIR, 'questions')
-DB_PATH = os.path.join(APP_DIR, 'data', 'quiz.db')
 PDF_DIR = os.path.join(os.path.dirname(BASE_DIR), '408习题库')
 
-# Flask 配置
-SECRET_KEY = 'quiz-408-local-app-secret'
-DEBUG = False
-HOST = '127.0.0.1'
-PORT = 5000
-
-# 科目映射
+# 科目映射：pdf = 题库源文件，json = 解析后题库
 SUBJECTS = {
     'os': {
         'name': '操作系统',
