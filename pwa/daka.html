@@ -64,6 +64,7 @@
     <script>
     let dakaQuestions = [];
     let dakaProgress = {};
+    let dakaGroups = [];
     let dakaNavCollapsed = localStorage.getItem('daka_nav_collapsed') === '1';
 
     function esc(s) {
@@ -97,14 +98,16 @@
         }
         let html = '';
         let nav = '';
+        dakaGroups = [];
         let gi = 0;
         for (const [label, qs] of groups) {
+            dakaGroups.push({label, qs});
             const gDone = qs.filter(q => dakaProgress[q.id]).length;
             const subs = qs.map(q => {
                 const done = !!dakaProgress[q.id];
                 const year = (q.real || '').match(/\d{4}/);
                 const item = `${q.source}${year ? ' · ' + year[0] : ''}`;
-                return `<a class="ol-nav-item sub${done ? ' daka-nav-done' : ''}" data-target="card-${q.id}"
+                return `<a class="ol-nav-item sub${done ? ' daka-nav-done' : ''}" data-target="card-${q.id}" data-label="${esc(item)}"
                     title="${esc(q.module)} / ${esc(q.kaodian)} · ${esc(q.real || '')}">${done ? '✓ ' : ''}${esc(item)}</a>`;
             }).join('');
             nav += `<div class="ol-nav-sec">
@@ -212,9 +215,44 @@
             });
             if (done) dakaProgress[qid] = new Date().toISOString();
             else delete dakaProgress[qid];
-            renderDaka();
+            updateDakaCard(qid);
         } catch (e) {
             alert('打卡失败，请重试');
+        }
+    }
+
+    // 打卡后只更新对应卡片/汇总/组标题/导航项，不重渲染整表（避免打开的组被收起、滚动跳回顶部）
+    function updateDakaCard(qid) {
+        const done = !!dakaProgress[qid];
+        const card = document.getElementById('card-' + qid);
+        if (card) {
+            card.classList.toggle('daka-done', done);
+            const btn = card.querySelector('.btn-daka');
+            if (btn) {
+                btn.classList.toggle('checked', done);
+                btn.textContent = done ? '已打卡 ✓' : '打卡';
+            }
+        }
+        const doneCount = dakaQuestions.filter(q => dakaProgress[q.id]).length;
+        const sum = document.getElementById('dakaSummary');
+        if (sum) sum.innerHTML = `已打卡 <b>${doneCount}</b> / ${dakaQuestions.length} 题`;
+        const gIdx = dakaGroups.findIndex(g => g.qs.some(q => q.id === qid));
+        if (gIdx >= 0) {
+            const group = dakaGroups[gIdx];
+            const gDone = group.qs.filter(q => dakaProgress[q.id]).length;
+            const title = `${group.label}（${gDone}/${group.qs.length}）`;
+            if (card) {
+                const det = card.closest('details.daka-group');
+                const sumEl = det ? det.querySelector('summary.daka-group-title') : null;
+                if (sumEl) sumEl.textContent = title;
+            }
+            const navRoot = document.querySelector(`.ol-nav-item.root[data-group="${gIdx}"]`);
+            if (navRoot) navRoot.textContent = title;
+        }
+        const navItem = document.querySelector(`.ol-nav-item.sub[data-target="card-${qid}"]`);
+        if (navItem) {
+            navItem.classList.toggle('daka-nav-done', done);
+            navItem.innerHTML = (done ? '✓ ' : '') + esc(navItem.getAttribute('data-label') || '');
         }
     }
 
