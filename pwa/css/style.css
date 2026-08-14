@@ -3306,328 +3306,224 @@ a.chapter-badge-link:hover {
     }
 }
 
-/* ==================== 计组强化思维导图页 ==================== */
+/* ==================== 计组强化思维导图 · 线性大纲阅读页 ==================== */
 .map-header {
     margin-bottom: 16px;
 }
 
 .map-header h1 {
-    font-size: 1.6rem;
-    margin-bottom: 6px;
+    font-size: 1.5rem;
+    margin-bottom: 4px;
 }
 
 .map-stats {
-    margin-top: 8px;
     color: var(--text-light);
-    font-size: 0.88rem;
+    font-size: 0.9rem;
 }
 
 .map-toolbar {
     display: flex;
+    gap: 8px;
     align-items: center;
     flex-wrap: wrap;
-    gap: 8px;
-    margin-bottom: 16px;
+    margin-bottom: 10px;
 }
 
 .map-search {
-    flex: 1;
-    min-width: 220px;
+    flex: 1 1 220px;
+    min-width: 180px;
 }
 
 .map-progress {
-    flex: 1;
-    min-width: 160px;
+    flex: 1 1 140px;
+    min-width: 120px;
     height: 8px;
-    background: var(--light);
-    border-radius: 4px;
+    background: var(--border);
+    border-radius: 99px;
     overflow: hidden;
-    margin-left: auto;
 }
 
 .map-progress-bar {
     height: 100%;
     width: 0;
-    background: linear-gradient(90deg, var(--primary), #34d399);
-    border-radius: 4px;
+    background: linear-gradient(90deg, #4f46e5, #22c55e);
     transition: width 0.3s;
+    border-radius: 99px;
 }
 
-.map-layout {
-    display: flex;
-    gap: 20px;
-    align-items: flex-start;
-}
-
-.map-tree {
-    flex: 1;
-    min-width: 0;
-    background: var(--card-bg);
-    border-radius: var(--radius);
-    box-shadow: var(--shadow);
-    padding: 14px;
-}
-
-.map-detail {
-    width: 340px;
-    flex-shrink: 0;
-    position: sticky;
-    top: 76px;
-    max-height: calc(100vh - 96px);
-    overflow-y: auto;
-    background: var(--card-bg);
-    border-radius: var(--radius);
-    box-shadow: var(--shadow);
-    padding: 16px;
-}
-
-.map-detail-hint {
-    color: var(--text-light);
-    font-size: 0.9rem;
-    text-align: center;
-    padding: 30px 0;
-}
-
-.map-detail-path {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 4px;
-    font-size: 0.78rem;
-    color: var(--text-light);
-    margin-bottom: 10px;
-}
-
-.map-path-sep {
-    opacity: 0.6;
-}
-
-.map-detail-title {
-    font-size: 1.1rem;
-    margin: 0 0 10px;
-}
-
-.map-detail-text {
-    font-size: 0.92rem;
-    line-height: 1.7;
-    color: var(--text);
-    background: var(--light);
-    border-radius: 8px;
-    padding: 10px 12px;
-    margin-bottom: 12px;
-    white-space: pre-wrap;
-}
-
-.map-detail-empty {
+.map-search-hint {
     color: var(--text-light);
     font-size: 0.85rem;
-    margin-bottom: 12px;
-}
-
-.map-detail-kids {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 6px;
-}
-
-.map-detail-kid {
-    text-align: left;
+    margin-bottom: 10px;
 }
 
 .map-empty {
     color: var(--text-light);
-    padding: 30px;
     text-align: center;
+    padding: 40px 0;
 }
 
-.map-root {
-    margin-bottom: 10px;
+/* 大节卡片 */
+.ol-sec {
+    margin-bottom: 18px;
 }
 
-.map-root-head {
+.ol-sec-head {
     display: flex;
     align-items: center;
-    gap: 6px;
-    padding: 10px 12px;
-    border-radius: 8px;
-    background: var(--light);
+    gap: 10px;
     cursor: pointer;
-    font-weight: 600;
-    font-size: 1.02rem;
-    transition: background 0.15s;
+    background: var(--card-bg);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    padding: 13px 18px;
+    user-select: none;
 }
 
-.map-root-head:hover {
-    background: var(--border);
+.ol-sec-head:hover {
+    background: var(--light);
 }
 
-.map-root-head.selected {
-    background: var(--primary);
-    color: #fff;
-}
-
-.map-root-head.mastered .map-root-title::after {
-    content: " ✓";
+.ol-sec-head.done .ol-sec-title {
     color: #22c55e;
 }
 
-.map-root-tag {
-    font-size: 0.7rem;
-    font-weight: 500;
-    padding: 1px 7px;
-    border-radius: 10px;
-    background: var(--primary);
-    color: #fff;
-}
-
-.map-root-progress {
-    margin-left: auto;
-    font-size: 0.78rem;
-    font-weight: 500;
+.ol-caret {
     color: var(--text-light);
+    font-size: 0.85rem;
+    width: 14px;
+    text-align: center;
+    flex-shrink: 0;
 }
 
-.map-root-head.selected .map-root-progress {
-    color: #e0e7ff;
+.ol-sec-title {
+    font-size: 1.15rem;
+    font-weight: 700;
 }
 
-.map-list {
-    list-style: none;
-    margin: 0;
-    padding-left: 18px;
-    border-left: 1px solid var(--border);
+.ol-sec-progress {
+    margin-left: auto;
+    color: var(--text-light);
+    font-size: 0.85rem;
+    white-space: nowrap;
 }
 
-.map-children {
-    margin-left: 8px;
+.ol-sec-body {
+    border-left: 3px solid var(--primary);
+    margin-left: 16px;
+    padding-left: 10px;
+    padding-top: 8px;
 }
 
-.map-item {
-    margin: 2px 0;
+.ol-sec-body.collapsed {
+    display: none;
 }
 
-.map-node {
+/* 知识节点行 */
+.ol-node {
     display: flex;
-    align-items: center;
-    gap: 4px;
-    padding: 5px 8px;
+    align-items: flex-start;
+    gap: 8px;
+    padding: 6px 8px;
     border-radius: 6px;
-    cursor: pointer;
-    font-size: 0.92rem;
-    line-height: 1.5;
-    transition: background 0.12s;
+    margin-left: calc(var(--d, 0) * 20px);
 }
 
-.map-node:hover {
+.ol-node:hover {
     background: var(--light);
 }
 
-.map-node.selected {
-    background: var(--primary);
-    color: #fff;
+.ol-check {
+    flex-shrink: 0;
+    margin-top: 2px;
+    cursor: pointer;
 }
 
-.map-node.mastered .map-name {
+.ol-check input {
+    width: 16px;
+    height: 16px;
+    cursor: pointer;
+    accent-color: #22c55e;
+}
+
+.ol-row {
+    flex: 1;
+    min-width: 0;
+    line-height: 1.55;
+}
+
+.ol-name {
+    font-weight: 600;
+    word-break: break-word;
+}
+
+.ol-lv0 > .ol-row .ol-name,
+.ol-lv0 .ol-name {
+    font-weight: 700;
+}
+
+.ol-detail {
+    color: var(--text-light);
+    word-break: break-word;
+    white-space: pre-wrap;
+}
+
+.ol-lv2 .ol-name,
+.ol-lv3 .ol-name,
+.ol-lv4 .ol-name,
+.ol-lv5 .ol-name,
+.ol-lv6 .ol-name {
+    font-weight: 500;
+    color: var(--text);
+}
+
+.ol-tag {
+    font-size: 0.7rem;
+    background: var(--border);
+    color: var(--text-light);
+    border-radius: 4px;
+    padding: 0 5px;
+    vertical-align: 1px;
+    margin-left: 6px;
+    white-space: nowrap;
+}
+
+.ol-node.mastered .ol-name {
     color: #22c55e;
+    opacity: 0.85;
 }
 
-.map-node.selected .map-name {
-    color: #fff;
-}
-
-.map-node.hit .map-name {
+.ol-node.hit .ol-name {
     background: #fde68a;
     border-radius: 3px;
     color: #7c2d12;
 }
 
-.map-node.hit.selected .map-name {
-    background: transparent;
-    color: #fff;
-}
-
-.map-dim {
-    opacity: 0.35;
-}
-
-.map-caret {
-    width: 16px;
-    flex-shrink: 0;
-    text-align: center;
-    color: var(--text-light);
-    font-size: 0.78rem;
-}
-
-.map-node.selected .map-caret {
-    color: #e0e7ff;
-}
-
-.map-master {
-    width: 20px;
-    flex-shrink: 0;
-    text-align: center;
-    cursor: pointer;
-    color: var(--text-light);
-    font-size: 0.85rem;
-    border-radius: 4px;
-}
-
-.map-master:hover {
-    background: var(--border);
-}
-
-.map-node.mastered .map-master {
-    color: #22c55e;
-}
-
-.map-name {
-    flex: 1;
-    word-break: break-word;
-}
-
-.map-dot {
-    width: 6px;
-    height: 6px;
-    border-radius: 50%;
-    background: var(--primary);
-    flex-shrink: 0;
-    opacity: 0.6;
+.ol-node.dim {
+    opacity: 0.3;
 }
 
 /* 暗色模式适配 */
-.dark .map-root-head.selected,
-.dark .map-node.selected {
-    background: #2b5a9e;
+.dark .ol-sec-head:hover {
+    background: #1b2028;
 }
 
-.dark .map-node.hit .map-name {
+.dark .ol-node.hit .ol-name {
     background: #6b4f00;
     color: #ffe9a8;
 }
 
-.dark .map-node.hit.selected .map-name {
-    background: transparent;
-    color: #fff;
+.dark .ol-sec-head.done .ol-sec-title {
+    color: #4ade80;
 }
 
-.dark .map-root-tag {
-    background: #2b5a9e;
+.dark .ol-node.mastered .ol-name {
+    color: #4ade80;
 }
 
-.dark .map-detail-text {
-    background: #1b2028;
-}
-
-/* 响应式：窄屏右侧详情面板移到下方 */
-@media (max-width: 900px) {
-    .map-layout {
-        flex-direction: column;
-    }
-    .map-detail {
-        width: 100%;
-        position: static;
-        max-height: none;
-    }
-    .map-children {
-        margin-left: 4px;
+/* 窄屏：缩进减小 */
+@media (max-width: 640px) {
+    .ol-node {
+        margin-left: calc(var(--d, 0) * 12px);
     }
 }
