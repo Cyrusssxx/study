@@ -237,6 +237,36 @@ body {
     gap: 8px;
 }
 
+/* 科目卡内：知识笔记 / 思维导图 入口框 */
+.card-note-row {
+    margin-top: 14px;
+    padding-top: 12px;
+    border-top: 1px dashed var(--border);
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.btn-note {
+    background: #2e7d32;
+    color: #fff;
+}
+
+.btn-note:hover {
+    background: #245f28;
+    color: #fff;
+}
+
+.btn-map {
+    background: #4f46e5;
+    color: #fff;
+}
+
+.btn-map:hover {
+    background: #4338ca;
+    color: #fff;
+}
+
 /* 按钮 */
 .btn {
     display: inline-block;
@@ -2035,55 +2065,7 @@ mark {
     border-color: #3a404b;
 }
 
-/* ==================== 首页学习工具区 ==================== */
-.tools-section {
-    margin-top: 24px;
-}
-
-.tools-section > h2 {
-    font-size: 1.2rem;
-    margin-bottom: 12px;
-}
-
-.tools-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-    gap: 20px;
-}
-
-/* 工具卡（打卡 / 笔记等入口） */
-.tool-card {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 16px;
-    background: var(--card-bg);
-    border-radius: var(--radius);
-    box-shadow: var(--shadow);
-    border-left: 4px solid var(--primary);
-    padding: 20px 24px;
-    flex-wrap: wrap;
-}
-
-.tool-card--notes {
-    border-left-color: #2e7d32;
-}
-
-.dark .tool-card--notes {
-    border-left-color: #81c784;
-}
-
 /* ==================== 数据结构强化打卡 ==================== */
-
-.daka-home-info h2 {
-    font-size: 1.2rem;
-    margin-bottom: 4px;
-}
-
-.daka-home-info p {
-    color: var(--text-light);
-    font-size: 0.9rem;
-}
 
 .daka-home-progress {
     margin-top: 4px;

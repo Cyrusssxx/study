@@ -406,6 +406,12 @@
         async function loadMap() {
             try {
                 const resp = await fetch(`data/${SUBJECT}_map.json`);
+                if (resp.status === 404) {
+                    document.getElementById('mapSubtitle').textContent = '该科目思维导图正在制作中，敬请期待…';
+                    document.getElementById('mapRoot').innerHTML = '<div class="map-empty">📭 暂无导图内容</div>';
+                    document.getElementById('olNav').innerHTML = '';
+                    return;
+                }
                 if (!resp.ok) throw new Error(resp.status);
                 MAP = await resp.json();
                 MAP.roots.forEach((r, i) => { r._idx = i; assignIds(r, null); });
