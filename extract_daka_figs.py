@@ -2,7 +2,7 @@
 """
 打卡题教材原图截取：复用 extract_daka.py 的节定位，按行坐标切出每题
 题面/解答在 PDF 中的原始区域，渲染为 JPG（含图/表格，弥补纯文本提取丢图）。
-输出 static/daka_figs/（Flask 走 /static/，spec 已整目录打包）并同步 pwa/data/daka_figs/，
+输出 pwa/data/daka_figs/（已废弃 static/ 镜像，PWA 为唯一真源），
 同时给 ds_daka.json 每题追加 figs: {content:[文件名], answer:[文件名]}。
 用法：
     python extract_daka_figs.py           # 预览：只写 _preview_figs.txt 报告，不产图
@@ -19,8 +19,8 @@ import fitz
 from extract_daka import PDF, OUT, PWA_OUT, BOOK_HEADER, build_ranges
 
 ROOT = os.path.dirname(os.path.abspath(__file__))
-FIG_DIR = os.path.join(ROOT, 'static', 'daka_figs')
-PWA_FIG_DIR = os.path.join(ROOT, 'pwa', 'data', 'daka_figs')
+# 直接写 PWA 数据目录（pwa/ 为唯一真源，已废弃 static/ 镜像）
+FIG_DIR = os.path.join(ROOT, 'pwa', 'data', 'daka_figs')
 PREVIEW = os.path.join(ROOT, '_preview_figs.txt')
 ZOOM = 2.0
 JPG_QUALITY = 78
@@ -137,10 +137,8 @@ def main():
     if apply_mode:
         json.dump(data, open(OUT, 'w', encoding='utf-8'), ensure_ascii=False, indent=2)
         shutil.copy2(OUT, PWA_OUT)
-        shutil.rmtree(PWA_FIG_DIR, ignore_errors=True)
-        shutil.copytree(FIG_DIR, PWA_FIG_DIR)
         total = sum(os.path.getsize(os.path.join(FIG_DIR, f)) for f in os.listdir(FIG_DIR))
-        print(f'figs: {len(os.listdir(FIG_DIR))} files, {total / 1024 / 1024:.1f} MB -> {FIG_DIR} (+pwa)')
+        print(f'figs: {len(os.listdir(FIG_DIR))} files, {total / 1024 / 1024:.1f} MB -> {FIG_DIR}')
 
 
 if __name__ == '__main__':

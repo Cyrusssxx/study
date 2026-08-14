@@ -41,7 +41,6 @@ def validate_js_syntax(js_code, label):
         os.unlink(tmp.name)
 
 for path, label in [
-    ('templates/notes.html', 'Flask版'),
     ('pwa/notes.html', 'PWA版')
 ]:
     js = extract_js(path)
