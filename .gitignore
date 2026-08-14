@@ -17,3 +17,7 @@ t*.png
 *_dump*.txt
 *_scan*.txt
 *.log
+
+# 题库构建产物：data/questions/*.json 由 tools/sync_questions.py 从真源 pwa/data 生成
+data/questions/*.json
+data/questions/backup_*/

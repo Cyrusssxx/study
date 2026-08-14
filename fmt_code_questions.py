@@ -5,7 +5,7 @@
 - 手工重建：双栏排版被 OCR 交错的并发题等 12 题，用 MANUAL 表直接替换
 用法：
     python fmt_code_questions.py            # 预览：写 _preview_codefmt.txt，不改数据
-    python fmt_code_questions.py --apply    # 应用：备份后写回四科 JSON 并同步 pwa/data
+    python fmt_code_questions.py --apply    # 应用：写回四科 JSON(真源 pwa/data) 并同步 data/questions 镜像
 """
 import json
 import re
@@ -14,9 +14,11 @@ import shutil
 import sys
 
 ROOT = os.path.dirname(os.path.abspath(__file__))
-QDIR = os.path.join(ROOT, 'data', 'questions')
-BACKUP_DIR = os.path.join(QDIR, 'backup_codefmt')
-PWA_DATA = os.path.join(ROOT, 'pwa', 'data')
+# 题库真源已统一为 pwa/data（config.QUESTIONS_DIR）。data/questions 为构建产物。
+QDIR = os.path.join(ROOT, 'pwa', 'data')              # 真源（canonical）
+MIRROR_DIR = os.path.join(ROOT, 'data', 'questions')  # 构建产物镜像
+BACKUP_DIR = os.path.join(MIRROR_DIR, 'backup_codefmt')
+PWA_DATA = QDIR  # 兼容旧变量名
 SUBJECTS = ['ds', 'os', 'co', 'cn']
 
 # ---------- 自动还原 ----------
@@ -256,9 +258,11 @@ def main():
             if apply_mode:
                 q['content'] = new
         if apply_mode and changed:
+            os.makedirs(BACKUP_DIR, exist_ok=True)
             shutil.copy2(path, os.path.join(BACKUP_DIR, f'{s}.json'))
             json.dump(data, open(path, 'w', encoding='utf-8'), ensure_ascii=False, indent=2)
-            shutil.copy2(path, os.path.join(PWA_DATA, f'{s}.json'))
+            os.makedirs(MIRROR_DIR, exist_ok=True)
+            shutil.copy2(path, os.path.join(MIRROR_DIR, f'{s}.json'))
         report.append(f"\n>>> {s}: 改动 {changed} 题")
         total += changed
     report.append(f"\n总计改动 {total} 题" + ('（已写回+同步pwa）' if apply_mode else '（预览模式）'))

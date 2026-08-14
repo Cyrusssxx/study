@@ -10,7 +10,10 @@ import os
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
 DATA_DIR = os.path.join(BASE_DIR, 'data')
-QUESTIONS_DIR = os.path.join(DATA_DIR, 'questions')
+# 题库真源已统一为 pwa/data（PWA 只读取此处，也是上游管线 parse_pdf/add_chapters/
+# generate_answers/fmt_code_questions --apply 的写入目标）。data/questions 改为构建期生成，
+# 由 tools/sync_questions.py 从真源复制规范化得到，不再手工维护（见 .gitignore）。
+QUESTIONS_DIR = os.path.join(BASE_DIR, 'pwa', 'data')
 PDF_DIR = os.path.join(os.path.dirname(BASE_DIR), '408习题库')
 
 # 科目映射：pdf = 题库源文件，json = 解析后题库
