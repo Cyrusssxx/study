@@ -83,7 +83,7 @@
             if (subject) params.set('subject', subject);
             const resp = await api(`/api/search?${params}`);
             const data = await resp.json();
-            renderResults(data.results, kw);
+            renderResults(data, kw);
         } catch (e) {
             container.innerHTML = '<div class="error">搜索失败</div>';
         }
@@ -100,31 +100,51 @@
         } catch (e) { return html; }
     }
 
-    function renderResults(results, kw) {
+    function renderResults(data, kw) {
         const container = document.getElementById('searchResults');
-        if (results.length === 0) {
+        const results = data.results || [];
+        const notes = data.notes || [];
+        if (results.length === 0 && notes.length === 0) {
             container.innerHTML = `
                 <div class="empty-state">
-                    <h3>没有找到相关题目</h3>
+                    <h3>没有找到相关题目或知识点</h3>
                     <p>换个关键词试试，比如更短的词</p>
                 </div>`;
             return;
         }
 
-        let html = `<div class="list-header"><span>找到 ${results.length} 道题${results.length >= 50 ? '（已达上限，可换更精确的关键词）' : ''}，点击进入对应题目</span></div>`;
-        for (const q of results) {
-            html += `
-                <div class="list-item list-item-link" onclick="location.href='quiz.html?subject=${q.subject}&mode=sequential&goto=${q.id}'">
-                    <div class="item-header">
-                        <span class="item-subject">${q.subject_name}</span>
-                        ${q.is_real_exam ? '<span class="badge-real">统考真题</span>' : ''}
-                        <span class="item-info">${q.chapter || ''}${q.section ? ' · ' + q.section : ''}</span>
-                    </div>
-                    <div class="item-content">${fmtContent(highlight(q.content, kw))}</div>
-                    <div class="item-options">
-                        ${Object.entries(q.options || {}).map(([k,v]) => `<span class="mini-option">${k}. ${highlight(v, kw)}</span>`).join('')}
-                    </div>
-                </div>`;
+        let html = '';
+        if (results.length) {
+            html += `<div class="list-header"><span>找到 ${results.length} 道题${results.length >= 50 ? '（已达上限，可换更精确的关键词）' : ''}，点击进入对应题目</span></div>`;
+            for (const q of results) {
+                html += `
+                    <div class="list-item list-item-link" onclick="location.href='quiz.html?subject=${q.subject}&mode=sequential&goto=${q.id}'">
+                        <div class="item-header">
+                            <span class="item-subject">${q.subject_name}</span>
+                            ${q.exam_year && q.is_real_exam ? `<span class="badge-real">${q.exam_year} 统考真题</span>` : (q.is_real_exam ? '<span class="badge-real">统考真题</span>' : '')}
+                            <span class="item-info">${q.chapter || ''}${q.section ? ' · ' + q.section : ''}</span>
+                        </div>
+                        <div class="item-content">${fmtContent(highlight(q.content, kw))}</div>
+                        <div class="item-options">
+                            ${Object.entries(q.options || {}).map(([k,v]) => `<span class="mini-option">${k}. ${highlight(v, kw)}</span>`).join('')}
+                        </div>
+                    </div>`;
+            }
+        }
+        // 知识库笔记结果（P1-3）
+        if (notes.length) {
+            html += `<div class="list-header notes-result-head"><span>📖 相关知识点 ${notes.length} 条，点击查看考点笔记</span></div>`;
+            for (const n of notes) {
+                const preview = (n.html || '').replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim();
+                html += `
+                    <div class="list-item list-item-link" onclick="location.href='notes.html?subject=${n.subject}&goto=${encodeURIComponent(n.section)}'">
+                        <div class="item-header">
+                            <span class="item-subject">${n.subject_name} · 知识库</span>
+                            <span class="item-info">${n.chapter || ''}${n.section ? ' · ' + n.section : ''}</span>
+                        </div>
+                        <div class="item-content">${highlight(preview, kw)}</div>
+                    </div>`;
+            }
         }
         container.innerHTML = html;
     }

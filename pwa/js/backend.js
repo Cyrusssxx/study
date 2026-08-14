@@ -41,6 +41,30 @@ async function getQuestionById(qid) {
     return data.questions.find(q => q.id === qid) || null;
 }
 
+// 知识库笔记索引：用于搜题覆盖知识点（P1-3）与章节↔题目互链（P1-4）。
+// 结构：{chapters:[{chapter, sections:[{section, html}]}]}
+const _notesCache = {};
+const _notesIndex = {};
+async function loadNotes(subject) {
+    if (_notesCache[subject]) return _notesCache[subject];
+    const resp = await fetch(`data/notes/${subject}_notes.json`);
+    const data = await resp.json();
+    _notesCache[subject] = data;
+    const texts = [];
+    for (const ch of (data.chapters || [])) {
+        for (const sec of (ch.sections || [])) {
+            texts.push({
+                chapter: ch.chapter || '',
+                section: sec.section || '',
+                html: sec.html || '',
+                text: (sec.html || '').replace(TAG_RE, ' ').toLowerCase()
+            });
+        }
+    }
+    _notesIndex[subject] = texts;
+    return data;
+}
+
 // ==================== IndexedDB ====================
 const DB_NAME = 'quiz408';
 const DB_VER = 2;
@@ -447,11 +471,11 @@ async function api(url, opts = {}) {
             return jsonResp(result);
         }
 
-        // ---------- 搜题 ----------
+        // ---------- 搜题（题目 + 知识库笔记） ----------
         if (seg[1] === 'search') {
             const kw = (p.get('q') || '').trim().toLowerCase();
             const subject = p.get('subject') || '';
-            if (!kw) return jsonResp({ results: [], total: 0 });
+            if (!kw) return jsonResp({ results: [], total: 0, notes: [], notes_total: 0 });
             const keys = SUBJECTS[subject] ? [subject] : Object.keys(SUBJECTS);
             const results = [];
             outer:
@@ -466,12 +490,27 @@ async function api(url, opts = {}) {
                         id: qid, subject: key, subject_name: SUBJECTS[key].name,
                         number: q.number, content: q.content || '', options: q.options,
                         chapter: q.chapter || '', section: q.section || '',
-                        is_real_exam: q.is_real_exam || false
+                        is_real_exam: q.is_real_exam || false,
+                        exam_year: q.exam_year || null
                     });
                     if (results.length >= 50) break outer;
                 }
             }
-            return jsonResp({ results, total: results.length });
+            // 同时检索知识库笔记正文，最多 20 条
+            const notesResults = [];
+            notesOuter:
+            for (const key of keys) {
+                await loadNotes(key);
+                for (const n of (_notesIndex[key] || [])) {
+                    if (!n.text.includes(kw)) continue;
+                    notesResults.push({
+                        subject: key, subject_name: SUBJECTS[key].name,
+                        chapter: n.chapter, section: n.section, html: n.html
+                    });
+                    if (notesResults.length >= 20) break notesOuter;
+                }
+            }
+            return jsonResp({ results, total: results.length, notes: notesResults, notes_total: notesResults.length });
         }
 
         // ---------- 笔记 ----------
@@ -779,4 +818,33 @@ if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
         navigator.serviceWorker.register('sw.js').catch(e => console.warn('SW注册失败（需HTTPS或localhost）', e));
     });
+    // 更新提示（P1-5）：发现新版本并完成安装后，弹出 toast 让用户手动刷新，
+    // 避免 skipWaiting 静默接管导致当前页面数据/状态意外刷新。
+    let hasPendingUpdate = false;
+    navigator.serviceWorker.addEventListener('updatefound', () => {
+        const installing = navigator.serviceWorker.installing;
+        if (!installing) return;
+        installing.addEventListener('statechange', () => {
+            // 已有旧 SW 在控制页面（说明是更新，而非首次安装）且新版本已就绪
+            if (installing.state === 'installed' && navigator.serviceWorker.controller) {
+                hasPendingUpdate = true;
+                showUpdateToast();
+            }
+        });
+    });
+    navigator.serviceWorker.addEventListener('controllerchange', () => {
+        // 新 SW 已接管页面；若是用户点了 toast 触发的刷新，这里不再重复处理
+    });
+}
+
+function showUpdateToast() {
+    if (document.getElementById('swUpdateToast')) return;
+    const t = document.createElement('div');
+    t.id = 'swUpdateToast';
+    t.className = 'sw-update-toast';
+    t.innerHTML = '<span>发现新版本，点击刷新</span>';
+    t.onclick = () => location.reload();
+    document.body.appendChild(t);
+    setTimeout(() => t.classList.add('show'), 50);
+    setTimeout(() => { t.classList.remove('show'); setTimeout(() => t.remove(), 300); }, 8000);
 }

@@ -58,6 +58,9 @@
                         <h2 id="subjectTitle"></h2>
                         <span class="mode-badge" id="modeBadge"></span>
                         <button class="opt-shuffle-btn" id="shuffleBtn" onclick="toggleShuffle()" title="打乱选项显示顺序（字母跟随内容，答案字母不变）">选项乱序 <span id="shuffleState">关</span></button>
+                        <select class="quiz-year-filter" id="yearFilter" onchange="onYearChange()" style="display:none" title="按统考真题年份筛选">
+                            <option value="">全部年份</option>
+                        </select>
                         <button class="opt-shuffle-btn" id="favResetBtn" style="display:none" onclick="resetFavProgress()" title="清空收藏题的作答与错题记录，重新刷一遍（收藏保留）">清空重做 ⟳</button>
                     </div>
                     <div class="quiz-nav-info">
@@ -94,7 +97,9 @@
     const MODE = _params.get('mode') || 'sequential';
     const CHAPTER = _params.get('chapter') || '';
     const SECTION = _params.get('section') || '';
+    const YEAR = _params.get('year') || '';   // 真题年份筛选（仅真题模式生效）
     let questions = [];
+    let quizAllQuestions = [];   // 真题年份前端筛选的基准集合
     let currentIndex = 0;
     let totalQuestions = 0;
     let answered = {};  // {questionId: {answer, isCorrect}}
@@ -130,7 +135,10 @@
             const resp = await api(`/api/questions/${SUBJECT}?mode=${MODE}&page=1&per_page=9999`);
             const data = await resp.json();
             questions = data.questions;
-            totalQuestions = data.total;
+            quizAllQuestions = data.questions;
+            // 真题年份筛选（P2）：仅真题模式展示下拉，前端按 exam_year 过滤，无需额外请求
+            setupYearFilter();
+            totalQuestions = questions.length;
 
             // 恢复历史答题记录（last_status），刷新/跳转页面后不丢失
             for (const q of questions) {
@@ -176,6 +184,31 @@
         } catch (e) {
             document.getElementById('questionArea').innerHTML = `<div class="error">加载失败: ${e.message}</div>`;
         }
+    }
+
+    // 真题年份下拉：从已加载题目的 exam_year 收集可选年份；真题模式才显示
+    function setupYearFilter() {
+        const ys = document.getElementById('yearFilter');
+        if (!ys) return;
+        if (MODE !== 'real') { ys.style.display = 'none'; return; }
+        ys.style.display = '';
+        const years = [...new Set(quizAllQuestions.map(q => q.exam_year).filter(Boolean))].sort((a, b) => b - a);
+        ys.innerHTML = '<option value="">全部年份</option>' + years.map(y =>
+            `<option value="${y}">${y} 年 (${quizAllQuestions.filter(q => q.exam_year === y).length})</option>`).join('');
+        if (YEAR) ys.value = YEAR;
+        const y = ys.value;
+        if (y) questions = quizAllQuestions.filter(q => String(q.exam_year) === String(y));
+    }
+
+    // 切换年份：重新筛选题目并回到第一题
+    function onYearChange() {
+        const y = document.getElementById('yearFilter').value;
+        questions = y ? quizAllQuestions.filter(q => String(q.exam_year) === String(y)) : quizAllQuestions.slice();
+        totalQuestions = questions.length;
+        currentIndex = 0;
+        explanationShown = false;
+        noteShown = false;
+        renderQuestion();
     }
 
     // ============ 侧边栏章节树 ============

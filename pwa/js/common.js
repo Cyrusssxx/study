@@ -14,6 +14,16 @@ function fmtContent(html) {
     });
 }
 
+// ============ 离线图片预热：daka/dati 等图片密集型页面调用 ============
+// 通过触发 fetch 让 SW 的 fetch 处理程序把图片拉入缓存（首次在线查看后离线即可用），
+// 避免 daka/dati 在离线时图片裂开。预热失败不影响页面显示（用户查看时 SW 仍会缓存）。
+function warmFigureCache(urls) {
+    if (!urls || !urls.length) return;
+    for (const u of urls) {
+        try { fetch(u); } catch (e) { /* 忽略单个预热失败 */ }
+    }
+}
+
 function applyDark() {
     if (isDarkOn()) {
         document.documentElement.classList.add('dark');

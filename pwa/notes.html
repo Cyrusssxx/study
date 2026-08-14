@@ -354,7 +354,10 @@
                     toc += `<a class="notes-toc-sec" data-sec="${sec.section}">${sec.section}</a>`;
                     body += `
                     <section class="notes-section" data-sec="${sec.section}">
-                        <h3 class="notes-sec-title">${sec.section}</h3>
+                        <div class="notes-sec-head">
+                            <h3 class="notes-sec-title">${sec.section}</h3>
+                            <a class="notes-prac-link" href="quiz.html?subject=${SUBJECT}&mode=sequential&chapter=${encodeURIComponent(ch.chapter)}&section=${encodeURIComponent(sec.section)}" target="_blank" title="新窗口打开该节对应的练习题">📝 相关题目</a>
+                        </div>
                         <div class="notes-body">${fmtNotes(sec.html)}</div>
                     </section>`;
                 }

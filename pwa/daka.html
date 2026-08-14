@@ -131,6 +131,8 @@
             a.addEventListener('click', () => toggleDakaGroup(parseInt(a.dataset.group, 10)));
         });
         document.getElementById('dakaList').innerHTML = html;
+        // 预热打卡原图到 SW 缓存，离线查看不裂图（P0-1）
+        warmFigureCache([...document.querySelectorAll('#dakaList img')].map(i => i.src));
     }
 
     function toggleDakaNav() {

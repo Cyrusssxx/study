@@ -426,6 +426,8 @@
             });
         });
         syncExpandBtn();
+        // 预热当前已渲染的大题截图到 SW 缓存，离线查看不裂图（P0-1）
+        warmFigureCache([...root.querySelectorAll('.dati-qbody img, .dati-abody img')].map(i => i.src));
     }
 
     function toggleAllChapters() {
