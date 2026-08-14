@@ -86,11 +86,28 @@
                 if (isMatch) cls += ' hit';
                 else if (!isAncestor) cls += ' dim';
             }
-            return `<div class="${cls}" style="--d:${depth}" data-id="${node._id}">
-                <span class="ol-name">${esc(node.n)}</span>
-                ${node.tag ? `<span class="ol-tag">${esc(node.tag)}</span>` : ''}
-                ${node.d ? `<span class="ol-detail">${esc(node.d)}</span>` : ''}
-            </div>` + (node.c || []).map(k => renderNode(k, depth + 1)).join('');
+            const d = node.d || '';
+            const raw = d.split(/([。；])/);
+            const segs = [];
+            for (let i = 0; i < raw.length; i += 2) {
+                const t = (raw[i] + (raw[i + 1] || '')).trim();
+                if (t) segs.push(t);
+            }
+            let inner;
+            const isLeaf = !(node.c || []).length;
+            const dot = isLeaf ? '<span class="ol-dot"></span>' : '';
+            if (segs.length > 1) {
+                cls += ' multi';
+                inner = `<div class="ol-main">${dot}<span class="ol-name">${esc(node.n)}</span>
+                    ${node.tag ? `<span class="ol-tag">${esc(node.tag)}</span>` : ''}</div>
+                    <div class="ol-detail">${segs.map(s => `<div class="ol-dline">${esc(s)}</div>`).join('')}</div>`;
+            } else {
+                inner = `${dot}<span class="ol-name">${esc(node.n)}</span>
+                    ${node.tag ? `<span class="ol-tag">${esc(node.tag)}</span>` : ''}
+                    ${node.d ? `<span class="ol-detail">${esc(node.d)}</span>` : ''}`;
+            }
+            return `<div class="${cls}" style="--d:${depth}" data-id="${node._id}">${inner}</div>`
+                + (node.c || []).map(k => renderNode(k, depth + 1)).join('');
         }
 
         function renderSection(r, idx) {
