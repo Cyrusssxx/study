@@ -3316,39 +3316,12 @@ a.chapter-badge-link:hover {
     margin-bottom: 4px;
 }
 
-.map-stats {
-    color: var(--text-light);
-    font-size: 0.9rem;
-}
-
 .map-toolbar {
-    display: flex;
-    gap: 8px;
-    align-items: center;
-    flex-wrap: wrap;
     margin-bottom: 10px;
 }
 
 .map-search {
-    flex: 1 1 220px;
-    min-width: 180px;
-}
-
-.map-progress {
-    flex: 1 1 140px;
-    min-width: 120px;
-    height: 8px;
-    background: var(--border);
-    border-radius: 99px;
-    overflow: hidden;
-}
-
-.map-progress-bar {
-    height: 100%;
-    width: 0;
-    background: linear-gradient(90deg, #4f46e5, #22c55e);
-    transition: width 0.3s;
-    border-radius: 99px;
+    max-width: 420px;
 }
 
 .map-search-hint {
@@ -3363,93 +3336,151 @@ a.chapter-badge-link:hover {
     padding: 40px 0;
 }
 
-/* 大节卡片 */
-.ol-sec {
-    margin-bottom: 18px;
+.map-flash {
+    background: var(--light);
+    border-radius: 6px;
 }
 
-.ol-sec-head {
+/* 布局：左导航 + 内容 */
+.ol-layout {
     display: flex;
-    align-items: center;
-    gap: 10px;
-    cursor: pointer;
+    gap: 18px;
+    align-items: flex-start;
+}
+
+#mapRoot {
+    flex: 1;
+    min-width: 0;
+}
+
+/* 左侧可收起导航 */
+.ol-nav {
+    width: 224px;
+    flex: 0 0 224px;
+    position: sticky;
+    top: 76px;
+    max-height: calc(100vh - 96px);
+    overflow-y: auto;
     background: var(--card-bg);
+    border: 1px solid var(--border);
     border-radius: var(--radius);
     box-shadow: var(--shadow);
-    padding: 13px 18px;
+}
+
+.ol-nav-head {
+    padding: 10px 14px;
+    font-weight: 600;
+    font-size: 0.92rem;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    cursor: pointer;
     user-select: none;
 }
 
-.ol-sec-head:hover {
+.ol-nav-toggle {
+    color: var(--text-light);
+    transition: transform 0.2s;
+}
+
+.ol-nav.collapsed .ol-nav-toggle {
+    transform: rotate(-90deg);
+}
+
+.ol-nav.collapsed .ol-nav-body {
+    display: none;
+}
+
+.ol-nav-body {
+    padding: 6px 10px 14px;
+}
+
+.ol-nav-sec {
+    margin: 8px 0 4px;
+}
+
+.ol-nav-item {
+    display: block;
+    padding: 5px 8px;
+    border-radius: 6px;
+    font-size: 0.86rem;
+    cursor: pointer;
+    color: var(--text);
+    word-break: break-word;
+}
+
+.ol-nav-item:hover {
     background: var(--light);
 }
 
-.ol-sec-head.done .ol-sec-title {
-    color: #22c55e;
+.ol-nav-item.root {
+    font-weight: 600;
+    color: var(--primary);
 }
 
-.ol-caret {
+.ol-nav-item.sub {
     color: var(--text-light);
-    font-size: 0.85rem;
-    width: 14px;
-    text-align: center;
-    flex-shrink: 0;
+    padding-left: 20px;
+    font-size: 0.82rem;
+}
+
+.ol-nav-fab {
+    display: none;
+    position: fixed;
+    right: 14px;
+    bottom: 20px;
+    z-index: 300;
+    border: none;
+    background: var(--primary);
+    color: #fff;
+    padding: 10px 16px;
+    border-radius: 24px;
+    font-size: 0.9rem;
+    box-shadow: 0 4px 14px rgba(74, 144, 217, .4);
+    cursor: pointer;
+}
+
+.ol-nav-mask {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, .4);
+    z-index: 200;
+}
+
+/* 大节 */
+.ol-sec {
+    margin-bottom: 26px;
 }
 
 .ol-sec-title {
-    font-size: 1.15rem;
+    font-size: 1.18rem;
     font-weight: 700;
-}
-
-.ol-sec-progress {
-    margin-left: auto;
-    color: var(--text-light);
-    font-size: 0.85rem;
-    white-space: nowrap;
+    padding-left: 10px;
+    border-left: 4px solid var(--primary);
+    margin: 0 0 10px;
+    line-height: 1.4;
 }
 
 .ol-sec-body {
-    border-left: 3px solid var(--primary);
-    margin-left: 16px;
-    padding-left: 10px;
-    padding-top: 8px;
-}
-
-.ol-sec-body.collapsed {
-    display: none;
+    border-left: 1px solid var(--border);
+    padding-left: 14px;
 }
 
 /* 知识节点行 */
 .ol-node {
     display: flex;
-    align-items: flex-start;
+    align-items: baseline;
     gap: 8px;
-    padding: 6px 8px;
+    padding: 7px 10px;
     border-radius: 6px;
     margin-left: calc(var(--d, 0) * 20px);
+    line-height: 1.6;
 }
 
 .ol-node:hover {
     background: var(--light);
-}
-
-.ol-check {
-    flex-shrink: 0;
-    margin-top: 2px;
-    cursor: pointer;
-}
-
-.ol-check input {
-    width: 16px;
-    height: 16px;
-    cursor: pointer;
-    accent-color: #22c55e;
-}
-
-.ol-row {
-    flex: 1;
-    min-width: 0;
-    line-height: 1.55;
 }
 
 .ol-name {
@@ -3457,9 +3488,10 @@ a.chapter-badge-link:hover {
     word-break: break-word;
 }
 
-.ol-lv0 > .ol-row .ol-name,
-.ol-lv0 .ol-name {
+.ol-lv1 > .ol-name,
+.ol-lv1 .ol-name {
     font-weight: 700;
+    font-size: 1.03em;
 }
 
 .ol-detail {
@@ -3474,7 +3506,6 @@ a.chapter-badge-link:hover {
 .ol-lv5 .ol-name,
 .ol-lv6 .ol-name {
     font-weight: 500;
-    color: var(--text);
 }
 
 .ol-tag {
@@ -3483,14 +3514,9 @@ a.chapter-badge-link:hover {
     color: var(--text-light);
     border-radius: 4px;
     padding: 0 5px;
-    vertical-align: 1px;
-    margin-left: 6px;
     white-space: nowrap;
-}
-
-.ol-node.mastered .ol-name {
-    color: #22c55e;
-    opacity: 0.85;
+    flex-shrink: 0;
+    margin-top: 4px;
 }
 
 .ol-node.hit .ol-name {
@@ -3504,25 +3530,41 @@ a.chapter-badge-link:hover {
 }
 
 /* 暗色模式适配 */
-.dark .ol-sec-head:hover {
-    background: #1b2028;
-}
-
 .dark .ol-node.hit .ol-name {
     background: #6b4f00;
     color: #ffe9a8;
 }
 
-.dark .ol-sec-head.done .ol-sec-title {
-    color: #4ade80;
+.dark .map-flash {
+    background: #1b2028;
 }
 
-.dark .ol-node.mastered .ol-name {
-    color: #4ade80;
-}
-
-/* 窄屏：缩进减小 */
-@media (max-width: 640px) {
+/* 窄屏：导航转为抽屉 */
+@media (max-width: 900px) {
+    .ol-layout {
+        display: block;
+    }
+    .ol-nav {
+        position: fixed;
+        top: 0;
+        right: 0;
+        bottom: 0;
+        width: 260px;
+        max-height: none;
+        border-radius: var(--radius) 0 0 var(--radius);
+        transform: translateX(100%);
+        transition: transform 0.25s;
+        z-index: 300;
+    }
+    .ol-nav.open {
+        transform: translateX(0);
+    }
+    .ol-nav-mask.open {
+        display: block;
+    }
+    .ol-nav-fab {
+        display: block;
+    }
     .ol-node {
         margin-left: calc(var(--d, 0) * 12px);
     }

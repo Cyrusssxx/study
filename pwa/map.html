@@ -40,19 +40,19 @@
         <div class="map-header">
             <h1>🗺️ 计组强化思维导图</h1>
             <p class="notes-source" id="mapSubtitle">加载中...</p>
-            <div class="map-stats" id="mapStats"></div>
         </div>
         <div class="map-toolbar">
             <input class="search-input map-search" id="mapSearch" type="search"
                 placeholder="🔍 搜索知识点 / 真题年份 / 硬件编号（如 ALU、CF、Tag）…" oninput="onMapSearch()">
-            <button class="btn btn-secondary btn-sm" onclick="toggleAllSections(true)">全部展开</button>
-            <button class="btn btn-secondary btn-sm" onclick="toggleAllSections(false)">收起全部</button>
-            <button class="btn btn-secondary btn-sm" onclick="clearMastered()">清空掌握</button>
-            <div class="map-progress" id="mapProgress"><div class="map-progress-bar" id="mapProgressBar"></div></div>
         </div>
         <div class="map-search-hint" id="mapSearchHint"></div>
-        <div id="mapRoot"><div class="map-empty">加载中…</div></div>
+        <div class="ol-layout">
+            <aside class="ol-nav" id="olNav"></aside>
+            <div id="mapRoot"><div class="map-empty">加载中…</div></div>
+        </div>
     </main>
+    <button class="ol-nav-fab" id="olNavFab" onclick="openOlNav()" title="目录">☰ 目录</button>
+    <div class="ol-nav-mask" id="olNavMask" onclick="closeOlNav()"></div>
     <script src="js/common.js"></script>
     <script src="js/backend.js"></script>
     <script>
@@ -60,107 +60,52 @@
         const SUBJECT = _params.get('subject') || 'co';
 
         let MAP = null;
-        let mastered = {};
         let totalNodes = 0;
         let searchQ = '';
         let matchIds = new Set();
-        let collapsedSecs = new Set();
+        let forcedOpen = new Set();
+        let olNavCollapsed = localStorage.getItem('comap_nav_collapsed') === '1';
 
         function esc(s) {
             return String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
         }
 
-        function assignIds(node, parent, parentNode) {
+        function assignIds(node, parent) {
             node._id = parent == null ? String(node._idx) : parent + '-' + node._idx;
-            node._parent = parentNode;
             totalNodes++;
-            (node.c || []).forEach((ch, i) => { ch._idx = i; assignIds(ch, node._id, node); });
-        }
-
-        function findNode(id) {
-            for (const r of MAP.roots) { const f = findInNode(r, id); if (f) return f; }
-            return null;
-        }
-        function findInNode(node, id) {
-            if (node._id === id) return node;
-            for (const c of (node.c || [])) { const f = findInNode(c, id); if (f) return f; }
-            return null;
-        }
-
-        function countMastered(node) {
-            let c = mastered[node._id] ? 1 : 0;
-            for (const k of (node.c || [])) c += countMastered(k);
-            return c;
-        }
-        function countTotal(node) {
-            return 1 + (node.c || []).reduce((s, k) => s + countTotal(k), 0);
-        }
-
-        function loadMastered() {
-            try { mastered = JSON.parse(localStorage.getItem('comap_mastered') || '{}'); } catch { mastered = {}; }
-            for (const id of Object.keys(mastered)) if (!findNode(id)) delete mastered[id];
-        }
-
-        function saveMastered() {
-            localStorage.setItem('comap_mastered', JSON.stringify(mastered));
-        }
-
-        function updateStats() {
-            let n = 0;
-            for (const id of Object.keys(mastered)) if (findNode(id)) n++;
-            const pct = totalNodes ? Math.round(n / totalNodes * 100) : 0;
-            document.getElementById('mapStats').textContent = `共 ${totalNodes} 个知识点 · 已掌握 ${n}（${pct}%）`;
-            document.getElementById('mapProgressBar').style.width = pct + '%';
+            (node.c || []).forEach((ch, i) => { ch._idx = i; assignIds(ch, node._id); });
         }
 
         // ==================== 大纲渲染 ====================
 
         function renderNode(node, depth) {
-            const isMastered = !!mastered[node._id];
             const isMatch = matchIds.has(node._id);
             const isAncestor = forcedOpen.has(node._id);
             let cls = 'ol-node ol-lv' + Math.min(depth, 6);
-            if (isMastered) cls += ' mastered';
             if (searchQ) {
                 if (isMatch) cls += ' hit';
                 else if (!isAncestor) cls += ' dim';
             }
-            let row = `<div class="${cls}" style="--d:${depth}" data-id="${node._id}">
-                <label class="ol-check" title="${isMastered ? '已掌握，点击取消' : '标记为已掌握'}">
-                    <input type="checkbox" onchange="toggleMastered('${node._id}')" ${isMastered ? 'checked' : ''}>
-                </label>
-                <div class="ol-row">
-                    <span class="ol-name">${esc(node.n)}</span>
-                    ${node.tag ? `<span class="ol-tag">${esc(node.tag)}</span>` : ''}
-                    ${node.d ? `<span class="ol-detail">${esc(node.d)}</span>` : ''}
-                </div>
-            </div>`;
-            let out = row;
-            for (const k of (node.c || [])) out += renderNode(k, depth + 1);
-            return out;
+            return `<div class="${cls}" style="--d:${depth}" data-id="${node._id}">
+                <span class="ol-name">${esc(node.n)}</span>
+                ${node.tag ? `<span class="ol-tag">${esc(node.tag)}</span>` : ''}
+                ${node.d ? `<span class="ol-detail">${esc(node.d)}</span>` : ''}
+            </div>` + (node.c || []).map(k => renderNode(k, depth + 1)).join('');
         }
 
         function renderSection(r, idx) {
-            const collapsed = collapsedSecs.has(idx);
-            const mc = countMastered(r), tc = countTotal(r);
-            const allDone = mc === tc;
-            return `<section class="ol-sec">
-                <div class="ol-sec-head${allDone ? ' done' : ''}" onclick="toggleSection(${idx})">
-                    <span class="ol-caret">${collapsed ? '▸' : '▾'}</span>
-                    <span class="ol-sec-title">${esc(r.n)}</span>
-                    ${r.tag ? `<span class="ol-tag">${esc(r.tag)}</span>` : ''}
-                    <span class="ol-sec-progress">✔ ${mc}/${tc}</span>
-                </div>
-                <div class="ol-sec-body${collapsed ? ' collapsed' : ''}">${renderNode(r, 0)}</div>
+            const kids = (r.c || []).map(k => renderNode(k, 1)).join('');
+            return `<section class="ol-sec" id="sec-${idx}">
+                <h2 class="ol-sec-title">${esc(r.n)}</h2>
+                <div class="ol-sec-body">${kids || '<div class="map-empty">（无内容）</div>'}</div>
             </section>`;
         }
-
-        let forcedOpen = new Set();
 
         function renderAll() {
             const root = document.getElementById('mapRoot');
             if (!MAP) { root.innerHTML = '<div class="map-empty">加载失败，请检查网络后刷新。</div>'; return; }
             root.innerHTML = MAP.roots.map(renderSection).join('');
+            renderNav();
             const hint = document.getElementById('mapSearchHint');
             if (searchQ) {
                 hint.style.display = '';
@@ -172,33 +117,56 @@
             }
         }
 
-        function toggleSection(idx) {
-            if (collapsedSecs.has(idx)) collapsedSecs.delete(idx); else collapsedSecs.add(idx);
-            renderAll();
+        // ==================== 左侧可收起导航 ====================
+
+        function renderNav() {
+            const nav = document.getElementById('olNav');
+            if (!MAP) return;
+            const body = MAP.roots.map((r, idx) => {
+                const subs = (r.c || []).map(k =>
+                    `<a class="ol-nav-item sub" data-target="${k._id}" title="${esc(k.n)}">${esc(k.n)}</a>`
+                ).join('');
+                return `<div class="ol-nav-sec">
+                    <a class="ol-nav-item root" data-target="sec-${idx}">${esc(r.n)}</a>
+                    <div class="ol-nav-subs">${subs}</div>
+                </div>`;
+            }).join('');
+            nav.innerHTML = `<div class="ol-nav-head" onclick="toggleOlNav()">目录<span class="ol-nav-toggle">▾</span></div>
+                <div class="ol-nav-body">${body}</div>`;
+            nav.classList.toggle('collapsed', olNavCollapsed);
+            nav.querySelectorAll('.ol-nav-item').forEach(a => {
+                a.addEventListener('click', () => gotoNode(a.dataset.target));
+            });
         }
 
-        function toggleAllSections(open) {
-            collapsedSecs.clear();
-            if (!open) for (let i = 0; i < MAP.roots.length; i++) collapsedSecs.add(i);
-            renderAll();
+        function toggleOlNav() {
+            olNavCollapsed = !olNavCollapsed;
+            localStorage.setItem('comap_nav_collapsed', olNavCollapsed ? '1' : '0');
+            const nav = document.getElementById('olNav');
+            if (nav) nav.classList.toggle('collapsed', olNavCollapsed);
         }
 
-        function toggleMastered(id) {
-            const node = findNode(id);
-            if (!node) return;
-            if (mastered[id]) delete mastered[id]; else mastered[id] = true;
-            saveMastered();
-            updateStats();
-            renderAll();
+        function openOlNav() {
+            document.getElementById('olNav').classList.add('open');
+            document.getElementById('olNavMask').classList.add('open');
         }
 
-        function clearMastered() {
-            if (!confirm('确定清空所有“已掌握”标记吗？')) return;
-            mastered = {};
-            saveMastered();
-            updateStats();
-            renderAll();
+        function closeOlNav() {
+            document.getElementById('olNav').classList.remove('open');
+            document.getElementById('olNavMask').classList.remove('open');
         }
+
+        function gotoNode(target) {
+            const el = document.getElementById(target) || document.querySelector(`[data-id="${target}"]`);
+            if (el) {
+                el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                el.classList.add('map-flash');
+                setTimeout(() => el.classList.remove('map-flash'), 1500);
+            }
+            closeOlNav();
+        }
+
+        // ==================== 搜索 ====================
 
         function onMapSearch() {
             searchQ = document.getElementById('mapSearch').value.trim().toLowerCase();
@@ -227,11 +195,9 @@
                 const resp = await fetch(`data/${SUBJECT}_map.json`);
                 if (!resp.ok) throw new Error(resp.status);
                 MAP = await resp.json();
-                document.getElementById('mapSubtitle').textContent = MAP.subtitle || '';
-                MAP.roots.forEach((r, i) => { r._idx = i; assignIds(r, null, null); });
-                loadMastered();
+                MAP.roots.forEach((r, i) => { r._idx = i; assignIds(r, null); });
+                document.getElementById('mapSubtitle').textContent = (MAP.subtitle ? MAP.subtitle + ' · ' : '') + `共 ${totalNodes} 个知识点`;
                 renderAll();
-                updateStats();
             } catch (err) {
                 document.getElementById('mapSubtitle').textContent = '导图数据加载失败：' + err.message;
                 document.getElementById('mapRoot').innerHTML = '<div class="map-empty">加载失败，请检查网络后刷新。</div>';
