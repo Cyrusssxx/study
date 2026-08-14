@@ -4,7 +4,7 @@
 仅作用于 <p class="paragraph"> 内部。
   1. ① ② ③ … 枚举 → <ol>（≥2 个、按序、前为分隔符）
   2. <strong>术语</strong>：…；<strong>… 并列要点 → <ul>（≥3 个）
-  3. 超长段（纯文本 ≥200 字）且无可列表化结构 → 按句子切短段
+  3. 超长段（纯文本 ≥150 字）且无可列表化结构 → 按句子切短段
 
 切分时用「内联标签栈携带」方式：跨段时先闭合再重开，保证每段标签平衡。
 """
@@ -16,7 +16,7 @@ import sys
 CIRCLED = '①②③④⑤⑥⑦⑧⑨'
 LIST_MIN_CIRCLE = 2
 LIST_MIN_STRONG = 3
-SPLIT_LEN = 200
+SPLIT_LEN = 150
 
 INLINE_TAGS = {
     'strong', 'b', 'em', 'i', 'u', 'sub', 'sup', 'code', 'span',
@@ -247,28 +247,34 @@ def build_ul_from_strongs(inner, strongs):
 
 
 def _balanced_split_html(html):
-    """对单个仍过长(>=SPLIT_LEN)的段落，按 clause 标点（，、；：）在中间点平衡切分。
-    处理"一长串句子"（整段只有一个超长句、无句末标点）的情况。"""
+    """对单个仍过长(>=SPLIT_LEN)的段落切分。
+    优先按 clause 标点（，、；：）在中点平衡切分；若无任何 clause 标点（整段是单句/长串），
+    则在中点附近的「文字字符」处硬切（可能句中断开），保证每段 <= SPLIT_LEN。"""
     toks = tokenize(html)
-    if len(plain_text(toks)) < SPLIT_LEN:
+    if len(plain_text(toks)) <= SPLIT_LEN:
         return [html]
-    # 建立 (idx,ci) -> 全局文本偏移，收集 clause 切分点
-    off_map = {}
-    bounds = []
+    total = len(plain_text(toks))
+    mid = total / 2
+    # 收集：clause 标点位置 与 全部文字字符位置（仅在 text token 内，避免切断标签）
+    clause_bounds = []
+    char_positions = []   # (text_offset, idx, ci)
     text_off = 0
     for idx, (kind, name, raw) in enumerate(toks):
         if kind == 'text':
             for ci, ch in enumerate(raw):
-                off_map[(idx, ci)] = text_off + ci
+                char_positions.append((text_off + ci, idx, ci))
                 if ch in '，、；：':
-                    bounds.append((idx, ci))
+                    clause_bounds.append((text_off + ci, idx, ci))
             text_off += len(raw)
-    if not bounds:
-        return [html]  # 无任何可切分标点，无法再拆
-    total = len(plain_text(toks))
-    mid = total / 2
-    best = min(bounds, key=lambda b: abs(off_map[b] - mid))
-    parts = split_at_bounds(toks, {best}, after_char=True)
+    # 选切点：优先 clause 标点里离中点最近的；否则用任意文字字符里离中点最近的（句中硬切）
+    if clause_bounds:
+        best = min(clause_bounds, key=lambda b: abs(b[0] - mid))
+    elif char_positions:
+        best = min(char_positions, key=lambda b: abs(b[0] - mid))
+    else:
+        return [html]  # 全是标签，无法切
+    boundary = (best[1], best[2])
+    parts = split_at_bounds(toks, {boundary}, after_char=True)
     res = []
     for p in parts:
         p = p.strip()
