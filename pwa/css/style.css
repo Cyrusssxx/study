@@ -647,6 +647,8 @@ body {
     display: flex;
     flex-direction: column;
     gap: 12px;
+    flex: 1;
+    min-width: 0;
 }
 
 .list-header {
@@ -3335,10 +3337,10 @@ a.chapter-badge-link:hover {
     min-width: 0;
 }
 
-/* 左侧可收起导航 */
+/* 左侧可收起导航（导图 / 打卡共用）：向左边收起，收起后仅留窄竖条 */
 .ol-nav {
-    width: 224px;
-    flex: 0 0 224px;
+    width: 200px;
+    flex: 0 0 200px;
     position: sticky;
     top: 76px;
     max-height: calc(100vh - 96px);
@@ -3347,6 +3349,7 @@ a.chapter-badge-link:hover {
     border: 1px solid var(--border);
     border-radius: var(--radius);
     box-shadow: var(--shadow);
+    transition: width 0.2s ease, flex-basis 0.2s ease;
 }
 
 .ol-nav-head {
@@ -3363,15 +3366,49 @@ a.chapter-badge-link:hover {
 
 .ol-nav-toggle {
     color: var(--text-light);
-    transition: transform 0.2s;
 }
 
-.ol-nav.collapsed .ol-nav-toggle {
-    transform: rotate(-90deg);
+.ol-nav.collapsed {
+    width: 0;
+    flex: 0 0 0;
+    overflow: hidden;
+    border-width: 0;
+    visibility: hidden;
 }
 
 .ol-nav.collapsed .ol-nav-body {
     display: none;
+}
+
+/* 收起后左边留的窄竖条，点击展开 */
+.ol-nav-tab {
+    display: none;
+    flex: 0 0 auto;
+    align-self: flex-start;
+    position: sticky;
+    top: 76px;
+    width: 26px;
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    border-radius: 0 var(--radius) var(--radius) 0;
+    box-shadow: var(--shadow);
+    color: var(--text-light);
+    font-size: 0.78rem;
+    line-height: 1.6;
+    padding: 10px 2px;
+    writing-mode: vertical-rl;
+    text-align: center;
+    cursor: pointer;
+    user-select: none;
+}
+
+.ol-nav.collapsed + .ol-nav-tab {
+    display: block;
+}
+
+.ol-nav-tab:hover {
+    color: var(--primary);
+    border-color: var(--primary);
 }
 
 .ol-nav-body {
@@ -3405,6 +3442,10 @@ a.chapter-badge-link:hover {
     color: var(--text-light);
     padding-left: 20px;
     font-size: 0.82rem;
+}
+
+.ol-nav-item.sub.daka-nav-done {
+    color: var(--success);
 }
 
 .ol-nav-fab {
@@ -3579,14 +3620,24 @@ a.chapter-badge-link:hover {
         right: 0;
         bottom: 0;
         width: 260px;
+        flex: none;
         max-height: none;
         border-radius: var(--radius) 0 0 var(--radius);
         transform: translateX(100%);
         transition: transform 0.25s;
         z-index: 300;
+        visibility: visible;
+        overflow-y: auto;
+    }
+    .ol-nav.collapsed {
+        width: 260px;
+        border-width: 1px;
     }
     .ol-nav.open {
         transform: translateX(0);
+    }
+    .ol-nav-tab {
+        display: none !important;
     }
     .ol-nav-mask.open {
         display: block;

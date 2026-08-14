@@ -49,6 +49,7 @@
         <div class="map-search-hint" id="mapSearchHint"></div>
         <div class="ol-layout">
             <aside class="ol-nav" id="olNav"></aside>
+            <button class="ol-nav-tab" id="olNavTab" onclick="expandOlNav()" title="展开目录">☰ 目录</button>
             <div id="mapRoot"><div class="map-empty">加载中…</div></div>
         </div>
     </main>
@@ -344,7 +345,7 @@
                     <div class="ol-nav-subs">${subs}</div>
                 </div>`;
             }).join('');
-            nav.innerHTML = `<div class="ol-nav-head" onclick="toggleOlNav()">目录<span class="ol-nav-toggle">▾</span></div>
+            nav.innerHTML = `<div class="ol-nav-head" onclick="toggleOlNav()">目录<span class="ol-nav-toggle">«</span></div>
                 <div class="ol-nav-body">${body}</div>`;
             nav.classList.toggle('collapsed', olNavCollapsed);
             nav.querySelectorAll('.ol-nav-item').forEach(a => {
@@ -357,6 +358,13 @@
             localStorage.setItem('comap_nav_collapsed', olNavCollapsed ? '1' : '0');
             const nav = document.getElementById('olNav');
             if (nav) nav.classList.toggle('collapsed', olNavCollapsed);
+        }
+
+        function expandOlNav() {
+            olNavCollapsed = false;
+            localStorage.setItem('comap_nav_collapsed', '0');
+            const nav = document.getElementById('olNav');
+            if (nav) nav.classList.remove('collapsed');
         }
 
         function openOlNav() {

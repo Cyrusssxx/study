@@ -49,15 +49,26 @@
 
         <div class="daka-summary" id="dakaSummary"></div>
 
-        <div class="question-list" id="dakaList">
-            <div class="loading">加载中...</div>
+        <div class="ol-layout">
+            <aside class="ol-nav" id="dakaNav"></aside>
+            <button class="ol-nav-tab" id="dakaNavTab" onclick="expandDakaNav()" title="展开目录">☰ 目录</button>
+            <div class="question-list" id="dakaList">
+                <div class="loading">加载中...</div>
+            </div>
         </div>
     </main>
+    <button class="ol-nav-fab" id="dakaNavFab" onclick="openDakaNav()" title="定位题目">☰ 定位</button>
+    <div class="ol-nav-mask" id="dakaNavMask" onclick="closeDakaNav()"></div>
     <script src="js/common.js"></script>
     <script src="js/backend.js"></script>
     <script>
     let dakaQuestions = [];
     let dakaProgress = {};
+    let dakaNavCollapsed = localStorage.getItem('daka_nav_collapsed') === '1';
+
+    function esc(s) {
+        return String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+    }
 
     async function loadDaka() {
         try {
@@ -78,22 +89,87 @@
         document.getElementById('dakaSummary').innerHTML =
             `已打卡 <b>${doneCount}</b> / ${dakaQuestions.length} 题`;
 
-        // 按优先级分组，必做与高优先级默认展开
+        // 按优先级分组，默认全部收起，通过左侧导航定位题目
         const groups = new Map();
         for (const q of dakaQuestions) {
             if (!groups.has(q.priority_label)) groups.set(q.priority_label, []);
             groups.get(q.priority_label).push(q);
         }
         let html = '';
+        let nav = '';
+        let gi = 0;
         for (const [label, qs] of groups) {
-            const open = (label === '必做' || label === '高优先级') ? ' open' : '';
             const gDone = qs.filter(q => dakaProgress[q.id]).length;
-            html += `<details class="daka-group"${open}>
-                <summary class="daka-group-title">${label}（${gDone}/${qs.length}）</summary>
+            const subs = qs.map(q => {
+                const done = !!dakaProgress[q.id];
+                const year = (q.real || '').match(/\d{4}/);
+                const item = `${q.source}${year ? ' · ' + year[0] : ''}`;
+                return `<a class="ol-nav-item sub${done ? ' daka-nav-done' : ''}" data-target="card-${q.id}"
+                    title="${esc(q.module)} / ${esc(q.kaodian)} · ${esc(q.real || '')}">${done ? '✓ ' : ''}${esc(item)}</a>`;
+            }).join('');
+            nav += `<div class="ol-nav-sec">
+                <a class="ol-nav-item root" data-group="${gi}">${esc(label)}（${gDone}/${qs.length}）</a>
+                <div class="ol-nav-subs">${subs}</div>
+            </div>`;
+            html += `<details class="daka-group" id="group-${gi}">
+                <summary class="daka-group-title">${esc(label)}（${gDone}/${qs.length}）</summary>
                 ${qs.map(renderCard).join('')}
             </details>`;
+            gi++;
         }
+        const navEl = document.getElementById('dakaNav');
+        navEl.innerHTML = `<div class="ol-nav-head" onclick="toggleDakaNav()">定位<span class="ol-nav-toggle">«</span></div>
+            <div class="ol-nav-body">${nav}</div>`;
+        navEl.classList.toggle('collapsed', dakaNavCollapsed);
+        navEl.querySelectorAll('.ol-nav-item.sub').forEach(a => {
+            a.addEventListener('click', () => gotoDaka(a.dataset.target));
+        });
+        navEl.querySelectorAll('.ol-nav-item.root').forEach(a => {
+            a.addEventListener('click', () => toggleDakaGroup(parseInt(a.dataset.group, 10)));
+        });
         document.getElementById('dakaList').innerHTML = html;
+    }
+
+    function toggleDakaNav() {
+        dakaNavCollapsed = !dakaNavCollapsed;
+        localStorage.setItem('daka_nav_collapsed', dakaNavCollapsed ? '1' : '0');
+        document.getElementById('dakaNav').classList.toggle('collapsed', dakaNavCollapsed);
+    }
+
+    function expandDakaNav() {
+        dakaNavCollapsed = false;
+        localStorage.setItem('daka_nav_collapsed', '0');
+        document.getElementById('dakaNav').classList.remove('collapsed');
+    }
+
+    function openDakaNav() {
+        document.getElementById('dakaNav').classList.add('open');
+        document.getElementById('dakaNavMask').classList.add('open');
+    }
+
+    function closeDakaNav() {
+        document.getElementById('dakaNav').classList.remove('open');
+        document.getElementById('dakaNavMask').classList.remove('open');
+    }
+
+    function toggleDakaGroup(idx) {
+        const det = document.getElementById('group-' + idx);
+        if (det) {
+            det.open = !det.open;
+            det.scrollIntoView({behavior: 'smooth', block: 'start'});
+        }
+    }
+
+    function gotoDaka(target) {
+        const card = document.getElementById(target);
+        if (card) {
+            const det = card.closest('details.daka-group');
+            if (det && !det.open) det.open = true;
+            card.scrollIntoView({behavior: 'smooth', block: 'start'});
+            card.classList.add('map-flash');
+            setTimeout(() => card.classList.remove('map-flash'), 1500);
+        }
+        closeDakaNav();
     }
 
     function badgeClass(p) {
