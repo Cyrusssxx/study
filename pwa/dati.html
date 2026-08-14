@@ -133,6 +133,7 @@
             <button class="dati-chip" id="fAll" onclick="setFilter('all')">全部 <span class="dati-count" id="cntAll"></span></button>
             <button class="dati-chip" id="fReal" onclick="setFilter('real')">统考真题 <span class="dati-count" id="cntReal"></span></button>
             <button class="dati-chip" id="fFav" onclick="setFilter('fav')">★ 我的收藏 <span class="dati-count" id="cntFav"></span></button>
+            <button class="dati-chip" id="datiExpandAll" onclick="toggleAllChapters()">展开全部</button>
             <select class="dati-year" id="yearSel" onchange="setYear(this.value)" style="display:none"></select>
         </div>
         <div class="dati-layout">
@@ -156,6 +157,11 @@
     let noteMap = {};            // qid -> {content, images}，dati 题笔记
     let noteOpen = new Set();    // 展开中的笔记面板 qid
     let navCollapsed = localStorage.getItem('datiNavCollapsed') === '1';  // 桌面端导航是否收起
+    let openChapters = new Set(JSON.parse(localStorage.getItem('datiOpenCh') || '[]'));  // 已展开的章节（默认收起，按需加载图片）
+
+    function saveOpenChapters() {
+        localStorage.setItem('datiOpenCh', JSON.stringify([...openChapters]));
+    }
 
     const img = (key, fn) => `<img src="data/dati_figs/${key}/${fn}" loading="lazy" alt="大题截图">`;
 
@@ -334,7 +340,8 @@
             }
             if (!secHtml.length) continue;
             const n = secHtml.length;
-            chaptersHtml.push(`<details class="daka-group" open>
+            const ckey = activeSubject + '::' + ch.name;
+            chaptersHtml.push(`<details class="daka-group"${openChapters.has(ckey) ? ' open' : ''} data-chkey="${ckey}">
                 <summary class="daka-group-title">${ch.name}（${n} 节）</summary>
                 ${secHtml.join('')}
             </details>`);
@@ -381,6 +388,13 @@
     function jumpTo(qid) {
         const el = document.getElementById('q' + qid);
         if (el) {
+            const d = el.closest('details.daka-group');
+            if (d && !d.open) {
+                d.open = true;
+                openChapters.add(d.dataset.chkey);
+                saveOpenChapters();
+                syncExpandBtn();
+            }
             el.scrollIntoView({ behavior: 'smooth', block: 'start' });
             el.classList.add('dati-flash');
             setTimeout(() => el.classList.remove('dati-flash'), 1500);
@@ -410,6 +424,36 @@
             if (ta) { ta.value = note.content || ''; autoResizeNote(ta); }
             renderNoteImages(qid, p.querySelector('[data-note-imgs]'));
         });
+        root.querySelectorAll('details.daka-group').forEach(d => {
+            d.addEventListener('toggle', () => {
+                const k = d.dataset.chkey;
+                if (d.open) openChapters.add(k); else openChapters.delete(k);
+                saveOpenChapters();
+            });
+        });
+        syncExpandBtn();
+    }
+
+    function toggleAllChapters() {
+        const root = document.getElementById('datiRoot');
+        const details = [...root.querySelectorAll('details.daka-group')];
+        if (!details.length) return;
+        const allOpen = details.every(d => d.open);
+        openChapters.clear();
+        for (const d of details) {
+            d.open = !allOpen;
+            if (!allOpen) openChapters.add(d.dataset.chkey);
+        }
+        saveOpenChapters();
+        syncExpandBtn();
+    }
+
+    function syncExpandBtn() {
+        const btn = document.getElementById('datiExpandAll');
+        if (!btn) return;
+        const root = document.getElementById('datiRoot');
+        const details = [...root.querySelectorAll('details.daka-group')];
+        btn.textContent = details.length && details.every(d => d.open) ? '收起全部' : '展开全部';
     }
 
     function toggleNotePanel(qid) {
