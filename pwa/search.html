@@ -137,7 +137,7 @@
             for (const n of notes) {
                 const preview = (n.html || '').replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim();
                 html += `
-                    <div class="list-item list-item-link" onclick="location.href='notes.html?subject=${n.subject}&goto=${encodeURIComponent(n.section)}'">
+                    <div class="list-item list-item-link" onclick="location.href='notes.html?subject=${n.subject}&goto=${encodeURIComponent(n.section)}&q=${encodeURIComponent(kw)}'">
                         <div class="item-header">
                             <span class="item-subject">${n.subject_name} · 知识库</span>
                             <span class="item-info">${n.chapter || ''}${n.section ? ' · ' + n.section : ''}</span>

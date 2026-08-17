@@ -55,6 +55,8 @@
         const _params = new URLSearchParams(location.search);
         const SUBJECT = _params.get('subject') || 'co';
         const GOTO = _params.get('goto');
+        const LINE = _params.get('line');   // 跳到该节第 N 行（data-line）
+        const Q = _params.get('q');         // 关键词/题干片段：节内(+全局兜底)模糊定位最相关的小知识点并高亮
         // 笔记批注 / 高亮持久化走现有笔记链路（api() 拦截 IndexedDB）
         const noteApi = (url, opts) => api(url, opts);
 
@@ -93,7 +95,7 @@
             // 操作系统（OS）映射
             "1.1 操作系统的基本概念": "1.2 操作系统发展历程",
             "2.1 进程与线程简介": "2.2 CPU调度",
-            "71.3 文件系统": "4.3 文件系统",
+            "71.3 文件系统": "4.3 文件系统的实现",
         };
 
         // 章节名含 / 等字符，锚点定位统一走 data-sec 属性匹配，不用 id 选择器
@@ -149,6 +151,126 @@
                 void target.offsetWidth;
                 target.classList.add('goto-highlight');
             }
+        }
+
+        // 仅按名称解析出 section 元素（供细粒度跳转复用 jumpTo 的匹配逻辑）
+        function resolveSectionEl(name) {
+            const sections = Array.from(document.querySelectorAll('.notes-section'));
+            const mapped = SEC_ALIASES[name] || name;
+            let target = sections.find(s => s.dataset.sec === name)
+                          || sections.find(s => s.dataset.sec === mapped);
+            if (!target) {
+                const numMatch = (mapped || name).match(/^(\d+\.\d+)/);
+                if (numMatch) {
+                    const prefix = numMatch[1];
+                    const candidates = sections.filter(s => s.dataset.sec.startsWith(prefix));
+                    if (candidates.length === 1) {
+                        target = candidates[0];
+                    } else if (candidates.length > 1) {
+                        const titleKw = (mapped || name).replace(/^(\d+\.\d+\s*)+/, '').replace(/[的与及和和或]+/g, ' ').trim().split(/\s+/).filter(w => w.length > 1);
+                        let bestScore = 0;
+                        for (const c of candidates) {
+                            const secTitle = c.dataset.sec.replace(/^\d+\.\d+\s*/, '');
+                            let score = 0;
+                            for (const kw of titleKw) if (secTitle.includes(kw)) score += kw.length;
+                            if (score > bestScore) { bestScore = score; target = c; }
+                        }
+                        if (bestScore === 0) target = candidates[0];
+                    }
+                }
+            }
+            if (!target) {
+                const kw = (mapped || name).replace(/^\d+\.[\d\s]*/, '').trim();
+                if (kw.length >= 2) target = sections.find(s => s.dataset.sec.includes(kw));
+            }
+            return target || null;
+        }
+
+        // 跳到该节内的具体某一行（data-line），并闪烁高亮
+        function jumpToLine(secName, lineNo) {
+            const sec = resolveSectionEl(secName);
+            if (!sec) return false;
+            const el = sec.querySelector('.anno-line[data-line="' + lineNo + '"]');
+            if (!el) return false;
+            el.scrollIntoView({ block: 'center', behavior: 'smooth' });
+            const tsec = sec.dataset.sec;
+            el.classList.add('locate-flash');
+            setTimeout(() => el.classList.remove('locate-flash'), 1800);
+            document.querySelectorAll('.notes-toc-sec').forEach(l => l.classList.toggle('active', l.dataset.sec === tsec));
+            return true;
+        }
+
+        // 关键词/题干片段 → 定位到最相关的小知识点行（细粒度跳转）
+        // 策略：在「题目所属节」内优先定位；节内无命中才全局兜底。
+        // 评分 = 题干与笔记行共享的「稀有长字串」加权求和（IDF），天然压低
+        //       "下列关于…的叙述中，正确的是"等通用套话；例题题干行降权。
+        let _bgCache = null;
+        function bgIndex() {
+            if (_bgCache) return _bgCache;
+            const lines = Array.from(document.querySelectorAll('.notes-content .anno-line'));
+            const N = lines.length;
+            const df = {};
+            const recs = lines.map(el => {
+                const t = cleanTextOf(el).toLowerCase();
+                const grams = new Set();
+                for (let ln = 2; ln <= 5; ln++)            // 2~5 字子串语料，计算文档频率
+                    for (let i = 0; i + ln <= t.length; i++) grams.add(t.slice(i, i + ln));
+                for (const g of grams) df[g] = (df[g] || 0) + 1;
+                const isEx = /^(?:[（(]?\s*)?(?:例\s*[0-9０-９]+|例题|经典例题|经典题|典例演算)/.test(t)
+                            || /的叙述中，正确的是/.test(t) || /下列关于/.test(t);
+                return { el, t, grams, isEx };
+            });
+            _bgCache = { N, df, recs };
+            return _bgCache;
+        }
+        function _scoreLine(q, rec, N, df) {
+            const ql = String(q).toLowerCase();
+            if (ql.length < 2) return { score: 0, hits: 0 };
+            const matched = new Set();
+            for (let ln = 5; ln >= 2; ln--)               // 先长后短，去重收集题干与行共享的子串
+                for (let i = 0; i + ln <= ql.length; i++) {
+                    const sub = ql.slice(i, i + ln);
+                    if (rec.grams.has(sub)) matched.add(sub);
+                }
+            let score = 0, hits = 0;
+            const rareTh = Math.max(3, N * 0.02);
+            for (const sub of matched) {
+                if (sub.length < 2) continue;
+                const d = df[sub] || 0;
+                if (!(sub.length >= 3 || d <= rareTh)) continue;   // 仅奖励较长或稀有的字串
+                score += sub.length * Math.log((N + 1) / (d + 1));  // IDF 加权
+                hits++;
+            }
+            if (ql && rec.t.indexOf(ql) >= 0) score += 8;          // 整句命中再加成
+            return { score, hits };
+        }
+        function gotoSpecific(q, preferSecEl) {
+            const idx = bgIndex();
+            const N = idx.N, df = idx.df;
+            let bestIn = null, bestInScore = -1, bestInLen = 1e9;
+            let bestGl = null, bestGlScore = -1, bestGlLen = 1e9;
+            for (const rec of idx.recs) {
+                const r = _scoreLine(q, rec, N, df);
+                if (!r.hits) continue;
+                let sc = r.score;
+                if (rec.isEx) sc *= 0.4;                          // 例题题干行降权
+                if (sc > bestGlScore || (sc === bestGlScore && rec.t.length < bestGlLen)) {
+                    bestGlScore = sc; bestGl = rec.el; bestGlLen = rec.t.length;
+                }
+                if (preferSecEl && preferSecEl.contains(rec.el)) {
+                    if (sc > bestInScore || (sc === bestInScore && rec.t.length < bestInLen)) {
+                        bestInScore = sc; bestIn = rec.el; bestInLen = rec.t.length;
+                    }
+                }
+            }
+            const target = bestIn || bestGl;                      // 节内优先，否则全局兜底
+            if (!target) return false;
+            target.scrollIntoView({ block: 'center', behavior: 'smooth' });
+            const tsec = target.closest('.notes-section');
+            target.classList.add('locate-flash');
+            setTimeout(() => target.classList.remove('locate-flash'), 1800);
+            if (tsec) document.querySelectorAll('.notes-toc-sec').forEach(l => l.classList.toggle('active', l.dataset.sec === tsec.dataset.sec));
+            return true;
         }
 
         // ---------- 笔记排版优化：序号分行 / 例题卡片 ----------
@@ -385,7 +507,14 @@
                 });
             }, { passive: true });
 
-            if (GOTO) setTimeout(() => jumpTo(GOTO, true), 100);
+            // 细粒度跳转：?line=N 跳该节某行；?q=关键词 节内(全局兜底)定位最相关小点；否则整节跳转
+            if (GOTO) setTimeout(() => {
+                let done = false;
+                const secEl = resolveSectionEl(GOTO);
+                if (LINE) done = jumpToLine(GOTO, parseInt(LINE, 10) || 0);
+                if (!done && Q) done = gotoSpecific(Q, secEl);
+                if (!done) jumpTo(GOTO, true);
+            }, 100);
             // 长表格加横向滚动包裹，防止移动端列被压扁
             document.querySelectorAll('.notes-body table').forEach(t => {
                 const wrap = document.createElement('div');
