@@ -4,7 +4,7 @@
  * 预缓存资源（页面/样式/题库/图标）任意改动后重新构建即可让客户端自动换新缓存，
  * 无需手动改版本号。手动编辑本行会被下次构建覆盖。
  */
-const CACHE_VER = 'quiz408-41b09a5d0b';
+const CACHE_VER = 'quiz408-9ac4fd6441';
 
 const PRECACHE = [
     'index.html',
