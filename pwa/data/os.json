@@ -3010,7 +3010,7 @@
     {
       "id": "os_0201",
       "number": 201,
-      "content": "【2013统考真题】某系统正在执行三个进程P₁，P₂和P₃，各进程的计算(CPU)时间和I/O时间比例如下表所示。为提高系统资源利用率，合理的进程优先级设置应为( )<table class=\"q-table\"><thead><tr><th>进程名</th><th>计算时间</th><th>I/O时间</th></tr></thead><tbody><tr><td>P₁</td><td>90%</td><td>10%</td></tr><tr><td>P₂</td><td>50%</td><td>50%</td></tr><tr><td>P₃</td><td>15%</td><td>85%</td></tr></tbody></table>",
+      "content": "【2013统考真题】某系统正在执行三个进程P₁，P₂和P₃，各进程的计算(CPU)时间和I/O时间比例如下表所示<br><img src=\"data/os_figs/os_0201.png\"><br>。为提高系统资源利用率，合理的进程优先级设置应为( )<table class=\"q-table\"><thead><tr><th>进程名</th><th>计算时间</th><th>I/O时间</th></tr></thead><tbody><tr><td>P₁</td><td>90%</td><td>10%</td></tr><tr><td>P₂</td><td>50%</td><td>50%</td></tr><tr><td>P₃</td><td>15%</td><td>85%</td></tr></tbody></table>",
       "options": {
         "A": "P₁>P₂>P₃",
         "B": "P₃>P₂>P₁",
@@ -3055,7 +3055,7 @@
     {
       "id": "os_0204",
       "number": 204,
-      "content": "【2017统考真题】假设4个作业到达系统的时刻和运行时间如下表所示。系统在t=2时开始作业调度。若分别采用先来先服务和短作业优先调度算法，则选中的作业分别是( )<table class=\"q-table\"><thead><tr><th>作业</th><th>到达时刻t</th><th>运行时间</th></tr></thead><tbody><tr><td>J₁</td><td>0</td><td>3</td></tr><tr><td>J₂</td><td>1</td><td>3</td></tr><tr><td>J₃</td><td>1</td><td>2</td></tr><tr><td>J₄</td><td>3</td><td>1</td></tr></tbody></table>",
+      "content": "【2017统考真题】假设4个作业到达系统的时刻和运行时间如下表所示<br><img src=\"data/os_figs/os_0204.png\"><br>。系统在t=2时开始作业调度。若分别采用先来先服务和短作业优先调度算法，则选中的作业分别是( )<table class=\"q-table\"><thead><tr><th>作业</th><th>到达时刻t</th><th>运行时间</th></tr></thead><tbody><tr><td>J₁</td><td>0</td><td>3</td></tr><tr><td>J₂</td><td>1</td><td>3</td></tr><tr><td>J₃</td><td>1</td><td>2</td></tr><tr><td>J₄</td><td>3</td><td>1</td></tr></tbody></table>",
       "options": {
         "A": "J₂、J₃",
         "B": "J₁、J₄",
@@ -3100,7 +3100,7 @@
     {
       "id": "os_0207",
       "number": 207,
-      "content": "【2019统考真题】系统采用二级反馈队列调度算法进行进程调度。就绪队列Q₁采用时间片轮转调度算法，时间片为10ms；就绪队列Q₂采用短进程优先调度算法；系统优先调度Q₁队列中的进程，当Q₁为空时系统才会调度Q₂中的进程；新创建的进程首先进入Q₁；Q₁中的进程执行一个时间片后，若未结束，则转入Q₂。若当前Q₁、Q₂为空，系统依次创建进程P₁、P₂后即开始进程调度，P₁、P₂需要的CPU时间分别为30ms和20ms，则进程P₁、P₂在系统中的平均等待时间为( )",
+      "content": "【2019统考真题】系统采用二级反馈队列调度算法进行进程调度。就绪队列Q₁采用时间片轮转调度算法，时间片为10ms；就绪队列Q₂采用短进程优先调度算法；系统优先调度Q₁队列中的进程，当Q₁为空时系统才会调度Q₂中的进程；新创建的进程首先进入Q₁；Q₁中的进程执行一个时间片后，若未结束，则转入Q₂。若当前Q₁、Q₂为空，系统依次创建进程P₁、P₂后即开始进程调度，P₁、P₂需要的CPU时间分别为30ms和20ms，则进程P₁、P₂在系统中的平均等待时间为( )<br><img src=\"data/os_figs/os_0207.png\"><br>",
       "options": {
         "A": "25ms",
         "B": "20ms",
@@ -3160,7 +3160,7 @@
     {
       "id": "os_0211",
       "number": 211,
-      "content": "【2022统考真题】进程P₀、P₁、P₂和P₃进入就绪队列的时刻、优先级(值越小优先权越高)及CPU执行时间如下表所示。若系统采用基于优先权的抢占式进程调度算法，则从0ms时刻开始调度，到4个进程都运行结束为止，发生进程调度的总次数为( )<table class=\"q-table\"><thead><tr><th>进程名</th><th>进入就绪队列的时刻</th><th>优先级</th><th>CPU执行时间</th></tr></thead><tbody><tr><td>P₀</td><td>0ms</td><td>15</td><td>100ms</td></tr><tr><td>P₁</td><td>10ms</td><td>20</td><td>60ms</td></tr><tr><td>P₂</td><td>10ms</td><td>10</td><td>20ms</td></tr><tr><td>P₃</td><td>15ms</td><td>6</td><td>10ms</td></tr></tbody></table>",
+      "content": "【2022统考真题】进程P₀、P₁、P₂和P₃进入就绪队列的时刻、优先级(值越小优先权越高)及CPU执行时间如下表所示<br><img src=\"data/os_figs/os_0211.png\"><br>。若系统采用基于优先权的抢占式进程调度算法，则从0ms时刻开始调度，到4个进程都运行结束为止，发生进程调度的总次数为( )<table class=\"q-table\"><thead><tr><th>进程名</th><th>进入就绪队列的时刻</th><th>优先级</th><th>CPU执行时间</th></tr></thead><tbody><tr><td>P₀</td><td>0ms</td><td>15</td><td>100ms</td></tr><tr><td>P₁</td><td>10ms</td><td>20</td><td>60ms</td></tr><tr><td>P₂</td><td>10ms</td><td>10</td><td>20ms</td></tr><tr><td>P₃</td><td>15ms</td><td>6</td><td>10ms</td></tr></tbody></table>",
       "options": {
         "A": "4",
         "B": "5",
@@ -3175,7 +3175,7 @@
     {
       "id": "os_0212",
       "number": 212,
-      "content": "【2023统考真题】进程P₁、P₂和P₃进入就绪队列的时刻、优先级(值越大优先权越高)和CPU执行时间如下表所示。若系统采用基于优先权的抢占式CPU调度算法，从0ms时刻开始进行调度，则P₁、P₂和P₃的平均周转时间为( )<table class=\"q-table\"><thead><tr><th>进程名</th><th>进入就绪队列的时刻</th><th>优先级</th><th>CPU执行时间</th></tr></thead><tbody><tr><td>P₁</td><td>0ms</td><td>1</td><td>60ms</td></tr><tr><td>P₂</td><td>20ms</td><td>10</td><td>42ms</td></tr><tr><td>P₃</td><td>30ms</td><td>100</td><td>13ms</td></tr></tbody></table>",
+      "content": "【2023统考真题】进程P₁、P₂和P₃进入就绪队列的时刻、优先级(值越大优先权越高)和CPU执行时间如下表所示<br><img src=\"data/os_figs/os_0212.png\"><br>。若系统采用基于优先权的抢占式CPU调度算法，从0ms时刻开始进行调度，则P₁、P₂和P₃的平均周转时间为( )<table class=\"q-table\"><thead><tr><th>进程名</th><th>进入就绪队列的时刻</th><th>优先级</th><th>CPU执行时间</th></tr></thead><tbody><tr><td>P₁</td><td>0ms</td><td>1</td><td>60ms</td></tr><tr><td>P₂</td><td>20ms</td><td>10</td><td>42ms</td></tr><tr><td>P₃</td><td>30ms</td><td>100</td><td>13ms</td></tr></tbody></table>",
       "options": {
         "A": "60ms",
         "B": "61ms",
@@ -4480,7 +4480,7 @@
     {
       "id": "os_0299",
       "number": 299,
-      "content": "假设具有5个进程的进程集合P={P₀，P₁，P₂，P₃，P₄}，系统中有三类资源A，B，C，假设在某时刻有如下状态，见下表。系统是处于安全状态的，则x，y，z的取值可能是( )<br>I.1，4，0　II.0，6，2　III.1，1，1　IV.0，4，7",
+      "content": "假设具有5个进程的进程集合P={P₀，P₁，P₂，P₃，P₄}，系统中有三类资源A，B，C，假设在某时刻有如下状态，见下表。系统是处于安全状态的，则x，y，z的取值可能是( )<br>I.1，4，0　II.0，6，2　III.1，1，1　IV.0，4，7<br><img src=\"data/os_figs/os_0299.png\"><br>",
       "options": {
         "A": "I、II、IV",
         "B": "I、II",
@@ -4615,7 +4615,7 @@
     {
       "id": "os_0308",
       "number": 308,
-      "content": "【2011统考真题】某时刻进程的资源使用情况见下表，此时的安全序列是( )",
+      "content": "【2011统考真题】某时刻进程的资源使用情况见下表<br><img src=\"data/os_figs/os_0308.png\"><br>，此时的安全序列是( )",
       "options": {
         "A": "P₁,P₂,P₃,P₄",
         "B": "P₁,P₃,P₂,P₄",
@@ -4630,7 +4630,7 @@
     {
       "id": "os_0309",
       "number": 309,
-      "content": "【2012统考真题】假设5个进程P₀，P₁，P₂，P₃，P₄共享三类资源R₁，R₂，R₃，这些资源总数分别为18，6，22。T₀时刻的资源分配情况如下表所示，此时存在的一个安全序列是( )",
+      "content": "【2012统考真题】假设5个进程P₀，P₁，P₂，P₃，P₄共享三类资源R₁，R₂，R₃，这些资源总数分别为18，6，22。T₀时刻的资源分配情况如下表所示<br><img src=\"data/os_figs/os_0309.png\"><br>，此时存在的一个安全序列是( )",
       "options": {
         "A": "P₀,P₂,P₄,P₁,P₃",
         "B": "P₁,P₀,P₃,P₄,P₂",
@@ -4735,7 +4735,7 @@
     {
       "id": "os_0316",
       "number": 316,
-      "content": "【2020统考真题】某系统中有A、B两类资源各6个，t时刻的资源分配及需求情况如下表所示。 t时刻安全性检测结果是( )",
+      "content": "【2020统考真题】某系统中有A、B两类资源各6个，t时刻的资源分配及需求情况如下表所示<br><img src=\"data/os_figs/os_0316.png\"><br>。 t时刻安全性检测结果是( )",
       "options": {
         "A": "存在安全序列P₁,P₂,P₃",
         "B": "存在安全序列P₂,P₁,P₃",
@@ -4765,7 +4765,7 @@
     {
       "id": "os_0318",
       "number": 318,
-      "content": "【2022统考真题】系统中有三个进程P₀，P₁，P₂及三类资源A、B、C。若某时刻系统分配资源的情况如下表所示，则此时系统中存在的安全序列的个数为( )",
+      "content": "【2022统考真题】系统中有三个进程P₀，P₁，P₂及三类资源A、B、C。若某时刻系统分配资源的情况如下表所示<br><img src=\"data/os_figs/os_0318.png\"><br>，则此时系统中存在的安全序列的个数为( )",
       "options": {
         "A": "1",
         "B": "2",
