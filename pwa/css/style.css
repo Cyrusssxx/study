@@ -2237,6 +2237,22 @@ mark {
     border-radius: var(--radius);
 }
 
+.daka-analysis {
+    margin-top: 10px;
+    padding: 10px 14px;
+    background: #eef2ff;
+    border-left: 3px solid var(--primary);
+    border-radius: var(--radius);
+    font-size: 0.92rem;
+    line-height: 1.7;
+    white-space: pre-line;
+}
+
+.dark .daka-analysis {
+    background: #23283a;
+    border-left-color: #818cf8;
+}
+
 /* 打卡夜间适配 */
 .dark .badge-must {
     background: #3d2426;

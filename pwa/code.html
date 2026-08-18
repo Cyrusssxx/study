@@ -37,7 +37,7 @@
     <main class="container">
         <div class="page-header">
             <h1>💻 数据结构代码真题</h1>
-            <p>2009–2023 共 15 道 408 算法设计（代码）真题，按考点分组，点开看官方解答</p>
+            <p>2009–2026 共 18 道 408 算法设计（代码）真题，按考点分组，点开看官方解答（含每题考点/易错点详解）</p>
         </div>
 
         <div class="daka-summary" id="codeSummary"></div>
@@ -95,7 +95,7 @@
                 <div class="daka-card-header">
                     <span class="daka-badge badge-must">${esc(q.kaodian)}</span>
                     <span class="daka-source">${esc(q.real)}${q.source ? ' · ' + esc(q.source) : ''}</span>
-                    <a class="btn-daka" href="${esc(q.weblink)}" target="_blank" rel="noopener">知乎原文 ↗</a>
+                    ${q.weblink ? `<a class="btn-daka" href="${esc(q.weblink)}" target="_blank" rel="noopener">解析原文 ↗</a>` : ''}
                     <button class="btn-daka code-toggle${done ? ' checked' : ''}" onclick="toggleCode('${q.id}')">
                         ${done ? '已会 ✓' : '标记已会'}
                     </button>
@@ -104,7 +104,7 @@
                 <details class="daka-answer">
                     <summary>查看答案与解析</summary>
                     <div class="daka-answer-body">${q.answer}</div>
-                    <div class="daka-analysis"><b>考点 / 易错点：</b>${esc(q.analysis)}</div>
+                    <div class="daka-analysis">${esc(q.analysis.replace('易错点：', '\n易错点：'))}</div>
                 </details>
             </div>
         `;
