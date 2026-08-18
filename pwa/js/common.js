@@ -1,9 +1,37 @@
 // ============ 全局变量 ============
 let isDarkOn = () => localStorage.getItem('darkMode') === '1';
 
+// ============ 公式排版：LaTeX 风格 _{} ^{} 与 _x 转 HTML 上下标（保护代码块） ============
+function fmtFormula(html) {
+    if (!html || typeof html !== 'string') return html;
+    const blocks = [];
+    const NO = '\u0000';
+    // 先取出 <pre> 代码块，避免代码里的下划线/尖括号被误转
+    html = html.replace(/<pre[\s\S]*?<\/pre>/g, (m) => {
+        blocks.push(m);
+        return NO + 'B' + (blocks.length - 1) + NO;
+    });
+    html = html.replace(/_\{([^{}]+)\}/g, '<sub>$1</sub>');          // X_{n-2} → X<sub>n-2</sub>
+    html = html.replace(/\^\{([^{}]+)\}/g, '<sup>$1</sup>');         // x^{-1} → x<sup>-1</sup>
+    html = html.replace(/([A-Za-z0-9₀₁₂₃₄₅₆₇₈₉]|\))_([A-Za-z0-9])(?!\w)/g, '$1<sub>$2</sub>'); // X_0 → X<sub>0</sub>
+    return html.replace(/\u0000B(\d+)\u0000/g, (m, i) => blocks[i]);
+}
+
+// ============ 答案排版：公式 + 步骤①②③前自动换行 ============
+function fmtAnswer(html) {
+    if (!html || typeof html !== 'string') return html;
+    html = fmtFormula(html);
+    return html.replace(/([①-⑩])/g, (m, i, src) => {
+        const prev = src.slice(Math.max(0, i - 5), i).toLowerCase();
+        if (prev.endsWith('<br>') || prev.endsWith('<br/>')) return m;
+        return '<br>' + m;
+    });
+}
+
 // ============ 题干排版：判断组合题（I. II. III. IV. 陈述挤在一行）自动分行 ============
 function fmtContent(html) {
     if (!html || typeof html !== 'string') return html;
+    html = fmtFormula(html);
     return html.replace(/<[^>]*>|(I{1,3}|IV|V)\./g, (m, num, off, src) => {
         if (!num) return m;  // HTML 标签原样保留（如图片/代码块，不误插）
         if (off === 0) return m;  // 题干首字符就是编号时不加

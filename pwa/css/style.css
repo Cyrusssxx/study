@@ -2235,6 +2235,13 @@ mark {
     padding: 12px 14px;
     background: var(--light);
     border-radius: var(--radius);
+    line-height: 1.9;
+    word-break: break-word;
+}
+
+.daka-answer-body sub,
+.daka-answer-body sup {
+    font-size: 0.75em;
 }
 
 .daka-analysis {

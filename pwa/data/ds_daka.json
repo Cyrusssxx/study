@@ -63,7 +63,7 @@
         "做408真题_2011_41题，即王道书 6.4.6_大题_9"
       ],
       "content": "【2011统考真题】已知有6个顶点(顶点编号为0～5)的有向带权图G,其邻接矩阵A为上三角矩阵，按行为主序(行优先)保存在如下的一维数组中。4，6，0，0，∞，5，0，0，0，∞，4，3，0，∞，0，3，3<br>要求：<br>1)写出图G的邻接矩阵A.<br>2)画出有向带权图G.<br>3)求图G的关键路径，并计算该关键路径的长度。",
-      "answer": "④1⑥2 10 D 3 C<br>1)在上三角矩阵A[6][6]中，第1行至第5行主对角线上方的元素个数分别为5,4,3,2,1,由此可以画出压缩存储数组中的元素所属行的情况，如下图所示。4 6 5 4 3 3 3第1行第2行第3行第4行 第5行可以用“平移”的思想，将前5个、后4个、后3个、后2个、后1个元素，分别移动到矩阵对角线(“0”)右边的行上。图G的邻接矩阵A为<br>2)有向带权图G如下图所示。◎6 4③3 4②⑤①5 3④3<br>3)先计算各个事件的最早发生时间，得到v?()和v/()数组如下表所示。i 0 2 3 4 5\nv(I)\n0 4 9 13 12 16\nv()\n0 4 9 13 13 16 1接下来计算所有活动的最早和最迟发生时间e()和I(),如下表所示。ao-1 ao-2 a1-2 a2-3 a2-4 a3-5 a4-5 e)0 0 4 9 9 13 12 10 0 3 4 9 10 13 13 10-e()0 3 0 0 1 0 1满足10-e()=0的路径就是关键路径，所以关键路径为ao-1,a1-2,a?-3,a3-5,如右图所示(双线箭头表示),长度为4+5+4+3=16。按求关键路径的公式计算较为复杂，建议考生面临此类题时直接穷举各条路径即可。◎6 4③3 4②⑤①5 3④3",
+      "answer": "④1⑥2 10 D 3 C<br>1)在上三角矩阵A[6][6]中，第1行至第5行主对角线上方的元素个数分别为5,4,3,2,1,由此可以画出压缩存储数组中的元素所属行的情况，如下图所示。4 6 5 4 3 3 3第1行第2行第3行第4行 第5行可以用“平移”的思想，将前5个、后4个、后3个、后2个、后1个元素，分别移动到矩阵对角线(“0”)右边的行上。图G的邻接矩阵A为<br>2)有向带权图G如下图所示。◎6 4③3 4②⑤①5 3④3<br>3)先计算各个事件的最早发生时间，得到ve()和vl()数组如下表所示。i 0 1 2 3 4 5\nvl()\n0 4 9 13 12 16\nve()\n0 4 9 13 13 16 1接下来计算所有活动的最早和最迟发生时间e()和I(),如下表所示。ao-1 ao-2 a1-2 a2-3 a2-4 a3-5 a4-5 e)0 0 4 9 9 13 12 10 0 3 4 9 10 13 13 10-e()0 3 0 0 1 0 1满足10-e()=0的路径就是关键路径，所以关键路径为a₀-1,a₁-2,a₂-3,a₃-5,如右图所示(双线箭头表示),长度为4+5+4+3=16。按求关键路径的公式计算较为复杂，建议考生面临此类题时直接穷举各条路径即可。◎6 4③3 4②⑤①5 3④3",
       "figs": {
         "content": [
           "ds_daka_6_4_6_9_q_0.jpg"
@@ -110,7 +110,7 @@
       "tasks": [
         "做408真题_2013_42题，即王道书 7.2.4_大题_7"
       ],
-      "content": "【2013统考真题】设包含4个数据元素的集合S={'do','for,'repeat,'while'},各元素的查找概率依次为p?=0.35,p?=0.15,p?=0.15,p?=0.35.将S保存在一个长度为4的顺序表中，采用折半查找法，查找成功时的平均查找长度为2.2.<br>1)若采用顺序存储结构保存S,且要求平均查找长度更短，则元素应如何排列?应使用何种查找方法?查找成功时的平均查找长度是多少?<br>2)若采用链式存储结构保存S,且要求平均查找长度更短，则元素应如何排列?应使用何种查找方法?查找成功时的平均查找长度是多少?",
+      "content": "【2013统考真题】设包含4个数据元素的集合S={'do','for,'repeat,'while'},各元素的查找概率依次为p₁=0.35,p₂=0.15,p₃=0.15,p₄=0.35.将S保存在一个长度为4的顺序表中，采用折半查找法，查找成功时的平均查找长度为2.2.<br>1)若采用顺序存储结构保存S,且要求平均查找长度更短，则元素应如何排列?应使用何种查找方法?查找成功时的平均查找长度是多少?<br>2)若采用链式存储结构保存S,且要求平均查找长度更短，则元素应如何排列?应使用何种查找方法?查找成功时的平均查找长度是多少?",
       "answer": "1)折半查找要求元素有序顺序存储，字符串默认按字典序排序(字典序是一种比较两个字符串大小的方法，它按字母顺序从左到右逐个比较对应的字符，若某一位可以比较出大小，则不再继续比较后面的字符，如abd&lt;acd、abc&lt;abcd等),对本题来说 do&lt;for&lt;repeat&lt;while。若各个元素的查找概率不同，折半查找的性能不一定优于顺序查找。采用顺序查找时，元素按其查找概率的降序排列时查找长度最小。采用顺序存储结构，数据元素按其查找概率降序排列。采用顺序查找方法。查找成功时的平均查找长度=0.35×1+0.35×2+0.15×3+0.15×4=2.1。此时，显然查找长度比折半查找的更短。<br>2)答案1:采用链式存储结构时，只能采用顺序查找，其性能和顺序表一样，类似于上题。数据元素按其查找概率降序排列，构成单链表。采用顺序查找方法。查找成功时的平均查找长度=0.35×1+0.35×2+0.15×3+0.15×4=2.1。答案2:还可以构造成二叉排序树的形式。采用二叉链表的存储结构，构造二叉排序树，元素的存储方式见下图。采用二叉排序树的查找方法。for repeat do while或do while repeat for二叉排序树1二叉排序树2查找成功时的平均查找长度=0.15×1+0.35×2+0.35×2+0.15×3=2.0。",
       "figs": {
         "content": [
@@ -181,7 +181,7 @@
         "做408真题_2016_42题，即王道书 5.2.3_大题_6"
       ],
       "content": "【2016统考真题】若一棵非空k(k≥2)叉树T中的每个非叶结点都有k个孩子，则称T为正则k叉树。请回答下列问题并给出推导过程。<br>1)若T有m个非叶结点，则T中的叶结点有多少个?<br>2)若T的高度为h(单结点的树h=1),则T的结点数最多为多少个?最少为多少个?",
-      "answer": "1)正则k叉树中仅含有两类结点；叶结点(个数记为no)和度为k的分支结点(个数记为nk)。树T中的结点总数n=no+nk=no+m。树中所含的边数e=n-1,这些边均是从m个度为k的结点发出的，即e=mk。整理得no+m=mk+1,所以no=(k-1)m+1。<br>2)高度为h的正则k叉树T中，含最多结点的树形为：除第h层外，第1到第h-1层的结点都是度为k的分支结点；而第h层均为叶结点，即树是“满”树。此时第j(1≤j≤h)层的结点数为k-1,结点总数M为\nM=2-k-I\n含最少结点的正则k叉树的树形为：第1层只有根结点，第2到第h-1层仅含1个分支结点和k-1个叶结点，第h层有k个叶结点。也就是说，除根外，第2到第h层中每层的结点数均为k,所以T中所含结点总数M?为M?=1+(h-1)k",
+      "answer": "1)正则k叉树中仅含有两类结点；叶结点(个数记为no)和度为k的分支结点(个数记为nk)。树T中的结点总数n=no+nk=no+m。树中所含的边数e=n-1,这些边均是从m个度为k的结点发出的，即e=mk。整理得no+m=mk+1,所以no=(k-1)m+1。<br>2)高度为h的正则k叉树T中，含最多结点的树形为：除第h层外，第1到第h-1层的结点都是度为k的分支结点；而第h层均为叶结点，即树是“满”树。此时第j(1≤j≤h)层的结点数为k-1,结点总数M为\nM=2-k-I\n含最少结点的正则k叉树的树形为：第1层只有根结点，第2到第h-1层仅含1个分支结点和k-1个叶结点，第h层有k个叶结点。也就是说，除根外，第2到第h层中每层的结点数均为k,所以T中所含结点总数M_h为M_h=1+(h-1)k",
       "figs": {
         "content": [
           "ds_daka_5_2_3_6_q_0.jpg"
@@ -368,8 +368,8 @@
       "tasks": [
         "做408真题_2024_42题，即王道书7.5.5_大题_7"
       ],
-      "content": "【2024统考真题】将关键字序列20,3,11,18,9,14,7依次存储到初始为空、长度为11的散列表HT中，散列函数H(key)=(key×3).H(key)计算出的初始散列地址为H?,发生冲突时探查地址序列是H?,H?,H?,⋯,其中Hk=(H?+R),k=1,2,3,⋯·请回答下列问题：<br>1)画出所构造的HT,并计算HT的装填因子。<br>2)给出在HT中查找关键字14的关键字比较序列。<br>3)在HT中查找关键字8,确认查找失败时的散列地址是多少?",
-      "answer": "1)①H(20)=5,装入地址5;②H(3)=9,装入地址9;③H(11)=0,装入地址0;④H(18)=10,装入地址10;⑤ H(9)=5,冲突，H?(9)=(5+1)=6,装入地址6;⑥H(14)=9,冲突，H?(14)=(9+1)=10,冲突，H?(14)=(9+4)=2,装入地址2。散列表如下。5 5 1 1装填因子α=7/11。<br>2)H(14)=9,和关键字3比较，不命中；H?(14)=(9+1)=10,和18比较，不命中；H?(14)=(9+4)=2,和14比较，命中。因此，关键字比较序列是3,18,14。<br>3)H(8)=2,和关键字14比较，不命中；H?(8)=(2+1)=3,和7比较，不命中；H?(8)=(2+4)=6,和9比较，不命中；H?(8)=(2+9=0,和11比较，不命中；H?(8)=(2+16)=7,是空位置，确认查找失败。因此，确认查找失败时的散列地址是7。",
+      "content": "【2024统考真题】将关键字序列20,3,11,18,9,14,7依次存储到初始为空、长度为11的散列表HT中，散列函数H(key)=(key×3) mod 11。H(key)计算出的初始散列地址为H₀,发生冲突时探查地址序列是H₁,H₂,H₃,⋯,其中H_k=(H₀+R),k=1,2,3,⋯。请回答下列问题：<br>1)画出所构造的HT,并计算HT的装填因子。<br>2)给出在HT中查找关键字14的关键字比较序列。<br>3)在HT中查找关键字8,确认查找失败时的散列地址是多少?",
+      "answer": "1)①H(20)=5,装入地址5;②H(3)=9,装入地址9;③H(11)=0,装入地址0;④H(18)=10,装入地址10;⑤ H(9)=5,冲突，H₁(9)=(5+1)=6,装入地址6;⑥H(14)=9,冲突，H₁(14)=(9+1)=10,冲突，H₂(14)=(9+4)=2,装入地址2。散列表如下。5 5 1 1装填因子α=7/11。<br>2)H(14)=9,和关键字3比较，不命中；H₁(14)=(9+1)=10,和18比较，不命中；H₂(14)=(9+4)=2,和14比较，命中。因此，关键字比较序列是3,18,14。<br>3)H(8)=2,和关键字14比较，不命中；H₁(8)=(2+1)=3,和7比较，不命中；H₂(8)=(2+4)=6,和9比较，不命中；H₃(8)=(2+9)=0,和11比较，不命中；H₄(8)=(2+16)=7,是空位置，确认查找失败。因此，确认查找失败时的散列地址是7。",
       "figs": {
         "content": [
           "ds_daka_7_5_5_7_q_0.jpg"
@@ -566,8 +566,8 @@
       "tasks": [
         "做王道书 2.2.3_大题_7"
       ],
-      "content": "已知在一维数组A[m+n]中依次存放两个线性表(aj,a2,a3,⋯,am)和(b?,b?,b?,⋯,bn)。编写一个函数，将数组中两个顺序表的位置互换，即将(b?,b?, b?,⋯,b?)放在(a?,a2,a?,⋯,am)的前面。",
-      "answer": "算法思想：首先将数组A[m+n]中的全部元素(a1,a?,a3,⋯,am,b?,b?,b?,⋯,b?)原地逆置为(bm,b-i,bn-2,⋯,b?,am,am-I,am-2,⋯,a?),然后对前n个元素和后m个元素分别使用逆置算法，即可得到(b?,b2,b?,⋯,bai,a2,a3,⋯,am),从而实现顺序表的位置互换。本题代码如下：\n<pre class=\"code-block\">typedef int DataType;\nvoid Reverse(DataType A[],int left,int right,int arraysize){\n    //逆转(aleft,aleft+1,aleft+2,⋯,aright)为(aright,aright-1,⋯,aleft)\n    if(left&gt;=rightllright&gt;=arraySize)\n    return;\n    int mid=(left+right)/2;\n    for(int i=0;i&lt;=mid-left;i++){\n        DataType temp=A[left+i];\n        A[left+i]=A[right-i];\n        A[right-i]=temp;\n    }\n}\nvoid Exchange(DataType A[],int m,int n,int arraySize)f\n/*数组A[m+n]中，从0到m-1存放顺序表(a1,a2,a3,⋯,am),从m到m+n-1存放顺序表</pre>\n(b1,b2,b3,⋯,bn),算法将这两个表的位置互换*/\n<pre class=\"code-block\">Reverse(A,0,m+n-1,arraySize);\nReverse(A,0,n-1,arraySize);\nReverse(A,n,m+n-1,arraySize);\n}</pre>",
+      "content": "已知在一维数组A[m+n]中依次存放两个线性表(a₁,a₂,a₃,⋯,a_m)和(b₁,b₂,b₃,⋯,b_n)。编写一个函数，将数组中两个顺序表的位置互换，即将(b₁,b₂,b₃,⋯,b_n)放在(a₁,a₂,a₃,⋯,a_m)的前面。",
+      "answer": "算法思想：首先将数组A[m+n]中的全部元素(a₁,a₂,a₃,⋯,a_m,b₁,b₂,b₃,⋯,b_n)原地逆置为(b_n,b_{n-1},b_{n-2},⋯,b₁,a_m,a_{m-1},a_{m-2},⋯,a₁),然后对前n个元素和后m个元素分别使用逆置算法，即可得到(b₁,b₂,b₃,⋯,b_n,a₁,a₂,a₃,⋯,a_m),从而实现顺序表的位置互换。本题代码如下：\n<pre class=\"code-block\">typedef int DataType;\nvoid Reverse(DataType A[],int left,int right,int arraysize){\n    //逆转(aleft,aleft+1,aleft+2,⋯,aright)为(aright,aright-1,⋯,aleft)\n    if(left&gt;=right||right&gt;=arraySize)\n    return;\n    int mid=(left+right)/2;\n    for(int i=0;i&lt;=mid-left;i++){\n        DataType temp=A[left+i];\n        A[left+i]=A[right-i];\n        A[right-i]=temp;\n    }\n}\nvoid Exchange(DataType A[],int m,int n,int arraySize){\n/*数组A[m+n]中，从0到m-1存放顺序表(a1,a2,a3,⋯,am),从m到m+n-1存放顺序表</pre>\n(b1,b2,b3,⋯,bn),算法将这两个表的位置互换*/\n<pre class=\"code-block\">Reverse(A,0,m+n-1,arraySize);\nReverse(A,0,n-1,arraySize);\nReverse(A,n,m+n-1,arraySize);\n}</pre>",
       "figs": {
         "content": [
           "ds_daka_2_2_3_7_q_0.jpg"
@@ -661,7 +661,7 @@
         "做王道书 2.3.7_大题_3"
       ],
       "content": "试编写算法将带头结点的单链表就地逆置，所谓“就地”是指辅助空间复杂度为O(1)。",
-      "answer": "解法1:将头结点摘下，然后从第一结点开始，依次插入到头结点的后面(头插法建立单链表),直到最后一个结点为止，这样就实现了链表的逆置，如下图所示。P、头插法a?an L-A本题代码如下：\n<pre class=\"code-block\">LinkList Reverse_1(LinkList L){\n    LNode *p,*r;\n    p=L-&gt;next;\n    L-&gt;next=NULL;\n    while(p!=NULL){\n        r=p-&gt;next;\n        p-&gt;next=L-&gt;next;\n        L-&gt;next=p;\n        p=r;\n        return L;\n    }</pre>\n/ /p为工作指针，r为p的后继，以防断链/ /从第一个元素结点开始\nI/先将头结点L的next域置为NULL I//依次将元素结点摘下///暂存p的后继\n// /将p结点插入到头结点之后解法2:大部分辅导书都只介绍解法1,这对读者的理解和思维是不利的。为了将调整指针这个复杂的过程分析清楚，我们借助图形来进行直观的分析。假设pre、p和r指向三个相邻的结点，如下图所示。假设经过若干操作后，*pre之前的结点的指针都已调整完毕，它们的next都指向其原前驱结点。现在令*p结点的next域指向*pre结点，注意到一旦调整指针的指向，*p的后继结点的链就会断开，为此需要用r来指向原*p的后继结点。处理时需要注意两点：一是在处理第一个结点时，应将其next域置为NULL,而不是指向头结点(因为它将作为新表的尾结点);二是在处理完最后一个结点后，需要将头结点的指针指向它。pre P r L-A a1-2 a-1 a,au A!本题代码如下：\n<pre class=\"code-block\">LinkList Reverse_2(LinkList L){\n    LNode *pre,*p=L-&gt;next,*r=p-&gt;next;\n    p-&gt;next=NULL;</pre>\nIⅡ处理第一个结点\n<pre class=\"code-block\">while(r!=NULL){\n    //r为空，则说明p为最后一个结点\n    pre=p;  //依次继续遍历\n    p=r;\n    r=r-&gt;next;\n    p-&gt;next=pre;  //指针反转\n}\nL-&gt;next=p;  //处理最后一个结点\nreturn L;\n}</pre>\n上述两个算法的时间复杂度为O(n),空间复杂度为O(1)。",
+      "answer": "解法1:将头结点摘下，然后从第一结点开始，依次插入到头结点的后面(头插法建立单链表),直到最后一个结点为止，这样就实现了链表的逆置，如下图所示。P、头插法a₁a_n L-A本题代码如下：\n<pre class=\"code-block\">LinkList Reverse_1(LinkList L){\n    LNode *p,*r;\n    p=L-&gt;next;\n    L-&gt;next=NULL;\n    while(p!=NULL){\n        r=p-&gt;next;\n        p-&gt;next=L-&gt;next;\n        L-&gt;next=p;\n        p=r;\n        return L;\n    }</pre>\n/ /p为工作指针，r为p的后继，以防断链/ /从第一个元素结点开始\n//先将头结点L的next域置为NULL; //依次将元素结点摘下 //暂存p的后继\n// /将p结点插入到头结点之后解法2:大部分辅导书都只介绍解法1,这对读者的理解和思维是不利的。为了将调整指针这个复杂的过程分析清楚，我们借助图形来进行直观的分析。假设pre、p和r指向三个相邻的结点，如下图所示。假设经过若干操作后，*pre之前的结点的指针都已调整完毕，它们的next都指向其原前驱结点。现在令*p结点的next域指向*pre结点，注意到一旦调整指针的指向，*p的后继结点的链就会断开，为此需要用r来指向原*p的后继结点。处理时需要注意两点：一是在处理第一个结点时，应将其next域置为NULL,而不是指向头结点(因为它将作为新表的尾结点);二是在处理完最后一个结点后，需要将头结点的指针指向它。pre P r L-A a1-2 a-1 a,au A!本题代码如下：\n<pre class=\"code-block\">LinkList Reverse_2(LinkList L){\n    LNode *pre,*p=L-&gt;next,*r=p-&gt;next;\n    p-&gt;next=NULL;</pre>\n//处理第一个结点\n<pre class=\"code-block\">while(r!=NULL){\n    //r为空，则说明p为最后一个结点\n    pre=p;  //依次继续遍历\n    p=r;\n    r=r-&gt;next;\n    p-&gt;next=pre;  //指针反转\n}\nL-&gt;next=p;  //处理最后一个结点\nreturn L;\n}</pre>\n上述两个算法的时间复杂度为O(n),空间复杂度为O(1)。",
       "figs": {
         "content": [
           "ds_daka_2_3_7_3_q_0.jpg"
@@ -899,8 +899,8 @@
       "tasks": [
         "做王道书 2.3.7_大题_6"
       ],
-      "content": "设C={a1,b?,a?,b?,⋯,ambn}为线性表，采用带头结点的单链表存放，设计一个就地算法，将其拆分为两个线性表，使得A={a?,a?,⋯,a3,B={bn⋯,b?,b?}。",
-      "answer": "算法思想：循环遍历链表C,采用尾插法将一个结点插入表A,这个结点为奇数号结点，这样建立的表A与原来的结点顺序相同；采用头插法将下一结点插入表B,这个结点为偶数号结点，这样建立的表B与原来的结点顺序正好相反。本题代码如下：LinkList DisCreat_2(LinkList &amp;A)(\n<pre class=\"code-block\">LinkList B=(LinkList)malloc(sizeof(LNode));//创建B表表头\nB-&gt;next=NULL;  //B表的初始化\nLNode *p=A-&gt;next,*q;</pre>\n1/p为工作指针\n<pre class=\"code-block\">LNode *ra=A;  //ra始终指向A的尾结点\nwhile(p!=NULL){\n    ra-&gt;next=p; ra=p;  //将*p链到A的表尾\n    p=p-&gt;next;\n    if(p!=NULL){\n        q=p-&gt;next;  //头插后，*p将断链，因此用q记忆*p的后继\n        p-&gt;next=B-&gt;next;  //将*p插入到B的前端\n        B-&gt;next=p;\n        p=q;\n        ra-&gt;next=NULL;  //A尾结点的next域置空\n        return B;\n        上\n    }</pre>\n要特别注意的是，该算法采用头插法插入结点后，*p的指针域已改变，若不设变量保存其后继结点，则会引起断链，从而导致算法出错。",
+      "content": "设C={a₁,b₁,a₂,b₂,⋯,a_m,b_n}为线性表，采用带头结点的单链表存放，设计一个就地算法，将其拆分为两个线性表，使得A={a₁,a₂,⋯,a_m},B={b_n,⋯,b₂,b₁}。",
+      "answer": "算法思想：循环遍历链表C,采用尾插法将一个结点插入表A,这个结点为奇数号结点，这样建立的表A与原来的结点顺序相同；采用头插法将下一结点插入表B,这个结点为偶数号结点，这样建立的表B与原来的结点顺序正好相反。本题代码如下：LinkList DisCreat_2(LinkList &amp;A)(\n<pre class=\"code-block\">LinkList B=(LinkList)malloc(sizeof(LNode));//创建B表表头\nB-&gt;next=NULL;  //B表的初始化\nLNode *p=A-&gt;next,*q;</pre>\n//p为工作指针\n<pre class=\"code-block\">LNode *ra=A;  //ra始终指向A的尾结点\nwhile(p!=NULL){\n    ra-&gt;next=p; ra=p;  //将*p链到A的表尾\n    p=p-&gt;next;\n    if(p!=NULL){\n        q=p-&gt;next;  //头插后，*p将断链，因此用q记忆*p的后继\n        p-&gt;next=B-&gt;next;  //将*p插入到B的前端\n        B-&gt;next=p;\n        p=q;\n        ra-&gt;next=NULL;  //A尾结点的next域置空\n        return B;\n        上\n    }</pre>\n要特别注意的是，该算法采用头插法插入结点后，*p的指针域已改变，若不设变量保存其后继结点，则会引起断链，从而导致算法出错。",
       "figs": {
         "content": [
           "ds_daka_2_3_7_6_q_0.jpg"
@@ -994,7 +994,7 @@
       "tasks": [
         "做王道书 2.3.7_大题_10"
       ],
-      "content": "两个整数序列A=a?,a2,a,⋯,am和B=b?,b?,b?,⋯,b。已经存入两个单链表中，设计一个算法，判断序列B是否是序列A的连续子序列。",
+      "content": "两个整数序列A=a₁,a₂,a₃,⋯,a_m和B=b₁,b₂,b₃,⋯,b_n。已经存入两个单链表中，设计一个算法，判断序列B是否是序列A的连续子序列。",
       "answer": "算法思想：因为两个整数序列已存入两个链表中，操作从两个链表的第一个结点开始，若对应数据相等，则后移指针；若对应数据不等，则A链表从上次开始比较结点的后继开始，B链表仍从第一个结点开始比较，直到B链表到尾表示匹配成功。A链表到尾而B链表未到尾表示失败。操作中应记住A链表每次的开始结点，以便下次匹配时好从其后继开始。本题代码如下：\n<pre class=\"code-block\">int Pattern(LinkList A,LinkList B){\n    LNode *p=A;  //p为A链表的工作指针，本题假定A和B均无头结点\n    LNode *pre=p;  //pre记住每趟比较中A链表的开始结点\n    LNode *q=B;  //q是B链表的工作指针\n    while(p&amp;&amp;q)\n    if(p-&gt;data==q-&gt;data)[//结点值相同\n    p=p-&gt;next;\n    q=q-&gt;next;\n    else{\n        pre=pre-&gt;next;\n        p=pre;  //A链表新的开始比较结点\n        q=B;  //q从B链表第一个结点开始\n        if(q==NULL)  //B已经比较结束\n        return 1;  //说明B是A的子序列\n        else\n        return 0;  //B不是A的子序列\n    }\n}</pre>\n注 意该题其实是字符串模式匹配的链式表示形式，读者应该结合字符串模式匹配的内容重新考虑能否优化该算法。",
       "figs": {
         "content": [
@@ -1064,7 +1064,7 @@
         "做26王道书 5.3.3_大题_8"
       ],
       "content": "已知二叉树以二叉链表存储，编写算法完成：对于树中每个元素值为x的结点，删除以它为根的子树，并释放相应的空间。",
-      "answer": "删除以元素值x为根的子树，只要能删除其左右子树，就可以释放值为x的根结点，因此宜采用后序遍历。算法思想：删除值为x的结点，意味着应将其父结点的左(右)孩子指针置空，用层次遍历易于找到某结点的父结点。本题要求删除树中每个元素值为x的结点的子树，因此要遍历完整棵二叉树。算法实现如下：\n<pre class=\"code-block\">void DeleteXTree(BiTree &amp;bt){\n    //删除以bt为根的子树\n    if(bt)\n    DeleteXTree(bt-&gt;lchild);\n    DeleteXTree(bt-&gt;rchild);  //删除bt的左子树、右子树\n    free(bt);  //释放被删结点所占的存储空间\n}\n}\n//在二叉树上查找所有以x为元素值的结点，并删除以其为根的子树\nvoid Search(BiTree bt,ElemType x){\n    BiTree Q[];</pre>\n1/Q是存放二叉树结点指针的队列，容量足够大\n<pre class=\"code-block\">if(bt){\n    if(bt-&gt;data==x){\n        //若根结点值为x,则删除整棵树\n        DeleteXTree(bt);\n        exit(0);\n    }\n    InitQueue(Q);\n    EnQueue(Q,bt);\n    while(!ISEmpty(Q)){\n        DeQueue(Q,p);\n        if(p-&gt;lchild)  //若左孩子非空\n        if(p-&gt;lchild-&gt;data==x){\n            //左子树符合则删除左子树\n            DeleteXTree(p-&gt;lchild);\n            p-&gt;lchild=NULL;\n        }</pre>\nI1父结点的左孩子置空\n<pre class=\"code-block\">else\nEnQueue(Q,p-&gt;lchild);  //左子树入队列\nif(p-&gt;rchild)  //若右孩子非空\nif(p-&gt;rchild-&gt;data==x){\n    //右孩子符合则删除右子树\n    DeleteXTree(p-&gt;rchild);\n    p-&gt;rchild=NULL;\n}\n//父结点的右孩子置空\nelse\nEnQueue(Q,p-&gt;rchild); //右孩子入队列\n}\n}</pre>",
+      "answer": "删除以元素值x为根的子树，只要能删除其左右子树，就可以释放值为x的根结点，因此宜采用后序遍历。算法思想：删除值为x的结点，意味着应将其父结点的左(右)孩子指针置空，用层次遍历易于找到某结点的父结点。本题要求删除树中每个元素值为x的结点的子树，因此要遍历完整棵二叉树。算法实现如下：\n<pre class=\"code-block\">void DeleteXTree(BiTree &amp;bt){\n    //删除以bt为根的子树\n    if(bt)\n    DeleteXTree(bt-&gt;lchild);\n    DeleteXTree(bt-&gt;rchild);  //删除bt的左子树、右子树\n    free(bt);  //释放被删结点所占的存储空间\n}\n}\n//在二叉树上查找所有以x为元素值的结点，并删除以其为根的子树\nvoid Search(BiTree bt,ElemType x){\n    BiTree Q[];</pre>\n1/Q是存放二叉树结点指针的队列，容量足够大\n<pre class=\"code-block\">if(bt){\n    if(bt-&gt;data==x){\n        //若根结点值为x,则删除整棵树\n        DeleteXTree(bt);\n        exit(0);\n    }\n    InitQueue(Q);\n    EnQueue(Q,bt);\n    while(!ISEmpty(Q)){\n        DeQueue(Q,p);\n        if(p-&gt;lchild)  //若左孩子非空\n        if(p-&gt;lchild-&gt;data==x){\n            //左子树符合则删除左子树\n            DeleteXTree(p-&gt;lchild);\n            p-&gt;lchild=NULL;\n        }</pre>\n//父结点的左孩子置空\n<pre class=\"code-block\">else\nEnQueue(Q,p-&gt;lchild);  //左子树入队列\nif(p-&gt;rchild)  //若右孩子非空\nif(p-&gt;rchild-&gt;data==x){\n    //右孩子符合则删除右子树\n    DeleteXTree(p-&gt;rchild);\n    p-&gt;rchild=NULL;\n}\n//父结点的右孩子置空\nelse\nEnQueue(Q,p-&gt;rchild); //右孩子入队列\n}\n}</pre>",
       "figs": {
         "content": [
           "ds_daka_5_3_3_8_q_0.jpg"
@@ -1134,8 +1134,8 @@
       "tasks": [
         "做王道书 5.3.3_大题_14"
       ],
-      "content": "试设计判断两棵二叉树是否相似的算法。所谓二叉树T?和T?相似，指的是T?和T?都是空的二叉树或都只有一个根结点；或者T?的左子树和T?的左子树是相似的，且T?的右子树和T?的右子树是相似的。",
-      "answer": "本题采用递归的思想求解，若T?和T?都是空树，则相似；若有一个为空另一个不空，则必然不相似；否则递归地比较它们的左右子树是否相似。递归函数的定义如下：<br>1)f(T1,T2)=1;若T1==T2==NULL。<br>2)f(T1,T2)=0;若T1和T2之一为NULL,另一个不为NULL。<br>3)f(T1,T2)=f(T1-&gt;1child,T2-&gt;1child)&amp;f(T1-&gt;rchild,T2-&gt;rchild);若T1和T2均不为NULL。因此，算法实现如下：\n<pre class=\"code-block\">int similar(BiTree T1,BiTree T2){\n    //采用递归的算法判断两棵二叉树是否相似\n    int lefts,rightS;\n    if(T1==NULL&amp;&amp;T2==NULL)  //两棵树皆空\n    return 1;\n    else if(T1==NULL||T2==NULL)  //只有一棵树为空\n    return 0;\n    else{\n        //递归判断\n        leftS=similar(T1-&gt;lchild,T2-&gt;lchild);\n        rightS=similar(T1-&gt;rchild,T2-&gt;rchild);\n        return leftS&amp;&amp;rightS;\n    }</pre>\n上",
+      "content": "试设计判断两棵二叉树是否相似的算法。所谓二叉树T₁和T₂相似，指的是T₁和T₂都是空的二叉树或都只有一个根结点；或者T₁的左子树和T₂的左子树是相似的，且T₁的右子树和T₂的右子树是相似的。",
+      "answer": "本题采用递归的思想求解，若T₁和T₂都是空树，则相似；若有一个为空另一个不空，则必然不相似；否则递归地比较它们的左右子树是否相似。递归函数的定义如下：<br>1)f(T1,T2)=1;若T1==T2==NULL。<br>2)f(T1,T2)=0;若T1和T2之一为NULL,另一个不为NULL。<br>3)f(T1,T2)=f(T1-&gt;1child,T2-&gt;lchild)&amp;f(T1-&gt;rchild,T2-&gt;rchild);若T1和T2均不为NULL。因此，算法实现如下：\n<pre class=\"code-block\">int similar(BiTree T1,BiTree T2){\n    //采用递归的算法判断两棵二叉树是否相似\n    int lefts,rightS;\n    if(T1==NULL&amp;&amp;T2==NULL)  //两棵树皆空\n    return 1;\n    else if(T1==NULL||T2==NULL)  //只有一棵树为空\n    return 0;\n    else{\n        //递归判断\n        leftS=similar(T1-&gt;lchild,T2-&gt;lchild);\n        rightS=similar(T1-&gt;rchild,T2-&gt;rchild);\n        return leftS&amp;&amp;rightS;\n    }</pre>\n上",
       "figs": {
         "content": [
           "ds_daka_5_3_3_14_q_0.jpg"
@@ -1251,7 +1251,7 @@
       "tasks": [
         "做王道书 2.2.3_大题_8"
       ],
-      "content": "线性表(a,a?,a?,⋯,an)中的元素递增有序且按顺序存储于计算机内。要求设计一个算法，完成用最少时间在表中查找数值为x的元素，若找到，则将其与后继元素位置相交换，若找不到，则将其插入表中并使表中元素仍然递增有序。",
+      "content": "线性表(a₁,a₂,a₃,⋯,a_n)中的元素递增有序且按顺序存储于计算机内。要求设计一个算法，完成用最少时间在表中查找数值为x的元素，若找到，则将其与后继元素位置相交换，若找不到，则将其插入表中并使表中元素仍然递增有序。",
       "answer": "算法思想：顺序存储的线性表递增有序，可以顺序查找，也可以折半查找。题目要求“用最少的时间在表中查找数值为x的元素”,这里应使用折半查找法。本题代码如下：\n<pre class=\"code-block\">void SearchExchangeInsert(ElemType A[],ElemType x){\n    int low=0,high=n-1,mid;  //1ow和high指向顺序表下界和上界的下标\n    while(low&lt;=high){\n        mid=(low+high)/2;  //找中间位置\n        if(A[mid]==x) break;  //找到x,退出while循环\n        else if(A[mid]&lt;x)low=mid+1;//到中点mid的右半部去查\n        else high=mid-1;  //到中点mid的左半部去查</pre>\n}//下面两个if语句只会执行一个\n<pre class=\"code-block\">if(A[mid]==x&amp;&amp;mid!=n-1){\n    //若最后一个元素与x相等，则不存在与其后</pre>\n继交换的操作\n<pre class=\"code-block\">t=A[mid];A[mid]=A[mid+1];A[mid+1]=t;\nif(low&gt;high)  //查找失败，插入数据元素x\nfor(i=n-1;i&gt;high;i--) A[i+1]=A[i];  //后移元素\nA[i+1]=x;  //插入x\n}\n//结束插入\n}\n}</pre>\n本题的算法也可写成三个函数：查找函数、交换后继函数与插入函数。写成三个函数的优点是逻辑清晰且易读。09.【解析】<br>1)算法的基本设计思想。使用三个下标变量从小到大遍历数组。当三个下标变量指向的元素相等时，输出并向前推进指针，否则仅移动小于最大元素的下标变量，直到某个下标变量移出数组范围，即可停止。<br>2)算法的实现。\n<pre class=\"code-block\">void samekey(int A[],int B[],int C[],int n){\n    int i=0,j=0,k=0;  //定义三个工作指针\n    while(i&lt;n&amp;&amp;j&lt;n&amp;&amp;k&lt;n){\n        //相同则输出，并集体后移\n        if(A[i]==B[j]&amp;&amp;B[j]==C[k]){\n            printf(\"%d\\n\",A[i]);\n            i++;j++;k++;\n        }else{\n            int maxNum=max(A[i],max(Bj),C[k]));\n            if(A[i]&lt;maxNum)i++;\n            if(B[j]&lt;maxNum)j++;\n            if(C[k]&lt;maxNum)k++;</pre>\n3)每个指针移动的次数不超过n,且每次循环至少有一个指针后移，故时间复杂度为O(n),算法只用到了常数个变量，空间复杂度为O(1)。",
       "figs": {
         "content": [
@@ -1300,7 +1300,7 @@
         "做王道书 2.3.7_大题_2"
       ],
       "content": "试编写在带头结点的单链表L中删除一个最小值结点的高效算法(假设该结点唯一)。",
-      "answer": "算法思想：用p从头至尾扫描单链表，pre指向*p结点的前驱，用minp保存值最小的结点指针(初值为p),minpre 指向*minp结点的前驱(初值为pre)。一边扫描，一边比较，若p-&gt;data小于minp-&gt;data,则将p、pre分别赋值给minp、minpre,如下图所示。当p扫描完毕时，minp指向最小值结点，minpre指向最小值结点的前驱结点，再将minp所指结点删除即可。minpre pre p minp L-a a-1 a a册本题代码如下：LinkList Delete_Min(LinkList &amp;L)(LNode *pre=L,*p=pre-&gt;next;1/p为工作指针，pre指向其前驱\n<pre class=\"code-block\">LNode *minpre=pre,*minp=p;//保存最小值结点及其前驱\nwhile(p!=NULL){\n    if(p-&gt;data&lt;minp-&gt;data){\n        minp=p;  //找到比之前找到的最小值结点更小的结点\n        minpre=pre;\n    }\n    pre=p;  //继续扫描下一个结点\n    p=p-&gt;next;\n    minpre-&gt;next=minp-&gt;next;  //删除最小值结点\n    free(minp);\n    return L;\n}\n}</pre>\n算法需要从头至尾扫描链表，时间复杂度为O(n),空间复杂度为O(1)。若本题改为不带头结点的单链表，则实现上会有所不同，请读者自行思考。",
+      "answer": "算法思想：用p从头至尾扫描单链表，pre指向*p结点的前驱，用minp保存值最小的结点指针(初值为p),minpre 指向*minp结点的前驱(初值为pre)。一边扫描，一边比较，若p-&gt;data小于minp-&gt;data,则将p、pre分别赋值给minp、minpre,如下图所示。当p扫描完毕时，minp指向最小值结点，minpre指向最小值结点的前驱结点，再将minp所指结点删除即可。minpre pre p minp L-a a-1 a a册本题代码如下：LinkList Delete_Min(LinkList &amp;L)(LNode *pre=L,*p=pre-&gt;next;//p为工作指针，pre指向其前驱\n<pre class=\"code-block\">LNode *minpre=pre,*minp=p;//保存最小值结点及其前驱\nwhile(p!=NULL){\n    if(p-&gt;data&lt;minp-&gt;data){\n        minp=p;  //找到比之前找到的最小值结点更小的结点\n        minpre=pre;\n    }\n    pre=p;  //继续扫描下一个结点\n    p=p-&gt;next;\n    minpre-&gt;next=minp-&gt;next;  //删除最小值结点\n    free(minp);\n    return L;\n}\n}</pre>\n算法需要从头至尾扫描链表，时间复杂度为O(n),空间复杂度为O(1)。若本题改为不带头结点的单链表，则实现上会有所不同，请读者自行思考。",
       "figs": {
         "content": [
           "ds_daka_2_3_7_2_q_0.jpg"
@@ -1347,7 +1347,7 @@
         "做王道书 2.3.7_大题_7"
       ],
       "content": "在一个递增有序的单链表中，存在重复的元素。设计算法删除重复的元素，例如(7,10,地址元素链接地址1000H a 1010H 1004H b 100CH 1008H c 1000H 100CH d NULL 1010H e 1004H 1014H 10,21,30,42,42,42,51,70)将变为(7,10,21,30,42,51,70)。",
-      "answer": "算法思想：题中链表是有序表，因此所有相同值域的结点都是相邻的。用p扫描递增单链表L,若*p结点的值域等于其后继结点的值域，则删除后者，否则p移向下一个结点。本题代码如下：\n<pre class=\"code-block\">void Del_Same(LinkList &amp;L){\n    LNode *p=L-&gt;next,*q;  //p为扫描工作指针\n    if(p==NULL)\n    return;\n    while(p-&gt;next!=NULL){\n        q=p-&gt;next;</pre>\n1/q指向*p的后继结点\n<pre class=\"code-block\">if(p-&gt;data==q-&gt;data){\n    //找到重复值的结点\n    p-&gt;next=q-&gt;next;  //释放*q结点\n    free(q);  //释放相同元素值的结点\n}else\np=p-&gt;next;</pre>\n本算法的时间复杂度为O(n),空间复杂度为O(1)。本题也可采用尾插法，将头结点摘下，然后从第一结点开始，依次与已经插入结点的链表的最后一个结点比较，若不等则直接插入，否则将当前遍历的结点删除并处理下一个结点，直到最后一个结点为止。",
+      "answer": "算法思想：题中链表是有序表，因此所有相同值域的结点都是相邻的。用p扫描递增单链表L,若*p结点的值域等于其后继结点的值域，则删除后者，否则p移向下一个结点。本题代码如下：\n<pre class=\"code-block\">void Del_Same(LinkList &amp;L){\n    LNode *p=L-&gt;next,*q;  //p为扫描工作指针\n    if(p==NULL)\n    return;\n    while(p-&gt;next!=NULL){\n        q=p-&gt;next;</pre>\n//q指向*p的后继结点\n<pre class=\"code-block\">if(p-&gt;data==q-&gt;data){\n    //找到重复值的结点\n    p-&gt;next=q-&gt;next;  //释放*q结点\n    free(q);  //释放相同元素值的结点\n}else\np=p-&gt;next;</pre>\n本算法的时间复杂度为O(n),空间复杂度为O(1)。本题也可采用尾插法，将头结点摘下，然后从第一结点开始，依次与已经插入结点的链表的最后一个结点比较，若不等则直接插入，否则将当前遍历的结点删除并处理下一个结点，直到最后一个结点为止。",
       "figs": {
         "content": [
           "ds_daka_2_3_7_7_q_0.jpg",
@@ -1370,8 +1370,8 @@
       "tasks": [
         "做王道书 2.3.7_大题_12"
       ],
-      "content": "有两个循环单链表，链表头指针分别为h?和h?,编写一个函数将链表h?链接到链表h?之后，要求链接后的链表仍保持循环链表形式。",
-      "answer": "算法思想：先找到两个链表的尾指针，将第一个链表的尾指针与第二个链表的头结点链接起来，再使之成为循环的。本题代码如下：LinkList Link(LinkList &amp;h1,LinkList &amp;h2)(\n<pre class=\"code-block\">//将循环链表h2链接到循环链表h1之后，使之仍保持循环链表的形式\nLNode *p,*q;</pre>\nI1分别指向两个链表的尾结点\n<pre class=\"code-block\">p=h1;\nwhile(p-&gt;next!=h1)  //寻找h1的尾结点\np=p-&gt;next;\nq=h2;\nwhile(q-&gt;next!=h2)  //寻找h2的尾结点\nq=q-&gt;next;\np-&gt;next=h2;  //将h2链接到h1之后\nq-&gt;next=h1;  //令h2的尾结点指向h1\nreturn h1;\n}</pre>",
+      "content": "有两个循环单链表，链表头指针分别为h₁和h₂,编写一个函数将链表h₂链接到链表h₁之后，要求链接后的链表仍保持循环链表形式。",
+      "answer": "算法思想：先找到两个链表的尾指针，将第一个链表的尾指针与第二个链表的头结点链接起来，再使之成为循环的。本题代码如下：LinkList Link(LinkList &amp;h1,LinkList &amp;h2)(\n<pre class=\"code-block\">//将循环链表h2链接到循环链表h1之后，使之仍保持循环链表的形式\nLNode *p,*q;</pre>\n//分别指向两个链表的尾结点\n<pre class=\"code-block\">p=h1;\nwhile(p-&gt;next!=h1)  //寻找h1的尾结点\np=p-&gt;next;\nq=h2;\nwhile(q-&gt;next!=h2)  //寻找h2的尾结点\nq=q-&gt;next;\np-&gt;next=h2;  //将h2链接到h1之后\nq-&gt;next=h1;  //令h2的尾结点指向h1\nreturn h1;\n}</pre>",
       "figs": {
         "content": [
           "ds_daka_2_3_7_12_q_0.jpg"
