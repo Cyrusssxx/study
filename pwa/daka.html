@@ -195,10 +195,11 @@
     function renderCard(q) {
         const done = !!dakaProgress[q.id];
         const figs = q.figs || {content: [], answer: []};
-        const img = n => `<img src="data/daka_figs/${n}" loading="lazy" alt="教材原图">`;
-        // 题面/解答直接用教材原图，无图时才回退到提取文本
-        const content = figs.content.length ? figs.content.map(img).join('') : q.content;
-        const answer = figs.answer.length ? figs.answer.map(img).join('') : (q.answer || '（解答见教材）');
+        const img = n => `<img src="data/daka_figs/${n}" loading="lazy" alt="教材原图" onclick="window.open(this.src,'_blank')">`;
+        const figWrap = (arr, label) => arr && arr.length ? `<div class="code-figs"><div class="code-figs-label">📷 ${label}</div>${arr.map(img).join('')}</div>` : '';
+        // 文本在前（始终可读/可复制代码），教材原图在后作补充；图慢/失败时不再空白
+        const content = fmtContent(q.content || '') + figWrap(figs.content, '题目教材原图');
+        const answer = fmtAnswer(q.answer || '（解答见教材）') + figWrap(figs.answer, '解答教材原图');
         return `
             <div class="daka-card${done ? ' daka-done' : ''}" id="card-${q.id}">
                 <div class="daka-card-header">
@@ -209,7 +210,7 @@
                     </button>
                 </div>
                 <div class="daka-kaodian">${q.module} / ${q.kaodian}</div>
-                <div class="daka-content">${fmtContent(content)}</div>
+                <div class="daka-content">${content}</div>
                 <details class="daka-answer">
                     <summary>查看答案</summary>
                     <div class="daka-answer-body">${answer}</div>
