@@ -42,22 +42,15 @@
 
         <div class="daka-summary" id="codeSummary"></div>
 
-        <div class="ol-layout">
-            <aside class="ol-nav" id="codeNav"></aside>
-            <button class="ol-nav-tab" id="codeNavTab" onclick="toggleCodeNav()" title="展开目录">☰ 目录</button>
-            <div class="question-list" id="codeList">
-                <div class="loading">加载中...</div>
-            </div>
+        <div class="question-list" id="codeList">
+            <div class="loading">加载中...</div>
         </div>
     </main>
-    <button class="ol-nav-fab" id="codeNavFab" onclick="openCodeNav()" title="定位题目">☰ 定位</button>
-    <div class="ol-nav-mask" id="codeNavMask" onclick="closeCodeNav()"></div>
     <script src="js/common.js"></script>
     <script>
     let codeQuestions = [];
     let codeProgress = {};
     const LS_KEY = 'ds_code_progress';
-    let codeNavCollapsed = localStorage.getItem('code_nav_collapsed') === '1';
 
     function esc(s) {
         return String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
@@ -84,31 +77,14 @@
             if (!groups.has(k)) groups.set(k, []);
             groups.get(k).push(q);
         }
-        let html = '', nav = '', gi = 0;
+        let html = '';
         for (const [k, qs] of groups) {
             const gDone = qs.filter(q => codeProgress[q.id]).length;
-            const subs = qs.map(q =>
-                `<a class="ol-nav-item sub${codeProgress[q.id] ? ' code-nav-done' : ''}" data-target="card-${q.id}">${q.year} ${esc(q.real.replace(/年.*/, ''))}</a>`
-            ).join('');
-            nav += `<div class="ol-nav-sec">
-                <a class="ol-nav-item root" data-group="${gi}">${esc(k)}（${gDone}/${qs.length}）</a>
-                <div class="ol-nav-subs">${subs}</div>
-            </div>`;
-            html += `<details class="code-group" id="group-${gi}" open>
+            html += `<details class="code-group" open>
                 <summary class="daka-group-title">${esc(k)}（${gDone}/${qs.length}）</summary>
                 ${qs.map(renderCard).join('')}
             </details>`;
-            gi++;
         }
-        const navEl = document.getElementById('codeNav');
-        navEl.innerHTML = `<div class="ol-nav-head" onclick="toggleCodeNav()">定位<span class="ol-nav-toggle">«</span></div>
-            <div class="ol-nav-body">${nav}</div>`;
-        navEl.classList.toggle('collapsed', codeNavCollapsed);
-        navEl.querySelectorAll('.ol-nav-item.sub').forEach(a => a.addEventListener('click', () => gotoCard(a.dataset.target)));
-        navEl.querySelectorAll('.ol-nav-item.root').forEach(a => a.addEventListener('click', () => {
-            const det = document.getElementById('group-' + a.dataset.group);
-            if (det) { det.open = !det.open; void det.offsetHeight; scrollToEl(det); }
-        }));
         document.getElementById('codeList').innerHTML = html;
     }
 
@@ -148,30 +124,6 @@
         if (sum) sum.innerHTML = `已会 <b>${doneCount}</b> / ${codeQuestions.length} 题`;
     }
 
-    function toggleCodeNav() {
-        codeNavCollapsed = !codeNavCollapsed;
-        localStorage.setItem('code_nav_collapsed', codeNavCollapsed ? '1' : '0');
-        document.getElementById('codeNav').classList.toggle('collapsed', codeNavCollapsed);
-    }
-    function openCodeNav() {
-        document.getElementById('codeNav').classList.add('open');
-        document.getElementById('codeNavMask').classList.add('open');
-    }
-    function closeCodeNav() {
-        document.getElementById('codeNav').classList.remove('open');
-        document.getElementById('codeNavMask').classList.remove('open');
-    }
-    function gotoCard(target) {
-        const card = document.getElementById(target);
-        if (card) {
-            const det = card.closest('details.code-group');
-            if (det && !det.open) { det.open = true; void det.offsetHeight; }
-            scrollToEl(card);
-            card.classList.add('map-flash');
-            setTimeout(() => card.classList.remove('map-flash'), 1500);
-        }
-        closeCodeNav();
-    }
     function scrollToEl(el) {
         const top = el.getBoundingClientRect().top + window.scrollY - 76;
         window.scrollTo({ top: Math.max(0, top), behavior: 'smooth' });
