@@ -21,7 +21,7 @@ function fmtFormula(html) {
 function fmtAnswer(html) {
     if (!html || typeof html !== 'string') return html;
     html = fmtFormula(html);
-    return html.replace(/([①-⑩])/g, (m, i, src) => {
+    return html.replace(/[①-⑩]/g, (m, i, src) => {
         const prev = src.slice(Math.max(0, i - 5), i).toLowerCase();
         if (prev.endsWith('<br>') || prev.endsWith('<br/>')) return m;
         return '<br>' + m;
