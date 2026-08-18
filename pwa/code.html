@@ -118,6 +118,11 @@
 
     function renderCard(q) {
         const done = !!codeProgress[q.id];
+        const figs = q.figs || {};
+        const figHtml = (arr, label) => {
+            if (!arr || !arr.length) return '';
+            return `<div class="code-figs"><div class="code-figs-label">📷 ${esc(label)}</div>${arr.map(n => `<img src="data/daka_figs/${esc(n)}" loading="lazy" alt="教材原图" onclick="window.open(this.src,'_blank')">`).join('')}</div>`;
+        };
         return `
             <div class="daka-card${done ? ' daka-done' : ''}" id="card-${q.id}">
                 <div class="daka-card-header">
@@ -129,10 +134,12 @@
                     </button>
                 </div>
                 <div class="daka-content">${fmtC(q.content)}</div>
+                ${figHtml(figs.content, '题目教材原图')}
                 <details class="daka-answer">
                     <summary>查看答案与解析</summary>
                     <div class="daka-answer-body">${fmtA(q.answer)}</div>
                     <div class="daka-analysis">${esc((q.analysis || '').replace('易错点：', '\n易错点：'))}</div>
+                    ${figHtml(figs.answer, '解答教材原图')}
                 </details>
             </div>
         `;

@@ -13,6 +13,14 @@
       "source": "王道书 2.3.7_大题_17",
       "content": "【2009统考真题】已知一个带有表头结点的单链表，结点结构为data link假设该链表只给出了头指针 list。在不改变链表的前提下，请设计一个尽可能高效的算法，查找链表中倒数第k个位置上的结点(k为正整数)。若查找成功，算法输出该结点的data域的值，并返回1;否则，只返回0。要求：<br>1)描述算法的基本设计思想。<br>2)描述算法的详细实现步骤。<br>3)根据设计思想和实现步骤，采用程序设计语言描述算法(使用C、C++或 Java语言实现),关键之处请给出简要注释。",
       "answer": "1)算法的基本设计思想：问题的关键是设计一个尽可能高效的算法，通过链表的一次遍历，找到倒数第k个结点的位置。定义两个指针变量p和q,初始时均指向头结点的下一个结点(链表的第一个结点),p指针沿链表移动；当p指针移动到第k个结点时，q指针开始与p指针同步移动；当p指针移动到最后一个结点时，q指针所指示结点为倒数第k个结点。以上过程对链表仅进行一遍扫描。<br>2)算法的详细实现步骤如下：① count=0,p和q指向链表表头结点的下一个结点。②若p为空，转⑤。③若count等于k,则q指向下一个结点；否则，count=count+1。④p指向下一个结点，转②。⑤若 count等于k,则查找成功，输出该结点的data域的值，返回1;否则，说明k值超过了线性表的长度，查找失败，返回0。⑥算法结束。<br>3)算法实现如下：\n<pre class=\"code-block\">typedef int ElemType;  //链表数据的类型定义\ntypedef struct LNode {\n    //链表结点的结构定义\n    ElemType data;  //结点数据\n    struct LNode *link;  //结点链接指针\n}LNode,*LinkList;\nint Search_k(LinkList list,int k){\n    LNode *p=list-&gt;link,*q=list-&gt;link;//指针p、q指示第一个结点\n    int count=0;\n    while(p!=NULL){\n        //遍历链表直到最后一个结点\n        if(count&lt;k) count++;  //计数，若count&lt;k只移动p\n        else q=q-&gt;link;\n        p=p-&gt;link;</pre>\n//之后让p、q同步移动}//while\n<pre class=\"code-block\">if(count&lt;k)\nreturn 0;  //查找失败返回0\nelse{\n    //否则打印并返回1\n    printf(\"%d\",q-&gt;data);\n    return 1;\n}\n}</pre>\n评分说明若所给算法采用一遍扫描方式就能得到正确结果，则可给满分15分；若采用两遍或多遍扫描才能得到正确结果，则最高分为10分。若采用递归算法得到正确结果，则最高给10分；若实现算法的空间复杂度过高(使用了大小与k有关的辅助数组),但结果正确，则最高给10分。",
+      "figs": {
+        "content": [
+          "ds_daka_2_3_7_17_q_0.jpg"
+        ],
+        "answer": [
+          "ds_daka_2_3_7_17_a_0.jpg"
+        ]
+      },
       "analysis": "考点：单链表单遍扫描、快慢指针（两指针间距 k）。易错点：快指针先走 k 步后慢指针才同步出发；表长<k 时快指针走完仍不足 k 步须返回失败；k<=0 与空表要特判；“倒数第 k 个”从 1 计数。",
       "weblink": "https://zhuanlan.zhihu.com/p/715401637"
     },
@@ -25,6 +33,15 @@
       "source": "王道书 2.2.3_大题_10",
       "content": "【2010统考真题】设将n(n&gt;1)个整数存放到一维数组R中。设计一个在时间和空间两方面都尽可能高效的算法。将R中保存的序列循环左移p(0&lt;p&lt;n)个位置，即将R中的数据由(X₀,X₁,⋯,X_{n-1})变换为(Xp,Xp+1,⋯,Xn-1,X_0,X_1,⋯,X_{p-1})。要求：<br>1)给出算法的基本设计思想。<br>2)根据设计思想，采用C或C++或Java语言描述算法，关键之处给出注释。<br>3)说明你所设计算法的时间复杂度和空间复杂度。",
       "answer": "1)算法的基本设计思想：可将问题视为把数组ab转换成数组 ba(a代表数组的前p个元素，b代表数组中余下的n-p个元素),先将a逆置得到a⁻¹b,再将b逆置得到a⁻¹b1,最后将整个a⁻¹b⁻¹逆置得到(a⁻¹b')-1=ba。设Reverse函数执行将数组逆置的操作，对abcdefgh向左循环移动3(p=3)个位置的过程如下：\n<pre class=\"code-block\">Reverse(0,p-1)得到cbadefgh;\nReverse(p,n-1)得到cbahgfed;\nReverse(0,n-1)得到defghabc。</pre>\n注：在Reverse中，两个参数分别表示数组中待转换元素的始末位置。<br>2)使用C语言描述算法如下：\n<pre class=\"code-block\">void Reverse(int R[],int from,int to){\n    int i,temp;\n    for(i=0;i&lt;(to-from+1)/2;i++)\n    {temp=R[from+i];R[from+i]=R[to-i];R[to-i]=temp;}\n}\nvoid Converse(int R[],int n,int p){\n    Reverse(R,0,p-1);\n    Reverse(R,p,n-1);\n    Reverse(R,0,n-1);\n}</pre>\n3)上述算法中三个Reverse函数的时间复杂度分别为O(p/2)、O(n-p)/2)和O(n/2),故所设计的算法的时间复杂度为O(n),空间复杂度为O(1)。【另解】借助辅助数组来实现。算法思想：创建大小为p的辅助数组S,将R中前p个整数依次暂存在S中，同时将R中后n-p个整数左移，然后将S中暂存的p个数依次放回到R中的后续单元。时间复杂度为O(n),空间复杂度为O(p)。",
+      "figs": {
+        "content": [
+          "ds_daka_2_2_3_10_q_0.jpg"
+        ],
+        "answer": [
+          "ds_daka_2_2_3_10_a_0.jpg",
+          "ds_daka_2_2_3_10_a_1.jpg"
+        ]
+      },
       "analysis": "考点：线性表原地逆置技巧、三段逆置组合（前段/后段/整体）。易错点：p 可能 >=n，必须先 p=p%n；三段边界 Reverse(0,p-1)、Reverse(p,n-1)、Reverse(0,n-1) 别写错；要求 O(n)/O(1) 时不能开辅助数组。",
       "weblink": "https://zhuanlan.zhihu.com/p/715616143"
     },
@@ -37,6 +54,15 @@
       "source": "王道书 2.2.3_大题_11",
       "content": "【2011统考真题】一个长度为L(L≥1)的升序序列S,处在第⌊L/2⌋个位置的数称为S的中位数。例如，若序列S₁=(11,13,15,17,19),则S₁的中位数是15,两个序列的中位数是含它们所有元素的升序序列的中位数。例如，若S₂=(2,4,6,8,20),则S₂和S₁的中位数是11。现在有两个等长升序序列A和B,试设计一个在时间和空间两方面都尽可能高效的算法，找出两个序列A和B的中位数。要求：<br>1)给出算法的基本设计思想。<br>2)根据设计思想，采用C或C++或Java语言描述算法，关键之处给出注释。<br>3)说明你所设计算法的时间复杂度和空间复杂度。",
       "answer": "1)算法的基本设计思想如下。分别求两个升序序列A、B的中位数，设为a和b,求序列A、B的中位数过程如下：①若a=b,则a或b为所求中位数，算法结束。②若a&lt;b,则舍弃序列A中较小的一半，同时舍弃序列B中较大的一半，要求两次舍弃的长度相等。③若a&gt;b,则舍弃序列A中较大的一半，同时舍弃序列B中较小的一半，要求两次舍弃的长度相等。在保留的两个升序序列中，重复过程①、②、③,直到两个序列中均只含一个元素时为止，较小者为所求的中位数。<br>2)本题代码如下：\n<pre class=\"code-block\">int M_Search(int A[],int B[],int n){\n    int s1,d1,m1,s2,d2,m2;\n    s1=0;d1=n-1;\n    s2=0;d2=n-1;\n    while(s1!=dl||s2!=d2){\n        m1=(s1+d1)/2;\n        m2=(s2+d2)/2;\n        if(A[m1]==B[m2])\n        return A[m1];  //满足条件①\n        if(A[m1]&lt;B[m2]){\n            //满足条件②\n            if((s1+d1)%2==0){\n                //若元素个数为奇数\n                s1=m1;  //舍弃A中间点以前的部分，且保留中间点\n                d2=m2;  //舍弃B中间点以后的部分，且保留中间点\n            }\n            else{\n                //元素个数为偶数\n                s1=m1+1;  //舍弃A的前半部分\n                d2=m2;  //舍弃B的后半部分\n            }\n        }\n        else{\n            //满足条件③\n            if((s1+d1)%2==0){\n                //若元素个数为奇数\n                d1=m1;  //舍弃A中间点以后的部分，且保留中间点\n                s2=m2;  //舍弃B中间点以前的部分，且保留中间点\n            }\n            else{\n                //元素个数为偶数\n                d1=m1;  //舍弃A的后半部分\n                s2=m2+1;  //舍弃B的前半部分\n            }\n        }\n    }\n    return A[s1]&lt;B[s2]?A[s1]:B[s2];\n}</pre>\n3)算法的时间复杂度为O(log₂n),空间复杂度为O(1)。【另解】对两个长度为n的升序序列A和B中的元素按从小到大的顺序依次访问，这里访问的含义只是比较序列中两个元素的大小，并不实现两个序列的合并，因此空间复杂度为O(1)。按照上述规则访问第n个元素时，这个元素为两个序列A和B的中位数。",
+      "figs": {
+        "content": [
+          "ds_daka_2_2_3_11_q_0.jpg"
+        ],
+        "answer": [
+          "ds_daka_2_2_3_11_a_0.jpg",
+          "ds_daka_2_2_3_11_a_1.jpg"
+        ]
+      },
       "analysis": "考点：两个有序表合并、中位数定义（2n 个元素的中位=第 n 小，0 基下标 n-1）。易错点：合并后总长 2n，中位数下标是 n-1 不是 n；等长时也可用“平分法”（递归比较两表中位）做到 O(logn)，注意递归边界。",
       "weblink": "https://zhuanlan.zhihu.com/p/718557723"
     },
@@ -49,6 +75,15 @@
       "source": "王道书 2.3.7_大题_18",
       "content": "【2012统考真题】假定采用带头结点的单链表保存单词，当两个单词有相同的后缀时，可共享相同的后缀存储空间，例如，loading和being的存储映像如下图所示。str1、1 0 a d str2、i n 9 b e p设str1和str2分别指向两个单词所在单链表的头结点，链表结点结构为data next请设计一个时间上尽可能高效的算法，找出由str1和str2所指向两个链表共同后缀的起始位置(如图中字符i所在结点的位置p)。要求：<br>1)给出算法的基本设计思想。<br>2)根据设计思想，采用C或C++或Java语言描述算法，关键之处给出注释。<br>3)说明你所设计算法的时间复杂度。",
       "answer": "顺序遍历两个链表到尾结点时，并不能保证两个链表同时到达尾结点。这是因为两个链表的长度不同。假设一个链表比另一个链表长k个结点，我们先在长链表上遍历k个结点，之后同步遍历两个链表，这样就能够保证它们同时到达最后一个结点。因为两个链表从第一个公共结点到链表的尾结点都是重合的，所以它们肯定同时到达第一个公共结点。<br>1)算法的基本设计思想：①分别求出str1和str2所指的两个链表的长度m和n。②将两个链表以表尾对齐：令指针p、q分别指向str1和str2的头结点，若m≥n,则指针p先走，使p指向链表中的第m-n+1个结点；若m&lt;n,则使q指向链表中的第n-m+1个结点，即使指针p和q所指的结点到表尾的长度相等。③反复将指针p和q同步向后移动，并判断它们是否指向同一结点。当p、q指向同一结点，则该点即所求的共同后缀的起始地址。<br>2)本题代码如下：\n<pre class=\"code-block\">typedef struct Node{\n    char data;\n    struct Node*next;\n    SNode;</pre>\n/*求链表长度的函数*/\n<pre class=\"code-block\">int listlen(SNode *head){\n    int len=0;\n    while(head-&gt;next!=NULL){\n        len++;\n        head=head-&gt;next;\n        return len;\n    }</pre>\n/*找出共同后缀的起始地址*/SNode* find_list(SNode *str1,SNode *str2)(\n<pre class=\"code-block\">int m,n;\nSNode *p,*q;\nm=listlen(str1);  //求str1的长度，O(m)\nn=listlen(str2);  //求str2的长度，O(n)\nfor(p=str1;m&gt;n;m--)  //若m&gt;n,使p指向链表中的第m-n+1个结点\np=p-&gt;next;\nfor(q=str2;m&lt;n;n--)  //若m&lt;n,使q指向链表中的第n-m+1个结点\nq=q-&gt;next;\nwhile(p-&gt;next!=NULL&amp;&amp;p-&gt;next!=q-&gt;next)(//查找共同后缀的起始地址\np=p-&gt;next;  //两个指针同步向后移动\nq=q-&gt;next;\nreturn p-&gt;next;  //返回共同后缀的起始地址\n}\n4\n}</pre>\n3)时间复杂度为O(lenl+len2)或O(max(lenl,len2)),其中lenl、len2分别为两个链表的长度。",
+      "figs": {
+        "content": [
+          "ds_daka_2_3_7_18_q_0.jpg"
+        ],
+        "answer": [
+          "ds_daka_2_3_7_18_a_0.jpg",
+          "ds_daka_2_3_7_18_a_1.jpg"
+        ]
+      },
       "analysis": "考点：链表公共结点/公共后缀、长度差对齐、栈“后进先出”倒序比较。易错点：先让长表头指针走 |len1-len2| 步再同步比较；判断条件是结点地址相同（p==q）而非值相同；公共结点之后的所有结点都相同。",
       "weblink": "https://zhuanlan.zhihu.com/p/720226035"
     },
@@ -61,6 +96,15 @@
       "source": "王道书 2.2.3_大题_12",
       "content": "【2013统考真题】已知一个整数序列A=(a₀,a₁,⋯,a_{n-1}),其中0≤a_i&lt;n(O≤i&lt;n)。若存在a_{p₁}=a_{p₂}=⋯=a_{p_m}=x且m&gt;n/2(0≤p&lt;n,1≤k≤m),则称x为A的主元素。例如A=(0,5,5,3,5,7,5,5),则5为主元素；又如A=(0,5,5,3,5,1,5,7),则A中没有主元素。假设A中的n个元素保存在一个一维数组中，请设计一个尽可能高效的算法，找出A的主元素。若存在主元素，则输出该元素；否则输出-1。要求：<br>1)给出算法的基本设计思想。<br>2)根据设计思想，采用C或C++或Java语言描述算法，关键之处给出注释。<br>3)说明你所设计算法的时间复杂度和空间复杂度。",
       "answer": "1)算法的基本设计思想：算法的策略是从前向后扫描数组元素，标记出一个可能成为主元素的元素Num。然后重新计数，确认Num是否是主元素。算法可分为以下两步：①选取候选的主元素。依次扫描所给数组中的每个整数，将第一个遇到的整数Num保存到c中，记录Num的出现次数为1;若遇到的下一个整数仍等于Num,则计数加1,否则计数减1;当计数减到0时，将遇到的下一个整数保存到c中，计数重新记为1,开始新一轮计数，即从当前位置开始重复上述过程，直到扫描完全部数组元素。②判断c中元素是否是真正的主元素。再次扫描该数组，统计c中元素出现的次数，若大于n/2,则为主元素；否则，序列中不存在主元素。<br>2)算法实现如下：\n<pre class=\"code-block\">int Majority(int A[],int n){\n    int i,c,count=1;  //c用来保存候选主元素，count用来计数\n    c=A[0];  //设置A[0]为候选主元素\n    for(i=1;i&lt;n;i++)  //查找候选主元素\n    if(A[i]==c)\n    count++;  //对A中的候选主元素计数\n    else\n    if(count&gt;0)  //处理不是候选主元素的情况\n    count--;\n    else{\n        //更换候选主元素，重新计数\n        c=A[i];\n        count=1;\n        }\n    for(i=0;i&lt;n;i++)  //统计候选主元素的实际出现次数\n        if(A[i]==c)\n        count++;\n        if(count&gt;n/2)return c;  //确认候选主元素\n        else return -1;  //不存在主元素\n    }\n}</pre>\n3)实现的程序的时间复杂度为O(n),空间复杂度为O(1)。说 明本题若采用先排好序再统计的方法[时间复杂度为O(nlog₂n)],则只要解答正确，最高就可拿11分。即便是写出O(n2)的算法，最高也能拿10分，因此，对于统考算法题，花费大量时间去思考最优解法是得不偿失的。本算法的方法非常典型，需要牢固掌握。",
+      "figs": {
+        "content": [
+          "ds_daka_2_2_3_12_q_0.jpg",
+          "ds_daka_2_2_3_12_q_1.jpg"
+        ],
+        "answer": [
+          "ds_daka_2_2_3_12_a_0.jpg"
+        ]
+      },
       "analysis": "考点：主元素定义（出现次数>n/2）、摩尔投票（候选+计数）、伪散列计数（值域有限）。易错点：摩尔投票只产生候选，无论是否存在主元素都必须二次扫描验证出现次数是否真>n/2；用数组下标计数时注意值域 [0,n-1] 与开数组大小。",
       "weblink": "https://zhuanlan.zhihu.com/p/718848457"
     },
@@ -73,6 +117,15 @@
       "source": "王道书 5.3.3_大题_15",
       "content": "【2014 统考真题】二叉树的带权路径长度(WPL)是二叉树中所有叶结点的带权路径长度之和。给定一棵二叉树T,采用二叉链表存储，结点结构为left weight right其中叶结点的weight域保存该结点的非负权值。设root为指向T的根结点的指针，请设计求T的WPL的算法，要求：<br>1)给出算法的基本设计思想。<br>2)使用C或C++语言，给出二叉树结点的数据类型定义。<br>3)根据设计思想，采用C或C++语言描述算法，关键之处给出注释。",
       "answer": "二叉树的带权路径长度有两种常见的计算方法：①根据二叉树的带权路径长度的定义，二叉树的WPL值= 树中全部叶结点的带权路径长度之和。②根据带权二叉树的性质，二叉树的WPL值= 树中所有非叶结点的权值之和(记住该结论即可，不要求证明)。根据两种常见的计算方法，本题不难写出下列两种解法。<br>1)算法的基本设计思想。①本问题可采用递归算法实现。根据定义：二叉树的WPL值= 树中全部叶结点的带权路径长度之和=根结点左子树中全部叶结点的带权路径长度之和+根结点右子树中全部叶结点的带权路径长度之和叶结点的带权路径长度= 该结点的weight域的值×该结点的深度设根结点的深度为0,若某结点的深度为d时，则其孩子结点的深度为d+1。在递归遍历二叉树结点的过程中，若遍历到叶结点，则返回该结点的带权路径长度，否则返回其左右子树的带权路径长度之和。②若借用非叶结点的weight域保存其孩子结点中weight域值的和，则树的WPL等于树中所有非叶结点weight域值之和。采用后序遍历策略，在遍历二叉树T时递归计算每个非叶结点的weight 域的值，则树T的WPL等于根结点左子树的WPL加上右子树的WPL,再加上根结点中weight域的值。在递归遍历二叉树结点的过程中，若遍历到叶结点，则return 0并且退出递归，否则递归计算其左右子树的WPL和自身结点的权值。<br>2)二叉树结点的数据类型定义如下。\n<pre class=\"code-block\">typedef struct node{\n    int weight;\n    struct node *left,*right;\n}BTree;</pre>\n3)算法的代码如下。①基于方法1的算法实现：\n<pre class=\"code-block\">int WPL(BTree *root)  //根据WPL的定义采用递归算法实现\n{ return WPL1(root,0);\n}\nint WPL1(BTree *root,int d)  //d为结点深度\n{ if(root-&gt;left==NULL&amp;&amp;root-&gt;right==NULL)\n    return(root-&gt;weight*d);\n    else\n    return(WPL1(root-&gt;left,d+1)+WPL1(root-&gt;right,d+1));\n}</pre>\n②基于方法2的算法实现：\n<pre class=\"code-block\">int WPL(BTree *root)  //基于递归的后序遍历算法实现\n{ int w_1,w_r;\n    if(root-&gt;left==NULL&amp;&amp;root-&gt;right==NULL)\n    return 0;\n    else\n    { w_1=WPL(root-&gt;left);  //计算左子树的WPL\n        w_r=WPL(root-&gt;right);  //计算右子树的WPL\n        root-&gt;weight=root-&gt;left-&gt;weight+root-&gt;right-&gt;weight;  //填写非叶结点的weight域\n        return(w_1+w_r+root-&gt;weight); //返回WPL值</pre>\n注 意上述两种算法为官方标准答案，当遍历到度为1的结点时，会传入空指针，导致空指针异常。但是，作为408考试的算法题，不要求考虑特殊的边界条件，只要算法思想正确，代码逻辑正确，即可得满分。因此，在复习过程中，无须花过多的时间抠代码的各种边界条件。",
+      "figs": {
+        "content": [
+          "ds_daka_5_3_3_15_q_0.jpg"
+        ],
+        "answer": [
+          "ds_daka_5_3_3_15_a_0.jpg",
+          "ds_daka_5_3_3_15_a_1.jpg"
+        ]
+      },
       "analysis": "考点：带权路径长度 WPL、先序/层次遍历带深度、叶结点判定。易错点：递归深度定义要统一（根深度从 0 或 1 计，WPL 相应差一个权值）；只累加叶结点（左右孩子皆空）的 deep*weight；层次遍历需队列记录深度。",
       "weblink": "https://zhuanlan.zhihu.com/p/717071345"
     },
@@ -85,6 +138,15 @@
       "source": "王道书 2.3.7_大题_19",
       "content": "【2015统考真题】用单链表保存m个整数，结点的结构为[data][link],且|data|≤n(n为正整数)。现要求设计一个时间上尽可能高效的算法，对于链表中data的绝对值相等的结点，仅保留第一次出现的结点而删除其余绝对值相等的结点。例如，若给定的单链表head如下：head 21-15-15·-7 15^则删除结点后的head为head 21-15-7<br>要求：<br>1)给出算法的基本设计思想。<br>2)使用C或C++语言，给出单链表结点的数据类型定义。<br>3)根据设计思想，采用C或C++语言描述算法，关键之处给出注释。<br>4)说明你所设计算法的时间复杂度和空间复杂度。",
       "answer": "1)算法的基本设计思想：●算法的核心思想是用空间换时间。使用辅助数组记录链表中已出现的数值，从而只需对链表进行一趟扫描。●因为|data|≤n,故辅助数组q的大小为n+1,各元素的初值均为0。依次扫描链表中的各结点，同时检查q[|data|]的值，若为0则保留该结点，并令q[|data|]=1;否则将该结点从链表中删除。<br>2)使用C语言描述的单链表结点的数据类型定义：\n<pre class=\"code-block\">typedef struct node f\nint\ndata;\nstruct node\n*link;\n}NODE;\nTypedef NODE*PNODE;</pre>\n3)算法实现如下：\n<pre class=\"code-block\">void func(PNODE h,int n){\n    PNODE p=h,r;\n    int *q,m;\n    q=(int *)malloc(sizeof(int)*(n+1)); //申请n+1个位置的辅助空间\n    for(int i=0;i&lt;n+1;i++)  //数组元素初值置0\n    *(q+i)=0;\n    while(p-&gt;link!=NULL){\n        m=p-&gt;link-&gt;data&gt;0? p-&gt;link-&gt;data:-p-&gt;link-&gt;data;\n        if(*(q+m)==0){\n            //判断该结点的data是否已出现过\n            *(q+m)=1;  //首次出现\n            p=p-&gt;link;  //保留\n        }\n        else{\n            //重复出现\n            r=p-&gt;link;  //删除\n            p-&gt;link=r-&gt;link;\n            free(r);\n        }\n        free(q);\n    }</pre>\n『<br>4)参考答案所给算法的时间复杂度为O(m),空间复杂度为O(n)。",
+      "figs": {
+        "content": [
+          "ds_daka_2_3_7_19_q_0.jpg"
+        ],
+        "answer": [
+          "ds_daka_2_3_7_19_a_0.jpg",
+          "ds_daka_2_3_7_19_a_1.jpg"
+        ]
+      },
       "analysis": "考点：链表删除、伪散列哈希（值域有限用数组做标记）、绝对值去重。易错点：标记数组大小是 n+1（绝对值范围 [0,n]，含 0）；删除 p->next 后 p 不移动（避免漏判）；先判断 key[m]==0 再决定保留或删除。",
       "weblink": "https://zhuanlan.zhihu.com/p/720389291"
     },
@@ -97,6 +159,15 @@
       "source": "王道书 8.3.3_大题_4",
       "content": "【2016统考真题】已知由n(n≥2)个正整数构成的集合A={a_k | 0≤k&lt;n},将其划分为两个不相交的子集A₁和A₂,元素个数分别是n₁和n₂,A₁和A₂中的元素之和分别为S₁和S₂。设计一个尽可能高效的划分算法，满足|n₁-n₂|最小且|S₁-S₂|最大。要求：<br>1)给出算法的基本设计思想。<br>2)根据设计思想，采用C或C++语言描述算法，关键之处给出注释。<br>3)说明所设计算法的平均时间复杂度和空间复杂度。",
       "answer": "1)算法的基本设计思想由题意可知，将最小的⌊n/2⌋个元素放在A₁中，其余的元素放在A₂中，分组结果即可满足题目要求。仿照快速排序的思想，基于枢轴将n个整数划分为两个子集。根据划分后枢轴所处的位置i分别处理：①若i=⌊n/2⌋,则分组完成，算法结束。②若i&lt;⌊n/2⌋,则枢轴及之前的所有元素均属于A₁,继续对i之后的元素进行划分。③若i&gt;⌊n/2⌋,则枢轴及之后的所有元素均属于A₂,继续对i之前的元素进行划分。基于该设计思想实现的算法，无须对全部元素进行全排序，其平均时间复杂度是O(n),空间复杂度是O(1)。<br>2)算法实现\n<pre class=\"code-block\">int setPartition(int a[],int n)\nint pivotkey,low=0,low0=0,high=n-1,high0=n-1,flag=1,k=n/2,i;\nint s1=0,s2=0;\nwhile(flag){\n    pivotkey=a[low];  //选择枢轴\n    while(low&lt;high)  //基于枢轴对数据进行划分\n    while(low&lt;high &amp;&amp; a[high]&gt;=pivotkey)--high;\n    if(low!=high) a[low]=a[high];\n    while(low&lt;high &amp;&amp; a[low]&lt;=pivotkey)++low;\n    if(low!=high) a[high]=a[low];  //end of while(low&lt;high)\n    a[low]=pivotkey;\n    if(low==k-1)  //若枢轴是第n/2小的元素，划分成功\n    flag=0;\n    else{\n        //是否继续划分\n        if(low&lt;k-1){\n            low0=++low;\n            high=high0;\n            else{\n                high0=--high;\n                low=low0;\n            }\n            for(i=0;i&lt;k;i++)s1+=a[i];\n        }\n    }\n    for(i=k;i&lt;n;i++)s2+=a[i];\n    return s2-s1;\n}</pre>\n3)本算法的平均时间复杂度是O(n),空间复杂度是O(1)。",
+      "figs": {
+        "content": [
+          "ds_daka_8_3_3_4_q_0.jpg"
+        ],
+        "answer": [
+          "ds_daka_8_3_3_4_a_0.jpg",
+          "ds_daka_8_3_3_4_a_1.jpg"
+        ]
+      },
       "analysis": "考点：快速排序 partition 思想、“第 k 小元素”减治选择、集合划分使个数差最小且和差最大。易错点：枢轴定位到 n/2（k-1）位置即停止，无需完全排序；平均 O(n)/O(1) 是快排划分的期望，最坏 O(n^2)；若要求各段内部相对顺序不变，partition 不稳定需换辅助数组/前插。",
       "weblink": "https://zhuanlan.zhihu.com/p/722256405"
     },
@@ -109,6 +180,16 @@
       "source": "王道书 5.3.3_大题_16",
       "content": "【2017统考真题】请设计一个算法，将给定的表达式树(二叉树)转换为等价的中缀表达式(通过括号反映操作符的计算次序)并输出。例如，当下列两棵表达式树作为算法的输入时：+a b@a b c输出的等价中缀表达式分别为(a+b)*(c*(-d))和(a*b)+(-(c-d))。二叉树结点定义如下：\n<pre class=\"code-block\">typedef struct node{\n    char data[10];  //存储操作数或操作符\n    struct node*left,*right;\n}BTree;</pre>\n要求：<br>1)给出算法的基本设计思想。<br>2)根据设计思想，采用C或C++语言描述算法，关键之处给出注释。",
       "answer": "1)算法的基本设计思想。表达式树的中序序列加上必要的括号即等价的中缀表达式。可以基于二叉树的中序遍历策略得到所需的表达式。表达式树中分支结点所对应的子表达式的计算次序，由该分支结点所处的位置决定。为得到正确的中缀表达式，需要在生成遍历序列的同时，在适当位置增加必要的括号。显然，表达式的最外层(对应根结点)和操作数(对应叶结点)不需要添加括号。<br>2)算法实现。将二叉树的中序遍历递归算法稍加改造即可得本题的答案。除根结点和叶结点外，遍历到其他结点时在遍历其左子树之前加上左括号，遍历完右子树后加上右括号。\n<pre class=\"code-block\">{\n    void BtreeTOE(BTree *root){\n        BtreeToExp(root,1);  //根的高度为1\n        void BtreeToExp(BTree *root,int deep){\n            if(root==NULL) return;  //空结点返回\n            else if(root-&gt;left==NULL&amp;&amp;root-&gt;right==NULL) //若为叶结点\n            printf(\"%s\",root-&gt;data);  //输出操作数，不加括号\n            else{\n                if(deep&gt;1) printf(\"(\");  //若有子表达式则加一层括号\n                BtreeToExp(root-&gt;left, deep+1);\n                printf(\"%s\",root-&gt;data);  //输出操作符\n                BtreeToExp(root-&gt;right, deep+1);\n                if(deep&gt;1) printf(\")\");  //若有子表达式则加一层括号\n            }\n        }</pre>",
+      "figs": {
+        "content": [
+          "ds_daka_5_3_3_16_q_0.jpg",
+          "ds_daka_5_3_3_16_q_1.jpg"
+        ],
+        "answer": [
+          "ds_daka_5_3_3_16_a_0.jpg",
+          "ds_daka_5_3_3_16_a_1.jpg"
+        ]
+      },
       "analysis": "考点：表达式树的中序遍历、运算符优先级与括号策略。易错点：最外层不加括号（deep>1 才加）；括号加在当前结点是加减法且非根的子树外；单目运算符（如负号）只处理右子树；操作数叶子直接输出。",
       "weblink": "https://zhuanlan.zhihu.com/p/720860549"
     },
@@ -121,6 +202,15 @@
       "source": "王道书 2.2.3_大题_13",
       "content": "【2018统考真题】给定一个含n(n≥1)个整数的数组，请设计一个在时间上尽可能高效的算法，找出数组中未出现的最小正整数。例如，数组{-5,3,2,3}中未出现的最小正整数是1;数组{1,2,3}中未出现的最小正整数是4。要求：<br>1)给出算法的基本设计思想。<br>2)根据设计思想，采用C或C++语言描述算法，关键之处给出注释。<br>3)说明你所设计算法的时间复杂度和空间复杂度。",
       "answer": "1)算法的基本设计思想：<br>要求在时间上尽可能高效，因此采用空间换时间的办法。分配一个用于标记的数组B[n],用来记录A中是否出现了1～n中的正整数，B[0]对应正整数1,B[n-1]对应正整数n,初始化B中全部为0。A中含有n个整数，因此可能返回的值是1～n+1,当A中n个数恰好为1~n时返回n+1。当数组A中出现了小于或等于0或大于n的值时，会导致1～n中出现空余位置，返回结果必然在1～n中，因此对于A中出现了小于或等于0或大于n的值，可以不采取任何操作。\n<pre class=\"code-block\">经过以上分析可以得出算法流程：从A[0]开始遍历A,若O&lt;A[i]&lt;=n,则令B[A[i]-1]=1;</pre>\n否则不做操作。对A遍历结束后，开始遍历数组B,若能查找到第一个满足B[i]==0的下标i,返回i+1即为结果，此时说明A中未出现的最小正整数在1和n之间。若B[i]全部不为0,返回i+1(跳出循环时i=n,i+1等于n+1),此时说明A中未出现的最小正整数是n+1。<br>2)算法实现：\n<pre class=\"code-block\">int findMissMin(int A[],int n)\n{\n    int i,*B;  //标记数组\n    B=(int *)malloc(sizeof(int)*n);/1分配空间\n    memset(B,0,sizeof(int)*n);  //赋初值为0\n    for(i=0;i&lt;n;i++)\n    if(A[i]&gt;0&amp;&amp;A[i]&lt;=n)  //若A[i]的值介于1~n,则标记数组 B\n    B[A[i]-1]=1;\n    for(i=0;i&lt;n;i++)  //扫描数组B,找到目标值\n    if(B[i]==0) break;\n    return i+1;  //返回结果\n}</pre>\n3)时间复杂度：遍历A一次，遍历B一次，两次循环内操作步骤为O(1)量级，因此时间复杂度为O(n)。空间复杂度：额外分配了B[n],空间复杂度为O(n)。",
+      "figs": {
+        "content": [
+          "ds_daka_2_2_3_13_q_0.jpg"
+        ],
+        "answer": [
+          "ds_daka_2_2_3_13_a_0.jpg",
+          "ds_daka_2_2_3_13_a_1.jpg"
+        ]
+      },
       "analysis": "考点：数值与下标映射（伪散列/原地置换）、“缺失的最小正整数”。易错点：值域 [1,n] 才有意义，忽略 <=0 和 >n 的元素；置换法原地归位时防死循环（目标位置已有正确值则跳过）；标记数组法空间 O(n)、置换法空间 O(1)，按题目要求选择。",
       "weblink": "https://zhuanlan.zhihu.com/p/720283487"
     },
@@ -133,6 +223,15 @@
       "source": "王道书 2.3.7_大题_20",
       "content": "【2019统考真题】设线性表L=(a₁,a₂,a₃,⋯,a_{n-2},a_{n-1},a_n)采用带头结点的单链表保存，链表中的结点定义如下：\n<pre class=\"code-block\">typedef struct node\n( int data;\nstruct node*next;\n}NODE;</pre>\n请设计一个空间复杂度为O(1)且时间上尽可能高效的算法，重新排列L中的各结点，得到线性表L'=(a₁,a_n,a₂,a_{n-1},a₃,a_{n-2},⋯)。要求：<br>1)给出算法的基本设计思想。<br>2)根据设计思想，采用C或C++语言描述算法，关键之处给出注释。<br>3)说明你所设计的算法的时间复杂度。",
       "answer": "1)算法的基本设计思想：先观察L=(a₁,a₂,a₃,⋯,a_{n-2},a_{n-1},a_n)和L'=(a₁,a_n,a₂,a_{n-1},a₃,a_{n-2},⋯),发现L′是由L摘取第一个元素，再摘取倒数第一个元素⋯⋯依次合并而成的。为了方便链表后半段取元素，需要先将L后半段原地逆置[题目要求空间复杂度为O(1),不能借助栈],否则每取最后一个结点都需要遍历一次链表。①先找出链表L的中间结点，为此设置两个指针p和q,指针p每次走一步，指针q每次走两步，当指针q到达链尾时，指针p正好在链表的中间结点；②然后将L的后半段结点原地逆置。③ 从单链表前后两段中依次各取一个结点，按要求重排。<br>2)算法实现如下：\n<pre class=\"code-block\">void change_list(NODE*h){\n    NODE *p,*q,*r,*s;\n    p=q=h;\n    while(q-&gt;next!=NULL){\n        ///寻找中间结点\n        p=p-&gt;next;  //p走一步\n        q=q-&gt;next;\n        if(q-&gt;next!=NULL) q=q-&gt;next;\n        //q走两步\n    }\n    q=p-&gt;next;</pre>\n//p所指结点为中间结点，q为后半段链表的首结点\n<pre class=\"code-block\">p-&gt;next=NULL;\nwhile(q!=NULL){\n    //将链表后半段逆置\n    r=q-&gt;next;\n    q-&gt;next=p-&gt;next;\n    p-&gt;next=q;\n    q=r;\n}\ns=h-&gt;next;  //s指向前半段的第一个数据结点，即插入点\nq=p-&gt;next;  //q指向后半段的第一个数据结点\np-&gt;next=NULL;\nwhile(q!=NULL)  //将链表后半段的结点插入到指定位置\nr=q-&gt;next;  //r指向后半段的下一个结点\nq-&gt;next=s-&gt;next;//将q所指结点插入到s所指结点之后\ns-&gt;next=q;\ns=q-&gt;next;  //s指向前半段的下一个插入点\nq=r;\n}</pre>\n3)第一步找中间结点的时间复杂度为O(n),第二步逆置的时间复杂度为O(n),第三步合并链表的时间复杂度为O(n),所以该算法的时间复杂度为O(n)。",
+      "figs": {
+        "content": [
+          "ds_daka_2_3_7_20_q_0.jpg"
+        ],
+        "answer": [
+          "ds_daka_2_3_7_20_a_0.jpg",
+          "ds_daka_2_3_7_20_a_1.jpg"
+        ]
+      },
       "analysis": "考点：快慢指针找中点、单链表逆置、两链表交替合并。易错点：快指针走两步的条件（fast->next && fast->next->next）；断开中点 slow->next=NULL；逆置后半段用三指针；交叉合并时先保存 q 的下一结点，再把 p 移到下一段头（p=q->next）。",
       "weblink": "https://zhuanlan.zhihu.com/p/720397271"
     },
@@ -145,6 +244,15 @@
       "source": "王道书 2.2.3_大题_14",
       "content": "【2020统考真题】定义三元组(a,b,c)(a,b,c均为整数)的距离D=|a-b|+|b-c|+|c-a|.给定3个非空整数集合S₁、S₂、S₃,按升序分别存储在3个数组中。请设计一个尽可能高效的算法，计算并输出所有可能的三元组(a,b,c)(a∈S₁,b∈S₂,c∈S₃)中的最小距离。例如 S₁={-1,0,9},S₂={-25,-10,10,11},S₃={2,9,17,30,41},则最小距离为2,相应的三元组为(9,10,9)。要求：<br>1)给出算法的基本设计思想。<br>2)根据设计思想，采用C语言或C++语言描述算法，关键之处给出注释。<br>3)说明你所设计算法的时间复杂度和空间复杂度。",
       "answer": "分析。由D=|a-b|+|b-c|+|c-a|≥0,有如下结论。①当a=b=c时，距离最小。②其余情况。不失一般性，假设a≤b≤c,观察下面的数轴：L₁=|a-b|,L₂=|b-c|,L₃=|c-a|\nD=|a-b|+|b-c|+|c-a|≥0=L₁+L₂+L₃=2L₃\n由D的表达式可知，事实上决定D大小的关键是a和c之间的距离，于是问题就可以简化为每次固定c找一个a,使得L₃=|c-a|最小。<br>1)算法的基本设计思想：①使用Dmin记录所有已处理的三元组的最小距离，初值为一个足够大的整数。②集合S₁、S₂、S₃分别保存在数组A、B、C中。数组的下标变量i=j=k=0,当i&lt;|S₁| j&lt;|S₂|且k&lt;|S₃|时(|S|表示集合S中的元素个数),循环执行下面的步骤a)～c)。a)计算(A[i],B[j],C[k])的距离D;(计算D)b)若D&lt;Dmin,则Dmin=D;(更新D)c)将A[i]、B[j]、C[k]中的最小值的下标+1;(对照分析：最小值为a,最大值为c,这里c不变而更新a,试图寻找更小的距离D)③输出Dmin,结束。<br>2)算法实现：\n<pre class=\"code-block\">#define INT_MAX 0x7fffffff\nint abs_(int a)(//计算绝对值\nif(a&lt;0) return -a;\nelse return a;\n}\nbool xls_min(int a,int b,int c){//a是否是三个数中的最小值\n    if(a&lt;=b&amp;&amp;a&lt;=c) return true;\n    return false;\n}\nint findMinofTrip(int A[,int n,int B[],int m,int c[],int p){\n    //D_min用于记录三元组的最小距离，初值赋为INT_MAX\n    int i=0,j=0,k=0,D_min=INT_MAX,D;\n    while(i&lt;n&amp;&amp;j&lt;m&amp;&amp;k&lt;p&amp;&amp;D_min&gt;0)\n    D=abs_(A[i]-B[j])+abs_(B[j]-C[k])+abs(C[k]-A[i]);//计算D\n    if(D&lt;D_min) D_min=D;  //更新 D\n    if(xls_min(A[i],B[j],C[k])) i++; //更新a\n    else if(xls_min(B[j],C[k],A[i])) j++;\n    else k++;\n    return D_min;\n}</pre>\n上<br>3)设n=|S₁|+|S₂|+|S₃|,时间复杂度为O(n),空间复杂度为O(1)。",
+      "figs": {
+        "content": [
+          "ds_daka_2_2_3_14_q_0.jpg"
+        ],
+        "answer": [
+          "ds_daka_2_2_3_14_a_0.jpg",
+          "ds_daka_2_2_3_14_a_1.jpg"
+        ]
+      },
       "analysis": "考点：三个有序数组的贪心多指针、距离公式化简 D=|a-b|+|b-c|+|c-a|=2(max-min)。易错点：每次移动“当前三者最小值”所在指针（升序下才能逼近最优）；暴力 O(n^3) 超时，要写 O(n) 线性扫描；保留最优三元组值；先化简公式便于分析。",
       "weblink": "https://zhuanlan.zhihu.com/p/720312808"
     },
@@ -157,6 +265,14 @@
       "source": "王道书 6.2.6_大题_7",
       "content": "【2021统考真题】已知无向连通图G由顶点集V和边集E组成，|E|&gt;0,当G中度为奇数的顶点个数为不大于2的偶数时，G存在包含所有边且长度为E的路径(称为EL路径)。设图G采用邻接矩阵存储，类型定义如下：\n<pre class=\"code-block\">typedef struct{\n    //图的定义\n    int numVertices,numEdges;  //图中实际的顶点数和边数\n    char VerticesList[MAXV];  //顶点表。MAXV为已定义常量\n    int Edge[MAXV][MAXV];  //邻接矩阵\n}MGraph;</pre>\n请设计算法int IsExistEL(MGraph G),判断G是否存在EL路径，若存在，则返回1,否则返回0。要求：<br>1)给出算法的基本设计思想。<br>2)根据设计思想，采用C或C++语言描述算法，关键之处给出注释。<br>3)说明你所设计算法的时间复杂度和空间复杂度。",
       "answer": "1)算法的基本设计思想：本算法题属于送分题，题干已经告诉我们算法的思想。对于采用邻接矩阵存储的无向图，在邻接矩阵的每一行(列)中，非零元素的个数为本行(列)对应顶点的度。可以依次计算连通图G中各顶点的度，并记录度为奇数的顶点个数，若个数为0或2,则返回1,否则返回0。<br>2)算法实现\n<pre class=\"code-block\">int ISExistEL(MGraph G){\n    //采用邻接矩阵存储，判断图是否存在EL路径\n    int degree,i,j,count=0;\n    for(i=0;i&lt;G.numVertices;i++){\n        degree=0;\n        for(j=0;j&lt;G.numVertices;j++)\n        degree+=G.Edge[i][j];  //依次计算各个顶点的度\n        if(degree%2!=0)\n        count++;  //对度为奇数的顶点计数\n        if(count==0||count==2)\n        return 1;  //存在EL路径，返回1\n        else\n        return 0;  //不存在EL 路径，返回0</pre>\n3)时间复杂度和空间复杂度算法需要遍历整个邻接矩阵，所以时间复杂度为O(n2),空间复杂度为O(1)。",
+      "figs": {
+        "content": [
+          "ds_daka_6_2_6_7_q_0.jpg"
+        ],
+        "answer": [
+          "ds_daka_6_2_6_7_a_0.jpg"
+        ]
+      },
       "analysis": "考点：欧拉回路/路径判定（奇度顶点数 0 或 2 + 图连通）、邻接矩阵求度数。易错点：奇度=2 只是必要非充分，还须保证图连通（排除孤立点/森林）；无向图度数看行或列均可（矩阵对称）；有向图欧拉条件不同（入度=出度或仅起终点差 1），勿混用。",
       "weblink": "https://zhuanlan.zhihu.com/p/721791028"
     },
@@ -169,6 +285,15 @@
       "source": "王道书 5.3.3_大题_17",
       "content": "【2022 统考真题】已知非空二叉树T的结点值均为正整数，采用顺序存储方式保存，数据结构定义如下：\n<pre class=\"code-block\">typedef struct{\n    //MAX_SIZE为已定义常量\n    int SqBiTNode[MAX_SIZE]; //保存二叉树结点值的数组\n    int ElemNum;  //实际占用的数组元素个数\n    SqBiTree;</pre>\nT中不存在的结点在数组SqBiTNode中用-1表示。例如，对于下图所示的两棵非空二叉树T₁和T₂：<br>T₁的存储结果如下：<br>T₁.SqBiTNode：40 25 60 -1 30 -1 80 -1 -1 27<br>T₁.ElemNum=10<br>T₂的存储结果如下：<br>T₂.SqBiTNode：40 50 60 -1 30 -1 -1 -1 -1 -1 35<br>T₂.ElemNum=11<br>请设计一个尽可能高效的算法，判定一棵采用这种方式存储的二叉树是否为二叉搜索树，若是，则返回true，否则，返回false。要求：<br>1)给出算法的基本设计思想。<br>2)根据设计思想，采用C或C++语言描述算法，关键之处给出注释。",
       "answer": "1)算法的基本设计思想。对于采用顺序存储方式保存的二叉树，根结点保存在 SqBiTNode[0]中；当某结点保存在SqBiTNode[i]中时，若有左孩子，则其值保存在 SqBiTNode[2i+1]中；若有右孩子，则其值保存在SqBiTNode[2i+2]中；若有双亲结点，则其值保存在SqBiTNode[(i-1)/2]中。二叉搜索树需要满足的条件是：任意一个结点值大于其左子树中的全部结点值，小于其右子树中的全部结点值。中序遍历二叉搜索树得到一个升序序列。使用整型变量val记录中序遍历过程中已遍历结点的最大值，初值为一个负整数。若当前遍历的结点值小于或等于val,则算法返回 false,否则，将val的值更新为当前结点的值。<br>2)算法实现。\n<pre class=\"code-block\">#define false 0\n#define true 1\ntypedef int bool;\nbool judgeInorderBST(SqBiTree bt,int k,int *val){//初始调用时k的值是0\n    if(k&lt;bt.ElemNum&amp;&amp;bt.SqBiTNode[k]!=-1){\n        if(!judgeInorderBST(bt,2*k+1,val))return false;\n        if(bt.SqBiTNode[k]&lt;=*val) return false;\n        *val=bt.SqBiTNode[k];\n        if(!judgeInorderBST(bt,2*k+2,val))return false;\n    }\n    return true;\n}</pre>\n【解答2】<br>1)算法的基本设计思想。对于采用顺序存储方式保存的二叉树，根结点保存在 SqBiTNode[0]中；当某结点保存在SqBiTNode[i]中时，若有左孩子，则其值保存在SqBiTNode[2i+1]中；若有右孩子，则其值保存在SqBiTNode[2i+2]中；若有双亲结点，则其值保存在SqBiTNode[(i-1)/2]中。二叉搜索树需要满足的条件是：任意一个结点值大于其左子树中的全部结点值，小于其右子树中的全部结点值。设置两个数组pmax和pmin。根据二叉搜索树的定义，SqBiTNode[i]中的值应该大于以 SqBiTNode[2i+1]为根的子树中的最大值(保存在pmax[2i+1]中),小于以SqBiTNode[2i+2]为根的子树中的最小值(保存在pmin[2i+1]中)。初始时，用数组SqBiTNode中前ElemNum个元素的值对数组pmax和pmin初始化。在数组SqBiTNode中从后向前扫描，扫描过程中逐一验证结点与子树之间是否满足上述的大小关系。<br>2)算法实现。\n<pre class=\"code-block\">#define false 0\n#define true 1\ntypedef int bool;\nbool judgeBST(SqBiTree bt){\n    int k,m,*pmin,*pmax;\n    pmin=(int *)malloc(sizeof(int)*(bt.ElemNum));\n    pmax=(int *)malloc(sizeof(int)*(bt.ElemNum));\n    for(k=0;k&lt;bt.ElemNum;k++)  //辅助数组初始化\n    pmin[k]=pmax[k]=bt.SqBiTNode[k];\n    for(k=bt.ElemNum-1;k&gt;0;k--){ //从最后一个叶结点向根遍历\n        if(bt.SqBiTNode[k]!=-1){\n            m=(k-1)/2;  //双亲\n            if(k%2==1&amp;&amp;bt.SqBiTNode[m]&gt;pmax[k])  //其为左孩子\n            pmin[m]=pmin[k];\n            else if(k%2==0&amp;&amp;bt.SqBiTNode[m]&lt;pmin[k])  //其为右孩子\n            pmax[m]=pmax[k];\n            else return false;\n            return true;</pre>",
+      "figs": {
+        "content": [
+          "ds_daka_5_3_3_17_q_0.jpg"
+        ],
+        "answer": [
+          "ds_daka_5_3_3_17_a_0.jpg",
+          "ds_daka_5_3_3_17_a_1.jpg"
+        ]
+      },
       "analysis": "考点：顺序存储二叉树下标关系（i 的左右孩子 2i+1/2i+2，-1 表示空）、BST 性质（左<根<右）。易错点：递归范围约束 (min,max) 初始为负/正无穷，空结点（-1）直接返回真；“等于”按题目要求严格小于/大于；中序遍历法须严格递增（prev<cur），初值 -INF。",
       "weblink": "https://zhuanlan.zhihu.com/p/720983629"
     },
@@ -181,6 +306,15 @@
       "source": "王道书 6.2.6_大题_8",
       "content": "【2023统考真题】已知有向图G采用邻接矩阵存储，类型定义如下：\n<pre class=\"code-block\">typedef struct{\n    //图的类型定义\n    int numVertices,numEdges;  //图的顶点数和有向边数\n    char VerticesList[MAXV];  //顶点表，MAXV为已定义常量\n    int Edge[MAXV][MAXV];  //邻接矩阵\n}MGraph;</pre>\n将图中出度大于入度的顶点称为K顶点。例如，在右图中，顶点a和b为K顶点。请设计算法int printVertices(MGraph G),对给定的任意非空有向图G,输出G中所有的K顶点，并返回K顶点的个数。要求：<br>1)给出算法的基本设计思想。<br>2)根据设计思想，采用C或C++语言描述算法，关键之处给出注释。",
       "answer": "1)算法的基本设计思想：采用邻接矩阵表示有向图时，一行中 1的个数为该行对应顶点的出度，一列中1的个数为该列对应顶点的入度。使用一个初值为零的计数器记录K顶点的个数。对图G的每个顶点，根据邻接矩阵计算其出度outdegree 和入度indegree。若 outdegree-indegree&gt;0,则输出该顶点且计数器加1。最后返回计数器的值。<br>2)用C语言描述的算法：\n<pre class=\"code-block\">int printVertices(MGraph G){\n    //采用邻接矩阵存储，输出K顶点，返回个数\n    int indegree,outdegree,k,m,count=0;\n    for(k=0;k&lt;G.numVertices;k++){\n        indegree=outdegree=0;\n        for(m=0;m&lt;G.numVertices;m++)  //计算顶点的出度\n        outdegree+=G.Edge[k][m];\n        for(m=0;m&lt;G.numVertices;m++)  //计算顶点的入度\n        indegree+=G.Edge[m][k];\n        if(outdegree&gt;indegree){\n            printf(\"%c\",G.VerticesList[k]);\n            count++;\n            return count;  //返回K顶点的个数\n        }</pre>",
+      "figs": {
+        "content": [
+          "ds_daka_6_2_6_8_q_0.jpg",
+          "ds_daka_6_2_6_8_q_1.jpg"
+        ],
+        "answer": [
+          "ds_daka_6_2_6_8_a_0.jpg"
+        ]
+      },
       "analysis": "考点：邻接矩阵有向图出度/入度计算（行=出度、列=入度）、矩阵遍历统计。易错点：出度看第 i 行、入度看第 i 列，别反；无向图对称矩阵行列一致；无权图邻接值 0/1、有权图 INF 的判断；返回计数与输出顶点别遗漏。",
       "weblink": "https://zhuanlan.zhihu.com/p/721975150"
     },

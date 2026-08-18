@@ -2259,6 +2259,10 @@ mark {
     background: #23283a;
     border-left-color: #818cf8;
 }
+.code-figs { margin-top: 10px; }
+.code-figs-label { font-size: 0.82rem; color: #64748b; margin-bottom: 6px; font-weight: 600; }
+.code-figs img { display: block; max-width: 100%; height: auto; margin: 6px 0; border: 1px solid #e2e8f0; border-radius: 6px; cursor: zoom-in; }
+.dark .code-figs img { border-color: #334155; }
 
 /* 打卡夜间适配 */
 .dark .badge-must {

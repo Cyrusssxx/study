@@ -192,6 +192,7 @@ for year in sorted(META):
         "source": q.get('source', ''),
         "content": q.get('content', ''),
         "answer": q.get('answer', ''),
+        "figs": q.get('figs'),
         "analysis": analysis,
         "weblink": f"https://zhuanlan.zhihu.com/p/{zhihu}",
     })
