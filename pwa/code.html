@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>数据结构代码真题 - 408刷题</title>
+    <link rel="manifest" href="manifest.webmanifest">
+    <meta name="theme-color" content="#4f46e5">
+    <link rel="icon" type="image/png" href="icons/icon-192.png">
+    <link rel="apple-touch-icon" href="icons/icon-192.png">
+    <script>if (localStorage.getItem('darkMode') === '1') document.documentElement.classList.add('dark');</script>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-container">
+            <a href="index.html" class="nav-brand">408刷题</a>
+            <div class="nav-links">
+                <a href="index.html" class="nav-link">首页</a>
+                <a href="wrong.html" class="nav-link">错题本</a>
+                <a href="favorites.html" class="nav-link">收藏夹</a>
+                <a href="exam.html" class="nav-link">模拟考试</a>
+                <a href="stats.html" class="nav-link">学习统计</a>
+                <a href="search.html" class="nav-link">搜题</a>
+                <a href="daka.html" class="nav-link">强化打卡</a>
+                <a href="dati.html" class="nav-link">大题专项</a>
+                <a href="code.html" class="nav-link active">代码题</a>
+            </div>
+            <div class="nav-tools">
+                <span class="nav-timer" id="navTimer" title="今日刷题时长（切换到其他窗口时暂停）">⏱ 00:00:00</span>
+                <button class="nav-switch" id="darkSwitch" onclick="toggleDark()" title="夜间模式：深色主题护眼">
+                    夜间 <span class="switch-state" id="darkState">关</span>
+                </button>
+            </div>
+        </div>
+    </nav>
+    <main class="container">
+        <div class="page-header">
+            <h1>💻 数据结构代码真题</h1>
+            <p>2009–2023 共 15 道 408 算法设计（代码）真题，按考点分组，点开看官方解答</p>
+        </div>
+
+        <div class="daka-summary" id="codeSummary"></div>
+
+        <div class="ol-layout">
+            <aside class="ol-nav" id="codeNav"></aside>
+            <button class="ol-nav-tab" id="codeNavTab" onclick="toggleCodeNav()" title="展开目录">☰ 目录</button>
+            <div class="question-list" id="codeList">
+                <div class="loading">加载中...</div>
+            </div>
+        </div>
+    </main>
+    <button class="ol-nav-fab" id="codeNavFab" onclick="openCodeNav()" title="定位题目">☰ 定位</button>
+    <div class="ol-nav-mask" id="codeNavMask" onclick="closeCodeNav()"></div>
+    <script src="js/common.js"></script>
+    <script>
+    let codeQuestions = [];
+    let codeProgress = {};
+    const LS_KEY = 'ds_code_progress';
+    let codeNavCollapsed = localStorage.getItem('code_nav_collapsed') === '1';
+
+    function esc(s) {
+        return String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+    }
+
+    async function loadCode() {
+        try {
+            const resp = await fetch('data/ds_code.json');
+            codeQuestions = (await resp.json()).questions;
+            codeProgress = JSON.parse(localStorage.getItem(LS_KEY) || '{}');
+            renderCode();
+        } catch (e) {
+            document.getElementById('codeList').innerHTML = '<div class="error">加载失败（请确认已部署 data/ds_code.json）</div>';
+        }
+    }
+
+    function renderCode() {
+        const done = codeQuestions.filter(q => codeProgress[q.id]).length;
+        document.getElementById('codeSummary').innerHTML = `已会 <b>${done}</b> / ${codeQuestions.length} 题`;
+
+        const groups = new Map();
+        for (const q of codeQuestions) {
+            const k = q.kaodian || '其他';
+            if (!groups.has(k)) groups.set(k, []);
+            groups.get(k).push(q);
+        }
+        let html = '', nav = '', gi = 0;
+        for (const [k, qs] of groups) {
+            const gDone = qs.filter(q => codeProgress[q.id]).length;
+            const subs = qs.map(q =>
+                `<a class="ol-nav-item sub${codeProgress[q.id] ? ' code-nav-done' : ''}" data-target="card-${q.id}">${q.year} ${esc(q.real.replace(/年.*/, ''))}</a>`
+            ).join('');
+            nav += `<div class="ol-nav-sec">
+                <a class="ol-nav-item root" data-group="${gi}">${esc(k)}（${gDone}/${qs.length}）</a>
+                <div class="ol-nav-subs">${subs}</div>
+            </div>`;
+            html += `<details class="code-group" id="group-${gi}" open>
+                <summary class="daka-group-title">${esc(k)}（${gDone}/${qs.length}）</summary>
+                ${qs.map(renderCard).join('')}
+            </details>`;
+            gi++;
+        }
+        const navEl = document.getElementById('codeNav');
+        navEl.innerHTML = `<div class="ol-nav-head" onclick="toggleCodeNav()">定位<span class="ol-nav-toggle">«</span></div>
+            <div class="ol-nav-body">${nav}</div>`;
+        navEl.classList.toggle('collapsed', codeNavCollapsed);
+        navEl.querySelectorAll('.ol-nav-item.sub').forEach(a => a.addEventListener('click', () => gotoCard(a.dataset.target)));
+        navEl.querySelectorAll('.ol-nav-item.root').forEach(a => a.addEventListener('click', () => {
+            const det = document.getElementById('group-' + a.dataset.group);
+            if (det) { det.open = !det.open; void det.offsetHeight; scrollToEl(det); }
+        }));
+        document.getElementById('codeList').innerHTML = html;
+    }
+
+    function renderCard(q) {
+        const done = !!codeProgress[q.id];
+        return `
+            <div class="daka-card${done ? ' daka-done' : ''}" id="card-${q.id}">
+                <div class="daka-card-header">
+                    <span class="daka-badge badge-must">${esc(q.kaodian)}</span>
+                    <span class="daka-source">${esc(q.real)}${q.source ? ' · ' + esc(q.source) : ''}</span>
+                    <a class="btn-daka" href="${esc(q.weblink)}" target="_blank" rel="noopener">知乎原文 ↗</a>
+                    <button class="btn-daka code-toggle${done ? ' checked' : ''}" onclick="toggleCode('${q.id}')">
+                        ${done ? '已会 ✓' : '标记已会'}
+                    </button>
+                </div>
+                <div class="daka-content">${fmtContent(q.content)}</div>
+                <details class="daka-answer">
+                    <summary>查看答案与解析</summary>
+                    <div class="daka-answer-body">${q.answer}</div>
+                    <div class="daka-analysis"><b>考点 / 易错点：</b>${esc(q.analysis)}</div>
+                </details>
+            </div>
+        `;
+    }
+
+    function toggleCode(qid) {
+        if (codeProgress[qid]) delete codeProgress[qid];
+        else codeProgress[qid] = 1;
+        localStorage.setItem(LS_KEY, JSON.stringify(codeProgress));
+        const card = document.getElementById('card-' + qid);
+        const done = !!codeProgress[qid];
+        card.classList.toggle('daka-done', done);
+        const btn = card.querySelector('.code-toggle');
+        if (btn) { btn.classList.toggle('checked', done); btn.textContent = done ? '已会 ✓' : '标记已会'; }
+        const doneCount = codeQuestions.filter(q => codeProgress[q.id]).length;
+        const sum = document.getElementById('codeSummary');
+        if (sum) sum.innerHTML = `已会 <b>${doneCount}</b> / ${codeQuestions.length} 题`;
+    }
+
+    function toggleCodeNav() {
+        codeNavCollapsed = !codeNavCollapsed;
+        localStorage.setItem('code_nav_collapsed', codeNavCollapsed ? '1' : '0');
+        document.getElementById('codeNav').classList.toggle('collapsed', codeNavCollapsed);
+    }
+    function openCodeNav() {
+        document.getElementById('codeNav').classList.add('open');
+        document.getElementById('codeNavMask').classList.add('open');
+    }
+    function closeCodeNav() {
+        document.getElementById('codeNav').classList.remove('open');
+        document.getElementById('codeNavMask').classList.remove('open');
+    }
+    function gotoCard(target) {
+        const card = document.getElementById(target);
+        if (card) {
+            const det = card.closest('details.code-group');
+            if (det && !det.open) { det.open = true; void det.offsetHeight; }
+            scrollToEl(card);
+            card.classList.add('map-flash');
+            setTimeout(() => card.classList.remove('map-flash'), 1500);
+        }
+        closeCodeNav();
+    }
+    function scrollToEl(el) {
+        const top = el.getBoundingClientRect().top + window.scrollY - 76;
+        window.scrollTo({ top: Math.max(0, top), behavior: 'smooth' });
+    }
+
+    loadCode();
+    </script>
+</body>
+</html>
