@@ -4,7 +4,7 @@
  * 预缓存资源（页面/样式/题库/图标）任意改动后重新构建即可让客户端自动换新缓存，
  * 无需手动改版本号。手动编辑本行会被下次构建覆盖。
  */
-const CACHE_VER = 'quiz408-2698af6752';
+const CACHE_VER = 'quiz408-4e6ef8b938';
 
 const PRECACHE = [
     'index.html',
@@ -18,6 +18,7 @@ const PRECACHE = [
     'dati.html',
     'notes.html',
     'map.html',
+    'code.html',
     'manifest.webmanifest',
     'css/style.css',
     'js/common.js',
@@ -46,7 +47,10 @@ self.addEventListener('install', (e) => {
     e.waitUntil(
         caches.open(CACHE_VER)
             // Request(reload)：预缓存绕过浏览器HTTP缓存，确保升版本后拿到的是服务器最新文件
-            .then(cache => cache.addAll(PRECACHE.map(u => new Request(u, { cache: 'reload' }))))
+            // 用 allSettled：个别资源下载失败不阻塞 SW 安装，缺失项由 fetch 兜底按需补
+            .then(cache => Promise.allSettled(
+                PRECACHE.map(u => cache.add(new Request(u, { cache: 'reload' })))
+            ))
             .then(() => self.skipWaiting())
     );
 });
@@ -59,16 +63,42 @@ self.addEventListener('activate', (e) => {
     );
 });
 
-// cache-first：离线优先；缓存未命中再走网络并回填
+// 缓存策略（分层）：
+// - 页面/HTML、JS、CSS、manifest → 网络优先：保证线上更新后拿到最新页面与脚本（避免旧函数缺失），离线时回退缓存
+// - 数据/图片/图标等 → 缓存优先（离线优先）：未命中走网络并回填
 self.addEventListener('fetch', (e) => {
     if (e.request.method !== 'GET') return;
+
+    const url = new URL(e.request.url);
+    const isSameOrigin = url.origin === location.origin;
+    const path = url.pathname;
+    const isDocOrCode = e.request.mode === 'navigate'
+        || path.endsWith('.html')
+        || path.endsWith('.js')
+        || path.endsWith('.css')
+        || path.endsWith('.webmanifest')
+        || path.endsWith('/');
+
+    if (isDocOrCode) {
+        e.respondWith(
+            fetch(e.request).then(resp => {
+                if (resp && resp.ok && isSameOrigin) {
+                    const clone = resp.clone();
+                    caches.open(CACHE_VER).then(c => c.put(e.request, clone));
+                }
+                return resp;
+            }).catch(() => caches.match(e.request, { ignoreSearch: true }))
+        );
+        return;
+    }
+
     e.respondWith(
         caches.match(e.request, { ignoreSearch: true }).then(hit => {
             if (hit) return hit;
             return fetch(e.request).then(resp => {
-                if (resp.ok && new URL(e.request.url).origin === location.origin) {
+                if (resp.ok && isSameOrigin) {
                     const clone = resp.clone();
-                    caches.open(CACHE_VER).then(cache => cache.put(e.request, clone));
+                    caches.open(CACHE_VER).then(c => c.put(e.request, clone));
                 }
                 return resp;
             });

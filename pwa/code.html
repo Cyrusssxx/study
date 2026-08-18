@@ -58,6 +58,9 @@
     let codeProgress = {};
     const LS_KEY = 'ds_code_progress';
     let codeNavCollapsed = localStorage.getItem('code_nav_collapsed') === '1';
+    // 防御：common.js 若被旧缓存拦下（缺新函数），退回纯文本渲染，保证页面不崩
+    const fmtC = (typeof fmtContent === 'function') ? fmtContent : (s) => String(s == null ? '' : s);
+    const fmtA = (typeof fmtAnswer === 'function') ? fmtAnswer : (s) => String(s == null ? '' : s);
 
     function esc(s) {
         return String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
@@ -70,7 +73,8 @@
             codeProgress = JSON.parse(localStorage.getItem(LS_KEY) || '{}');
             renderCode();
         } catch (e) {
-            document.getElementById('codeList').innerHTML = '<div class="error">加载失败（请确认已部署 data/ds_code.json）</div>';
+            console.error('[code] 加载或渲染失败:', e);
+            document.getElementById('codeList').innerHTML = '<div class="error">加载失败：' + esc(e && e.message ? e.message : e) + '</div>';
         }
     }
 
@@ -124,11 +128,11 @@
                         ${done ? '已会 ✓' : '标记已会'}
                     </button>
                 </div>
-                <div class="daka-content">${fmtContent(q.content)}</div>
+                <div class="daka-content">${fmtC(q.content)}</div>
                 <details class="daka-answer">
                     <summary>查看答案与解析</summary>
-                    <div class="daka-answer-body">${fmtAnswer(q.answer)}</div>
-                    <div class="daka-analysis">${esc(q.analysis.replace('易错点：', '\n易错点：'))}</div>
+                    <div class="daka-answer-body">${fmtA(q.answer)}</div>
+                    <div class="daka-analysis">${esc((q.analysis || '').replace('易错点：', '\n易错点：'))}</div>
                 </details>
             </div>
         `;
