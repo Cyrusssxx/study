@@ -21,13 +21,15 @@ function fmtFormula(html) {
 function fmtAnswer(html) {
     if (!html || typeof html !== 'string') return html;
     html = fmtFormula(html);
-    // 保护 <pre> 代码块，避免代码里的标点被误断行
+    // 保护 <pre> 代码块（连同前后紧邻换行符），避免代码里的标点/换行被误处理
     const blocks = [];
     const NO = '\u0000';
-    html = html.replace(/<pre[\s\S]*?<\/pre>/g, (m) => {
+    html = html.replace(/\n*<pre[\s\S]*?<\/pre>\n*/g, (m) => {
         blocks.push(m);
         return NO + 'B' + (blocks.length - 1) + NO;
     });
+    // 文字部分的换行符转 <br>（<pre> 内部换行已在上一步保护）
+    html = html.replace(/\n+/g, '<br>');
     // 句末标点分行：。！？ 后换行；分号后换行，但";否则"是 if-else 结构不拆。
     // 后面已是 <br>/换行/占位符时不重复加。这样步骤①②③(句号结尾)和纯长段落都按逻辑句分行，
     // 而"转⑤""重复过程①、②、③"等引用/列举(前面非句末标点)天然不被拆。
@@ -40,7 +42,16 @@ function fmtAnswer(html) {
 function fmtContent(html) {
     if (!html || typeof html !== 'string') return html;
     html = fmtFormula(html);
-    return html.replace(/<[^>]*>|(I{1,3}|IV|V)\./g, (m, num, off, src) => {
+    // 保护 <pre> 代码块（连同前后紧邻换行符）
+    const blocks = [];
+    const NO = '\u0000';
+    html = html.replace(/\n*<pre[\s\S]*?<\/pre>\n*/g, (m) => {
+        blocks.push(m);
+        return NO + 'B' + (blocks.length - 1) + NO;
+    });
+    // 文字部分的换行符转 <br>
+    html = html.replace(/\n+/g, '<br>');
+    html = html.replace(/<[^>]*>|(I{1,3}|IV|V)\./g, (m, num, off, src) => {
         if (!num) return m;  // HTML 标签原样保留（如图片/代码块，不误插）
         if (off === 0) return m;  // 题干首字符就是编号时不加
         // 前面紧邻 <br>（已分行）不再重复插入
@@ -48,6 +59,7 @@ function fmtContent(html) {
         if (prev.endsWith('<br>') || prev.endsWith('<br/>')) return m;
         return '<br>' + m;
     });
+    return html.replace(/\u0000B(\d+)\u0000/g, (m, k) => blocks[k]);
 }
 
 // ============ 离线图片预热：daka/dati 等图片密集型页面调用 ============
