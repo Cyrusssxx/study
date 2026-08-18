@@ -17,25 +17,22 @@ function fmtFormula(html) {
     return html.replace(/\u0000B(\d+)\u0000/g, (m, i) => blocks[i]);
 }
 
-// ============ 答案排版：公式 + 步骤①②③前自动换行（仅句末标点后视为新步骤） ============
+// ============ 答案排版：公式 + 按句末标点分行（逻辑分段） ============
 function fmtAnswer(html) {
     if (!html || typeof html !== 'string') return html;
     html = fmtFormula(html);
-    // 保护 <pre> 代码块，避免代码注释里的圈数字被误断行
+    // 保护 <pre> 代码块，避免代码里的标点被误断行
     const blocks = [];
     const NO = '\u0000';
     html = html.replace(/<pre[\s\S]*?<\/pre>/g, (m) => {
         blocks.push(m);
         return NO + 'B' + (blocks.length - 1) + NO;
     });
-    // 智能分行：圈数字①-⑩，仅当紧跟句末标点（。；：？！）)】]》}」』）时才是新步骤开头；
-    // 前面是汉字/字母/数字/顿号（如"转⑤""重复过程①、②、③"）时是引用/列举，不换行
-    html = html.replace(/[①-⑩]/g, (m, i, src) => {
-        const prev = src.slice(Math.max(0, i - 6), i);
-        if (/<br\/?>\s*$/.test(prev)) return m;                       // 已有 <br>，不动
-        if (/[。；：？！）)\]】》」』}]\s*$/.test(prev)) return '<br>' + m; // 句末标点后 → 换行
-        return m;
-    });
+    // 句末标点分行：。！？ 后换行；分号后换行，但";否则"是 if-else 结构不拆。
+    // 后面已是 <br>/换行/占位符时不重复加。这样步骤①②③(句号结尾)和纯长段落都按逻辑句分行，
+    // 而"转⑤""重复过程①、②、③"等引用/列举(前面非句末标点)天然不被拆。
+    html = html.replace(/([。！？])(?!(?:$|<br\/?>|\s|\u0000))/g, '$1<br>');
+    html = html.replace(/；(?!否则)(?!(?:$|<br\/?>|\s|\u0000))/g, '；<br>');
     return html.replace(/\u0000B(\d+)\u0000/g, (m, k) => blocks[k]);
 }
 
