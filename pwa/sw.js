@@ -1,12 +1,21 @@
 /* 408刷题 PWA - Service Worker
- * 预缓存全部页面/样式/脚本/题库/图标，安装后完全离线可用。
- * CACHE_VER 由构建脚本 tools/build_sw.py 依据 PRECACHE 资源内容自动算哈希生成，
- * 预缓存资源（页面/样式/题库/图标）任意改动后重新构建即可让客户端自动换新缓存，
- * 无需手动改版本号。手动编辑本行会被下次构建覆盖。
+ * 预缓存拆分为两层，避免每次部署都强制重下 3.79MB：
+ *   APP_PRECACHE  —— 应用外壳（页面/样式/脚本/图标/元数据），体积 ~380KB，
+ *                    变化频率低；哈希注入 APP_VER。
+ *   DATA_PRECACHE —— 数据文件（题库/笔记/导图/打卡表），体积大（~3.4MB），
+ *                    安装时一并预取（失败不阻塞），但按 DATA_VER 隔离；
+ *                    运行时按需缓存，离线可用。
+ * APP_VER / DATA_VER 由构建脚本 tools/build_sw.py 依据各自资源内容自动算哈希生成，
+ * 单一真源是下方两个数组；手动编辑版本行会被下次构建覆盖。
+ *
+ * 关键收益：① 首页只依赖外壳 + 几百字节的 meta.json，不再因题库变化被迫重下；
+ *          ② 只改数据不改外壳时，APP_VER 不变 → 外壳零重下；反之亦然。
  */
-const CACHE_VER = 'quiz408-18d3a8b304';
+const APP_VER = 'quiz408-app-508a3cf06d';
+const DATA_VER = 'quiz408-data-6323ac90d3';
 
-const PRECACHE = [
+// 应用外壳：保证离线骨架与最新脚本。meta.json 仅几百字节，随外壳一起预缓存。
+const APP_PRECACHE = [
     'index.html',
     'quiz.html',
     'wrong.html',
@@ -23,6 +32,13 @@ const PRECACHE = [
     'css/style.css',
     'js/common.js',
     'js/backend.js',
+    'data/meta.json',
+    'icons/icon-192.png',
+    'icons/icon-512.png'
+];
+
+// 数据文件：体积大，按需/预取缓存，与外壳版本解耦。
+const DATA_PRECACHE = [
     'data/os.json',
     'data/co.json',
     'data/ds.json',
@@ -39,34 +55,43 @@ const PRECACHE = [
     'data/sub_os_full.txt',
     'data/sub_os_opts.txt',
     'data/co_map.json',
-    'data/os_map.json',
-    'icons/icon-192.png',
-    'icons/icon-512.png'
+    'data/os_map.json'
 ];
 
 self.addEventListener('install', (e) => {
-    e.waitUntil(
-        caches.open(CACHE_VER)
-            // Request(reload)：预缓存绕过浏览器HTTP缓存，确保升版本后拿到的是服务器最新文件
-            // 用 allSettled：个别资源下载失败不阻塞 SW 安装，缺失项由 fetch 兜底按需补
-            .then(cache => Promise.allSettled(
-                PRECACHE.map(u => cache.add(new Request(u, { cache: 'reload' })))
-            ))
-            .then(() => self.skipWaiting())
-    );
+    e.waitUntil((async () => {
+        // 外壳必缓存（保证离线骨架）。若同名缓存已存在（本层版本未变），跳过重下，省流量。
+        const appCache = await caches.open(APP_VER);
+        if ((await appCache.keys()).length === 0) {
+            await Promise.allSettled(
+                APP_PRECACHE.map(u => appCache.add(new Request(u, { cache: 'reload' })))
+            );
+        }
+        // 数据预取：个别失败不阻塞（运行时仍会按需补缓存）。版本未变则跳过重下。
+        const dataCache = await caches.open(DATA_VER);
+        if ((await dataCache.keys()).length === 0) {
+            await Promise.allSettled(
+                DATA_PRECACHE.map(u => dataCache.add(new Request(u, { cache: 'reload' })))
+            );
+        }
+        await self.skipWaiting();
+    })());
 });
 
 self.addEventListener('activate', (e) => {
-    e.waitUntil(
-        caches.keys()
-            .then(keys => Promise.all(keys.filter(k => k !== CACHE_VER).map(k => caches.delete(k))))
-            .then(() => self.clients.claim())
-    );
+    e.waitUntil((async () => {
+        const keys = await caches.keys();
+        await Promise.all(keys.filter(k =>
+            (k.startsWith('quiz408-app-') && k !== APP_VER) ||
+            (k.startsWith('quiz408-data-') && k !== DATA_VER)
+        ).map(k => caches.delete(k)));
+        await self.clients.claim();
+    })());
 });
 
 // 缓存策略（分层）：
-// - 页面/HTML、JS、CSS、manifest → 网络优先：保证线上更新后拿到最新页面与脚本（避免旧函数缺失），离线时回退缓存
-// - 数据/图片/图标等 → 缓存优先（离线优先）：未命中走网络并回填
+// - 页面/HTML、JS、CSS、manifest → 网络优先：保证线上更新后拿到最新页面与脚本，离线回退缓存
+// - 数据/图片/图标 → 缓存优先（离线优先）：未命中走网络并回填对应版本缓存
 self.addEventListener('fetch', (e) => {
     if (e.request.method !== 'GET') return;
 
@@ -84,8 +109,7 @@ self.addEventListener('fetch', (e) => {
         e.respondWith(
             fetch(e.request).then(resp => {
                 if (resp && resp.ok && isSameOrigin) {
-                    const clone = resp.clone();
-                    caches.open(CACHE_VER).then(c => c.put(e.request, clone));
+                    caches.open(APP_VER).then(c => c.put(e.request, resp.clone()));
                 }
                 return resp;
             }).catch(() => caches.match(e.request, { ignoreSearch: true }))
@@ -93,16 +117,17 @@ self.addEventListener('fetch', (e) => {
         return;
     }
 
-    e.respondWith(
-        caches.match(e.request, { ignoreSearch: true }).then(hit => {
-            if (hit) return hit;
-            return fetch(e.request).then(resp => {
-                if (resp.ok && isSameOrigin) {
-                    const clone = resp.clone();
-                    caches.open(CACHE_VER).then(c => c.put(e.request, clone));
-                }
-                return resp;
-            });
-        })
-    );
+    // 数据/图片/图标：按资源归属选择缓存命名空间（数据版本 / 外壳版本），缓存优先
+    const inData = DATA_PRECACHE.some(u => path.endsWith('/' + u) || path === '/' + u);
+    const cacheName = inData ? DATA_VER : APP_VER;
+    e.respondWith((async () => {
+        const hit = await caches.match(e.request, { ignoreSearch: true });
+        if (hit) return hit;
+        const resp = await fetch(e.request);
+        if (resp.ok && isSameOrigin) {
+            const c = await caches.open(cacheName);
+            c.put(e.request, resp.clone());
+        }
+        return resp;
+    })());
 });

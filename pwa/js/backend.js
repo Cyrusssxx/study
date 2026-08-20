@@ -41,6 +41,23 @@ async function getQuestionById(qid) {
     return data.questions.find(q => q.id === qid) || null;
 }
 
+// 题量元数据：首页 /api/stats 只需各科总题数画进度条，无需整份题库。
+// 抽成几百字节的 data/meta.json，避免首页下载 ~2.1MB 题库（性能优化）。
+const _metaCache = { promise: null };
+async function getTotals() {
+    if (_metaCache.promise) return _metaCache.promise;
+    _metaCache.promise = (async () => {
+        try {
+            const r = await fetch('data/meta.json');
+            return await r.json();
+        } catch (e) {
+            console.warn('meta.json 读取失败，总题数回退为 0', e);
+            return { subjects: {}, ds_daka: 0 };
+        }
+    })();
+    return _metaCache.promise;
+}
+
 // 知识库笔记索引：用于搜题覆盖知识点（P1-3）与章节↔题目互链（P1-4）。
 // 结构：{chapters:[{chapter, sections:[{section, html}]}]}
 const _notesCache = {};
@@ -427,10 +444,11 @@ async function api(url, opts = {}) {
         // ---------- 统计 ----------
         if (seg[1] === 'stats' && !seg[2]) {
             const overall = await subjectStats(null);
+            const totals = await getTotals();
             const subjects = {};
             for (const key of Object.keys(SUBJECTS)) {
-                const data = await loadQuestions(key);
-                subjects[key] = { ...(await subjectStats(key)), total_questions: data.total, name: SUBJECTS[key].name };
+                const total = (totals.subjects && totals.subjects[key] && totals.subjects[key].total) || 0;
+                subjects[key] = { ...(await subjectStats(key)), total_questions: total, name: SUBJECTS[key].name };
             }
             return jsonResp({ overall, subjects });
         }

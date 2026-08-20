@@ -154,14 +154,15 @@
             loadDakaHome();
         }
 
-        // 打卡板块进度：题库总数 + IndexedDB 完成数
+        // 打卡板块进度：题库总数（meta.json，免下 146KB ds_daka.json）+ IndexedDB 完成数
         async function loadDakaHome() {
             try {
-                const [qResp, pResp] = await Promise.all([
-                    fetch('data/ds_daka.json'),
+                const [metaResp, pResp] = await Promise.all([
+                    fetch('data/meta.json'),
                     api('/api/daka/progress')
                 ]);
-                const total = (await qResp.json()).total;
+                const meta = await metaResp.json();
+                const total = meta.ds_daka || 0;
                 const progress = (await pResp.json()).progress || {};
                 document.getElementById('dakaHomeProgress').innerHTML =
                     `已打卡 <b>${Object.keys(progress).length}</b> / ${total} 题`;
