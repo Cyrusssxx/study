@@ -302,7 +302,13 @@
             let inner;
             const isLeaf = !(node.c || []).length;
             const dot = isLeaf ? '<span class="ol-dot"></span>' : '';
-            if (segs.length > 1) {
+            if (node.svg) {
+                // 节点带原始 SVG 草图：不转义直接渲染（如 OS PV 总结的步骤草图）
+                inner = `${dot}<span class="ol-name">${esc(node.n)}</span>
+                    ${node.tag ? `<span class="ol-tag">${esc(node.tag)}</span>` : ''}
+                    ${node.d ? `<div class="ol-detail">${esc(node.d)}</div>` : ''}
+                    <div class="ol-svg">${node.svg}</div>`;
+            } else if (segs.length > 1) {
                 cls += ' multi';
                 inner = `<div class="ol-main">${dot}<span class="ol-name">${esc(node.n)}</span>
                     ${node.tag ? `<span class="ol-tag">${esc(node.tag)}</span>` : ''}</div>
