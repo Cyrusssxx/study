@@ -41,7 +41,8 @@
             <h1>📖 考点笔记</h1>
             <p class="notes-source">加载中...</p>
         </div>
-        <div class="notes-layout">
+        <div class="notes-layout" id="notesLayout">
+            <button class="notes-toc-toggle" id="notesTocToggle" onclick="toggleNotesToc()" title="收起/展开目录" aria-label="收起/展开目录">«</button>
             <aside class="notes-toc" id="notesToc"></aside>
             <div class="notes-content" id="notesContent"></div>
         </div>
@@ -59,6 +60,18 @@
         const Q = _params.get('q');         // 关键词/题干片段：节内(+全局兜底)模糊定位最相关的小知识点并高亮
         // 笔记批注 / 高亮持久化走现有笔记链路（api() 拦截 IndexedDB）
         const noteApi = (url, opts) => api(url, opts);
+
+        // 左侧目录可收起（状态持久化）
+        const notesLayout = document.getElementById('notesLayout');
+        if (localStorage.getItem('notes_toc_collapsed') === '1') {
+            notesLayout.classList.add('notes-toc-collapsed');
+            document.getElementById('notesTocToggle').textContent = '»';
+        }
+        function toggleNotesToc() {
+            const collapsed = notesLayout.classList.toggle('notes-toc-collapsed');
+            localStorage.setItem('notes_toc_collapsed', collapsed ? '1' : '0');
+            document.getElementById('notesTocToggle').textContent = collapsed ? '»' : '«';
+        }
 
         // 题目旧 section 名（王道）→ 笔记新 section 名（袁书/新版）映射表
         const SEC_ALIASES = {

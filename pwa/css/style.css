@@ -2306,6 +2306,43 @@ mark {
     align-items: flex-start;
 }
 
+/* 目录收起按钮：左侧竖条，点击向左收起/展开目录 */
+.notes-toc-toggle {
+    flex-shrink: 0;
+    width: 26px;
+    height: 30px;
+    margin-top: 2px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    background: var(--card-bg);
+    color: var(--text-light);
+    font-size: 0.95rem;
+    line-height: 1;
+    cursor: pointer;
+    position: sticky;
+    top: 82px;
+    box-shadow: var(--shadow);
+    transition: color .15s ease, border-color .15s ease;
+}
+.notes-toc-toggle:hover {
+    color: var(--primary);
+    border-color: var(--primary);
+}
+
+/* 收起状态：目录隐藏为 0 宽，内容区占满 */
+.notes-layout.notes-toc-collapsed .notes-toc {
+    width: 0;
+    padding-left: 0;
+    padding-right: 0;
+    overflow: hidden;
+    border: none;
+    box-shadow: none;
+    opacity: 0;
+}
+.notes-toc {
+    transition: width .2s ease, opacity .2s ease, padding .2s ease;
+}
+
 /* 左侧目录树：吸顶跟随滚动 */
 .notes-toc {
     position: sticky;
@@ -2652,6 +2689,20 @@ a.chapter-badge-link:hover {
         position: static;
         width: 100%;
         max-height: 180px;
+    }
+
+    /* 窄屏强制显示目录（顶部横向滚动形态），隐藏收起按钮 */
+    .notes-toc-toggle {
+        display: none;
+    }
+
+    .notes-layout.notes-toc-collapsed .notes-toc {
+        width: 100%;
+        opacity: 1;
+        padding: 12px 8px;
+        border: none;
+        box-shadow: var(--shadow);
+        border-radius: var(--radius);
     }
 }
 
