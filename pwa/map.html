@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>计组强化思维导图 - 408刷题</title>
+    <title>思维导图 - 408刷题</title>
     <link rel="manifest" href="manifest.webmanifest">
     <meta name="theme-color" content="#4f46e5">
     <link rel="icon" type="image/png" href="icons/icon-192.png">
@@ -38,7 +38,7 @@
     </nav>
     <main class="container">
         <div class="map-header">
-            <h1>🗺️ 计组强化思维导图</h1>
+            <h1 id="mapTitle">🗺️ 思维导图</h1>
             <p class="notes-source" id="mapSubtitle">加载中...</p>
             <p class="map-anno-tip">📝 选中文字会弹出工具条：可划词高亮（黄/绿/蓝/粉）或点「📝批注」添加批注（可 Ctrl+V 粘贴截图，与笔记页同款）</p>
         </div>
@@ -60,6 +60,17 @@
     <script>
         const _params = new URLSearchParams(location.search);
         const SUBJECT = _params.get('subject') || 'co';
+
+        // 科目名映射：标题不再写死，随 subject 参数变化
+        const SUBJECT_NAME = {
+            os: '操作系统', co: '计算机组成原理', ds: '数据结构', cn: '计算机网络',
+            ds_daka: '数据结构打卡'
+        };
+        const subjectName = () => SUBJECT_NAME[SUBJECT] || SUBJECT.toUpperCase();
+        function setMapTitle(text) {
+            document.getElementById('mapTitle').textContent = '🗺️ ' + text;
+            document.title = text + ' - 408刷题';
+        }
 
         let MAP = null;
         let totalNodes = 0;
@@ -418,6 +429,8 @@
         }
 
         async function loadMap() {
+            // 先按科目设好标题（即使 404 也显示对应科目名）
+            setMapTitle(subjectName() + '思维导图');
             try {
                 const resp = await fetch(`data/${SUBJECT}_map.json`);
                 if (resp.status === 404) {
@@ -428,6 +441,7 @@
                 }
                 if (!resp.ok) throw new Error(resp.status);
                 MAP = await resp.json();
+                setMapTitle(MAP.title || subjectName() + '思维导图');
                 MAP.roots.forEach((r, i) => { r._idx = i; assignIds(r, null); });
                 document.getElementById('mapSubtitle').textContent = (MAP.subtitle ? MAP.subtitle + ' · ' : '') + `共 ${totalNodes} 个知识点`;
                 renderAll();
