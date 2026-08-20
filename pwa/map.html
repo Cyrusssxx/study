@@ -48,7 +48,6 @@
                 placeholder="🔍 搜索知识点 / 真题年份 / 硬件编号（如 ALU、CF、Tag）…" oninput="onMapSearch()">
         </div>
         <div class="map-search-hint" id="mapSearchHint"></div>
-        <div class="map-stepbar" id="mapStepBar"></div>
         <div class="ol-layout">
             <aside class="ol-nav" id="olNav"></aside>
             <button class="ol-nav-tab" id="olNavTab" onclick="expandOlNav()" title="展开目录">☰ 目录</button>
@@ -91,7 +90,6 @@
         let hlSaveTimer = null;
         let hlToolbar = null;
         const hlKey = () => SUBJECT + '_map_hl';
-        let _stepObserver = null;
 
         // 批注块混排在大纲里，高亮的偏移/文本计算一律跳过批注子树，保证批注增删不影响高亮定位
         function inAnno(n) {
@@ -399,7 +397,6 @@
             }
             reapplyHighlights();
             renderNav();
-            renderStepBar();
             const hint = document.getElementById('mapSearchHint');
             if (searchQ) {
                 hint.style.display = '';
@@ -409,37 +406,6 @@
             } else {
                 hint.style.display = 'none';
             }
-        }
-
-        // 顶部步骤导航条：由各 root 的 sections 生成吸顶 chips
-        function renderStepBar() {
-            const bar = document.getElementById('mapStepBar');
-            if (!MAP) { bar.innerHTML = ''; return; }
-            const chips = [];
-            MAP.roots.forEach((r, ri) => {
-                (r.c || []).forEach((sec, si) => {
-                    chips.push(`<button class="map-step" data-target="sec-${ri}-${si}" onclick="gotoNode('sec-${ri}-${si}')">${esc(sec.n)}</button>`);
-                });
-            });
-            bar.innerHTML = chips.join('');
-            initStepSpy(bar);
-        }
-
-        // 步骤条随滚动自动高亮当前节（IntersectionObserver，不支持时静默降级）
-        function initStepSpy(bar) {
-            if (!('IntersectionObserver' in window)) return;
-            if (_stepObserver) { _stepObserver.disconnect(); _stepObserver = null; }
-            const chips = Array.from(bar.querySelectorAll('.map-step'));
-            if (!chips.length) return;
-            _stepObserver = new IntersectionObserver(entries => {
-                entries.forEach(e => {
-                    if (e.isIntersecting) {
-                        const id = e.target.id;
-                        chips.forEach(c => c.classList.toggle('active', c.dataset.target === id));
-                    }
-                });
-            }, { rootMargin: '-120px 0px -70% 0px', threshold: 0 });
-            document.querySelectorAll('.map-sec').forEach(s => _stepObserver.observe(s));
         }
 
         // ==================== 左侧可收起导航 ====================
@@ -537,7 +503,6 @@
                     document.getElementById('mapSubtitle').textContent = '该科目思维导图正在制作中，敬请期待…';
                     document.getElementById('mapRoot').innerHTML = '<div class="map-empty">📭 暂无导图内容</div>';
                     document.getElementById('olNav').innerHTML = '';
-                    document.getElementById('mapStepBar').innerHTML = '';
                     return;
                 }
                 if (!resp.ok) throw new Error(resp.status);

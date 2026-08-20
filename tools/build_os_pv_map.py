@@ -21,7 +21,7 @@ def html_to_text(block):
     block = re.sub(r'</tr>', '\n', block)
     block = re.sub(r'</table>', '\n', block)
     block = re.sub(r'<br\s*/?>', '\n', block)
-    block = re.sub(r'</(p|li|div|h\d)>', '\n', block)
+    block = re.sub(r'</(p|li|div|h\d|pre)>', '\n', block)
     block = re.sub(r'<[^>]+>', '', block)
     block = htmlmod.unescape(block)
     lines = [ln.strip() for ln in block.split('\n')]

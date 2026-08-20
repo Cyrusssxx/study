@@ -3405,45 +3405,6 @@ a.chapter-badge-link:hover {
 
 /* ============ 卡片流思维导图（map.html） ============ */
 
-/* 顶部步骤导航条：吸顶、横向滚动 */
-.map-stepbar {
-    position: sticky;
-    top: 56px;
-    z-index: 50;
-    display: flex;
-    gap: 8px;
-    overflow-x: auto;
-    padding: 8px 2px;
-    margin-bottom: 12px;
-    background: var(--card-bg);
-    border-bottom: 1px solid var(--border);
-    scrollbar-width: thin;
-}
-.map-stepbar::-webkit-scrollbar { height: 6px; }
-.map-stepbar::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
-
-.map-step {
-    flex: 0 0 auto;
-    white-space: nowrap;
-    padding: 6px 14px;
-    border: 1px solid var(--border);
-    border-radius: 999px;
-    background: var(--card-bg);
-    color: var(--text);
-    font-size: 0.86rem;
-    cursor: pointer;
-    transition: background .15s ease, color .15s ease, border-color .15s ease;
-}
-.map-step:hover {
-    border-color: var(--primary);
-    color: var(--primary);
-}
-.map-step.active {
-    background: var(--primary);
-    border-color: var(--primary);
-    color: #fff;
-}
-
 /* 大节（root） */
 .map-group { margin-bottom: 30px; }
 
@@ -3558,6 +3519,8 @@ a.chapter-badge-link:hover {
 .ol-svg svg {
     display: block;
     margin: 0 auto;
+    max-width: 100%;
+    height: auto;
 }
 
 /* 布局：左导航 + 内容 */

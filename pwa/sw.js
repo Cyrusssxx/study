@@ -11,8 +11,8 @@
  * 关键收益：① 首页只依赖外壳 + 几百字节的 meta.json，不再因题库变化被迫重下；
  *          ② 只改数据不改外壳时，APP_VER 不变 → 外壳零重下；反之亦然。
  */
-const APP_VER = 'quiz408-app-52c68f3931';
-const DATA_VER = 'quiz408-data-6323ac90d3';
+const APP_VER = 'quiz408-app-b996c2a52b';
+const DATA_VER = 'quiz408-data-c8ad50df25';
 
 // 应用外壳：保证离线骨架与最新脚本。meta.json 仅几百字节，随外壳一起预缓存。
 const APP_PRECACHE = [
