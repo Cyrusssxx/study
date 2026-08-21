@@ -113,9 +113,10 @@
 
         // 章节名含 / 等字符，锚点定位统一走 data-sec 属性匹配，不用 id 选择器
         // 支持：1) 精确匹配 2) 别名映射（旧section→新section）3) 编号前缀模糊匹配 4) 关键词兜底
+        // 匹配范围含小节(.notes-sub)，节名跳节容器、小节名跳小节容器
         function jumpTo(name, highlight) {
-            const sections = Array.from(document.querySelectorAll('.notes-section'));
-            const tocLinks = Array.from(document.querySelectorAll('.notes-toc-sec'));
+            const sections = Array.from(document.querySelectorAll('.notes-section, .notes-sub'));
+            const tocLinks = Array.from(document.querySelectorAll('.notes-toc-sec, .notes-toc-sub'));
 
             // 0) 别名映射转换（题目旧名 → 笔记新名）
             const mapped = SEC_ALIASES[name] || name;
@@ -157,6 +158,7 @@
             }
 
             if (!target) return;
+            expandTocSec(target.dataset.sec);   // 跳到节/小节时确保其节列表展开
             target.scrollIntoView({ behavior: 'smooth', block: 'start' });
             tocLinks.forEach(l => l.classList.toggle('active', l.dataset.sec === target.dataset.sec));
             if (highlight) {
@@ -166,9 +168,51 @@
             }
         }
 
-        // 仅按名称解析出 section 元素（供细粒度跳转复用 jumpTo 的匹配逻辑）
+        // ---------- 目录小节列表：展开/收起 + 状态记忆 ----------
+        let tocSecState = {};
+        try { tocSecState = JSON.parse(localStorage.getItem('notes_toc_sec') || '{}'); } catch (e) { tocSecState = {}; }
+        function saveTocSecState() {
+            try { localStorage.setItem('notes_toc_sec', JSON.stringify(tocSecState)); } catch (e) { }
+        }
+        function toggleTocSec(link) {
+            const box = link.nextElementSibling;
+            if (!box || !box.classList.contains('notes-toc-subs')) return;
+            const collapsed = box.classList.toggle('collapsed');
+            link.classList.toggle('collapsed', collapsed);
+            tocSecState[link.dataset.sec] = collapsed;
+            saveTocSecState();
+        }
+        function expandTocSec(secName) {
+            // 目标是节：展开其小节列表；目标是小节：反查其所属节再展开
+            let secKey = secName;
+            const subEl = document.querySelector(`.notes-sub[data-sec="${CSS.escape(secName)}"]`);
+            if (subEl) {
+                const secEl = subEl.closest('.notes-section');
+                if (secEl) secKey = secEl.dataset.sec;
+            }
+            const link = document.querySelector(`.notes-toc-sec[data-sec="${CSS.escape(secKey)}"]`);
+            if (!link || !link.dataset.hassub) return;
+            const box = link.nextElementSibling;
+            if (box && box.classList.contains('collapsed')) {
+                box.classList.remove('collapsed');
+                link.classList.remove('collapsed');
+                delete tocSecState[secKey];
+                saveTocSecState();
+            }
+        }
+        function initTocSecStates() {
+            document.querySelectorAll('.notes-toc-sec[data-hassub]').forEach(link => {
+                if (tocSecState[link.dataset.sec]) {
+                    const box = link.nextElementSibling;
+                    if (box) box.classList.add('collapsed');
+                    link.classList.add('collapsed');
+                }
+            });
+        }
+
+        // 仅按名称解析出 section/subsection 元素（供细粒度跳转复用 jumpTo 的匹配逻辑）
         function resolveSectionEl(name) {
-            const sections = Array.from(document.querySelectorAll('.notes-section'));
+            const sections = Array.from(document.querySelectorAll('.notes-section, .notes-sub'));
             const mapped = SEC_ALIASES[name] || name;
             let target = sections.find(s => s.dataset.sec === name)
                           || sections.find(s => s.dataset.sec === mapped);
@@ -488,26 +532,43 @@
                 toc += `<div class="notes-toc-ch">${ch.chapter}</div>`;
                 body += `<h2 class="notes-ch-title">${ch.chapter}</h2>`;
                 for (const sec of ch.sections) {
-                    toc += `<a class="notes-toc-sec" data-sec="${sec.section}">${sec.section}</a>`;
+                    const subs = sec.subsections || [];
+                    const hasSub = subs.length > 0;
+                    // 目录：有子节的可点击展开/收起，无子节的点击跳转
+                    toc += `<a class="notes-toc-sec" data-sec="${sec.section}"${hasSub ? ' data-hassub="1" onclick="toggleTocSec(this)"' : ` onclick="jumpTo(${JSON.stringify(sec.section)}, false)"`}>${hasSub ? '<span class="toc-sec-arrow">▾</span>' : ''}${sec.section}</a>`;
+                    if (hasSub) {
+                        toc += `<div class="notes-toc-subs">` + subs.map(s =>
+                            `<a class="notes-toc-sub" data-sec="${s.section}" onclick="jumpTo(${JSON.stringify(s.section)}, false)">${s.section}</a>`
+                        ).join('') + `</div>`;
+                    }
+                    // 正文：节标题 + (小节 + 节尾)
                     body += `
                     <section class="notes-section" data-sec="${sec.section}">
                         <div class="notes-sec-head">
                             <h3 class="notes-sec-title">${sec.section}</h3>
                             <a class="notes-prac-link" href="quiz.html?subject=${SUBJECT}&mode=sequential&chapter=${encodeURIComponent(ch.chapter)}&section=${encodeURIComponent(sec.section)}" target="_blank" title="新窗口打开该节对应的练习题">📝 相关题目</a>
                         </div>
-                        <div class="notes-body">${fmtNotes(sec.html)}</div>
+                        <div class="notes-body">`;
+                    if (hasSub) {
+                        body += subs.map(s => `
+                        <div class="notes-sub" data-sec="${s.section}">
+                            <h4 class="notes-sub-title">${s.section}</h4>
+                            <div class="notes-sub-body">${fmtNotes(s.html)}</div>
+                        </div>`).join('');
+                    }
+                    body += `${fmtNotes(sec.html)}
+                        </div>
                     </section>`;
                 }
             }
             document.getElementById('notesToc').innerHTML = toc;
             document.getElementById('notesContent').innerHTML = body;
 
-            document.querySelectorAll('.notes-toc-sec').forEach(l =>
-                l.addEventListener('click', () => jumpTo(l.dataset.sec, false)));
+            initTocSecStates();
 
-            // 滚动时目录跟随高亮
-            const sections = Array.from(document.querySelectorAll('.notes-section'));
-            const tocLinks = Array.from(document.querySelectorAll('.notes-toc-sec'));
+            // 滚动时目录跟随高亮（节+小节均参与，DOM顺序靠后者优先→天然偏向最深可见项）
+            const sections = Array.from(document.querySelectorAll('.notes-section, .notes-sub'));
+            const tocLinks = Array.from(document.querySelectorAll('.notes-toc-sec, .notes-toc-sub'));
             let ticking = false;
             window.addEventListener('scroll', () => {
                 if (ticking) return;

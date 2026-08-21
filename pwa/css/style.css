@@ -2585,6 +2585,65 @@ mark {
     font-weight: 600;
 }
 
+/* 目录二级小节（教材原目录划分，节内可展开/收起） */
+.toc-sec-arrow {
+    display: inline-block;
+    margin-right: 5px;
+    font-size: 0.68rem;
+    color: var(--text-dim);
+    transition: transform .15s ease;
+}
+.notes-toc-sec.collapsed .toc-sec-arrow {
+    transform: rotate(-90deg);
+}
+.notes-toc-subs {
+    overflow: hidden;
+}
+.notes-toc-subs.collapsed {
+    display: none;
+}
+.notes-toc-sub {
+    display: block;
+    padding: 3px 10px 3px 38px;
+    font-size: 0.8rem;
+    color: var(--text-dim);
+    border-radius: 5px;
+    cursor: pointer;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    transition: color .12s ease, background .12s ease;
+}
+.notes-toc-sub:hover {
+    background: var(--light);
+    color: var(--primary);
+}
+.notes-toc-sub.active {
+    background: #eef5fd;
+    color: var(--primary);
+    font-weight: 600;
+}
+
+/* 正文小节（二级标题 + 内容块） */
+.notes-sub {
+    margin: 4px 0 18px;
+}
+.notes-sub-title {
+    font-size: 0.98rem;
+    color: var(--primary);
+    margin: 0 0 10px;
+    padding: 7px 12px;
+    background: #eef5fd;
+    border-left: 3px solid var(--primary);
+    border-radius: 6px;
+    scroll-margin-top: 88px;
+}
+.notes-sub-body h4 {
+    margin: 14px 0 8px;
+    font-size: 0.95rem;
+    color: var(--text);
+}
+
 /* 右侧内容区 */
 .notes-content {
     flex: 1;
@@ -2815,6 +2874,13 @@ a.chapter-badge-link:hover {
 /* 笔记页夜间适配 */
 .dark .notes-toc-sec.active {
     background: #1f3a5f;
+}
+.dark .notes-toc-sub.active {
+    background: #1f3a5f;
+}
+.dark .notes-sub-title {
+    background: #1f3a5f;
+    color: #7db3e8;
 }
 
 .dark .notes-body b {
