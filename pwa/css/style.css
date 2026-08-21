@@ -1894,6 +1894,80 @@ mark {
     transition: all 0.2s;
 }
 
+/* ===== 快捷键设置弹窗 ===== */
+.kb-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.4);
+    z-index: 200;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+.kb-overlay[hidden] { display: none; }
+.kb-dialog {
+    background: var(--card-bg);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    width: 340px;
+    max-width: 92vw;
+    padding: 18px 20px;
+}
+.kb-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-weight: 600;
+    font-size: 0.95rem;
+    margin-bottom: 14px;
+}
+.kb-close {
+    border: none;
+    background: none;
+    font-size: 14px;
+    cursor: pointer;
+    color: var(--text-light);
+    padding: 2px 6px;
+}
+.kb-close:hover { color: var(--danger); }
+.kb-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 10px;
+}
+.kb-label { font-size: 0.9rem; color: var(--text); }
+.kb-capture {
+    width: 160px;
+    padding: 8px;
+    border: 1px dashed var(--border);
+    border-radius: 6px;
+    background: var(--bg);
+    color: var(--text);
+    font-size: 0.88rem;
+    cursor: pointer;
+    text-align: center;
+    transition: border-color .15s ease, color .15s ease, background .15s ease;
+}
+.kb-capture:hover { border-color: var(--primary); }
+.kb-capture.capturing {
+    border-color: var(--primary);
+    border-style: solid;
+    color: var(--primary);
+    background: #eef5fd;
+}
+.kb-hint {
+    font-size: 0.78rem;
+    color: var(--text-light);
+    margin: 6px 0 14px;
+    line-height: 1.6;
+}
+.kb-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
+}
+
 .opt-shuffle-btn.on {
     border-color: var(--primary);
     color: var(--primary);

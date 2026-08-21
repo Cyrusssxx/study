@@ -60,6 +60,7 @@
                         <h2 id="subjectTitle"></h2>
                         <span class="mode-badge" id="modeBadge"></span>
                         <button class="opt-shuffle-btn" id="shuffleBtn" onclick="toggleShuffle()" title="打乱选项显示顺序（字母跟随内容，答案字母不变）">选项乱序 <span id="shuffleState">关</span></button>
+                        <button class="opt-shuffle-btn" onclick="openKeybindDialog()" title="自定义上一题/下一题快捷键（支持键盘按键与鼠标侧键）">快捷键 ⚙</button>
                         <select class="quiz-year-filter" id="yearFilter" onchange="onYearChange()" style="display:none" title="按统考真题年份筛选">
                             <option value="">全部年份</option>
                         </select>
@@ -91,6 +92,30 @@
             </aside>
         </div>
     </main>
+
+    <!-- 快捷键设置弹窗 -->
+    <div class="kb-overlay" id="kbOverlay" hidden onclick="if(event.target===this)closeKeybindDialog()">
+        <div class="kb-dialog">
+            <div class="kb-head">
+                <span>快捷键设置</span>
+                <button class="kb-close" onclick="closeKeybindDialog()" title="关闭">✕</button>
+            </div>
+            <div class="kb-row">
+                <span class="kb-label">上一题</span>
+                <button class="kb-capture" id="kbPrev" onclick="startCapture('prev')" title="点击后按任意键或鼠标侧键">←</button>
+            </div>
+            <div class="kb-row">
+                <span class="kb-label">下一题</span>
+                <button class="kb-capture" id="kbNext" onclick="startCapture('next')" title="点击后按任意键或鼠标侧键">→</button>
+            </div>
+            <p class="kb-hint">点击方框后按键盘任意键或鼠标侧键（浏览器前进/后退键）即可绑定；默认已绑定鼠标侧键：侧键上=上一题、侧键下=下一题。</p>
+            <div class="kb-actions">
+                <button class="btn btn-secondary" onclick="resetKeybinds()">恢复默认</button>
+                <button class="btn btn-primary" onclick="closeKeybindDialog()">完成</button>
+            </div>
+        </div>
+    </div>
+
     <script src="js/common.js"></script>
     <script src="js/backend.js"></script>
     <script>
@@ -154,6 +179,81 @@
             }
         });
     }
+
+    // ==================== 自定义快捷键：上一题/下一题（键盘 + 鼠标侧键） ====================
+    const KB_KEY = 'quiz_keybinds_v1';
+    let keybinds = { prev: 'mouse3', next: 'mouse4' };   // 默认：鼠标侧键上=上一题、侧键下=下一题
+    try { keybinds = Object.assign({}, keybinds, JSON.parse(localStorage.getItem(KB_KEY) || '{}')); } catch (e) { }
+    let capturing = null;
+
+    function kbName(code) {
+        if (code === 'mouse3') return '鼠标侧键 · 上';
+        if (code === 'mouse4') return '鼠标侧键 · 下';
+        const map = { ArrowLeft: '←', ArrowRight: '→', ArrowUp: '↑', ArrowDown: '↓', Space: '空格', Enter: '回车', Tab: 'Tab', Backspace: '退格', Delete: 'Delete', Home: 'Home', End: 'End', PageUp: 'PageUp', PageDown: 'PageDown', Escape: 'Esc' };
+        if (map[code]) return map[code];
+        return code.replace(/^Key/, '').replace(/^Digit/, '').replace(/^Numpad/, '小键盘 ');
+    }
+
+    function openKeybindDialog() {
+        document.getElementById('kbPrev').textContent = kbName(keybinds.prev);
+        document.getElementById('kbNext').textContent = kbName(keybinds.next);
+        document.getElementById('kbOverlay').hidden = false;
+    }
+    function closeKeybindDialog() { stopCapture(); document.getElementById('kbOverlay').hidden = true; }
+    function startCapture(side) {
+        stopCapture();
+        capturing = side;
+        const btn = document.getElementById(side === 'prev' ? 'kbPrev' : 'kbNext');
+        btn.classList.add('capturing');
+        btn.textContent = '请按键…';
+    }
+    function stopCapture() {
+        if (!capturing) return;
+        capturing = null;
+        document.querySelectorAll('.kb-capture').forEach(b => b.classList.remove('capturing'));
+    }
+    function applyCapture(code) {
+        if (!capturing) return;
+        const side = capturing;
+        stopCapture();
+        keybinds[side] = code;
+        localStorage.setItem(KB_KEY, JSON.stringify(keybinds));
+        document.getElementById(side === 'prev' ? 'kbPrev' : 'kbNext').textContent = kbName(code);
+    }
+    function resetKeybinds() {
+        keybinds = { prev: 'mouse3', next: 'mouse4' };
+        localStorage.setItem(KB_KEY, JSON.stringify(keybinds));
+        openKeybindDialog();
+    }
+    function inEditable(e) {
+        const t = e && e.target;
+        return t && (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA' || t.tagName === 'SELECT' || t.isContentEditable);
+    }
+    // 键盘：捕获 + 触发翻题
+    document.addEventListener('keydown', e => {
+        if (capturing) { e.preventDefault(); e.stopPropagation(); applyCapture(e.code); return; }
+        if (inEditable(e) || e.ctrlKey || e.metaKey || e.altKey || e.repeat) return;
+        if (e.code === keybinds.prev) { e.preventDefault(); prevQuestion(); }
+        else if (e.code === keybinds.next) { e.preventDefault(); nextQuestion(); }
+    });
+    // 鼠标侧键（button 3/4）：捕获 + 触发翻题 + 拦截浏览器前进/后退
+    document.addEventListener('mousedown', e => {
+        if (e.button !== 3 && e.button !== 4 || inEditable(e)) return;
+        const code = e.button === 3 ? 'mouse3' : 'mouse4';
+        if (capturing || code === keybinds.prev || code === keybinds.next) e.preventDefault();
+    }, true);
+    document.addEventListener('auxclick', e => {
+        const b = e.button;
+        if (b !== 3 && b !== 4) return;
+        if (capturing) { e.preventDefault(); e.stopPropagation(); applyCapture(b === 3 ? 'mouse3' : 'mouse4'); return; }
+        if (inEditable(e)) return;
+        const code = b === 3 ? 'mouse3' : 'mouse4';
+        if (code === keybinds.prev) { e.preventDefault(); prevQuestion(); }
+        else if (code === keybinds.next) { e.preventDefault(); nextQuestion(); }
+    });
+    // Firefox 专用侧键事件
+    document.addEventListener('mouseback', e => { e.preventDefault(); if (!capturing && keybinds.prev === 'mouse3') prevQuestion(); else if (capturing) applyCapture('mouse3'); });
+    document.addEventListener('mouseforward', e => { e.preventDefault(); if (!capturing && keybinds.next === 'mouse4') nextQuestion(); else if (capturing) applyCapture('mouse4'); });
 
     async function loadQuizQuestions() {
         try {
