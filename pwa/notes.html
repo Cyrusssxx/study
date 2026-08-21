@@ -217,6 +217,8 @@
         // 策略：在「题目所属节」内优先定位；节内无命中才全局兜底。
         // 评分 = 题干与笔记行共享的「稀有长字串」加权求和（IDF），天然压低
         //       "下列关于…的叙述中，正确的是"等通用套话；例题题干行降权。
+        // strict=true 时仅限节内匹配（从 quiz 📖 链接进入用），
+        //   防止通用题干在别的节碰巧高分→跳到"奇怪的地方"
         let _bgCache = null;
         function bgIndex() {
             if (_bgCache) return _bgCache;
@@ -257,7 +259,7 @@
             if (ql && rec.t.indexOf(ql) >= 0) score += 8;          // 整句命中再加成
             return { score, hits };
         }
-        function gotoSpecific(q, preferSecEl) {
+        function gotoSpecific(q, preferSecEl, strict) {
             const idx = bgIndex();
             const N = idx.N, df = idx.df;
             let bestIn = null, bestInScore = -1, bestInLen = 1e9;
@@ -276,7 +278,7 @@
                     }
                 }
             }
-            const target = bestIn || bestGl;                      // 节内优先，否则全局兜底
+            const target = strict ? bestIn : (bestIn || bestGl);   // strict: 禁止全局兜底，防跳到别的节
             if (!target) return false;
             target.scrollIntoView({ block: 'center', behavior: 'smooth' });
             const tsec = target.closest('.notes-section');
@@ -521,11 +523,13 @@
             }, { passive: true });
 
             // 细粒度跳转：?line=N 跳该节某行；?q=关键词 节内(全局兜底)定位最相关小点；否则整节跳转
+            // 从 quiz 📖 链接进入(GOTO+Q)时 strict=true: 仅限节内匹配,
+            //   防止通用题干在别的节碰巧高分→跳到"奇怪的地方"; 无命中则兜底 jumpTo 整节高亮
             if (GOTO) setTimeout(() => {
                 let done = false;
                 const secEl = resolveSectionEl(GOTO);
                 if (LINE) done = jumpToLine(GOTO, parseInt(LINE, 10) || 0);
-                if (!done && Q) done = gotoSpecific(Q, secEl);
+                if (!done && Q) done = gotoSpecific(Q, secEl, true);   // strict: 禁止跨节跳转
                 if (!done) jumpTo(GOTO, true);
             }, 100);
             // 长表格加横向滚动包裹，防止移动端列被压扁
