@@ -837,6 +837,7 @@ body {
 .chapter-sidebar { transition: width .15s ease, opacity .15s ease; }
 .quiz-layout.chapter-collapsed .chapter-sidebar {
     width: 26px;
+    height: calc(100vh - 96px);   /* 关键：内容 display:none 后高度塌陷为0，必须显式给高 */
     min-width: 0;
     padding: 0;
     margin: 0;
@@ -864,6 +865,7 @@ body {
 .number-sidebar { transition: width .15s ease, opacity .15s ease; }
 .quiz-layout.number-collapsed .number-sidebar {
     width: 26px;
+    height: calc(100vh - 96px);   /* 关键：内容 display:none 后高度塌陷为0，必须显式给高 */
     min-width: 0;
     padding: 0;
     margin: 0;
@@ -1967,6 +1969,23 @@ mark {
     color: var(--text-light);
     margin: 6px 0 14px;
     line-height: 1.6;
+}
+.kb-row.kb-guard { cursor: pointer; }
+.kb-guard input[type="checkbox"] {
+    width: 16px;
+    height: 16px;
+    accent-color: var(--primary);
+    cursor: pointer;
+}
+.kb-guard-tag {
+    display: inline-block;
+    margin-left: 6px;
+    padding: 1px 6px;
+    border-radius: 999px;
+    background: var(--light);
+    color: var(--text-light);
+    font-size: 0.68rem;
+    vertical-align: middle;
 }
 .kb-actions {
     display: flex;

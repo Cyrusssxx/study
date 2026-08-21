@@ -108,7 +108,11 @@
                 <span class="kb-label">下一题</span>
                 <button class="kb-capture" id="kbNext" onclick="startCapture('next')" title="点击后按任意键或鼠标侧键">→</button>
             </div>
-            <p class="kb-hint">点击方框后按键盘任意键或鼠标侧键（浏览器前进/后退键）即可绑定；默认已绑定鼠标侧键：侧键上=上一题、侧键下=下一题。</p>
+            <label class="kb-row kb-guard">
+                <span class="kb-label">侧键拦截<span class="kb-guard-tag">防后退/前进</span></span>
+                <input type="checkbox" id="kbSideGuard" onchange="toggleSideGuard()">
+            </label>
+            <p class="kb-hint">点击方框后按键盘任意键或鼠标侧键（浏览器前进/后退键）即可绑定；默认已绑定鼠标侧键：侧键上=上一题、侧键下=下一题。开启「侧键拦截」后，侧键在本页完全劫持为翻题，绝不会触发浏览器后退/前进。</p>
             <div class="kb-actions">
                 <button class="btn btn-secondary" onclick="resetKeybinds()">恢复默认</button>
                 <button class="btn btn-primary" onclick="closeKeybindDialog()">完成</button>
@@ -184,7 +188,13 @@
     const KB_KEY = 'quiz_keybinds_v1';
     let keybinds = { prev: 'mouse3', next: 'mouse4' };   // 默认：鼠标侧键上=上一题、侧键下=下一题
     try { keybinds = Object.assign({}, keybinds, JSON.parse(localStorage.getItem(KB_KEY) || '{}')); } catch (e) { }
+    let sideGuard = localStorage.getItem('quiz_sideguard') !== '0';  // 默认开：侧键在本页完全劫持
     let capturing = null;
+
+    function toggleSideGuard() {
+        sideGuard = document.getElementById('kbSideGuard').checked;
+        localStorage.setItem('quiz_sideguard', sideGuard ? '1' : '0');
+    }
 
     function kbName(code) {
         if (code === 'mouse3') return '鼠标侧键 · 上';
@@ -197,6 +207,7 @@
     function openKeybindDialog() {
         document.getElementById('kbPrev').textContent = kbName(keybinds.prev);
         document.getElementById('kbNext').textContent = kbName(keybinds.next);
+        document.getElementById('kbSideGuard').checked = sideGuard;
         document.getElementById('kbOverlay').hidden = false;
     }
     function closeKeybindDialog() { stopCapture(); document.getElementById('kbOverlay').hidden = true; }
@@ -237,10 +248,11 @@
         else if (e.code === keybinds.next) { e.preventDefault(); nextQuestion(); }
     });
     // 鼠标侧键（button 3/4）：捕获 + 触发翻题 + 拦截浏览器前进/后退
+    // sideGuard 开启时：任何侧键一律拦截（含未绑定的），绝不触发浏览器前进/后退
     document.addEventListener('mousedown', e => {
         if (e.button !== 3 && e.button !== 4 || inEditable(e)) return;
         const code = e.button === 3 ? 'mouse3' : 'mouse4';
-        if (capturing || code === keybinds.prev || code === keybinds.next) e.preventDefault();
+        if (capturing || sideGuard || code === keybinds.prev || code === keybinds.next) e.preventDefault();
     }, true);
     document.addEventListener('auxclick', e => {
         const b = e.button;
@@ -248,12 +260,23 @@
         if (capturing) { e.preventDefault(); e.stopPropagation(); applyCapture(b === 3 ? 'mouse3' : 'mouse4'); return; }
         if (inEditable(e)) return;
         const code = b === 3 ? 'mouse3' : 'mouse4';
-        if (code === keybinds.prev) { e.preventDefault(); prevQuestion(); }
-        else if (code === keybinds.next) { e.preventDefault(); nextQuestion(); }
+        if (sideGuard || code === keybinds.prev || code === keybinds.next) {
+            e.preventDefault();
+            if (code === keybinds.prev) prevQuestion();
+            else if (code === keybinds.next) nextQuestion();
+        }
     });
     // Firefox 专用侧键事件
-    document.addEventListener('mouseback', e => { e.preventDefault(); if (!capturing && keybinds.prev === 'mouse3') prevQuestion(); else if (capturing) applyCapture('mouse3'); });
-    document.addEventListener('mouseforward', e => { e.preventDefault(); if (!capturing && keybinds.next === 'mouse4') nextQuestion(); else if (capturing) applyCapture('mouse4'); });
+    document.addEventListener('mouseback', e => {
+        e.preventDefault();
+        if (capturing) applyCapture('mouse3');
+        else if (keybinds.prev === 'mouse3') prevQuestion();
+    });
+    document.addEventListener('mouseforward', e => {
+        e.preventDefault();
+        if (capturing) applyCapture('mouse4');
+        else if (keybinds.next === 'mouse4') nextQuestion();
+    });
 
     async function loadQuizQuestions() {
         try {
