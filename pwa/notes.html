@@ -324,11 +324,16 @@
             }
             const target = strict ? bestIn : (bestIn || bestGl);   // strict: 禁止全局兜底，防跳到别的节
             if (!target) return false;
-            target.scrollIntoView({ block: 'center', behavior: 'smooth' });
             const tsec = target.closest('.notes-section');
+            const tsub = target.closest('.notes-sub');             // 命中行所属小节（题目跳转精准到小章节）
+            if (tsub) expandTocSec(tsub.dataset.sec);
+            else if (tsec) expandTocSec(tsec.dataset.sec);
+            target.scrollIntoView({ block: 'center', behavior: 'smooth' });
             target.classList.add('locate-flash');
             setTimeout(() => target.classList.remove('locate-flash'), 1800);
-            if (tsec) document.querySelectorAll('.notes-toc-sec').forEach(l => l.classList.toggle('active', l.dataset.sec === tsec.dataset.sec));
+            const hlName = tsub ? tsub.dataset.sec : (tsec ? tsec.dataset.sec : '');
+            if (hlName) document.querySelectorAll('.notes-toc-sec, .notes-toc-sub').forEach(l =>
+                l.classList.toggle('active', l.dataset.sec === hlName));
             return true;
         }
 
@@ -534,11 +539,11 @@
                 for (const sec of ch.sections) {
                     const subs = sec.subsections || [];
                     const hasSub = subs.length > 0;
-                    // 目录：有子节的可点击展开/收起，无子节的点击跳转
-                    toc += `<a class="notes-toc-sec" data-sec="${sec.section}"${hasSub ? ' data-hassub="1" onclick="toggleTocSec(this)"' : ` onclick="jumpTo(${JSON.stringify(sec.section)}, false)"`}>${hasSub ? '<span class="toc-sec-arrow">▾</span>' : ''}${sec.section}</a>`;
+                    // 目录：有子节的可点击展开/收起，无子节的点击跳转（事件委托见下方，避免内联onclick引号嵌套bug）
+                    toc += `<a class="notes-toc-sec" data-sec="${sec.section}"${hasSub ? ' data-hassub="1"' : ''}>${hasSub ? '<span class="toc-sec-arrow">▾</span>' : ''}${sec.section}</a>`;
                     if (hasSub) {
                         toc += `<div class="notes-toc-subs">` + subs.map(s =>
-                            `<a class="notes-toc-sub" data-sec="${s.section}" onclick="jumpTo(${JSON.stringify(s.section)}, false)">${s.section}</a>`
+                            `<a class="notes-toc-sub" data-sec="${s.section}">${s.section}</a>`
                         ).join('') + `</div>`;
                     }
                     // 正文：节标题 + (小节 + 节尾)
@@ -563,6 +568,17 @@
             }
             document.getElementById('notesToc').innerHTML = toc;
             document.getElementById('notesContent').innerHTML = body;
+
+            // 目录点击事件委托：有子节的节=展开/收起，节/小节=跳转
+            const tocBox = document.getElementById('notesToc');
+            tocBox.onclick = e => {
+                const subLink = e.target.closest('.notes-toc-sub');
+                if (subLink) { jumpTo(subLink.dataset.sec, false); return; }
+                const secLink = e.target.closest('.notes-toc-sec');
+                if (!secLink) return;
+                if (secLink.dataset.hassub) toggleTocSec(secLink);
+                else jumpTo(secLink.dataset.sec, false);
+            };
 
             initTocSecStates();
 
