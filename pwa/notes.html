@@ -68,9 +68,21 @@
             document.getElementById('notesTocToggle').textContent = '»';
         }
         function toggleNotesToc() {
-            const collapsed = notesLayout.classList.toggle('notes-toc-collapsed');
-            localStorage.setItem('notes_toc_collapsed', collapsed ? '1' : '0');
-            document.getElementById('notesTocToggle').textContent = collapsed ? '»' : '«';
+            const collapsed = notesLayout.classList.contains('notes-toc-collapsed');
+            if (collapsed) {
+                // 展开：宽度瞬时恢复，下一帧移除滑出类触发 transform 滑入（零重排，丝滑）
+                notesLayout.classList.remove('notes-toc-collapsed');
+                requestAnimationFrame(() => notesLayout.classList.remove('notes-toc-collapsing'));
+            } else {
+                // 收起：先 transform 滑出（合成层动画不重排），结束后再收宽度
+                notesLayout.classList.add('notes-toc-collapsing');
+                setTimeout(() => {
+                    notesLayout.classList.add('notes-toc-collapsed');
+                    notesLayout.classList.remove('notes-toc-collapsing');
+                }, 180);
+            }
+            localStorage.setItem('notes_toc_collapsed', collapsed ? '0' : '1');
+            document.getElementById('notesTocToggle').textContent = collapsed ? '«' : '»';
         }
 
         // 题目旧 section 名（王道）→ 笔记新 section 名（袁书/新版）映射表

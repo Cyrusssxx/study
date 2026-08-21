@@ -809,6 +809,62 @@ body {
     cursor: default;
 }
 
+/* ===== 左右侧栏整栏收起把手（吸顶竖条） ===== */
+.side-rail {
+    flex-shrink: 0;
+    width: 24px;
+    align-self: flex-start;
+    position: sticky;
+    top: 76px;
+    height: calc(100vh - 96px);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    background: var(--card-bg);
+    color: var(--text-light);
+    font-size: 0.72rem;
+    line-height: 1;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: color .15s ease, border-color .15s ease, background .15s ease;
+    z-index: 5;
+}
+.side-rail:hover {
+    color: var(--primary);
+    border-color: var(--primary);
+}
+.side-rail-left::before { content: '◀'; }
+.side-rail-right::before { content: '▶'; }
+.quiz-layout.chapter-collapsed .side-rail-left::before { content: '▶'; }
+.quiz-layout.number-collapsed .side-rail-right::before { content: '◀'; }
+
+/* 折叠动画：transform 滑出（合成层不重排），结束后瞬时收宽度 */
+.chapter-sidebar { transition: transform .18s ease; }
+.quiz-layout.chapter-sliding .chapter-sidebar { transform: translateX(-105%); }
+.quiz-layout.chapter-collapsed .chapter-sidebar {
+    width: 0;
+    min-width: 0;
+    padding: 0;
+    margin: 0;
+    border: none;
+    box-shadow: none;
+    overflow: hidden;
+    opacity: 0;
+}
+.number-sidebar { transition: transform .18s ease; }
+.quiz-layout.number-sliding .number-sidebar { transform: translateX(105%); }
+.quiz-layout.number-collapsed .number-sidebar {
+    width: 0;
+    min-width: 0;
+    padding: 0;
+    margin: 0;
+    border: none;
+    box-shadow: none;
+    overflow: hidden;
+    opacity: 0;
+}
+
 .number-panel {
     overflow-y: auto;
     padding: 10px 14px 14px;
@@ -1202,6 +1258,20 @@ body {
     /* 侧边栏堆叠到顶部 */
     .quiz-layout {
         flex-direction: column;
+    }
+    /* 窄屏：隐藏收起把手，折叠态侧栏仍完整展示（堆叠形态） */
+    .side-rail {
+        display: none;
+    }
+    .quiz-layout.chapter-collapsed .chapter-sidebar,
+    .quiz-layout.number-collapsed .number-sidebar {
+        width: 100%;
+        min-width: 0;
+        opacity: 1;
+        overflow: visible;
+        margin: 0;
+        border: none;
+        box-shadow: var(--shadow);
     }
     .chapter-sidebar {
         width: 100%;
@@ -2340,7 +2410,11 @@ mark {
     opacity: 0;
 }
 .notes-toc {
-    transition: width .2s ease, opacity .2s ease, padding .2s ease;
+    transition: transform .18s ease;
+}
+/* 滑出中（transform 合成层动画，不触发布局重排，收起不卡） */
+.notes-layout.notes-toc-collapsing .notes-toc {
+    transform: translateX(-105%);
 }
 
 /* 左侧目录树：吸顶跟随滚动 */
@@ -2703,6 +2777,11 @@ a.chapter-badge-link:hover {
         border: none;
         box-shadow: var(--shadow);
         border-radius: var(--radius);
+    }
+
+    /* 窄屏不滑出（目录本就堆叠展示），仅保留折叠形态 */
+    .notes-layout.notes-toc-collapsing .notes-toc {
+        transform: none;
     }
 }
 

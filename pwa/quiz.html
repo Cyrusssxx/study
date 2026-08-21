@@ -42,7 +42,9 @@
         </div>
     </nav>
     <main class="container">
-        <div class="quiz-layout">
+        <div class="quiz-layout" id="quizLayout">
+            <button class="side-rail side-rail-left" id="chapterRail" onclick="toggleQuizSidebar('chapter')"
+                title="收起/展开章节导航" aria-label="收起/展开章节导航"></button>
             <aside class="chapter-sidebar">
                 <div class="sidebar-title" onclick="this.parentElement.classList.toggle('collapsed')">
                     章节导航 <span class="sidebar-toggle">▾</span>
@@ -85,6 +87,8 @@
                 <div class="sidebar-title">题号</div>
                 <div class="number-panel" id="numberPanel"></div>
             </aside>
+            <button class="side-rail side-rail-right" id="numberRail" onclick="toggleQuizSidebar('number')"
+                title="收起/展开题号" aria-label="收起/展开题号"></button>
         </div>
     </main>
     <script src="js/common.js"></script>
@@ -126,8 +130,40 @@
 
     // 初始化
     async function init() {
+        initQuizSidebars();
         loadChapterTree();
         await loadQuizQuestions();
+    }
+
+    // ==================== 左右侧栏整栏收起/展开（状态持久化） ====================
+    function toggleQuizSidebar(side) {
+        const layout = document.getElementById('quizLayout');
+        const cls = side === 'chapter' ? 'chapter-collapsed' : 'number-collapsed';
+        const slide = side === 'chapter' ? 'chapter-sliding' : 'number-sliding';
+        const collapsed = layout.classList.contains(cls);
+        if (collapsed) {
+            // 展开：宽度瞬时恢复，下一帧移除滑出类触发 transform 滑入
+            layout.classList.remove(cls);
+            requestAnimationFrame(() => layout.classList.remove(slide));
+        } else {
+            // 收起：先 transform 滑出（合成层动画不重排），结束后再收宽度
+            layout.classList.add(slide);
+            setTimeout(() => {
+                layout.classList.add(cls);
+                layout.classList.remove(slide);
+            }, 180);
+        }
+        localStorage.setItem('quiz_' + side + '_collapsed', collapsed ? '0' : '1');
+    }
+
+    function initQuizSidebars() {
+        const layout = document.getElementById('quizLayout');
+        if (!layout) return;
+        ['chapter', 'number'].forEach(side => {
+            if (localStorage.getItem('quiz_' + side + '_collapsed') === '1') {
+                layout.classList.add(side === 'chapter' ? 'chapter-collapsed' : 'number-collapsed');
+            }
+        });
     }
 
     async function loadQuizQuestions() {
