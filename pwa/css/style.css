@@ -809,86 +809,59 @@ body {
     cursor: default;
 }
 
-/* ===== 侧栏内嵌收起按钮（嵌入目录右上角，收起后侧栏收成窄条） ===== */
+/* ===== 侧栏收起/展开小按钮（独立吸顶小块，对齐笔记目录 toggle 风格） ===== */
 .side-toggle {
-    position: absolute;
-    top: 8px;
-    right: 8px;
-    z-index: 2;
-    border: 1px solid var(--border);
-    background: var(--bg);
-    color: var(--text-dim);
-    border-radius: 6px;
+    flex-shrink: 0;
     width: 26px;
-    height: 26px;
+    height: 30px;
+    margin-top: 2px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    background: var(--card-bg);
+    color: var(--text-light);
+    font-size: 0.8rem;
     line-height: 1;
-    font-size: 12px;
     cursor: pointer;
-    flex: none;
+    position: sticky;
+    top: 82px;
+    box-shadow: var(--shadow);
+    display: flex;
+    align-items: center;
+    justify-content: center;
     transition: color .15s ease, border-color .15s ease, background .15s ease;
+    z-index: 5;
 }
 .side-toggle:hover {
     color: var(--primary);
     border-color: var(--primary);
 }
+#chapterToggle::before { content: '◀'; }
+#numberToggle::before { content: '▶'; }
+.quiz-layout.chapter-collapsed #chapterToggle::before { content: '▶'; }
+.quiz-layout.number-collapsed #numberToggle::before { content: '◀'; }
 
-/* 折叠动画：宽度+透明度短促收合（0.15s，自然抽屉感） */
-/* 折叠后收成 26px 主色细条，醒目可点（原浅色细条与页面背景同色近乎隐形） */
+/* 折叠动画：宽度+透明度短促收合；收起后侧栏完全消失（不留长条），按钮独立保留 */
 .chapter-sidebar { transition: width .15s ease, opacity .15s ease; }
 .quiz-layout.chapter-collapsed .chapter-sidebar {
-    width: 26px;
-    height: calc(100vh - 96px);   /* 关键：内容 display:none 后高度塌陷为0，必须显式给高 */
+    width: 0;
     min-width: 0;
     padding: 0;
     margin: 0;
     border: none;
-    border-radius: var(--radius);
-    background: var(--primary);
-    box-shadow: var(--shadow);
-    overflow: hidden;
-    opacity: 1;
-}
-.quiz-layout.chapter-collapsed .chapter-sidebar .sidebar-title,
-.quiz-layout.chapter-collapsed .chapter-sidebar .chapter-tree {
-    display: none;
-}
-.quiz-layout.chapter-collapsed .chapter-sidebar .side-toggle {
-    top: 50%;
-    right: auto;
-    left: 50%;
-    transform: translate(-50%, -50%) rotate(180deg);
-    background: #fff;
-    border-color: transparent;
-    color: var(--primary);
     box-shadow: none;
+    overflow: hidden;
+    opacity: 0;
 }
 .number-sidebar { transition: width .15s ease, opacity .15s ease; }
 .quiz-layout.number-collapsed .number-sidebar {
-    width: 26px;
-    height: calc(100vh - 96px);   /* 关键：内容 display:none 后高度塌陷为0，必须显式给高 */
+    width: 0;
     min-width: 0;
     padding: 0;
     margin: 0;
     border: none;
-    border-radius: var(--radius);
-    background: var(--primary);
-    box-shadow: var(--shadow);
-    overflow: hidden;
-    opacity: 1;
-}
-.quiz-layout.number-collapsed .number-sidebar .sidebar-title,
-.quiz-layout.number-collapsed .number-sidebar .number-panel {
-    display: none;
-}
-.quiz-layout.number-collapsed .number-sidebar .side-toggle {
-    top: 50%;
-    right: auto;
-    left: 50%;
-    transform: translate(-50%, -50%) rotate(180deg);
-    background: #fff;
-    border-color: transparent;
-    color: var(--primary);
     box-shadow: none;
+    overflow: hidden;
+    opacity: 0;
 }
 
 .number-panel {
