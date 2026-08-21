@@ -2241,6 +2241,27 @@ mark {
     border-color: #3a404b;
 }
 
+/* 教材示意图的 ASCII/文字结构还原（等宽 pre，像图不像代码） */
+.ascii-fig {
+    font-family: Consolas, "Courier New", monospace;
+    font-size: 0.84rem;
+    line-height: 1.5;
+    background: #f0f6ff;
+    border: 1px dashed var(--border);
+    border-radius: var(--radius);
+    padding: 12px 14px;
+    margin: 10px 0;
+    overflow-x: auto;
+    white-space: pre;
+    color: var(--text);
+    text-align: left;
+}
+.dark .ascii-fig {
+    background: #1b2635;
+    border-color: #3a404b;
+    color: #d5dde8;
+}
+
 /* ==================== 数据结构强化打卡 ==================== */
 
 .daka-home-progress {
