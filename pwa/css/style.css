@@ -809,16 +809,16 @@ body {
     cursor: default;
 }
 
-/* ===== 左右侧栏整栏收起把手（吸顶竖条） ===== */
+/* ===== 左右侧栏整栏收起把手（小方块） ===== */
 .side-rail {
     flex-shrink: 0;
-    width: 24px;
+    width: 26px;
+    height: 44px;
     align-self: flex-start;
     position: sticky;
     top: 76px;
-    height: calc(100vh - 96px);
     border: 1px solid var(--border);
-    border-radius: var(--radius);
+    border-radius: 8px;
     background: var(--card-bg);
     color: var(--text-light);
     font-size: 0.72rem;
@@ -829,6 +829,7 @@ body {
     justify-content: center;
     transition: color .15s ease, border-color .15s ease, background .15s ease;
     z-index: 5;
+    box-shadow: var(--shadow);
 }
 .side-rail:hover {
     color: var(--primary);
@@ -839,9 +840,8 @@ body {
 .quiz-layout.chapter-collapsed .side-rail-left::before { content: '▶'; }
 .quiz-layout.number-collapsed .side-rail-right::before { content: '◀'; }
 
-/* 折叠动画：transform 滑出（合成层不重排），结束后瞬时收宽度 */
-.chapter-sidebar { transition: transform .18s ease; }
-.quiz-layout.chapter-sliding .chapter-sidebar { transform: translateX(-105%); }
+/* 折叠动画：宽度+透明度短促收合（0.15s，自然抽屉感） */
+.chapter-sidebar { transition: width .15s ease, opacity .15s ease; }
 .quiz-layout.chapter-collapsed .chapter-sidebar {
     width: 0;
     min-width: 0;
@@ -852,8 +852,7 @@ body {
     overflow: hidden;
     opacity: 0;
 }
-.number-sidebar { transition: transform .18s ease; }
-.quiz-layout.number-sliding .number-sidebar { transform: translateX(105%); }
+.number-sidebar { transition: width .15s ease, opacity .15s ease; }
 .quiz-layout.number-collapsed .number-sidebar {
     width: 0;
     min-width: 0;
@@ -2410,11 +2409,7 @@ mark {
     opacity: 0;
 }
 .notes-toc {
-    transition: transform .18s ease;
-}
-/* 滑出中（transform 合成层动画，不触发布局重排，收起不卡） */
-.notes-layout.notes-toc-collapsing .notes-toc {
-    transform: translateX(-105%);
+    transition: width .15s ease, opacity .15s ease;
 }
 
 /* 左侧目录树：吸顶跟随滚动 */
@@ -2777,11 +2772,6 @@ a.chapter-badge-link:hover {
         border: none;
         box-shadow: var(--shadow);
         border-radius: var(--radius);
-    }
-
-    /* 窄屏不滑出（目录本就堆叠展示），仅保留折叠形态 */
-    .notes-layout.notes-toc-collapsing .notes-toc {
-        transform: none;
     }
 }
 

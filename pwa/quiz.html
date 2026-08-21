@@ -139,21 +139,8 @@
     function toggleQuizSidebar(side) {
         const layout = document.getElementById('quizLayout');
         const cls = side === 'chapter' ? 'chapter-collapsed' : 'number-collapsed';
-        const slide = side === 'chapter' ? 'chapter-sliding' : 'number-sliding';
-        const collapsed = layout.classList.contains(cls);
-        if (collapsed) {
-            // 展开：宽度瞬时恢复，下一帧移除滑出类触发 transform 滑入
-            layout.classList.remove(cls);
-            requestAnimationFrame(() => layout.classList.remove(slide));
-        } else {
-            // 收起：先 transform 滑出（合成层动画不重排），结束后再收宽度
-            layout.classList.add(slide);
-            setTimeout(() => {
-                layout.classList.add(cls);
-                layout.classList.remove(slide);
-            }, 180);
-        }
-        localStorage.setItem('quiz_' + side + '_collapsed', collapsed ? '0' : '1');
+        const collapsed = layout.classList.toggle(cls);
+        localStorage.setItem('quiz_' + side + '_collapsed', collapsed ? '1' : '0');
     }
 
     function initQuizSidebars() {
