@@ -302,12 +302,24 @@
         function segmentCardBody(d) {
             const lines = String(d || '').split('\n');
             let mode = 'prose';
-            const prose = [], code = [], out = [];
+            const prose = [], code = [], table = [], out = [];
             const flush = () => {
                 if (prose.length) { out.push({ t: 'p', text: prose.join('\n') }); prose.length = 0; }
                 if (code.length) { out.push({ t: 'code', text: code.join('\n') }); code.length = 0; }
+                if (table.length) { out.push({ t: 'table', text: table.join('\n') }); table.length = 0; }
             };
             for (const line of lines) {
+                const isTable = /^\s*\|/.test(line);
+                if (isTable) {                                   // 表格行：以 | 开头
+                    if (mode !== 'table') { flush(); mode = 'table'; }
+                    table.push(line);
+                    continue;
+                }
+                if (mode === 'table') {                          // 表格续行：cell 内换行合并到上一行
+                    if (line.trim() === '') { flush(); mode = 'prose'; continue; }
+                    table[table.length - 1] += ' ' + line.trim();
+                    continue;
+                }
                 const codey = looksLikeCode(line);
                 if (codey === false && line.trim() === '') {       // 空行：保持当前缓冲
                     (mode === 'code' ? code : prose).push('');
@@ -326,13 +338,27 @@
             return out;
         }
 
-        // 卡片正文 HTML：散文 → <p>，代码 → <pre class="mc-code"><code class="language-c hljs-code">
+        // 卡片正文 HTML：散文 → <p>，代码 → <pre class="mc-code"><code class="language-c hljs-code">，表格 → <table class="mc-table">
         function cardBodyHtml(node) {
             const segs = segmentCardBody(node.d);
             let html = '';
             for (const s of segs) {
                 if (s.t === 'code') {
                     html += `<pre class="mc-code"><code class="language-c hljs-code">${esc(s.text)}</code></pre>`;
+                } else if (s.t === 'table') {
+                    const rows = s.text.split('\n').map(r => {
+                        let t = r.trim();
+                        if (t.startsWith('|')) t = t.slice(1);
+                        if (t.endsWith('|')) t = t.slice(0, -1);
+                        return t.split('|').map(c => esc(c.trim()));
+                    }).filter(r => r.length && r.some(c => c !== ''));
+                    if (!rows.length) continue;
+                    const head = rows[0], body = rows.slice(1);
+                    html += '<div class="mc-table-wrap"><table class="mc-table"><thead><tr>'
+                        + head.map(c => `<th>${c}</th>`).join('')
+                        + '</tr></thead><tbody>'
+                        + body.map(r => '<tr>' + r.map(c => `<td>${c}</td>`).join('') + '</tr>').join('')
+                        + '</tbody></table></div>';
                 } else {
                     const paras = s.text.split(/\n{2,}/).map(x => x.trim()).filter(Boolean);
                     html += paras.map(p => `<p class="mc-text">${esc(p).replace(/\n/g, '<br>')}</p>`).join('');

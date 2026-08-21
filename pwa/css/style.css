@@ -3468,6 +3468,34 @@ a.chapter-badge-link:hover {
 }
 .mc-text:last-child { margin-bottom: 0; }
 
+/* 卡片内 markdown 表格（横向溢出可滚动） */
+.mc-table-wrap {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    margin: 10px 0;
+}
+.map-card .mc-table {
+    border-collapse: collapse;
+    width: 100%;
+    min-width: 520px;
+    font-size: 0.86rem;
+    line-height: 1.6;
+    color: var(--text);
+}
+.map-card .mc-table th,
+.map-card .mc-table td {
+    border: 1px solid var(--border);
+    padding: 6px 10px;
+    text-align: left;
+    vertical-align: top;
+    word-break: break-word;
+}
+.map-card .mc-table th {
+    background: var(--light);
+    font-weight: 600;
+    white-space: nowrap;
+}
+
 /* 代码块（highlight.js 主题负责 token 配色，这里只定容器） */
 .mc-code {
     margin: 8px 0;
