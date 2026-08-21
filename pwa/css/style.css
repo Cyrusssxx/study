@@ -809,59 +809,71 @@ body {
     cursor: default;
 }
 
-/* ===== 左右侧栏整栏收起把手（小方块） ===== */
-.side-rail {
-    flex-shrink: 0;
-    width: 26px;
-    height: 44px;
-    align-self: flex-start;
-    position: sticky;
-    top: 76px;
+/* ===== 侧栏内嵌收起按钮（嵌入目录右上角，收起后侧栏收成窄条） ===== */
+.side-toggle {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    z-index: 2;
     border: 1px solid var(--border);
-    border-radius: 8px;
-    background: var(--card-bg);
-    color: var(--text-light);
-    font-size: 0.72rem;
+    background: var(--bg);
+    color: var(--text-dim);
+    border-radius: 6px;
+    width: 26px;
+    height: 26px;
     line-height: 1;
+    font-size: 12px;
     cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
+    flex: none;
     transition: color .15s ease, border-color .15s ease, background .15s ease;
-    z-index: 5;
-    box-shadow: var(--shadow);
 }
-.side-rail:hover {
+.side-toggle:hover {
     color: var(--primary);
     border-color: var(--primary);
 }
-.side-rail-left::before { content: '◀'; }
-.side-rail-right::before { content: '▶'; }
-.quiz-layout.chapter-collapsed .side-rail-left::before { content: '▶'; }
-.quiz-layout.number-collapsed .side-rail-right::before { content: '◀'; }
 
 /* 折叠动画：宽度+透明度短促收合（0.15s，自然抽屉感） */
 .chapter-sidebar { transition: width .15s ease, opacity .15s ease; }
 .quiz-layout.chapter-collapsed .chapter-sidebar {
-    width: 0;
+    width: 26px;
     min-width: 0;
     padding: 0;
     margin: 0;
     border: none;
     box-shadow: none;
     overflow: hidden;
-    opacity: 0;
+    opacity: 1;
+}
+.quiz-layout.chapter-collapsed .chapter-sidebar .sidebar-title,
+.quiz-layout.chapter-collapsed .chapter-sidebar .chapter-tree {
+    display: none;
+}
+.quiz-layout.chapter-collapsed .chapter-sidebar .side-toggle {
+    top: 50%;
+    right: auto;
+    left: 50%;
+    transform: translate(-50%, -50%) rotate(180deg);
 }
 .number-sidebar { transition: width .15s ease, opacity .15s ease; }
 .quiz-layout.number-collapsed .number-sidebar {
-    width: 0;
+    width: 26px;
     min-width: 0;
     padding: 0;
     margin: 0;
     border: none;
     box-shadow: none;
     overflow: hidden;
-    opacity: 0;
+    opacity: 1;
+}
+.quiz-layout.number-collapsed .number-sidebar .sidebar-title,
+.quiz-layout.number-collapsed .number-sidebar .number-panel {
+    display: none;
+}
+.quiz-layout.number-collapsed .number-sidebar .side-toggle {
+    top: 50%;
+    right: auto;
+    left: 50%;
+    transform: translate(-50%, -50%) rotate(180deg);
 }
 
 .number-panel {
@@ -936,6 +948,11 @@ body {
     justify-content: space-between;
     align-items: center;
     user-select: none;
+}
+/* 右上角内嵌收起按钮让位 */
+.chapter-sidebar .sidebar-title,
+.number-sidebar .sidebar-title {
+    padding-right: 42px;
 }
 
 .sidebar-toggle {
@@ -1258,8 +1275,8 @@ body {
     .quiz-layout {
         flex-direction: column;
     }
-    /* 窄屏：隐藏收起把手，折叠态侧栏仍完整展示（堆叠形态） */
-    .side-rail {
+    /* 窄屏：隐藏收起按钮，折叠态侧栏仍完整展示（堆叠形态） */
+    .side-toggle {
         display: none;
     }
     .quiz-layout.chapter-collapsed .chapter-sidebar,
@@ -1271,6 +1288,14 @@ body {
         margin: 0;
         border: none;
         box-shadow: var(--shadow);
+    }
+    .quiz-layout.chapter-collapsed .sidebar-title,
+    .quiz-layout.number-collapsed .sidebar-title {
+        display: flex;
+    }
+    .quiz-layout.chapter-collapsed .chapter-tree,
+    .quiz-layout.number-collapsed .number-panel {
+        display: block;
     }
     .chapter-sidebar {
         width: 100%;

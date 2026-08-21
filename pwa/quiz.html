@@ -43,9 +43,9 @@
     </nav>
     <main class="container">
         <div class="quiz-layout" id="quizLayout">
-            <button class="side-rail side-rail-left" id="chapterRail" onclick="toggleQuizSidebar('chapter')"
-                title="收起/展开章节导航" aria-label="收起/展开章节导航"></button>
             <aside class="chapter-sidebar">
+                <button class="side-toggle" onclick="toggleQuizSidebar('chapter')"
+                    title="收起/展开章节导航" aria-label="收起/展开章节导航">◀</button>
                 <div class="sidebar-title" onclick="this.parentElement.classList.toggle('collapsed')">
                     章节导航 <span class="sidebar-toggle">▾</span>
                 </div>
@@ -84,11 +84,11 @@
             </div>
 
             <aside class="number-sidebar">
+                <button class="side-toggle" onclick="toggleQuizSidebar('number')"
+                    title="收起/展开题号" aria-label="收起/展开题号">◀</button>
                 <div class="sidebar-title">题号</div>
                 <div class="number-panel" id="numberPanel"></div>
             </aside>
-            <button class="side-rail side-rail-right" id="numberRail" onclick="toggleQuizSidebar('number')"
-                title="收起/展开题号" aria-label="收起/展开题号"></button>
         </div>
     </main>
     <script src="js/common.js"></script>
