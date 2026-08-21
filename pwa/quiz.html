@@ -140,14 +140,16 @@
         const layout = document.getElementById('quizLayout');
         const cls = side === 'chapter' ? 'chapter-collapsed' : 'number-collapsed';
         const collapsed = layout.classList.toggle(cls);
-        localStorage.setItem('quiz_' + side + '_collapsed', collapsed ? '1' : '0');
+        localStorage.setItem('quiz_sidebar_' + side, collapsed ? '1' : '0');
     }
 
     function initQuizSidebars() {
         const layout = document.getElementById('quizLayout');
         if (!layout) return;
         ['chapter', 'number'].forEach(side => {
-            if (localStorage.getItem('quiz_' + side + '_collapsed') === '1') {
+            // v2 改用新 key（旧 key quiz_*_collapsed 残留会让侧栏意外收起，作废）
+            localStorage.removeItem('quiz_' + side + '_collapsed');
+            if (localStorage.getItem('quiz_sidebar_' + side) === '1') {
                 layout.classList.add(side === 'chapter' ? 'chapter-collapsed' : 'number-collapsed');
             }
         });

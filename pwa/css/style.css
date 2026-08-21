@@ -839,7 +839,9 @@ body {
     min-width: 0;
     padding: 0;
     margin: 0;
-    border: none;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    background: var(--light);
     box-shadow: none;
     overflow: hidden;
     opacity: 1;
@@ -853,6 +855,8 @@ body {
     right: auto;
     left: 50%;
     transform: translate(-50%, -50%) rotate(180deg);
+    background: var(--card-bg);
+    box-shadow: var(--shadow);
 }
 .number-sidebar { transition: width .15s ease, opacity .15s ease; }
 .quiz-layout.number-collapsed .number-sidebar {
@@ -860,7 +864,9 @@ body {
     min-width: 0;
     padding: 0;
     margin: 0;
-    border: none;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    background: var(--light);
     box-shadow: none;
     overflow: hidden;
     opacity: 1;
@@ -874,6 +880,8 @@ body {
     right: auto;
     left: 50%;
     transform: translate(-50%, -50%) rotate(180deg);
+    background: var(--card-bg);
+    box-shadow: var(--shadow);
 }
 
 .number-panel {
