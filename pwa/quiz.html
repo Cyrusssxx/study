@@ -247,24 +247,48 @@
         if (e.code === keybinds.prev) { e.preventDefault(); prevQuestion(); }
         else if (e.code === keybinds.next) { e.preventDefault(); nextQuestion(); }
     });
-    // 鼠标侧键（button 3/4）：捕获 + 触发翻题 + 拦截浏览器前进/后退
-    // sideGuard 开启时：任何侧键一律拦截（含未绑定的），绝不触发浏览器前进/后退
-    document.addEventListener('mousedown', e => {
-        if (e.button !== 3 && e.button !== 4 || inEditable(e)) return;
+    // ==================== 鼠标侧键（button 3/4）：拦截前进/后退 + 翻题 ====================
+    // 双层防护：
+    //  1) mousedown/mouseup/auxclick 捕获阶段 preventDefault（多数 Chrome 版本有效）
+    //  2) popstate 兜底——若某版本 Chrome 在浏览器进程层直接执行后退/前进（JS 拦不住），
+    //     导航发生后立即恢复历史锚点，并把侧键转成翻题（用户感知=侧键直接翻题，绝不后退）
+    let lastSideKeyAt = 0, lastSideButton = 0, popHandledAt = 0;
+    const sideTakeover = e => {   // 该侧键是否应由本页接管
         const code = e.button === 3 ? 'mouse3' : 'mouse4';
-        if (capturing || sideGuard || code === keybinds.prev || code === keybinds.next) e.preventDefault();
-    }, true);
+        return capturing || sideGuard || code === keybinds.prev || code === keybinds.next;
+    };
+    ['mousedown', 'mouseup'].forEach(evt => {
+        document.addEventListener(evt, e => {
+            if (e.button !== 3 && e.button !== 4 || inEditable(e)) return;
+            if (sideTakeover(e)) {
+                lastSideKeyAt = Date.now();
+                lastSideButton = e.button;
+                e.preventDefault();
+            }
+        }, true);
+    });
     document.addEventListener('auxclick', e => {
         const b = e.button;
         if (b !== 3 && b !== 4) return;
+        lastSideKeyAt = Date.now();
+        lastSideButton = b;
         if (capturing) { e.preventDefault(); e.stopPropagation(); applyCapture(b === 3 ? 'mouse3' : 'mouse4'); return; }
         if (inEditable(e)) return;
-        const code = b === 3 ? 'mouse3' : 'mouse4';
-        if (sideGuard || code === keybinds.prev || code === keybinds.next) {
+        if (sideTakeover(e)) {
             e.preventDefault();
-            if (code === keybinds.prev) prevQuestion();
-            else if (code === keybinds.next) nextQuestion();
+            if (Date.now() - popHandledAt < 120) return;   // popstate 兜底刚翻过题，防双翻
+            if (b === 3 && keybinds.prev === 'mouse3') prevQuestion();
+            else if (b === 4 && keybinds.next === 'mouse4') nextQuestion();
         }
+    });
+    // popstate 兜底：同文档后退/前进发生瞬间恢复 + 转翻题
+    window.addEventListener('popstate', () => {
+        if (Date.now() - lastSideKeyAt > 400) return;   // 非侧键引起（手动后退等）→ 放行
+        if (Date.now() - popHandledAt < 50) return;
+        popHandledAt = Date.now();
+        try { history.pushState({ quizGuard: 1 }, '', location.href); } catch (err) { }
+        if (lastSideButton === 3 && keybinds.prev === 'mouse3') prevQuestion();
+        else if (lastSideButton === 4 && keybinds.next === 'mouse4') nextQuestion();
     });
     // Firefox 专用侧键事件
     document.addEventListener('mouseback', e => {
@@ -277,6 +301,8 @@
         if (capturing) applyCapture('mouse4');
         else if (keybinds.next === 'mouse4') nextQuestion();
     });
+    // 进入页面制造同文档历史锚点：否则侧键后退=跨文档导航（页面卸载），popstate 兜底失效
+    try { history.pushState({ quizGuard: 1 }, '', location.href); } catch (err) { }
 
     async function loadQuizQuestions() {
         try {
