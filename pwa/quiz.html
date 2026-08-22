@@ -353,6 +353,19 @@
                 if (gi >= 0) currentIndex = gi;
             }
 
+            // 刷新后自动回到上次做的题：无显式 chapter/goto 定位时，从练习历史恢复
+            if (!CHAPTER && !GOTO) {
+                try {
+                    const key = [SUBJECT, MODE, CHAPTER, SECTION].join('|');
+                    const list = JSON.parse(localStorage.getItem('practiceHistory')) || [];
+                    const rec = list.find(e => [e.subject, e.mode, e.chapter || '', e.section || ''].join('|') === key);
+                    if (rec && rec.qid) {
+                        const ri = questions.findIndex(q => q.id === rec.qid);
+                        if (ri >= 0) currentIndex = ri;
+                    }
+                } catch (e) { /* 恢复失败保持首题 */ }
+            }
+
             noteShown = !!questions[currentIndex].note;  // 有笔记的题默认展开笔记面板
             renderQuestion();
         } catch (e) {
