@@ -144,16 +144,23 @@
     <script>
     let DATI = null;
     let activeSubject = localStorage.getItem('datiSubject') || 'os';
-    let filter = 'all';          // all | real | fav
-    let year = '';               // '' = 全部年份
+    let filter = localStorage.getItem('datiFilter') || 'all';   // all | real | fav
+    let year = localStorage.getItem('datiYear') || '';          // '' = 全部年份
     let favSet = new Set();      // 当前科目已收藏的题 id
     const ansTpl = {};           // 答案图片 HTML 模板，首次展开时注入
     let noteMap = {};            // qid -> {content, images}，dati 题笔记
-    let noteOpen = new Set();    // 展开中的笔记面板 qid
+    let noteOpen = new Set(JSON.parse(localStorage.getItem('datiNoteOpen') || '[]'));  // 展开中的笔记面板 qid
+    let ansOpen = new Set(JSON.parse(localStorage.getItem('datiAnsOpen') || '[]'));    // 展开中的答案面板 qid
     let openChapters = new Set(JSON.parse(localStorage.getItem('datiOpenCh') || '[]'));  // 已展开的章节（默认收起，按需加载图片）
 
     function saveOpenChapters() {
         localStorage.setItem('datiOpenCh', JSON.stringify([...openChapters]));
+    }
+    function saveAnsOpen() {
+        localStorage.setItem('datiAnsOpen', JSON.stringify([...ansOpen]));
+    }
+    function saveNoteOpen() {
+        localStorage.setItem('datiNoteOpen', JSON.stringify([...noteOpen]));
     }
 
     const img = (key, fn) => `<img src="data/dati_figs/${key}/${fn}" loading="lazy" alt="大题截图">`;
@@ -167,6 +174,12 @@
             await loadNotes();
             renderTabs();
             renderYearOptions();
+            // 恢复上次的筛选/年份 UI 状态
+            document.getElementById('fAll').classList.toggle('active', filter === 'all');
+            document.getElementById('fReal').classList.toggle('active', filter === 'real');
+            document.getElementById('fFav').classList.toggle('active', filter === 'fav');
+            document.getElementById('yearSel').style.display = filter === 'real' ? '' : 'none';
+            document.getElementById('yearSel').value = year;
             render();
         } catch (e) {
             document.getElementById('datiRoot').innerHTML = `<div class="error">加载失败</div>`;
@@ -229,6 +242,7 @@
 
     function setFilter(f) {
         filter = f;
+        localStorage.setItem('datiFilter', f);
         document.getElementById('yearSel').style.display = f === 'real' ? '' : 'none';
         document.getElementById('fAll').classList.toggle('active', f === 'all');
         document.getElementById('fReal').classList.toggle('active', f === 'real');
@@ -236,7 +250,7 @@
         render();
     }
 
-    function setYear(v) { year = v; render(); }
+    function setYear(v) { year = v; localStorage.setItem('datiYear', v); render(); }
 
     function passFilter(q) {
         if (filter === 'real') return q.real && (!year || String(q.year) === String(year));
@@ -301,6 +315,8 @@
         if (!box) return;
         if (box.classList.contains('open')) {
             box.classList.remove('open');
+            ansOpen.delete(qid);
+            saveAnsOpen();
             if (btn) btn.textContent = '查看答案';
             return;
         }
@@ -309,6 +325,8 @@
             box.dataset.filled = '1';
         }
         box.classList.add('open');
+        ansOpen.add(qid);
+        saveAnsOpen();
         if (btn) btn.textContent = '收起答案';
         box.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
     }
@@ -418,6 +436,22 @@
             if (ta) { ta.value = note.content || ''; autoResizeNote(ta); }
             renderNoteImages(qid, p.querySelector('[data-note-imgs]'));
         });
+        // 恢复刷新前已展开的答案面板（填充答案图 + 按钮文案）
+        root.querySelectorAll('.dati-abody[data-ans]').forEach(box => {
+            const qid = box.dataset.ans;
+            if (!ansOpen.has(qid)) return;
+            if (!box.dataset.filled) {
+                box.innerHTML = ansTpl[qid] || '';
+                box.dataset.filled = '1';
+            }
+            box.classList.add('open');
+            const btn = root.querySelector(`.dati-ans-btn[data-qid="${qid}"]`);
+            if (btn) btn.textContent = '收起答案';
+        });
+        // 恢复刷新前已打开的笔记面板的按钮高亮
+        root.querySelectorAll('.dati-note-btn[data-qid]').forEach(btn => {
+            if (noteOpen.has(btn.dataset.qid)) btn.classList.add('active');
+        });
         root.querySelectorAll('details.daka-group').forEach(d => {
             d.addEventListener('toggle', () => {
                 const k = d.dataset.chkey;
@@ -459,12 +493,14 @@
         if (p.style.display === 'none') {
             p.style.display = 'block';
             noteOpen.add(qid);
+            saveNoteOpen();
             if (btn) btn.classList.add('active');
             const ta = p.querySelector('.dati-note-input');
             if (ta) { ta.focus(); autoResizeNote(ta); }
         } else {
             p.style.display = 'none';
             noteOpen.delete(qid);
+            saveNoteOpen();
             if (btn) btn.classList.remove('active');
         }
     }
