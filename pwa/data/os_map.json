@@ -1,6 +1,6 @@
 {
-  "title": "操作系统 · PV操作总结思维导图",
-  "subtitle": "生产者-消费者六步骤解题法 · 每步配草图",
+  "title": "操作系统 · 考点思维导图",
+  "subtitle": "PV操作六步骤解题法 · 缺页处理完整流程",
   "roots": [
     {
       "n": "第2章 进程与线程",
@@ -54,6 +54,34 @@
             {
               "n": "四、补充注意",
               "d": "隐含的互斥：对临界区（如缓冲区）的访问必须互斥，即使题目未明说也要加 mutex。\n多个 P 连续出现时要格外小心：连续 P 容易造成死锁，重点检查顺序（同步 P 在前、互斥 P 在后）。\nV 操作顺序一般不影响死锁：通常先 V 互斥、再 V 同步，但调换一般不会死锁。\n信号量初值的含义：初值 = 初始可用资源数。互斥资源初值 1；空位同步初值 = 缓冲区容量 n；数据同步初值 = 0（初始无数据）。\n解题迁移：六步骤法同样适用于读者-写者、哲学家、理发师等，只需在步骤一调整进程类别、步骤三调整同步关系。"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "n": "第3章 内存管理",
+      "c": [
+        {
+          "n": "3.2 虚拟内存管理 · 缺页处理（重点）",
+          "c": [
+            {
+              "n": "缺页（Page Fault）是什么",
+              "d": "CPU 访问虚拟地址时，MMU（内存管理单元）查页表发现该虚拟页不在物理内存中（页表项状态位 P=0），触发缺页中断，由操作系统内核接管处理，整个过程对进程透明。\n缺页中断属于内中断（异常）中的故障（Fault）：在指令执行期间触发，处理完毕后 CPU 重新执行那条产生中断的指令（而非下一条）。\n一条指令执行期间可能引发多次缺页中断（如 copy A to B 跨页最多 6 次）。"
+            },
+            {
+              "n": "缺页处理完整流程（六步）",
+              "d": "① 检查地址是否合法：非法（空指针/越界）→ 段错误，杀死进程\n② 找空闲页框：无空闲 → 页面置换（选牺牲页，脏页先写回外存）\n③ 从磁盘/交换区读入数据（磁盘 I/O，缺页延迟主要来源）\n④ 更新页表项：填页框号，置有效位 P=1（页表项地址 = 页表基址 + 页号 × 页表项大小）\n⑤ 刷新 TLB（快表），无效化旧映射（x86 用 invlpg 指令）\n⑥ 恢复进程上下文，重新执行触发缺页的指令",
+              "svg": "<svg viewBox=\"0 0 660 640\" xmlns=\"http://www.w3.org/2000/svg\" style=\"max-width:100%;background:#f8fafc;border-radius:8px;display:block;margin:10px 0\"><defs><marker id=\"pf_map1\" markerWidth=\"10\" markerHeight=\"10\" refX=\"8\" refY=\"3\" orient=\"auto\"><polygon points=\"0,0 8,3 0,6\" fill=\"#475569\"/></marker></defs><rect x=\"210\" y=\"20\" width=\"240\" height=\"40\" rx=\"9\" fill=\"#e0e7ff\" stroke=\"#6366f1\" stroke-width=\"2\"/><text x=\"330\" y=\"45\" text-anchor=\"middle\" font-size=\"13\" fill=\"#1e293b\">CPU 访问虚拟地址 VA</text><line x1=\"330\" y1=\"60\" x2=\"330\" y2=\"86\" stroke=\"#475569\" stroke-width=\"2\" marker-end=\"url(#pf_map1)\"/><rect x=\"200\" y=\"88\" width=\"260\" height=\"40\" rx=\"9\" fill=\"#e0e7ff\" stroke=\"#6366f1\" stroke-width=\"2\"/><text x=\"330\" y=\"113\" text-anchor=\"middle\" font-size=\"13\" fill=\"#1e293b\">MMU 查页表，状态位 P=0</text><line x1=\"330\" y1=\"128\" x2=\"330\" y2=\"154\" stroke=\"#475569\" stroke-width=\"2\" marker-end=\"url(#pf_map1)\"/><rect x=\"185\" y=\"156\" width=\"290\" height=\"40\" rx=\"9\" fill=\"#e0e7ff\" stroke=\"#6366f1\" stroke-width=\"2\"/><text x=\"330\" y=\"181\" text-anchor=\"middle\" font-size=\"13\" fill=\"#1e293b\">触发缺页中断（进入内核态）</text><line x1=\"330\" y1=\"196\" x2=\"330\" y2=\"222\" stroke=\"#475569\" stroke-width=\"2\" marker-end=\"url(#pf_map1)\"/><rect x=\"30\" y=\"224\" width=\"600\" height=\"272\" rx=\"10\" fill=\"#eef2ff\" stroke=\"#6366f1\" stroke-width=\"2\"/><text x=\"330\" y=\"248\" text-anchor=\"middle\" font-size=\"14\" fill=\"#6366f1\" font-weight=\"bold\">缺页中断处理程序（操作系统内核）</text><rect x=\"50\" y=\"258\" width=\"560\" height=\"36\" rx=\"6\" fill=\"#f1f5f9\" stroke=\"#94a3b8\" stroke-width=\"1.5\"/><text x=\"64\" y=\"281\" text-anchor=\"start\" font-size=\"13\" fill=\"#1e293b\">① 检查地址是否合法：非法（空指针/越界）→ 段错误，杀死进程</text><rect x=\"50\" y=\"298\" width=\"560\" height=\"36\" rx=\"6\" fill=\"#f1f5f9\" stroke=\"#94a3b8\" stroke-width=\"1.5\"/><text x=\"64\" y=\"321\" text-anchor=\"start\" font-size=\"13\" fill=\"#1e293b\">② 找空闲页框：无空闲 → 页面置换（选牺牲页，脏页先写回）</text><rect x=\"50\" y=\"338\" width=\"560\" height=\"36\" rx=\"6\" fill=\"#f1f5f9\" stroke=\"#94a3b8\" stroke-width=\"1.5\"/><text x=\"64\" y=\"361\" text-anchor=\"start\" font-size=\"13\" fill=\"#1e293b\">③ 从磁盘/交换区读入数据（磁盘 I/O，缺页延迟主要来源）</text><rect x=\"50\" y=\"378\" width=\"560\" height=\"36\" rx=\"6\" fill=\"#f1f5f9\" stroke=\"#94a3b8\" stroke-width=\"1.5\"/><text x=\"64\" y=\"401\" text-anchor=\"start\" font-size=\"13\" fill=\"#1e293b\">④ 更新页表项：填页框号，置有效位 P=1</text><rect x=\"50\" y=\"418\" width=\"560\" height=\"36\" rx=\"6\" fill=\"#f1f5f9\" stroke=\"#94a3b8\" stroke-width=\"1.5\"/><text x=\"64\" y=\"441\" text-anchor=\"start\" font-size=\"13\" fill=\"#1e293b\">⑤ 刷新 TLB（快表），无效化旧映射（x86 可用 invlpg）</text><rect x=\"50\" y=\"458\" width=\"560\" height=\"36\" rx=\"6\" fill=\"#f1f5f9\" stroke=\"#94a3b8\" stroke-width=\"1.5\"/><text x=\"64\" y=\"481\" text-anchor=\"start\" font-size=\"13\" fill=\"#1e293b\">⑥ 恢复进程上下文，重新执行触发缺页的指令</text></svg>"
+            },
+            {
+              "n": "整体过程示意（虚拟地址空间 ↔ 物理内存 ↔ 磁盘）",
+              "d": "缺页处理后，操作系统把一个空闲物理页框分配给你，并把该页框号填入你的页表项，从而在虚拟地址空间和物理内存之间建立新的映射——整个过程对进程完全透明。",
+              "svg": "<svg viewBox=\"0 0 660 330\" xmlns=\"http://www.w3.org/2000/svg\" style=\"max-width:100%;background:#f8fafc;border-radius:8px;display:block;margin:10px 0\"><defs><marker id=\"pf_map2\" markerWidth=\"10\" markerHeight=\"10\" refX=\"8\" refY=\"3\" orient=\"auto\"><polygon points=\"0,0 8,3 0,6\" fill=\"#475569\"/></marker></defs><text x=\"120\" y=\"26\" text-anchor=\"middle\" font-size=\"12\" fill=\"#64748b\">虚拟地址空间（进程）</text><text x=\"330\" y=\"26\" text-anchor=\"middle\" font-size=\"12\" fill=\"#64748b\">物理内存（RAM）</text><text x=\"540\" y=\"26\" text-anchor=\"middle\" font-size=\"12\" fill=\"#64748b\">磁盘（swap / 文件）</text><rect x=\"30\" y=\"40\" width=\"180\" height=\"60\" rx=\"9\" fill=\"#e0e7ff\" stroke=\"#6366f1\" stroke-width=\"2\"/><text x=\"120\" y=\"67\" text-anchor=\"middle\" font-size=\"13\" fill=\"#1e293b\">虚拟页 048H</text><text x=\"120\" y=\"86\" text-anchor=\"middle\" font-size=\"11.5\" fill=\"#64748b\">（VA 触发缺页）</text><rect x=\"240\" y=\"40\" width=\"180\" height=\"60\" rx=\"9\" fill=\"#e0e7ff\" stroke=\"#6366f1\" stroke-width=\"2\"/><text x=\"330\" y=\"67\" text-anchor=\"middle\" font-size=\"13\" fill=\"#1e293b\">空闲页框 BAB40H</text><text x=\"330\" y=\"86\" text-anchor=\"middle\" font-size=\"11.5\" fill=\"#64748b\">（分配）</text><rect x=\"450\" y=\"40\" width=\"180\" height=\"60\" rx=\"9\" fill=\"#e0e7ff\" stroke=\"#6366f1\" stroke-width=\"2\"/><text x=\"540\" y=\"67\" text-anchor=\"middle\" font-size=\"13\" fill=\"#1e293b\">牺牲页数据</text><text x=\"540\" y=\"86\" text-anchor=\"middle\" font-size=\"11.5\" fill=\"#64748b\">（swap / 文件）</text><line x1=\"210\" y1=\"70\" x2=\"236\" y2=\"70\" stroke=\"#475569\" stroke-width=\"2\" marker-end=\"url(#pf_map2)\"/><line x1=\"420\" y1=\"58\" x2=\"446\" y2=\"58\" stroke=\"#475569\" stroke-width=\"2\" marker-end=\"url(#pf_map2)\"/><line x1=\"446\" y1=\"84\" x2=\"420\" y2=\"84\" stroke=\"#475569\" stroke-width=\"2\" marker-end=\"url(#pf_map2)\"/><text x=\"222\" y=\"118\" text-anchor=\"middle\" font-size=\"11.5\" fill=\"#64748b\">① 缺页</text><text x=\"433\" y=\"116\" text-anchor=\"middle\" font-size=\"11.5\" fill=\"#64748b\">② 换出（脏页写回）</text><text x=\"433\" y=\"132\" text-anchor=\"middle\" font-size=\"11.5\" fill=\"#64748b\">③ 读入数据</text><line x1=\"330\" y1=\"100\" x2=\"330\" y2=\"140\" stroke=\"#475569\" stroke-width=\"2\" marker-end=\"url(#pf_map2)\"/><text x=\"352\" y=\"122\" text-anchor=\"start\" font-size=\"11.5\" fill=\"#64748b\">调入完成</text><rect x=\"30\" y=\"142\" width=\"600\" height=\"170\" rx=\"10\" fill=\"#eef2ff\" stroke=\"#6366f1\" stroke-width=\"2\"/><text x=\"330\" y=\"166\" text-anchor=\"middle\" font-size=\"14\" fill=\"#6366f1\" font-weight=\"bold\">④ 更新页表项：虚拟页 048H → 页框 BAB40H（有效位 P=1）</text><rect x=\"50\" y=\"180\" width=\"560\" height=\"36\" rx=\"6\" fill=\"#f1f5f9\" stroke=\"#94a3b8\" stroke-width=\"1.5\"/><text x=\"64\" y=\"203\" text-anchor=\"start\" font-size=\"13\" fill=\"#1e293b\">⑤ 刷新 TLB（快表），无效化旧映射（invlpg）</text><rect x=\"50\" y=\"222\" width=\"560\" height=\"36\" rx=\"6\" fill=\"#f1f5f9\" stroke=\"#94a3b8\" stroke-width=\"1.5\"/><text x=\"64\" y=\"245\" text-anchor=\"start\" font-size=\"13\" fill=\"#1e293b\">⑥ 重新执行指令，MMU 命中 → 得到物理地址，继续执行</text></svg>"
+            },
+            {
+              "n": "页面置换算法：如何选牺牲页",
+              "d": "内存无空闲页框时，由页面置换算法选牺牲页（victim page）：\nOPT：淘汰「以后永不使用或最长时间不再被访问」的页（理论最优，无法实现，仅作评价基准）\nFIFO：淘汰「最先进入内存」的页（实现最简单，唯一可能发生 Belady 异常）\nLRU：淘汰「最近最久未使用」的页（性能接近 OPT，需栈/寄存器支持、开销大）\nCLOCK：访问位循环扫描、1→0 给第二次机会，近似 LRU；改进型再结合修改位降低写回 I/O"
             }
           ]
         }
