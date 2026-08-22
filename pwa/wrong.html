@@ -153,7 +153,21 @@
         }
     }
 
+    // 状态持久化：恢复筛选条件（科目/排序/只看真题/显示已解决）
+    const ps = PS.get({ subject: '', sort: '', realOnly: false, showResolved: false });
+    const setEl = (id, v) => { const el = document.getElementById(id); if (el) el.value = v; };
+    const setCk = (id, v) => { const el = document.getElementById(id); if (el) el.checked = !!v; };
+    setEl('subjectFilter', ps.subject); setEl('sortFilter', ps.sort);
+    setCk('realOnly', ps.realOnly); setCk('showResolved', ps.showResolved);
+    window.addEventListener('pagehide', () => PS.set({
+        subject: document.getElementById('subjectFilter').value,
+        sort: document.getElementById('sortFilter').value,
+        realOnly: document.getElementById('realOnly').checked,
+        showResolved: document.getElementById('showResolved').checked
+    }));
+
     loadWrongQuestions();
+    PS.restoreScroll();
     </script>
 </body>
 </html>

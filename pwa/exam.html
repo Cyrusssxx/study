@@ -410,6 +410,7 @@
 
     function setResultFilter(wrongOnly) {
         resultWrongOnly = wrongOnly;
+        PS.set({ resultWrongOnly: wrongOnly });
         renderResult(lastResult, lastFromHistory);
     }
 
@@ -517,6 +518,20 @@
 
     // 恢复上次的"错题入本"选择（默认开启）
     document.getElementById('recordWrong').checked = localStorage.getItem('examRecordWrong') !== '0';
+
+    // 状态持久化：恢复组卷设置（科目/题数/时长）与结果页"只看错题"开关；变化时保存
+    const ps = PS.get({ mode: '', count: '', minutes: '', resultWrongOnly: null });
+    if (ps.mode) {
+        const m = document.getElementById('examMode');
+        if ([...m.options].some(o => o.value === ps.mode)) { m.value = ps.mode; onModeChange(); }
+    }
+    if (ps.count) document.getElementById('examCount').value = ps.count;
+    if (ps.minutes) document.getElementById('examMinutes').value = ps.minutes;
+    if (ps.resultWrongOnly != null) resultWrongOnly = !!ps.resultWrongOnly;
+    document.getElementById('examMode').addEventListener('change', () => PS.set({ mode: document.getElementById('examMode').value }));
+    document.getElementById('examCount').addEventListener('change', () => PS.set({ count: document.getElementById('examCount').value }));
+    document.getElementById('examMinutes').addEventListener('change', () => PS.set({ minutes: document.getElementById('examMinutes').value }));
+
     checkActive();
     
     // ============ 辅助函数 ============

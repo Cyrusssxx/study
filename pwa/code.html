@@ -190,6 +190,15 @@
     }
 
     loadCode();
+    // 状态持久化：恢复组展开状态（折叠面板）+ 滚动位置；离开时保存
+    const grp = PS.get({ groups: null }).groups;
+    if (Array.isArray(grp)) {
+        document.querySelectorAll('details[id^="group-"]').forEach(d => { d.open = grp.includes(d.id); });
+    }
+    window.addEventListener('pagehide', () => PS.set({
+        groups: [...document.querySelectorAll('details[id^="group-"]')].filter(d => d.open).map(d => d.id)
+    }));
+    PS.restoreScroll();
     </script>
 </body>
 </html>

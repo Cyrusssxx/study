@@ -149,7 +149,18 @@
         container.innerHTML = html;
     }
 
+    // 状态持久化：恢复上次的搜索词与科目并自动搜索；输入变化时保存
+    const ps = PS.get({ q: '', subject: '' });
+    if (ps.q || ps.subject) {
+        document.getElementById('searchInput').value = ps.q || '';
+        if (ps.subject) document.getElementById('subjectFilter').value = ps.subject;
+        doSearch();
+    }
+    document.getElementById('searchInput').addEventListener('input', () => PS.set({ q: document.getElementById('searchInput').value }));
+    document.getElementById('subjectFilter').addEventListener('change', () => PS.set({ subject: document.getElementById('subjectFilter').value }));
+
     document.getElementById('searchInput').focus();
+    PS.restoreScroll();
     </script>
 </body>
 </html>

@@ -241,3 +241,46 @@ function toggleAutoNext() {
 }
 
 renderAutoNextSwitch();
+
+// ============ 页面状态持久化：刷新后恢复浏览状态（滚动位置 + 页面交互状态） ============
+// 通用机制：所有页面自动获得「滚动位置」恢复；页面交互状态（搜索词/筛选/tab/折叠面板）
+// 由各页用 PS.get/PS.set 存取，并在数据渲染完成后调用 PS.restoreScroll() 精准恢复。
+const PS = (() => {
+    const pageKey = () => 'ps_' + location.pathname.split('/').pop();
+    const scrollKey = () => 'ps_scroll_' + location.pathname.split('/').pop();
+    const read = () => { try { return JSON.parse(localStorage.getItem(pageKey()) || '{}'); } catch (e) { return {}; } };
+    return {
+        // 读取本页状态（合并默认值）
+        get(def) { return Object.assign({}, def || {}, read()); },
+        // 合并写入本页状态
+        set(patch) {
+            try { localStorage.setItem(pageKey(), JSON.stringify(Object.assign(read(), patch))); } catch (e) { /* 隐私模式等场景静默失败 */ }
+        },
+        // 恢复滚动位置：内容异步渲染的页面在数据加载渲染完成后调用一次；
+        // 内置多帧补偿（最长约 1.2s），页面高度后移时自动追滚。
+        restoreScroll(offsetTop) {
+            let y = null;
+            try { y = parseInt(sessionStorage.getItem(scrollKey()) || '', 10); } catch (e) {}
+            if (y === null || !isFinite(y) || y < 0) return;
+            const target = () => Math.max(0, y - (offsetTop || 0));
+            window.scrollTo(0, target());
+            let tries = 0;
+            const retry = () => {
+                if (++tries > 6) return;
+                const t = target();
+                const doc = document.documentElement;
+                if (Math.abs(window.scrollY - t) < 4 && (doc.scrollHeight - window.innerHeight) >= t - 2) return;
+                window.scrollTo(0, t);
+                setTimeout(retry, 200);
+            };
+            setTimeout(retry, 200);
+        }
+    };
+})();
+
+// 离开/刷新页面时保存滚动位置（pagehide 兼容移动端 & 不阻塞 bfcache）
+window.addEventListener('pagehide', () => {
+    try { sessionStorage.setItem('ps_scroll_' + location.pathname.split('/').pop(), String(window.scrollY)); } catch (e) {}
+});
+// 普通同步页面：load 后自动恢复；异步渲染页随后续逐页调 PS.restoreScroll() 更精准
+window.addEventListener('load', () => { setTimeout(() => PS.restoreScroll(), 60); });

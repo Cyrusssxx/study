@@ -628,6 +628,8 @@
     }
 
     loadDati();
+    // 状态持久化：页面交互状态已持久化，此处补滚动位置恢复（数据渲染完成后）
+    PS.restoreScroll();
     </script>
 </body>
 </html>

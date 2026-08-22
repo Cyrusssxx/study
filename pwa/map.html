@@ -518,6 +518,7 @@
 
         function onMapSearch() {
             searchQ = document.getElementById('mapSearch').value.trim().toLowerCase();
+            PS.set({ q: searchQ });
             matchIds.clear(); forcedOpen.clear();
             if (searchQ) {
                 (function walk(nodes) {
@@ -558,6 +559,13 @@
                 initHl();
                 loadAnnos();
                 loadHighlights();
+                // 状态持久化：恢复上次搜索词（自动重放搜索：高亮+目录定位）
+                const ps = PS.get({ q: '' });
+                if (ps.q) {
+                    document.getElementById('mapSearch').value = ps.q;
+                    onMapSearch();
+                }
+                PS.restoreScroll();
             } catch (err) {
                 document.getElementById('mapSubtitle').textContent = '导图数据加载失败：' + err.message;
                 document.getElementById('mapRoot').innerHTML = '<div class="map-empty">加载失败，请检查网络后刷新。</div>';

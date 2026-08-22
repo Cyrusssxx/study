@@ -383,6 +383,7 @@
         ys.innerHTML = '<option value="">全部年份</option>' + years.map(y =>
             `<option value="${y}">${y} 年 (${quizAllQuestions.filter(q => q.exam_year === y).length})</option>`).join('');
         if (YEAR) ys.value = YEAR;
+        else { const py = PS.get({ year: '' }).year; if (py && [...ys.options].some(o => o.value === py)) ys.value = py; }
         const y = ys.value;
         if (y) questions = quizAllQuestions.filter(q => String(q.exam_year) === String(y));
     }
@@ -390,6 +391,7 @@
     // 切换年份：重新筛选题目并回到第一题
     function onYearChange() {
         const y = document.getElementById('yearFilter').value;
+        PS.set({ year: y });
         questions = y ? quizAllQuestions.filter(q => String(q.exam_year) === String(y)) : quizAllQuestions.slice();
         totalQuestions = questions.length;
         currentIndex = 0;

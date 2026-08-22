@@ -668,6 +668,14 @@
                 wrap.appendChild(t);
             });
             initAnnoAndHl();
+
+            // 状态持久化：恢复上次搜索词（自动重放搜索）与滚动位置
+            const ps = PS.get({ q: '' });
+            if (ps.q) {
+                const si = document.getElementById('notesSearchInput');
+                if (si) { si.value = ps.q; doNoteSearch(ps.q); }
+            }
+            PS.restoreScroll();
         }
 
         // ==================== 考点笔记：行级批注 + 划词高亮 ====================
@@ -752,6 +760,7 @@
         }
 
         function doNoteSearch(q) {
+            PS.set({ q: q || '' });
             const box = document.getElementById('notesSearchResults');
             if (!box) return;
             q = q.trim().toLowerCase();

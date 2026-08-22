@@ -132,7 +132,13 @@
         }
     }
 
+    // 状态持久化：恢复科目筛选；变化时保存
+    const ps = PS.get({ subject: '' });
+    if (ps.subject) document.getElementById('subjectFilter').value = ps.subject;
+    document.getElementById('subjectFilter').addEventListener('change', () => PS.set({ subject: document.getElementById('subjectFilter').value }));
+
     loadFavorites();
+    PS.restoreScroll();
     </script>
 </body>
 </html>
