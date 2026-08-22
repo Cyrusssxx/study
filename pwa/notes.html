@@ -67,10 +67,61 @@
             notesLayout.classList.add('notes-toc-collapsed');
             document.getElementById('notesTocToggle').textContent = '»';
         }
+        // 目录收起/展开：用 Web Animations API（transform+opacity，合成器属性）驱动动画，
+        // 动画帧零布局重排（避免 width 动画导致长文档每帧 reflow 卡顿）；
+        // 宽度归零/恢复在动画结束帧一次性完成（单帧布局，视觉无感）。
+        const TOC_ANIM_OPT = { duration: 180, easing: 'ease' };
+        let tocAnimating = false; // 动画进行中忽略重复点击，避免动画叠加错乱
         function toggleNotesToc() {
-            const collapsed = notesLayout.classList.toggle('notes-toc-collapsed');
-            localStorage.setItem('notes_toc_collapsed', collapsed ? '1' : '0');
-            document.getElementById('notesTocToggle').textContent = collapsed ? '»' : '«';
+            if (tocAnimating) return;
+            const toc = document.getElementById('notesToc');
+            const collapsing = !notesLayout.classList.contains('notes-toc-collapsed');
+            const btn = document.getElementById('notesTocToggle');
+            // 老浏览器无 WAAPI 时回退：直接切换（无动画）
+            if (typeof toc.animate !== 'function') {
+                const done = () => {
+                    notesLayout.classList.toggle('notes-toc-collapsed');
+                    localStorage.setItem('notes_toc_collapsed', notesLayout.classList.contains('notes-toc-collapsed') ? '1' : '0');
+                    btn.textContent = notesLayout.classList.contains('notes-toc-collapsed') ? '»' : '«';
+                };
+                done();
+                return;
+            }
+            tocAnimating = true;
+            if (collapsing) {
+                // ① 滑出 + 淡出（transform/opacity，合成器属性，动画帧零重排；动画期间目录仍占位，内容区不动）
+                const a = toc.animate(
+                    [{ transform: 'none', opacity: 1 }, { transform: 'translateX(-120%)', opacity: 0 }],
+                    TOC_ANIM_OPT
+                );
+                // ② 动画结束后：宽度归零（单帧一次 reflow）+ 持久化
+                a.onfinish = () => {
+                    notesLayout.classList.add('notes-toc-collapsed');
+                    localStorage.setItem('notes_toc_collapsed', '1');
+                    btn.textContent = '»';
+                    tocAnimating = false;
+                };
+            } else {
+                // ① 先把目录藏到左侧（不可见），再恢复占位宽度，避免闪烁
+                toc.style.transition = 'none';
+                toc.style.transform = 'translateX(-120%)';
+                toc.style.opacity = '0';
+                notesLayout.classList.remove('notes-toc-collapsed');
+                void toc.offsetHeight; // 强制应用隐藏起点
+                // ② 滑入 + 淡入
+                const a = toc.animate(
+                    [{ transform: 'translateX(-120%)', opacity: 0 }, { transform: 'none', opacity: 1 }],
+                    TOC_ANIM_OPT
+                );
+                a.onfinish = () => {
+                    toc.style.transform = '';
+                    toc.style.opacity = '';
+                    toc.style.transition = '';
+                    localStorage.setItem('notes_toc_collapsed', '0');
+                    btn.textContent = '«';
+                    tocAnimating = false;
+                };
+            }
         }
 
         // 题目旧 section 名（王道）→ 笔记新 section 名（袁书/新版）映射表

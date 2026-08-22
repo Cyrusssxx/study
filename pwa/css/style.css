@@ -2563,11 +2563,6 @@ mark {
     opacity: 0;
 }
 .notes-toc {
-    transition: width .15s ease, opacity .15s ease;
-}
-
-/* 左侧目录树：吸顶跟随滚动 */
-.notes-toc {
     position: sticky;
     top: 76px;
     width: 230px;
@@ -2578,6 +2573,8 @@ mark {
     border-radius: var(--radius);
     box-shadow: var(--shadow);
     padding: 12px 8px;
+    /* 收起/展开动画由 JS 的 Web Animations API 驱动（transform+opacity，零重排），
+       不再用 width transition 触发逐帧布局重排 */
 }
 
 /* 搜索框：侧边栏内紧凑样式，吸顶固定不随目录滚动 */
