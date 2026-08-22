@@ -443,9 +443,17 @@
                 const subs = (r.c || []).map((sec, si) =>
                     `<a class="ol-nav-item sub" data-target="sec-${ri}-${si}" title="${esc(sec.n)}">${esc(sec.n)}</a>`
                 ).join('');
+                // 搜索模式：在该节下补出命中的卡片节点（第三层），直观展示模块在目录树中的层级位置
+                let cards = '';
+                if (searchQ && matchIds.size) {
+                    cards = (sec.c || []).filter(k => matchIds.has(k._id)).map(k => {
+                        const name = k.n.length > 20 ? k.n.slice(0, 20) + '…' : k.n;
+                        return `<a class="ol-nav-item card hit" data-target="${k._id}" title="${esc(k.n)}">${esc(name)}</a>`;
+                    }).join('');
+                }
                 return `<div class="ol-nav-sec">
                     <a class="ol-nav-item root" data-target="sec-${ri}-0">${esc(r.n)}</a>
-                    <div class="ol-nav-subs">${subs}</div>
+                    <div class="ol-nav-subs">${subs}${cards}</div>
                 </div>`;
             }).join('');
             nav.innerHTML = `<div class="ol-nav-head" onclick="toggleOlNav()">目录<span class="ol-nav-toggle">«</span></div>
@@ -454,6 +462,16 @@
             nav.querySelectorAll('.ol-nav-item').forEach(a => {
                 a.addEventListener('click', () => gotoNode(a.dataset.target));
             });
+            // 搜索定位：自动展开目录 → 滚动到第一个命中卡片节点 → 高亮提示
+            if (searchQ && matchIds.size) {
+                if (nav.classList.contains('collapsed')) expandOlNav();
+                const first = nav.querySelector('.ol-nav-item.card.hit');
+                if (first) {
+                    nav.scrollTop = Math.max(0, first.offsetTop - (nav.clientHeight / 2) + (first.clientHeight / 2));
+                    first.classList.add('nav-flash');
+                    setTimeout(() => first.classList.remove('nav-flash'), 1800);
+                }
+            }
         }
 
         function toggleOlNav() {

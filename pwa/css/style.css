@@ -3963,6 +3963,22 @@ a.chapter-badge-link:hover {
     color: var(--success);
 }
 
+/* 搜索定位：目录树第三层（命中卡片节点）+ 高亮闪烁 */
+.ol-nav-item.card {
+    color: var(--primary);
+    padding-left: 34px;
+    font-size: 0.8rem;
+    font-weight: 600;
+}
+.ol-nav-item.nav-flash {
+    background: #fde68a;
+    color: #7c2d12;
+}
+.dark .ol-nav-item.nav-flash {
+    background: #6d5a00;
+    color: #fde68a;
+}
+
 .ol-nav-fab {
     display: none;
     position: fixed;
