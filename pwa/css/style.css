@@ -2805,6 +2805,47 @@ mark {
     color: var(--primary-dark);
 }
 
+/* 重点总结章节：分隔线 / 标题 / 重点标注框 */
+.notes-body .section-split {
+    border: none;
+    border-top: 2px dashed var(--border);
+    margin: 38px 0 8px;
+}
+
+.notes-body .key-point-title {
+    font-size: 1.08rem;
+    color: #fff;
+    background: linear-gradient(90deg, var(--primary), var(--primary-dark));
+    margin: 12px 0 16px;
+    padding: 10px 16px;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.12);
+}
+
+.notes-body .key-callout {
+    background: #fffbe6;
+    border: 1px solid #ffe58f;
+    border-left: 4px solid #faad14;
+    border-radius: 8px;
+    padding: 12px 16px;
+    margin: 16px 0;
+    line-height: 1.9;
+}
+
+.notes-body .key-callout b {
+    color: #d48806;
+}
+
+.dark .notes-body .key-callout {
+    background: #2e2a1a;
+    border-color: #5c4a1a;
+    border-left-color: #d4a017;
+}
+
+.dark .notes-body .key-callout b {
+    color: #ffc53d;
+}
+
 /* 排版优化：序号分行（note-li）与例题卡片（note-example） */
 .notes-body .note-li {
     margin: 7px 0;
