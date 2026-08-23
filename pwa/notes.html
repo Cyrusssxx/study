@@ -1139,10 +1139,10 @@
         let hlToolbar = null;
         function initHighlight() {
             const content = document.getElementById('notesContent');
-            // 点已有高亮→就地取消
+            // 点已有高亮→弹出"取消高亮"按钮，点按钮才真正取消（避免误触一键清掉）
             content.addEventListener('click', e => {
                 const span = e.target.closest && e.target.closest('.note-hl');
-                if (span) { e.stopPropagation(); removeHighlight(span); }
+                if (span) { e.stopPropagation(); showHlCancelFor(span); }
             });
             content.addEventListener('mouseup', () => setTimeout(showHlToolbar, 0));
             document.addEventListener('mousedown', e => {
@@ -1190,6 +1190,22 @@
                 const span = (range.startContainer.parentElement || range.startContainer).closest
                     ? (range.startContainer.parentElement || range.startContainer).closest('.note-hl') : null;
                 if (span) removeHighlight(span);
+                hideHlToolbar();
+            });
+        }
+
+        // 点击已有高亮 span 时，弹出一个仅含"取消高亮"按钮的小工具条；点按钮才删除
+        function showHlCancelFor(span) {
+            hideHlToolbar();
+            const rect = span.getBoundingClientRect();
+            hlToolbar = document.createElement('div');
+            hlToolbar.className = 'hl-toolbar hl-cancel-only';
+            hlToolbar.innerHTML = '<span class="hl-cancel" title="取消高亮">✕ 取消高亮</span>';
+            document.body.appendChild(hlToolbar);
+            hlToolbar.style.top = (window.scrollY + rect.top - hlToolbar.offsetHeight - 8) + 'px';
+            hlToolbar.style.left = (window.scrollX + rect.left) + 'px';
+            hlToolbar.querySelector('.hl-cancel').addEventListener('click', () => {
+                removeHighlight(span);
                 hideHlToolbar();
             });
         }

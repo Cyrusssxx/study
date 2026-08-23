@@ -3255,6 +3255,25 @@ a.chapter-badge-link:hover {
 
 .hl-cancel:hover { color: var(--danger); }
 
+/* 点击已有高亮弹出的"仅取消"工具条 */
+.hl-toolbar.hl-cancel-only {
+    padding: 4px 6px;
+    gap: 0;
+}
+.hl-toolbar.hl-cancel-only .hl-cancel {
+    border-left: none;
+    padding: 4px 12px;
+    font-size: 0.82rem;
+    color: var(--danger);
+    background: rgba(220, 53, 69, 0.08);
+    border-radius: 6px;
+    white-space: nowrap;
+}
+.hl-toolbar.hl-cancel-only .hl-cancel:hover {
+    background: rgba(220, 53, 69, 0.16);
+    color: var(--danger);
+}
+
 /* 批注 + 高亮夜间适配 */
 .dark .line-anno-block {
     background: #35301d;
