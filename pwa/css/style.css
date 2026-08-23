@@ -2669,6 +2669,17 @@ mark {
     color: var(--primary);
     font-weight: 600;
 }
+/* 重点小节：目录加粗 + 主色，醒目提示 */
+.notes-toc-sub-strong {
+    color: var(--primary-dark);
+    font-weight: 700;
+}
+.notes-toc-sub-strong:hover {
+    color: var(--primary);
+}
+.dark .notes-toc-sub-strong {
+    color: #ffc53d;
+}
 
 /* 正文小节（二级标题 + 内容块） */
 .notes-sub {
@@ -2683,6 +2694,13 @@ mark {
     border-left: 3px solid var(--primary);
     border-radius: 6px;
     scroll-margin-top: 88px;
+}
+/* 重点小节标题：渐变底 + 白字，与目录加粗呼应 */
+.notes-sub-strong > .notes-sub-title {
+    color: #fff;
+    background: linear-gradient(90deg, var(--primary), var(--primary-dark));
+    border-left-color: var(--primary-dark);
+    font-weight: 700;
 }
 .notes-sub-body h4 {
     margin: 14px 0 8px;

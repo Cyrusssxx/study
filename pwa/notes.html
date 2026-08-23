@@ -594,7 +594,7 @@
                     toc += `<a class="notes-toc-sec" data-sec="${sec.section}"${hasSub ? ' data-hassub="1"' : ''}>${hasSub ? '<span class="toc-sec-arrow">▾</span>' : ''}${sec.section}</a>`;
                     if (hasSub) {
                         toc += `<div class="notes-toc-subs">` + subs.map(s =>
-                            `<a class="notes-toc-sub" data-sec="${s.section}">${s.section}</a>`
+                            `<a class="notes-toc-sub${s.important ? ' notes-toc-sub-strong' : ''}" data-sec="${s.section}">${s.section}</a>`
                         ).join('') + `</div>`;
                     }
                     // 正文：节标题 + (小节 + 节尾)
@@ -607,7 +607,7 @@
                         <div class="notes-body">`;
                     if (hasSub) {
                         body += subs.map(s => `
-                        <div class="notes-sub" data-sec="${s.section}">
+                        <div class="notes-sub${s.important ? ' notes-sub-strong' : ''}" data-sec="${s.section}">
                             <h4 class="notes-sub-title">${s.section}</h4>
                             <div class="notes-sub-body">${fmtNotes(s.html)}</div>
                         </div>`).join('');
