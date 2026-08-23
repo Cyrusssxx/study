@@ -89,6 +89,7 @@
         let hlItems = [];          // [{sec, start, end, color, text}]
         let hlSaveTimer = null;
         let hlToolbar = null;
+        let hlMouseupTimer = null;
         const hlKey = () => SUBJECT + '_map_hl';
 
         // 批注块混排在大纲里，高亮的偏移/文本计算一律跳过批注子树，保证批注增删不影响高亮定位
@@ -158,7 +159,11 @@
                 const span = e.target.closest && e.target.closest('.note-hl');
                 if (span) { e.stopPropagation(); showHlCancelFor(span); }
             });
-            root.addEventListener('mouseup', () => setTimeout(showHlToolbar, 0));
+            root.addEventListener('mouseup', () => {
+                // 划词结束时再决定是否弹颜色工具条；用 timer 以便点击高亮弹取消条时能取消它
+                clearTimeout(hlMouseupTimer);
+                hlMouseupTimer = setTimeout(showHlToolbar, 0);
+            });
             document.addEventListener('mousedown', e => {
                 if (hlToolbar && !hlToolbar.contains(e.target)) hideHlToolbar();
             });
@@ -167,6 +172,8 @@
         function hideHlToolbar() { if (hlToolbar) { hlToolbar.remove(); hlToolbar = null; } }
 
         function showHlToolbar() {
+            // 若当前正显示"取消高亮"工具条，不要覆盖它（避免点高亮后工具条被误关）
+            if (hlToolbar && hlToolbar.classList.contains('hl-cancel-only')) return;
             const sel = window.getSelection();
             if (!sel || sel.isCollapsed || !sel.rangeCount) { hideHlToolbar(); return; }
             const range = sel.getRangeAt(0);
@@ -205,6 +212,7 @@
 
         // 点击已有高亮 span 时，弹出一个仅含"取消高亮"按钮的小工具条；点按钮才删除
         function showHlCancelFor(span) {
+            clearTimeout(hlMouseupTimer);   // 取消划词 mouseup 可能挂起的 showHlToolbar，避免覆盖本工具条
             hideHlToolbar();
             const rect = span.getBoundingClientRect();
             hlToolbar = document.createElement('div');
@@ -237,10 +245,15 @@
             const start = +span.dataset.start;
             const color = span.dataset.color;
             hlItems = hlItems.filter(it => !(it.sec === sec && it.start === start && it.color === color));
-            const parent = span.parentNode;
-            while (span.firstChild) parent.insertBefore(span.firstChild, span);
-            parent.removeChild(span);
-            parent.normalize();
+            // 同一高亮可能跨内联标签拆成多个 span（data-start/color 相同），须全部移除，避免残留孤儿
+            span.closest('.map-sec-body').querySelectorAll('.note-hl').forEach(s => {
+                if (+s.dataset.start === start && s.dataset.color === color) {
+                    const parent = s.parentNode;
+                    while (s.firstChild) parent.insertBefore(s.firstChild, s);
+                    parent.removeChild(s);
+                    parent.normalize();
+                }
+            });
             saveHl();
         }
 
