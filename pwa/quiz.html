@@ -60,7 +60,7 @@
                         <h2 id="subjectTitle"></h2>
                         <span class="mode-badge" id="modeBadge"></span>
                         <button class="opt-shuffle-btn" id="shuffleBtn" onclick="toggleShuffle()" title="打乱选项显示顺序（字母跟随内容，答案字母不变）">选项乱序 <span id="shuffleState">关</span></button>
-                        <button class="opt-shuffle-btn" onclick="openKeybindDialog()" title="自定义上一题/下一题快捷键（支持键盘按键与鼠标侧键）">快捷键 ⚙</button>
+                        <button class="opt-shuffle-btn" onclick="openKeybindDialog()" title="切换练习模式 / 自定义上一题/下一题快捷键">设置 ⚙</button>
                         <select class="quiz-year-filter" id="yearFilter" onchange="onYearChange()" style="display:none" title="按统考真题年份筛选">
                             <option value="">全部年份</option>
                         </select>
@@ -94,13 +94,17 @@
         </div>
     </main>
 
-    <!-- 快捷键设置弹窗 -->
+    <!-- 练习设置弹窗：模式切换 + 快捷键统一管理 -->
     <div class="kb-overlay" id="kbOverlay" hidden onclick="if(event.target===this)closeKeybindDialog()">
         <div class="kb-dialog">
             <div class="kb-head">
-                <span>快捷键设置</span>
+                <span>练习设置</span>
                 <button class="kb-close" onclick="closeKeybindDialog()" title="关闭">✕</button>
             </div>
+            <div class="kb-sec-title">练习模式</div>
+            <div class="mode-switch" id="modeSwitch"></div>
+            <p class="kb-hint" id="modeSwitchHint">切换后题目列表立即刷新，无需退出本页；下次进入默认沿用所选模式。</p>
+            <div class="kb-sec-title">快捷键</div>
             <div class="kb-row">
                 <span class="kb-label">上一题</span>
                 <button class="kb-capture" id="kbPrev" onclick="startCapture('prev')" title="点击后按任意键或鼠标侧键">←</button>
@@ -128,8 +132,15 @@
     const _params = new URLSearchParams(location.search);
     const SUBJECT = _params.get('subject') || 'os';
     const NOTES_SUBJECTS = ['os', 'co', 'ds', 'cn'];  // 已有考点笔记的科目，徽章白名单化防死链
-    const MODE = _params.get('mode') || 'sequential';
+    // 可在练习设置面板内热切换的模式（无需退出页面）
+    const SWITCHABLE_MODES = ['sequential', 'favorite', 'real', 'fav_real'];
+    let MODE = _params.get('mode') || '';
     const CHAPTER = _params.get('chapter') || '';
+    // 记住上次选择的模式：无显式 mode 参数且无定位参数时沿用偏好（首页按钮等显式入口以参数为准）
+    if (!MODE && !CHAPTER && !_params.get('goto')) {
+        try { MODE = localStorage.getItem('quiz_mode_pref_' + SUBJECT) || ''; } catch (e) { }
+    }
+    if (!MODE) MODE = 'sequential';
     const SECTION = _params.get('section') || '';
     const YEAR = _params.get('year') || '';   // 真题年份筛选（仅真题模式生效）
     const STAGE = _params.get('stage') || ''; // 复习阶段筛选（仅 review 模式生效）：2/4/7/15 天期
@@ -151,6 +162,7 @@
         'favorite': '收藏模式',
         'unanswered': '未做模式',
         'real': '真题模式',
+        'fav_real': '收藏+真题',
         'code': '代码专项',
         'smart': '智能模式',
         'review': '复习模式'
@@ -160,6 +172,7 @@
     document.title = `${SUBJECT_NAME} - 刷题`;
     document.getElementById('subjectTitle').textContent = SUBJECT_NAME;
     document.getElementById('modeBadge').textContent = modeNames[MODE] || MODE;
+    document.getElementById('modeBadge').dataset.mode = MODE;
 
     // 初始化
     async function init() {
@@ -212,7 +225,52 @@
         document.getElementById('kbPrev').textContent = kbName(keybinds.prev);
         document.getElementById('kbNext').textContent = kbName(keybinds.next);
         document.getElementById('kbSideGuard').checked = sideGuard;
+        renderModeSwitch();
         document.getElementById('kbOverlay').hidden = false;
+    }
+
+    // ==================== 练习模式热切换（收藏 / 真题 / 收藏+真题 / 顺序） ====================
+    function renderModeSwitch() {
+        const box = document.getElementById('modeSwitch');
+        box.innerHTML = SWITCHABLE_MODES.map(m =>
+            `<button class="mode-chip ${m === MODE ? 'active' : ''}" onclick="switchPracticeMode('${m}')" ${m === MODE ? 'disabled' : ''}>${modeNames[m]}</button>`
+        ).join('');
+        // 当前模式不在可切换列表（如错题/复习模式进入）时给出提示，避免误以为面板失效
+        const hint = document.getElementById('modeSwitchHint');
+        if (!SWITCHABLE_MODES.includes(MODE)) {
+            hint.textContent = `当前为「${modeNames[MODE] || MODE}」，从下方选择一种模式即可切换；切换后立即刷新题目列表。`;
+            hint.style.color = 'var(--accent, #b45309)';
+        } else {
+            hint.textContent = '切换后题目列表立即刷新，无需退出本页；下次进入默认沿用所选模式。';
+            hint.style.color = '';
+        }
+    }
+
+    function updateModeBadge() {
+        const badge = document.getElementById('modeBadge');
+        badge.textContent = modeNames[MODE] || MODE;
+        badge.dataset.mode = MODE;   // 供 CSS 按模式着色（视觉反馈）
+    }
+
+    function switchPracticeMode(m) {
+        if (m === MODE || !SWITCHABLE_MODES.includes(m)) { closeKeybindDialog(); return; }
+        MODE = m;
+        try { localStorage.setItem('quiz_mode_pref_' + SUBJECT, m); } catch (e) { }
+        // 同步 URL：刷新/分享保持所选模式；清掉定位参数避免被钉回旧题
+        try {
+            const u = new URL(location.href);
+            u.searchParams.set('mode', m);
+            u.searchParams.delete('goto');
+            history.replaceState(null, '', u.pathname + (u.search || '') + u.hash);
+        } catch (e) { }
+        // 重置瞬态状态后整列重载
+        currentIndex = 0;
+        document.getElementById('yearFilter').style.display = 'none';
+        document.getElementById('favResetBtn').style.display = 'none';
+        document.getElementById('reviewChips').style.display = 'none';
+        closeKeybindDialog();
+        updateModeBadge();
+        loadQuizQuestions();
     }
     function closeKeybindDialog() { stopCapture(); document.getElementById('kbOverlay').hidden = true; }
     function startCapture(side) {
@@ -324,10 +382,14 @@
     // 题头知识点名：优先小节（已精确到小节），回落节
     function secLabel(q) { return q.subsection || q.section || ''; }
 
+    let _loadSeq = 0;   // 加载序号：模式热切换时丢弃过期响应，防止竞态覆盖
+
     async function loadQuizQuestions() {
+        const seq = ++_loadSeq;
         try {
             const stageQ = (MODE === 'review' && STAGE) ? `&stage=${encodeURIComponent(STAGE)}` : '';
             const resp = await api(`/api/questions/${SUBJECT}?mode=${MODE}&page=1&per_page=9999${stageQ}`);
+            if (seq !== _loadSeq) return;   // 已有更新的加载，丢弃本次结果
             const data = await resp.json();
             questions = data.questions;
             quizAllQuestions = data.questions;
@@ -337,7 +399,7 @@
             if (MODE !== 'sequential') {
                 api(`/api/questions/${SUBJECT}?mode=sequential&page=1&per_page=9999`)
                     .then(r => r.json())
-                    .then(full => { _buildSecOrdinal(full.questions); if (questions[currentIndex]) renderQuestion(); })
+                    .then(full => { if (seq !== _loadSeq) return; _buildSecOrdinal(full.questions); if (questions[currentIndex]) renderQuestion(); })
                     .catch(() => { });
             }
             // 真题年份筛选（P2）：仅真题模式展示下拉，前端按 exam_year 过滤，无需额外请求
@@ -359,15 +421,15 @@
                 document.getElementById('questionArea').innerHTML = `
                     <div class="empty-state">
                         <h3>暂无题目</h3>
-                        <p>${MODE === 'wrong' ? '恭喜！没有错题需要复习' : MODE === 'review' ? '今日没有到期的复习题 🎉' : MODE === 'favorite' ? '还没有收藏任何题目' : MODE === 'code' ? '该科目暂无含代码的题目' : '题库为空'}</p>
+                        <p>${MODE === 'wrong' ? '恭喜！没有错题需要复习' : MODE === 'review' ? '今日没有到期的复习题 🎉' : MODE === 'favorite' ? '还没有收藏任何题目' : MODE === 'fav_real' ? '还没有收藏任何统考真题（先在收藏模式收藏真题，或直接用真题模式）' : MODE === 'code' ? '该科目暂无含代码的题目' : '题库为空'}</p>
                         <a href="index.html" class="btn btn-primary">返回首页</a>
                     </div>
                 `;
                 return;
             }
 
-            // 收藏模式：显示「清空重做」按钮
-            if (MODE === 'favorite') document.getElementById('favResetBtn').style.display = '';
+            // 收藏/收藏+真题模式：显示「清空重做」按钮
+            if (MODE === 'favorite' || MODE === 'fav_real') document.getElementById('favResetBtn').style.display = '';
 
             // 章节定位：不限制筛选，直接跳到该章节首题，仍可顺序刷到后面的题
             if (CHAPTER) {
@@ -425,7 +487,7 @@
     function setupYearFilter() {
         const ys = document.getElementById('yearFilter');
         if (!ys) return;
-        if (MODE !== 'real') { ys.style.display = 'none'; return; }
+        if (!(MODE === 'real' || MODE === 'fav_real')) { ys.style.display = 'none'; return; }
         ys.style.display = '';
         const years = [...new Set(quizAllQuestions.map(q => q.exam_year).filter(Boolean))].sort((a, b) => b - a);
         ys.innerHTML = '<option value="">全部年份</option>' + years.map(y =>

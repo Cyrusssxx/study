@@ -4371,3 +4371,75 @@ a.chapter-badge-link:hover {
 .dark .notes-content svg.co-flow .cft { fill: #dbe2ea; }
 .dark .notes-content svg.co-flow .cfts { fill: #93a1b0; }
 .dark .notes-content svg.co-flow .cfa { stroke: #5a6b7d; }
+
+/* ==================== 练习设置面板：模式切换 chips ==================== */
+.kb-sec-title {
+    font-size: 13px;
+    font-weight: bold;
+    color: var(--text-light);
+    margin: 12px 0 6px;
+    padding-left: 8px;
+    border-left: 3px solid #14b8a6;
+}
+
+.mode-switch {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    padding: 2px 0 4px;
+}
+
+.mode-chip {
+    padding: 5px 14px;
+    border-radius: 999px;
+    border: 1px solid #c8cdd4;
+    background: transparent;
+    color: var(--text-light);
+    font-size: 13px;
+    cursor: pointer;
+    transition: background 0.15s, border-color 0.15s, color 0.15s;
+}
+
+.mode-chip:hover {
+    border-color: #14b8a6;
+    color: #0f766e;
+    background: #effaf8;
+}
+
+.mode-chip.active {
+    background: linear-gradient(90deg, #0d9488, #14b8a6);
+    border-color: transparent;
+    color: white;
+    font-weight: bold;
+    cursor: default;
+    opacity: 1;
+}
+
+/* 题头模式徽章按模式着色（当前模式视觉反馈） */
+.mode-badge[data-mode="favorite"] { background: #fef3c7; color: #92400e; }
+.mode-badge[data-mode="real"]     { background: #dbeafe; color: #1e40af; }
+.mode-badge[data-mode="fav_real"] { background: linear-gradient(90deg, #ccfbf1, #dbeafe); color: #0f766e; }
+.mode-badge[data-mode="sequential"] { background: #e5e7eb; color: #374151; }
+
+.dark .kb-sec-title { color: #aab6c2; }
+
+.dark .mode-chip {
+    border-color: #3a4754;
+    color: #aab6c2;
+}
+
+.dark .mode-chip:hover {
+    border-color: #2dd4bf;
+    color: #6fd3c3;
+    background: #16303a;
+}
+
+.dark .mode-chip.active {
+    background: linear-gradient(90deg, #0f766e, #0d9488);
+    color: white;
+}
+
+.dark .mode-badge[data-mode="favorite"] { background: #3a2f18; color: #e0b45c; }
+.dark .mode-badge[data-mode="real"]     { background: #1a2b45; color: #7fb0ee; }
+.dark .mode-badge[data-mode="fav_real"] { background: linear-gradient(90deg, #123a30, #1a2b45); color: #6fd3c3; }
+.dark .mode-badge[data-mode="sequential"] { background: #26303b; color: #aab6c2; }

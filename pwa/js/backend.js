@@ -320,6 +320,9 @@ async function api(url, opts = {}) {
                 qs = qs.filter(q => wrongIds.has(q.id));
             } else if (mode === 'favorite') {
                 qs = qs.filter(q => favSet.has(q.id));
+            } else if (mode === 'fav_real') {
+                // 收藏+真题混合：既是收藏题又是统考真题
+                qs = qs.filter(q => favSet.has(q.id) && q.is_real_exam);
             } else if (mode === 'unanswered') {
                 qs = qs.filter(q => !statuses[q.id]);
             } else if (mode === 'review') {
