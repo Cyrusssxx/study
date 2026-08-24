@@ -212,6 +212,22 @@
             expandTocSec(target.dataset.sec);   // 跳到节/小节时确保其节列表展开
             target.scrollIntoView({ behavior: 'smooth', block: 'start' });
             tocLinks.forEach(l => l.classList.toggle('active', l.dataset.sec === target.dataset.sec));
+            // 目录侧栏跟随：收起则展开；高亮项滚动到目录可视区中部
+            const layout = document.getElementById('notesLayout');
+            if (layout && layout.classList.contains('notes-toc-collapsed')) {
+                layout.classList.remove('notes-toc-collapsed');
+                const tbtn = document.getElementById('notesTocToggle');
+                if (tbtn) tbtn.textContent = '«';
+                localStorage.setItem('notes_toc_collapsed', '0');
+            }
+            requestAnimationFrame(() => {
+                const actLink = document.querySelector('.notes-toc-sec.active, .notes-toc-sub.active');
+                const toc = document.getElementById('notesToc');
+                if (!actLink || !toc) return;
+                const tr = toc.getBoundingClientRect(), lr = actLink.getBoundingClientRect();
+                if (lr.top < tr.top + 8 || lr.bottom > tr.bottom - 8)
+                    toc.scrollTop += lr.top - tr.top - tr.height / 2 + lr.height;
+            });
             if (highlight) {
                 target.classList.remove('goto-highlight');
                 void target.offsetWidth;
@@ -650,14 +666,14 @@
                 });
             }, { passive: true });
 
-            // 细粒度跳转：?line=N 跳该节某行；?q=关键词 节内(全局兜底)定位最相关小点；否则整节跳转
-            // 从 quiz 📖 链接进入(GOTO+Q)时 strict=true: 仅限节内匹配,
-            //   防止通用题干在别的节碰巧高分→跳到"奇怪的地方"; 无命中则兜底 jumpTo 整节高亮
+            // 细粒度跳转：?line=N 跳该节某行；?goto=节/小节名 精确落位；
+            // 仅当 goto 无法解析时才用 ?q= 题干片段做模糊定位兜底（不再默认"搜索式"跳行）
             if (GOTO) setTimeout(() => {
                 let done = false;
                 const secEl = resolveSectionEl(GOTO);
                 if (LINE) done = jumpToLine(GOTO, parseInt(LINE, 10) || 0);
-                if (!done && Q) done = gotoSpecific(Q, secEl, true);   // strict: 禁止跨节跳转
+                if (!done && secEl) { jumpTo(GOTO, true); done = true; }   // 精确落位：直接跳到节/小节
+                if (!done && Q) done = gotoSpecific(Q, secEl, true);       // 兜底：节内模糊定位
                 if (!done) jumpTo(GOTO, true);
             }, 100);
             // 长表格加横向滚动包裹，防止移动端列被压扁
@@ -670,8 +686,9 @@
             initAnnoAndHl();
 
             // 状态持久化：恢复上次搜索词（自动重放搜索）与滚动位置
+            // 带 GOTO 进入（刷题📖跳转）时不重放搜索，避免干扰定位
             const ps = PS.get({ q: '' });
-            if (ps.q) {
+            if (ps.q && !GOTO) {
                 const si = document.getElementById('notesSearchInput');
                 if (si) { si.value = ps.q; doNoteSearch(ps.q); }
             }
