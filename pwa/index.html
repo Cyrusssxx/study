@@ -114,6 +114,14 @@
                             <a href="quiz.html?subject=${key}&mode=favorite" class="btn btn-warning">收藏练习</a>
                             <a href="quiz.html?subject=${key}&mode=real" class="btn btn-secondary">统考真题</a>
                         </div>
+                        ${sub.review_stages && sub.due_review_count > 0 ? `
+                        <div class="review-chips">
+                            <span class="review-chips-label">按阶段刷：</span>
+                            ${[1, 2, 4, 7, 15].map(iv => (sub.review_stages[iv] || []).length
+                                ? `<a class="review-chip" href="quiz.html?subject=${key}&mode=review&stage=${iv}" title="当前处于 ${iv} 天间隔阶段的到期题">${iv}天期 · ${(sub.review_stages[iv]).length}</a>`
+                                : '').join('')}
+                            ${sub.review_upcoming ? `<span class="review-chip review-chip-upcoming" title="未来3天内将到期的题数">即将到期 +${sub.review_upcoming}</span>` : ''}
+                        </div>` : ''}
                         <div class="card-note-row">
                             <a href="notes.html?subject=${key}" class="btn btn-note">📖 知识笔记</a>
                             <a href="map.html?subject=${key}" class="btn btn-map" title="思维导图：大纲式阅读 + 划词高亮批注">🗺️ 思维导图</a>

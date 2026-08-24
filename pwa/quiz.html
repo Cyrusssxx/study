@@ -65,6 +65,7 @@
                             <option value="">全部年份</option>
                         </select>
                         <button class="opt-shuffle-btn" id="favResetBtn" style="display:none" onclick="resetFavProgress()" title="清空收藏题的作答与错题记录，重新刷一遍（收藏保留）">清空重做 ⟳</button>
+                        <div class="review-chips" id="reviewChips" style="display:none"></div>
                     </div>
                     <div class="quiz-nav-info">
                         <span id="questionProgress">加载中...</span>
@@ -131,6 +132,7 @@
     const CHAPTER = _params.get('chapter') || '';
     const SECTION = _params.get('section') || '';
     const YEAR = _params.get('year') || '';   // 真题年份筛选（仅真题模式生效）
+    const STAGE = _params.get('stage') || ''; // 复习阶段筛选（仅 review 模式生效）：1/2/4/7/15 天期
     let questions = [];
     let quizAllQuestions = [];   // 真题年份前端筛选的基准集合
     let _secOrdinal = {};        // {qid: 节内序号}——按全库编号顺序，题在其 section 内排第几
@@ -305,18 +307,26 @@
     // 进入页面制造同文档历史锚点：否则侧键后退=跨文档导航（页面卸载），popstate 兜底失效
     try { history.pushState({ quizGuard: 1 }, '', location.href); } catch (err) { }
 
-    // 按「全库编号升序」给每题计算其 section 内的序号（题头「小节 · 第 n 题」用）
+    // 按「全库编号升序」给每题计算其「小节/节」内的序号（题头「小节 · 第 n 题」用）
+    // 优先按小节（subsection）分组，无小节字段回落节（section）
     function _buildSecOrdinal(list) {
         _secOrdinal = {};
         const bySec = {};
-        for (const q of list) (bySec[q.section || ''] = bySec[q.section || ''] || []).push(q);
+        for (const q of list) {
+            const k = q.subsection || q.section || '';
+            (bySec[k] = bySec[k] || []).push(q);
+        }
         for (const k of Object.keys(bySec))
             bySec[k].sort((a, b) => a.number - b.number).forEach((q, i) => { _secOrdinal[q.id] = i + 1; });
     }
 
+    // 题头知识点名：优先小节（已精确到小节），回落节
+    function secLabel(q) { return q.subsection || q.section || ''; }
+
     async function loadQuizQuestions() {
         try {
-            const resp = await api(`/api/questions/${SUBJECT}?mode=${MODE}&page=1&per_page=9999`);
+            const stageQ = (MODE === 'review' && STAGE) ? `&stage=${encodeURIComponent(STAGE)}` : '';
+            const resp = await api(`/api/questions/${SUBJECT}?mode=${MODE}&page=1&per_page=9999${stageQ}`);
             const data = await resp.json();
             questions = data.questions;
             quizAllQuestions = data.questions;
@@ -566,7 +576,7 @@
                     <div class="explanation-title">答案解析</div>
                     <div class="explanation-meta">
                         ${q.answer ? `<span class="expl-answer">正确答案：${q.multi_blank ? [...q.answer].join('、') : q.answer}</span>` : '<span class="expl-answer">暂无标准答案</span>'}
-                        ${q.chapter ? `<span class="expl-kp">知识点：${q.chapter}${q.section ? ' · ' + q.section : ''}</span>` : ''}
+                        ${q.chapter ? `<span class="expl-kp">知识点：${q.chapter}${secLabel(q) ? ' · ' + secLabel(q) : ''}</span>` : ''}
                     </div>
                     ${expl}
                 </div>`;
@@ -592,7 +602,7 @@
             <div class="question-card">
                 <div class="question-header">
                     <div class="question-meta">
-                        <span class="question-number">${q.section && _secOrdinal[q.id] ? `${q.section} · 第 ${_secOrdinal[q.id]} 题` : `题号 ${q.number}`}（本轮第 ${currentIndex + 1} 题）</span>
+                        <span class="question-number">${secLabel(q) && _secOrdinal[q.id] ? `${secLabel(q)} · 第 ${_secOrdinal[q.id]} 题` : `题号 ${q.number}`}（本轮第 ${currentIndex + 1} 题）</span>
                         ${q.is_real_exam ? `<span class="badge-real">${q.exam_year ? q.exam_year + ' ' : ''}统考真题</span>` : ''}
                         ${q.chapter ? (NOTES_SUBJECTS.includes(SUBJECT) && q.section
                             ? `<a class="chapter-badge chapter-badge-link" href="notes.html?subject=${SUBJECT}&goto=${encodeURIComponent(q.subsection || q.section)}&q=${encodeURIComponent((q.content||'').slice(0,60))}" target="_blank" title="点击新窗口查看该知识点笔记（已定位到小节）">${q.chapter} · ${q.section} 📖</a>`

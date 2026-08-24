@@ -213,30 +213,64 @@ async function subjectStats(subject) {
 // 复习间隔（天）：连续答对 N 次后，隔 REVIEW_INTERVALS[N] 天到期再复习；streak>=5 毕业
 const REVIEW_INTERVALS = [1, 2, 4, 7, 15];
 
-async function getDueReview(subject) {
+// 单题复习阶段计算：返回 {qid, interval(当前间隔天数), dueAt} 或 null（无动态/已豁免）
+function _reviewStageOf(w, st, nowMs) {
+    const streak = w.correct_streak || 0;
+    const la = st ? st.answered_at || '' : '';
+    // 基准时间取最近一次动态（做错或作答），只取前19位规避考试批量提交的 .NNN 后缀
+    const baseStr = ((w.last_wrong_at || '') > la ? w.last_wrong_at || '' : la).slice(0, 19);
+    if (!baseStr) return null;
+    // 用 T 分隔符解析，规避 Safari 不认空格分隔的日期格式
+    const base = new Date(baseStr.replace(' ', 'T')).getTime();
+    if (isNaN(base)) return null;
+    // 历史迁移豁免：已解决且超过30天无动态的老错题视为已毕业，防止存量数据涌入队列
+    if (w.is_resolved && nowMs - base > 30 * 86400000) return null;
+    const interval = REVIEW_INTERVALS[Math.min(streak, 4)];
+    return { qid: w.question_id, interval, dueAt: base + interval * 86400000 };
+}
+
+// stage：可选，只保留处于该间隔天数阶段的到期题（阶段筛选 chips 用）
+async function getDueReview(subject, stage) {
     const wrongs = (await dbAll('wrong')).filter(w =>
         (!subject || w.subject === subject) && (!w.is_resolved || (w.correct_streak || 0) < 5));
     const statuses = await latestStatuses(subject);
     const nowMs = Date.now();
     const due = [];
     for (const w of wrongs) {
-        const streak = w.correct_streak || 0;
-        const st = statuses[w.question_id];
-        const la = st ? st.answered_at || '' : '';
-        // 基准时间取最近一次动态（做错或作答），只取前19位规避考试批量提交的 .NNN 后缀
-        const baseStr = ((w.last_wrong_at || '') > la ? w.last_wrong_at || '' : la).slice(0, 19);
-        if (!baseStr) continue;
-        // 用 T 分隔符解析，规避 Safari 不认空格分隔的日期格式
-        const base = new Date(baseStr.replace(' ', 'T')).getTime();
-        if (isNaN(base)) continue;
-        // 历史迁移豁免：已解决且超过30天无动态的老错题视为已毕业，防止存量数据涌入队列
-        if (w.is_resolved && nowMs - base > 30 * 86400000) continue;
-        const dueAt = base + REVIEW_INTERVALS[Math.min(streak, 4)] * 86400000;
-        if (nowMs >= dueAt) due.push([nowMs - dueAt, w.question_id]);
+        const info = _reviewStageOf(w, statuses[w.question_id], nowMs);
+        if (!info) continue;
+        if (nowMs >= info.dueAt && (!stage || info.interval === stage))
+            due.push([nowMs - info.dueAt, info.qid]);
     }
     // 逾期越久越靠前；同逾期时长按题ID稳定排序
     due.sort((a, b) => b[0] - a[0] || (a[1] < b[1] ? -1 : 1));
     return { ids: due.map(x => x[1]), count: due.length };
+}
+
+// 阶段明细：各间隔阶段的题 id 分组 + 各阶段到期数 + 未来3天内即将到期预告（阶段 chips / 规划用）
+async function getDueReviewDetailed(subject) {
+    const wrongs = (await dbAll('wrong')).filter(w =>
+        (!subject || w.subject === subject) && (!w.is_resolved || (w.correct_streak || 0) < 5));
+    const statuses = await latestStatuses(subject);
+    const nowMs = Date.now();
+    const stages = {};              // {interval天数: [qid...]} 该阶段全部题
+    const stageDue = {};            // {interval天数: 该阶段今日到期数}
+    let dueCount = 0;
+    const upcoming = [];            // [{qid, inDays, interval}]
+    for (const w of wrongs) {
+        const info = _reviewStageOf(w, statuses[w.question_id], nowMs);
+        if (!info) continue;
+        (stages[info.interval] = stages[info.interval] || []).push(info.qid);
+        if (nowMs >= info.dueAt) {
+            dueCount++;
+            stageDue[info.interval] = (stageDue[info.interval] || 0) + 1;
+        } else {
+            const days = (info.dueAt - nowMs) / 86400000;
+            if (days <= 3) upcoming.push({ qid: info.qid, inDays: Math.ceil(days), interval: info.interval });
+        }
+    }
+    upcoming.sort((a, b) => a.inDays - b.inDays || (a.qid < b.qid ? -1 : 1));
+    return { stages, stageDue, dueCount, upcoming };
 }
 
 // ==================== api() 路由 ====================
@@ -289,8 +323,8 @@ async function api(url, opts = {}) {
             } else if (mode === 'unanswered') {
                 qs = qs.filter(q => !statuses[q.id]);
             } else if (mode === 'review') {
-                // 艾宾浩斯复习：只出今日到期的错题，保持逾期时长降序
-                const { ids } = await getDueReview(subject);
+                // 艾宾浩斯复习：只出今日到期的错题，保持逾期时长降序；?stage=N 只刷该间隔阶段
+                const { ids } = await getDueReview(subject, p.get('stage') ? parseInt(p.get('stage'), 10) : null);
                 const order = new Map(ids.map((id, i) => [id, i]));
                 qs = qs.filter(q => order.has(q.id)).sort((a, b) => order.get(a.id) - order.get(b.id));
             } else if (mode === 'smart') {
@@ -441,6 +475,12 @@ async function api(url, opts = {}) {
             return jsonResp({ favorites: result, total: result.length });
         }
 
+        // ---------- 复习阶段明细（阶段筛选 chips 数据源） ----------
+        if (seg[1] === 'review' && seg[2] === 'stages') {
+            const subject = p.get('subject') || null;
+            return jsonResp(await getDueReviewDetailed(subject));
+        }
+
         // ---------- 统计 ----------
         if (seg[1] === 'stats' && !seg[2]) {
             const overall = await subjectStats(null);
@@ -448,7 +488,12 @@ async function api(url, opts = {}) {
             const subjects = {};
             for (const key of Object.keys(SUBJECTS)) {
                 const total = (totals.subjects && totals.subjects[key] && totals.subjects[key].total) || 0;
-                subjects[key] = { ...(await subjectStats(key)), total_questions: total, name: SUBJECTS[key].name };
+                // 复习阶段明细：{1:[qid...],2:...,4:...,7:...,15:...}，首页阶段 chips 用
+                const detail = await getDueReviewDetailed(key);
+                subjects[key] = {
+                    ...(await subjectStats(key)), total_questions: total, name: SUBJECTS[key].name,
+                    review_stages: detail.stages, review_stage_due: detail.stageDue, review_upcoming: detail.upcoming.length
+                };
             }
             return jsonResp({ overall, subjects });
         }
