@@ -4346,3 +4346,28 @@ a.chapter-badge-link:hover {
     background: var(--card-bg, #fff); color: var(--text, #333);
 }
 .dark .quiz-year-filter { background: #1e1e2e; border-color: #444; color: #ccc; }
+
+/* ==================== 笔记内嵌流程图（计组 3.6.6 访存全流程） ==================== */
+.notes-content svg.co-flow { width: 100%; height: auto; display: block; margin: 10px 0 14px; }
+.notes-content svg.co-flow .cb-p { fill: #f0edfc; stroke: #7f77dd; stroke-width: 0.6; }
+.notes-content svg.co-flow .cb-t { fill: #e1f5ee; stroke: #1d9e75; stroke-width: 0.6; }
+.notes-content svg.co-flow .cb-b { fill: #e6f1fb; stroke: #378add; stroke-width: 0.6; }
+.notes-content svg.co-flow .cb-g { fill: #eaf3de; stroke: #639922; stroke-width: 0.6; }
+.notes-content svg.co-flow .cb-r { fill: #fcebeb; stroke: #e24b4a; stroke-width: 0.6; }
+.notes-content svg.co-flow .cb-y { fill: #faeeda; stroke: #ba7517; stroke-width: 0.6; }
+.notes-content svg.co-flow .cb-n { fill: #f1efe8; stroke: #b4b2a9; stroke-width: 0.6; }
+.notes-content svg.co-flow .cw { fill: #ffffff; stroke: #b4b2a9; stroke-width: 0.6; }
+.notes-content svg.co-flow .cft { font-size: 12px; fill: #33334d; }
+.notes-content svg.co-flow .cfts { font-size: 11px; fill: #6b7280; }
+.notes-content svg.co-flow .cfa { stroke: #94a3b8; stroke-width: 1.4; fill: none; }
+.dark .notes-content svg.co-flow .cb-p { fill: #2a2750; stroke: #8f88e0; }
+.dark .notes-content svg.co-flow .cb-t { fill: #123a30; stroke: #37b58a; }
+.dark .notes-content svg.co-flow .cb-b { fill: #173049; stroke: #5b9bd8; }
+.dark .notes-content svg.co-flow .cb-g { fill: #25341a; stroke: #84b64a; }
+.dark .notes-content svg.co-flow .cb-r { fill: #3d2020; stroke: #d96a6a; }
+.dark .notes-content svg.co-flow .cb-y { fill: #3a2f18; stroke: #d09a3f; }
+.dark .notes-content svg.co-flow .cb-n { fill: #232c36; stroke: #4a5663; }
+.dark .notes-content svg.co-flow .cw { fill: #16202c; stroke: #4a5663; }
+.dark .notes-content svg.co-flow .cft { fill: #dbe2ea; }
+.dark .notes-content svg.co-flow .cfts { fill: #93a1b0; }
+.dark .notes-content svg.co-flow .cfa { stroke: #5a6b7d; }
