@@ -686,13 +686,13 @@
             initAnnoAndHl();
 
             // 状态持久化：恢复上次搜索词（自动重放搜索）与滚动位置
-            // 带 GOTO 进入（刷题📖跳转）时不重放搜索，避免干扰定位
+            // 带 GOTO 进入（刷题📖跳转）时：不重放搜索、不恢复旧滚动位置（否则追滚会打断锚点跳转）
             const ps = PS.get({ q: '' });
             if (ps.q && !GOTO) {
                 const si = document.getElementById('notesSearchInput');
                 if (si) { si.value = ps.q; doNoteSearch(ps.q); }
             }
-            PS.restoreScroll();
+            if (!GOTO && !LINE) PS.restoreScroll();
         }
 
         // ==================== 考点笔记：行级批注 + 划词高亮 ====================

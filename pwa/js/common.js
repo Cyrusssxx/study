@@ -283,4 +283,9 @@ window.addEventListener('pagehide', () => {
     try { sessionStorage.setItem('ps_scroll_' + location.pathname.split('/').pop(), String(window.scrollY)); } catch (e) {}
 });
 // 普通同步页面：load 后自动恢复；异步渲染页随后续逐页调 PS.restoreScroll() 更精准
-window.addEventListener('load', () => { setTimeout(() => PS.restoreScroll(), 60); });
+// 带 goto/line 跳转参数进入（如刷题📖知识点链接）时不恢复：避免追滚机制与锚点跳转打架
+window.addEventListener('load', () => {
+    const _sp = new URLSearchParams(location.search);
+    if (_sp.has('goto') || _sp.has('line')) return;
+    setTimeout(() => PS.restoreScroll(), 60);
+});
