@@ -132,7 +132,7 @@
     const CHAPTER = _params.get('chapter') || '';
     const SECTION = _params.get('section') || '';
     const YEAR = _params.get('year') || '';   // 真题年份筛选（仅真题模式生效）
-    const STAGE = _params.get('stage') || ''; // 复习阶段筛选（仅 review 模式生效）：1/2/4/7/15 天期
+    const STAGE = _params.get('stage') || ''; // 复习阶段筛选（仅 review 模式生效）：2/4/7/15 天期
     const FRESH = _params.get('fresh') === '1'; // fresh=1：跳过位置恢复，从第 1 题开始
     let questions = [];
     let quizAllQuestions = [];   // 真题年份前端筛选的基准集合

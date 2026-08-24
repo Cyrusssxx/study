@@ -210,8 +210,8 @@ async function subjectStats(subject) {
 }
 
 // ==================== 艾宾浩斯复习（对应 database.get_due_review，改动需双端同步） ====================
-// 复习间隔（天）：连续答对 N 次后，隔 REVIEW_INTERVALS[N] 天到期再复习；streak>=5 毕业
-const REVIEW_INTERVALS = [1, 2, 4, 7, 15];
+// 复习间隔（天）：连续答对 N 次后，隔 REVIEW_INTERVALS[min(N,末位)] 天到期再复习；走完全部间隔（连对4次）毕业
+const REVIEW_INTERVALS = [2, 4, 7, 15];
 
 // 单题复习阶段计算：返回 {qid, interval(当前间隔天数), dueAt} 或 null（无动态/已豁免）
 function _reviewStageOf(w, st, nowMs) {
@@ -225,14 +225,14 @@ function _reviewStageOf(w, st, nowMs) {
     if (isNaN(base)) return null;
     // 历史迁移豁免：已解决且超过30天无动态的老错题视为已毕业，防止存量数据涌入队列
     if (w.is_resolved && nowMs - base > 30 * 86400000) return null;
-    const interval = REVIEW_INTERVALS[Math.min(streak, 4)];
+    const interval = REVIEW_INTERVALS[Math.min(streak, REVIEW_INTERVALS.length - 1)];
     return { qid: w.question_id, interval, dueAt: base + interval * 86400000 };
 }
 
 // stage：可选，只保留处于该间隔天数阶段的到期题（阶段筛选 chips 用）
 async function getDueReview(subject, stage) {
     const wrongs = (await dbAll('wrong')).filter(w =>
-        (!subject || w.subject === subject) && (!w.is_resolved || (w.correct_streak || 0) < 5));
+        (!subject || w.subject === subject) && (!w.is_resolved || (w.correct_streak || 0) < REVIEW_INTERVALS.length));
     const statuses = await latestStatuses(subject);
     const nowMs = Date.now();
     const due = [];
@@ -250,7 +250,7 @@ async function getDueReview(subject, stage) {
 // 阶段明细：各间隔阶段的题 id 分组 + 各阶段到期数 + 未来3天内即将到期预告（阶段 chips / 规划用）
 async function getDueReviewDetailed(subject) {
     const wrongs = (await dbAll('wrong')).filter(w =>
-        (!subject || w.subject === subject) && (!w.is_resolved || (w.correct_streak || 0) < 5));
+        (!subject || w.subject === subject) && (!w.is_resolved || (w.correct_streak || 0) < REVIEW_INTERVALS.length));
     const statuses = await latestStatuses(subject);
     const nowMs = Date.now();
     const stages = {};              // {interval天数: [qid...]} 该阶段全部题

@@ -108,17 +108,16 @@
                         </div>
                         <div class="card-actions">
                             <a class="btn btn-primary btn-resume" data-subject="${key}" href="quiz.html?subject=${key}&mode=sequential">继续刷题</a>
-                            <a href="quiz.html?subject=${key}&mode=sequential&fresh=1" class="btn btn-secondary">顺序刷题</a>
                             <a href="quiz.html?subject=${key}&mode=wrong" class="btn btn-danger">错题重刷 (${sub.wrong_count})</a>
                             <a href="quiz.html?subject=${key}&mode=random" class="btn btn-secondary">随机抽题</a>
                             <a href="quiz.html?subject=${key}&mode=favorite" class="btn btn-warning">收藏练习</a>
                             <a href="quiz.html?subject=${key}&mode=real" class="btn btn-secondary">统考真题</a>
                         </div>
                         ${(sub.due_review_count > 0 || sub.review_upcoming > 0) ? `
-                        <div class="review-chips" title="艾宾浩斯记忆曲线：错题按1/2/4/7/15天间隔到期复习，连对5次毕业">
+                        <div class="review-chips" title="艾宾浩斯记忆曲线：错题按2/4/7/15天间隔到期复习，连对4次毕业">
                             <span class="review-chips-label">📅 复习：</span>
                             ${sub.due_review_count > 0 ? `<a class="review-chip review-chip-all" href="quiz.html?subject=${key}&mode=review">全部到期 · ${sub.due_review_count}</a>` : ''}
-                            ${[1, 2, 4, 7, 15].map(iv => (sub.review_stages && sub.review_stages[iv] || []).length
+                            ${[2, 4, 7, 15].map(iv => (sub.review_stages && sub.review_stages[iv] || []).length
                                 ? `<a class="review-chip" href="quiz.html?subject=${key}&mode=review&stage=${iv}" title="当前处于 ${iv} 天间隔阶段的到期题">${iv}天期 · ${(sub.review_stages[iv]).length}</a>`
                                 : '').join('')}
                             ${sub.review_upcoming ? `<span class="review-chip review-chip-upcoming" title="未来3天内将到期的题数">即将到期 +${sub.review_upcoming}</span>` : ''}
