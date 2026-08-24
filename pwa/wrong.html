@@ -130,7 +130,7 @@
                         <span class="item-info">错误 ${q.wrong_count} 次</span>
                         ${q.is_resolved ? '<span class="badge-resolved">已解决</span>' : `<span class="badge-streak">还需连对 ${needMore} 次</span>`}
                         <button class="btn btn-sm btn-secondary item-goto" onclick="event.stopPropagation(); location.href='quiz.html?subject=${q.subject}&mode=sequential&goto=${q.question_id}'">去练习 →</button>
-                        ${q.section ? `<button class="btn btn-sm btn-secondary item-goto" onclick="event.stopPropagation(); location.href='notes.html?subject=${q.subject}&goto=${encodeURIComponent(q.section)}&q=${encodeURIComponent((q.content||'').slice(0,60))}'" title="查看该节考点笔记">看知识点 📖</button>` : ''}
+                        ${q.section ? `<button class="btn btn-sm btn-secondary item-goto" onclick="event.stopPropagation(); location.href='notes.html?subject=${q.subject}&goto=${encodeURIComponent(q.subsection || q.section)}&q=${encodeURIComponent((q.content||'').slice(0,60))}'" title="查看该知识点笔记（已定位到小节）">看知识点 📖</button>` : ''}
                     </div>
                     <div class="item-content">${fmtContent(q.content)}</div>
                     <div class="item-options">
