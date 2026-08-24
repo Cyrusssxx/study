@@ -165,7 +165,7 @@
         // 章节名含 / 等字符，锚点定位统一走 data-sec 属性匹配，不用 id 选择器
         // 支持：1) 精确匹配 2) 别名映射（旧section→新section）3) 编号前缀模糊匹配 4) 关键词兜底
         // 匹配范围含小节(.notes-sub)，节名跳节容器、小节名跳小节容器
-        function jumpTo(name, highlight) {
+        function jumpTo(name, highlight, instant) {
             const sections = Array.from(document.querySelectorAll('.notes-section, .notes-sub'));
             const tocLinks = Array.from(document.querySelectorAll('.notes-toc-sec, .notes-toc-sub'));
 
@@ -210,7 +210,18 @@
 
             if (!target) return;
             expandTocSec(target.dataset.sec);   // 跳到节/小节时确保其节列表展开
-            target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            // instant=true（📖跳转进入）：瞬时定位+多次钉住，防止后续布局变化/残留恢复把位置带走；
+            // false（目录点击）：保持平滑滚动
+            const scrollToTarget = () => {
+                const y = target.getBoundingClientRect().top + window.scrollY - 70;
+                window.scrollTo(0, Math.max(0, y));
+            };
+            if (instant) {
+                scrollToTarget();
+                [150, 350, 700].forEach(t => setTimeout(scrollToTarget, t));
+            } else {
+                target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }
             tocLinks.forEach(l => l.classList.toggle('active', l.dataset.sec === target.dataset.sec));
             // 目录侧栏跟随：收起则展开；高亮项滚动到目录可视区中部
             const layout = document.getElementById('notesLayout');
@@ -672,9 +683,17 @@
                 let done = false;
                 const secEl = resolveSectionEl(GOTO);
                 if (LINE) done = jumpToLine(GOTO, parseInt(LINE, 10) || 0);
-                if (!done && secEl) { jumpTo(GOTO, true); done = true; }   // 精确落位：直接跳到节/小节
-                if (!done && Q) done = gotoSpecific(Q, secEl, true);       // 兜底：节内模糊定位
-                if (!done) jumpTo(GOTO, true);
+                if (!done && secEl) { jumpTo(GOTO, true, true); done = true; }  // 精确落位（瞬时+钉住）
+                if (!done && Q) done = gotoSpecific(Q, secEl, true);            // 兜底：节内模糊定位
+                if (!done) jumpTo(GOTO, true, true);
+                // 落位后清掉跳转参数与旧的滚动存档：
+                // ① 之后刷新页面走正常恢复逻辑（不会误判成"跳转进入"）② 防任何残留恢复拉走位置
+                try { sessionStorage.removeItem('ps_scroll_' + location.pathname.split('/').pop()); } catch (e) {}
+                try {
+                    const u = new URL(location.href);
+                    ['goto', 'line', 'q'].forEach(k => u.searchParams.delete(k));
+                    history.replaceState(null, '', u.pathname + (u.search || '') + u.hash);
+                } catch (e) {}
             }, 100);
             // 长表格加横向滚动包裹，防止移动端列被压扁
             document.querySelectorAll('.notes-body table').forEach(t => {
