@@ -370,6 +370,12 @@
             if (GOTO) {
                 const gi = questions.findIndex(q => q.id === GOTO);
                 if (gi >= 0) currentIndex = gi;
+                // 定位完成后清掉 goto 参数：否则刷新永远被钉回该题，位置恢复失效
+                try {
+                    const u = new URL(location.href);
+                    u.searchParams.delete('goto');
+                    history.replaceState(null, '', u.pathname + (u.search || '') + u.hash);
+                } catch (e) { }
             }
 
             // 刷新后自动回到上次做的题：无显式 chapter/goto 定位时恢复
