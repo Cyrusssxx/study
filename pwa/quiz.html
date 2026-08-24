@@ -133,6 +133,7 @@
     const YEAR = _params.get('year') || '';   // 真题年份筛选（仅真题模式生效）
     let questions = [];
     let quizAllQuestions = [];   // 真题年份前端筛选的基准集合
+    let _secOrdinal = {};        // {qid: 节内序号}——按全库编号顺序，题在其 section 内排第几
     let currentIndex = 0;
     let totalQuestions = 0;
     let answered = {};  // {questionId: {answer, isCorrect}}
@@ -304,12 +305,30 @@
     // 进入页面制造同文档历史锚点：否则侧键后退=跨文档导航（页面卸载），popstate 兜底失效
     try { history.pushState({ quizGuard: 1 }, '', location.href); } catch (err) { }
 
+    // 按「全库编号升序」给每题计算其 section 内的序号（题头「小节 · 第 n 题」用）
+    function _buildSecOrdinal(list) {
+        _secOrdinal = {};
+        const bySec = {};
+        for (const q of list) (bySec[q.section || ''] = bySec[q.section || ''] || []).push(q);
+        for (const k of Object.keys(bySec))
+            bySec[k].sort((a, b) => a.number - b.number).forEach((q, i) => { _secOrdinal[q.id] = i + 1; });
+    }
+
     async function loadQuizQuestions() {
         try {
             const resp = await api(`/api/questions/${SUBJECT}?mode=${MODE}&page=1&per_page=9999`);
             const data = await resp.json();
             questions = data.questions;
             quizAllQuestions = data.questions;
+            // 题头显示「小节 · 节内第几题」：按全库编号顺序给每题算节内序号
+            _buildSecOrdinal(data.questions);
+            // 非 sequential 模式下当前集合是子集（收藏/错题/随机…），再拉一次全量库作序号基准
+            if (MODE !== 'sequential') {
+                api(`/api/questions/${SUBJECT}?mode=sequential&page=1&per_page=9999`)
+                    .then(r => r.json())
+                    .then(full => { _buildSecOrdinal(full.questions); if (questions[currentIndex]) renderQuestion(); })
+                    .catch(() => { });
+            }
             // 真题年份筛选（P2）：仅真题模式展示下拉，前端按 exam_year 过滤，无需额外请求
             setupYearFilter();
             totalQuestions = questions.length;
@@ -556,7 +575,7 @@
             <div class="question-card">
                 <div class="question-header">
                     <div class="question-meta">
-                        <span class="question-number">题号 ${q.number}（本轮第 ${currentIndex + 1} 题）</span>
+                        <span class="question-number">${q.section && _secOrdinal[q.id] ? `${q.section} · 第 ${_secOrdinal[q.id]} 题` : `题号 ${q.number}`}（本轮第 ${currentIndex + 1} 题）</span>
                         ${q.is_real_exam ? `<span class="badge-real">${q.exam_year ? q.exam_year + ' ' : ''}统考真题</span>` : ''}
                         ${q.chapter ? (NOTES_SUBJECTS.includes(SUBJECT) && q.section
                             ? `<a class="chapter-badge chapter-badge-link" href="notes.html?subject=${SUBJECT}&goto=${encodeURIComponent(q.subsection || q.section)}&q=${encodeURIComponent((q.content||'').slice(0,60))}" target="_blank" title="点击新窗口查看该知识点笔记（已定位到小节）">${q.chapter} · ${q.section} 📖</a>`
