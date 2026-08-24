@@ -1842,20 +1842,54 @@ mark {
     color: white;
 }
 
-/* ==================== 今日复习入口（艾宾浩斯） ==================== */
-.btn-review {
+/* ==================== 复习阶段 chips（艾宾浩斯，首页按阶段刷） ==================== */
+.review-chips {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 6px;
+    margin-top: 10px;
+}
+
+.review-chips-label {
+    font-size: 13px;
+    color: var(--text-light);
+}
+
+.review-chip {
+    display: inline-block;
+    padding: 3px 10px;
+    border-radius: 999px;
+    border: 1px solid #99d6cd;
+    background: #effaf8;
+    color: #0f766e;
+    font-size: 12px;
+    line-height: 1.5;
+    text-decoration: none;
+    transition: background 0.15s, border-color 0.15s;
+}
+
+a.review-chip:hover {
+    background: #d7f2ec;
+    border-color: #14b8a6;
+}
+
+.review-chip-all {
     background: linear-gradient(90deg, #0d9488, #14b8a6);
+    border-color: transparent;
     color: white;
-    opacity: 0.75;
+    font-weight: bold;
 }
 
-.btn-review.has-due {
-    opacity: 1;
-    box-shadow: 0 0 0 2px rgba(20, 184, 166, 0.25);
+a.review-chip-all:hover {
+    background: linear-gradient(90deg, #0f766e, #0d9488);
 }
 
-.btn-review:hover {
-    opacity: 0.88;
+.review-chip-upcoming {
+    border-style: dashed;
+    border-color: #c8cdd4;
+    background: transparent;
+    color: var(--text-light);
 }
 
 .btn-smart:hover {
@@ -2053,12 +2087,30 @@ mark {
     background: #40351f;
 }
 
-.dark .btn-review {
-    background: linear-gradient(90deg, #0f766e, #0d9488);
+.dark .review-chips-label {
+    color: #8b98a5;
 }
 
-.dark .btn-review.has-due {
-    box-shadow: 0 0 0 2px rgba(13, 148, 136, 0.35);
+.dark .review-chip {
+    background: #16303a;
+    border-color: #2a5560;
+    color: #6fd3c3;
+}
+
+.dark a.review-chip:hover {
+    background: #1d414d;
+    border-color: #2dd4bf;
+}
+
+.dark .review-chip-all {
+    background: linear-gradient(90deg, #0f766e, #0d9488);
+    color: white;
+}
+
+.dark .review-chip-upcoming {
+    border-color: #3a4754;
+    background: transparent;
+    color: #8b98a5;
 }
 
 /* 选项与判题反馈 */

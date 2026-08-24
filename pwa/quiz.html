@@ -133,6 +133,7 @@
     const SECTION = _params.get('section') || '';
     const YEAR = _params.get('year') || '';   // 真题年份筛选（仅真题模式生效）
     const STAGE = _params.get('stage') || ''; // 复习阶段筛选（仅 review 模式生效）：1/2/4/7/15 天期
+    const FRESH = _params.get('fresh') === '1'; // fresh=1：跳过位置恢复，从第 1 题开始
     let questions = [];
     let quizAllQuestions = [];   // 真题年份前端筛选的基准集合
     let _secOrdinal = {};        // {qid: 节内序号}——按全库编号顺序，题在其 section 内排第几
@@ -389,9 +390,10 @@
             }
 
             // 刷新后自动回到上次做的题：无显式 chapter/goto 定位时恢复
+            // fresh=1（首页「顺序刷题」）跳过恢复，从第 1 题开始
             // ① 优先读本页专用位置存档（quiz_pos_<科目>_<模式>，不受全局历史6条上限挤掉）
             // ② 兜底再查 practiceHistory（供首页「继续上次练习」的共享记录）
-            if (!CHAPTER && !GOTO) {
+            if (!CHAPTER && !GOTO && !FRESH) {
                 try {
                     const pos = JSON.parse(localStorage.getItem('quiz_pos_' + SUBJECT + '_' + MODE) || 'null');
                     if (pos && pos.qid) {
