@@ -543,7 +543,7 @@
             noteHtml = `
                 <div class="note-panel">
                     <div class="note-title">我的笔记</div>
-                    <textarea id="noteInput" class="note-input" rows="4" onfocus="onNoteEdit()" oninput="autoResizeNote(this)" onpaste="pasteNoteImage(event)" placeholder="记下你的解题思路、易错点...（Ctrl+V 可直接粘贴截图；清空内容保存即删除笔记）"></textarea>
+                    <textarea id="noteInput" class="note-input" rows="4" onfocus="onNoteEdit()" oninput="autoResizeNote(this); onNoteInput()" onpaste="pasteNoteImage(event)" placeholder="记下你的解题思路、易错点...（Ctrl+V 可直接粘贴截图；停顿即自动保存；清空内容保存即删除笔记）"></textarea>
                     <div class="note-images" id="noteImages"></div>
                     <div class="note-actions">
                         <button class="btn btn-primary btn-sm note-save-btn${hasNote ? ' saved' : ''}" id="noteSaveBtn" onclick="saveNote()">保存笔记</button>
@@ -672,6 +672,8 @@
     }
 
     function gotoQuestion(i) {
+        // 切题前冲刷挂起的自动保存：此刻 DOM/currentIndex 仍属旧题，存的是旧题内容（输入已实时落内存，双保险）
+        flushNoteSave();
         currentIndex = i;
         explanationShown = false;
         noteShown = !!questions[i].note;  // 有笔记默认展开，没有不展开
@@ -694,6 +696,25 @@
         if (btn) btn.classList.remove('saved');
     }
 
+    // ==================== 笔记自动保存（防抖） ====================
+    let _noteTimer = null;
+    function onNoteInput() {
+        const q = questions[currentIndex];
+        const el = document.getElementById('noteInput');
+        if (!q || !el) return;
+        q.note = el.value;              // 先落内存：切题/重渲染不丢字
+        onNoteEdit();
+        const hint = document.getElementById('noteHint');
+        if (hint) hint.textContent = '自动保存中…';
+        clearTimeout(_noteTimer);
+        _noteTimer = setTimeout(() => { _noteTimer = null; saveNote(true); }, 800);
+    }
+    // 页面隐藏/关闭前冲刷未入库的输入
+    function flushNoteSave() {
+        if (_noteTimer) { clearTimeout(_noteTimer); _noteTimer = null; saveNote(true); }
+    }
+    window.addEventListener('pagehide', flushNoteSave);
+
     // 笔记输入框高度自适应：随内容自动增高，超过 60% 视口高时出现滚动条
     function autoResizeNote(el) {
         if (!el) return;
@@ -703,7 +724,7 @@
         el.style.overflowY = el.scrollHeight > maxH ? 'auto' : 'hidden';
     }
 
-    async function saveNote() {
+    async function saveNote(isAuto = false) {
         const q = questions[currentIndex];
         const content = document.getElementById('noteInput').value;
         // 保存前是否已有笔记：用于区分「已删除」和「本来就是空的」
@@ -719,13 +740,19 @@
             q.note_images = result.images || [];
             const hasNote = !!(q.note || q.note_images.length);
             const hint = document.getElementById('noteHint');
-            hint.textContent = hasNote ? '已保存 ✓' : (hadNote ? '已删除笔记' : '笔记是空的，没有保存');
+            hint.textContent = hasNote ? (isAuto ? '已自动保存 ✓' : '已保存 ✓') : (hadNote ? '已删除笔记' : '笔记是空的，没有保存');
             setTimeout(() => { if (hint) hint.textContent = ''; }, 2000);
             // 保存成功后淡化保存按钮（提示已保存），再次编辑时恢复
             const btn = document.getElementById('noteSaveBtn');
             if (btn) btn.classList.toggle('saved', hasNote);
         } catch (e) {
-            alert('笔记保存失败: ' + e.message);
+            if (isAuto) {
+                // 自动保存失败静默提示，不弹窗打断输入
+                const hint = document.getElementById('noteHint');
+                if (hint) hint.textContent = '自动保存失败，请点「保存笔记」重试';
+            } else {
+                alert('笔记保存失败: ' + e.message);
+            }
         }
     }
 
