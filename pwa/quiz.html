@@ -372,17 +372,28 @@
                 if (gi >= 0) currentIndex = gi;
             }
 
-            // 刷新后自动回到上次做的题：无显式 chapter/goto 定位时，从练习历史恢复
+            // 刷新后自动回到上次做的题：无显式 chapter/goto 定位时恢复
+            // ① 优先读本页专用位置存档（quiz_pos_<科目>_<模式>，不受全局历史6条上限挤掉）
+            // ② 兜底再查 practiceHistory（供首页「继续上次练习」的共享记录）
             if (!CHAPTER && !GOTO) {
                 try {
-                    const key = [SUBJECT, MODE, CHAPTER, SECTION].join('|');
-                    const list = JSON.parse(localStorage.getItem('practiceHistory')) || [];
-                    const rec = list.find(e => [e.subject, e.mode, e.chapter || '', e.section || ''].join('|') === key);
-                    if (rec && rec.qid) {
-                        const ri = questions.findIndex(q => q.id === rec.qid);
-                        if (ri >= 0) currentIndex = ri;
+                    const pos = JSON.parse(localStorage.getItem('quiz_pos_' + SUBJECT + '_' + MODE) || 'null');
+                    if (pos && pos.qid) {
+                        const pi = questions.findIndex(q => q.id === pos.qid);
+                        if (pi >= 0) currentIndex = pi;
                     }
-                } catch (e) { /* 恢复失败保持首题 */ }
+                } catch (e) { }
+                if (currentIndex === 0) {
+                    try {
+                        const key = [SUBJECT, MODE, CHAPTER, SECTION].join('|');
+                        const list = JSON.parse(localStorage.getItem('practiceHistory')) || [];
+                        const rec = list.find(e => [e.subject, e.mode, e.chapter || '', e.section || ''].join('|') === key);
+                        if (rec && rec.qid) {
+                            const ri = questions.findIndex(q => q.id === rec.qid);
+                            if (ri >= 0) currentIndex = ri;
+                        }
+                    } catch (e) { /* 恢复失败保持首题 */ }
+                }
             }
 
             noteShown = !!questions[currentIndex].note;  // 有笔记的题默认展开笔记面板
@@ -648,6 +659,8 @@
                 .filter(e => [e.subject, e.mode, e.chapter || '', e.section || ''].join('|') !== key);
             list.unshift({ subject: SUBJECT, mode: MODE, chapter: CHAPTER, section: SECTION, qid: q.id, idx: currentIndex, total: totalQuestions, ts: Date.now() });
             localStorage.setItem('practiceHistory', JSON.stringify(list.slice(0, 6)));
+            // 本页专用位置存档（每科目+模式独立一键，不会被全局历史上限挤掉）
+            localStorage.setItem('quiz_pos_' + SUBJECT + '_' + MODE, JSON.stringify({ qid: q.id, idx: currentIndex, ts: Date.now() }));
         } catch (e) { /* 存储异常不影响做题 */ }
     }
 
@@ -728,9 +741,12 @@
         clearTimeout(_noteTimer);
         _noteTimer = setTimeout(() => { _noteTimer = null; saveNote(true); }, 800);
     }
-    // 页面隐藏/关闭前冲刷未入库的输入
+    // 页面隐藏/关闭前冲刷未入库的输入（任何异常不得阻断切题/卸载）
     function flushNoteSave() {
-        if (_noteTimer) { clearTimeout(_noteTimer); _noteTimer = null; saveNote(true); }
+        if (_noteTimer) {
+            clearTimeout(_noteTimer); _noteTimer = null;
+            try { saveNote(true); } catch (e) { }
+        }
     }
     window.addEventListener('pagehide', flushNoteSave);
 
@@ -745,7 +761,8 @@
 
     async function saveNote(isAuto = false) {
         const q = questions[currentIndex];
-        const content = document.getElementById('noteInput').value;
+        const inputEl = document.getElementById('noteInput');
+        const content = inputEl ? inputEl.value : (q.note || '');   // 面板未展开时安全兜底
         // 保存前是否已有笔记：用于区分「已删除」和「本来就是空的」
         const hadNote = !!(q.note || (q.note_images || []).length);
         try {
