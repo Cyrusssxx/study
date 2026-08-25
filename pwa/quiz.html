@@ -153,6 +153,7 @@
     let answered = {};  // {questionId: {answer, isCorrect}}
     let explanationShown = false;  // 当前题解析面板是否展开
     let noteShown = false;  // 当前题笔记面板是否展开
+    const hasNoteOf = q => !!(q.note || (q.note_images || []).length);  // 题目是否有笔记（文本或图片）
     let optionOrder = {};  // {qid: [key,...]} 选项乱序开启时每题的显示顺序缓存
 
     const modeNames = {
@@ -476,7 +477,7 @@
                 }
             }
 
-            noteShown = !!questions[currentIndex].note;  // 有笔记的题默认展开笔记面板
+            noteShown = hasNoteOf(questions[currentIndex]);  // 有笔记（文本或图片）的题默认展开笔记面板
             renderQuestion();
         } catch (e) {
             document.getElementById('questionArea').innerHTML = `<div class="error">加载失败: ${e.message}</div>`;
@@ -788,7 +789,7 @@
         flushNoteSave();
         currentIndex = i;
         explanationShown = false;
-        noteShown = !!questions[i].note;  // 有笔记默认展开，没有不展开
+        noteShown = hasNoteOf(questions[i]);  // 有笔记（文本或图片）默认展开，没有不展开
         renderQuestion();
     }
 
@@ -1015,7 +1016,7 @@
         if (currentIndex > 0) {
             currentIndex--;
             explanationShown = false;
-            noteShown = !!questions[currentIndex].note;
+            noteShown = hasNoteOf(questions[currentIndex]);
             renderQuestion();
         }
     }
@@ -1024,7 +1025,7 @@
         if (currentIndex < questions.length - 1) {
             currentIndex++;
             explanationShown = false;
-            noteShown = !!questions[currentIndex].note;
+            noteShown = hasNoteOf(questions[currentIndex]);
             renderQuestion();
         }
     }
