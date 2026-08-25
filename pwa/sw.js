@@ -12,7 +12,7 @@
  *          ② 只改数据不改外壳时，APP_VER 不变 → 外壳零重下；反之亦然。
  */
 const APP_VER = 'quiz408-app-c8ad1ab44c';
-const DATA_VER = 'quiz408-data-d870242fe6';
+const DATA_VER = 'quiz408-data-bda9b26331';
 
 // 应用外壳：保证离线骨架与最新脚本。meta.json 仅几百字节，随外壳一起预缓存。
 const APP_PRECACHE = [
@@ -54,6 +54,27 @@ const DATA_PRECACHE = [
     'data/notes/ds_notes.json',
     'data/notes/cn_notes.json',
     'img/cn_fig_2_3.png',
+    'img/os_fig_2_1_mem.png',
+    'img/os_fig_2_2_state.png',
+    'img/os_fig_3_8_paging.png',
+    'img/os_fig_3_9_tlb.png',
+    'img/os_fig_3_15_seg.png',
+    'img/os_fig_3_18_segpaged.png',
+    'img/os_fig_3_20_pagereq.png',
+    'img/os_fig_4_1_fslevel.png',
+    'img/os_fig_4_6_dir1.png',
+    'img/os_fig_4_7_dir2.png',
+    'img/os_fig_4_8_tree.png',
+    'img/os_fig_4_9_dag.png',
+    'img/os_fig_4_11_link.png',
+    'img/os_fig_4_12_fat.png',
+    'img/os_fig_5_15_spool.png',
+    'img/os_fig_5_22_fcfs.png',
+    'img/os_fig_5_23_sstf.png',
+    'img/os_fig_5_24_scan.png',
+    'img/os_fig_5_25_cscan.png',
+    'img/os_fig_5_26_look.png',
+    'img/os_fig_5_27_clook.png',
     'data/sub_all.txt',
     'data/sub_os.txt',
     'data/sub_os_full.txt',
