@@ -1161,14 +1161,15 @@ body {
 
 .explanation-panel {
     margin-top: 12px;
-    border: 1px solid #d9e6f5;
+    border: 1px solid rgba(128, 128, 128, calc((1 - var(--ui-alpha)) * 0.5 + 0.001));
     border-radius: var(--radius);
     overflow: hidden;
+    background: rgba(var(--card-rgb), var(--ui-alpha));
 }
 
 .explanation-title {
     padding: 10px 16px;
-    background: #eef5fd;
+    background: rgba(238, 245, 253, var(--ui-alpha));
     color: var(--primary);
     font-weight: 600;
     font-size: 0.9rem;
@@ -1491,8 +1492,8 @@ mark {
 .note-panel {
     margin-top: 14px;
     padding: 14px 16px;
-    background: #fffdf5;
-    border: 1px solid #f0e6c8;
+    background: rgba(255, 253, 245, var(--ui-alpha));
+    border: 1px solid rgba(128, 128, 128, calc((1 - var(--ui-alpha)) * 0.5 + 0.001));
     border-radius: var(--radius);
 }
 
@@ -2224,7 +2225,7 @@ a.review-chip-all:hover {
 
 /* 解析面板 */
 .dark .explanation-panel {
-    border-color: #33415a;
+    border-color: rgba(128, 128, 128, calc((1 - var(--ui-alpha)) * 0.5 + 0.001));
 }
 
 .dark .explanation-meta {
@@ -2244,8 +2245,8 @@ a.review-chip-all:hover {
 
 /* 笔记面板 */
 .dark .note-panel {
-    background: #2b2820;
-    border-color: #4a4430;
+    background: rgba(43, 40, 32, var(--ui-alpha));
+    border-color: rgba(128, 128, 128, calc((1 - var(--ui-alpha)) * 0.5 + 0.001));
 }
 
 .dark .note-title {
