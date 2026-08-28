@@ -2,17 +2,24 @@
  * 预缓存拆分为两层，避免每次部署都强制重下 3.79MB：
  *   APP_PRECACHE  —— 应用外壳（页面/样式/脚本/图标/元数据），体积 ~380KB，
  *                    变化频率低；哈希注入 APP_VER。
- *   DATA_PRECACHE —— 数据文件（题库/笔记/导图/打卡表），体积大（~3.4MB），
+ *   DATA_PRECACHE —— 数据文件（题库/笔记/导图/打卡表），体积大（~5MB），
  *                    安装时一并预取（失败不阻塞），但按 DATA_VER 隔离；
  *                    运行时按需缓存，离线可用。
- * APP_VER / DATA_VER 由构建脚本 tools/build_sw.py 依据各自资源内容自动算哈希生成，
- * 单一真源是下方两个数组；手动编辑版本行会被下次构建覆盖。
+ * 第三层（不进任何预缓存清单）：
+ *   LAZY_DATA     —— 懒加载数据文件，只有打开对应页面才拉取（首屏零成本）。
+ *                    它不能按 DATA_VER 归口：DATA_VER 只由 DATA_PRECACHE 内容算出，
+ *                    改这些文件时 DATA_VER 不变，缓存优先就会一直命中旧数据；
+ *                    按 APP_VER 归口同样失效（改数据不动外壳）。故单独算 LAZY_VER。
+ * APP_VER / DATA_VER / LAZY_VER 由构建脚本 tools/build_sw.py 依据各自资源内容自动算哈希生成，
+ * 单一真源是下方三个数组；手动编辑版本行会被下次构建覆盖。
  *
  * 关键收益：① 首页只依赖外壳 + 几百字节的 meta.json，不再因题库变化被迫重下；
- *          ② 只改数据不改外壳时，APP_VER 不变 → 外壳零重下；反之亦然。
+ *          ② 只改数据不改外壳时，APP_VER 不变 → 外壳零重下；反之亦然；
+ *          ③ 懒加载数据既不占首屏，改完也能凭 LAZY_VER 正确失效。
  */
 const APP_VER = 'quiz408-app-4a26ccc052';
 const DATA_VER = 'quiz408-data-558aaab952';
+const LAZY_VER = 'quiz408-lazy-9fdef590c3';
 
 // 应用外壳：保证离线骨架与最新脚本。meta.json 仅几百字节，随外壳一起预缓存。
 const APP_PRECACHE = [
@@ -86,6 +93,18 @@ const DATA_PRECACHE = [
     'data/os_map.json'
 ];
 
+// 懒加载资源：按前缀归口，不进任何预缓存清单（首屏零成本、按需拉取），
+// 但必须有自己的版本命名空间——改了这些文件时 APP_VER/DATA_VER 都不变，
+// 若沿用缓存优先就会一直命中旧图/旧数据。LAZY_VER 由构建脚本按这些目录实际内容算出。
+const LAZY_PREFIXES = [
+    'data/algo_notes.json',
+    'data/daka_figs/',
+    'data/ds_figs/',
+    'data/os_figs/',
+    'data/cn_figs/',
+    'data/dati_figs/'
+];
+
 self.addEventListener('install', (e) => {
     e.waitUntil((async () => {
         // 外壳必缓存（保证离线骨架）。若同名缓存已存在（本层版本未变），跳过重下，省流量。
@@ -111,7 +130,8 @@ self.addEventListener('activate', (e) => {
         const keys = await caches.keys();
         await Promise.all(keys.filter(k =>
             (k.startsWith('quiz408-app-') && k !== APP_VER) ||
-            (k.startsWith('quiz408-data-') && k !== DATA_VER)
+            (k.startsWith('quiz408-data-') && k !== DATA_VER) ||
+            (k.startsWith('quiz408-lazy-') && k !== LAZY_VER)
         ).map(k => caches.delete(k)));
         await self.clients.claim();
     })());
@@ -120,6 +140,7 @@ self.addEventListener('activate', (e) => {
 // 缓存策略（分层）：
 // - 页面/HTML、JS、CSS、manifest → 网络优先：保证线上更新后拿到最新页面与脚本，离线回退缓存
 // - 数据/图片/图标 → 缓存优先（离线优先）：未命中走网络并回填对应版本缓存
+//   其中 LAZY_PREFIXES 命中的资源回填到 LAZY_VER 命名空间（不进预缓存、首屏不下载）
 self.addEventListener('fetch', (e) => {
     if (e.request.method !== 'GET') return;
 
@@ -145,9 +166,11 @@ self.addEventListener('fetch', (e) => {
         return;
     }
 
-    // 数据/图片/图标：按资源归属选择缓存命名空间（数据版本 / 外壳版本），缓存优先
-    const inData = DATA_PRECACHE.some(u => path.endsWith('/' + u) || path === '/' + u);
-    const cacheName = inData ? DATA_VER : APP_VER;
+    // 数据/图片/图标：按资源归属选择缓存命名空间（懒加载层 / 数据层 / 外壳层），缓存优先。
+    // 三者必须互斥：懒加载前缀优先判定，避免被外壳层「吃掉」而长期命中旧内容。
+    const inLazy = LAZY_PREFIXES.some(u => path.includes('/' + u));
+    const inData = !inLazy && DATA_PRECACHE.some(u => path.endsWith('/' + u) || path === '/' + u);
+    const cacheName = inLazy ? LAZY_VER : (inData ? DATA_VER : APP_VER);
     e.respondWith((async () => {
         const hit = await caches.match(e.request, { ignoreSearch: true });
         if (hit) return hit;
