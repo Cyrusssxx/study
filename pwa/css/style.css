@@ -4565,3 +4565,26 @@ a.chapter-badge-link:hover {
 .bg-reset:hover { background: var(--border); }
 .bg-hint { font-size: 11px; color: var(--text-light); margin-top: 6px; line-height: 1.5; }
 .bg-disabled { opacity: .45; pointer-events: none; }
+
+/* 🎨 背景按钮：与页面已有的右下角悬浮按钮（目录定位 ☰）错开，避免重叠 */
+@media (max-width: 900px) {
+    .bg-fab.bg-fab-shift { bottom: 78px; }
+}
+
+/* ===== 全局：各页面容器纳入 UI 透明度 ===== */
+.subject-card,
+.result-score-card,
+.exam-setup-card,
+.daka-card,
+.map-card {
+    background: rgba(var(--card-rgb), var(--ui-alpha));
+}
+.subject-card,
+.result-score-card,
+.exam-setup-card,
+.map-card {
+    border: 1px solid rgba(128, 128, 128, calc((1 - var(--ui-alpha)) * 0.5 + 0.001));
+}
+.daka-card {
+    border-top: 1px solid rgba(128, 128, 128, calc((1 - var(--ui-alpha)) * 0.5 + 0.001));
+}
