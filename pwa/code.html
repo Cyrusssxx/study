@@ -54,6 +54,7 @@
     <div class="ol-nav-mask" id="codeNavMask" onclick="closeCodeNav()"></div>
     <script src="js/common.js"></script>
     <script src="js/background.js"></script>
+    <script src="js/lightbox.js"></script>
     <script>
     let codeQuestions = [];
     let codeProgress = {};
@@ -212,38 +213,6 @@
         groups: [...document.querySelectorAll('details[id^="group-"]')].filter(d => d.open).map(d => d.id)
     }));
     PS.restoreScroll();
-
-    /* ===== 图片放大预览：当前页 lightbox，不再新开标签页 ===== */
-    function ensureFigLightbox() {
-        let box = document.getElementById('figLightbox');
-        if (box) return box;
-        box = document.createElement('div');
-        box.id = 'figLightbox';
-        box.className = 'fig-lightbox';
-        box.innerHTML = '<img alt="放大预览"><button class="fig-lb-close" aria-label="关闭预览">×</button>';
-        box.addEventListener('click', function (e) {
-            if (e.target === box || e.target.classList.contains('fig-lb-close')) closeFigLightbox();
-        });
-        document.body.appendChild(box);
-        return box;
-    }
-    window.openFigLightbox = function (src) {
-        const box = ensureFigLightbox();
-        box.querySelector('img').src = src;
-        box.classList.add('show');
-        document.body.style.overflow = 'hidden';
-    };
-    window.closeFigLightbox = function () {
-        const box = document.getElementById('figLightbox');
-        if (box) {
-            box.classList.remove('show');
-            box.querySelector('img').src = '';
-        }
-        document.body.style.overflow = '';
-    };
-    document.addEventListener('keydown', function (e) {
-        if (e.key === 'Escape') closeFigLightbox();
-    });
     </script>
 </body>
 </html>

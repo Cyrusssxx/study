@@ -2302,23 +2302,53 @@ a.review-chip-all:hover {
 /* ===== 图片放大预览 lightbox（当前页，不新开标签页） ===== */
 .fig-lightbox {
     position: fixed; inset: 0; z-index: 3000;
-    display: none; align-items: center; justify-content: center;
-    background: rgba(0, 0, 0, .82); padding: 24px;
-    cursor: zoom-out;
+    display: none; flex-direction: column;
+    background: rgba(0, 0, 0, .88);
 }
 .fig-lightbox.show { display: flex; }
-.fig-lightbox img {
-    max-width: 96vw; max-height: 92vh; object-fit: contain;
-    border-radius: 8px; background: #fff; box-shadow: 0 8px 40px rgba(0, 0, 0, .5);
-    cursor: default;
+
+/* 顶部工具栏 */
+.fig-lb-bar {
+    flex: none; display: flex; align-items: center; justify-content: center; gap: 10px;
+    padding: 12px 16px; background: rgba(0, 0, 0, .35);
 }
-.fig-lb-close {
-    position: absolute; top: 16px; right: 20px;
-    width: 40px; height: 40px; border: none; border-radius: 50%;
-    background: rgba(255, 255, 255, .16); color: #fff; font-size: 26px; line-height: 1;
-    cursor: pointer; transition: background .15s ease;
+.fig-lb-btn {
+    min-width: 40px; height: 36px; padding: 0 12px;
+    border: none; border-radius: 8px; cursor: pointer;
+    background: rgba(255, 255, 255, .16); color: #fff;
+    font-size: 15px; line-height: 1; transition: background .15s ease;
 }
-.fig-lb-close:hover { background: rgba(255, 255, 255, .32); }
+.fig-lb-btn:hover { background: rgba(255, 255, 255, .32); }
+.fig-lb-btn.fig-lb-close { font-size: 18px; }
+.fig-lb-zoom {
+    min-width: 58px; text-align: center; color: #fff;
+    font-size: 13px; font-variant-numeric: tabular-nums;
+}
+
+/* 图片舞台 */
+.fig-lb-stage {
+    flex: 1; min-height: 0; overflow: hidden;
+    display: flex; align-items: center; justify-content: center;
+    cursor: grab;
+}
+.fig-lightbox.dragging .fig-lb-stage { cursor: grabbing; }
+.fig-lb-stage img {
+    max-width: 94vw; max-height: 78vh; object-fit: contain;
+    border-radius: 8px; background: #fff;
+    box-shadow: 0 8px 40px rgba(0, 0, 0, .5);
+    cursor: inherit; user-select: none; -webkit-user-drag: none;
+    transform-origin: center center; will-change: transform;
+}
+
+/* 底部提示 */
+.fig-lb-tip {
+    flex: none; text-align: center; padding: 10px 16px 14px;
+    color: rgba(255, 255, 255, .6); font-size: 12px;
+}
+@media (max-width: 600px) {
+    .fig-lb-tip { display: none; }
+    .fig-lb-stage img { max-height: 72vh; }
+}
 
 /* ===== 代码真题·暴力解区块 ===== */
 .code-brute {
@@ -4565,6 +4595,26 @@ a.chapter-badge-link:hover {
 .bg-reset:hover { background: var(--border); }
 .bg-hint { font-size: 11px; color: var(--text-light); margin-top: 6px; line-height: 1.5; }
 .bg-disabled { opacity: .45; pointer-events: none; }
+
+/* 背景应用范围选择 */
+.bg-scope-btns { display: flex; gap: 8px; margin-bottom: 8px; }
+.bg-scope-btn {
+    flex: 1; padding: 6px 0; border: 1px solid var(--border);
+    background: var(--light); color: var(--text);
+    border-radius: 6px; cursor: pointer; font-size: 12px;
+    transition: border-color .15s ease, color .15s ease;
+}
+.bg-scope-btn:hover { border-color: var(--primary); color: var(--primary); }
+.bg-scope-list { display: grid; grid-template-columns: 1fr 1fr; gap: 2px 8px; }
+.bg-scope-item {
+    display: flex; align-items: center; gap: 5px; padding: 3px 0;
+    font-size: 12px; color: var(--text); cursor: pointer;
+}
+.bg-scope-item input {
+    width: 13px; height: 13px; margin: 0; cursor: pointer;
+    accent-color: var(--primary);
+}
+.bg-scope-cur span { font-weight: 600; color: var(--primary); }
 
 /* 🎨 背景按钮：与页面已有的右下角悬浮按钮（目录定位 ☰）错开，避免重叠 */
 @media (max-width: 900px) {

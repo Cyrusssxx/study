@@ -17,6 +17,23 @@
     var BG_VAL = 'quiz_bg_value';
     var BG_OV = 'quiz_bg_overlay';
     var BG_OP = 'quiz_ui_opacity';
+    var BG_SCOPE = 'quiz_bg_scope';              // 应用范围：["*"] 或 文件名数组
+
+    // 可选应用场景（与 pwa 下的页面一一对应）
+    var PAGES = [
+        { f: 'index.html', n: '首页' },
+        { f: 'quiz.html', n: '刷题' },
+        { f: 'notes.html', n: '笔记' },
+        { f: 'code.html', n: '代码题' },
+        { f: 'daka.html', n: '强化打卡' },
+        { f: 'dati.html', n: '大题专项' },
+        { f: 'wrong.html', n: '错题本' },
+        { f: 'favorites.html', n: '收藏夹' },
+        { f: 'stats.html', n: '统计' },
+        { f: 'search.html', n: '搜题' },
+        { f: 'exam.html', n: '模拟考试' },
+        { f: 'map.html', n: '思维导图' }
+    ];
 
     var PRESETS = [
         '#f0f2f5', '#e8f0fe', '#f3e8ff', '#e6f4ea', '#fff3e0', '#fde7e9',
@@ -31,6 +48,27 @@
     function $(id) { return document.getElementById(id); }
     function isDark() { return document.documentElement.classList.contains('dark'); }
     function getOverlay() { return parseInt(localStorage.getItem(BG_OV) || '0', 10); }
+
+    /* ---------------- 应用范围 ---------------- */
+    function currentPage() {
+        var f = (location.pathname.split('/').pop() || 'index.html').toLowerCase();
+        return f === '' || f === 'study' ? 'index.html' : f;
+    }
+    function getScope() {
+        try {
+            var s = JSON.parse(localStorage.getItem(BG_SCOPE));
+            return Array.isArray(s) ? s : ['*'];
+        } catch (e) { return ['*']; }
+    }
+    function setScope(arr) {
+        localStorage.setItem(BG_SCOPE, JSON.stringify(arr));
+        renderScope();
+        applyBg();
+    }
+    function inScope(page) {
+        var s = getScope();
+        return s.indexOf('*') >= 0 || s.indexOf(page) >= 0;
+    }
 
     /* ---------------- DOM 注入 ---------------- */
     function injectDom() {
@@ -67,6 +105,15 @@
             '            <span class="bg-val" id="bgOpacityVal">100%</span>' +
             '        </div>' +
             '    </div>' +
+            '    <div class="bg-sec" id="bgScopeSec">' +
+            '        <div class="bg-sec-title">应用范围</div>' +
+            '        <div class="bg-scope-btns">' +
+            '            <button type="button" class="bg-scope-btn" onclick="setBgScopeAll()">全站</button>' +
+            '            <button type="button" class="bg-scope-btn" onclick="setBgScopeOnly()">仅本页</button>' +
+            '        </div>' +
+            '        <div class="bg-scope-list" id="bgScopeList"></div>' +
+            '        <div class="bg-hint" id="bgScopeHint"></div>' +
+            '    </div>' +
             '    <button class="bg-reset" onclick="resetQuizBg()">重置为默认背景</button>' +
             '</div>';
 
@@ -81,25 +128,34 @@
     }
 
     /* ---------------- 背景应用 ---------------- */
-    function applyBg() {
-        var type = localStorage.getItem(BG_TYPE) || 'none';
-        var val = localStorage.getItem(BG_VAL) || '';
+    /** 清除背景，恢复页面默认外观 */
+    function clearBg() {
         var body = document.body;
         var overlayEl = $('bgOverlay');
         var ovSec = $('bgOverlaySec');
+        body.style.backgroundImage = '';
+        body.style.backgroundColor = '';
+        body.style.backgroundSize = '';
+        body.style.backgroundPosition = '';
+        body.style.backgroundAttachment = '';
+        body.style.backgroundRepeat = '';
+        if (overlayEl) overlayEl.style.display = 'none';
+        if (ovSec) ovSec.classList.add('bg-disabled');
+    }
+
+    function applyBg() {
+        var overlayEl = $('bgOverlay');
         if (!overlayEl) return;
 
-        if (type === 'none' || !val) {
-            body.style.backgroundImage = '';
-            body.style.backgroundColor = '';
-            body.style.backgroundSize = '';
-            body.style.backgroundPosition = '';
-            body.style.backgroundAttachment = '';
-            body.style.backgroundRepeat = '';
-            overlayEl.style.display = 'none';
-            if (ovSec) ovSec.classList.add('bg-disabled');
-            return;
-        }
+        // 当前页不在应用范围内 → 不应用背景（面板仍可用，可随时改回来）
+        if (!inScope(currentPage())) { clearBg(); return; }
+
+        var type = localStorage.getItem(BG_TYPE) || 'none';
+        var val = localStorage.getItem(BG_VAL) || '';
+        var body = document.body;
+        var ovSec = $('bgOverlaySec');
+
+        if (type === 'none' || !val) { clearBg(); return; }
         if (type === 'image') {
             body.style.backgroundImage = 'url(' + val + ')';
             body.style.backgroundSize = 'cover';
@@ -214,6 +270,49 @@
         p.classList.toggle('open', open);
     };
 
+    /* ---------------- 应用范围交互 ---------------- */
+    function renderScope() {
+        var list = $('bgScopeList');
+        if (!list) return;
+        var s = getScope();
+        var all = s.indexOf('*') >= 0;
+        var cur = currentPage();
+        var html = '';
+        PAGES.forEach(function (p) {
+            var on = all || s.indexOf(p.f) >= 0;
+            var isCur = p.f === cur;
+            html += '<label class="bg-scope-item' + (isCur ? ' bg-scope-cur' : '') + '">' +
+                '<input type="checkbox"' + (on ? ' checked' : '') +
+                ' onchange="toggleBgScopePage(\'' + p.f + '\', this.checked)">' +
+                '<span>' + p.n + (isCur ? '（本页）' : '') + '</span>' +
+                '</label>';
+        });
+        list.innerHTML = html;
+
+        var hint = $('bgScopeHint');
+        if (hint) {
+            hint.textContent = inScope(cur)
+                ? (all ? '已应用到全站所有页面。' : '仅应用到勾选的页面。')
+                : '⚠ 当前页未勾选，背景暂不显示（设置会保留）。';
+        }
+    }
+
+    window.setBgScopeAll = function () { setScope(['*']); };
+    window.setBgScopeOnly = function () { setScope([currentPage()]); };
+    window.toggleBgScopePage = function (f, checked) {
+        var s = getScope();
+        // 从"全站"态展开为逐页全选，便于取消其中某一页
+        if (s.indexOf('*') >= 0) {
+            s = PAGES.map(function (p) { return p.f; });
+        }
+        if (checked) {
+            if (s.indexOf(f) < 0) s.push(f);
+        } else {
+            s = s.filter(function (x) { return x !== f; });
+        }
+        setScope(s);
+    };
+
     /* ---------------- 初始化 ---------------- */
     function init() {
         injectDom();
@@ -254,6 +353,7 @@
             };
         }
 
+        renderScope();
         applyBg();
         markActive();
 

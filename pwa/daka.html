@@ -62,6 +62,7 @@
     <div class="ol-nav-mask" id="dakaNavMask" onclick="closeDakaNav()"></div>
     <script src="js/common.js"></script>
     <script src="js/background.js"></script>
+    <script src="js/lightbox.js"></script>
     <script src="js/backend.js"></script>
     <script>
     let dakaQuestions = [];
@@ -196,7 +197,7 @@
     function renderCard(q) {
         const done = !!dakaProgress[q.id];
         const figs = q.figs || {content: [], answer: []};
-        const img = n => `<img src="data/daka_figs/${n}" loading="lazy" alt="教材原图" onclick="window.open(this.src,'_blank')">`;
+        const img = n => `<img src="data/daka_figs/${n}" loading="lazy" alt="教材原图" onclick="openFigLightbox(this.src)">`;
         const figWrap = (arr, label) => arr && arr.length ? `<div class="code-figs"><div class="code-figs-label">📷 ${label}</div>${arr.map(img).join('')}</div>` : '';
         // 文本在前（始终可读/可复制代码），教材原图在后作补充；图慢/失败时不再空白
         const content = fmtContent(q.content || '') + figWrap(figs.content, '题目教材原图');
