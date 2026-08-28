@@ -119,6 +119,8 @@
     function renderCard(q) {
         const done = !!codeProgress[q.id];
         const figs = q.figs || {};
+        // 有教材原图的题只显示图片；无配图的题（2024/2025/2026）仍显示文字题面
+        const hasQFig = (figs.content || []).length > 0;
         const figHtml = (arr, label) => {
             if (!arr || !arr.length) return '';
             return `<div class="code-figs"><div class="code-figs-label">📷 ${esc(label)}</div>${arr.map(n => `<img src="data/daka_figs/${esc(n)}" loading="lazy" alt="教材原图" onclick="openFigLightbox(this.src)">`).join('')}</div>`;
@@ -143,7 +145,7 @@
                         ${done ? '已会 ✓' : '标记已会'}
                     </button>
                 </div>
-                <div class="daka-content">${fmtC(q.content)}</div>
+                ${hasQFig ? '' : `<div class="daka-content">${fmtC(q.content)}</div>`}
                 ${figHtml(figs.content, '题目教材原图')}
                 <details class="daka-answer">
                     <summary>考点分析 · 易错点 · 暴力解</summary>
