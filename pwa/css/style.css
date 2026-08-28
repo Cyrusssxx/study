@@ -2425,26 +2425,200 @@ a.review-chip-all:hover {
 .dark .sol-head { color: #d8c580; }
 .dark .sol-cx { background: rgba(52, 152, 219, .16); color: #7fc4e8; }
 
-/* ===== 算法讲义知识库（algo.html） ===== */
-.algo-chapter { margin-bottom: 36px; }
-.algo-h2 {
-    font-size: 1.25rem; font-weight: 700; color: var(--primary);
-    margin: 8px 0 16px; padding-bottom: 8px; border-bottom: 2px solid var(--border);
+/* ===== 算法讲义知识库（algo.html）—— 版型对齐考点笔记 notes.html ===== */
+
+/* 章节卡片：与 .notes-section 同款（白卡 + 圆角 + 阴影） */
+.algo-card {
+    background: var(--card-bg);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    padding: 22px 26px 8px;
+    margin-bottom: 18px;
+    scroll-margin-top: 76px;
 }
-.algo-h {
-    color: var(--text); line-height: 1.5; scroll-margin-top: 70px;
+
+/* 章标题：与 .notes-ch-title 同款（左 4px 主色竖条） */
+.algo-ch-title {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: var(--text);
+    margin: 0 0 14px;
+    padding-left: 12px;
+    border-left: 4px solid var(--primary);
+    scroll-margin-top: 76px;
 }
-h3.algo-h { font-size: 1.05rem; margin: 24px 0 10px; }
-h4.algo-h { font-size: 0.95rem; margin: 18px 0 8px; }
-h5.algo-h { font-size: 0.88rem; margin: 14px 0 6px; color: var(--text-light); }
-h6.algo-h { font-size: 0.84rem; margin: 12px 0 6px; color: var(--text-light); }
+
+/* 正文：与 .notes-body 同款（行距 2.0 + 两端对齐） */
+.algo-body {
+    font-size: 1rem;
+    line-height: 2.0;
+    text-align: justify;
+}
+
+/* 三级标题（章内主节 2.1）：与 .notes-body h4 同款 4px 主色条 */
+h3.algo-h {
+    font-size: 1.02rem;
+    color: var(--text);
+    margin: 34px 0 12px;
+    padding-left: 11px;
+    position: relative;
+    scroll-margin-top: 76px;
+}
+h3.algo-h::before {
+    content: "";
+    position: absolute;
+    left: 0; top: 3px; bottom: 3px;
+    width: 4px;
+    border-radius: 2px;
+    background: var(--primary);
+}
+
+/* 四级标题（2.2.1）：半透明主色细条，压一级 */
+h4.algo-h {
+    font-size: 0.97rem;
+    color: var(--text);
+    margin: 24px 0 10px;
+    padding-left: 11px;
+    position: relative;
+    scroll-margin-top: 76px;
+}
+h4.algo-h::before {
+    content: "";
+    position: absolute;
+    left: 0; top: 4px; bottom: 4px;
+    width: 3px;
+    border-radius: 2px;
+    background: rgba(74, 144, 217, .42);
+}
+
+/* 五级标题（更细的知识点，如「树和森林」）：小字 + 减淡，不进主视觉 */
+h5.algo-h {
+    font-size: 0.9rem;
+    font-weight: 700;
+    color: var(--text-light);
+    margin: 18px 0 8px;
+    scroll-margin-top: 76px;
+}
+
+h3.algo-h:first-child, h4.algo-h:first-child, h5.algo-h:first-child { margin-top: 0; }
+
 .algo-para {
-    font-size: 0.9rem; line-height: 1.95; color: var(--text);
-    margin: 8px 0; white-space: pre-wrap; word-break: break-word;
+    font-size: 1rem;
+    line-height: 2.0;
+    color: var(--text);
+    margin: 11px 0;
+    white-space: pre-wrap;
+    word-break: break-word;
 }
-.algo-code { margin: 10px 0 14px; }
-.algo-tbl { margin: 10px 0 14px; }
-.algo-nav-link { display: block; }
+
+.algo-code { margin: 12px 0 14px; }
+
+/* 做题思路表（讲义原文的 | 分隔表） */
+.algo-tbl {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 12px 0 16px;
+    font-size: 0.86rem;
+    line-height: 1.6;
+}
+.algo-tbl th, .algo-tbl td {
+    border: 1px solid var(--border);
+    padding: 7px 12px;
+    text-align: left;
+}
+.algo-tbl th {
+    background: var(--light);
+    font-weight: 600;
+    font-size: 0.82rem;
+    color: var(--text-light);
+}
+
+/* 列数对不齐的原文表格：等宽保留，不猜列序（PDF 抽字拆散了单元格） */
+.algo-raw {
+    font-family: Consolas, "Courier New", monospace;
+    font-size: 0.84rem;
+    line-height: 1.8;
+    color: var(--text-light);
+    background: var(--light);
+    border: 1px dashed var(--border);
+    border-radius: 6px;
+    padding: 8px 12px;
+    margin: 12px 0 16px;
+    white-space: pre-wrap;
+    word-break: break-word;
+}
+.algo-raw-wide {
+    overflow-x: auto;
+    white-space: pre;
+}
+
+/* 真题卡（蓝）/ 例题卡（黄）：与 .notes-body .key-callout / .note-example 同族 */
+.algo-qa {
+    margin: 16px 0;
+    padding: 6px 16px 14px;
+    border-radius: 10px;
+}
+.algo-qa-real {
+    background: rgba(74, 144, 217, .07);
+    border: 1px solid rgba(74, 144, 217, .28);
+    border-left: 4px solid var(--primary);
+}
+.algo-qa-eg {
+    background: #fffbe6;
+    border: 1px solid #ffe58f;
+    border-left: 4px solid #faad14;
+}
+.algo-qa-badge {
+    display: inline-block;
+    margin: 8px 0 4px;
+    padding: 3px 10px;
+    border-radius: 6px;
+    font-size: 0.8rem;
+    font-weight: 700;
+    letter-spacing: .2px;
+}
+.algo-qa-real .algo-qa-badge { background: var(--primary); color: #fff; }
+.algo-qa-eg .algo-qa-badge { background: #faad14; color: #fff; }
+.algo-qa .algo-para {
+    font-size: 0.96rem;
+    line-height: 1.95;
+    margin: 6px 0 0;
+}
+.algo-qa .algo-code { margin: 10px 0 0; }
+
+.dark .algo-qa-real {
+    background: rgba(74, 144, 217, .13);
+    border-color: rgba(74, 144, 217, .4);
+}
+.dark .algo-qa-eg {
+    background: #2e2a1a;
+    border-color: #5c4a1a;
+    border-left-color: #d4a017;
+}
+.dark .algo-qa-eg .algo-qa-badge { background: #d4a017; color: #1f242c; }
+
+/* 目录：章节标题可点（复用 .notes-toc-ch 视觉，补成可点击块） */
+.algo-toc-ch {
+    display: block;
+    font-weight: 600;
+    font-size: 0.88rem;
+    padding: 8px 10px 4px;
+    color: var(--text);
+    cursor: pointer;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    scroll-margin-top: 84px;
+}
+.algo-toc-ch:hover { background: var(--light); color: var(--primary); }
+.algo-toc-ch.active { background: #eef5fd; color: var(--primary); }
+
+/* 五级标题在目录里再下压一层（特异性高于 .notes-toc-sub，顺序无关） */
+.notes-toc-sub.algo-toc-l5 {
+    padding-left: 54px;
+    font-size: 0.75rem;
+}
+.dark .algo-toc-ch.active { background: rgba(74, 144, 217, .2); }
 
 /* 代码题页 -> 算法讲义 的悬浮入口（放左下角，避开右下角的 🎨 与 ☰） */
 .algo-fab {

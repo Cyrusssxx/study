@@ -37,61 +37,142 @@
     </nav>
 
     <main class="container">
-        <div class="page-header">
+        <div class="notes-header">
             <h1>📘 算法讲义 · 知识点与做题方法</h1>
-            <p id="algoMeta">加载中…</p>
+            <p class="notes-source" id="algoMeta">加载中...</p>
         </div>
 
-        <div class="ol-layout">
-            <aside class="ol-nav" id="algoNav"></aside>
-            <button class="ol-nav-tab" id="algoNavTab" onclick="toggleAlgoNav()" title="展开目录">☰ 目录</button>
-            <div class="question-list" id="algoBody">
+        <div class="notes-layout" id="algoLayout">
+            <button class="notes-toc-toggle" id="algoTocToggle" onclick="toggleAlgoToc()" title="收起/展开目录" aria-label="收起/展开目录">«</button>
+            <aside class="notes-toc" id="algoToc"></aside>
+            <div class="notes-content" id="algoBody">
                 <div class="loading">加载中...</div>
             </div>
         </div>
-    </main>
 
-    <button class="ol-nav-fab" id="algoNavFab" onclick="openAlgoNav()" title="打开目录">☰ 目录</button>
-    <div class="ol-nav-mask" id="algoNavMask" onclick="closeAlgoNav()"></div>
+        <button class="notes-top-btn" id="algoTopBtn" title="回到开头" hidden
+            onclick="window.scrollTo({ top: 0, behavior: 'smooth' })">↑</button>
+    </main>
 
     <script src="js/common.js"></script>
     <script src="js/background.js"></script>
     <script src="js/lightbox.js"></script>
     <script>
     /* 讲义方法论知识库：data/algo_notes.json（懒加载，不进主包预缓存）
-       内容一字未改，仅还原排版结构：标题层级 / 代码块 / 表格 */
+       内容一字未改，仅还原排版结构：标题层级 / 表格 / 代码块 / 真题·例题卡片
+       版型对齐 notes.html（考点笔记）：notes-header + notes-layout(toggle + toc + content) */
 
     const NBSP = /\u00a0/g;
     const esc = (s) => String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    const norm = (s) => String(s == null ? '' : s).replace(NBSP, ' ');
+
     let anchorSeq = 0;
 
-    /** 段落里若每行都含 ' | '，视为表格（讲义的做题思路表等） */
-    function renderText(raw) {
-        const text = String(raw || '').replace(NBSP, ' ');
-        const lines = text.split('\n').map(l => l.trim()).filter(Boolean);
-        const tableLike = lines.length >= 2 && lines.every(l => l.indexOf('|') >= 0);
-        if (tableLike) {
-            const rows = lines.map(l => l.split('|').map(c => c.trim()));
-            const head = rows[0], body = rows.slice(1);
-            return '<table class="sol-score algo-tbl">' +
-                '<tr>' + head.map(c => `<th>${esc(c)}</th>`).join('') + '</tr>' +
-                body.map(r => '<tr>' + r.map(c => `<td>${esc(c)}</td>`).join('') + '</tr>').join('') +
-                '</table>';
+    /* ---------- 片段渲染 ---------- */
+
+    /* 讲义里的「做题思路表」：
+       1) PDF 抽字常把空表头列丢掉 → 首行比正文少 1 列，左补一列恢复对齐；
+          2) 少 2 列以上的情况是 PDF 按视觉行拆散了单元格（列顺序错乱），
+             无法可靠还原 → 整体降级为普通文本，避免渲染出错序的表。 */
+    function isTableLine(line) {
+        return line.indexOf('|') >= 0 && line.split('|').length >= 2;
+    }
+
+    function tableBlock(rows) {
+        if (rows.length < 2) return null;   /* 单行不算表（如「data | link」） */
+        let grid = rows.map(r => r.split('|').map(c => c.trim()));
+        const widths = grid.map(r => r.length);
+        const counts = {};
+        widths.forEach(w => { counts[w] = (counts[w] || 0) + 1; });
+        let N = 0, modal = 0;
+        Object.keys(counts).forEach(w => { if (counts[w] > modal) { modal = counts[w]; N = +w; } });
+        /* 只接受「最多缺 1 列」的可信情况：缺失的是空表头列，左补即可 */
+        if (grid.some(r => N - r.length !== 1 && r.length !== N)) return null;
+        grid = grid.map(r => r.length === N - 1 ? [''].concat(r) : r);
+        const head = grid[0], body = grid.slice(1);
+        return '<table class="algo-tbl">' +
+            '<tr>' + head.map(c => `<th>${esc(c)}</th>`).join('') + '</tr>' +
+            body.map(r => '<tr>' + r.map(c => `<td>${esc(c)}</td>`).join('') + '</tr>').join('') +
+            '</table>';
+    }
+
+    /* 真题 / 例题标识：可位于行首，或在「例：」这类短引导词之后 */
+    const MARKER_RE = /^(?:例[题]?\s*[:：]\s*)?(【[^】]*真题[^】]*】|例题\s*\d+\s*[-–—~]\s*\d+)/;
+    const RE_REAL = /^【[^】]*真题[^】]*】/;
+
+    /** 按「标记行」把文字段切成多张卡（一段里常并列 6 个例题） */
+    function paraBlocks(lines) {
+        let out = [];
+        let cur = null;
+        const push = () => { if (cur) { out.push(cur); cur = null; } };
+        for (const l of lines) {
+            const m = l.match(MARKER_RE);
+            if (m) {
+                push();
+                const rest = l.slice(m[0].length).trim();
+                cur = { badge: m[1], isReal: RE_REAL.test(m[1]), lines: rest ? [rest] : [] };
+            } else {
+                if (!cur) { cur = { badge: null, lines: [] }; }
+                cur.lines.push(l);
+            }
         }
-        return `<div class="algo-para">${esc(text)}</div>`;
+        push();
+        return out.map(b => {
+            if (!b.badge) return `<div class="algo-para">${esc(b.lines.join('\n'))}</div>`;
+            const cls = b.isReal ? 'algo-qa-real' : 'algo-qa-eg';
+            return `<div class="algo-qa ${cls}"><span class="algo-qa-badge">${esc(b.badge)}</span>` +
+                (b.lines.length ? `<div class="algo-para">${esc(b.lines.join('\n'))}</div>` : '') +
+                '</div>';
+        }).join('');
+    }
+
+    /**
+     * 多行 | 分隔段，但列数对不齐（PDF 按视觉行拆散了单元格）→
+     * 不猜列序，按原文等宽保留，既可读又不误导。
+     */
+    function rawBlock(rows) {
+        const text = rows.map(r => norm(r)).join('\n');
+        const isWide = rows.some(r => norm(r).length > 60);
+        return `<div class="algo-raw${isWide ? ' algo-raw-wide' : ''}">${esc(text)}</div>`;
+    }
+
+    /** 段落里表格行与文字混排时，按「表格段 / 文字段」切分，避免 | 直接露出 */
+    function renderText(raw) {
+        const lines = norm(raw).split('\n');
+        let html = '';
+        let buf = [];
+        let tbl = null;
+        const flush = () => {
+            if (!buf.length) return;
+            const t = tbl ? tableBlock(buf) : null;
+            if (t) html += t;
+            else if (tbl && buf.length > 1) html += rawBlock(buf);   /* 乱序：原文保留 */
+            else html += paraBlocks(buf);
+            buf = [];
+        };
+        for (const rawLine of lines) {
+            const l = norm(rawLine).trim();
+            if (!l) { flush(); tbl = null; continue; }
+            const t = isTableLine(l);
+            if (tbl === null) tbl = t;
+            else if (t !== tbl) { flush(); tbl = t; }
+            buf.push(l);
+        }
+        flush();
+        return html;
     }
 
     function renderItems(items) {
         let html = '';
         for (const it of items) {
             if (it.t === 'h') {
-                const lvl = Math.min(6, Math.max(3, it.lvl || 3));
+                const lvl = Math.min(5, Math.max(3, it.lvl || 3));
                 anchorSeq++;
                 const id = 'sec-' + anchorSeq;
-                it._id = id;                       // 供目录生成后回填
-                html += `<h${lvl} class="algo-h" id="${id}" data-anchor="${id}">${esc(it.text)}</h${lvl}>`;
+                it._id = id;
+                html += `<h${lvl} class="algo-h" id="${id}" data-anchor="${id}">${esc(norm(it.text))}</h${lvl}>`;
             } else if (it.t === 'code') {
-                html += `<pre class="code-block algo-code">${esc(String(it.text || '').replace(NBSP, ' '))}</pre>`;
+                html += `<pre class="code-block algo-code">${esc(norm(it.text))}</pre>`;
             } else {
                 html += renderText(it.text);
             }
@@ -99,20 +180,24 @@
         return html;
     }
 
+    /* ---------- 目录（三级全展开，沿用 notes 视觉） ---------- */
+
     function buildNav(chapters) {
-        let html = '<div class="ol-nav-head" onclick="toggleAlgoNav()">目录<span class="ol-nav-toggle">«</span></div>';
+        let html = '';
         for (const c of chapters) {
-            const subs = c.items.filter(x => x.t === 'h');
-            html += `<div class="ol-nav-chapter">${esc(c.title)}</div>`;
-            for (const s of subs) {
-                if (!s._id) continue;
-                const indent = (s.lvl || 3) - 3;
-                html += `<a class="ol-nav-link algo-nav-link" style="padding-left:${10 + indent * 12}px" ` +
-                        `href="#${s._id}" onclick="closeAlgoNav()">${esc(s.text)}</a>`;
+            anchorSeq++;
+            const cid = 'ch-' + anchorSeq;
+            html += `<a class="algo-toc-ch" href="#${cid}">${esc(c.title)}</a>`;
+            for (const s of c.items.filter(x => x.t === 'h' && x._id)) {
+                const lvl = Math.min(5, Math.max(3, s.lvl || 3));
+                const cls = lvl === 3 ? 'notes-toc-sec' : (lvl === 4 ? 'notes-toc-sub' : 'notes-toc-sub algo-toc-l5');
+                html += `<a class="${cls}" href="#${s._id}">${esc(norm(s.text))}</a>`;
             }
         }
         return html;
     }
+
+    /* ---------- 加载 ---------- */
 
     async function loadAlgo() {
         const body = document.getElementById('algoBody');
@@ -132,26 +217,110 @@
 
         let html = '';
         for (const c of data.chapters) {
-            html += `<section class="algo-chapter"><h2 class="algo-h2">${esc(c.title)}</h2>` +
-                    renderItems(c.items) + '</section>';
+            anchorSeq++;
+            const cid = 'ch-' + anchorSeq;
+            html += `<section class="algo-card" id="${cid}">` +
+                    `<div class="algo-ch-title">${esc(c.title)}</div>` +
+                    `<div class="algo-body">${renderItems(c.items)}</div>` +
+                    '</section>';
         }
         body.innerHTML = html;
-        document.getElementById('algoNav').innerHTML = buildNav(data.chapters);
+        document.getElementById('algoToc').innerHTML = buildNav(data.chapters);
+        setupScrollSpy();
     }
 
-    /* 目录展开/收起（与代码题页同款交互） */
-    function toggleAlgoNav() {
-        document.getElementById('algoNav').classList.toggle('open');
-        document.getElementById('algoNavMask').classList.toggle('open');
+    /* ---------- 目录收起/展开（与考点笔记同款：WAAPI 合成器属性动画 + 本地记忆） ---------- */
+
+    const algoLayout = document.getElementById('algoLayout');
+    if (localStorage.getItem('algo_toc_collapsed') === '1') {
+        algoLayout.classList.add('notes-toc-collapsed');
+        document.getElementById('algoTocToggle').textContent = '»';
     }
-    function openAlgoNav() {
-        document.getElementById('algoNav').classList.add('open');
-        document.getElementById('algoNavMask').classList.add('open');
+
+    const TOC_ANIM_OPT = { duration: 180, easing: 'ease' };
+    let tocAnimating = false;
+    function toggleAlgoToc() {
+        if (tocAnimating) return;
+        const toc = document.getElementById('algoToc');
+        const collapsing = !algoLayout.classList.contains('notes-toc-collapsed');
+        const btn = document.getElementById('algoTocToggle');
+        if (typeof toc.animate !== 'function') {
+            algoLayout.classList.toggle('notes-toc-collapsed');
+            localStorage.setItem('algo_toc_collapsed', algoLayout.classList.contains('notes-toc-collapsed') ? '1' : '0');
+            btn.textContent = algoLayout.classList.contains('notes-toc-collapsed') ? '»' : '«';
+            return;
+        }
+        tocAnimating = true;
+        if (collapsing) {
+            const a = toc.animate(
+                [{ transform: 'none', opacity: 1 }, { transform: 'translateX(-120%)', opacity: 0 }],
+                TOC_ANIM_OPT
+            );
+            a.onfinish = () => {
+                algoLayout.classList.add('notes-toc-collapsed');
+                localStorage.setItem('algo_toc_collapsed', '1');
+                btn.textContent = '»';
+                tocAnimating = false;
+            };
+        } else {
+            toc.style.transition = 'none';
+            toc.style.transform = 'translateX(-120%)';
+            toc.style.opacity = '0';
+            algoLayout.classList.remove('notes-toc-collapsed');
+            void toc.offsetHeight;
+            const a = toc.animate(
+                [{ transform: 'translateX(-120%)', opacity: 0 }, { transform: 'none', opacity: 1 }],
+                TOC_ANIM_OPT
+            );
+            a.onfinish = () => {
+                toc.style.transform = '';
+                toc.style.opacity = '';
+                toc.style.transition = '';
+                localStorage.setItem('algo_toc_collapsed', '0');
+                btn.textContent = '«';
+                tocAnimating = false;
+            };
+        }
     }
-    function closeAlgoNav() {
-        document.getElementById('algoNav').classList.remove('open');
-        document.getElementById('algoNavMask').classList.remove('open');
+
+    /* ---------- 滚动跟随：目录高亮当前小节 + 侧栏自动滚动 ---------- */
+
+    function setupScrollSpy() {
+        const links = Array.from(document.querySelectorAll('#algoToc a'));
+        const targets = links.map(a => document.getElementById(a.getAttribute('href').slice(1))).filter(Boolean);
+        if (!targets.length || typeof IntersectionObserver === 'undefined') return;
+        const byId = {};
+        links.forEach(a => { byId[a.getAttribute('href').slice(1)] = a; });
+
+        const setActive = (id) => {
+            links.forEach(a => a.classList.toggle('active', a === byId[id]));
+            const act = byId[id];
+            if (act && !algoLayout.classList.contains('notes-toc-collapsed')) {
+                const toc = document.getElementById('algoToc');
+                /* 只滚侧栏，不用 scrollIntoView（会连页面一起滚） */
+                const mid = act.offsetTop - toc.clientHeight / 2 + act.offsetHeight / 2;
+                if (mid < toc.scrollTop || mid > toc.scrollTop + toc.clientHeight) {
+                    toc.scrollTo({ top: Math.max(0, mid), behavior: 'smooth' });
+                }
+            }
+        };
+
+        const io = new IntersectionObserver((entries) => {
+            let best = null;
+            for (const e of entries) if (e.isIntersecting) {
+                if (!best || e.boundingClientRect.top < best.boundingClientRect.top) best = e;
+            }
+            if (best) setActive(best.target.id);
+        }, { rootMargin: '-70px 0px -55% 0px', threshold: 0 });
+        targets.forEach(t => io.observe(t));
     }
+
+    /* ---------- 回到顶部按钮 ---------- */
+
+    const algoTopBtn = document.getElementById('algoTopBtn');
+    window.addEventListener('scroll', () => {
+        algoTopBtn.hidden = window.scrollY < 600;
+    }, { passive: true });
 
     loadAlgo();
     </script>
