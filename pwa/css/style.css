@@ -1808,6 +1808,17 @@ mark {
     border-radius: 6px;
 }
 
+/* 题干/解析中的嵌入图：可点击放大 */
+.question-content img,
+.explanation-body img {
+    cursor: zoom-in;
+    transition: opacity 0.15s;
+}
+.question-content img:hover,
+.explanation-body img:hover {
+    opacity: 0.88;
+}
+
 .history-table {
     width: 100%;
     border-collapse: collapse;
@@ -4443,3 +4454,50 @@ a.chapter-badge-link:hover {
 .dark .mode-badge[data-mode="real"]     { background: #1a2b45; color: #7fb0ee; }
 .dark .mode-badge[data-mode="fav_real"] { background: linear-gradient(90deg, #123a30, #1a2b45); color: #6fd3c3; }
 .dark .mode-badge[data-mode="sequential"] { background: #26303b; color: #aab6c2; }
+
+/* ==================== 刷题背景自定义（仅 quiz.html 生效） ==================== */
+#bgOverlay { position: fixed; inset: 0; z-index: -1; pointer-events: none; display: none; }
+.bg-fab {
+    position: fixed; right: 20px; bottom: 20px; width: 48px; height: 48px;
+    border: none; border-radius: 50%; background: var(--primary); color: #fff;
+    font-size: 22px; cursor: pointer; z-index: 200;
+    box-shadow: 0 4px 14px rgba(0,0,0,.25);
+    display: flex; align-items: center; justify-content: center;
+    transition: transform .15s ease, opacity .15s ease;
+}
+.bg-fab:hover { transform: scale(1.08); }
+.bg-fab:active { transform: scale(.96); }
+.bg-panel {
+    position: fixed; right: 20px; bottom: 80px; width: 290px; max-height: 78vh; overflow: auto;
+    background: var(--card-bg); color: var(--text); border: 1px solid var(--border);
+    border-radius: 12px; box-shadow: 0 8px 30px rgba(0,0,0,.18); z-index: 201;
+    padding: 16px; display: none;
+}
+.bg-panel.open { display: block; }
+.bg-panel h3 { font-size: 15px; margin-bottom: 4px; display: flex; justify-content: space-between; align-items: center; }
+.bg-panel .bg-close { border: none; background: none; font-size: 16px; cursor: pointer; color: var(--text-light); padding: 0 2px; }
+.bg-sec { margin-top: 14px; }
+.bg-sec-title { font-size: 12px; color: var(--text-light); margin-bottom: 8px; font-weight: 600; }
+.bg-swatches { display: grid; grid-template-columns: repeat(6, 1fr); gap: 8px; }
+.bg-swatch {
+    width: 100%; aspect-ratio: 1 / 1; border-radius: 8px; border: 2px solid transparent;
+    cursor: pointer; box-shadow: 0 1px 3px rgba(0,0,0,.15);
+    transition: transform .12s ease, border-color .12s ease;
+}
+.bg-swatch:hover { transform: scale(1.08); }
+.bg-swatch.active { border-color: var(--primary); }
+.bg-upload-btn {
+    display: inline-block; padding: 8px 14px; background: var(--primary); color: #fff;
+    border-radius: 8px; cursor: pointer; font-size: 13px; font-weight: 600;
+}
+.bg-upload-btn input { display: none; }
+.bg-row { display: flex; align-items: center; gap: 10px; margin-top: 8px; }
+.bg-row input[type=range] { flex: 1; }
+.bg-val { font-size: 12px; color: var(--text-light); min-width: 38px; text-align: right; }
+.bg-reset {
+    margin-top: 16px; width: 100%; padding: 9px; border: 1px solid var(--border);
+    background: var(--light); color: var(--text); border-radius: 8px; cursor: pointer; font-size: 13px;
+}
+.bg-reset:hover { background: var(--border); }
+.bg-hint { font-size: 11px; color: var(--text-light); margin-top: 6px; line-height: 1.5; }
+.bg-disabled { opacity: .45; pointer-events: none; }

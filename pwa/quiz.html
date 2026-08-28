@@ -125,6 +125,32 @@
         </div>
     </div>
 
+    <!-- 刷题背景自定义：仅本页生效 -->
+    <div id="bgOverlay"></div>
+    <button class="bg-fab" id="bgFab" title="刷题背景设置" onclick="toggleBgPanel()">🎨</button>
+    <div class="bg-panel" id="bgPanel">
+        <h3>刷题背景 <button class="bg-close" onclick="toggleBgPanel(false)" title="关闭">✕</button></h3>
+        <div class="bg-sec">
+            <div class="bg-sec-title">预设（纯色 / 渐变）</div>
+            <div class="bg-swatches" id="bgSwatches"></div>
+        </div>
+        <div class="bg-sec">
+            <div class="bg-sec-title">自定义图片</div>
+            <label class="bg-upload-btn">上传图片
+                <input type="file" id="bgFile" accept="image/png,image/jpeg,image/webp">
+            </label>
+            <div class="bg-hint">支持 jpg/png/webp；自动压缩缩放（最长边≤1920px），仅存于本机。</div>
+        </div>
+        <div class="bg-sec" id="bgOverlaySec">
+            <div class="bg-sec-title">遮罩强度（自定义图片时生效）</div>
+            <div class="bg-row">
+                <input type="range" id="bgOverlayRange" min="0" max="90" value="35" oninput="onBgOverlayInput(this.value)">
+                <span class="bg-val" id="bgOverlayVal">35%</span>
+            </div>
+        </div>
+        <button class="bg-reset" onclick="resetQuizBg()">重置为默认背景</button>
+    </div>
+
     <script src="js/common.js"></script>
     <script src="js/backend.js"></script>
     <script>
@@ -1144,6 +1170,174 @@
     }
 
     init();
+    </script>
+
+    <script>
+    // ===== 刷题背景自定义（仅 quiz.html 生效） =====
+    (function () {
+        const BG_TYPE = 'quiz_bg_type', BG_VAL = 'quiz_bg_value', BG_OV = 'quiz_bg_overlay';
+        const PRESETS = [
+            '#f0f2f5', '#e8f0fe', '#f3e8ff', '#e6f4ea', '#fff3e0', '#fde7e9',
+            'linear-gradient(135deg,#a1c4fd,#c2e9fb)',
+            'linear-gradient(135deg,#d4fc79,#96e6a1)',
+            'linear-gradient(135deg,#fbc2eb,#a6c1ee)',
+            'linear-gradient(135deg,#84fab0,#8fd3f4)',
+            'linear-gradient(135deg,#f6d365,#fda085)',
+            'linear-gradient(120deg,#fccb90,#d57eeb)'
+        ];
+        const overlayEl = document.getElementById('bgOverlay');
+        const isDark = () => document.documentElement.classList.contains('dark');
+        const getOverlay = () => parseInt(localStorage.getItem(BG_OV) || '0', 10);
+
+        function applyQuizBg() {
+            const type = localStorage.getItem(BG_TYPE) || 'none';
+            const val = localStorage.getItem(BG_VAL) || '';
+            const ovSec = document.getElementById('bgOverlaySec');
+            if (type === 'none' || !val) {
+                document.body.style.backgroundImage = '';
+                document.body.style.backgroundColor = '';
+                document.body.style.backgroundSize = '';
+                document.body.style.backgroundPosition = '';
+                document.body.style.backgroundAttachment = '';
+                document.body.style.backgroundRepeat = '';
+                overlayEl.style.display = 'none';
+                ovSec.classList.add('bg-disabled');
+                return;
+            }
+            if (type === 'image') {
+                document.body.style.backgroundImage = 'url(' + val + ')';
+                document.body.style.backgroundSize = 'cover';
+                document.body.style.backgroundPosition = 'center';
+                document.body.style.backgroundAttachment = 'fixed';
+                document.body.style.backgroundRepeat = 'no-repeat';
+                const a = getOverlay() / 100;
+                overlayEl.style.backgroundColor = isDark() ? ('rgba(0,0,0,' + a + ')') : ('rgba(255,255,255,' + a + ')');
+                overlayEl.style.display = 'block';
+                ovSec.classList.remove('bg-disabled');
+            } else { // preset
+                const isGrad = val.indexOf('gradient') >= 0;
+                document.body.style.backgroundImage = isGrad ? val : '';
+                document.body.style.backgroundColor = isGrad ? '' : val;
+                document.body.style.backgroundSize = '';
+                document.body.style.backgroundPosition = '';
+                document.body.style.backgroundAttachment = '';
+                document.body.style.backgroundRepeat = '';
+                overlayEl.style.display = 'none';
+                ovSec.classList.add('bg-disabled');
+            }
+        }
+
+        function setBg(type, val) {
+            localStorage.setItem(BG_TYPE, type);
+            localStorage.setItem(BG_VAL, val);
+            applyQuizBg();
+            markActive();
+        }
+        window.resetQuizBg = function () {
+            localStorage.removeItem(BG_TYPE);
+            localStorage.removeItem(BG_VAL);
+            localStorage.removeItem(BG_OV);
+            document.getElementById('bgOverlayRange').value = 35;
+            document.getElementById('bgOverlayVal').textContent = '35%';
+            applyQuizBg();
+            markActive();
+        };
+        window.onBgOverlayInput = function (v) {
+            localStorage.setItem(BG_OV, v);
+            document.getElementById('bgOverlayVal').textContent = v + '%';
+            applyQuizBg();
+        };
+        window.toggleBgPanel = function (force) {
+            const p = document.getElementById('bgPanel');
+            const open = force === undefined ? !p.classList.contains('open') : force;
+            p.classList.toggle('open', open);
+        };
+
+        function markActive() {
+            const type = localStorage.getItem(BG_TYPE) || 'none';
+            const val = localStorage.getItem(BG_VAL) || '';
+            document.querySelectorAll('.bg-swatch').forEach(function (s) {
+                s.classList.toggle('active', type === 'preset' && s.dataset.val === val);
+            });
+        }
+
+        function buildSwatches() {
+            const wrap = document.getElementById('bgSwatches');
+            PRESETS.forEach(function (p) {
+                const d = document.createElement('div');
+                d.className = 'bg-swatch';
+                d.dataset.val = p;
+                d.style.background = p;
+                d.title = p;
+                d.onclick = function () { setBg('preset', p); };
+                wrap.appendChild(d);
+            });
+        }
+
+        function compressImage(file, maxEdge, quality) {
+            return new Promise(function (res, rej) {
+                const r = new FileReader();
+                r.onload = function (e) {
+                    const img = new Image();
+                    img.onload = function () {
+                        let w = img.width, h = img.height;
+                        if (w > maxEdge || h > maxEdge) {
+                            const s = Math.min(maxEdge / w, maxEdge / h);
+                            w = Math.round(w * s); h = Math.round(h * s);
+                        }
+                        const c = document.createElement('canvas');
+                        c.width = w; c.height = h;
+                        c.getContext('2d').drawImage(img, 0, 0, w, h);
+                        res(c.toDataURL('image/jpeg', quality));
+                    };
+                    img.onerror = rej;
+                    img.src = e.target.result;
+                };
+                r.onerror = rej;
+                r.readAsDataURL(file);
+            });
+        }
+
+        function initBg() {
+            buildSwatches();
+            // 遮罩默认值（无记录时给 35%，避免图片过亮）
+            let ov = getOverlay();
+            if (!localStorage.getItem(BG_OV)) { ov = 35; localStorage.setItem(BG_OV, '35'); }
+            document.getElementById('bgOverlayRange').value = ov;
+            document.getElementById('bgOverlayVal').textContent = ov + '%';
+
+            const fi = document.getElementById('bgFile');
+            fi.onchange = function () {
+                const f = fi.files && fi.files[0];
+                if (!f) return;
+                if (!/^image\/(png|jpeg|webp)$/.test(f.type)) {
+                    alert('仅支持 jpg / png / webp 图片'); fi.value = ''; return;
+                }
+                compressImage(f, 1920, 0.8).then(function (dataUrl) {
+                    setBg('image', dataUrl);
+                    fi.value = '';
+                }).catch(function () {
+                    alert('图片处理失败，请换一张试试'); fi.value = '';
+                });
+            };
+
+            applyQuizBg();
+            markActive();
+
+            // 暗色模式切换时重算遮罩色
+            new MutationObserver(function () { applyQuizBg(); })
+                .observe(document.documentElement, { attributes: true, attributeFilter: ['class'] });
+
+            // 点击面板外关闭
+            document.addEventListener('click', function (ev) {
+                const p = document.getElementById('bgPanel');
+                if (!p.classList.contains('open')) return;
+                if (ev.target.closest('#bgPanel') || ev.target.closest('#bgFab')) return;
+                p.classList.remove('open');
+            });
+        }
+        initBg();
+    })();
     </script>
 </body>
 </html>
