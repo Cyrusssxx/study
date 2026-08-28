@@ -2377,6 +2377,93 @@ a.review-chip-all:hover {
 }
 .dark .code-brute-head { color: #d8c580; }
 
+/* ===== 讲义解法区块（一休算法讲义，含做题思路得分表） ===== */
+.sol-wrap { margin: 12px 0 16px; }
+.sol-source {
+    font-size: 0.78rem; color: var(--text-light); margin-bottom: 8px;
+}
+.sol-score {
+    width: 100%; border-collapse: collapse; margin-bottom: 12px;
+    font-size: 0.82rem;
+}
+.sol-score th, .sol-score td {
+    border: 1px solid var(--border); padding: 5px 10px; text-align: left;
+}
+.sol-score th { background: var(--light); font-weight: 600; font-size: 0.78rem; }
+.sol-score-num { font-weight: 700; color: #c0392b; text-align: center; }
+.sol-item {
+    margin: 12px 0; padding: 12px 14px;
+    background: #fffaf0; border: 1px solid #f0e0b8; border-radius: var(--radius);
+}
+.sol-head {
+    font-weight: 700; font-size: 0.9rem; color: #a06000;
+    margin-bottom: 8px; line-height: 1.5;
+}
+.sol-sec {
+    font-size: 0.75rem; font-weight: 600; color: var(--text-light);
+    text-transform: uppercase; letter-spacing: 0.5px; margin: 8px 0 4px;
+}
+.sol-text {
+    font-size: 0.86rem; line-height: 1.85; color: var(--text);
+    white-space: pre-wrap; word-break: break-word;
+}
+.sol-cx {
+    margin-top: 8px; padding: 6px 10px; border-radius: 6px;
+    background: rgba(52, 152, 219, .1); color: #1a6fa8;
+    font-size: 0.82rem; line-height: 1.7;
+}
+.sol-note {
+    margin-top: 8px; font-size: 0.82rem; line-height: 1.8;
+    color: var(--text-light); white-space: pre-wrap;
+}
+.sol-tag-fb {
+    display: inline-block; margin-left: 6px; padding: 1px 6px;
+    border-radius: 4px; background: var(--border); color: var(--text-light);
+    font-size: 0.68rem; font-weight: 500; vertical-align: middle;
+}
+.dark .sol-item { background: #2b2820; border-color: #4a4430; }
+.dark .sol-head { color: #d8c580; }
+.dark .sol-cx { background: rgba(52, 152, 219, .16); color: #7fc4e8; }
+
+/* ===== 算法讲义知识库（algo.html） ===== */
+.algo-chapter { margin-bottom: 36px; }
+.algo-h2 {
+    font-size: 1.25rem; font-weight: 700; color: var(--primary);
+    margin: 8px 0 16px; padding-bottom: 8px; border-bottom: 2px solid var(--border);
+}
+.algo-h {
+    color: var(--text); line-height: 1.5; scroll-margin-top: 70px;
+}
+h3.algo-h { font-size: 1.05rem; margin: 24px 0 10px; }
+h4.algo-h { font-size: 0.95rem; margin: 18px 0 8px; }
+h5.algo-h { font-size: 0.88rem; margin: 14px 0 6px; color: var(--text-light); }
+h6.algo-h { font-size: 0.84rem; margin: 12px 0 6px; color: var(--text-light); }
+.algo-para {
+    font-size: 0.9rem; line-height: 1.95; color: var(--text);
+    margin: 8px 0; white-space: pre-wrap; word-break: break-word;
+}
+.algo-code { margin: 10px 0 14px; }
+.algo-tbl { margin: 10px 0 14px; }
+.algo-nav-link { display: block; }
+
+/* 代码题页 -> 算法讲义 的悬浮入口（放左下角，避开右下角的 🎨 与 ☰） */
+.algo-fab {
+    position: fixed; left: 20px; bottom: 20px; z-index: 200;
+    display: flex; align-items: center; gap: 6px;
+    height: 44px; padding: 0 16px; border-radius: 22px;
+    background: var(--primary); color: #fff; text-decoration: none;
+    font-size: 15px; font-weight: 600;
+    box-shadow: 0 4px 14px rgba(0, 0, 0, .25);
+    transition: transform .15s ease, box-shadow .15s ease;
+}
+.algo-fab:hover {
+    transform: scale(1.05); box-shadow: 0 6px 20px rgba(0, 0, 0, .3); color: #fff;
+}
+.algo-fab:active { transform: scale(.97); }
+@media (max-width: 600px) {
+    .algo-fab { left: 14px; bottom: 14px; height: 40px; padding: 0 13px; font-size: 14px; }
+}
+
 /* ==================== 代码块（题干/解析/打卡题面通用） ==================== */
 .code-block {
     font-family: Consolas, "Courier New", monospace;

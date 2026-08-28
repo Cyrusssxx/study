@@ -25,6 +25,7 @@
                 <a href="daka.html" class="nav-link">强化打卡</a>
                 <a href="dati.html" class="nav-link">大题专项</a>
                 <a href="code.html" class="nav-link active">代码题</a>
+                <a href="algo.html" class="nav-link">算法讲义</a>
             </div>
             <div class="nav-tools">
                 <span class="nav-timer" id="navTimer" title="今日刷题时长（切换到其他窗口时暂停）">⏱ 00:00:00</span>
@@ -52,6 +53,7 @@
     </main>
     <button class="ol-nav-fab" id="codeNavFab" onclick="openCodeNav()" title="定位题目">☰ 定位</button>
     <div class="ol-nav-mask" id="codeNavMask" onclick="closeCodeNav()"></div>
+    <a class="algo-fab" href="algo.html" title="打开算法讲义：知识点与做题方法">📖<span>讲义</span></a>
     <script src="js/common.js"></script>
     <script src="js/background.js"></script>
     <script src="js/lightbox.js"></script>
@@ -127,14 +129,38 @@
             if (!arr || !arr.length) return '';
             return `<div class="code-figs"><div class="code-figs-label">📷 ${esc(label)}</div>${arr.map(n => `<img src="data/daka_figs/${esc(n)}" loading="lazy" alt="教材原图" onclick="openFigLightbox(this.src)">`).join('')}</div>`;
         };
-        const bruteHtml = (b) => {
-            if (!b) return '';
-            return `<div class="code-brute">
-                <div class="code-brute-head">💪 暴力解 · ${esc(b.method || '')}</div>
-                <div class="code-brute-sec">基本设计思想</div>
-                <div class="code-brute-idea">${b.idea || ''}</div>
-                <div class="code-brute-sec">代码（${esc(b.method || '')}）</div>
-                <pre class="code-block">${esc(b.code || '')}</pre>
+        // 讲义解法（优先）；讲义未收录时退回自生成暴力解
+        const solHtml = (q) => {
+            const s = q.solutions || {};
+            const list = s.list || [];
+            if (!list.length) {
+                const b = q.brute;
+                if (!b) return '';
+                return `<div class="code-brute">
+                    <div class="code-brute-head">💪 ${esc(b.method || '暴力解')} <span class="sol-tag-fb">自生成</span></div>
+                    <div class="sol-sec">基本设计思想</div>
+                    <div class="sol-text">${b.idea || ''}</div>
+                    <div class="sol-sec">代码</div>
+                    <pre class="code-block">${esc(b.code || '')}</pre>
+                </div>`;
+            }
+            const table = (s.score_rows || []).length ? `
+                <table class="sol-score">
+                    <tr><th>做题思路</th><th>方法</th><th>预计得分</th></tr>
+                    ${s.score_rows.map(r => `<tr><td>${esc(r.approach)}</td><td>${esc(r.method)}</td><td class="sol-score-num">${esc(r.score)}</td></tr>`).join('')}
+                </table>` : '';
+            return `<div class="sol-wrap">
+                <div class="sol-source">📘 ${esc(s.source || '')}</div>
+                ${table}
+                ${list.map(x => `
+                    <div class="sol-item">
+                        <div class="sol-head">${esc(x.tag || '')}${x.kind ? ' · ' + esc(x.kind) : ''}${x.name ? ' · ' + esc(x.name) : ''}</div>
+                        ${x.analysis ? `<div class="sol-sec">解析</div><div class="sol-text">${esc(x.analysis)}</div>` : ''}
+                        ${x.thought ? `<div class="sol-sec">基本设计思想</div><div class="sol-text">${esc(x.thought)}</div>` : ''}
+                        ${x.code ? `<div class="sol-sec">代码</div><pre class="code-block">${esc(x.code)}</pre>` : ''}
+                        ${x.complexity ? `<div class="sol-cx">${esc(x.complexity)}</div>` : ''}
+                        ${x.note ? `<div class="sol-note">${esc(x.note)}</div>` : ''}
+                    </div>`).join('')}
             </div>`;
         };
         return `
@@ -150,8 +176,8 @@
                 ${hasQFig ? '' : `<div class="daka-content">${fmtC(q.content)}</div>`}
                 ${figHtml(figs.content, '题目教材原图')}
                 <details class="daka-answer">
-                    <summary>考点分析 · 易错点 · 暴力解</summary>
-                    ${bruteHtml(q.brute)}
+                    <summary>考点分析 · 易错点 · 讲义解法</summary>
+                    ${solHtml(q)}
                     <div class="daka-analysis">${esc((q.analysis || '').replace('易错点：', '\n易错点：'))}</div>
                     ${figHtml(figs.answer, '解答教材原图')}
                 </details>
