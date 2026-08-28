@@ -121,7 +121,17 @@
         const figs = q.figs || {};
         const figHtml = (arr, label) => {
             if (!arr || !arr.length) return '';
-            return `<div class="code-figs"><div class="code-figs-label">📷 ${esc(label)}</div>${arr.map(n => `<img src="data/daka_figs/${esc(n)}" loading="lazy" alt="教材原图" onclick="window.open(this.src,'_blank')">`).join('')}</div>`;
+            return `<div class="code-figs"><div class="code-figs-label">📷 ${esc(label)}</div>${arr.map(n => `<img src="data/daka_figs/${esc(n)}" loading="lazy" alt="教材原图" onclick="openFigLightbox(this.src)">`).join('')}</div>`;
+        };
+        const bruteHtml = (b) => {
+            if (!b) return '';
+            return `<div class="code-brute">
+                <div class="code-brute-head">💪 暴力解 · ${esc(b.method || '')}</div>
+                <div class="code-brute-sec">基本设计思想</div>
+                <div class="code-brute-idea">${b.idea || ''}</div>
+                <div class="code-brute-sec">代码（${esc(b.method || '')}）</div>
+                <pre class="code-block">${esc(b.code || '')}</pre>
+            </div>`;
         };
         return `
             <div class="daka-card${done ? ' daka-done' : ''}" id="card-${q.id}">
@@ -136,8 +146,8 @@
                 <div class="daka-content">${fmtC(q.content)}</div>
                 ${figHtml(figs.content, '题目教材原图')}
                 <details class="daka-answer">
-                    <summary>查看答案与解析</summary>
-                    <div class="daka-answer-body">${fmtA(q.answer)}</div>
+                    <summary>考点分析 · 易错点 · 暴力解</summary>
+                    ${bruteHtml(q.brute)}
                     <div class="daka-analysis">${esc((q.analysis || '').replace('易错点：', '\n易错点：'))}</div>
                     ${figHtml(figs.answer, '解答教材原图')}
                 </details>
@@ -199,6 +209,38 @@
         groups: [...document.querySelectorAll('details[id^="group-"]')].filter(d => d.open).map(d => d.id)
     }));
     PS.restoreScroll();
+
+    /* ===== 图片放大预览：当前页 lightbox，不再新开标签页 ===== */
+    function ensureFigLightbox() {
+        let box = document.getElementById('figLightbox');
+        if (box) return box;
+        box = document.createElement('div');
+        box.id = 'figLightbox';
+        box.className = 'fig-lightbox';
+        box.innerHTML = '<img alt="放大预览"><button class="fig-lb-close" aria-label="关闭预览">×</button>';
+        box.addEventListener('click', function (e) {
+            if (e.target === box || e.target.classList.contains('fig-lb-close')) closeFigLightbox();
+        });
+        document.body.appendChild(box);
+        return box;
+    }
+    window.openFigLightbox = function (src) {
+        const box = ensureFigLightbox();
+        box.querySelector('img').src = src;
+        box.classList.add('show');
+        document.body.style.overflow = 'hidden';
+    };
+    window.closeFigLightbox = function () {
+        const box = document.getElementById('figLightbox');
+        if (box) {
+            box.classList.remove('show');
+            box.querySelector('img').src = '';
+        }
+        document.body.style.overflow = '';
+    };
+    document.addEventListener('keydown', function (e) {
+        if (e.key === 'Escape') closeFigLightbox();
+    });
     </script>
 </body>
 </html>

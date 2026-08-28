@@ -2299,6 +2299,54 @@ a.review-chip-all:hover {
     color: var(--primary);
 }
 
+/* ===== 图片放大预览 lightbox（当前页，不新开标签页） ===== */
+.fig-lightbox {
+    position: fixed; inset: 0; z-index: 3000;
+    display: none; align-items: center; justify-content: center;
+    background: rgba(0, 0, 0, .82); padding: 24px;
+    cursor: zoom-out;
+}
+.fig-lightbox.show { display: flex; }
+.fig-lightbox img {
+    max-width: 96vw; max-height: 92vh; object-fit: contain;
+    border-radius: 8px; background: #fff; box-shadow: 0 8px 40px rgba(0, 0, 0, .5);
+    cursor: default;
+}
+.fig-lb-close {
+    position: absolute; top: 16px; right: 20px;
+    width: 40px; height: 40px; border: none; border-radius: 50%;
+    background: rgba(255, 255, 255, .16); color: #fff; font-size: 26px; line-height: 1;
+    cursor: pointer; transition: background .15s ease;
+}
+.fig-lb-close:hover { background: rgba(255, 255, 255, .32); }
+
+/* ===== 代码真题·暴力解区块 ===== */
+.code-brute {
+    margin: 12px 0 16px; padding: 14px 16px;
+    background: #fffaf0; border: 1px solid #f0e0b8;
+    border-radius: var(--radius);
+}
+.code-brute-head {
+    font-weight: 700; font-size: 0.95rem; color: #a06000; margin-bottom: 10px;
+}
+.code-brute-sec {
+    font-size: 0.78rem; font-weight: 600; color: var(--text-light);
+    text-transform: uppercase; letter-spacing: 0.5px;
+    margin: 10px 0 6px;
+}
+.code-brute-idea {
+    font-size: 0.88rem; line-height: 1.9; color: var(--text);
+}
+.code-brute pre.code-block {
+    margin: 0; white-space: pre; overflow-x: auto;
+    font-family: Consolas, Monaco, "Courier New", monospace;
+    font-size: 0.82rem; line-height: 1.65;
+}
+.dark .code-brute {
+    background: #2b2820; border-color: #4a4430;
+}
+.dark .code-brute-head { color: #d8c580; }
+
 /* ==================== 代码块（题干/解析/打卡题面通用） ==================== */
 .code-block {
     font-family: Consolas, "Courier New", monospace;
