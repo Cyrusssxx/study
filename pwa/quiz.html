@@ -148,6 +148,14 @@
                 <span class="bg-val" id="bgOverlayVal">35%</span>
             </div>
         </div>
+        <div class="bg-sec" id="bgOpacitySec">
+            <div class="bg-sec-title">整体 UI 透明度（题目框 / 题号框 / 目录）</div>
+            <div class="bg-hint">仅背景变透明，文字保持清晰；拉低即可透出壁纸。</div>
+            <div class="bg-row">
+                <input type="range" id="bgOpacityRange" min="0" max="100" value="100" oninput="onUiOpacityInput(this.value)">
+                <span class="bg-val" id="bgOpacityVal">100%</span>
+            </div>
+        </div>
         <button class="bg-reset" onclick="resetQuizBg()">重置为默认背景</button>
     </div>
 
@@ -1175,7 +1183,7 @@
     <script>
     // ===== 刷题背景自定义（仅 quiz.html 生效） =====
     (function () {
-        const BG_TYPE = 'quiz_bg_type', BG_VAL = 'quiz_bg_value', BG_OV = 'quiz_bg_overlay';
+        const BG_TYPE = 'quiz_bg_type', BG_VAL = 'quiz_bg_value', BG_OV = 'quiz_bg_overlay', BG_OP = 'quiz_ui_opacity';
         const PRESETS = [
             '#f0f2f5', '#e8f0fe', '#f3e8ff', '#e6f4ea', '#fff3e0', '#fde7e9',
             'linear-gradient(135deg,#a1c4fd,#c2e9fb)',
@@ -1237,8 +1245,12 @@
             localStorage.removeItem(BG_TYPE);
             localStorage.removeItem(BG_VAL);
             localStorage.removeItem(BG_OV);
+            localStorage.removeItem(BG_OP);
             document.getElementById('bgOverlayRange').value = 35;
             document.getElementById('bgOverlayVal').textContent = '35%';
+            const op = document.getElementById('bgOpacityRange');
+            if (op) { op.value = 100; document.getElementById('bgOpacityVal').textContent = '100%'; }
+            document.documentElement.style.setProperty('--ui-alpha', 1);
             applyQuizBg();
             markActive();
         };
@@ -1246,6 +1258,12 @@
             localStorage.setItem(BG_OV, v);
             document.getElementById('bgOverlayVal').textContent = v + '%';
             applyQuizBg();
+        };
+        window.onUiOpacityInput = function (v) {
+            v = Math.max(0, Math.min(100, parseInt(v, 10) || 0));
+            localStorage.setItem(BG_OP, v);
+            document.getElementById('bgOpacityVal').textContent = v + '%';
+            document.documentElement.style.setProperty('--ui-alpha', v / 100);
         };
         window.toggleBgPanel = function (force) {
             const p = document.getElementById('bgPanel');
@@ -1305,6 +1323,15 @@
             if (!localStorage.getItem(BG_OV)) { ov = 35; localStorage.setItem(BG_OV, '35'); }
             document.getElementById('bgOverlayRange').value = ov;
             document.getElementById('bgOverlayVal').textContent = ov + '%';
+
+            // 整体 UI 透明度（默认 100 = 当前不透明）
+            let op = parseInt(localStorage.getItem(BG_OP) || '100', 10);
+            const opEl = document.getElementById('bgOpacityRange');
+            if (opEl) {
+                opEl.value = op;
+                document.getElementById('bgOpacityVal').textContent = op + '%';
+            }
+            document.documentElement.style.setProperty('--ui-alpha', op / 100);
 
             const fi = document.getElementById('bgFile');
             fi.onchange = function () {
