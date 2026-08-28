@@ -37,8 +37,9 @@ body {
 
 /* 导航栏 */
 .navbar {
-    background: var(--card-bg);
+    background: rgba(var(--card-rgb), var(--ui-alpha));
     box-shadow: var(--shadow);
+    border-bottom: 1px solid rgba(128,128,128, calc((1 - var(--ui-alpha)) * 0.5 + 0.001));
     position: sticky;
     top: 0;
     z-index: 100;
