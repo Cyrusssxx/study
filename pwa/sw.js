@@ -12,7 +12,7 @@
  *          ② 只改数据不改外壳时，APP_VER 不变 → 外壳零重下；反之亦然。
  */
 const APP_VER = 'quiz408-app-3a3cb8f7dd';
-const DATA_VER = 'quiz408-data-283f8f8cb1';
+const DATA_VER = 'quiz408-data-558aaab952';
 
 // 应用外壳：保证离线骨架与最新脚本。meta.json 仅几百字节，随外壳一起预缓存。
 const APP_PRECACHE = [
