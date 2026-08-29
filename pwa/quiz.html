@@ -673,7 +673,23 @@
             noteHtml = `
                 <div class="note-panel">
                     <div class="note-title">我的笔记</div>
-                    <textarea id="noteInput" class="note-input" rows="4" spellcheck="false" onfocus="onNoteEdit()" oninput="autoResizeNote(this); onNoteInput()" onpaste="pasteNoteImage(event)" placeholder="记下你的解题思路、易错点...（Ctrl+V 可直接粘贴截图；停顿即自动保存；清空内容保存即删除笔记）"></textarea>
+                    <div class="note-toolbar" id="noteToolbar">
+                        <button type="button" data-cmd="bold" title="加粗 (Ctrl+B)"><b>B</b></button>
+                        <button type="button" data-cmd="italic" title="斜体 (Ctrl+I)"><i>I</i></button>
+                        <span class="note-toolbar-sep"></span>
+                        <button type="button" data-cmd="h1" title="大标题">H1</button>
+                        <button type="button" data-cmd="h2" title="中标题">H2</button>
+                        <span class="note-toolbar-sep"></span>
+                        <span class="note-hl-dot" data-cmd="hl" data-color="yellow" title="黄高亮" style="background:#fff3a3"></span>
+                        <span class="note-hl-dot" data-cmd="hl" data-color="green" title="绿高亮" style="background:#b8e6c0"></span>
+                        <span class="note-hl-dot" data-cmd="hl" data-color="blue" title="蓝高亮" style="background:#b3d9f2"></span>
+                        <span class="note-hl-dot" data-cmd="hl" data-color="pink" title="粉高亮" style="background:#f5c2d5"></span>
+                        <span class="note-toolbar-sep"></span>
+                        <button type="button" data-cmd="clear" title="清除格式">⌫ 清除</button>
+                    </div>
+                    <div id="noteInput" class="note-input" contenteditable="true" spellcheck="false"
+                        onfocus="onNoteEdit()" oninput="autoResizeNote(this); onNoteInput()" onpaste="pasteNoteImage(event)"
+                        data-placeholder="记下你的解题思路、易错点...（Ctrl+V 可直接粘贴截图；停顿即自动保存；清空内容保存即删除笔记）"></div>
                     <div class="note-images" id="noteImages"></div>
                     <div class="note-actions">
                         <button class="btn btn-primary btn-sm note-save-btn${hasNote ? ' saved' : ''}" id="noteSaveBtn" onclick="saveNote()">保存笔记</button>
@@ -715,11 +731,12 @@
             </div>
         `;
 
-        // 笔记内容用value赋值，防止笔记里的HTML字符被解析
+        // 笔记内容装载：纯文本（旧格式）走 textContent，HTML 走 innerHTML 并信任白名单标签
         const noteInput = document.getElementById('noteInput');
         if (noteInput) {
-            noteInput.value = q.note || '';
+            loadNoteIntoEditor(noteInput, q.note || '');
             autoResizeNote(noteInput);
+            bindNoteToolbar(noteInput);
         }
         renderNoteImages();
 
@@ -834,7 +851,7 @@
         const q = questions[currentIndex];
         const el = document.getElementById('noteInput');
         if (!q || !el) return;
-        q.note = el.value;              // 先落内存：切题/重渲染不丢字
+        q.note = serializeNote(el);     // 富文本 → HTML 字符串，先落内存：切题/重渲染不丢字
         onNoteEdit();
         const hint = document.getElementById('noteHint');
         if (hint) hint.textContent = '自动保存中…';
@@ -862,7 +879,7 @@
     async function saveNote(isAuto = false) {
         const q = questions[currentIndex];
         const inputEl = document.getElementById('noteInput');
-        const content = inputEl ? inputEl.value : (q.note || '');   // 面板未展开时安全兜底
+        const content = inputEl ? serializeNote(inputEl) : (q.note || '');   // 面板未展开时安全兜底
         // 保存前是否已有笔记：用于区分「已删除」和「本来就是空的」
         const hadNote = !!(q.note || (q.note_images || []).length);
         try {
@@ -893,6 +910,131 @@
     }
 
     // ==================== 笔记贴图 ====================
+
+    // ---- 富文本笔记：装载 / 序列化 / 工具条 / 白名单 sanitize ----
+    // 旧格式是纯文本（不带 HTML 标签），新格式可能含 <strong><em><h1><h2><span class="hl-*"> 等
+    // 装载时通过白名单 sanitizer 防御性过滤，避免渲染任意 HTML（XSS）
+    const NOTE_ALLOWED_TAGS = new Set(['B','I','U','STRONG','EM','H1','H2','H3','P','BR','DIV','SPAN','UL','OL','LI','BLOCKQUOTE']);
+    const NOTE_ALLOWED_CLASS_RE = /^(hl-|note-hl-)?(yellow|green|blue|pink)$/;
+    function sanitizeNoteHtml(html) {
+        if (!html) return '';
+        // 极速判定：不含 '<' 直接当纯文本（最常见、零开销）
+        if (html.indexOf('<') < 0) return '';
+        const t = document.createElement('template');
+        t.innerHTML = html;
+        (function walk(node) {
+            const children = [...node.childNodes];
+            for (const c of children) {
+                if (c.nodeType === 1) {
+                    if (!NOTE_ALLOWED_TAGS.has(c.tagName)) {
+                        // 非法标签：把子节点提到父节点，再移除自己
+                        while (c.firstChild) node.insertBefore(c.firstChild, c);
+                        node.removeChild(c);
+                    } else {
+                        // 清掉危险属性，只保留 style.color/style.backgroundColor
+                        for (const a of [...c.attributes]) {
+                            if (a.name === 'style') {
+                                const ok = a.value.split(';').map(s => s.trim()).filter(s => {
+                                    const m = s.match(/^([a-z-]+):/);
+                                    return m && (m[1] === 'color' || m[1] === 'background-color' || m[1] === 'background');
+                                });
+                                if (ok.length) c.setAttribute('style', ok.join('; '));
+                                else c.removeAttribute('style');
+                            } else if (a.name === 'class') {
+                                if (!NOTE_ALLOWED_CLASS_RE.test(a.value)) c.removeAttribute('class');
+                            } else {
+                                c.removeAttribute(a.name);
+                            }
+                        }
+                        walk(c);
+                    }
+                } else if (c.nodeType === 8) {
+                    c.remove();
+                }
+            }
+        })(t.content);
+        return t.innerHTML;
+    }
+    function isHtmlNote(s) {
+        // 含白名单标签或高亮类才视为富文本；否则走纯文本路径
+        return /<(b|i|u|strong|em|h[1-3]|p|br|div|span|ul|ol|li|blockquote)\b/i.test(s);
+    }
+    function loadNoteIntoEditor(el, raw) {
+        if (!el) return;
+        el.innerHTML = '';
+        if (!raw) { updateNotePlaceholder(el); return; }
+        if (isHtmlNote(raw)) {
+            el.innerHTML = sanitizeNoteHtml(raw);
+        } else {
+            // 纯文本：换行转 <br>，整体白名单化（仍防 HTML 注入）
+            el.innerHTML = sanitizeNoteHtml(raw.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/\n/g, '<br>'));
+        }
+        updateNotePlaceholder(el);
+    }
+    function serializeNote(el) {
+        if (!el) return '';
+        const html = el.innerHTML.replace(/<br>\s*$/, '').trim();
+        // 内容为空（含只有空标签/空 <br>）时返回空串
+        if (!html || /^<br\/?>$/i.test(html) || html === '<p></p>') return '';
+        return html;
+    }
+    function updateNotePlaceholder(el) {
+        // contenteditable 不支持原生 placeholder，手动按子内容判断
+        if (!el) return;
+        const text = el.textContent.trim();
+        el.classList.toggle('is-empty', !text);
+    }
+    function bindNoteToolbar(el) {
+        // 工具条只对当前 input 元素绑一次（renderQuestion 多次创建会复用；用 dataset 标记防重复）
+        if (!el) return;
+        const panel = el.closest('.note-panel');
+        if (!panel) return;
+        const tb = panel.querySelector('.note-toolbar');
+        if (!tb || tb.dataset.bound) return;
+        tb.dataset.bound = '1';
+        tb.addEventListener('mousedown', e => e.preventDefault());   // 按下不丢选区
+        tb.addEventListener('click', e => {
+            const btn = e.target.closest('[data-cmd]');
+            if (!btn) return;
+            el.focus();
+            const cmd = btn.dataset.cmd;
+            if (cmd === 'bold') document.execCommand('bold');
+            else if (cmd === 'italic') document.execCommand('italic');
+            else if (cmd === 'h1') document.execCommand('formatBlock', false, 'H1');
+            else if (cmd === 'h2') document.execCommand('formatBlock', false, 'H2');
+            else if (cmd === 'hl') applyNoteHighlight(el, btn.dataset.color);
+            else if (cmd === 'clear') document.execCommand('removeFormat');
+            onNoteInput();
+        });
+        // 键盘快捷键 Ctrl/Cmd + B/I
+        el.addEventListener('keydown', e => {
+            if (!(e.ctrlKey || e.metaKey)) return;
+            if (e.key === 'b' || e.key === 'B') { e.preventDefault(); document.execCommand('bold'); onNoteInput(); }
+            else if (e.key === 'i' || e.key === 'I') { e.preventDefault(); document.execCommand('italic'); onNoteInput(); }
+        });
+        // 占位符：输入/失焦时刷新
+        el.addEventListener('input', () => updateNotePlaceholder(el));
+        el.addEventListener('blur', () => updateNotePlaceholder(el));
+    }
+    function applyNoteHighlight(el, color) {
+        const sel = window.getSelection();
+        if (!sel || sel.isCollapsed || !sel.rangeCount) return;
+        const range = sel.getRangeAt(0);
+        // 选区必须在 el 内
+        if (!el.contains(range.startContainer) || !el.contains(range.endContainer)) return;
+        // 用 execCommand 的 hiliteColor 作为后备（兼容性最好）
+        const ok = document.execCommand('hiliteColor', false, ({
+            yellow: '#fff3a3', green: '#b8e6c0', blue: '#b3d9f2', pink: '#f5c2d5'
+        })[color]);
+        if (ok) return;
+        // 后备失败：手动包 span
+        try {
+            const span = document.createElement('span');
+            span.className = 'hl hl-' + color;
+            span.appendChild(range.extractContents());
+            range.insertNode(span);
+        } catch (e) { /* 选区越界，忽略 */ }
+    }
 
     function renderNoteImages() {
         const box = document.getElementById('noteImages');

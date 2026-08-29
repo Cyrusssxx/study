@@ -1516,12 +1516,95 @@ mark {
     resize: none;
     overflow-y: hidden;
     line-height: 1.5;
+    /* contenteditable 必要 */
+    min-height: 60px;
+    word-break: break-word;
+    white-space: pre-wrap;
 }
-
+.note-input:empty::before,
+.note-input.is-empty::before {
+    content: attr(data-placeholder);
+    color: var(--text-light);
+    opacity: 0.6;
+    pointer-events: none;
+}
 .note-input:focus {
     outline: none;
     border-color: var(--primary);
 }
+/* 富文本元素基线 */
+.note-input h1 { font-size: 1.3rem; font-weight: 700; margin: 0.4em 0 0.2em; }
+.note-input h2 { font-size: 1.1rem; font-weight: 700; margin: 0.4em 0 0.2em; }
+.note-input p  { margin: 0.2em 0; }
+.note-input blockquote { border-left: 3px solid var(--border); margin: 0.3em 0; padding-left: 8px; color: var(--text-light); }
+
+/* ===== 笔记富文本工具条 ===== */
+.note-toolbar {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    flex-wrap: wrap;
+    padding: 4px 4px 6px;
+    margin-bottom: 4px;
+    border-bottom: 1px dashed var(--border);
+}
+.note-toolbar button {
+    background: none;
+    border: 1px solid transparent;
+    color: var(--text-light);
+    cursor: pointer;
+    width: 26px;
+    height: 26px;
+    border-radius: 4px;
+    font-size: 0.85rem;
+    line-height: 1;
+    padding: 0;
+    transition: all 0.15s;
+}
+.note-toolbar button:hover { border-color: var(--border); background: var(--hover-bg, rgba(128,128,128,0.06)); }
+.note-toolbar button:focus { outline: 2px solid rgba(79, 70, 229, 0.35); outline-offset: 1px; }
+.note-toolbar button[data-cmd="h1"],
+.note-toolbar button[data-cmd="h2"],
+.note-toolbar button[data-cmd="clear"] {
+    width: auto;
+    padding: 0 8px;
+    font-weight: 600;
+}
+.note-toolbar-sep {
+    display: inline-block;
+    width: 1px;
+    height: 18px;
+    background: var(--border);
+    margin: 0 4px;
+}
+.note-hl-dot {
+    display: inline-block;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    border: 1px solid rgba(128,128,128,0.3);
+    cursor: pointer;
+    transition: transform 0.1s;
+}
+.note-hl-dot:hover { transform: scale(1.15); border-color: var(--text-light); }
+/* 高亮背景色：execCommand('hiliteColor') 在不同浏览器/场景下可能生成 <font style="background">
+   或把 background-color 加到已有标签上（<b> 等），用 inline style 子串匹配兜底 4 色 */
+.note-input .hl-yellow,
+.note-input [style*="background-color: rgb(255, 243, 163)"],
+.note-input [style*="background-color:#fff3a3"],
+.note-input [style*="background:#fff3a3"] { background: #fff3a3 !important; }
+.note-input .hl-green,
+.note-input [style*="background-color: rgb(184, 230, 192)"],
+.note-input [style*="background-color:#b8e6c0"],
+.note-input [style*="background:#b8e6c0"] { background: #b8e6c0 !important; }
+.note-input .hl-blue,
+.note-input [style*="background-color: rgb(179, 217, 242)"],
+.note-input [style*="background-color:#b3d9f2"],
+.note-input [style*="background:#b3d9f2"] { background: #b3d9f2 !important; }
+.note-input .hl-pink,
+.note-input [style*="background-color: rgb(245, 194, 213)"],
+.note-input [style*="background-color:#f5c2d5"],
+.note-input [style*="background:#f5c2d5"] { background: #f5c2d5 !important; }
 
 .note-actions {
     display: flex;
