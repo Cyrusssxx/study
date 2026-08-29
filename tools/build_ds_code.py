@@ -179,7 +179,12 @@ for year in sorted(META):
     cand = [q for q in daka['questions']
             if q.get('sheet') == '算法题' and kw in q.get('content', '')]
     if not cand:
-        raise SystemExit(f"[!] 未找到 {year} 代码题 (keyword={kw})")
+        # ds_daka.json 已于 2026-08-29 下线 content/answer 文字字段（打卡表改纯教材原图），
+        # 关键词匹配必然落空 —— 这里给出真实原因，避免误判为题库漏题。
+        # 若确需重建 ds_code.json：先 git revert 6922ade 找回文字字段，或从教材重新提取。
+        raise SystemExit(f"[!] 未找到 {year} 代码题 (keyword={kw})："
+                         f"ds_daka.json 已删除题目文字字段（打卡表改纯教材原图），"
+                         f"无法按关键词匹配；请从教材 PDF 重新提取")
     if len(cand) > 1:
         print(f"[!] {year} 命中多个候选，取首个：{[c.get('id') for c in cand]}")
     q = cand[0]
