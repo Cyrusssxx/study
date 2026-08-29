@@ -162,15 +162,42 @@
         return html;
     }
 
+    /* 给标题加"重点"判定：含「暴力解」「真题」「重要」「核心」「考点」→ 主色加粗；
+       以「* 」开头或含「（选）/（可选）/（了解）」→ 可选项斜体灰。
+       用户主刷暴力解：所有"X 暴力解"类章节都打 strong，暴力解下子节也跟随。 */
+    function classifyTitle(rawText) {
+        const t = (rawText || '').trim();
+        if (/^[*]\s*/.test(t)) return 'optional';
+        if (/(暴力解|暴力枚举)/.test(t)) return 'strong';   // 用户主方向，最高优先
+        if (/(真题|重要|核心|考点|常考|总结)/.test(t)) return 'strong';
+        if (/(选|了解|扩展|选学|选读|难题|相对不重要)/.test(t)) return 'optional';
+        return '';
+    }
+
     function renderItems(items) {
         let html = '';
+        // 上下文：上一个标题是否是 strong（暴力解），若是则其下子节跟随
+        let lastStrong = false;
         for (const it of items) {
             if (it.t === 'h') {
                 const lvl = Math.min(5, Math.max(3, it.lvl || 3));
                 anchorSeq++;
                 const id = 'sec-' + anchorSeq;
                 it._id = id;
-                html += `<h${lvl} class="algo-h" id="${id}" data-anchor="${id}">${esc(norm(it.text))}</h${lvl}>`;
+                let cls = 'algo-h';
+                let clsToc = '';
+                // 当前节自身分类
+                const direct = classifyTitle(it.text);
+                // 若本节是 h3/h4 的"暴力解"类，则后续子节继承 strong
+                const isBrute = /(暴力解)/.test(it.text);
+                if (direct === 'strong') { cls += ' algo-h-strong'; clsToc = 'algo-toc-strong'; }
+                else if (direct === 'optional') { cls += ' algo-h-optional'; clsToc = 'algo-toc-optional'; }
+                else if (isBrute) { cls += ' algo-h-strong'; clsToc = 'algo-toc-strong'; }
+                else if (lvl >= 4 && lastStrong) { cls += ' algo-h-strong'; clsToc = 'algo-toc-strong'; }
+                it._tocClass = clsToc;
+                // 显示文本：把开头的 "* " 保留（CSS 已经在 strong/optional 上加 ▶/☆ 标识）
+                html += `<h${lvl} class="${cls}" id="${id}" data-anchor="${id}">${esc(norm(it.text))}</h${lvl}>`;
+                lastStrong = (cls.indexOf('algo-h-strong') >= 0);
             } else if (it.t === 'code') {
                 html += `<pre class="code-block algo-code">${esc(norm(it.text))}</pre>`;
             } else {
@@ -187,11 +214,13 @@
         for (const c of chapters) {
             anchorSeq++;
             const cid = 'ch-' + anchorSeq;
-            html += `<a class="algo-toc-ch" href="#${cid}">${esc(c.title)}</a>`;
+            const chTocCls = (c.title && /(暴力解|重要|核心|考点|常考)/.test(c.title)) ? ' algo-toc-strong' : '';
+            html += `<a class="algo-toc-ch${chTocCls}" href="#${cid}">${esc(c.title)}</a>`;
             for (const s of c.items.filter(x => x.t === 'h' && x._id)) {
                 const lvl = Math.min(5, Math.max(3, s.lvl || 3));
-                const cls = lvl === 3 ? 'notes-toc-sec' : (lvl === 4 ? 'notes-toc-sub' : 'notes-toc-sub algo-toc-l5');
-                html += `<a class="${cls}" href="#${s._id}">${esc(norm(s.text))}</a>`;
+                const base = lvl === 3 ? 'notes-toc-sec' : (lvl === 4 ? 'notes-toc-sub' : 'notes-toc-sub algo-toc-l5');
+                const toc = s._tocClass || '';
+                html += `<a class="${base}${toc ? ' ' + toc : ''}" href="#${s._id}">${esc(norm(s.text))}</a>`;
             }
         }
         return html;

@@ -2548,39 +2548,28 @@ a.review-chip-all:hover {
 
 /* 三级标题（章内主节 2.1）：与 .notes-body h4 同款 4px 主色条 */
 h3.algo-h {
-    font-size: 1.02rem;
+    font-size: 1.05rem;
     color: var(--text);
-    margin: 34px 0 12px;
-    padding-left: 11px;
+    margin: 32px 0 10px;
+    padding: 2px 0 2px 0;
     position: relative;
     scroll-margin-top: 76px;
+    border-bottom: 1px dashed transparent;   /* 取消目录/正文横线分隔 */
 }
-h3.algo-h::before {
-    content: "";
-    position: absolute;
-    left: 0; top: 3px; bottom: 3px;
-    width: 4px;
-    border-radius: 2px;
-    background: var(--primary);
-}
+h3.algo-h::before { content: none; }   /* 取消 4px 竖向主色条 */
 
-/* 四级标题（2.2.1）：半透明主色细条，压一级 */
+/* 四级标题（2.2.1）：与 notes 风格一致——纯文字、加粗压一级 */
 h4.algo-h {
-    font-size: 0.97rem;
+    font-size: 0.98rem;
+    font-weight: 700;
     color: var(--text);
-    margin: 24px 0 10px;
-    padding-left: 11px;
+    margin: 22px 0 8px;
+    padding: 0;
     position: relative;
     scroll-margin-top: 76px;
+    border-bottom: 1px dashed transparent;
 }
-h4.algo-h::before {
-    content: "";
-    position: absolute;
-    left: 0; top: 4px; bottom: 4px;
-    width: 3px;
-    border-radius: 2px;
-    background: rgba(74, 144, 217, .42);
-}
+h4.algo-h::before { content: none; }
 
 /* 五级标题（更细的知识点，如「树和森林」）：小字 + 减淡，不进主视觉 */
 h5.algo-h {
@@ -2589,6 +2578,27 @@ h5.algo-h {
     color: var(--text-light);
     margin: 18px 0 8px;
     scroll-margin-top: 76px;
+}
+h5.algo-h::before { content: none; }
+
+/* 重点小节：主色加粗（目录 + 正文都生效，类名同时作用于 .algo-toc-ch / .notes-toc-sec / .notes-toc-sub） */
+.algo-h.algo-h-strong,
+.algo-h.algo-h-strong::before {
+    color: var(--primary);
+    font-weight: 800;
+}
+.algo-h.algo-h-strong::before {
+    content: none !important;
+}
+.algo-h.algo-h-optional {
+    color: var(--text-light);
+    font-style: italic;
+}
+.algo-h.algo-h-optional::after {
+    content: " ☆";
+    color: var(--text-dim);
+    font-size: 0.78em;
+    font-style: normal;
 }
 
 h3.algo-h:first-child, h4.algo-h:first-child, h5.algo-h:first-child { margin-top: 0; }
@@ -2710,6 +2720,32 @@ h3.algo-h:first-child, h4.algo-h:first-child, h5.algo-h:first-child { margin-top
     font-size: 0.75rem;
 }
 .dark .algo-toc-ch.active { background: rgba(74, 144, 217, .2); }
+
+/* 重点/暴力解目录项：加粗 + 主色（与笔记 notes-toc-sub-strong 同族） */
+.algo-toc-ch.algo-toc-strong,
+.notes-toc-sec.algo-toc-strong,
+.notes-toc-sub.algo-toc-strong {
+    color: var(--primary) !important;
+    font-weight: 700 !important;
+}
+.algo-toc-ch.algo-toc-strong::before { content: "▶ "; color: var(--primary); }
+.notes-toc-sub.algo-toc-strong::before { content: "▶ "; color: var(--primary); font-size: 0.7em; }
+.algo-toc-ch.algo-toc-strong:hover,
+.notes-toc-sec.algo-toc-strong:hover,
+.notes-toc-sub.algo-toc-strong:hover { color: var(--primary-dark, #3730a3) !important; }
+
+/* 可选项（带 * 的题）：斜体灰色 + 星号 */
+.algo-toc-ch.algo-toc-optional,
+.notes-toc-sec.algo-toc-optional,
+.notes-toc-sub.algo-toc-optional {
+    color: var(--text-dim) !important;
+    font-style: italic;
+}
+.algo-toc-ch.algo-toc-optional::before,
+.notes-toc-sub.algo-toc-optional::before { content: "☆ "; color: var(--text-dim); font-style: normal; }
+
+.dark .algo-toc-ch.algo-toc-strong,
+.dark .notes-toc-sub.algo-toc-strong { color: #a5b4fc !important; }
 
 /* 代码题页 -> 算法讲义 的悬浮入口（放左下角，避开右下角的 🎨 与 ☰） */
 .algo-fab {
