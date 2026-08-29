@@ -66,6 +66,7 @@
                             <option value="">全部年份</option>
                         </select>
                         <button class="opt-shuffle-btn" id="favResetBtn" style="display:none" onclick="resetFavProgress()" title="清空收藏题的作答与错题记录，重新刷一遍（收藏保留）">清空重做 ⟳</button>
+                        <button class="opt-shuffle-btn" id="favWrongResetBtn" style="display:none" onclick="resetFavWrong()" title="只把收藏题从错题本移除：作答记录与正确率保留，收藏也保留">清空收藏错题 🗑</button>
                         <div class="review-chips" id="reviewChips" style="display:none"></div>
                     </div>
                     <div class="quiz-nav-info">
@@ -158,6 +159,7 @@
     let noteShown = false;  // 当前题笔记面板是否展开
     const hasNoteOf = q => !!(q.note || (q.note_images || []).length);  // 题目是否有笔记（文本或图片）
     let optionOrder = {};  // {qid: [key,...]} 选项乱序开启时每题的显示顺序缓存
+    let favWrongCount = 0; // 收藏题当前的错题记录条数（含已解决），给「清空收藏错题」按钮做计数与禁用
 
     const modeNames = {
         'sequential': '顺序模式',
@@ -271,6 +273,7 @@
         currentIndex = 0;
         document.getElementById('yearFilter').style.display = 'none';
         document.getElementById('favResetBtn').style.display = 'none';
+        document.getElementById('favWrongResetBtn').style.display = 'none';
         document.getElementById('reviewChips').style.display = 'none';
         closeKeybindDialog();
         updateModeBadge();
@@ -432,8 +435,12 @@
                 return;
             }
 
-            // 收藏/收藏+真题模式：显示「清空重做」按钮
-            if (MODE === 'favorite' || MODE === 'fav_real') document.getElementById('favResetBtn').style.display = '';
+            // 收藏/收藏+真题模式：显示「清空重做」与「清空收藏错题」按钮
+            if (MODE === 'favorite' || MODE === 'fav_real') {
+                document.getElementById('favResetBtn').style.display = '';
+                document.getElementById('favWrongResetBtn').style.display = '';
+                updateFavWrongCount();
+            }
 
             // 章节定位：不限制筛选，直接跳到该章节首题，仍可顺序刷到后面的题
             if (CHAPTER) {
@@ -1055,7 +1062,47 @@
             await api(`/api/favorites/reset/${SUBJECT}`, {method: 'POST'});
             answered = {};
             questions.forEach(q => { q.last_status = null; });
+            updateFavWrongCount();  // 全量重刷后错题记录已清空，同步按钮计数
             gotoQuestion(0);
+        } catch (e) {
+            alert('清空失败: ' + e.message);
+        }
+    }
+
+    // 收藏题当前还有几条错题记录（含已解决）：给按钮显示计数，0 条时禁用避免误点
+    // 用 quizAllQuestions 而非 questions 做交集——年份筛选后 questions 只是子集
+    async function updateFavWrongCount() {
+        const btn = document.getElementById('favWrongResetBtn');
+        if (!btn || btn.style.display === 'none') return 0;
+        try {
+            const resp = await api(`/api/wrong?subject=${encodeURIComponent(SUBJECT)}&include_resolved=true`);
+            const data = await resp.json();
+            const favIds = new Set(quizAllQuestions.map(q => q.id));
+            favWrongCount = (data.wrong_questions || []).filter(w => favIds.has(w.question_id)).length;
+        } catch (e) {
+            favWrongCount = -1;  // 取不到就当有内容，宁可让用户看到确认框
+        }
+        btn.textContent = favWrongCount > 0 ? `清空收藏错题 ${favWrongCount} 🗑` : '清空收藏错题 🗑';
+        btn.disabled = favWrongCount === 0;
+        btn.title = favWrongCount === 0
+            ? '收藏题中暂无错题记录'
+            : `把 ${favWrongCount} 道收藏题从错题本移除：作答记录与正确率保留，收藏也保留`;
+        return favWrongCount;
+    }
+
+    async function resetFavWrong() {
+        // 仅清收藏题的错题记录：作答记录/正确率不动，收藏也保留
+        // 点下时现取一次计数，避免用户在页面上又答错几题导致按钮上显示的旧数字过期
+        const n = await updateFavWrongCount();
+        if (n === 0) { alert('收藏题中暂无错题记录'); return; }
+        // n<0 表示计数接口取数失败：不带具体数字照样执行，宁可多问一句也不要漏删
+        const msg = n > 0
+            ? `把 ${n} 道收藏题从错题本移除？\n（作答记录与正确率保留，收藏保留，不影响其他题）`
+            : '把收藏题从错题本移除？\n（未能读取当前条数；作答记录与正确率保留，收藏保留）';
+        if (!confirm(msg)) return;
+        try {
+            await api(`/api/favorites/reset-wrong/${SUBJECT}`, {method: 'POST'});
+            await updateFavWrongCount();
         } catch (e) {
             alert('清空失败: ' + e.message);
         }

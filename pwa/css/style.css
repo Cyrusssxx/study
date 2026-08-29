@@ -359,6 +359,8 @@ body {
     display: flex;
     align-items: center;
     gap: 12px;
+    /* 头部按钮较多（模式/乱序/设置/年份/清空重做/清空收藏错题），窄屏换行而非横向溢出 */
+    flex-wrap: wrap;
 }
 
 .mode-badge {
@@ -1932,6 +1934,12 @@ a.review-chip-all:hover {
     font-size: 0.78rem;
     white-space: nowrap;
     transition: all 0.2s;
+}
+
+/* 无内容可清（如收藏题里没有错题记录）时置灰，避免点了走空确认 */
+.opt-shuffle-btn:disabled {
+    opacity: 0.45;
+    cursor: not-allowed;
 }
 
 /* ===== 快捷键设置弹窗 ===== */

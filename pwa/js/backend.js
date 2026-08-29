@@ -449,23 +449,29 @@ async function api(url, opts = {}) {
 
         // ---------- 收藏列表 / 收藏清空重做 ----------
         if (seg[1] === 'favorites') {
-            if (seg[2] === 'reset') {
-                // 只清收藏题的作答与错题记录，收藏本身保留（对应 app.py /api/favorites/reset）
+            // reset       → 清收藏题的作答记录 + 错题记录（重刷一遍）
+            // reset-wrong → 只清收藏题的错题记录（作答记录/正确率保留，题仍在收藏中）
+            // 收藏本身始终保留（对应 app.py /api/favorites/reset）
+            if (seg[2] === 'reset' || seg[2] === 'reset-wrong') {
+                const wrongOnly = seg[2] === 'reset-wrong';
                 const subject = seg[3];
                 if (!SUBJECTS[subject]) return jsonResp({ error: '科目不存在' }, 404);
                 const favIds = new Set((await dbAll('favorites')).filter(f => f.subject === subject).map(f => f.question_id));
+                let cleared = 0;
                 if (favIds.size) {
                     const db = await openDB();
-                    for (const store of ['progress', 'wrong']) {
+                    for (const store of wrongOnly ? ['wrong'] : ['progress', 'wrong']) {
                         const rows = await dbAll(store);
                         const tx = db.transaction(store, 'readwrite');
                         for (const r of rows) {
-                            if (favIds.has(r.question_id)) tx.objectStore(store).delete(store === 'progress' ? r.pk : r.question_id);
+                            if (!favIds.has(r.question_id)) continue;
+                            tx.objectStore(store).delete(store === 'progress' ? r.pk : r.question_id);
+                            cleared++;
                         }
                         await new Promise((res, rej) => { tx.oncomplete = res; tx.onerror = () => rej(tx.error); });
                     }
                 }
-                return jsonResp({ success: true, cleared: favIds.size });
+                return jsonResp({ success: true, cleared, favs: favIds.size, scope: wrongOnly ? 'wrong' : 'all' });
             }
             const subject = p.get('subject') || null;
             const list = (await dbAll('favorites')).filter(f => !subject || f.subject === subject);
