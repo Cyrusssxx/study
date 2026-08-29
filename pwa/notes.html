@@ -610,7 +610,9 @@
 
             let toc = `<div class="notes-search" id="notesSearchBox" hidden>
                 <input type="search" id="notesSearchInput" placeholder="🔍 搜索考点、章节、批注…" autocomplete="off"
-                    oninput="doNoteSearch(this.value)" onfocus="doNoteSearch(this.value)">
+                    oninput="doNoteSearch(this.value)"
+                    onmousedown="this.dataset.userFocus=1"
+                    onfocus="if(this.dataset.userFocus)showNoteHistory();this.removeAttribute('data-user-focus')">
                 <div class="notes-search-results" id="notesSearchResults" hidden></div>
             </div>`;
             let body = '';
