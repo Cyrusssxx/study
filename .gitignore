@@ -21,3 +21,9 @@ t*.png
 # 题库构建产物：data/questions/*.json 由 tools/sync_questions.py 从真源 pwa/data 生成
 data/questions/*.json
 data/questions/backup_*/
+
+# 根目录 data/ 整体为构建产物/归档副本（单源在 pwa/data）；注意根锚定，勿用裸 data/ 误伤 pwa/data
+/data/
+
+# 个人助手工具的本地记忆
+.workbuddy/
