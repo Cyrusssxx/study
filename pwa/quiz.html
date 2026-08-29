@@ -1160,6 +1160,9 @@
 
             renderQuestion();
 
+            // 收藏模式下作答后立即刷新「清空收藏错题」按钮计数（答错 +1 / 答对移出 -1）
+            if (MODE === 'favorite' || MODE === 'fav_real') updateFavWrongCount();
+
             if (autoJump) {
                 setTimeout(() => {
                     // 用户可能已手动翻题，仅当还停在当前题时才跳
@@ -1201,6 +1204,8 @@
                 q.is_favorited = result.is_favorited;
                 renderQuestion();
             }
+            // 收藏/取消收藏改变了 favIds 集合，刷新收藏错题按钮计数
+            if (MODE === 'favorite' || MODE === 'fav_real') updateFavWrongCount();
         } catch (e) {
             console.error('收藏失败:', e);
         }
