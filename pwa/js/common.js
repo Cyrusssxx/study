@@ -318,3 +318,51 @@ window.addEventListener('load', () => {
     if (_sp.has('goto') || _sp.has('line')) return;
     setTimeout(() => PS.restoreScroll(), 60);
 });
+
+// ============ 顶栏折叠（右上角箭头按钮）============
+// 在每个页面 .navbar 末尾注入折叠按钮，状态按页持久化
+// ——记忆习惯：经常用某页的用户把顶栏收起，长期保留
+(function () {
+    const KEY = 'navbar_collapsed';
+    let initialized = false;
+    function apply(collapsed) {
+        const nav = document.querySelector('.navbar');
+        if (!nav) return;
+        nav.classList.toggle('is-collapsed', !!collapsed);
+        const btn = nav.querySelector('.nav-collapse-btn');
+        if (btn) {
+            btn.classList.toggle('on', !!collapsed);
+            btn.setAttribute('aria-expanded', String(!collapsed));
+            btn.title = collapsed ? '展开顶栏' : '收起顶栏';
+        }
+    }
+    function init() {
+        if (initialized) return;
+        const nav = document.querySelector('.navbar');
+        if (!nav) return;
+        // 幂等：若已存在按钮（极端情况下重复加载），不重复创建
+        if (nav.querySelector('.nav-collapse-btn')) { initialized = true; apply(localStorage.getItem(KEY) === '1'); return; }
+        const btn = document.createElement('button');
+        btn.className = 'nav-collapse-btn';
+        btn.type = 'button';
+        btn.innerHTML = '<span class="nav-collapse-arrow">▾</span>';
+        btn.setAttribute('aria-label', '折叠/展开顶栏');
+        btn.addEventListener('click', () => {
+            const next = !(document.querySelector('.navbar')?.classList.contains('is-collapsed'));
+            try { localStorage.setItem(KEY, next ? '1' : '0'); } catch (e) {}
+            apply(next);
+        });
+        nav.appendChild(btn);
+        initialized = true;
+        let collapsed = false;
+        try { collapsed = localStorage.getItem(KEY) === '1'; } catch (e) {}
+        apply(collapsed);
+    }
+    // 兼容各种加载时机：DOMContentLoaded 可能在脚本解析期间已过
+    const run = () => { try { init(); } catch (e) { console.error('navbar collapse init failed', e); } };
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', run, { once: true });
+    } else {
+        run();
+    }
+})();

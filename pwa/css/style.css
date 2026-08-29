@@ -4907,3 +4907,54 @@ a.chapter-badge-link:hover {
 .daka-card {
     border-top: 1px solid rgba(128, 128, 128, calc((1 - var(--ui-alpha)) * 0.5 + 0.001));
 }
+
+/* ============ 顶栏折叠按钮（common.js 注入 .navbar 末尾）============ */
+/* 按钮绝对定位钉在顶栏右上角，nav 折叠时仍能看见它用于重新展开 */
+.navbar { position: sticky; }   /* 已有 sticky，confirm */
+.nav-collapse-btn {
+    position: absolute;
+    top: 15px;
+    right: 14px;
+    z-index: 110;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: none;
+    border: 1px solid #c8cdd4;
+    color: var(--text-light);
+    width: 30px;
+    height: 30px;
+    border-radius: 999px;
+    cursor: pointer;
+    font-size: 0.9rem;
+    line-height: 1;
+    padding: 0;
+    transition: all 0.2s;
+}
+.nav-collapse-btn:hover { color: var(--primary); border-color: var(--primary); }
+.nav-collapse-btn:focus { outline: 2px solid rgba(79, 70, 229, 0.35); outline-offset: 2px; }
+.nav-collapse-btn .nav-collapse-arrow {
+    display: inline-block;
+    transition: transform 0.25s ease;
+}
+/* 收起状态：箭头朝上（点击展开） */
+.nav-collapse-btn.on .nav-collapse-arrow { transform: rotate(180deg); }
+
+/* 收起时顶栏 nav-container 折叠；按钮位置保持原处 */
+/* 用 height 过渡：max-height 在 .nav-container 上无效（它 height: 60px 是定值） */
+.navbar .nav-container {
+    transition: height 0.28s ease, opacity 0.2s ease;
+    overflow: hidden;
+}
+.navbar.is-collapsed .nav-container {
+    height: 0 !important;
+    opacity: 0;
+    pointer-events: none;
+    padding-top: 0;
+    padding-bottom: 0;
+}
+.navbar.is-collapsed {
+    border-bottom-color: transparent;
+    box-shadow: none;
+}
+}
