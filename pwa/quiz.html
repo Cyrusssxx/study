@@ -66,7 +66,7 @@
                             <option value="">全部年份</option>
                         </select>
                         <button class="opt-shuffle-btn" id="favResetBtn" style="display:none" onclick="resetFavProgress()" title="清空收藏题的作答与错题记录，重新刷一遍（收藏保留）">清空重做 ⟳</button>
-                        <button class="opt-shuffle-btn" id="favWrongResetBtn" style="display:none" onclick="resetFavWrong()" title="只把收藏题从错题本移除：作答记录与正确率保留，收藏也保留">清空收藏错题 🗑</button>
+                        <button class="opt-shuffle-btn" id="favWrongResetBtn" style="display:none" onclick="resetFavWrong()" title="只把收藏模式下的错题从错题本移除：其他题的错题不受影响，作答记录与正确率保留，收藏也保留">清空收藏错题 🗑</button>
                         <div class="review-chips" id="reviewChips" style="display:none"></div>
                     </div>
                     <div class="quiz-nav-info">
@@ -1069,13 +1069,16 @@
         }
     }
 
-    // 收藏题当前还有几条错题记录（含已解决）：给按钮显示计数，0 条时禁用避免误点
-    // 用 quizAllQuestions 而非 questions 做交集——年份筛选后 questions 只是子集
+    // 收藏题里有几道「现在还在错题本上」：给按钮显示计数，0 道时禁用避免误点
+    // ① 不加 include_resolved → 与错题本页看到的一致（连对2次已移出的历史不计入）
+    // ② 用 quizAllQuestions 而非 questions 做交集——年份筛选后 questions 只是子集
+    // 注意：计数按「未解决」算，但真删时按「该题的全部错题记录」删（含已解决），
+    // 这样这些收藏题会彻底移出错题本，不会因为留了已解决记录又回到30天复盘
     async function updateFavWrongCount() {
         const btn = document.getElementById('favWrongResetBtn');
         if (!btn || btn.style.display === 'none') return 0;
         try {
-            const resp = await api(`/api/wrong?subject=${encodeURIComponent(SUBJECT)}&include_resolved=true`);
+            const resp = await api(`/api/wrong?subject=${encodeURIComponent(SUBJECT)}`);
             const data = await resp.json();
             const favIds = new Set(quizAllQuestions.map(q => q.id));
             favWrongCount = (data.wrong_questions || []).filter(w => favIds.has(w.question_id)).length;
@@ -1085,8 +1088,8 @@
         btn.textContent = favWrongCount > 0 ? `清空收藏错题 ${favWrongCount} 🗑` : '清空收藏错题 🗑';
         btn.disabled = favWrongCount === 0;
         btn.title = favWrongCount === 0
-            ? '收藏题中暂无错题记录'
-            : `把 ${favWrongCount} 道收藏题从错题本移除：作答记录与正确率保留，收藏也保留`;
+            ? '收藏题中暂无错题（已连对2次移出的历史记录不计入）'
+            : `把收藏模式下的 ${favWrongCount} 道错题从错题本移除：只动收藏题，其他题的错题不受影响；作答记录与正确率保留，收藏也保留`;
         return favWrongCount;
     }
 
@@ -1094,11 +1097,11 @@
         // 仅清收藏题的错题记录：作答记录/正确率不动，收藏也保留
         // 点下时现取一次计数，避免用户在页面上又答错几题导致按钮上显示的旧数字过期
         const n = await updateFavWrongCount();
-        if (n === 0) { alert('收藏题中暂无错题记录'); return; }
+        if (n === 0) { alert('收藏模式下的题目里没有错题了'); return; }
         // n<0 表示计数接口取数失败：不带具体数字照样执行，宁可多问一句也不要漏删
         const msg = n > 0
-            ? `把 ${n} 道收藏题从错题本移除？\n（作答记录与正确率保留，收藏保留，不影响其他题）`
-            : '把收藏题从错题本移除？\n（未能读取当前条数；作答记录与正确率保留，收藏保留）';
+            ? `把收藏模式下的 ${n} 道错题从错题本移除？\n\n只动收藏里的题，其他题的错题记录不受影响\n作答记录与正确率保留，收藏也保留`
+            : '把收藏模式下的错题从错题本移除？\n\n（未能读取当前条数；只动收藏里的题，其他题的错题记录不受影响）';
         if (!confirm(msg)) return;
         try {
             await api(`/api/favorites/reset-wrong/${SUBJECT}`, {method: 'POST'});
