@@ -162,15 +162,19 @@
         return html;
     }
 
-    /* 给标题加"重点"判定：含「暴力解」「真题」「重要」「核心」「考点」→ 主色加粗；
-       以「* 」开头或含「（选）/（可选）/（了解）」→ 可选项斜体灰。
-       用户主刷暴力解：所有"X 暴力解"类章节都打 strong，暴力解下子节也跟随。 */
+    /* 给标题加"重点"判定：暴力解信号（直接命中+正文语义信号）都打 strong；可选项信号打 optional。
+       用户主刷暴力解：4-5 章的 DFS/BFS/枚举/递归/遍历也属于"暴力解通用模式"，统一标 strong 醒目提示。 */
     function classifyTitle(rawText) {
         const t = (rawText || '').trim();
         if (/^[*]\s*/.test(t)) return 'optional';
-        if (/(暴力解|暴力枚举)/.test(t)) return 'strong';   // 用户主方向，最高优先
-        if (/(真题|重要|核心|考点|常考|总结)/.test(t)) return 'strong';
-        if (/(选|了解|扩展|选学|选读|难题|相对不重要)/.test(t)) return 'optional';
+        // 直接的"暴力解"标题
+        if (/(暴力解|暴力枚举|枚举法|枚举求解)/.test(t)) return 'strong';
+        // 4-5 章通用暴力解信号：递归/DFS/BFS/遍历/回溯/分治穷举
+        if (/(递归遍历|DFS\s*\/?\s*BFS|深度优先|广度优先|树遍历|前序|中序|后序|层序|回溯|穷举|分治|暴力)/.test(t)) return 'strong';
+        // 重要性信号
+        if (/(真题|重要|核心|考点|常考|总结|思路|方法|做题方法|模板)/.test(t)) return 'strong';
+        // 可选/了解信号
+        if (/(选|了解|扩展|选学|选读|难题|相对不重要|选看|进阶)/.test(t)) return 'optional';
         return '';
     }
 
