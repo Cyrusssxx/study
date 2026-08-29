@@ -5040,4 +5040,65 @@ a.chapter-badge-link:hover {
     border-bottom-color: transparent;
     box-shadow: none;
 }
+
+/* ===== 总线对照清单（数据/地址）专用样式 ===== */
+.notes-body .bus-h3 {
+    font-size: 1.15rem;
+    font-weight: 700;
+    color: var(--primary);
+    border-left: 4px solid var(--primary);
+    padding: 4px 10px;
+    margin: 1.4em 0 0.6em;
+    background: linear-gradient(90deg, rgba(79, 70, 229, 0.06), transparent);
+    border-radius: 0 6px 6px 0;
+}
+.notes-body .bus-h4 {
+    font-size: 1rem;
+    font-weight: 700;
+    color: #b45309;
+    border-left: 3px solid #f59e0b;
+    padding: 2px 8px;
+    margin: 1em 0 0.4em;
+    background: rgba(245, 158, 11, 0.05);
+    border-radius: 0 4px 4px 0;
+}
+.notes-body .bus-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 0.5em 0 1em;
+    font-size: 0.88rem;
+    line-height: 1.55;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.04);
+    border-radius: 6px;
+    overflow: hidden;
+}
+.notes-body .bus-table thead th {
+    background: var(--primary);
+    color: #fff;
+    text-align: left;
+    padding: 8px 10px;
+    font-weight: 600;
+    border: 1px solid var(--primary);
+}
+.notes-body .bus-table tbody td {
+    padding: 7px 10px;
+    border: 1px solid rgba(128,128,128,0.18);
+    vertical-align: top;
+}
+.notes-body .bus-table tbody tr:nth-child(even) { background: rgba(128,128,128,0.04); }
+.notes-body .bus-table tbody tr:hover { background: rgba(79, 70, 229, 0.05); }
+.notes-body .bus-table b { color: var(--primary); font-weight: 700; }
+.notes-body .bus-ol {
+    margin: 0.4em 0 1em 1.2em;
+    padding: 0;
+}
+.notes-body .bus-ol li {
+    margin: 0.35em 0;
+    line-height: 1.6;
+    padding-left: 0.3em;
+}
+.notes-body .bus-ol li::marker { color: var(--primary); font-weight: 700; }
+.dark .notes-body .bus-table thead th { background: #4f46e5; }
+.dark .notes-body .bus-h3 { color: #a5b4fc; background: linear-gradient(90deg, rgba(165,180,252,0.08), transparent); }
+.dark .notes-body .bus-h4 { color: #fbbf24; background: rgba(251,191,36,0.05); }
 }
