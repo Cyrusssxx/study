@@ -121,10 +121,78 @@
         tpl.innerHTML = html;
         while (tpl.firstChild) document.body.appendChild(tpl.firstChild);
 
-        // 与页面已有的右下角悬浮按钮（如目录定位 ☰）错开，避免重叠
-        if (document.querySelector('.ol-nav-fab')) {
-            $('bgFab').classList.add('bg-fab-shift');
+        // 与页面自带的右下角悬浮按钮（笔记/讲义的「回到开头」、大题页目录 ☰ 等）撞位时自动上移
+        shiftFab();
+    }
+
+    /* ---------------- 悬浮按钮避让 ----------------
+     * 🎨 默认停靠右下角（right:20 / bottom:20）。各页面自己在右下角也常放悬浮按钮，
+     * 二者会完全重叠，且页面按钮 z-index 更高会把 🎨 整个盖住。
+     * 旧实现靠写死的选择器名单（.ol-nav-fab）+ 固定偏移，笔记页改版后彻底失效。
+     * 这里改为实测：谁真的占着 🎨 的停靠位，就把 🎨 抬到它上方；没人占就回默认位。 */
+    var FAB_RIGHT = 20, FAB_BOTTOM = 20, FAB_GAP = 12, FAB_ZONE = 240;
+    // 候选名单：覆盖现有的右下角悬浮按钮，新增同类按钮时补到这里
+    var FAB_SEL = '.notes-top-btn, .ol-nav-fab, .dati-nav-fab, ' +
+        '[class*="nav-fab"], [class*="top-btn"], [id$="TopBtn"]';
+
+    /** 右下角区域内、当前可见、且与 🎨 默认停靠位相交的 fixed 元素矩形 */
+    function fabColliders() {
+        var fab = $('bgFab');
+        if (!fab) return [];
+        var vw = window.innerWidth, vh = window.innerHeight;
+        // 用 CSS 定义的默认停靠位算参考矩形，不读 fab 当前 bottom——
+        // 否则抬过一次后再测就会拿“已抬高”的位置判断，误判为无碰撞
+        var rest = {
+            left: vw - FAB_RIGHT - fab.offsetWidth,
+            right: vw - FAB_RIGHT,
+            top: vh - FAB_BOTTOM - fab.offsetHeight,
+            bottom: vh - FAB_BOTTOM
+        };
+        var nodes = document.querySelectorAll(FAB_SEL);
+        var out = [];
+        for (var i = 0; i < nodes.length; i++) {
+            var el = nodes[i];
+            if (el === fab || fab.contains(el)) continue;
+            var cs = getComputedStyle(el);
+            if (cs.position !== 'fixed' || cs.display === 'none' || cs.visibility === 'hidden') continue;
+            var r = el.getBoundingClientRect();
+            if (!r.width || !r.height) continue;
+            if (r.right < vw - FAB_ZONE || r.bottom < vh - FAB_ZONE) continue;   // 不在右下角
+            if (r.right > rest.left && r.left < rest.right &&
+                r.bottom > rest.top && r.top < rest.bottom) {
+                out.push(r);
+            }
         }
+        return out;
+    }
+
+    /** 有碰撞 → 🎨 抬到最上方那个按钮之上；无碰撞 → 回到默认停靠位 */
+    function shiftFab() {
+        var fab = $('bgFab');
+        if (!fab) return;
+        var col = fabColliders();
+        if (!col.length) { fab.style.bottom = ''; return; }
+        var top = 0;
+        for (var i = 0; i < col.length; i++) top = Math.max(top, col[i].top);
+        fab.style.bottom = (window.innerHeight - (top - FAB_GAP)) + 'px';
+    }
+
+    /** 面板跟随 🎨 实际位置，避免压住按钮 */
+    function placePanel() {
+        var p = $('bgPanel'), fab = $('bgFab');
+        if (!p || !fab) return;
+        var b = parseFloat(getComputedStyle(fab).bottom);
+        p.style.bottom = (isNaN(b) ? FAB_BOTTOM : b) + fab.offsetHeight + FAB_GAP + 'px';
+    }
+
+    var shiftTimer = 0;
+    function scheduleShift() {
+        if (shiftTimer) return;
+        shiftTimer = requestAnimationFrame(function () {
+            shiftTimer = 0;
+            shiftFab();
+            placePanel();
+        });
     }
 
     /* ---------------- 背景应用 ---------------- */
@@ -268,6 +336,7 @@
         if (!p) return;
         var open = force === undefined ? !p.classList.contains('open') : force;
         p.classList.toggle('open', open);
+        if (open) placePanel();
     };
 
     /* ---------------- 应用范围交互 ---------------- */
@@ -360,6 +429,13 @@
         // 暗色模式切换时重算遮罩色
         new MutationObserver(function () { applyBg(); })
             .observe(document.documentElement, { attributes: true, attributeFilter: ['class'] });
+
+        // 🎨 避让：页面按钮多随滚动才显示（如「回到开头」滚过 400px 才出现），
+        // 所以滚动/尺寸变化时要重新实测，而不是只在注入时判断一次
+        if (document.querySelector(FAB_SEL)) {
+            window.addEventListener('scroll', scheduleShift, { passive: true });
+        }
+        window.addEventListener('resize', scheduleShift);
 
         // 点击面板外关闭
         document.addEventListener('click', function (ev) {

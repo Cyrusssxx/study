@@ -4818,7 +4818,8 @@ a.chapter-badge-link:hover {
     font-size: 22px; cursor: pointer; z-index: 200;
     box-shadow: 0 4px 14px rgba(0,0,0,.25);
     display: flex; align-items: center; justify-content: center;
-    transition: transform .15s ease, opacity .15s ease;
+    /* bottom 参与过渡：与页面按钮撞位时由 background.js 抬升，动画自然不突兀 */
+    transition: transform .15s ease, opacity .15s ease, bottom .2s ease;
 }
 .bg-fab:hover { transform: scale(1.08); }
 .bg-fab:active { transform: scale(.96); }
@@ -4877,10 +4878,9 @@ a.chapter-badge-link:hover {
 }
 .bg-scope-cur span { font-weight: 600; color: var(--primary); }
 
-/* 🎨 背景按钮：与页面已有的右下角悬浮按钮（目录定位 ☰）错开，避免重叠 */
-@media (max-width: 900px) {
-    .bg-fab.bg-fab-shift { bottom: 78px; }
-}
+/* 🎨 背景按钮避让：由 js/background.js 实测页面右下角是否已有悬浮按钮，
+   有则动态抬高（inline bottom），无人占位则回到默认 20px。
+   旧版写死 .bg-fab-shift + 固定 78px 偏移，只在 ≤900px 生效，笔记页改版后失效。 */
 
 /* ===== 全局：各页面容器纳入 UI 透明度 ===== */
 .subject-card,
