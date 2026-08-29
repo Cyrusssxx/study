@@ -200,9 +200,10 @@
         const figs = q.figs || {content: [], answer: []};
         const img = n => `<img src="data/daka_figs/${n}" loading="lazy" alt="教材原图" onclick="openFigLightbox(this.src)">`;
         const figWrap = (arr, label) => arr && arr.length ? `<div class="code-figs"><div class="code-figs-label">📷 ${label}</div>${arr.map(img).join('')}</div>` : '';
-        // 文本在前（始终可读/可复制代码），教材原图在后作补充；图慢/失败时不再空白
-        const content = fmtContent(q.content || '') + figWrap(figs.content, '题目教材原图');
-        const answer = fmtAnswer(q.answer || '（解答见教材）') + figWrap(figs.answer, '解答教材原图');
+        // 打卡表已改纯教材原图：ds_daka.json 不再存题目/答案文字，卡片只渲染教材原图。
+        // 文字字段仍兼容（若有则排在图前）；图与文字都缺时给占位，避免出现空白卡片。
+        const content = [fmtContent(q.content || ''), figWrap(figs.content, '题目教材原图')].join('') || '（题目见教材原图）';
+        const answer = [fmtAnswer(q.answer || ''), figWrap(figs.answer, '解答教材原图')].join('') || '（解答见教材原图）';
         return `
             <div class="daka-card${done ? ' daka-done' : ''}" id="card-${q.id}">
                 <div class="daka-card-header">
