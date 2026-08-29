@@ -1267,10 +1267,9 @@
         }
     }
 
-    // 键盘快捷键（在笔记输入框内不触发，防止打字时误操作）
+    // 键盘快捷键（笔记/选项/搜索框等任何可编辑元素内均不触发，防止打字时误跳题）
     document.addEventListener('keydown', (e) => {
-        const tag = (e.target.tagName || '').toLowerCase();
-        if (tag === 'textarea' || tag === 'input') return;
+        if (inEditable(e) || e.ctrlKey || e.metaKey || e.altKey || e.repeat) return;
         if (e.key === 'ArrowLeft') prevQuestion();
         else if (e.key === 'ArrowRight') nextQuestion();
         else if (e.key === 'Enter') submitAnswer();
