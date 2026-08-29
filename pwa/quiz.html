@@ -277,6 +277,15 @@
         document.getElementById('reviewChips').style.display = 'none';
         closeKeybindDialog();
         updateModeBadge();
+        // 章节树链接是页面加载时按当时模式生成的，热切换后需就地改写，
+        // 否则点章节会跳回旧模式（树不重渲染）
+        try {
+            document.querySelectorAll('#chapterTree a[href]').forEach(a => {
+                const u = new URL(a.href, location.href);
+                u.searchParams.set('mode', m);
+                a.href = u.pathname + u.search;
+            });
+        } catch (e) { }
         loadQuizQuestions();
     }
     function closeKeybindDialog() { stopCapture(); document.getElementById('kbOverlay').hidden = true; }

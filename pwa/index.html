@@ -185,10 +185,12 @@
             let list = [];
             try { list = JSON.parse(localStorage.getItem('practiceHistory')) || []; } catch (e) {}
             if (!list.length) return;
-            // list 已按时间倒序，取每科第一个（最新）；跳过收藏模式——避免点「继续刷题」被拉回收藏模式出不来
+            // list 已按时间倒序，取每科第一个（最新）；跳过收藏系模式（favorite/fav_real）
+            // ——收藏与收藏+真题都是受限子集，点「继续刷题」被拉回去会出不来（fav_real 漏判导致
+            //    用户从首页继续时被静默带进收藏+真题，点章节又一直保持该模式）
             const latest = {};
             for (const e of list) {
-                if (e.mode === 'favorite') continue;
+                if (e.mode === 'favorite' || e.mode === 'fav_real') continue;
                 if (!latest[e.subject]) latest[e.subject] = e;
             }
             const link = e => `quiz.html?subject=${e.subject}&mode=${e.mode}${e.chapter ? '&chapter=' + encodeURIComponent(e.chapter) : ''}${e.section ? '&section=' + encodeURIComponent(e.section) : ''}&goto=${e.qid}`;
