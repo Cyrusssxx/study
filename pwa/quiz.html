@@ -1069,21 +1069,48 @@
     }
 
     // 从剪贴板粘贴图片（截图后在笔记框 Ctrl+V），压缩后随笔记入库；纯文字粘贴不受影响
+    /* 接管 paste 事件：
+       1) 含图片 → 走 compressImage 入 note_images（不接管默认行为，让图片以 file 形式被处理）
+       2) 仅文本/HTML → preventDefault + 强制转纯文本插入（避免浏览器把外部样式错位
+         地套到 contenteditable 上、且避免 XSS 风险）
+       3) 混合格式（html + 文字）→ 转纯文本插入（笔记编辑器的 H1/H2/加粗 用工具条而不是外部格式） */
     async function pasteNoteImage(event) {
-        const files = [...(event.clipboardData ? event.clipboardData.items : [])]
-            .filter(it => it.type.startsWith('image/'))
-            .map(it => it.getAsFile())
-            .filter(Boolean);
-        if (!files.length) return;
+        const cd = event.clipboardData;
+        if (!cd) return;
+        const items = [...cd.items];
+        const files = items.filter(it => it.type.startsWith('image/'))
+            .map(it => it.getAsFile()).filter(Boolean);
+        // 有图片：让浏览器自己处理图片插入，文本不动
+        if (files.length) {
+            // 图片单独存到 note_images
+            event.preventDefault();
+            const q = questions[currentIndex];
+            try {
+                for (const f of files) {
+                    (q.note_images = q.note_images || []).push(await compressImage(f));
+                }
+            } catch (e) { alert(e.message); }
+            renderNoteImages();
+            saveNote();
+            return;
+        }
+        // 无图片：拦截默认粘贴，把任何富文本转纯文本后插入
         event.preventDefault();
-        const q = questions[currentIndex];
-        try {
-            for (const f of files) {
-                (q.note_images = q.note_images || []).push(await compressImage(f));
+        const text = cd.getData('text/plain') || '';
+        if (text) {
+            // execCommand('insertText') 在 contenteditable 内更稳，避免换行/选区错位
+            const ok = document.execCommand('insertText', false, text);
+            if (!ok) {
+                // 后备：直接 Range 插入
+                const sel = window.getSelection();
+                if (sel && sel.rangeCount) {
+                    const r = sel.getRangeAt(0);
+                    r.deleteContents();
+                    r.insertNode(document.createTextNode(text));
+                }
             }
-        } catch (e) { alert(e.message); }
-        renderNoteImages();
-        saveNote();   // 贴图后立即随笔记入库
+            onNoteInput();   // 触发自动保存
+        }
     }
 
     function delNoteImage(i) {
