@@ -2710,6 +2710,7 @@ h3.algo-h:first-child, h4.algo-h:first-child, h5.algo-h:first-child { margin-top
     overflow: hidden;
     text-overflow: ellipsis;
     scroll-margin-top: 84px;
+    text-decoration: none;   /* 取消目录项文字下划线（<a> 默认带） */
 }
 .algo-toc-ch:hover { background: var(--light); color: var(--primary); }
 .algo-toc-ch.active { background: #eef5fd; color: var(--primary); }
@@ -2718,6 +2719,7 @@ h3.algo-h:first-child, h4.algo-h:first-child, h5.algo-h:first-child { margin-top
 .notes-toc-sub.algo-toc-l5 {
     padding-left: 54px;
     font-size: 0.75rem;
+    text-decoration: none;
 }
 .dark .algo-toc-ch.active { background: rgba(74, 144, 217, .2); }
 
@@ -3163,6 +3165,7 @@ h3.algo-h:first-child, h4.algo-h:first-child, h5.algo-h:first-child { margin-top
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
+    text-decoration: none;   /* 取消目录项文字下划线（<a> 默认带） */
 }
 
 .notes-toc-sec:hover {
@@ -3204,6 +3207,7 @@ h3.algo-h:first-child, h4.algo-h:first-child, h5.algo-h:first-child { margin-top
     overflow: hidden;
     text-overflow: ellipsis;
     transition: color .12s ease, background .12s ease;
+    text-decoration: none;   /* 取消目录项文字下划线（<a> 默认带） */
 }
 .notes-toc-sub:hover {
     background: var(--light);
