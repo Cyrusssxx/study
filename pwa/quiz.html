@@ -673,7 +673,7 @@
             noteHtml = `
                 <div class="note-panel">
                     <div class="note-title">我的笔记</div>
-                    <textarea id="noteInput" class="note-input" rows="4" onfocus="onNoteEdit()" oninput="autoResizeNote(this); onNoteInput()" onpaste="pasteNoteImage(event)" placeholder="记下你的解题思路、易错点...（Ctrl+V 可直接粘贴截图；停顿即自动保存；清空内容保存即删除笔记）"></textarea>
+                    <textarea id="noteInput" class="note-input" rows="4" spellcheck="false" onfocus="onNoteEdit()" oninput="autoResizeNote(this); onNoteInput()" onpaste="pasteNoteImage(event)" placeholder="记下你的解题思路、易错点...（Ctrl+V 可直接粘贴截图；停顿即自动保存；清空内容保存即删除笔记）"></textarea>
                     <div class="note-images" id="noteImages"></div>
                     <div class="note-actions">
                         <button class="btn btn-primary btn-sm note-save-btn${hasNote ? ' saved' : ''}" id="noteSaveBtn" onclick="saveNote()">保存笔记</button>
