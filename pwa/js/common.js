@@ -283,6 +283,35 @@ window.addEventListener('pagehide', () => {
     try { sessionStorage.setItem('ps_scroll_' + location.pathname.split('/').pop(), String(window.scrollY)); } catch (e) {}
 });
 // 普通同步页面：load 后自动恢复；异步渲染页随后续逐页调 PS.restoreScroll() 更精准
+// ============ 题目嵌入图点击放大（全站复用 lightbox） ============
+// 复用 .img-lightbox 样式（与笔记图 viewNoteImage 共用同一套弹层）
+function openImageLightbox(src) {
+    if (!src) return;
+    const ov = document.createElement('div');
+    ov.className = 'img-lightbox';
+    ov.innerHTML = `<img src="${src}" alt="放大查看">`;
+    ov.onclick = () => ov.remove();
+    document.body.appendChild(ov);
+}
+
+// 事件委托：题干/解析里的 <img> 点击放大；排除笔记区（已有独立 viewNoteImage）
+document.addEventListener('click', e => {
+    const img = e.target.closest('.question-content img, .explanation-body img, .question-card img');
+    // 只处理 data/os_figs/ 路径的题图，不拦截笔记贴图、图标等
+    if (img && img.src && /os_figs|co_figs|ds_figs|cn_figs/.test(img.src)) {
+        e.preventDefault();
+        openImageLightbox(img.src);
+    }
+}, true);
+
+// ESC 关闭 lightbox
+document.addEventListener('keydown', e => {
+    if (e.key === 'Escape') {
+        const lb = document.querySelector('.img-lightbox');
+        if (lb) lb.remove();
+    }
+});
+
 // 带 goto/line 跳转参数进入（如刷题📖知识点链接）时不恢复：避免追滚机制与锚点跳转打架
 window.addEventListener('load', () => {
     const _sp = new URLSearchParams(location.search);
