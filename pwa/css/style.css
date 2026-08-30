@@ -2612,6 +2612,32 @@ h3.algo-h:first-child, h4.algo-h:first-child, h5.algo-h:first-child { margin-top
     word-break: break-word;
 }
 
+/* 正文画重点：关键词行内荧光笔 + 关键句高亮（文字一字未改，仅视觉） */
+.algo-kw {
+    background: linear-gradient(transparent 60%, rgba(250, 173, 20, 0.45) 60%);
+    padding: 0 1px;
+    border-radius: 2px;
+    font-weight: 600;
+    color: inherit;
+}
+.algo-key-sentence {
+    background: rgba(79, 70, 229, 0.08);
+    border-radius: 6px;
+    padding: 2px 6px;
+    box-decoration-break: clone;
+    -webkit-box-decoration-break: clone;
+}
+.algo-key-sentence::before {
+    content: "🔑 ";
+    margin-right: 1px;
+}
+.dark .algo-kw {
+    background: linear-gradient(transparent 60%, rgba(250, 173, 20, 0.5) 60%);
+}
+.dark .algo-key-sentence {
+    background: rgba(99, 102, 241, 0.18);
+}
+
 .algo-code { margin: 12px 0 14px; }
 
 /* 做题思路表（讲义原文的 | 分隔表） */

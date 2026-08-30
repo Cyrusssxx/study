@@ -64,10 +64,12 @@ function run() {
   console.log('--- 结构 ---');
   check('章节卡片 = 6', cnt(algoBody, /class="algo-card"/g) === 6, String(cnt(algoBody, /class="algo-card"/g)));
   check('章标题 = 6', cnt(algoBody, /class="algo-ch-title"/g) === 6);
-  check('h3/h4/h5 = 23/50/31',
-    [cnt(algoBody, /<h3 class="algo-h"/g), cnt(algoBody, /<h4 class="algo-h"/g), cnt(algoBody, /<h5 class="algo-h"/g)]
+  /* 按标题层级标签计数（不变量）：与 strong/optional 分类无关，
+     之前的「class="algo-h"」精确匹配会因重点标题加 algo-h-strong 而漏计 */
+  check('h3/h4/h5 层级总数',
+    [cnt(algoBody, /<h3 /g), cnt(algoBody, /<h4 /g), cnt(algoBody, /<h5 /g)]
       .join('/') === '23/50/31',
-    [cnt(algoBody, /<h3 class="algo-h"/g), cnt(algoBody, /<h4 class="algo-h"/g), cnt(algoBody, /<h5 class="algo-h"/g)].join('/'));
+    [cnt(algoBody, /<h3 /g), cnt(algoBody, /<h4 /g), cnt(algoBody, /<h5 /g)].join('/'));
   /* 111 → 103：修复抽取损坏时删除了 8 个被误标成 code 的碎片 item
      （折半查找模板表 3 个 + 5 处被切开的散文续句） */
   check('代码块 = 103', cnt(algoBody, /class="code-block algo-code"/g) === 103, String(cnt(algoBody, /class="code-block algo-code"/g)));
@@ -157,6 +159,15 @@ function run() {
   check('「例题 2-1」在 6 分钟内段落里被单独成卡',
     /<div class="algo-para">练习：请在 6 分钟内想出以下例题的直观做法（不考虑复杂度）<\/div>/.test(algoBody)
     && /例题 2-1/.test(algoBody));
+
+  console.log('--- 正文画重点（关键词 / 关键句高亮） ---');
+  const nKeySent = cnt(algoBody, /class="algo-key-sentence"/g);
+  const nKw = cnt(algoBody, /class="algo-kw"/g);
+  check('关键句高亮 > 0', nKeySent > 0, String(nKeySent));
+  check('关键词行内高亮 > 0', nKw > 0, String(nKw));
+  /* 精确段落（练习：请在 6 分钟内…）不得被关键词包裹破坏（复杂度/做法已排除在词表外） */
+  check('精确段落「练习：请在 6 分钟内…」保持原样',
+    /<div class="algo-para">练习：请在 6 分钟内想出以下例题的直观做法（不考虑复杂度）<\/div>/.test(algoBody));
 
   console.log('--- 裸露 | 泄漏 ---');
   const paraTexts = [...algoBody.matchAll(/<div class="algo-para">([\s\S]*?)<\/div>/g)].map(m => m[1]);

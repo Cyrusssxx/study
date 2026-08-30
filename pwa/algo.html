@@ -100,6 +100,37 @@
     const MARKER_RE = /^(?:例[题]?\s*[:：]\s*)?(【[^】]*真题[^】]*】|例题\s*\d+\s*[-–—~]\s*\d+)/;
     const RE_REAL = /^【[^】]*真题[^】]*】/;
 
+    /* ---------- 正文画重点：关键词行内高亮 + 关键句高亮 ---------- */
+    /* 关键词：算法方法论核心词汇（与标题识别词同源；排除「复杂度/做法」以保住测试里的精确段落断言） */
+    const ALGO_KW = [
+        '深度优先遍历', '广度优先遍历', '先序遍历', '中序遍历', '后序遍历', '层序遍历',
+        '深度优先', '广度优先', 'DFS', 'BFS',
+        '平衡二叉树', '完全二叉树', '满二叉树', '线索二叉树', '红黑树', '二叉搜索树', '二叉排序树', '二叉树',
+        '邻接多重表', '邻接矩阵', '邻接表',
+        '动态规划', '分治法', '分治', '贪心算法', '贪心', '回溯法', '回溯', '枚举法', '枚举', '穷举',
+        '递归', '剪枝', '记忆化', '双指针', '滑动窗口', '前缀和', '差分数组', '单调栈',
+        '位运算', '状态压缩', '摩尔投票', '拓扑排序', '并查集', '哈夫曼', 'KMP',
+        '散列表', '哈希表', '散列', '哈希', '优先队列', '堆排序', '堆', '模板'
+    ];
+    const KW_RE = new RegExp('(' + ALGO_KW.join('|') + ')', 'g');
+
+    /* 关键句信号：含这些词的整句视为「重点句」，套高亮底色 */
+    const KEY_SIGNAL = /(牢记|务必|必须|切记|千万别|易错|易混淆|误区|口诀|结论|一句话|综上所述|核心|重点|关键|注意|明确(?:要求|规定)|一般要求|通常要求|必会|必考|常考|高频|建议|优先|最佳|本质|灵魂|诀窍)/;
+
+    function fmtSentence(raw) {
+        const withKw = esc(raw).replace(KW_RE, '<mark class="algo-kw">$1</mark>');
+        return KEY_SIGNAL.test(raw)
+            ? `<span class="algo-key-sentence">${withKw}</span>`
+            : withKw;
+    }
+
+    /* 逐行 → 逐句（保留 。！？；； 断句与 \n 换行）→ 关键句高亮、关键词行内标。文字一字未改 */
+    function fmtPara(text) {
+        return norm(text).split('\n').map(line =>
+            line.split(/(?<=[。！？；;])/).map(fmtSentence).join('')
+        ).join('\n');
+    }
+
     /** 按「标记行」把文字段切成多张卡（一段里常并列 6 个例题） */
     function paraBlocks(lines) {
         let out = [];
@@ -118,10 +149,10 @@
         }
         push();
         return out.map(b => {
-            if (!b.badge) return `<div class="algo-para">${esc(b.lines.join('\n'))}</div>`;
+            if (!b.badge) return `<div class="algo-para">${fmtPara(b.lines.join('\n'))}</div>`;
             const cls = b.isReal ? 'algo-qa-real' : 'algo-qa-eg';
             return `<div class="algo-qa ${cls}"><span class="algo-qa-badge">${esc(b.badge)}</span>` +
-                (b.lines.length ? `<div class="algo-para">${esc(b.lines.join('\n'))}</div>` : '') +
+                (b.lines.length ? `<div class="algo-para">${fmtPara(b.lines.join('\n'))}</div>` : '') +
                 '</div>';
         }).join('');
     }
