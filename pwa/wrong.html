@@ -70,6 +70,8 @@
                 显示已解决
             </label>
             <button class="btn btn-primary" onclick="startWrongPractice()">开始错题练习</button>
+            <button class="btn btn-secondary" onclick="exportWrongList('md')" title="导出当前过滤的错题为 Markdown 文本（含题千/选项/答案/解析）">📄 导出 Markdown</button>
+            <button class="btn btn-secondary" onclick="exportWrongList('json')" title="导出当前过滤的错题为 JSON（与学习数据备份同格式，可通过"导入"还原）">💾 导出 JSON</button>
         </div>
 
         <!-- 错题列表 -->
@@ -171,6 +173,114 @@
 
     loadWrongQuestions();
     PS.restoreScroll();
+
+    /* ============ 错题导出（Markdown / JSON）============
+       按当前筛选条件（科目/排序/只看真题/显示已解决）导出
+       - Markdown：含题千/选项/答案/解析/章节，可直接打印或转 PDF 复习
+       - JSON：与 stats.html 的"导出学习数据"格式同源，含 question 元数据，可通过
+         stats.html 的"导入备份文件"还原到原设备（wrong 库里的错题记录字段完整保留） */
+    let _exportCache = null;   // 复用最近一次加载结果，避免重复请求
+    function stripHtmlForExport(html) {
+        if (!html) return '';
+        const div = document.createElement('div');
+        div.innerHTML = html;
+        return (div.textContent || div.innerText || '').replace(/\s+\n/g, '\n').trim();
+    }
+    function escapeMd(s) {
+        return String(s == null ? '' : s)
+            .replace(/([_*`\[\]])/g, '\\$1')
+            .replace(/\|/g, '\\|')
+            .replace(/\n+/g, ' ');
+    }
+    async function getCurrentWrongList() {
+        if (_exportCache && _exportCache.length) return _exportCache;
+        const subject = document.getElementById('subjectFilter').value;
+        const includeResolved = document.getElementById('showResolved').checked;
+        const sort = document.getElementById('sortFilter').value;
+        const realOnly = document.getElementById('realOnly').checked;
+        const params = new URLSearchParams();
+        if (subject) params.set('subject', subject);
+        if (includeResolved) params.set('include_resolved', 'true');
+        if (sort !== 'recent') params.set('sort', sort);
+        if (realOnly) params.set('real_only', 'true');
+        const resp = await api('/api/wrong?' + params);
+        const data = await resp.json();
+        _exportCache = data.wrong_questions || [];
+        return _exportCache;
+    }
+    function downloadFile(filename, content, mime) {
+        const blob = new Blob([content], { type: mime + ';charset=utf-8' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url; a.download = filename;
+        document.body.appendChild(a); a.click();
+        setTimeout(() => { document.body.removeChild(a); URL.revokeObjectURL(url); }, 200);
+    }
+    function buildWrongMarkdown(list) {
+        const SUBJ_NAMES = { os: '操作系统', co: '计算机组成原理', ds: '数据结构', cn: '计算机网络' };
+        const subject = list[0] ? list[0].subject : (document.getElementById('subjectFilter').value || 'all');
+        const lines = [];
+        const now = new Date().toISOString().slice(0, 16).replace('T', ' ');
+        lines.push('# 错题本导出');
+        lines.push('');
+        lines.push(`- 导出时间：${now}`);
+        lines.push(`- 科目：${SUBJ_NAMES[subject] || subject || '全部'}`);
+        lines.push(`- 错题数：${list.length}`);
+        lines.push(`- 含解析：${list.filter(q => q.explanation).length}`);
+        lines.push('');
+        list.forEach((q, i) => {
+            const content = stripHtmlForExport(q.content);
+            lines.push('---');
+            lines.push('');
+            lines.push(`## ${i + 1}. ${SUBJ_NAMES[q.subject] || q.subject} · ${q.chapter || ''}${q.section ? ' · ' + q.section : ''}${q.is_real_exam ? ' · 【' + (q.exam_year || '') + ' 统考真题】' : ''}`);
+            lines.push('');
+            lines.push('**题干**');
+            lines.push('');
+            lines.push(content);
+            lines.push('');
+            if (q.options && Object.keys(q.options).length) {
+                lines.push('**选项**');
+                lines.push('');
+                Object.entries(q.options).forEach(([k, v]) => {
+                    lines.push(`- **${k}.** ${stripHtmlForExport(v)}`);
+                });
+                lines.push('');
+            }
+            lines.push('**正确答案**：`' + (q.correct_answer || q.answer || '?') + '`');
+            if (q.user_answer != null) {
+                lines.push('');
+                lines.push('**你的作答**：`' + (q.user_answer || '未作答') + '`');
+            }
+            lines.push('');
+            if (q.wrong_count) {
+                lines.push(`**错次**：${q.wrong_count}${q.last_wrong_at ? '（上次：' + q.last_wrong_at + '）' : ''}`);
+                lines.push('');
+            }
+            if (q.explanation) {
+                lines.push('**解析**');
+                lines.push('');
+                lines.push(stripHtmlForExport(q.explanation));
+                lines.push('');
+            }
+        });
+        return lines.join('\n');
+    }
+    async function exportWrongList(fmt) {
+        const list = await getCurrentWrongList();
+        if (!list.length) { alert('当前筛选条件下没有错题可导出'); return; }
+        const subject = list[0].subject || 'all';
+        const ts = new Date().toISOString().slice(0, 10);
+        if (fmt === 'json') {
+            // 与 stats.html 全量备份同源结构，单独抽出 wrong 部分便于用户迁移或打印
+            const payload = {
+                version: 1, exported_at: new Date().toISOString(), source: 'wrong-export',
+                subject, wrong: list
+            };
+            downloadFile(`错题_${subject}_${ts}.json`, JSON.stringify(payload, null, 2), 'application/json');
+        } else {
+            downloadFile(`错题_${subject}_${ts}.md`, buildWrongMarkdown(list), 'text/markdown');
+        }
+    }
     </script>
 </body>
 </html>
