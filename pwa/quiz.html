@@ -677,7 +677,7 @@
         // 笔记面板（内容用DOM赋值，避免HTML转义问题）；已有笔记时仅淡化保存按钮，聚焦编辑恢复
         let noteHtml = '';
         if (noteShown) {
-            const hasNote = !!(q.note || (q.note_images || []).length);
+            const hasNote = hasNoteOf(q);
             noteHtml = `
                 <div class="note-panel">
                     <div class="note-title">我的笔记</div>
@@ -899,7 +899,7 @@
             const result = await resp.json();
             q.note = result.note || '';
             q.note_images = result.images || [];
-            const hasNote = !!(q.note || q.note_images.length);
+            const hasNote = hasNoteOf({ note: q.note, note_images: q.note_images });
             const hint = document.getElementById('noteHint');
             hint.textContent = hasNote ? (isAuto ? '已自动保存 ✓' : '已保存 ✓') : (hadNote ? '已删除笔记' : '笔记是空的，没有保存');
             setTimeout(() => { if (hint) hint.textContent = ''; }, 2000);
@@ -981,10 +981,10 @@
     }
     function serializeNote(el) {
         if (!el) return '';
-        const html = el.innerHTML.replace(/<br>\s*$/, '').trim();
-        // 内容为空（含只有空标签/空 <br>）时返回空串
-        if (!html || /^<br\/?>$/i.test(html) || html === '<p></p>') return '';
-        return html;
+        // 内容为空（含只有空标签/空 <br>）时返回空串——使用 stripTags 等价判断，避免"<br><br><br>" 等空气笔记被存为非空
+        const text = el.textContent.replace(/ /g, ' ').trim();
+        if (!text) return '';
+        return el.innerHTML;
     }
     function updateNotePlaceholder(el) {
         // contenteditable 不支持原生 placeholder，手动按子内容判断
