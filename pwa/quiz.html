@@ -1011,7 +1011,7 @@
             else if (cmd === 'h1') document.execCommand('formatBlock', false, 'H1');
             else if (cmd === 'h2') document.execCommand('formatBlock', false, 'H2');
             else if (cmd === 'hl') applyNoteHighlight(el, btn.dataset.color);
-            else if (cmd === 'clear') document.execCommand('removeFormat');
+            else if (cmd === 'clear') clearNoteFormat(el);
             onNoteInput();
         });
         // 键盘快捷键 Ctrl/Cmd + B/I
@@ -1042,6 +1042,38 @@
             span.appendChild(range.extractContents());
             range.insertNode(span);
         } catch (e) { /* 选区越界，忽略 */ }
+    }
+    // 「清除格式」：撤销 行内(粗体/斜体/颜色/字体) + 块级(H1/H2/H3/引用) + 高亮
+    // 关键：removeFormat 只能清行内标签，清不掉 formatBlock 产生的 H1/H2，也剥不掉
+    // class 化高亮 span(后备路径) 与内联 background；三者必须分别处理，否则清除「不生效」
+    function clearNoteFormat(el) {
+        el.focus();
+        const sel = window.getSelection();
+        if (!sel || sel.rangeCount === 0) return onNoteInput();
+        // 1) 行内格式
+        document.execCommand('removeFormat');
+        // 2) 块级格式：H1/H2/H3/blockquote → 普通段落 P（removeFormat 对 formatBlock 无效）
+        try { document.execCommand('formatBlock', false, 'P'); } catch (e) {}
+        // 3) 高亮：剥掉 class 化 span 与内联 background（removeFormat 不处理这两类）
+        stripNoteHighlight(sel.getRangeAt(0), el);
+        onNoteInput();
+    }
+    function stripNoteHighlight(range, root) {
+        root.querySelectorAll('*').forEach(s => {
+            if (!range.intersectsNode(s)) return;
+            // 内联背景高亮（execCommand('hiliteColor') 在某些浏览器产物）
+            if (s.style && (s.style.backgroundColor || s.style.background)) {
+                s.style.backgroundColor = '';
+                s.style.background = '';
+                if (s.getAttribute('style') === '') s.removeAttribute('style');
+            }
+            // class 化高亮 span（applyNoteHighlight 后备路径产生 <span class="hl hl-x">）
+            if (s.classList && s.classList.contains('hl')) {
+                const p = s.parentNode;
+                while (s.firstChild) p.insertBefore(s.firstChild, s);
+                p.removeChild(s);
+            }
+        });
     }
 
     function renderNoteImages() {
