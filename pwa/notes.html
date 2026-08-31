@@ -735,7 +735,13 @@
             const el = n.nodeType === 1 ? n : n.parentElement;
             return !!(el && el.closest('.line-anno'));
         }
-        const hlWalkFilter = { acceptNode: n => inAnno(n) ? NodeFilter.FILTER_REJECT : NodeFilter.FILTER_ACCEPT };
+        // SVG 内的 <text> 是真实文本节点，若被高亮包裹进 HTML <span>，会因 SVG 不渲染 HTML 元素而消失；
+        // 偏移计数/包裹一律跳过 SVG 子树，既修复"示意图高亮后文字消失"，又让旧失效高亮在还原时自动跳过
+        function inSvg(n) {
+            const el = n.nodeType === 1 ? n : n.parentElement;
+            return !!(el && el.closest('svg'));
+        }
+        const hlWalkFilter = { acceptNode: n => (inAnno(n) || inSvg(n)) ? NodeFilter.FILTER_REJECT : NodeFilter.FILTER_ACCEPT };
 
         // 过滤批注后的正文纯文本（与 offsetInRoot / wrapRange 同一计数口径）
         function cleanTextOf(root) {
@@ -1168,6 +1174,8 @@
                 const span = document.createElement('span');
                 span.className = cls;
                 if (ds) { span.dataset.start = ds.start; span.dataset.color = ds.color; }
+                // 兜底：绝不把 HTML <span> 包进 SVG <text>（会导致文字不渲染）
+                if (p.node.parentElement && p.node.parentElement.closest && p.node.parentElement.closest('svg')) continue;
                 range.surroundContents(span);   // 单文本节点区间，包裹安全
             }
         }
@@ -1208,6 +1216,8 @@
             // 选区必须完全落在同一 .notes-body 内，且不落进批注块
             if (!body || bodyOf(range.endContainer) !== body) { hideHlToolbar(); return; }
             if (inAnno(range.startContainer) || inAnno(range.endContainer)) { hideHlToolbar(); return; }
+            // 选区触及示意图(SVG)时禁止高亮：SVG <text> 被 HTML <span> 包裹会消失
+            if (inSvg(range.startContainer) || inSvg(range.endContainer)) { hideHlToolbar(); return; }
             hideHlToolbar();
             const rect = range.getBoundingClientRect();
             hlToolbar = document.createElement('div');
@@ -1335,6 +1345,7 @@
                     hlItems.push({ sec, start, end, color: it.color, text: it.text });
                 }
             });
+            saveHl();   // 落盘清洗：被跳过的 SVG 失效高亮不再持久化，文字恢复后不会反复消失
         }
 
         // 悬浮回顶按钮：下滑超过 400px 才出现，避免开头就挡内容

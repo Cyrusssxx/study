@@ -100,7 +100,13 @@
             const el = n.nodeType === 1 ? n : n.parentElement;
             return !!(el && el.closest('.line-anno'));
         }
-        const hlWalkFilter = { acceptNode: n => inAnno(n) ? NodeFilter.FILTER_REJECT : NodeFilter.FILTER_ACCEPT };
+        // SVG 内的 <text> 是真实文本节点，若被高亮包裹进 HTML <span>，会因 SVG 不渲染 HTML 元素而消失；
+        // 偏移计数/包裹一律跳过 SVG 子树，既修复"导图高亮后文字消失"，又让旧失效高亮在还原时自动跳过
+        function inSvg(n) {
+            const el = n.nodeType === 1 ? n : n.parentElement;
+            return !!(el && el.closest('svg'));
+        }
+        const hlWalkFilter = { acceptNode: n => (inAnno(n) || inSvg(n)) ? NodeFilter.FILTER_REJECT : NodeFilter.FILTER_ACCEPT };
 
         function cleanTextOf(root) {
             const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, hlWalkFilter);
@@ -144,6 +150,8 @@
                 const span = document.createElement('span');
                 span.className = cls;
                 if (ds) { span.dataset.start = ds.start; span.dataset.color = ds.color; }
+                // 兜底：绝不把 HTML <span> 包进 SVG <text>（会导致文字不渲染）
+                if (p.node.parentElement && p.node.parentElement.closest && p.node.parentElement.closest('svg')) continue;
                 range.surroundContents(span);
             }
         }
@@ -183,6 +191,8 @@
             const body = bodyOf(range.startContainer);
             if (!body || bodyOf(range.endContainer) !== body) { hideHlToolbar(); return; }
             if (inAnno(range.startContainer) || inAnno(range.endContainer)) { hideHlToolbar(); return; }
+            // 选区触及导图 SVG 时禁止高亮：SVG <text> 被 HTML <span> 包裹会消失
+            if (inSvg(range.startContainer) || inSvg(range.endContainer)) { hideHlToolbar(); return; }
             hideHlToolbar();
             const rect = range.getBoundingClientRect();
             hlToolbar = document.createElement('div');
@@ -275,6 +285,7 @@
 
         // 重渲染后按偏移重新上色（导图内容静态，偏移稳定）
         function reapplyHighlights() {
+            const retained = [];
             document.querySelectorAll('.map-sec').forEach(section => {
                 const sec = section.id;
                 const list = hlItems.filter(it => it.sec === sec);
@@ -286,12 +297,14 @@
                     let { start, end } = it;
                     if (full.slice(start, end) !== it.text) {
                         const idx = full.indexOf(it.text);
-                        if (idx < 0 || !it.text) continue;
+                        if (idx < 0 || !it.text) continue;   // 找不到（含 SVG 失效项）→ 丢弃
                         start = idx; end = idx + it.text.length;
                     }
                     wrapRange(body, start, end, 'note-hl note-hl-' + it.color, { start, color: it.color });
+                    retained.push({ sec, start, end, color: it.color, text: it.text });
                 }
             });
+            hlItems = retained;   // 丢弃无法定位的失效高亮（含作用在 SVG 上的），并据此落盘清洗
         }
 
         async function loadHighlights() {
@@ -304,6 +317,7 @@
             if (!Array.isArray(items) || !items.length) return;
             hlItems = items.filter(it => it && typeof it.sec === 'string');
             reapplyHighlights();
+            saveHl();   // 落盘清洗：reapplyHighlights 已丢弃 SVG 失效高亮
         }
 
         function esc(s) {
