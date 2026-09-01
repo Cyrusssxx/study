@@ -234,7 +234,7 @@
     {
       "id": "cn_0013",
       "number": 13,
-      "content": "【2010统考真题】在下图所示<br><img src=\"data/cn_figs/cn_0012.png\" alt=\"cn题图\" style=\"max-width:100%;margin:8px 0;border:1px solid #ddd;border-radius:4px;\" />的采用“存储-转发”方式的分组交换网络中，所有链路的数据传输 速率为100Mb/s，分组大小为1000B，其中分组头大小为20B。若主机H1向主机H2发送一个大小 为980000B的文件，则在不考虑分组拆装时间和传播延迟的情况下，从H1发送开始到H2接收完为止， 需要的时间至少是( )",
+      "content": "<img src=\"data/cn_figs/cn_0013_full.png\" alt=\"真题原题\" style=\"max-width:100%;margin:8px 0;border:1px solid #ddd;border-radius:4px;\" />",
       "options": {
         "A": "80ms",
         "B": "80.08ms",
@@ -251,7 +251,7 @@
     {
       "id": "cn_0014",
       "number": 14,
-      "content": "【2013统考真题】主机甲通过一个路由器(存储转发方式)与主机乙互连，两段链路的数据传输速 率均为10Mb/s，主机甲分别采用报文交换和分组大小为10kb的分组交换向主机乙发送一个大小为 8Mb(1M=106)的报文。若忽略链路传播延迟、分组头开销和分组拆装时间，则两种交换方式完成 该报文传输所需的总时间分别为( )",
+      "content": "<img src=\"data/cn_figs/cn_0014_full.png\" alt=\"真题原题\" style=\"max-width:100%;margin:8px 0;border:1px solid #ddd;border-radius:4px;\" />",
       "options": {
         "A": "800ms、1600ms",
         "B": "801ms、1600ms",
@@ -268,7 +268,7 @@
     {
       "id": "cn_0015",
       "number": 15,
-      "content": "【2023统考真题】在下图所示<br><img src=\"data/cn_figs/cn_0014.png\" alt=\"cn题图\" style=\"max-width:100%;margin:8px 0;border:1px solid #ddd;border-radius:4px;\" />的分组交换网络中，主机H1和H2通过路由器互连，2段链路的带 宽均为100Mb/s，时延带宽积(单向传播时延×带宽)均为1000b。若H1向H2发送一个大小为 1MB的文件，分组长度为1000B，则从H1开始发送的时刻起到H2收到文件全部数据时刻止，所 需的时间至少是( )(注：1M=106)",
+      "content": "<img src=\"data/cn_figs/cn_0015_full.png\" alt=\"真题原题\" style=\"max-width:100%;margin:8px 0;border:1px solid #ddd;border-radius:4px;\" />",
       "options": {
         "A": "80.02ms",
         "B": "80.08ms",
@@ -285,7 +285,7 @@
     {
       "id": "cn_0016",
       "number": 16,
-      "content": "【2024统考真题】若某分组交换网络及每段链路的带宽如下图所示，<br><img src=\"data/cn_figs/cn_0016.png\" alt=\"cn题图\" style=\"max-width:100%;margin:8px 0;border:1px solid #ddd;border-radius:4px;\" />则H1到H2的最大吞吐量约 为( )",
+      "content": "<img src=\"data/cn_figs/cn_0016_full.png\" alt=\"真题原题\" style=\"max-width:100%;margin:8px 0;border:1px solid #ddd;border-radius:4px;\" />",
       "options": {
         "A": "1Mb/s",
         "B": "10Mb/s",
@@ -811,7 +811,7 @@
     {
       "id": "cn_0045",
       "number": 45,
-      "content": "【2009统考真题】在OSI参考模型中，自下而上第一个提供端到端服务的层次是( )",
+      "content": "<img src=\"data/cn_figs/cn_0045_full.png\" alt=\"真题原题\" style=\"max-width:100%;margin:8px 0;border:1px solid #ddd;border-radius:4px;\" />",
       "options": {
         "A": "数据链路层",
         "B": "传输层",
@@ -866,7 +866,7 @@
     {
       "id": "cn_0047",
       "number": 47,
-      "content": "【2010统考真题】下列选项中，不属于网络体系结构所描述的内容是( )",
+      "content": "<img src=\"data/cn_figs/cn_0047_full.png\" alt=\"真题原题\" style=\"max-width:100%;margin:8px 0;border:1px solid #ddd;border-radius:4px;\" />",
       "options": {
         "A": "网络的层次",
         "B": "每层使用的协议",
@@ -883,7 +883,7 @@
     {
       "id": "cn_0048",
       "number": 48,
-      "content": "【2013统考真题】在OSI参考模型中，功能需由应用层的相邻层实现的是( )",
+      "content": "<img src=\"data/cn_figs/cn_0048_full.png\" alt=\"真题原题\" style=\"max-width:100%;margin:8px 0;border:1px solid #ddd;border-radius:4px;\" />",
       "options": {
         "A": "对话管理",
         "B": "数据格式转换",
@@ -900,7 +900,7 @@
     {
       "id": "cn_0049",
       "number": 49,
-      "content": "【2014统考真题】在OSI参考模型中，直接为会话层提供服务的是( )",
+      "content": "<img src=\"data/cn_figs/cn_0049_full.png\" alt=\"真题原题\" style=\"max-width:100%;margin:8px 0;border:1px solid #ddd;border-radius:4px;\" />",
       "options": {
         "A": "应用层",
         "B": "表示层",
@@ -917,7 +917,7 @@
     {
       "id": "cn_0050",
       "number": 50,
-      "content": "【2016统考真题】在OSI参考模型中，路由器、交换机(Switch)、集线器(Hub)实现的最高功能层 分别是( )",
+      "content": "<img src=\"data/cn_figs/cn_0050_full.png\" alt=\"真题原题\" style=\"max-width:100%;margin:8px 0;border:1px solid #ddd;border-radius:4px;\" />",
       "options": {
         "A": "2、2、1",
         "B": "2、2、2",
@@ -934,7 +934,7 @@
     {
       "id": "cn_0051",
       "number": 51,
-      "content": "【2017统考真题】假设OSI参考模型的应用层欲发送400B的数据(无拆分)，除物理层和应用层外， 其他各层在封装PDU时均引入20B的额外开销，则应用层的数据传输效率约为( )",
+      "content": "<img src=\"data/cn_figs/cn_0051_full.png\" alt=\"真题原题\" style=\"max-width:100%;margin:8px 0;border:1px solid #ddd;border-radius:4px;\" />",
       "options": {
         "A": "80%",
         "B": "83%",
@@ -951,7 +951,7 @@
     {
       "id": "cn_0052",
       "number": 52,
-      "content": "【2019统考真题】OSI参考模型的第5层(自下而上)完成的主要功能是( )",
+      "content": "<img src=\"data/cn_figs/cn_0052_full.png\" alt=\"真题原题\" style=\"max-width:100%;margin:8px 0;border:1px solid #ddd;border-radius:4px;\" />",
       "options": {
         "A": "差错控制",
         "B": "路由选择",
@@ -968,7 +968,7 @@
     {
       "id": "cn_0053",
       "number": 53,
-      "content": "【2020统考真题】下图描述<br><img src=\"data/cn_figs/cn_0053.png\" alt=\"cn题图\" style=\"max-width:100%;margin:8px 0;border:1px solid #ddd;border-radius:4px;\" />的协议要素是( ) I.语法 II.语义 III.时序",
+      "content": "<img src=\"data/cn_figs/cn_0053_full.png\" alt=\"真题原题\" style=\"max-width:100%;margin:8px 0;border:1px solid #ddd;border-radius:4px;\" />",
       "options": {
         "A": "仅I",
         "B": "仅II",
@@ -985,7 +985,7 @@
     {
       "id": "cn_0054",
       "number": 54,
-      "content": "【2021统考真题】在TCP/IP参考模型中，由传输层相邻的下一层实现的主要功能是( )",
+      "content": "<img src=\"data/cn_figs/cn_0054_full.png\" alt=\"真题原题\" style=\"max-width:100%;margin:8px 0;border:1px solid #ddd;border-radius:4px;\" />",
       "options": {
         "A": "对话管理",
         "B": "路由选择",
@@ -1002,7 +1002,7 @@
     {
       "id": "cn_0055",
       "number": 55,
-      "content": "【2022统考真题】在ISO/OSI参考模型中，实现两个相邻结点间流量控制功能的是( )",
+      "content": "<img src=\"data/cn_figs/cn_0055_full.png\" alt=\"真题原题\" style=\"max-width:100%;margin:8px 0;border:1px solid #ddd;border-radius:4px;\" />",
       "options": {
         "A": "物理层",
         "B": "数据链路层",
