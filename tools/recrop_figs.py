@@ -22,8 +22,8 @@ DOWN_FALLBACK = 380
 MIN_GAP_H = 32
 MIN_GAP_RELAXED = 20
 PAD = 2
-MAX_ZONE_H = 620
-DENSE_LEN = 12
+MAX_ZONE_H = 360       # 收紧上限，避免再截到半个页面
+DENSE_LEN = 6          # 6 字以上视为密集行（题文/选项都覆盖）
 
 
 def is_dense(t):
@@ -177,9 +177,20 @@ def main():
             # 王道"题 N 的图"实际位于"题 N-1 题首"与"题 N 题首/选项"之间
             prev_pdf_n = (target_pdf or pdf_n) - 1
             prev_rec = pdf_idx.get(prev_pdf_n)
-            prev_yq = prev_rec[2] if prev_rec else (yq - UPWARD_EXTEND)
-            y_top = max(prev_yq, yq - UPWARD_EXTEND)
+            # 关键：若 prev 真实存在（同一节内），必须 prev 也在同一页（lines 列表同属一页），
+            # 否则 prev_yq = yq - UPWARD_EXTEND（防止跨页裁出页眉）
+            if prev_rec and prev_rec[1] == page:
+                # 强约束：上界=上一题题首（不放大），下界=本题题首之前的 8pt 余量
+                y_top = prev_rec[2] + 4   # 上一题题首之下 4pt，避免抓到题首行
+            else:
+                # 跨页/无 prev：放大到 80pt 上方
+                y_top = max(yq - 80, 0)
             y_bottom = min(lines[oi][0] - 1, h_pg) if oi is not None else min(yq + DOWN_FALLBACK, h_pg)
+            # 钳制到页面有效范围
+            y_top = max(0, min(y_top, h_pg))
+            y_bottom = max(0, min(y_bottom, h_pg))
+            if y_top >= y_bottom:
+                y_bottom = min(y_top + MAX_ZONE_H, h_pg)
             zone = find_figure_zone(lines, y_top, y_bottom)
             if zone is None:
                 y0 = y_top
@@ -188,6 +199,8 @@ def main():
                     y1 = min(y0 + 60, h_pg)
                 zone = (y0, min(y1, y0 + MAX_ZONE_H), 'fallback')
             y0, y1, mode = zone
+            # 钳制防 y<0
+            y0 = max(0, y0); y1 = max(0, y1)
             if y1 - y0 < 20:
                 fail += 1
                 report.append(f'  FAIL {q["id"]} {q["section"]} pdf#{pdf_n}: too-small')
