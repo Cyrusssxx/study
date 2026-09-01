@@ -390,21 +390,22 @@
     // 进入页面制造同文档历史锚点：否则侧键后退=跨文档导航（页面卸载），popstate 兜底失效
     try { history.pushState({ quizGuard: 1 }, '', location.href); } catch (err) { }
 
-    // 按「全库编号升序」给每题计算其「小节/节」内的序号（题头「小节 · 第 n 题」用）
-    // 优先按小节（subsection）分组，无小节字段回落节（section）
+    // 题头「节 · 第 n 题」的序号：与右侧题号面板口径一致——按「节(section)」分组、
+    // 在展示顺序(list 顺序)内计数。这样标题的「第 n 题」与面板位置一一对应。
+    // 回落：无 section 时用 chapter。
     function _buildSecOrdinal(list) {
         _secOrdinal = {};
-        const bySec = {};
+        let curKey = null, idx = 0;
         for (const q of list) {
-            const k = q.subsection || q.section || '';
-            (bySec[k] = bySec[k] || []).push(q);
+            const k = q.section || q.chapter || '';
+            if (k !== curKey) { curKey = k; idx = 0; }
+            idx++;
+            _secOrdinal[q.id] = idx;
         }
-        for (const k of Object.keys(bySec))
-            bySec[k].sort((a, b) => a.number - b.number).forEach((q, i) => { _secOrdinal[q.id] = i + 1; });
     }
 
-    // 题头知识点名：优先小节（已精确到小节），回落节
-    function secLabel(q) { return q.subsection || q.section || ''; }
+    // 题头节名：显示「节(section)」而非「小节(subsection)」，与题号面板、章节徽标保持一致
+    function secLabel(q) { return q.section || q.chapter || ''; }
 
     let _loadSeq = 0;   // 加载序号：模式热切换时丢弃过期响应，防止竞态覆盖
 
