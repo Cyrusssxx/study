@@ -77,12 +77,16 @@ def build_cache(doc):
 
 
 def build_toc_map(doc):
-    """节代码(如 '2.3') -> 该节'本节试题精选'起始页(1-based)"""
+    """节代码(如 '2.3') -> 该节'本节习题精选'起始页(1-based)
+    王道 PDF 目录：1.1=章、1.1.1=节、1.1.7=本节习题精选（标题号重号）
+    用 toc 的 level 区分：含"习题精选"且 level>=3 才是目标。
+    """
     toc = doc.get_toc()
     m = {}
-    for _, title, page in toc:
-        if '试题精选' in title:
-            code = '.'.join(title.split()[0].split('.')[:2])
+    for level, title, page in toc:
+        if '习题精选' in title and level >= 3:
+            head = title.split()[0]
+            code = '.'.join(head.split('.')[:2])
             m[code] = page
     return m
 
