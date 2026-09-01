@@ -1,102 +1,131 @@
 # -*- coding: utf-8 -*-
-"""单题：find_zone + crop 全在子进程。父进程通过 argv 传 id/keyword/options/页候选，
-子进程输出 JSON {ok, page, pno, zt, zb, out_path} 或 {ok:false, why}。
-子进程崩溃父进程仅获非零 return code。"""
-import sys, json, os, pymupdf as fitz
+"""v3 单题裁剪子进程：输入 (block_start, block_end, qno, content, options, out)。
+用题干题号 regex 在节内块范围定位（绕开 bank↔PDF 文本差异），选项用 A. 行首定位。
+输出 JSON {ok, page, size, why}。子进程崩溃父进程仅得非零 rc。"""
+import sys, json, re
+import pymupdf as fitz
 PDF = r'D:/ai code/408教材/2027王道《计算机网络》考研复习指导 (王道论坛) (z-library.sk, 1lib.sk, z-lib.sk).pdf'
 
-def pick_kw(content):
-    import re
-    s = re.sub(r'<[^>]+>', '', content or '').strip()
-    s = re.sub(r'^【[^】]+】\s*', '', s)  # 先剥【year统考真题】前缀
-    s = re.sub(r'^(在下图所示|如下图所示|如图所示|如下图|如图|右图所示|上图中|如下列图所示|某网络拓扑及各链路带宽如下)\s*', '', s)
-    m = re.search(r'[\u4e00-\u9fa5A-Za-z0-9]', s)
-    if not m: return None
-    s2 = s[m.start():]
-    return s2[:12] if len(s2) >= 4 else None
+def find_qstart(doc, b0, b1, qno):
+    """在 [b0,b1] 页找题号行 'NN.'（行首，零填充），首个匹配即返回（题干页在答案页之前）"""
+    pat = re.compile(r'^\s*' + f'{qno:02d}' + r'\.')
+    for i in range(b0, b1 + 1):
+        try:
+            d = doc[i].get_text('dict')
+        except Exception:
+            continue  # xref 损坏页跳过
+        for blk in d['blocks']:
+            if blk.get('type') != 0: continue
+            for l in blk['lines']:
+                t = ''.join(s['text'] for s in l['spans'])
+                if pat.match(t):
+                    return i, l['bbox'][1], l['bbox'][3]
+    return None, None, None
 
-def opt_kw(opts):
-    import re
-    for k in ['A','B','C','D']:
-        v = (opts or {}).get(k) or ''
-        v = re.sub(r'^(如下图|如图|下图所示|如右图)[^A-Za-z0-9\u4e00-\u9fa5]*', '', v).strip()
-        if len(v) >= 6: return v[:10]
-    return None
+def find_first_option(doc, pno, after_y, opts):
+    """在指定页 after_y 之后找首个选项行 'A.'；返回 y0"""
+    pat = re.compile(r'^\s*A[\.、]')
+    try:
+        d = doc[pno].get_text('dict')
+    except Exception:
+        return None
+    cand = []
+    for blk in d['blocks']:
+        if blk.get('type') != 0: continue
+        for l in blk['lines']:
+            y0 = l['bbox'][1]
+            if y0 <= after_y + 3: continue
+            t = ''.join(s['text'] for s in l['spans'])
+            if pat.match(t):
+                cand.append(y0)
+    return min(cand) if cand else None
+
+def do_crop(pg, y0, y1, out):
+    try:
+        MAT = 2.0
+        pix = pg.get_pixmap(matrix=fitz.Matrix(MAT, MAT))
+        from PIL import Image
+        img = Image.frombytes('RGB', (pix.width, pix.height), pix.samples)
+        w, h = img.size
+        y0p = int(y0 * MAT); y1p = min(int(y1 * MAT), h)
+        x0p = int(45 * MAT); x1p = min(int(500 * MAT), w)
+        from PIL import ImageFilter, ImageOps
+        gray = img.convert('L').point(lambda v: 255 if v >= 240 else 0)
+        crop = gray.crop((x0p, y0p, x1p, y1p))
+        bb = crop.getbbox()
+        if not bb or bb[2] <= bb[0] or bb[3] <= bb[1]:
+            return None
+        cx0 = max(0, x0p + bb[0] - 3); cy0 = max(0, y0p + bb[1] - 3)
+        cx1 = min(w, x0p + bb[2] + 3); cy1 = min(h, y0p + bb[3] + 3)
+        if cx1 <= cx0 or cy1 <= cy0:
+            return None
+        img.crop((cx0, cy0, cx1, cy1)).save(out)
+        return (cx1 - cx0, cy1 - cy0)
+    except Exception:
+        return None
 
 def main():
     j = json.loads(sys.stdin.read())
-    qid, content, opts, out_path = j['id'], j['content'], j['options'], j['out']
+    b0, b1, qno = j['block0'], j['block1'], j['qno']
+    out = j['out']
     doc = fitz.open(PDF)
-    kw = pick_kw(content)
-    if not kw:
-        print(json.dumps({'ok': False, 'why': 'no_kw'})); return
-    pno = None
-    for i in range(doc.page_count):
-        if kw in doc[i].get_text().replace('\n', ''):
-            pno = i
+    pno, qs_y, qs_y1 = find_qstart(doc, b0, b1, qno)
     if pno is None:
-        print(json.dumps({'ok': False, 'why': 'page_not_found'})); return
+        print(json.dumps({'ok': False, 'why': 'qstart_not_found'})); return
     pg = doc[pno]
-    okw = opt_kw(opts)
-    def fy(p, n, after=None):
-        h = p.search_for(n)
-        if after is not None: h = [r for r in h if r.y0 > after + 3]
-        if not h: return None
-        return min(r.y0 for r in h)
-    kw_y0 = fy(pg, kw)
-    opt_y0 = fy(pg, okw, after=kw_y0) if okw else None
-    cur = pg; cur_pno = pno
-    if opt_y0 is None and pno + 1 < doc.page_count:
-        pg2 = doc[pno+1]
-        opt_y0 = fy(pg2, okw)
-        if opt_y0 is not None:
-            cur = pg2; cur_pno = pno + 1
-            zt, zb, info = 60, opt_y0 - 1, 'cross_page'
-            return do_crop(cur, cur_pno, zt, zb, info, out_path)
-    if opt_y0 is None or kw_y0 is None:
-        print(json.dumps({'ok': False, 'why': 'opt_or_kw'})); return
-    lines=[]
-    for b in cur.get_text('dict')['blocks']:
-        if b.get('type')!=0: continue
-        for l in b['lines']:
-            y0,y1 = l['bbox'][1], l['bbox'][3]
-            if y0 > kw_y0 - 2 and y1 < opt_y0 + 2:
-                t=''.join(s['text'] for s in l['spans']).strip()
-                if t: lines.append((y0,y1,t))
-    long=[x for x in lines if len(x[2])>=20]
-    stem_end = max(x[1] for x in long) if long else kw_y0
+    opt_y = find_first_option(doc, pno, qs_y, j.get('options') or {})
+    cur_pno = pno
+    if opt_y is None and pno + 1 < doc.page_count:
+        opt_y = find_first_option(doc, pno + 1, -1, j.get('options') or {})
+        cur_pno = pno + 1
+    if opt_y is None:
+        # 兜底：用块尾（下一个题号或块结束）作下界
+        print(json.dumps({'ok': False, 'why': 'option_not_found'})); return
+    # 题干末行（qs_y 与 opt_y 之间的长文本行）
+    pgc = doc[cur_pno]
+    lines = []
+    try:
+        dd = pgc.get_text('dict')
+        for blk in dd['blocks']:
+            if blk.get('type') != 0: continue
+            for l in blk['lines']:
+                y0, y1 = l['bbox'][1], l['bbox'][3]
+                t = ''.join(s['text'] for s in l['spans']).strip()
+                if not t: continue
+                if cur_pno == pno:
+                    if y0 > qs_y - 2 and y1 < opt_y + 2: lines.append((y0, y1, t))
+                else:
+                    if y1 < opt_y + 2: lines.append((y0, y1, t))
+    except Exception:
+        pass
+    long = [x for x in lines if len(x[2]) >= 15]
+    stem_end = max(x[1] for x in long) if long else qs_y
     zt = stem_end + 1
-    if opt_y0 - zt < 6: zt = kw_y0 + 1
-    return do_crop(cur, cur_pno, zt, opt_y0 - 1, 'same', out_path)
-
-def do_crop(pg, pno, y0, y1, info, out):
-    MAT = 2.0
-    pix = pg.get_pixmap(matrix=fitz.Matrix(MAT, MAT))
-    w, h, n, s = pix.width, pix.height, pix.n, pix.stride
-    samp = pix.samples
-    y0p = int(y0*MAT); y1p = min(int(y1*MAT), h)
-    x0p = int(45*MAT); x1p = min(int(500*MAT), w)
-    min_x=w; max_x=-1; min_y=h; max_y=-1
-    for y in range(y0p, y1p):
-        base = y*s
-        for x in range(x0p, x1p):
-            o = base + x*n
-            if samp[o]<240 and samp[o+1]<240 and samp[o+2]<240:
-                if x<min_x: min_x=x
-                if x>max_x: max_x=x
-                if y<min_y: min_y=y
-                if y>max_y: max_y=y
-    if max_x < 0:
+    if opt_y - zt < 6: zt = qs_y + 1
+    # 兜底 no_dark：向下扩大到块尾（下一个题号之前）重试
+    size = do_crop(doc[cur_pno], zt, opt_y - 1, out)
+    if not size:
+        next_pat = re.compile(r'^\s*' + f'{qno+1:02d}' + r'\.')
+        nxt_y = None
+        try:
+            dd = doc[cur_pno].get_text('dict')
+            for blk in dd['blocks']:
+                if blk.get('type') != 0: continue
+                for l in blk['lines']:
+                    t = ''.join(s['text'] for s in l['spans'])
+                    if next_pat.match(t) and l['bbox'][1] > qs_y + 2:
+                        nxt_y = l['bbox'][1]; break
+                if nxt_y: break
+        except Exception:
+            pass
+        if nxt_y:
+            size = do_crop(doc[cur_pno], zt, nxt_y - 1, out)
+    if not size:
         print(json.dumps({'ok': False, 'why': 'no_dark'})); return
-    cx0=max(0,min_x-3); cy0=max(0,min_y-3)
-    cx1=min(w,max_x+3); cy1=min(h,max_y+3)
-    sub = fitz.Pixmap(pix, fitz.IRect(cx0,cy0,cx1,cy1))
-    sub.save(out)
-    print(json.dumps({'ok': True, 'page': pno+1, 'size': [sub.width, sub.height], 'info': info, 'out': out}))
+    print(json.dumps({'ok': True, 'page': cur_pno + 1, 'size': size, 'zone': [zt, opt_y - 1]}))
 
 if __name__ == '__main__':
     try:
         main()
     except Exception as e:
-        import json
-        print(json.dumps({'ok': False, 'why': f'subprocess_exc:{type(e).__name__}:{e}'}))
+        print(json.dumps({'ok': False, 'why': f'exc:{type(e).__name__}:{e}'}))
