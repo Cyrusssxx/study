@@ -29,7 +29,7 @@ for idx, (pg, sec, typ) in enumerate(blocks):
         exer[sec.rsplit('.', 1)[0]] = (pg, end)
 
 def insert_img(content, num):
-    for marker in ['在下图所示的', '在下图所示，', '在下图所示。', '在下图所示', '在下图中', '下图是', '如下图所示，', '如下图所示。', '如下图所示', '如下图，', '如下图。', '如下图', '如图下所示', '如图所示，', '如图所示。', '如图所示', '如图，', '如图。', '如图']:
+    for marker in ['在下图所示的', '在下图所示，', '在下图所示。', '在下图所示', '在下图中', '下图为', '下图是', '下图中', '右图描述', '下图描述', '右图是', '右图', '如下图所示，', '如下图所示。', '如下图所示', '如下图，', '如下图。', '如下图', '如图下所示', '如图所示，', '如图所示。', '如图所示', '如图，', '如图。', '如图']:
         if marker in content:
             img = f'<br><img src="data/cn_figs/cn_{num:04d}.png" alt="cn题图" style="{IMG_STYLE}" />'
             return content.replace(marker, marker + img, 1), True
@@ -58,8 +58,8 @@ def main():
         if not blk or not qno:
             fail.append((q['id'], f'no_block key={key} qno={qno}')); continue
         out = os.path.join(ROOT, f"pwa/data/cn_figs/cn_{q['number']:04d}.png")
-        # 搜索范围只到答案页之前（避免匹配答案条目 'NN.'）
-        b1 = blk[1] - 1 if blk[1] is not None else blk[1]
+        # 搜索范围含答案页（跨页题在答案页顶部），子进程页内遇'答案与解析'即停
+        b1 = blk[1] if blk[1] is not None else blk[1]
         payload = json.dumps({'block0': blk[0], 'block1': b1, 'qno': qno,
                               'content': q.get('content') or '', 'options': q.get('options') or {}, 'out': out})
         print(f'[{idx+1}/{len(targets)}] {q["id"]} (节{key} 题{qno}) ...', end=' ', flush=True)

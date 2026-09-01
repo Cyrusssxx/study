@@ -7,8 +7,9 @@ import pymupdf as fitz
 PDF = r'D:/ai code/408教材/2027王道《计算机网络》考研复习指导 (王道论坛) (z-library.sk, 1lib.sk, z-lib.sk).pdf'
 
 def find_qstart(doc, b0, b1, qno):
-    """在 [b0,b1] 页找题号行 'NN.'（行首，零填充），首个匹配即返回（题干页在答案页之前）"""
-    pat = re.compile(r'^\s*' + f'{qno:02d}' + r'\.')
+    """在 [b0,b1] 页找题号行 'NN.'（行首，零填充）；答案页也搜，但页内遇'答案与解析'即停。"""
+    pats = [re.compile(r'^\s*' + f'{qno:02d}' + r'[\.．、]'),
+            re.compile(r'^\s*' + str(qno) + r'[\.．、]')]
     for i in range(b0, b1 + 1):
         try:
             d = doc[i].get_text('dict')
@@ -18,12 +19,15 @@ def find_qstart(doc, b0, b1, qno):
             if blk.get('type') != 0: continue
             for l in blk['lines']:
                 t = ''.join(s['text'] for s in l['spans'])
-                if pat.match(t):
-                    return i, l['bbox'][1], l['bbox'][3]
+                if '答案与解析' in t:
+                    return None, None, None  # 已进入答案区，本页后续为答案条目
+                for p in pats:
+                    if p.match(t):
+                        return i, l['bbox'][1], l['bbox'][3]
     return None, None, None
 
 def find_first_option(doc, pno, after_y, opts):
-    """在指定页 after_y 之后找首个选项行 'A.'；返回 y0"""
+    """在指定页 after_y 之后找首个选项行 'A.'（页内遇'答案与解析'即停）；返回 y0"""
     pat = re.compile(r'^\s*A[\.、]')
     try:
         d = doc[pno].get_text('dict')
@@ -33,9 +37,11 @@ def find_first_option(doc, pno, after_y, opts):
     for blk in d['blocks']:
         if blk.get('type') != 0: continue
         for l in blk['lines']:
+            t = ''.join(s['text'] for s in l['spans'])
+            if '答案与解析' in t:
+                return min(cand) if cand else None
             y0 = l['bbox'][1]
             if y0 <= after_y + 3: continue
-            t = ''.join(s['text'] for s in l['spans'])
             if pat.match(t):
                 cand.append(y0)
     return min(cand) if cand else None
@@ -92,6 +98,7 @@ def main():
                 y0, y1 = l['bbox'][1], l['bbox'][3]
                 t = ''.join(s['text'] for s in l['spans']).strip()
                 if not t: continue
+                if '答案与解析' in t: break
                 if cur_pno == pno:
                     if y0 > qs_y - 2 and y1 < opt_y + 2: lines.append((y0, y1, t))
                 else:
@@ -102,10 +109,10 @@ def main():
     stem_end = max(x[1] for x in long) if long else qs_y
     zt = stem_end + 1
     if opt_y - zt < 6: zt = qs_y + 1
-    # 兜底 no_dark：向下扩大到块尾（下一个题号之前）重试
     size = do_crop(doc[cur_pno], zt, opt_y - 1, out)
+    # 兜底1：向下扩大到下一个题号
     if not size:
-        next_pat = re.compile(r'^\s*' + f'{qno+1:02d}' + r'\.')
+        next_pat = re.compile(r'^\s*' + f'{qno+1:02d}' + r'[\.．、]')
         nxt_y = None
         try:
             dd = doc[cur_pno].get_text('dict')
@@ -113,6 +120,7 @@ def main():
                 if blk.get('type') != 0: continue
                 for l in blk['lines']:
                     t = ''.join(s['text'] for s in l['spans'])
+                    if '答案与解析' in t: break
                     if next_pat.match(t) and l['bbox'][1] > qs_y + 2:
                         nxt_y = l['bbox'][1]; break
                 if nxt_y: break
@@ -120,6 +128,22 @@ def main():
             pass
         if nxt_y:
             size = do_crop(doc[cur_pno], zt, nxt_y - 1, out)
+    # 兜底2（图在前）：题干上方，前一个题号之后
+    if not size and cur_pno == pno:
+        prev_pat = re.compile(r'^\s*' + f'{max(qno-1,0):02d}' + r'[\.．、]')
+        prev_y1 = None; prev_y0 = None
+        try:
+            dd = doc[pno].get_text('dict')
+            for blk in dd['blocks']:
+                if blk.get('type') != 0: continue
+                for l in blk['lines']:
+                    t = ''.join(s['text'] for s in l['spans'])
+                    if prev_pat.match(t) and l['bbox'][1] < qs_y - 2:
+                        prev_y0, prev_y1 = l['bbox'][1], l['bbox'][3]
+        except Exception:
+            pass
+        if prev_y1 is not None:
+            size = do_crop(doc[pno], prev_y1 + 1, qs_y - 1, out)
     if not size:
         print(json.dumps({'ok': False, 'why': 'no_dark'})); return
     print(json.dumps({'ok': True, 'page': cur_pno + 1, 'size': size, 'zone': [zt, opt_y - 1]}))

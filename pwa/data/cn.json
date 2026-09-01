@@ -968,7 +968,7 @@
     {
       "id": "cn_0053",
       "number": 53,
-      "content": "【2020统考真题】下图描述的协议要素是( ) I.语法 II.语义 III.时序",
+      "content": "【2020统考真题】下图描述<br><img src=\"data/cn_figs/cn_0053.png\" alt=\"cn题图\" style=\"max-width:100%;margin:8px 0;border:1px solid #ddd;border-radius:4px;\" />的协议要素是( ) I.语法 II.语义 III.时序",
       "options": {
         "A": "仅I",
         "B": "仅II",
@@ -1342,7 +1342,7 @@
     {
       "id": "cn_0075",
       "number": 75,
-      "content": "【2013统考真题】下图为10BaseT网卡接收到的信号波形，则该网卡收到的比特串是( )",
+      "content": "【2013统考真题】下图为<br><img src=\"data/cn_figs/cn_0075.png\" alt=\"cn题图\" style=\"max-width:100%;margin:8px 0;border:1px solid #ddd;border-radius:4px;\" />10BaseT网卡接收到的信号波形，则该网卡收到的比特串是( )",
       "options": {
         "A": "00110110",
         "B": "10101101",
@@ -1427,7 +1427,7 @@
     {
       "id": "cn_0080",
       "number": 80,
-      "content": "【2021统考真题】下图为一段差分曼彻斯特编码信号波形，该编码的二进制串是( )",
+      "content": "【2021统考真题】下图为<br><img src=\"data/cn_figs/cn_0080.png\" alt=\"cn题图\" style=\"max-width:100%;margin:8px 0;border:1px solid #ddd;border-radius:4px;\" />一段差分曼彻斯特编码信号波形，该编码的二进制串是( )",
       "options": {
         "A": "10111001",
         "B": "11010001",
@@ -6558,7 +6558,7 @@
     {
       "id": "cn_0381",
       "number": 381,
-      "content": "【2016统考真题】假设下图中的R1、R2、R3采用RIP交换路由信息，且均已收敛。若R3检测到 网络201.1.2.0/25不可达，并向R2通告一次新的距离向量，则R2更新后，其到达该网络的距离是( )",
+      "content": "【2016统考真题】假设下图中<br><img src=\"data/cn_figs/cn_0381.png\" alt=\"cn题图\" style=\"max-width:100%;margin:8px 0;border:1px solid #ddd;border-radius:4px;\" />的R1、R2、R3采用RIP交换路由信息，且均已收敛。若R3检测到 网络201.1.2.0/25不可达，并向R2通告一次新的距离向量，则R2更新后，其到达该网络的距离是( )",
       "options": {
         "A": "2",
         "B": "3",
