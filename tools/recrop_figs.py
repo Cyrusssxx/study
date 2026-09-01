@@ -157,16 +157,27 @@ def main():
     report = []
     for sec, lst in by_sec.items():
         qs_in_sec = sec_to_qs.get(sec, [])
-        # 若 PDF 含图题数 == 题库含图题数，逐一对齐；否则取较少者
-        n = min(len(lst), len(qs_in_sec))
-        for i in range(n):
-            q = qs_in_sec[i]
-            pdf_n, page, yq, lines = lst[i]
+        # 建立 pdf_n -> (page, yq, lines) 索引，便于按 _pdf_qno 字段查
+        pdf_idx = {it[0]: it for it in lst}
+        for q in qs_in_sec:
+            target_pdf = q.get('_pdf_qno')
+            if target_pdf is not None and target_pdf in pdf_idx:
+                pdf_n, page, yq, lines = pdf_idx[target_pdf]
+            else:
+                # 回退：题库含图题按顺序与 PDF 含图题按顺序配对
+                i = qs_in_sec.index(q)
+                if i >= len(lst):
+                    fail += 1
+                    report.append(f'  FAIL {q["id"]} {q["section"]} no-pdf-match')
+                    continue
+                pdf_n, page, yq, lines = lst[i]
             pg = doc[page]
             w, h_pg = pg.rect.width, pg.rect.height
             oi = find_options_line(lines, q, 0)  # 在 lines 里找
             # 王道"题 N 的图"实际位于"题 N-1 题首"与"题 N 题首/选项"之间
-            prev_yq = lst[i - 1][3] if i > 0 else (yq - UPWARD_EXTEND)
+            prev_pdf_n = (target_pdf or pdf_n) - 1
+            prev_rec = pdf_idx.get(prev_pdf_n)
+            prev_yq = prev_rec[2] if prev_rec else (yq - UPWARD_EXTEND)
             y_top = max(prev_yq, yq - UPWARD_EXTEND)
             y_bottom = min(lines[oi][0] - 1, h_pg) if oi is not None else min(yq + DOWN_FALLBACK, h_pg)
             zone = find_figure_zone(lines, y_top, y_bottom)
