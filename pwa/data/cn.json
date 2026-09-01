@@ -273,7 +273,7 @@
         "A": "80.02ms",
         "B": "80.08ms",
         "C": "80.09ms",
-        "D": "80.09ms"
+        "D": "80.10ms"
       },
       "answer": "D",
       "explanation": "<p>文件大小为1MB，分组长度为1000B，分组数量为1MB÷1000B=1000。一个分组从H1到H2所需的时间=H1的发送时延t+H1到路由器的传播时延t+路由器的发送时延t+路由器到H2的传播时延t4，其中t=t3=1000B÷100Mb/s=0.08ms，t2=t4=1000b÷100Mb/s=0.01mS。</p><p>因此，一个分组从H1到H2的端到端时延为(0.08+0.01)×2=0.18ms。H1发送前999个分组所需的时间为999t=79.92ms，此时，第1000个分组刚刚开始发送，它还需0.18ms才能到达H2。因此，从H1开始发送到H2收到全部数据所需的最短时间为79.92+0.18=80.10ms。</p><p>读者可以思考：若H1和H2之间有2个路由器，则所需的时间至少是多少？</p>",
@@ -304,10 +304,10 @@
       "number": 17,
       "content": "某网络拓扑及各链路带宽如下图<br><img src=\"data/cn_figs/cn_0017.png\" alt=\"cn题图\" style=\"max-width:100%;margin:8px 0;border:1px solid #ddd;border-radius:4px;\" />所示。网络按电路交换方式运行时，主机H1与H2建立一条带 宽为10Mb/s的电路，建立电路的时间为32μs；按分组交换方式运行时，分组长度为400B，忽略分组首 部开销。现主机H1向H2发送一个2MB(1M=106)的文件，分别采用电路交换、报文交换、分组交 换方式时，H2至少分别需要T 、T 、T 的时间才能接收到全部文件内容，则T 、T 、T 三 CS MS PS CS MS PS 者的大小关系是( )",
       "options": {
-        "A": "T >T >T",
-        "B": "T >T >T",
-        "C": "T >T >T",
-        "D": "T >T >T CS MS PS MS PS CS MS CS PS PS MS CS"
+        "A": "T<sub>CS</sub>＞T<sub>MS</sub>＞T<sub>PS</sub>",
+        "B": "T<sub>MS</sub>＞T<sub>PS</sub>＞T<sub>CS</sub>",
+        "C": "T<sub>MS</sub>＞T<sub>CS</sub>＞T<sub>PS</sub>",
+        "D": "T<sub>PS</sub>＞T<sub>MS</sub>＞T<sub>CS</sub>"
       },
       "answer": "B",
       "explanation": "<p>采用电路交换时，Tcs=电路建立时间32us+文件传输时间2MB-10Mb/s=32us+1.6s。采用报文交换时，整个报文需要逐跳存储转发，TMs=2MB÷10Mb/s+2MB-100Mb/s+2MB-1000Mb/s=1.776s。采用分组交换时，分组数为2MB/400B=5000，第一个分组从H1到H2的传输时延=400B-10Mb/s+400B-100Mb/s+400B-1000Mb/s=355.2uS；之后，每320us到达一个分组，故Tps=355.2μs+320×4999us=1.6s+35.2μs。因此TMs>Tps>Tcso</p>",
@@ -2381,10 +2381,10 @@
       "number": 136,
       "content": "对无序接收的滑动窗口协议，若序号位数为n，则接收窗口最大尺寸为( )",
       "options": {
-        "A": "2n-1",
+        "A": "2<sup>n</sup>−1",
         "B": "2n",
-        "C": "2n-1",
-        "D": "2n-1"
+        "C": "2n−1",
+        "D": "2<sup>n−1</sup>"
       },
       "answer": "D",
       "explanation": "<p>本题未直接告知使用的是选择重传协议，而是通过间接方式给出的。题目称无序接收的滑动窗口协议，表示接收窗口大于1，所以使用的是选择重传协议，接收窗口最大尺寸为2<sup>n</sup>!。</p>",
@@ -8141,7 +8141,7 @@
       "options": {
         "A": "k",
         "B": "k+1",
-        "C": "2k",
+        "C": "2<sup>k</sup>",
         "D": "2k"
       },
       "answer": "D",
@@ -8394,10 +8394,10 @@
       "number": 488,
       "content": "【2019统考真题】某客户通过一个TCP连接向服务器发送数据的部分过程如图所示。<br><img src=\"data/cn_figs/cn_0488.png\" alt=\"题图\" style=\"max-width:100%;margin:8px 0;border:1px solid #ddd;border-radius:4px;\" />客户在t<sub>0</sub>时刻第一次收到确认序列号ack_seq=100的段，并发送序列号seq=100的段，但发生丢失。若TCP支持快速重传，则客户重新发送seq=100段的时刻是( )",
       "options": {
-        "A": "t 1",
-        "B": "t 2",
-        "C": "t 3",
-        "D": "t 4"
+        "A": "t<sub>1</sub>",
+        "B": "t<sub>2</sub>",
+        "C": "t<sub>3</sub>",
+        "D": "t<sub>4</sub>"
       },
       "answer": "C",
       "explanation": "<p>TCP快速重传机制规定：当发送方收到对同一报文段的3个重复确认（余ACK）时，立即重传丢失段。to时刻首次收到ack_seq=100的确认段，不计入冗余；t、t、t连续收到三个相同的ack_seq=100，构成3个重复ACK，因此在t时刻触发快速重传，重新发送seq=100的段。</p>",
@@ -9195,7 +9195,7 @@
       "options": {
         "A": "TCP,TCP",
         "B": "TCP,UDP",
-        "C": "UDP,UDP",
+        "C": "UDP,TCP",
         "D": "UDP,UDP"
       },
       "answer": "A",
