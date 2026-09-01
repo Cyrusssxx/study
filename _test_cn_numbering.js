@@ -25,18 +25,18 @@ check('number 1..564 连续', qs.map(q => q.number), Array.from({ length: 564 },
 check('number 无重复', new Set(qs.map(q => q.number)).size, 564);
 check('id 与 number 对应', qs.every(q => q.id === 'cn_' + String(q.number).padStart(4, '0')), true);
 
-// 2) 5 节 _pdf_qno 连续
-const secExpect = {
-  '1.1 计算机网络概述': 17,
-  '1.2 计算机网络体系结构与参考模型': 38,
-  '4.2 IPv4': 72,
-  '5.3 TCP': 61,
-  '6.5 万维网': 19,
-};
-for (const [sec, n] of Object.entries(secExpect)) {
+// 2) 全部节 _pdf_qno 按节连续 1..N（教材题号）
+const secCount = {};
+for (const q of qs) secCount[q.section] = (secCount[q.section] || 0) + 1;
+const allSecs = Object.keys(secCount);
+check('共 28 个节', allSecs.length, 28);
+let qnoOK = true;
+for (const sec of allSecs) {
   const qnos = qs.filter(q => q.section === sec).map(q => q._pdf_qno);
-  check(`${sec} _pdf_qno = 1..${n}`, qnos, Array.from({ length: n }, (_, i) => i + 1));
+  const want = Array.from({ length: secCount[sec] }, (_, i) => i + 1);
+  if (JSON.stringify(qnos) !== JSON.stringify(want)) { qnoOK = false; console.log('  ✗', sec, '题号不连续'); }
 }
+check('全部节 _pdf_qno 按节 1..N 连续', qnoOK, true);
 
 // 3) 多空题结构
 const multi = qs.filter(q => q.multi_blank);
