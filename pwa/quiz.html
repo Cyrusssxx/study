@@ -1390,7 +1390,7 @@
             .join('');
         let bi = 0;
         return fmtContent(q.content).replace(
-            /<pre\b[\s\S]*?<\/pre>|(?<![A-Za-z0-9_])\(\s*\)|(?<![A-Za-z0-9_])\([①-⑩]\)/g,
+            /<pre\b[\s\S]*?<\/pre>|(?<![A-Za-z0-9_])\(\s*\)|\([①-⑩]\)/g,
             m => {
                 if (/^<pre/i.test(m)) return m;
                 const opts = Array.isArray(q.blank_opts) ? q.blank_opts[bi++] : q.options;
