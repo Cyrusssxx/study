@@ -885,9 +885,46 @@ async function examApi(action, body, arg) {
     return jsonResp({ error: '未知考试接口' }, 404);
 }
 
+// ==================== 计网题库 id 迁移（一次性） ====================
+// 2026-09-01：计网题库补入 6 道缺失多空题，全库 number/id 顺延（cn_0001..cn_0558
+// → cn_0001..cn_0564）。本地 progress/wrong/favorites/notes 按 question_id 建键，
+// 需按 data/cn_id_map.json 把旧 id 重写为新 id，否则既有收藏/错题/笔记/作答变孤儿。
+// localStorage 标记保证只跑一次；逐条迁移可重入（已迁移的记录不在映射中，自动跳过）。
+async function migrateCnQuestionIds() {
+    try {
+        if (localStorage.getItem('cn_id_migrated') === '1') return;
+        const resp = await fetch('data/cn_id_map.json');
+        if (!resp.ok) return;
+        const map = await resp.json();
+        let changed = 0;
+        for (const store of ['wrong', 'favorites', 'notes']) {
+            for (const row of await dbAll(store)) {
+                const nid = map[row.question_id];
+                if (nid && nid !== row.question_id) {
+                    await dbDelete(store, row.question_id);
+                    await dbPut(store, Object.assign({}, row, { question_id: nid }));
+                    changed++;
+                }
+            }
+        }
+        for (const row of await dbAll('progress')) {
+            const nid = map[row.question_id];
+            if (nid && nid !== row.question_id) {
+                await dbPut('progress', Object.assign({}, row, { question_id: nid }));
+                changed++;
+            }
+        }
+        localStorage.setItem('cn_id_migrated', '1');
+        console.log('[migrate] 计网题目 id 迁移完成，更新', changed, '条记录');
+    } catch (e) {
+        console.warn('[migrate] 计网题目 id 迁移未执行（可稍后自动重试）', e);
+    }
+}
+
 // ==================== Service Worker 注册 ====================
 if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
+        migrateCnQuestionIds();
         navigator.serviceWorker.register('sw.js').catch(e => console.warn('SW注册失败（需HTTPS或localhost）', e));
     });
     // 更新提示（P1-5）：发现新版本并完成安装后，弹出 toast 让用户手动刷新，

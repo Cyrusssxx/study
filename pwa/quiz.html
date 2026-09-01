@@ -1381,14 +1381,20 @@
         return optionOrder[q.id];
     }
 
-    // 多空题：把题干里每个 ( ) 替换成 A-D 下拉选择（跳过 <pre> 代码块与 malloc() 等函数调用）
+    // 多空题：把题干里每个 ( ) 或 (①)(②)… 替换成下拉选择（跳过 <pre> 代码块与 malloc() 等函数调用）
+    // 每空独立选项用 q.blank_opts（数组，每空一个 {A,B,...}）；无则回退 q.options（共享选项组，兼容旧数据）
     function fmtMultiContent(q, locked) {
-        const optHtml = ['<option value=""></option>']
-            .concat(Object.entries(q.options || {}).map(([k, v]) => `<option value="${k}">${k}. ${v}</option>`))
+        const optHtmlFor = opts => ['<option value=""></option>']
+            .concat(Object.entries(opts || {}).map(([k, v]) => `<option value="${k}">${k}. ${v}</option>`))
             .join('');
-        const selHtml = `<select class="blank-select" ${locked ? 'disabled' : ''} onchange="onMultiBlankPicked()">${optHtml}</select>`;
-        return fmtContent(q.content).replace(/<pre\b[\s\S]*?<\/pre>|(?<![A-Za-z0-9_])\(\s*\)/g, m =>
-            /^<pre/i.test(m) ? m : selHtml);
+        let bi = 0;
+        return fmtContent(q.content).replace(
+            /<pre\b[\s\S]*?<\/pre>|(?<![A-Za-z0-9_])\(\s*\)|(?<![A-Za-z0-9_])\([①-⑩]\)/g,
+            m => {
+                if (/^<pre/i.test(m)) return m;
+                const opts = Array.isArray(q.blank_opts) ? q.blank_opts[bi++] : q.options;
+                return `<select class="blank-select" ${locked ? 'disabled' : ''} onchange="onMultiBlankPicked()">${optHtmlFor(opts)}</select>`;
+            });
     }
 
     renderShuffleBtn();
