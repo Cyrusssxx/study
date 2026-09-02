@@ -354,7 +354,7 @@
     {
       "id": "co_0023",
       "number": 23,
-      "content": "假定编译器对高级语言的某条语句可以编译生成两种不同的指令序列，A、B和C三类指令的CPI 和两种不同序列所含的三类指令条数如下表所示，两个指令序列都在时钟周期为2ns的机器上运行， 则下列结论中正确的是( )指令类型 CPI 序列一的指令条数 序列二的指令条数",
+      "content": "假定编译器对高级语言的某条语句可以编译生成两种不同的指令序列，A、B和C三类指令的CPI 和两种不同序列所含的三类指令条数如下表所示，两个指令序列都在时钟周期为2ns的机器上运行， 则下列结论中正确的是( )<table class=\"q-table\"><thead><tr><th>指令类型</th><th>CPI</th><th>序列一的指令条数</th><th>序列二的指令条数</th></tr></thead><tbody><tr><td>A</td><td>1</td><td>1</td><td>2</td></tr><tr><td>B</td><td>2</td><td>1</td><td>1</td></tr><tr><td>C</td><td>3</td><td>4</td><td>2</td></tr></tbody></table>",
       "options": {
         "A": "序列一的MIPS数比序列二多50,序列一的执行速度比序列二快10ns",
         "B": "序列一的MIPS数比序列二多50,序列二的执行速度比序列一快10ns",
@@ -370,7 +370,7 @@
     {
       "id": "co_0024",
       "number": 24,
-      "content": "用一台40MHz的CPU执行标准测试程序，共包含100条指令，它所包含的指令混合比和不同指令 的CPI见下表。该段程序的平均CPI和程序的执行时间分别为( )指令类型 CPI 指令混合比 指令类型 CPI 指令混合比 算术和逻辑 1 60% 转移 4 12% 高速缓存命中的访存 2 18% 高速缓存失效的访存 8 10%",
+      "content": "用一台40MHz的CPU执行标准测试程序，共包含100条指令，它所包含的指令混合比和不同指令 的CPI见下表。该段程序的平均CPI和程序的执行时间分别为( )<table class=\"q-table\"><thead><tr><th>指令类型</th><th>CPI</th><th>指令混合比</th></tr></thead><tbody><tr><td>算术和逻辑</td><td>1</td><td>60%</td></tr><tr><td>转移</td><td>4</td><td>12%</td></tr><tr><td>高速缓存命中的访存</td><td>2</td><td>18%</td></tr><tr><td>高速缓存失效的访存</td><td>8</td><td>10%</td></tr></tbody></table>",
       "options": {
         "A": "2.26,5.6×10<sup>-8</sup>s",
         "B": "2.26,5.6×10<sup>-6</sup>s",
@@ -450,7 +450,7 @@
     {
       "id": "co_0029",
       "number": 29,
-      "content": "【2013统考真题】某计算机的主频为1.2GHz，其指令分为4类，它们在基准程序中所占比例及 CPI如下表所示。该机的MIPS数是( )指令类型 所占比例 CPI 指令类型 所占比例 CPI",
+      "content": "【2013统考真题】某计算机的主频为1.2GHz，其指令分为4类，它们在基准程序中所占比例及 CPI如下表所示。该机的MIPS数是( )<table class=\"q-table\"><thead><tr><th>指令类型</th><th>所占比例</th><th>CPI</th></tr></thead><tbody><tr><td>A</td><td>50%</td><td>2</td></tr><tr><td>B</td><td>20%</td><td>3</td></tr><tr><td>C</td><td>10%</td><td>4</td></tr><tr><td>D</td><td>20%</td><td>5</td></tr></tbody></table>",
       "options": {
         "A": "100",
         "B": "200",
