@@ -111,7 +111,7 @@
                     </div>
                     <div class="item-content">${fmtContent(q.content)}</div>
                     <div class="item-options">
-                        ${Object.entries(q.options || {}).map(([k,v]) => `<span class="mini-option">${k}. ${v}</span>`).join('')}
+                        ${Object.entries(q.options || {}).map(([k,v]) => `<span class="mini-option">${k}. ${fmtOptionText(v)}</span>`).join('')}
                     </div>
                     ${q.answer ? `<div class="item-answer">正确答案: ${q.multi_blank ? [...q.answer].join('、') : q.answer}</div>` : ''}
                 </div>

@@ -642,7 +642,7 @@
                 <label class="${optClass}">
                     <input type="radio" name="answer" value="${key}" ${checked} ${disabled} onchange="onOptionPicked()">
                     <span class="option-letter">${key}</span>
-                    <span class="option-text">${value}</span>
+                    <span class="option-text">${fmtOptionText(value)}</span>
                 </label>
             `;
         }
@@ -1386,7 +1386,7 @@
     // 每空独立选项用 q.blank_opts（数组，每空一个 {A,B,...}）；无则回退 q.options（共享选项组，兼容旧数据）
     function fmtMultiContent(q, locked) {
         const optHtmlFor = opts => ['<option value=""></option>']
-            .concat(Object.entries(opts || {}).map(([k, v]) => `<option value="${k}">${k}. ${v}</option>`))
+            .concat(Object.entries(opts || {}).map(([k, v]) => `<option value="${k}">${k}. ${fmtOptionText(v)}</option>`))
             .join('');
         let bi = 0;
         return fmtContent(q.content).replace(

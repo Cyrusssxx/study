@@ -62,6 +62,18 @@ function fmtContent(html) {
     return html.replace(/\u0000B(\d+)\u0000/g, (m, k) => blocks[k]);
 }
 
+// ============ 选项文本：转义 < > & 为文字，但保留合法下标/上标标签 <sub>/<sup> ============
+// 题干里 "则z<x<y" 这类不等式若直接进 innerHTML，浏览器会把 <x 当成标签吃掉导致选项截断。
+// 选项里只有 sub/sup 是预期的合法 HTML，其余一律转义为可见文字。
+function fmtOptionText(raw) {
+    if (raw == null) return '';
+    let s = String(raw);
+    s = s.replace(/<(\/?)(sub|sup)>/gi, '\uE000$1$2\uE000'); // 保护下标/上标
+    s = s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    s = s.replace(/\uE000(\/?)(sub|sup)\uE000/gi, '<$1$2>');   // 还原下标/上标
+    return s;
+}
+
 // ============ 离线图片预热：daka/dati 等图片密集型页面调用 ============
 // 通过触发 fetch 让 SW 的 fetch 处理程序把图片拉入缓存（首次在线查看后离线即可用），
 // 避免 daka/dati 在离线时图片裂开。预热失败不影响页面显示（用户查看时 SW 仍会缓存）。

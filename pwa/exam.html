@@ -301,13 +301,13 @@
                 <label class="option-item ${ua === key ? 'selected' : ''}">
                     <input type="radio" name="examAnswer" value="${key}" ${ua === key ? 'checked' : ''} onchange="pickAnswer('${q.id}', '${key}')">
                     <span class="option-letter">${key}</span>
-                    <span class="option-text">${value}</span>
+                    <span class="option-text">${fmtOptionText(value)}</span>
                 </label>`;
         }
         let multiTpl = '';
         if (isMulti) {
             const optHtml = ['<option value=""></option>']
-                .concat(Object.entries(q.options || {}).map(([k, v]) => `<option value="${k}">${k}. ${v}</option>`))
+                .concat(Object.entries(q.options || {}).map(([k, v]) => `<option value="${k}">${k}. ${fmtOptionText(v)}</option>`))
                 .join('');
             const selHtml = `<select class="blank-select" onchange="pickMultiAnswer()">${optHtml}</select>`;
             multiTpl = fmtContent(q.content).replace(/<pre\b[\s\S]*?<\/pre>|(?<![A-Za-z0-9_])\(\s*\)/g, m =>
