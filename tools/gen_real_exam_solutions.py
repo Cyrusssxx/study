@@ -110,7 +110,7 @@ def gen(sub, zh):
         for q in qs_y:
             out.append(fmt_question(q, sub))
         out.append("")
-    fn = f"真题逐题精解_{zh}.md"
+    fn = f"real_exam_{sub}.md"  # ASCII 文件名，避免 Windows Git 对中文未跟踪文件名枚举失败
     open(fn, "w", encoding="utf-8").write("\n".join(out).rstrip() + "\n")
     print(f"{zh}({sub}): {total} 题 -> {fn}")
 
