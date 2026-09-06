@@ -6299,7 +6299,7 @@
     {
       "id": "ds_0404",
       "number": 404,
-      "content": "【2022统考真题】下图是一个有10个活动的AOE网，时间余量最大的活动是( )。",
+      "content": "【2022统考真题】下图是一个有10个活动的AOE网<img src=\"data/ds_figs/ds_0404.jpeg\" alt=\"ds题图\" style=\"max-width:100%;margin:8px 0;border:1px solid #ddd;border-radius:4px;\" />，时间余量最大的活动是( )。",
       "options": {
         "A": "c",
         "B": "g",
@@ -7450,7 +7450,7 @@
     {
       "id": "ds_0477",
       "number": 477,
-      "content": "【2012统考真题】已知一棵3阶B树，如下图所示。删除关键字78得到一棵新B树，其最右叶结点 中的关键字是( )。",
+      "content": "【2012统考真题】已知一棵3阶B树，如下图所示<img src=\"data/ds_figs/ds_0477.jpeg\" alt=\"ds题图\" style=\"max-width:100%;margin:8px 0;border:1px solid #ddd;border-radius:4px;\" />。删除关键字78得到一棵新B树，其最右叶结点 中的关键字是( )。",
       "options": {
         "A": "60",
         "B": "60,62",
