@@ -3283,6 +3283,33 @@ h3.algo-h:first-child, h4.algo-h:first-child, h5.algo-h:first-child { margin-top
     color: var(--text);
 }
 
+/* 笔记正文内嵌对比表格 */
+.notes-sub-body table {
+    border-collapse: collapse;
+    margin: 10px 0 12px;
+    width: 100%;
+    font-size: 0.88rem;
+    letter-spacing: 0;
+    text-align: center;
+}
+.notes-sub-body table th,
+.notes-sub-body table td {
+    border: 1px solid var(--border);
+    padding: 4px 8px;
+    line-height: 1.5;
+    text-align: left;
+}
+.notes-sub-body table th {
+    background: var(--light);
+    font-weight: 600;
+    text-align: center;
+}
+.notes-sub-body table td:first-child {
+    font-weight: 600;
+    white-space: nowrap;
+    text-align: center;
+}
+
 /* 右侧内容区 */
 .notes-content {
     flex: 1;
