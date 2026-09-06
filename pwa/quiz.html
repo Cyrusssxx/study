@@ -694,6 +694,13 @@
                         <span class="note-hl-dot" data-cmd="hl" data-color="blue" title="蓝高亮" style="background:#b3d9f2"></span>
                         <span class="note-hl-dot" data-cmd="hl" data-color="pink" title="粉高亮" style="background:#f5c2d5"></span>
                         <span class="note-toolbar-sep"></span>
+                        <span class="note-color-dot" data-cmd="color" data-color="#d93025" title="红色字" style="color:#d93025">A</span>
+                        <span class="note-color-dot" data-cmd="color" data-color="#e8710a" title="橙色字" style="color:#e8710a">A</span>
+                        <span class="note-color-dot" data-cmd="color" data-color="#188038" title="绿色字" style="color:#188038">A</span>
+                        <span class="note-color-dot" data-cmd="color" data-color="#1a73e8" title="蓝色字" style="color:#1a73e8">A</span>
+                        <span class="note-color-dot" data-cmd="color" data-color="#8430ce" title="紫色字" style="color:#8430ce">A</span>
+                        <span class="note-color-dot" data-cmd="color" data-color="#5f6368" title="灰字" style="color:#5f6368">A</span>
+                        <span class="note-toolbar-sep"></span>
                         <button type="button" data-cmd="clear" title="清除格式">⌫ 清除</button>
                     </div>
                     <div id="noteInput" class="note-input" contenteditable="true" spellcheck="false"
@@ -1012,6 +1019,7 @@
             else if (cmd === 'h1') document.execCommand('formatBlock', false, 'H1');
             else if (cmd === 'h2') document.execCommand('formatBlock', false, 'H2');
             else if (cmd === 'hl') applyNoteHighlight(el, btn.dataset.color);
+            else if (cmd === 'color') applyNoteForeColor(el, btn.dataset.color);
             else if (cmd === 'clear') clearNoteFormat(el);
             onNoteInput();
         });
@@ -1044,6 +1052,32 @@
             range.insertNode(span);
         } catch (e) { /* 选区越界，忽略 */ }
     }
+    function applyNoteForeColor(el, color) {
+        const sel = window.getSelection();
+        if (!sel || sel.isCollapsed || !sel.rangeCount) return;
+        const range = sel.getRangeAt(0);
+        // 选区必须在 el 内
+        if (!el.contains(range.startContainer) || !el.contains(range.endContainer)) return;
+        // 用 execCommand('foreColor') 优先（选区/嵌套处理比手动 span 更稳），
+        // 但 Firefox 会生成 <font color>，而 font 标签不在保存白名单里，会被 sanitizer 剥掉——统一转成 span style.color
+        const ok = document.execCommand('foreColor', false, color);
+        if (ok) {
+            el.querySelectorAll('font[color]').forEach(f => {
+                const sp = document.createElement('span');
+                sp.style.color = f.getAttribute('color');
+                while (f.firstChild) sp.appendChild(f.firstChild);
+                f.replaceWith(sp);
+            });
+            return;
+        }
+        // 后备失败：手动包 span（style.color 在白名单中会被保留）
+        try {
+            const span = document.createElement('span');
+            span.style.color = color;
+            span.appendChild(range.extractContents());
+            range.insertNode(span);
+        } catch (e) { /* 选区越界，忽略 */ }
+    }
     // 「清除格式」：撤销 行内(粗体/斜体/颜色/字体) + 块级(H1/H2/H3/引用) + 高亮
     // 关键：removeFormat 只能清行内标签，清不掉 formatBlock 产生的 H1/H2，也剥不掉
     // class 化高亮 span(后备路径) 与内联 background；三者必须分别处理，否则清除「不生效」
@@ -1066,6 +1100,11 @@
             if (s.style && (s.style.backgroundColor || s.style.background)) {
                 s.style.backgroundColor = '';
                 s.style.background = '';
+                if (s.getAttribute('style') === '') s.removeAttribute('style');
+            }
+            // 字体染色（applyNoteForeColor 手动 span 后备路径产生 <span style="color:...">）
+            if (s.style && s.style.color) {
+                s.style.color = '';
                 if (s.getAttribute('style') === '') s.removeAttribute('style');
             }
             // class 化高亮 span（applyNoteHighlight 后备路径产生 <span class="hl hl-x">）

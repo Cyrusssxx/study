@@ -1587,6 +1587,23 @@ mark {
     transition: transform 0.1s;
 }
 .note-hl-dot:hover { transform: scale(1.15); border-color: var(--text-light); }
+/* 字体染色：方形 A 色块（区别于圆形高亮底点），字色即按钮色，hover 放大 */
+.note-color-dot {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 20px;
+    height: 20px;
+    border-radius: 4px;
+    border: 1px solid rgba(128,128,128,0.3);
+    cursor: pointer;
+    font-size: 13px;
+    font-weight: 700;
+    line-height: 1;
+    background: transparent;
+    transition: transform 0.1s;
+}
+.note-color-dot:hover { transform: scale(1.15); border-color: var(--text-light); background: rgba(128,128,128,0.08); }
 /* 高亮背景色：execCommand('hiliteColor') 在不同浏览器/场景下可能生成 <font style="background">
    或把 background-color 加到已有标签上（<b> 等），用 inline style 子串匹配兜底 4 色 */
 .note-input .hl-yellow,
