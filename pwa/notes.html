@@ -54,6 +54,7 @@
     <script src="js/background.js"></script>
     <script src="js/lightbox.js"></script>
     <script src="js/backend.js"></script>
+    <script src="js/note_richtext.js"></script>
     <script>
         // PWA 版：客户端 fetch 笔记 JSON 渲染（Flask 版为服务端 Jinja 渲染的镜像）
         const _params = new URLSearchParams(location.search);
@@ -972,7 +973,9 @@
             const el = document.createElement('div');
             el.className = 'line-anno line-anno-editor';
             el.innerHTML = `
-                <textarea class="note-input line-anno-input" spellcheck="false" placeholder="写批注，可 Ctrl+V 粘贴截图…"></textarea>
+                ${noteToolbarHtml()}
+                <div class="note-input line-anno-input" contenteditable="true" spellcheck="false"
+                    data-placeholder="写批注，可 Ctrl+V 粘贴截图…"></div>
                 <div class="note-images line-anno-editor-imgs"></div>
                 <div class="line-anno-bar">
                     <button type="button" class="btn btn-primary line-anno-save">保存</button>
@@ -983,9 +986,12 @@
             if (blk) blk.style.display = 'none';   // 编辑期间隐藏原批注块
             attachBelow(line, el);
             const input = el.querySelector('.line-anno-input');
-            input.value = item ? (item.text || '') : '';
+            // 富文本回填（旧纯文本批注自动兼容：无标签走 textContent 路径）
+            loadNoteIntoEditor(input, item ? (item.text || '') : '');
+            updateNotePlaceholder(input);
             renderEditorImages();
             input.addEventListener('paste', pasteAnnoImage);
+            bindNoteToolbar(input);
             el.querySelector('.line-anno-save').addEventListener('click', saveAnnoEditor);
             el.querySelector('.line-anno-cancel').addEventListener('click', () => closeAnnoEditor());
             input.focus();
@@ -1061,7 +1067,7 @@
         function saveAnnoEditor() {
             if (!annoEditor) return;
             const { sec, line, images } = annoEditor;
-            const text = annoEditor.el.querySelector('.line-anno-input').value.trim();
+            const text = serializeNote(annoEditor.el.querySelector('.line-anno-input'));
             annoItems = annoItems.filter(it => !(it.sec === sec && it.line === line));
             const old = annoBlockEl(sec, line);
             if (old) old.remove();
@@ -1095,7 +1101,11 @@
                     <button type="button" class="line-anno-op line-anno-edit">改</button>
                     <button type="button" class="line-anno-op line-anno-del">删</button>
                 </div>`;
-            if (item.text) el.querySelector('.line-anno-text').textContent = item.text;  // textContent 防注入
+            if (item.text) {
+                const t = el.querySelector('.line-anno-text');
+                if (isHtmlNote(item.text)) t.innerHTML = sanitizeNoteHtml(item.text);  // 富文本批注（加粗/染色/高亮）
+                else t.textContent = item.text;                                        // 旧纯文本批注：textContent 防注入
+            }
             el.querySelectorAll('.line-anno-img').forEach(img => img.onclick = () => viewAnnoImage(img.src));
             el.querySelector('.line-anno-edit').onclick = () => openAnnoEditor(line, item);
             el.querySelector('.line-anno-del').onclick = () => {

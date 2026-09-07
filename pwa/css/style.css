@@ -1607,18 +1607,22 @@ mark {
 /* 高亮背景色：execCommand('hiliteColor') 在不同浏览器/场景下可能生成 <font style="background">
    或把 background-color 加到已有标签上（<b> 等），用 inline style 子串匹配兜底 4 色 */
 .note-input .hl-yellow,
+.line-anno-text .hl-yellow,
 .note-input [style*="background-color: rgb(255, 243, 163)"],
 .note-input [style*="background-color:#fff3a3"],
 .note-input [style*="background:#fff3a3"] { background: #fff3a3 !important; }
 .note-input .hl-green,
+.line-anno-text .hl-green,
 .note-input [style*="background-color: rgb(184, 230, 192)"],
 .note-input [style*="background-color:#b8e6c0"],
 .note-input [style*="background:#b8e6c0"] { background: #b8e6c0 !important; }
 .note-input .hl-blue,
+.line-anno-text .hl-blue,
 .note-input [style*="background-color: rgb(179, 217, 242)"],
 .note-input [style*="background-color:#b3d9f2"],
 .note-input [style*="background:#b3d9f2"] { background: #b3d9f2 !important; }
 .note-input .hl-pink,
+.line-anno-text .hl-pink,
 .note-input [style*="background-color: rgb(245, 194, 213)"],
 .note-input [style*="background-color:#f5c2d5"],
 .note-input [style*="background:#f5c2d5"] { background: #f5c2d5 !important; }

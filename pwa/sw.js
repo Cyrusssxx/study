@@ -17,7 +17,7 @@
  *          ② 只改数据不改外壳时，APP_VER 不变 → 外壳零重下；反之亦然；
  *          ③ 懒加载数据既不占首屏，改完也能凭 LAZY_VER 正确失效。
  */
-const APP_VER = 'quiz408-app-6e6151eed9';
+const APP_VER = 'quiz408-app-7d8a0e8f3f';
 const DATA_VER = 'quiz408-data-0b46cb8bb6';
 const LAZY_VER = 'quiz408-lazy-2c13105a66';
 
@@ -42,6 +42,7 @@ const APP_PRECACHE = [
     'js/background.js',
     'js/lightbox.js',
     'js/backend.js',
+    'js/note_richtext.js',
     'data/meta.json',
     'icons/icon-192.png',
     'icons/icon-512.png',

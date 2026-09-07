@@ -1,131 +1,103 @@
-// 快速验证:笔记字体染色的两个核心路径
-// 1) sanitizeNoteHtml 保留 span style.color(保存/装载后颜色不丢)
-// 2) applyNoteForeColor 手动 span 后备(jsdom 无 execCommand)产生 <span style="color:...">
+// 富文本笔记工具回归测试(共享 pwa/js/note_richtext.js)
+// 覆盖:quiz 刷题笔记染色 + notes/map 批注编辑器富文本(工具栏/回填/序列化/渲染/sanitize/清除)
+const fs = require('fs');
 const { JSDOM } = require('jsdom');
-const dom = new JSDOM(`<!DOCTYPE html><html><body><div id="note" contenteditable="true">你好世界</div></body></html>`);
+
+const dom = new JSDOM(`<!DOCTYPE html><html><body></body></html>`);
 const { window } = dom;
 const document = window.document;
 // jsdom 无 execCommand:桩为返回 false → 走手动 span 后备路径(真实浏览器兼容路径的兜底)
 document.execCommand = () => false;
 
+// 加载共享 JS(与三页 <script src="js/note_richtext.js"> 同源)——new Function 显式注入 window/document,避免跨 realm
+const shared = fs.readFileSync('pwa/js/note_richtext.js', 'utf-8');
+new Function('window', 'document', shared)(window, document);
+
+const {
+    sanitizeNoteHtml, isHtmlNote, loadNoteIntoEditor, serializeNote,
+    updateNotePlaceholder, bindNoteToolbar, noteToolbarHtml,
+    applyNoteForeColor, clearNoteFormat
+} = window;
+
 let pass = 0, fail = 0;
 function assert(cond, msg) { if (cond) { pass++; console.log('  ✓', msg); } else { fail++; console.log('  ✗ FAIL:', msg); } }
 
-// ---- 从 quiz.html 提取的 sanitizer(保持原样) ----
-const NOTE_ALLOWED_TAGS = new Set(['B','I','U','STRONG','EM','H1','H2','H3','P','BR','DIV','SPAN','UL','OL','LI','BLOCKQUOTE']);
-const NOTE_ALLOWED_CLASS_RE = /^(hl-|note-hl-)?(yellow|green|blue|pink)$/;
-function sanitizeNoteHtml(html) {
-    if (!html) return '';
-    if (html.indexOf('<') < 0) return '';
-    const t = document.createElement('template');
-    t.innerHTML = html;
-    (function walk(node) {
-        const children = [...node.childNodes];
-        for (const c of children) {
-            if (c.nodeType === 1) {
-                if (!NOTE_ALLOWED_TAGS.has(c.tagName)) {
-                    while (c.firstChild) node.insertBefore(c.firstChild, c);
-                    node.removeChild(c);
-                } else {
-                    for (const a of [...c.attributes]) {
-                        if (a.name === 'style') {
-                            const ok = a.value.split(';').map(s => s.trim()).filter(s => {
-                                const m = s.match(/^([a-z-]+):/);
-                                return m && (m[1] === 'color' || m[1] === 'background-color' || m[1] === 'background');
-                            });
-                            if (ok.length) c.setAttribute('style', ok.join('; '));
-                            else c.removeAttribute('style');
-                        } else if (a.name === 'class') {
-                            if (!NOTE_ALLOWED_CLASS_RE.test(a.value)) c.removeAttribute('class');
-                        } else {
-                            c.removeAttribute(a.name);
-                        }
-                    }
-                    walk(c);
-                }
-            } else if (c.nodeType === 8) {
-                c.remove();
-            }
-        }
-    })(t.content);
-    return t.innerHTML;
-}
-
-// ---- 测试1: sanitizer 保留染色 span ----
-const src1 = '重点<span style="color:#d93025">红色标注</span>和<span style="color:#1a73e8">蓝色</span>结论';
+// ========== 1) sanitizer 保留染色/高亮、剥危险属性 ==========
+console.log('[1] sanitizeNoteHtml');
+const src1 = '重点<span style="color:#d93025">红色标注</span><span class="hl hl-yellow">黄底</span>结论';
 const out1 = sanitizeNoteHtml(src1);
-console.log('sanitizer 输出:', out1);
 assert(out1.includes('color:#d93025'), '保留红染色');
-assert(out1.includes('color:#1a73e8'), '保留蓝染色');
+assert(out1.includes('hl-yellow'), '保留高亮 class');
 assert(!out1.includes('onerror'), '危险属性被清');
 
-// ---- 测试2: execCommand 产物 <font color> 转换逻辑 ----
-// 模拟 Firefox 生成 <font color="#d93025">abc</font>,验证应用转换后变 span
-function normalizeFontToSpan(root) {
-    root.querySelectorAll('font[color]').forEach(f => {
-        const sp = document.createElement('span');
-        sp.style.color = f.getAttribute('color');
-        while (f.firstChild) sp.appendChild(f.firstChild);
-        f.replaceWith(sp);
-    });
-}
-const d2 = document.createElement('div');
-d2.innerHTML = 'a<font color="#d93025">红色</font>b';
-normalizeFontToSpan(d2);
-assert(d2.innerHTML.includes('<span style="color: rgb(217, 48, 37);">红色</span>') || d2.innerHTML.includes('color') , 'font 标签转为 span');
-assert(!d2.querySelector('font'), '无 font 残留');
+// ========== 2) isHtmlNote 判定 ==========
+console.log('[2] isHtmlNote');
+assert(!isHtmlNote('纯文本批注 abc'), '纯文本判定为 false');
+assert(isHtmlNote('<b>粗体</b>'), 'HTML 判定为 true');
 
-// ---- 测试3: 手动 span 后备(jsdom 无 execCommand → 走后备路径) ----
-const noteEl = document.getElementById('note');
-noteEl.innerHTML = '第一句 第二句';
-// 选中"第二句"
+// ========== 3) 批注编辑器:工具栏生成 + 装载回填 + 序列化 ==========
+console.log('[3] 批注编辑器流程(notes/map 同款)');
+// 模拟 notes.html openAnnoEditor 生成的容器
+const editor = document.createElement('div');
+editor.className = 'line-anno line-anno-editor';
+editor.innerHTML = `
+    ${noteToolbarHtml()}
+    <div class="note-input line-anno-input" contenteditable="true" spellcheck="false" data-placeholder="写批注"></div>`;
+document.body.appendChild(editor);
+const input = editor.querySelector('.line-anno-input');
+const tb = editor.querySelector('.note-toolbar');
+assert(!!input && input.getAttribute('contenteditable') === 'true', '批注输入区为 contenteditable');
+assert(tb && tb.querySelectorAll('[data-cmd]').length >= 14, '工具栏含 14+ 按钮(B/I/H1/H2/4高亮/6色/清除)');
+assert(tb.querySelector('[data-cmd="color"][data-color="#d93025"]'), '含红色字按钮');
+assert(tb.querySelector('[data-cmd="hl"][data-color="yellow"]'), '含黄高亮按钮');
+
+// 回填旧纯文本批注
+loadNoteIntoEditor(input, '旧批注文本 abc');
+assert(serializeNote(input) === '旧批注文本 abc', '纯文本批注回填/序列化无损');
+assert(input.classList.contains('is-empty') === false, '非空不显示占位');
+
+// 回填富文本批注(染红色+加粗)
+loadNoteIntoEditor(input, '注意<span style="color:#d93025">红色结论</span><b>重点</b>');
+const ser1 = serializeNote(input);
+assert(ser1.includes('color') && ser1.includes('<b>重点</b>'), '富文本回填后序列化保留染色与加粗');
+assert(!ser1.includes('onerror'), '序列化无注入');
+
+// 空内容序列化 → 空串(空气批注不保存)
+loadNoteIntoEditor(input, '');
+assert(serializeNote(input) === '', '空批注序列化为空串');
+
+// ========== 4) 绑定工具栏:点击颜色按钮产生染色(手动后备) ==========
+console.log('[4] bindNoteToolbar + 染色');
+bindNoteToolbar(input);
+loadNoteIntoEditor(input, '第一句 第二句 第三句');
 const range = document.createRange();
-range.selectNodeContents(noteEl.childNodes[0].childNodes[1] || noteEl.childNodes[0]);
-// 简化:直接测试 applyNoteForeColor 的核心手动包 span 逻辑
+range.setStart(input.firstChild, 4);
+range.setEnd(input.firstChild, 6);
 const sel = window.getSelection();
-range.setStart(noteEl.firstChild, 4); // "第一句 第二句" 第4字符起
-range.setEnd(noteEl.firstChild, 6);
-sel.removeAllRanges();
-sel.addRange(range);
-function applyNoteForeColor(el, color) {
-    const s = window.getSelection();
-    if (!s || s.isCollapsed || !s.rangeCount) return;
-    const r = s.getRangeAt(0);
-    if (!el.contains(r.startContainer) || !el.contains(r.endContainer)) return;
-    const ok = document.execCommand('foreColor', false, color);
-    if (ok) return;
-    try {
-        const span = document.createElement('span');
-        span.style.color = color;
-        span.appendChild(r.extractContents());
-        r.insertNode(span);
-    } catch (e) {}
-}
-applyNoteForeColor(noteEl, '#d93025');
-console.log('手动染色后 note html:', noteEl.innerHTML);
-assert(noteEl.querySelector('span[style*="color"]'), '手动 span 染色已应用');
+sel.removeAllRanges(); sel.addRange(range);
+tb.querySelector('[data-cmd="color"][data-color="#d93025"]').click();
+assert(!!input.querySelector('span[style*="color"]'), '点色块后文字被染色');
+assert(serializeNote(input).includes('color'), '染色可序列化');
 
-// ---- 测试4: 染色笔记保存→装载 往返不丢色 ----
-const serialized = noteEl.innerHTML;
-const reloaded = sanitizeNoteHtml(serialized);
-console.log('往返后 html:', reloaded);
-assert(reloaded.includes('color'), '保存/装载往返后颜色保留');
-
-// ---- 测试5: 清除格式剥 color ----
-function stripColor(range, root) {
-    root.querySelectorAll('*').forEach(s => {
-        if (!range.intersectsNode(s)) return;
-        if (s.style && s.style.color) {
-            s.style.color = '';
-            if (s.getAttribute('style') === '') s.removeAttribute('style');
-        }
-    });
-}
+// ========== 5) 清除格式剥色 ==========
+console.log('[5] clearNoteFormat');
+loadNoteIntoEditor(input, '测试<span style="color:#d93025">红字</span>结尾');
 const r2 = document.createRange();
-r2.selectNodeContents(noteEl);
-stripColor(r2, noteEl);
-console.log('清除后 note html:', noteEl.innerHTML);
-assert(!noteEl.querySelector('span[style*="color"]'), '清除格式后颜色被剥');
+r2.selectNodeContents(input);
+sel.removeAllRanges(); sel.addRange(r2);
+clearNoteFormat(input);
+assert(!input.querySelector('span[style*="color"]'), '清除格式后颜色被剥');
+
+// ========== 6) 批注渲染显示(notes innerHTML/sanitize / map 富文本替换逻辑) ==========
+console.log('[6] 批注渲染');
+const display = document.createElement('div');
+display.className = 'line-anno-text';
+display.innerHTML = sanitizeNoteHtml('重点<span style="color:#1a73e8">蓝字</span><span class="hl hl-green">绿底</span>');
+assert(display.querySelector('span[style*="color"]'), '渲染块保留染色');
+assert(display.querySelector('.hl-green'), '渲染块保留高亮 class(CSS 兜底 .line-anno-text .hl-green)');
+// 注入测试
+display.innerHTML = sanitizeNoteHtml('<img src=x onerror=alert(1)>你好');
+assert(!display.querySelector('img'), '注入的 img 被剥');
 
 console.log(`\n结果: ${pass} 通过 / ${fail} 失败`);
 process.exit(fail ? 1 : 0);

@@ -61,6 +61,7 @@
     <script src="js/background.js"></script>
     <script src="js/lightbox.js"></script>
     <script src="js/backend.js"></script>
+    <script src="js/note_richtext.js"></script>
     <script src="vendor/highlight/highlight.min.js"></script>
     <script>
         const _params = new URLSearchParams(location.search);
@@ -630,10 +631,12 @@
             if (!item) return '';
             const imgs = (item.images || []).map((src, i) =>
                 `<img class="line-anno-img" src="${src}" alt="批注图片" onclick="viewAnnoImage('${id}', ${i})">`).join('');
+            // 富文本批注（加粗/染色/高亮）走 sanitize 后 innerHTML；旧纯文本批注保持 esc 防注入
+            const textHtml = item.text ? (isHtmlNote(item.text) ? sanitizeNoteHtml(item.text) : esc(item.text)) : '';
             return `<div class="line-anno line-anno-block" data-id="${CSS.escape(id)}" style="--d:${depth}">
                 <span class="line-anno-icon">📝</span>
                 <div class="line-anno-body">
-                    ${item.text ? `<div class="line-anno-text">${esc(item.text)}</div>` : ''}
+                    ${item.text ? `<div class="line-anno-text">${textHtml}</div>` : ''}
                     ${imgs}
                 </div>
                 <div class="line-anno-ops">
@@ -659,7 +662,9 @@
             el.className = 'line-anno line-anno-editor';
             el.style.setProperty('--d', card.style.getPropertyValue('--d') || 0);
             el.innerHTML = `
-                <textarea class="note-input line-anno-input" placeholder="写批注，可 Ctrl+V 粘贴截图…"></textarea>
+                ${noteToolbarHtml()}
+                <div class="note-input line-anno-input" contenteditable="true" spellcheck="false"
+                    data-placeholder="写批注，可 Ctrl+V 粘贴截图…"></div>
                 <div class="note-images line-anno-editor-imgs"></div>
                 <div class="line-anno-bar">
                     <button type="button" class="btn btn-primary line-anno-save">保存</button>
@@ -670,9 +675,12 @@
             if (blk) blk.style.display = 'none';
             card.insertAdjacentElement('afterend', el);
             const input = el.querySelector('.line-anno-input');
-            input.value = item ? (item.text || '') : '';
+            // 富文本回填（旧纯文本批注自动兼容）
+            loadNoteIntoEditor(input, item ? (item.text || '') : '');
+            updateNotePlaceholder(input);
             renderEditorImages();
             input.addEventListener('paste', pasteAnnoImage);
+            bindNoteToolbar(input);
             el.querySelector('.line-anno-save').addEventListener('click', saveAnnoEditor);
             el.querySelector('.line-anno-cancel').addEventListener('click', () => closeAnnoEditor());
             input.focus();
@@ -750,7 +758,7 @@
         function saveAnnoEditor() {
             if (!annoEditor) return;
             const id = annoEditor.id;
-            const text = annoEditor.el.querySelector('.line-anno-input').value.trim();
+            const text = serializeNote(annoEditor.el.querySelector('.line-anno-input'));
             const images = annoEditor.images;
             annoItems = annoItems.filter(a => a.id !== id);
             if (text || images.length) annoItems.push({ id, text, images });
