@@ -3521,11 +3521,12 @@
       "content": "在下图所示<br><img src=\"data/cn_figs/cn_0203.png\" alt=\"cn题图\" style=\"max-width:100%;margin:8px 0;border:1px solid #ddd;border-radius:4px;\" />的网络中，假定主机A给主机B发送数据，在MAC帧从接入点AP2转发到目的主机B 的这段链路上，MAC帧的地址1、地址2和地址3分别是( )",
       "options": {
         "A": "BSSID2、BSSID1、MACB",
-        "B": "A B A",
-        "D": "MAC 、BSSID2、MAC"
+        "B": "MACB、BSSID2、BSSID1",
+        "C": "BSSID2、MACB、MACA",
+        "D": "MACB、BSSID2、MACA"
       },
       "answer": "D",
-      "explanation": "<p>MAC帧是从AP发送到主机B的，即“去往AP=0”而“来自AP=1”。因此，地址1是B的MAC地址，即MACB；地址2是AP2的BSSID，即BSSID2；地址3是源地址，是路由器的接口2的MAC地址，即MAC2。</p>",
+      "explanation": "<p>MAC帧是从AP2发送到主机B的，即“去往AP=0”而“来自AP=1”。因此，地址1（直接接收方）是主机B的MAC地址，即MACB；地址2（直接发送方）是AP2的MAC地址，即BSSID2；地址3存放实际源地址，即主机A的MAC地址MACA。口诀：地址1/2=当前无线链路两端（收/发），地址3=最终目的或原始源。</p>",
       "chapter": "第3章 数据链路层",
       "section": "3.6 局域网",
       "subsection": "3.6.2 以太网与IEEE 802.3",
