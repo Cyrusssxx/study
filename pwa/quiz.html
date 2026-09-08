@@ -140,13 +140,13 @@
     // 可在练习设置面板内热切换的模式（无需退出页面）
     const SWITCHABLE_MODES = ['sequential', 'favorite', 'real', 'fav_real'];
     let MODE = _params.get('mode') || '';
-    const CHAPTER = _params.get('chapter') || '';
+    let CHAPTER = _params.get('chapter') || '';
     // 记住上次选择的模式：无显式 mode 参数且无定位参数时沿用偏好（首页按钮等显式入口以参数为准）
     if (!MODE && !CHAPTER && !_params.get('goto')) {
         try { MODE = localStorage.getItem('quiz_mode_pref_' + SUBJECT) || ''; } catch (e) { }
     }
     if (!MODE) MODE = 'sequential';
-    const SECTION = _params.get('section') || '';
+    let SECTION = _params.get('section') || '';
     const YEAR = _params.get('year') || '';   // 真题年份筛选（仅真题模式生效）
     const STAGE = _params.get('stage') || ''; // 复习阶段筛选（仅 review 模式生效）：2/4/7/15 天期
     const FRESH = _params.get('fresh') === '1'; // fresh=1：跳过位置恢复，从第 1 题开始
@@ -580,15 +580,19 @@
                 const numMatch = ch.name.match(/第(\d+)章/);
                 const chNum = String(numMatch ? numMatch[1] : idx + 1).padStart(2, '0');
                 const chActive = isCur && CHAPTER === ch.name;
+                const escCh = String(ch.name).replace(/"/g, '&quot;');
+                const escSec = s => String(s).replace(/"/g, '&quot;');
                 let sectionsHtml = `
-                    <a class="tree-section ${chActive && !SECTION ? 'active' : ''}" href="${chapterLink(key, ch.name, '')}">本章全部<span class="tree-count">${ch.count}题</span></a>`;
+                    <a class="tree-section ${chActive && !SECTION ? 'active' : ''}" href="${chapterLink(key, ch.name, '')}"
+                       data-subject="${key}" data-chapter="${escCh}" data-section="">本章全部<span class="tree-count">${ch.count}题</span></a>`;
                 for (const s of ch.sections) {
                     const secActive = chActive && SECTION === s.name;
                     sectionsHtml += `
-                    <a class="tree-section ${secActive ? 'active' : ''}" href="${chapterLink(key, ch.name, s.name)}">${s.name}<span class="tree-count">${s.count}题</span></a>`;
+                    <a class="tree-section ${secActive ? 'active' : ''}" href="${chapterLink(key, ch.name, s.name)}"
+                       data-subject="${key}" data-chapter="${escCh}" data-section="${escSec(s.name)}">${s.name}<span class="tree-count">${s.count}题</span></a>`;
                 }
                 chaptersHtml += `
-                <div class="tree-chapter ${chActive ? 'open active' : ''}">
+                <div class="tree-chapter ${chActive ? 'open active' : ''}" data-chapter="${escCh}">
                     <div class="tree-chapter-row" onclick="this.parentElement.classList.toggle('open')">
                         <span class="tree-ch-num">${chNum}</span>
                         <span class="tree-ch-name">${ch.name}</span>
@@ -609,9 +613,72 @@
             </div>`;
         }
         document.getElementById('chapterTree').innerHTML = treeHtml;
-        // 滚动到当前选中项（只滚树容器，不滚页面）
-        const active = document.querySelector('.tree-section.active');
-        if (active) scrollInContainer(document.getElementById('chapterTree'), active, true);
+        bindChapterTreeNav();
+        syncChapterTree();   // 树渲染晚于首题渲染时，以当前题为准补一次同步
+    }
+
+    // 章节树页内跳转：左键单击拦截（保留 href 作降级/新标签/跨科目），同科目直接定位不刷新页面
+    function bindChapterTreeNav() {
+        const tree = document.getElementById('chapterTree');
+        if (!tree || tree.dataset.navBound) return;
+        tree.dataset.navBound = '1';
+        tree.addEventListener('click', e => {
+            const a = e.target.closest('a[data-chapter]');
+            if (!a) return;
+            // 修饰键/非左键放行（新标签/新窗口/降级）
+            if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || e.button !== 0) return;
+            e.preventDefault();
+            goChapter(a.dataset.subject, a.dataset.chapter, a.dataset.section || '');
+        });
+    }
+
+    // 同科目章节定位：改 CHAPTER/SECTION → 当前题集内找章节首题 → 渲染；不整页刷新
+    function goChapter(subjectKey, chapterName, sectionName) {
+        if (subjectKey !== SUBJECT) {
+            // 跨科目：题库数据不同，必须整页切换（等价原行为）
+            location.href = chapterLink(subjectKey, chapterName, sectionName);
+            return;
+        }
+        CHAPTER = chapterName;
+        SECTION = sectionName;
+        // URL 同步（刷新可恢复，不触发导航）
+        try {
+            const u = new URL(location.href);
+            if (chapterName) u.searchParams.set('chapter', chapterName);
+            else u.searchParams.delete('chapter');
+            if (sectionName) u.searchParams.set('section', sectionName);
+            else u.searchParams.delete('section');
+            history.pushState(null, '', u.pathname + u.search + u.hash);
+        } catch (err) { }
+        const idx = questions.findIndex(q => q.chapter === CHAPTER && (!SECTION || q.section === SECTION));
+        if (idx >= 0) {
+            currentIndex = idx;
+            explanationShown = false;
+            noteShown = false;
+            renderQuestion();
+        } else {
+            // 当前筛选集（错题/收藏/年份等）不含该章节题：整页加载以拿到完整题集（等价原行为）
+            location.href = chapterLink(subjectKey, chapterName, sectionName);
+        }
+    }
+
+    // 树高亮同步：当前题驱动 —— 展开/高亮所在章节与节，并滚动可见
+    function syncChapterTree() {
+        const tree = document.getElementById('chapterTree');
+        const q = questions[currentIndex];
+        if (!tree || !q) return;
+        tree.querySelectorAll('.tree-section.active, .tree-chapter.active').forEach(el => el.classList.remove('active'));
+        const chDiv = tree.querySelector(`.tree-chapter[data-chapter="${CSS.escape(String(q.chapter || ''))}"]`);
+        if (!chDiv) return;
+        chDiv.classList.add('active', 'open');
+        let target = null;
+        const secA = chDiv.querySelector(`a[data-section="${CSS.escape(String(q.section || ''))}"]`);
+        if (secA) { secA.classList.add('active'); target = secA; }
+        else {
+            const allA = chDiv.querySelector('a[data-section=""]');
+            if (allA) { allA.classList.add('active'); target = allA; }
+        }
+        scrollInContainer(tree, target || chDiv, true);
     }
 
     function renderQuestion() {
@@ -761,6 +828,7 @@
 
         renderNumberPanel();
         trackPractice();
+        syncChapterTree();   // 左侧章节树随当前题同步（高亮/展开/滚动）
     }
 
     // 记录练习位置：供首页「继续上次练习」与最近练习历史展示（本机 localStorage，同科目+模式+章节去重，最多留 6 条）
