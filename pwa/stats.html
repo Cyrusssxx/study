@@ -84,6 +84,14 @@
             </div>
         </div>
 
+        <!-- 本月错题分析 -->
+        <div class="stats-section">
+            <h2>📉 本月错题分析 <span class="chart-legend" id="monthWrongMeta"></span></h2>
+            <div id="monthWrongPanel">
+                <div class="loading">加载中...</div>
+            </div>
+        </div>
+
         <!-- 数据备份/导入 -->
         <div class="stats-section">
             <h2>数据管理 <span class="chart-legend">手机 ↔ 电脑互迁：导出JSON后在另一端导入（导入会全量覆盖当前数据）</span></h2>
@@ -179,8 +187,56 @@
         document.getElementById('masteryPanel').innerHTML = html;
     }
 
+    async function loadMonthWrong() {
+        const resp = await api('/api/stats/month-wrong');
+        const data = await resp.json();
+        document.getElementById('monthWrongMeta').textContent =
+            `${data.month} · 作答 ${data.answered} 次 · 错 ${data.wrong} 次 · 正确率 ${data.accuracy}%`;
+
+        // 建议(最先展示,后续按科目列薄弱章)
+        const weakHtml = data.weak && data.weak.length
+            ? `<div class="weak-advice">🔧 ${escHtml(data.suggestion)}</div>
+                <div class="weak-list">
+                    ${data.weak.slice(0, 6).map(w => {
+                        const acc = w.accuracy;
+                        const cls = acc >= 70 ? 'wk-mid' : 'wk-bad';
+                        return `<div class="weak-item ${cls}">
+                            <span class="weak-name">${escHtml(w.subject_name)}·${escHtml(w.chapter)}</span>
+                            <span class="weak-num">错 ${w.wrong} 题 / 答 ${w.answered} 次（正确率 ${acc}%）</span>
+                        </div>`;
+                    }).join('')}
+                </div>`
+            : `<div class="weak-ok">✅ ${escHtml(data.suggestion)}</div>`;
+
+        // 各科目章节明细
+        let subjHtml = '';
+        for (const key of Object.keys(data.subjects || {})) {
+            const s = data.subjects[key];
+            if (!s.answered) continue;
+            const rows = s.chapters.filter(c => c.answered > 0).map(c => {
+                const acc = c.answered ? Math.round((c.answered - c.wrong) / c.answered * 100) : 100;
+                const cls = acc >= 70 ? 'bar-high' : acc >= 50 ? 'bar-mid' : 'bar-low';
+                return `<div class="wk-sub-row">
+                    <span class="wk-sub-name" title="本月出过错的不同题数：${c.bad}">${escHtml(c.name)}</span>
+                    <div class="mastery-track"><div class="mastery-fill ${cls}" style="width: ${Math.max(2, acc)}%"></div></div>
+                    <span class="wk-sub-pct">${c.wrong}/${c.answered} · ${acc}%</span>
+                </div>`;
+            }).join('');
+            subjHtml += `<div class="wk-subject">
+                <h3>${escHtml(s.name)} <span class="mastery-summary">答 ${s.answered} · 错 ${s.wrong} · 出过错 ${s.bad_questions} 题 · 正确率 ${s.accuracy}%</span></h3>
+                ${rows}
+            </div>`;
+        }
+        document.getElementById('monthWrongPanel').innerHTML = (weakHtml || '') + subjHtml;
+    }
+
+    function escHtml(s) {
+        return String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+    }
+
     loadDaily();
     loadMastery();
+    loadMonthWrong();
 
     // ==================== 数据备份/导入 ====================
     async function exportBackup() {

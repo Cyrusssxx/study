@@ -51,6 +51,23 @@
 
         <div class="daka-summary" id="dakaSummary"></div>
 
+        <!-- 分类筛选：算法类型 / 题型 / 优先级 / 完成状态 -->
+        <div class="daka-filters">
+            <div class="daka-filter-row">
+                <span class="daka-filter-label">算法类型</span>
+                <div class="daka-chips" id="dakaFilterModule"></div>
+            </div>
+            <div class="daka-filter-row">
+                <span class="daka-filter-label">题型 / 状态</span>
+                <div class="daka-chips" id="dakaFilterSheet"></div>
+                <div class="daka-chips" id="dakaFilterDone"></div>
+            </div>
+            <div class="daka-filter-row">
+                <span class="daka-filter-label">优先级</span>
+                <div class="daka-chips" id="dakaFilterPriority"></div>
+            </div>
+        </div>
+
         <div class="ol-layout">
             <aside class="ol-nav" id="dakaNav"></aside>
             <button class="ol-nav-tab" id="dakaNavTab" onclick="expandDakaNav()" title="展开目录">☰ 目录</button>
@@ -70,6 +87,21 @@
     let dakaProgress = {};
     let dakaGroups = [];
     let dakaNavCollapsed = localStorage.getItem('daka_nav_collapsed') === '1';
+    // 筛选状态：算法类型 / 题型 / 优先级 / 完成状态(默认 all)
+    let dakaFilter = { module: '全部', sheet: '全部', priority: '全部', done: '全部' };
+
+    // 从题目元数据推导可用的算法类型（module），
+    // 但由于 module 文案带"基于“X”的算法训练"，统一映射为短分类；
+    // 应用题为真题，单独归"真题训练"。
+    function dakaModules(qs) {
+        const order = [];
+        const seen = new Set();
+        for (const q of qs) {
+            const m = q.module || '未分类';
+            if (!seen.has(m)) { seen.add(m); order.push(m); }
+        }
+        return order;
+    }
 
     function esc(s) {
         return String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
@@ -83,20 +115,72 @@
             ]);
             dakaQuestions = (await qResp.json()).questions;
             dakaProgress = (await pResp.json()).progress || {};
+            restoreDakaFilter();
+            renderFilters(true);
             renderDaka();
         } catch (e) {
             document.getElementById('dakaList').innerHTML = `<div class="error">加载失败</div>`;
         }
     }
 
+    function renderFilters(force) {
+        // 根据当前题库重建各筛选维度的选项（去重、固定顺序）
+        const mods = dakaModules(dakaQuestions);
+        const sheets = ['全部'].concat([...new Set(dakaQuestions.map(q => q.sheet || '未分类'))]);
+        const prios = ['全部'].concat([...new Set(dakaQuestions.map(q => q.priority_label || '未分类'))]);
+        const dones = ['全部', '已完成', '未完成'];
+        if (!force && dakaFilter.module !== '全部' && !mods.includes(dakaFilter.module)) dakaFilter.module = '全部';
+        if (!force && dakaFilter.sheet !== '全部' && !sheets.includes(dakaFilter.sheet)) dakaFilter.sheet = '全部';
+        if (!force && dakaFilter.priority !== '全部' && !prios.includes(dakaFilter.priority)) dakaFilter.priority = '全部';
+
+        const chip = (list, active, dim, label) => list.map(v => {
+            const on = v === active;
+            return `<a class="review-chip ${on ? 'review-chip-all' : ''}" data-dim="${dim}" data-val="${esc(v)}"
+                onclick="setDakaFilter('${dim}','${esc(v)}')">${label ? esc(v) : esc(v)}</a>`;
+        }).join('');
+
+        document.getElementById('dakaFilterModule').innerHTML = chip(mods, dakaFilter.module, 'module');
+        document.getElementById('dakaFilterSheet').innerHTML = chip(sheets, dakaFilter.sheet, 'sheet');
+        document.getElementById('dakaFilterDone').innerHTML = chip(dones, dakaFilter.done, 'done');
+        document.getElementById('dakaFilterPriority').innerHTML = chip(prios, dakaFilter.priority, 'priority');
+    }
+
+    function setDakaFilter(dim, val) {
+        dakaFilter[dim] = val;
+        localStorage.setItem('daka_filter_' + dim, val);
+        renderFilters();
+        renderDaka();
+    }
+
+    function filteredDaka() {
+        return dakaQuestions.filter(q =>
+            (dakaFilter.module === '全部' || q.module === dakaFilter.module) &&
+            (dakaFilter.sheet === '全部' || q.sheet === dakaFilter.sheet) &&
+            (dakaFilter.priority === '全部' || q.priority_label === dakaFilter.priority) &&
+            (dakaFilter.done === '全部' ||
+                (dakaFilter.done === '已完成' ? !!dakaProgress[q.id] : !dakaProgress[q.id]))
+        );
+    }
+
+    function restoreDakaFilter() {
+        const def = { module: '全部', sheet: '全部', priority: '全部', done: '全部' };
+        for (const k of Object.keys(def)) {
+            const v = localStorage.getItem('daka_filter_' + k);
+            if (v) dakaFilter[k] = v;
+        }
+    }
+
     function renderDaka() {
-        const doneCount = dakaQuestions.filter(q => dakaProgress[q.id]).length;
+        const list = filteredDaka();
+        const allCount = list.length;
+        const doneCount = list.filter(q => dakaProgress[q.id]).length;
         document.getElementById('dakaSummary').innerHTML =
-            `已打卡 <b>${doneCount}</b> / ${dakaQuestions.length} 题`;
+            `已打卡 <b>${doneCount}</b> / ${allCount} 题` +
+            (allCount < dakaQuestions.length ? ` <span class="daka-filtered-hint">（已按筛选显示 ${allCount}/${dakaQuestions.length}）</span>` : '');
 
         // 按优先级分组，默认全部收起，通过左侧导航定位题目
         const groups = new Map();
-        for (const q of dakaQuestions) {
+        for (const q of list) {
             if (!groups.has(q.priority_label)) groups.set(q.priority_label, []);
             groups.get(q.priority_label).push(q);
         }
@@ -134,7 +218,9 @@
         navEl.querySelectorAll('.ol-nav-item.root').forEach(a => {
             a.addEventListener('click', () => toggleDakaGroup(parseInt(a.dataset.group, 10)));
         });
-        document.getElementById('dakaList').innerHTML = html;
+        document.getElementById('dakaList').innerHTML = list.length === 0
+            ? `<div class="daka-empty">该筛选条件下没有题目，换个条件试试</div>`
+            : html;
         // 预热打卡原图到 SW 缓存，离线查看不裂图（P0-1）
         warmFigureCache([...document.querySelectorAll('#dakaList img')].map(i => i.src));
     }

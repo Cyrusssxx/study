@@ -543,6 +543,73 @@ async function api(url, opts = {}) {
             return jsonResp(result);
         }
 
+        // ---------- 本月错题分析（薄弱点诊断） ----------
+        if (seg[1] === 'stats' && seg[2] === 'month-wrong') {
+            // 本月 = 当前自然月，对比维度：科目 → 章节 → 小节，取该月内每题"最后作答"判定对错，
+            // 并统计答错次数>0 的题。输出薄弱章节排行与一句话建议。
+            const nowD = new Date(), p2 = n => String(n).padStart(2, '0');
+            const monthKey = `${nowD.getFullYear()}-${p2(nowD.getMonth() + 1)}`;   // YYYY-MM
+            const progressRows = (await dbAll('progress')).filter(r => (r.answered_at || '').startsWith(monthKey));
+
+            // 每题统计：本月作答次数/错次数/最后对错
+            const perQ = {};
+            for (const r of progressRows) {
+                const e = perQ[r.question_id] || (perQ[r.question_id] = { subject: r.subject, total: 0, wrong: 0, last_ok: 0 });
+                e.total++;
+                if (!r.is_correct) e.wrong++;
+                e.last_ok = r.is_correct ? 1 : 0;
+            }
+            // 科目→章节聚合（题目章节元数据）
+            const bySubject = {};
+            for (const [key, info] of Object.entries(SUBJECTS)) {
+                const data = await loadQuestions(key);
+                const chMap = {}, chapters = [];
+                let sAnswered = 0, sWrong = 0;
+                for (const q of data.questions) {
+                    const e = perQ[q.id];
+                    if (!e) continue;
+                    const ch = q.chapter || '未分类';
+                    if (!chMap[ch]) { chMap[ch] = { name: ch, answered: 0, wrong: 0, bad: 0 }; chapters.push(chMap[ch]); }
+                    const node = chMap[ch];
+                    node.answered += e.total; node.wrong += e.wrong;
+                    if (e.total > 0 && e.wrong > 0) node.bad++;                 // 本月出过错的不同题数
+                    sAnswered += e.total; sWrong += e.wrong;
+                }
+                // 科目级出过错题数(去重按题)
+                let sBad = 0;
+                for (const q of data.questions) { const e = perQ[q.id]; if (e && e.wrong > 0) sBad++; }
+                chapters.sort((a, b) => b.wrong - a.wrong || b.bad - a.bad);
+                bySubject[key] = {
+                    name: info.name, answered: sAnswered, wrong: sWrong, bad_questions: sBad,
+                    accuracy: sAnswered ? Math.round((sAnswered - sWrong) / sAnswered * 100) : 100,
+                    chapters
+                };
+            }
+            // 薄弱章节 = 至少答过 1 题且（错题数 ≥ 2 或 出过错题数 ≥ 1 且正确率 <70%）
+            const weak = [];
+            for (const [key, s] of Object.entries(bySubject)) {
+                for (const c of s.chapters) {
+                    const acc = c.answered ? Math.round((c.answered - c.wrong) / c.answered * 100) : 100;
+                    const isWeak = c.answered > 0 && (c.wrong >= 2 || (c.bad >= 1 && acc < 70));
+                    if (isWeak) weak.push({ subject: key, subject_name: s.name, chapter: c.name, answered: c.answered, wrong: c.wrong, bad: c.bad, accuracy: acc });
+                }
+            }
+            weak.sort((a, b) => b.wrong - a.wrong || b.bad - a.bad || a.accuracy - b.accuracy);
+            // 建议文案
+            let suggestion = '本月错题不多，保持当前节奏即可。';
+            if (weak.length) {
+                const top = weak.slice(0, 3).map(w => `${w.subject_name}·${w.chapter}（错${w.wrong}题）`).join('，');
+                suggestion = `建议优先复习：${top}。`;
+            }
+            const totRows = progressRows.length, totWrong = Object.values(perQ).reduce((s, e) => s + e.wrong, 0);
+            return jsonResp({
+                month: monthKey,
+                answered: totRows, wrong: totWrong,
+                accuracy: totRows ? Math.round((totRows - totWrong) / totRows * 100) : 100,
+                subjects: bySubject, weak, suggestion
+            });
+        }
+
         // ---------- 搜题（题目 + 知识库笔记） ----------
         if (seg[1] === 'search') {
             const kw = (p.get('q') || '').trim().toLowerCase();
