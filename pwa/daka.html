@@ -47,6 +47,7 @@
         <div class="page-header">
             <h1>📌 数据结构强化打卡</h1>
             <p>王道打卡表精选代码大题，按优先级排序，完成一题打卡一题</p>
+            <p class="daka-hint">💡 不想全刷？点上方筛选条只选「算法类型 / 题型 / 优先级」，选择会自动记住；图片按需加载，展开哪组才下哪组。</p>
         </div>
 
         <div class="daka-summary" id="dakaSummary"></div>
@@ -221,8 +222,30 @@
         document.getElementById('dakaList').innerHTML = list.length === 0
             ? `<div class="daka-empty">该筛选条件下没有题目，换个条件试试</div>`
             : html;
-        // 预热打卡原图到 SW 缓存，离线查看不裂图（P0-1）
-        warmFigureCache([...document.querySelectorAll('#dakaList img')].map(i => i.src));
+        // 视口驱动预热：只对"即将进入视口"的图触发 SW 缓存（常见场景是展开某组时预取其图），
+        // 不再一次性 fetch 全库 162 张图（那是首屏慢的根源）。滚动/展开时会按需继续预热。
+        warmVisibleFigures('#dakaList img');
+    }
+
+    let _dakaWarmObs = null;
+    function warmVisibleFigures(selector) {
+        const imgs = [...document.querySelectorAll(selector)];
+        if (!imgs.length) return;
+        if (typeof IntersectionObserver === 'undefined') {   // 降级：不预热（浏览 lazy 仍按需加载）
+            return;
+        }
+        if (_dakaWarmObs) _dakaWarmObs.disconnect();
+        _dakaWarmObs = new IntersectionObserver((entries) => {
+            const need = [];
+            for (const en of entries) {
+                if (!en.isIntersecting) continue;
+                const src = en.target.getAttribute('src') || en.target.getAttribute('data-src');
+                if (src) need.push(src);
+                _dakaWarmObs.unobserve(en.target);
+            }
+            if (need.length) warmFigureCache(need);
+        }, { rootMargin: '600px' });
+        imgs.forEach(im => _dakaWarmObs.observe(im));
     }
 
     function toggleDakaNav() {

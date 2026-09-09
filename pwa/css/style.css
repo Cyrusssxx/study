@@ -3009,6 +3009,12 @@ h3.algo-h:first-child, h4.algo-h:first-child, h5.algo-h:first-child { margin-top
     font-size: 1.05rem;
 }
 
+.daka-hint {
+    font-size: 0.82rem;
+    color: var(--text-light);
+    margin-top: 4px;
+}
+
 .daka-summary b {
     color: var(--primary);
 }

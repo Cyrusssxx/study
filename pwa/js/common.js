@@ -77,10 +77,31 @@ function fmtOptionText(raw) {
 // ============ 离线图片预热：daka/dati 等图片密集型页面调用 ============
 // 通过触发 fetch 让 SW 的 fetch 处理程序把图片拉入缓存（首次在线查看后离线即可用），
 // 避免 daka/dati 在离线时图片裂开。预热失败不影响页面显示（用户查看时 SW 仍会缓存）。
+// 【性能】同 URL 只预热一次 + 串行队列(最多 3 并发)，避免一次性 fetch 几十上百张图挤爆带宽
+// （打卡表 162 张图 7.3MB，全量并发预热会把首屏加载拖死——这是"打开很慢"的真正元凶）。
+const _warmedSet = new Set();
+let _warmInFlight = 0;
+const _WARM_MAX_CONCURRENCY = 3;
+const _warmQueue = [];
+
 function warmFigureCache(urls) {
     if (!urls || !urls.length) return;
     for (const u of urls) {
-        try { fetch(u); } catch (e) { /* 忽略单个预热失败 */ }
+        if (_warmedSet.has(u)) continue;
+        _warmedSet.add(u);
+        _warmQueue.push(u);
+        pumpWarmQueue();
+    }
+}
+
+function pumpWarmQueue() {
+    while (_warmInFlight < _WARM_MAX_CONCURRENCY && _warmQueue.length) {
+        const u = _warmQueue.shift();
+        _warmInFlight++;
+        fetch(u).catch(() => { /* 忽略单个预热失败 */ }).finally(() => {
+            _warmInFlight--;
+            pumpWarmQueue();
+        });
     }
 }
 
