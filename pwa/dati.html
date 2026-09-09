@@ -43,6 +43,8 @@
         }
         .dati-fav.on { color: #f59e0b; }
         .dati-actions { display: flex; align-items: center; gap: 8px; margin-top: 4px; flex-wrap: wrap; }
+        .dati-done-btn { min-width: 84px; }
+        .dati-done-btn.done { color: var(--primary); border-color: var(--primary); }
         .dati-note-btn.has-note { color: #8a6d1a; border-color: #e6d9a8; }
         .dati-note-btn.active { color: var(--primary); border-color: var(--primary); }
         .dati-qbody img, .dati-abody img { max-width: 100%; height: auto; display: block; margin-bottom: 6px; border-radius: 6px; }
@@ -128,6 +130,7 @@
             <button class="dati-chip" id="fAll" onclick="setFilter('all')">全部 <span class="dati-count" id="cntAll"></span></button>
             <button class="dati-chip" id="fReal" onclick="setFilter('real')">统考真题 <span class="dati-count" id="cntReal"></span></button>
             <button class="dati-chip" id="fFav" onclick="setFilter('fav')">★ 我的收藏 <span class="dati-count" id="cntFav"></span></button>
+            <button class="dati-chip" id="fTodo" onclick="setFilter('todo')">○ 未练 <span class="dati-count" id="cntTodo"></span></button>
             <button class="dati-chip" id="datiExpandAll" onclick="toggleAllChapters()">展开全部</button>
             <select class="dati-year" id="yearSel" onchange="setYear(this.value)" style="display:none"></select>
         </div>
@@ -155,6 +158,12 @@
     let noteOpen = new Set(JSON.parse(localStorage.getItem('datiNoteOpen') || '[]'));  // 展开中的笔记面板 qid
     let ansOpen = new Set(JSON.parse(localStorage.getItem('datiAnsOpen') || '[]'));    // 展开中的答案面板 qid
     let openChapters = new Set(JSON.parse(localStorage.getItem('datiOpenCh') || '[]'));  // 已展开的章节（默认收起，按需加载图片）
+    let doneSet = new Set(JSON.parse(localStorage.getItem('datiDone') || '[]'));        // 已练过的大题 qid（只看未练筛选用）
+    let lastSeenQ = localStorage.getItem('datiLastSeenQ') || '';                         // 上次浏览/跳转的题（刷新后自动定位）
+
+    function saveDoneSet() {
+        localStorage.setItem('datiDone', JSON.stringify([...doneSet]));
+    }
 
     function saveOpenChapters() {
         localStorage.setItem('datiOpenCh', JSON.stringify([...openChapters]));
@@ -166,7 +175,10 @@
         localStorage.setItem('datiNoteOpen', JSON.stringify([...noteOpen]));
     }
 
-    const img = (key, fn) => `<img src="data/dati_figs/${key}/${fn}" loading="lazy" alt="大题截图">`;
+    // 题干图：data-src 惰挂载（章节收起时不发请求，展开时才激活为 src——见 activateChapterImgs）
+    const qimg = (key, fn) => `<img data-src="data/dati_figs/${key}/${fn}" loading="lazy" alt="大题截图">`;
+    // 答案图：答案面板本身惰性注入，展开时才进 DOM，直接带 src
+    const aimg = (key, fn) => `<img src="data/dati_figs/${key}/${fn}" loading="lazy" alt="大题答案">`;
 
     // ==================== 数据与收藏 ====================
     async function loadDati() {
@@ -181,9 +193,11 @@
             document.getElementById('fAll').classList.toggle('active', filter === 'all');
             document.getElementById('fReal').classList.toggle('active', filter === 'real');
             document.getElementById('fFav').classList.toggle('active', filter === 'fav');
+            document.getElementById('fTodo').classList.toggle('active', filter === 'todo');
             document.getElementById('yearSel').style.display = filter === 'real' ? '' : 'none';
             document.getElementById('yearSel').value = year;
             render();
+            restoreLastSeen();
         } catch (e) {
             document.getElementById('datiRoot').innerHTML = `<div class="error">加载失败</div>`;
         }
@@ -250,6 +264,7 @@
         document.getElementById('fAll').classList.toggle('active', f === 'all');
         document.getElementById('fReal').classList.toggle('active', f === 'real');
         document.getElementById('fFav').classList.toggle('active', f === 'fav');
+        document.getElementById('fTodo').classList.toggle('active', f === 'todo');
         render();
     }
 
@@ -258,6 +273,7 @@
     function passFilter(q) {
         if (filter === 'real') return q.real && (!year || String(q.year) === String(year));
         if (filter === 'fav') return favSet.has(q.id);
+        if (filter === 'todo') return !doneSet.has(q.id);
         return true;
     }
 
@@ -274,13 +290,29 @@
         document.getElementById('cntAll').textContent = visibleQuestionsOf(sub, () => true).length;
         document.getElementById('cntReal').textContent = visibleQuestionsOf(sub, q => q.real).length;
         document.getElementById('cntFav').textContent = visibleQuestionsOf(sub, q => favSet.has(q.id)).length;
+        document.getElementById('cntTodo').textContent = visibleQuestionsOf(sub, q => !doneSet.has(q.id)).length;
+    }
+
+    // ==================== 已练标记（P3：只看未练） ====================
+    function toggleDone(qid) {
+        if (doneSet.has(qid)) doneSet.delete(qid); else doneSet.add(qid);
+        saveDoneSet();
+        const btn = document.querySelector(`.dati-done-btn[data-qid="${qid}"]`);
+        if (btn) {
+            const done = doneSet.has(qid);
+            btn.textContent = done ? '✅ 已练' : '○ 未练';
+            btn.classList.toggle('done', done);
+        }
+        updateCounts();
+        if (filter === 'todo') render();
     }
 
     function questionCard(subKey, secName, q, isFav) {
         const qid = q.id;
-        ansTpl[qid] = q.a.length ? q.a.map(fn => img(subKey, fn)).join('') : '<div class="dati-none">本题暂无答案截图</div>';
+        ansTpl[qid] = q.a.length ? q.a.map(fn => aimg(subKey, fn)).join('') : '<div class="dati-none">本题暂无答案截图</div>';
         const note = noteMap[qid] || {};
         const hasNote = !!(note.content || (note.images || []).length);
+        const done = doneSet.has(qid);
         return `
         <div class="dati-qcard" id="q${qid}">
             <div class="dati-qhead">
@@ -289,8 +321,10 @@
                 <button class="dati-fav${isFav ? ' on' : ''}" data-qid="${qid}" title="收藏本题"
                         onclick="toggleFav('${qid}', '${subKey}')">${isFav ? '★' : '☆'}</button>
             </div>
-            <div class="dati-qbody">${q.q.map(fn => img(subKey, fn)).join('')}</div>
+            <div class="dati-qbody">${q.q.map(fn => qimg(subKey, fn)).join('')}</div>
             <div class="dati-actions">
+                <button class="btn btn-secondary dati-done-btn${done ? ' done' : ''}" data-qid="${qid}" title="标记是否已练过本题"
+                        onclick="toggleDone('${qid}')">${done ? '✅ 已练' : '○ 未练'}</button>
                 <button class="btn btn-secondary dati-ans-btn" data-qid="${qid}" onclick="toggleAnswer('${qid}')">查看答案</button>
                 <button class="btn btn-secondary dati-note-btn${hasNote ? ' has-note' : ''}" data-qid="${qid}" title="我的笔记"
                         onclick="toggleNotePanel('${qid}')">📝 笔记${hasNote ? ' ●' : ''}</button>
@@ -410,17 +444,41 @@
         const el = document.getElementById('q' + qid);
         if (el) {
             const d = el.closest('details.daka-group');
-            if (d && !d.open) {
-                d.open = true;
+            if (d) {
+                if (!d.open) {
+                    d.open = true;
+                    activateChapterImgs(d);
+                }
                 openChapters.add(d.dataset.chkey);
                 saveOpenChapters();
                 syncExpandBtn();
             }
+            localStorage.setItem('datiLastSeenQ', qid);   // E2：记住上次浏览/跳转的题
             el.scrollIntoView({ behavior: 'smooth', block: 'start' });
             el.classList.add('dati-flash');
             setTimeout(() => el.classList.remove('dati-flash'), 1500);
         }
         closeNavMobile();
+    }
+
+    // E2：刷新后自动定位到上次浏览的题（从收藏/未练等筛选下也能恢复）
+    // 延迟到渲染与滚动恢复完成后执行，避免被 PS.restoreScroll 覆盖
+    function restoreLastSeen() {
+        if (!lastSeenQ || filter === 'fav') return;
+        setTimeout(() => {
+            const el = document.getElementById('q' + lastSeenQ);
+            if (!el) return;
+            const d = el.closest('details.daka-group');
+            if (d) {
+                if (!d.open) { d.open = true; activateChapterImgs(d); }
+                openChapters.add(d.dataset.chkey);
+                saveOpenChapters();
+                syncExpandBtn();
+            }
+            el.scrollIntoView({ behavior: 'auto', block: 'start' });
+            el.classList.add('dati-flash');
+            setTimeout(() => el.classList.remove('dati-flash'), 1500);
+        }, 250);
     }
 
     function openNavMobile() { setNav(true); }
@@ -456,15 +514,24 @@
             if (noteOpen.has(btn.dataset.qid)) btn.classList.add('active');
         });
         root.querySelectorAll('details.daka-group').forEach(d => {
+            // 已展开的章节立即激活题干图，未展开的等展开时激活（懒加载，收起不发请求）
+            if (d.open) activateChapterImgs(d);
             d.addEventListener('toggle', () => {
                 const k = d.dataset.chkey;
-                if (d.open) openChapters.add(k); else openChapters.delete(k);
+                if (d.open) { openChapters.add(k); activateChapterImgs(d); } else { openChapters.delete(k); }
                 saveOpenChapters();
             });
         });
         syncExpandBtn();
-        // 预热当前已渲染的大题截图到 SW 缓存，离线查看不裂图（P0-1）
-        warmFigureCache([...root.querySelectorAll('.dati-qbody img, .dati-abody img')].map(i => i.src));
+    }
+
+    // ==================== 章节级懒加载（E1+P2：收起章节 0 请求，展开才下题干图） ====================
+    function activateChapterImgs(d) {
+        if (!d) return;
+        d.querySelectorAll('img[data-src]').forEach(im => {
+            im.src = im.dataset.src;
+            im.removeAttribute('data-src');
+        });
     }
 
     function toggleAllChapters() {
@@ -474,8 +541,9 @@
         const allOpen = details.every(d => d.open);
         openChapters.clear();
         for (const d of details) {
-            d.open = !allOpen;
-            if (!allOpen) openChapters.add(d.dataset.chkey);
+            const willOpen = !allOpen;
+            d.open = willOpen;
+            if (willOpen) { openChapters.add(d.dataset.chkey); activateChapterImgs(d); }
         }
         saveOpenChapters();
         syncExpandBtn();
