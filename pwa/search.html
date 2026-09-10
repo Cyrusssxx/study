@@ -96,10 +96,20 @@
         return s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
     }
 
+    // 关键词逐字符转义、字符之间允许任意空白：既高亮「LRU算法」，也高亮「LRU 算法」/「LRU&nbsp;算法」
+    // （后端匹配已忽略空白，高亮必须同步，否则命中了却看不到标记）
+    function kwReg(kw) {
+        const chars = [...(kw || '').trim()].filter(c => !/\s/.test(c)).map(escapeReg);
+        if (!chars.length) return null;
+        try { return new RegExp(chars.join('\\s*'), 'gi'); } catch (e) { return null; }
+    }
+
     // 在纯文本节点里高亮关键词（结果内容本身可能带HTML标签，先粗暴替换文本）
     function highlight(html, kw) {
+        const re = kwReg(kw);
+        if (!re) return html;
         try {
-            return html.replace(new RegExp(escapeReg(kw), 'gi'), m => `<mark>${m}</mark>`);
+            return html.replace(re, m => `<mark>${m}</mark>`);
         } catch (e) { return html; }
     }
 
@@ -118,7 +128,11 @@
 
         let html = '';
         if (results.length) {
-            html += `<div class="list-header"><span>找到 ${results.length} 道题${results.length >= 50 ? '（已达上限，可换更精确的关键词）' : ''}，点击进入对应题目</span></div>`;
+            const totalHits = data.total || results.length;
+            const tail = totalHits > results.length
+                ? `（共命中 ${totalHits} 道，已按科目均衡显示前 ${results.length} 道；可换更精确的关键词）`
+                : '，点击进入对应题目';
+            html += `<div class="list-header"><span>找到 ${totalHits} 道题${tail}</span></div>`;
             for (const q of results) {
                 html += `
                     <div class="list-item list-item-link" onclick="location.href='quiz.html?subject=${q.subject}&mode=sequential&goto=${q.id}'">
@@ -136,7 +150,9 @@
         }
         // 知识库笔记结果（P1-3）
         if (notes.length) {
-            html += `<div class="list-header notes-result-head"><span>📖 相关知识点 ${notes.length} 条，点击查看考点笔记</span></div>`;
+            const nt = data.notes_total || notes.length;
+            const ntTail = nt > notes.length ? `（共 ${nt} 条，显示前 ${notes.length} 条）` : '';
+            html += `<div class="list-header notes-result-head"><span>📖 相关知识点 ${nt} 条${ntTail}，点击查看考点笔记</span></div>`;
             for (const n of notes) {
                 const preview = (n.html || '').replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim();
                 html += `

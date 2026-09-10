@@ -13,9 +13,30 @@ const SUBJECTS = {
 const REAL_EXAM_RE = /【\s*(2\s*0\s*\d\s*\d)\s*年?\s*统\s*考\s*真\s*题\s*】/;
 const TAG_RE = /<[^>]+>/g;
 
+// 搜索文本规范化：解码常见 HTML 实体 → 统一各类空白（含不间断空格/全角空格）→ 折叠全部空白 → 小写。
+// 目的：① 实体未解码时搜「A<B」「A&B」必然失败；② 原文跨标签/跨行写成「页面<br>置换」时，
+// 去标签后会留下空格，用户搜「页面置换」就断词搜不到；③ 用户输入「LRU 算法」而原文是「LRU算法」同理。
+// 索引与关键词都过这个函数后，两边空白被同等消除，匹配即恢复为纯子串包含。
+function normText(s) {
+    return (s || '')
+        .replace(/&nbsp;/gi, ' ')
+        .replace(/&lt;/gi, '<')
+        .replace(/&gt;/gi, '>')
+        .replace(/&quot;/gi, '"')
+        .replace(/&(?:amp);/gi, '&')
+        .replace(/&#0*39;|&apos;/gi, "'")
+        .replace(/[\u00a0\u3000\ufeff]/g, ' ')
+        .replace(/\s+/g, '')
+        .toLowerCase();
+}
+
+// 搜索结果上限（总量），以及笔记结果上限
+const SEARCH_LIMIT = 100;
+const SEARCH_NOTE_LIMIT = 40;
+
 // ==================== 题库加载（内存缓存） ====================
 const _qCache = {};      // {subject: data}
-const _searchTexts = {}; // {subject: [(id, 小写去HTML文本)]}
+const _searchTexts = {}; // {subject: [(id, 规范化可搜索文本)]}
 
 async function loadQuestions(key) {
     if (_qCache[key]) return _qCache[key];
@@ -26,12 +47,24 @@ async function loadQuestions(key) {
         const m = REAL_EXAM_RE.exec((q.content || '').slice(0, 80));
         q.is_real_exam = !!m;
         q.exam_year = m ? parseInt(m[1].replace(/\s/g, ''), 10) : null;
-        const raw = (q.content || '') + ' ' + Object.values(q.options || {}).join(' ') + ' ' + (q.explanation || '');
-        texts.push([q.id, raw.replace(TAG_RE, ' ').toLowerCase()]);
+        // 索引覆盖：题干 + 选项 + 解析 + 章节/小节（章节名原先不在索引里，搜「进程与线程」这类章节名会 0 命中）
+        const raw = [
+            q.content || '',
+            Object.values(q.options || {}).join(' '),
+            q.explanation || '',
+            q.chapter || '', q.section || '', q.subsection || ''
+        ].join(' ');
+        texts.push([q.id, normText(raw.replace(TAG_RE, ' '))]);
     }
     _searchTexts[key] = texts;
     _qCache[key] = data;
     return data;
+}
+
+// 清空题库与搜索索引缓存（数据更新后调用，下次访问自动用新数据重建索引）
+function resetQuestionCache(key) {
+    if (key) { delete _qCache[key]; delete _searchTexts[key]; }
+    else { for (const k of Object.keys(_qCache)) { delete _qCache[k]; delete _searchTexts[k]; } }
 }
 
 async function getQuestionById(qid) {
@@ -70,12 +103,25 @@ async function loadNotes(subject) {
     const texts = [];
     for (const ch of (data.chapters || [])) {
         for (const sec of (ch.sections || [])) {
-            texts.push({
+            // 小节自身正文（含章节名/小节名，便于按章节名检索）
+            if (sec.html) texts.push({
                 chapter: ch.chapter || '',
                 section: sec.section || '',
                 html: sec.html || '',
-                text: (sec.html || '').replace(TAG_RE, ' ').toLowerCase()
+                text: normText([ch.chapter || '', sec.section || '', sec.html || ''].join(' ').replace(TAG_RE, ' '))
             });
+            // 子小节正文：笔记正文约 80% 体量在 subsections 里（cn 11.7万字/os 30.9万字），
+            // 原先只索引 section.html 会导致绝大部分知识点搜不到。子小节在 notes.html 里有独立
+            // data-sec 锚点（.notes-sub[data-sec]），因此可作为独立结果条目并精确跳转。
+            for (const sb of (sec.subsections || [])) {
+                texts.push({
+                    chapter: ch.chapter || '',
+                    section: sb.section || sec.section || '',
+                    html: sb.html || '',
+                    text: normText([ch.chapter || '', sec.section || '', sb.section || '', sb.html || '']
+                        .join(' ').replace(TAG_RE, ' '))
+                });
+            }
         }
     }
     _notesIndex[subject] = texts;
@@ -612,19 +658,37 @@ async function api(url, opts = {}) {
 
         // ---------- 搜题（题目 + 知识库笔记） ----------
         if (seg[1] === 'search') {
-            const kw = (p.get('q') || '').trim().toLowerCase();
+            const kw = (p.get('q') || '').trim();
             const subject = p.get('subject') || '';
             if (!kw) return jsonResp({ results: [], total: 0, notes: [], notes_total: 0 });
+            const kwNorm = normText(kw);           // 与索引同规则：去空白/解码实体/小写
+            if (!kwNorm) return jsonResp({ results: [], total: 0, notes: [], notes_total: 0 });
             const keys = SUBJECTS[subject] ? [subject] : Object.keys(SUBJECTS);
-            const results = [];
-            outer:
+
+            // ---- 题库：先分科收集全部命中，再按科目「轮转取样」 ----
+            // 原实现是在单循环里累计到 50 就 break outer：只要第一个科目命中够多，
+            // 后面科目的结果一条都不会出现（搜「进程」时 os 独占 50 条，计组/计网全丢）。
+            const hitsBySub = {};                 // subject -> [qid...]
+            const qmaps = {};
             for (const key of keys) {
                 const data = await loadQuestions(key);
                 const qmap = {};
                 for (const q of data.questions) qmap[q.id] = q;
-                for (const [qid, text] of _searchTexts[key]) {
-                    if (!text.includes(kw)) continue;
-                    const q = qmap[qid];
+                qmaps[key] = qmap;
+                const hits = [];
+                for (const [qid, text] of _searchTexts[key]) if (text.includes(kwNorm)) hits.push(qid);
+                hitsBySub[key] = hits;
+            }
+            const total = Object.values(hitsBySub).reduce((a, b) => a + b.length, 0);
+            const results = [];
+            for (let i = 0; results.length < SEARCH_LIMIT; i++) {
+                let added = false;
+                for (const key of keys) {          // 每轮每科各取一条 → 各科目结果都不会被挤掉
+                    const hits = hitsBySub[key];
+                    if (i >= hits.length) continue;
+                    const qid = hits[i];
+                    const q = qmaps[key][qid];
+                    if (!q) continue;
                     results.push({
                         id: qid, subject: key, subject_name: SUBJECTS[key].name,
                         number: q.number, content: q.content || '', options: q.options,
@@ -632,24 +696,39 @@ async function api(url, opts = {}) {
                         is_real_exam: q.is_real_exam || false,
                         exam_year: q.exam_year || null
                     });
-                    if (results.length >= 50) break outer;
+                    added = true;
+                    if (results.length >= SEARCH_LIMIT) break;
                 }
+                if (!added) break;                 // 所有科目都取完了
             }
-            // 同时检索知识库笔记正文，最多 20 条
-            const notesResults = [];
-            notesOuter:
+
+            // ---- 知识库笔记：同样轮转取样（索引已含 subsections 正文） ----
+            const noteHitsBySub = {};
             for (const key of keys) {
                 await loadNotes(key);
-                for (const n of (_notesIndex[key] || [])) {
-                    if (!n.text.includes(kw)) continue;
+                noteHitsBySub[key] = (_notesIndex[key] || []).filter(n => n.text.includes(kwNorm));
+            }
+            const notesTotal = Object.values(noteHitsBySub).reduce((a, b) => a + b.length, 0);
+            const notesResults = [];
+            for (let i = 0; notesResults.length < SEARCH_NOTE_LIMIT; i++) {
+                let added = false;
+                for (const key of keys) {
+                    const hits = noteHitsBySub[key];
+                    if (i >= hits.length) continue;
+                    const n = hits[i];
                     notesResults.push({
                         subject: key, subject_name: SUBJECTS[key].name,
                         chapter: n.chapter, section: n.section, html: n.html
                     });
-                    if (notesResults.length >= 20) break notesOuter;
+                    added = true;
+                    if (notesResults.length >= SEARCH_NOTE_LIMIT) break;
                 }
+                if (!added) break;
             }
-            return jsonResp({ results, total: results.length, notes: notesResults, notes_total: notesResults.length });
+            return jsonResp({
+                results, total, shown: results.length,
+                notes: notesResults, notes_total: notesTotal
+            });
         }
 
         // ---------- 笔记 ----------
