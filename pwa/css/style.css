@@ -342,6 +342,54 @@ body {
     color: var(--warning);
 }
 
+/* 「不熟 / 不会」标记按钮（刷题卡片右上角，收藏按钮旁） */
+.mark-btns {
+    display: inline-flex;
+    gap: 6px;
+    margin-right: 8px;
+    align-items: center;
+}
+.mark-btn {
+    font-size: 0.78rem;
+    line-height: 1;
+    padding: 5px 10px;
+    border-radius: 12px;
+    border: 1px solid var(--border);
+    background: none;
+    color: var(--text-light);
+    cursor: pointer;
+    transition: all 0.2s;
+    white-space: nowrap;
+}
+.mark-btn:hover {
+    border-color: var(--primary);
+    color: var(--primary);
+}
+/* 不熟 → 黄 */
+.mark-btn.mark-unfamiliar {
+    background: rgba(212, 175, 55, 0.18);
+    border-color: #d4af37;
+    color: #d4af37;
+    font-weight: 600;
+}
+/* 不会 → 红 */
+.mark-btn.mark-dontknow {
+    background: rgba(220, 53, 69, 0.14);
+    border-color: #dc3545;
+    color: #dc3545;
+    font-weight: 600;
+}
+.dark .mark-btn.mark-unfamiliar {
+    color: #e6c74f;
+    border-color: #e6c74f;
+    background: rgba(230, 199, 79, 0.16);
+}
+.dark .mark-btn.mark-dontknow {
+    color: #ff6b6b;
+    border-color: #ff6b6b;
+    background: rgba(255, 107, 107, 0.16);
+}
+
 /* 答题页面 */
 .quiz-container {
     max-width: 800px;

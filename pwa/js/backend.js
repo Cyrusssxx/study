@@ -204,7 +204,7 @@ function openDB() {
                 prog.createIndex('by_qid', 'question_id');
                 prog.createIndex('by_subject', 'subject');
             }
-            for (const s of ['wrong', 'favorites', 'notes']) {
+            for (const s of ['wrong', 'favorites', 'notes', 'unfamiliar', 'dontknow']) {
                 if (!db.objectStoreNames.contains(s)) db.createObjectStore(s, { keyPath: 'question_id' });
             }
             if (!db.objectStoreNames.contains('exams')) {
@@ -304,11 +304,15 @@ async function subjectStats(subject) {
     const correct = ids.filter(k => statuses[k].is_correct).length;
     const wrongs = (await dbAll('wrong')).filter(w => (!subject || w.subject === subject) && !w.is_resolved).length;
     const favs = (await dbAll('favorites')).filter(f => !subject || f.subject === subject).length;
+    const unfams = (await dbAll('unfamiliar')).filter(f => !subject || f.subject === subject).length;
+    const dontknows = (await dbAll('dontknow')).filter(f => !subject || f.subject === subject).length;
     return {
         total_answered: ids.length,
         correct_count: correct,
         wrong_count: wrongs,
         favorite_count: favs,
+        unfamiliar_count: unfams,
+        dontknow_count: dontknows,
         accuracy: ids.length ? Math.round(correct / ids.length * 1000) / 10 : 0,
         due_review_count: (await getDueReview(subject)).count
     };
@@ -408,6 +412,8 @@ async function api(url, opts = {}) {
 
             const statuses = await latestStatuses(subject);
             const favSet = new Set((await dbAll('favorites')).filter(f => f.subject === subject).map(f => f.question_id));
+            const unfamSet = new Set((await dbAll('unfamiliar')).filter(f => f.subject === subject).map(f => f.question_id));
+            const dontknowSet = new Set((await dbAll('dontknow')).filter(f => f.subject === subject).map(f => f.question_id));
 
             if (mode === 'random') {
                 qs = qs.slice();
@@ -425,6 +431,12 @@ async function api(url, opts = {}) {
                 qs = qs.filter(q => wrongIds.has(q.id));
             } else if (mode === 'favorite') {
                 qs = qs.filter(q => favSet.has(q.id));
+            } else if (mode === 'unfamiliar') {
+                // 不熟标记：只出不熟的题（可与错题交叠加倍复习）
+                qs = qs.filter(q => unfamSet.has(q.id));
+            } else if (mode === 'dontknow') {
+                // 不会标记：只出完全不会的题
+                qs = qs.filter(q => dontknowSet.has(q.id));
             } else if (mode === 'fav_real') {
                 // 收藏+真题混合：既是收藏题又是统考真题
                 qs = qs.filter(q => favSet.has(q.id) && q.is_real_exam);
@@ -472,6 +484,8 @@ async function api(url, opts = {}) {
             const result = pageQs.map(q => ({
                 ...q,
                 is_favorited: favSet.has(q.id),
+                is_unfamiliar: unfamSet.has(q.id),
+                is_dontknow: dontknowSet.has(q.id),
                 last_status: statuses[q.id] || null,
                 note: notes[q.id] ? notes[q.id].content : '',
                 note_images: (notes[q.id] && notes[q.id].images) || []
@@ -529,6 +543,48 @@ async function api(url, opts = {}) {
             }
             await dbPut('favorites', { question_id: qid, subject, added_at: now() });
             return jsonResp({ question_id: qid, is_favorited: true });
+        }
+
+        // ---------- 不熟/不会 标记切换 ----------
+        // /api/mark/<unfamiliar|dontknow>/<qid>
+        if (seg[1] === 'mark') {
+            const kind = seg[2];
+            const qid = seg[3];
+            if (kind !== 'unfamiliar' && kind !== 'dontknow') {
+                return jsonResp({ error: '无效的标记类型' }, 400);
+            }
+            const subject = qid.split('_')[0];
+            if (!SUBJECTS[subject]) return jsonResp({ error: '无效的题目ID' }, 400);
+            const store = kind === 'unfamiliar' ? 'unfamiliar' : 'dontknow';
+            const key = kind === 'unfamiliar' ? 'is_unfamiliar' : 'is_dontknow';
+            const existing = await dbGet(store, qid);
+            if (existing) {
+                await dbDelete(store, qid);
+                return jsonResp({ question_id: qid, [key]: false });
+            }
+            await dbPut(store, { question_id: qid, subject, added_at: now() });
+            return jsonResp({ question_id: qid, [key]: true });
+        }
+
+        // ---------- 不熟/不会 列表 ----------
+        if (seg[1] === 'marks') {
+            const subject = p.get('subject') || null;
+            const kind = p.get('kind') || 'all'; // unfamiliar | dontknow | all
+            const list = [];
+            if (kind === 'unfamiliar' || kind === 'all') {
+                list.push(...(await dbAll('unfamiliar')).filter(m => !subject || m.subject === subject));
+            }
+            if (kind === 'dontknow' || kind === 'all') {
+                list.push(...(await dbAll('dontknow')).filter(m => !subject || m.subject === subject));
+            }
+            const result = [];
+            for (const m of list) {
+                const q = await getQuestionById(m.question_id);
+                if (!q) continue;
+                result.push({ ...m, ...q });
+            }
+            result.sort((a, b) => (a.added_at > b.added_at ? -1 : 1));
+            return jsonResp({ marks: result, total: result.length });
         }
 
         // ---------- 错题列表 ----------
@@ -866,6 +922,8 @@ async function api(url, opts = {}) {
                 progress: strip(await dbAll('progress'), 'pk'),
                 wrong: await dbAll('wrong'),
                 favorites: await dbAll('favorites'),
+                unfamiliar: await dbAll('unfamiliar'),
+                dontknow: await dbAll('dontknow'),
                 notes: await dbAll('notes'),
                 exams: strip(await dbAll('exams'), 'id'),
                 daka: await dbAll('daka_progress')
@@ -876,7 +934,7 @@ async function api(url, opts = {}) {
             const db = await openDB();
             const counts = {};
             // daka 存于备份的 'daka' 键，落库到 daka_progress store
-            const storeMap = { progress: 'progress', wrong: 'wrong', favorites: 'favorites', notes: 'notes', exams: 'exams', daka: 'daka_progress' };
+            const storeMap = { progress: 'progress', wrong: 'wrong', favorites: 'favorites', unfamiliar: 'unfamiliar', dontknow: 'dontknow', notes: 'notes', exams: 'exams', daka: 'daka_progress' };
             for (const [key, store] of Object.entries(storeMap)) {
                 const rows = Array.isArray(body[key]) ? body[key] : [];
                 await new Promise((res, rej) => {

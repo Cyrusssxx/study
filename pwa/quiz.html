@@ -138,7 +138,7 @@
     const SUBJECT = _params.get('subject') || 'os';
     const NOTES_SUBJECTS = ['os', 'co', 'ds', 'cn'];  // 已有考点笔记的科目，徽章白名单化防死链
     // 可在练习设置面板内热切换的模式（无需退出页面）
-    const SWITCHABLE_MODES = ['sequential', 'favorite', 'real', 'fav_real'];
+    const SWITCHABLE_MODES = ['sequential', 'favorite', 'unfamiliar', 'dontknow', 'real', 'fav_real'];
     let MODE = _params.get('mode') || '';
     let CHAPTER = _params.get('chapter') || '';
     // 记住上次选择的模式：无显式 mode 参数且无定位参数时沿用偏好（首页按钮等显式入口以参数为准）
@@ -175,6 +175,8 @@
         'random': '随机模式',
         'wrong': '错题模式',
         'favorite': '收藏模式',
+        'unfamiliar': '不熟模式',
+        'dontknow': '不会模式',
         'unanswered': '未做模式',
         'real': '真题模式',
         'fav_real': '收藏+真题',
@@ -447,7 +449,7 @@
                 document.getElementById('questionArea').innerHTML = `
                     <div class="empty-state">
                         <h3>暂无题目</h3>
-                        <p>${MODE === 'wrong' ? '恭喜！没有错题需要复习' : MODE === 'review' ? '今日没有到期的复习题 🎉' : MODE === 'favorite' ? '还没有收藏任何题目' : MODE === 'fav_real' ? '还没有收藏任何统考真题（先在收藏模式收藏真题，或直接用真题模式）' : MODE === 'code' ? '该科目暂无含代码的题目' : '题库为空'}</p>
+                        <p>${MODE === 'wrong' ? '恭喜！没有错题需要复习' : MODE === 'review' ? '今日没有到期的复习题 🎉' : MODE === 'favorite' ? '还没有收藏任何题目' : MODE === 'unfamiliar' ? '还没有标记"不熟"的题目（刷题时点卡片右上角 🟡不熟 即可标记）' : MODE === 'dontknow' ? '还没有标记"不会"的题目（刷题时点卡片右上角 🔴不会 即可标记）' : MODE === 'fav_real' ? '还没有收藏任何统考真题（先在收藏模式收藏真题，或直接用真题模式）' : MODE === 'code' ? '该科目暂无含代码的题目' : '题库为空'}</p>
                         <a href="index.html" class="btn btn-primary">返回首页</a>
                     </div>
                 `;
@@ -772,6 +774,10 @@
                             ? `<a class="chapter-badge chapter-badge-link" href="notes.html?subject=${SUBJECT}&goto=${encodeURIComponent(q.subsection || q.section)}&q=${encodeURIComponent((q.content||'').slice(0,60))}" target="_blank" title="点击新窗口查看该知识点笔记（已定位到小节）">${q.chapter} · ${q.section} 📖</a>`
                             : `<span class="chapter-badge" title="题目来源章节">${q.chapter}${q.section ? ' · ' + q.section : ''}</span>`) : ''}
                     </div>
+                    <span class="mark-btns">
+                        <button class="mark-btn ${q.is_unfamiliar ? 'mark-unfamiliar' : ''}" onclick="toggleMark('unfamiliar','${q.id}')" title="${q.is_unfamiliar ? '取消"不熟"标记' : '标记为不熟（黄色）'}">不熟</button>
+                        <button class="mark-btn ${q.is_dontknow ? 'mark-dontknow' : ''}" onclick="toggleMark('dontknow','${q.id}')" title="${q.is_dontknow ? '取消"不会"标记' : '标记为不会（红色）'}">不会</button>
+                    </span>
                     <button class="btn-icon ${isFav ? 'favorited' : ''}" onclick="toggleFavorite('${q.id}')" title="${isFav ? '取消收藏' : '收藏'}">
                         ${isFav ? '★' : '☆'}
                     </button>
@@ -1182,6 +1188,28 @@
             if (MODE === 'favorite' || MODE === 'fav_real') updateFavWrongCount();
         } catch (e) {
             console.error('收藏失败:', e);
+        }
+    }
+
+    async function toggleMark(kind, questionId) {
+        // kind: 'unfamiliar' | 'dontknow' —— 标记「不熟」（黄）或「不会」（红）
+        try {
+            const resp = await api(`/api/mark/${kind}/${questionId}`, {method: 'POST'});
+            const result = await resp.json();
+            const q = questions[currentIndex];
+            if (q.id === questionId) {
+                if (kind === 'unfamiliar') q.is_unfamiliar = !!result.is_unfamiliar;
+                else q.is_dontknow = !!result.is_dontknow;
+                renderQuestion();
+            }
+            // 当前正处于该标记模式：切掉该题后若集合已空，刷新列表显示空状态
+            if ((MODE === 'unfamiliar' && kind === 'unfamiliar') || (MODE === 'dontknow' && kind === 'dontknow')) {
+                if ((MODE === 'unfamiliar' && !q.is_unfamiliar) || (MODE === 'dontknow' && !q.is_dontknow)) {
+                    loadQuizQuestions();
+                }
+            }
+        } catch (e) {
+            console.error('标记失败:', e);
         }
     }
 
