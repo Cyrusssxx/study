@@ -128,6 +128,65 @@ async function loadNotes(subject) {
     return data;
 }
 
+// ==================== 算法讲义 / 思维导图 搜索索引（懒加载） ====================
+// algo_notes.json 与 *_map.json 不在题库/笔记索引内，导致讲义页、导图页可见的内容全站搜不到。
+// 这里按需加载建立索引：algo 条目用其 _id（algo.html#id 锚点直达），map 节点用与 map.html
+// assignIds 相同的算法生成 _id（map.html?subject=xx&goto=id 直达）。
+const _algoIndex = [];
+let _algoLoaded = false;
+async function loadAlgoIndex() {
+    if (_algoLoaded) return;
+    _algoLoaded = true;
+    try {
+        const resp = await fetch('data/algo_notes.json');
+        const data = await resp.json();
+        // 与 algo.html 相同的 id 生成规则：章节卡 ch-N 占号，h 标题 sec-N 递增（全局）
+        let anchorSeq = 0;
+        let curH = null;   // 当前最近标题：正文/代码归属其下
+        for (const c of (data.chapters || [])) {
+            anchorSeq++;   // 章节卡 ch-N
+            for (const it of (c.items || [])) {
+                if (it.t === 'h') {
+                    anchorSeq++;
+                    const id = 'sec-' + anchorSeq;
+                    curH = { chapter: c.title || '', id, page: it.page || '' };
+                    _algoIndex.push({ chapter: c.title || '', id, page: it.page || '',
+                        text: normText((c.title || '') + ' ' + (it.text || '')) });
+                } else if (it.t !== 'code' && curH && (it.text || '').trim()) {
+                    // 正文段落归属当前标题，命中可跳到该标题
+                    _algoIndex.push({ chapter: c.title || '', id: curH.id, page: curH.page,
+                        text: normText((curH.chapter || '') + ' ' + (it.text || '')) });
+                }
+            }
+        }
+    } catch (e) { /* 讲义加载失败不阻塞搜索 */ }
+}
+
+const _mapIndex = [];
+let _mapLoaded = false;
+async function loadMapIndex() {
+    if (_mapLoaded) return;
+    _mapLoaded = true;
+    try {
+        for (const [key, json] of [['co', 'co_map.json'], ['os', 'os_map.json']]) {
+            const resp = await fetch(`data/${json}`);
+            const data = await resp.json();
+            const walk = (nodes, path) => {
+                for (const n of (nodes || [])) {
+                    const p = path ? path + ' → ' + (n.n || '') : (n.n || '');
+                    if (n._id) _mapIndex.push({ subject: key, id: n._id, path: p, text: normText(p) });
+                    walk(n.c || [], p);
+                }
+            };
+            data.roots.forEach((r, i) => { r._idx = i; (function assignIds(node, parent) {
+                node._id = parent == null ? String(node._idx) : parent + '-' + node._idx;
+                (node.c || []).forEach((ch, j) => { ch._idx = j; assignIds(ch, node._id); });
+            })(r, null); });
+            walk(data.roots, '');
+        }
+    } catch (e) { /* 导图加载失败不阻塞搜索 */ }
+}
+
 // ==================== IndexedDB ====================
 const DB_NAME = 'quiz408';
 const DB_VER = 2;
@@ -725,9 +784,37 @@ async function api(url, opts = {}) {
                 }
                 if (!added) break;
             }
+
+            // ---- 算法讲义（algo_notes.json，懒加载；命中跳 algo.html#条目id） ----
+            let algoResults = [];
+            let algoTotal = 0;
+            if (!subject || subject === 'os') {      // 讲义为算法通用内容，全库搜索时纳入
+                await loadAlgoIndex();
+                algoTotal = _algoIndex.filter(a => a.text.includes(kwNorm)).length;
+                algoResults = _algoIndex.filter(a => a.text.includes(kwNorm)).slice(0, 20)
+                    .map(a => ({ type: 'algo', chapter: a.chapter, id: a.id, page: a.page, text: a.text.slice(0, 120) }));
+            }
+
+            // ---- 思维导图（co/os_map.json，懒加载；命中跳 map.html?subject=xx&goto=节点id） ----
+            let mapResults = [];
+            let mapTotal = 0;
+            const mapSubjects = SUBJECTS[subject] ? (subject === 'co' || subject === 'os' ? [subject] : []) : ['co', 'os'];
+            if (mapSubjects.length) {
+                await loadMapIndex();
+                const hits = _mapIndex.filter(m => mapSubjects.includes(m.subject) && m.text.includes(kwNorm));
+                mapTotal = hits.length;
+                mapResults = hits.slice(0, 10).map(m => ({
+                    type: 'map', subject: m.subject,
+                    subject_name: SUBJECTS[m.subject] ? SUBJECTS[m.subject].name : m.subject,
+                    id: m.id, path: m.path
+                }));
+            }
+
             return jsonResp({
                 results, total, shown: results.length,
-                notes: notesResults, notes_total: notesTotal
+                notes: notesResults, notes_total: notesTotal,
+                algo: algoResults, algo_total: algoTotal,
+                map: mapResults, map_total: mapTotal
             });
         }
 

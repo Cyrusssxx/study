@@ -50,7 +50,20 @@ const FIXTURES = {
   },
   'notes/co_notes.json': { subject: 'co', title: 'CO', chapters: [] },
   'notes/ds_notes.json': { subject: 'ds', title: 'DS', chapters: [] },
-  'notes/cn_notes.json': { subject: 'cn', title: 'CN', chapters: [] }
+  'notes/cn_notes.json': { subject: 'cn', title: 'CN', chapters: [] },
+  'algo_notes.json': {
+    meta: { source: '算法讲义' },
+    chapters: [{ title: 'ch3 链表', items: [
+      { t: 'h', lvl: 3, text: '头插法复习', page: 71 },
+      { t: 'h', lvl: 3, text: '快慢指针找中点' },
+      { t: 'p', text: '头插法的正文：每次插入都在头部' }
+    ] }]
+  },
+  'co_map.json': {
+    title: '计组导图',
+    roots: [{ n: '第一章', c: [{ n: '补码' }, { n: 'Cache' }] }]
+  },
+  'os_map.json': { title: 'OS 导图', roots: [] }
 };
 
 let pass = 0, fail = 0;
@@ -139,6 +152,24 @@ function assert(cond, msg) { if (cond) { pass++; console.log('  ✓', msg); } el
     assert(r.total === 0 && r.results.length === 0, '空白关键词返回空结果');
     const r2 = await search('这个词肯定不存在xyzzy');
     assert(r2.total === 0 && (r2.notes || []).length === 0, '无命中时 total/notes 均为 0');
+  }
+
+  // 9) 算法讲义 / 思维导图已纳入搜索索引（懒加载）
+  {
+    const r = await search('头插法');
+    assert((r.algo || []).length > 0 && r.algo_total > 0,
+      `算法讲义可搜到（algo ${(r.algo || []).length} 条, total ${r.algo_total}）`);
+    const a = (r.algo || [])[0];
+    assert(a && a.id === 'sec-2' && a.chapter === 'ch3 链表',
+      `algo 结果带 id/chapter 供跳转（实际 ${a && a.id}/${a && a.chapter}）`);
+    const r2 = await search('补码');
+    assert((r2.map || []).length > 0, `导图节点可搜到（map ${(r2.map || []).length} 条）`);
+    const m = (r2.map || [])[0];
+    assert(m && m.id === '0-0' && m.subject === 'co',
+      `map 结果带 subject/id 供跳转（实际 ${m && m.id}/${m && m.subject}）`);
+    // 单科过滤时 map 仅返回对应科目
+    const r3 = await search('补码', 'os');
+    assert((r3.map || []).length === 0, '单科过滤：os 下不含 co 导图结果');
   }
 
   console.log(`\n结果：${pass} 通过 / ${fail} 失败`);

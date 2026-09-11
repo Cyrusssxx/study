@@ -291,6 +291,11 @@
         body.innerHTML = html;
         document.getElementById('algoToc').innerHTML = buildNav(data.chapters);
         setupScrollSpy();
+        // 搜索结果直达：algo.html#条目id
+        if (location.hash) {
+            const target = document.getElementById(decodeURIComponent(location.hash.slice(1)));
+            if (target) setTimeout(() => target.scrollIntoView({ block: 'start' }), 120);
+        }
     }
 
     /* ---------- 目录收起/展开（与考点笔记同款：WAAPI 合成器属性动画 + 本地记忆） ---------- */

@@ -96,6 +96,10 @@
         return s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
     }
 
+    function esc(s) {
+        return String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+    }
+
     // 关键词逐字符转义、字符之间允许任意空白：既高亮「LRU算法」，也高亮「LRU 算法」/「LRU&nbsp;算法」
     // （后端匹配已忽略空白，高亮必须同步，否则命中了却看不到标记）
     function kwReg(kw) {
@@ -162,6 +166,41 @@
                             <span class="item-info">${n.chapter || ''}${n.section ? ' · ' + n.section : ''}</span>
                         </div>
                         <div class="item-content">${highlight(preview, kw)}</div>
+                    </div>`;
+            }
+        }
+        // 算法讲义结果（algo_notes.json 懒加载索引）
+        const algo = data.algo || [];
+        if (algo.length) {
+            const at = data.algo_total || algo.length;
+            const atTail = at > algo.length ? `（共 ${at} 条，显示前 ${algo.length} 条）` : '';
+            html += `<div class="list-header notes-result-head"><span>📘 算法讲义 ${at} 条${atTail}，点击直达讲义对应章节</span></div>`;
+            for (const a of algo) {
+                const preview = (a.text || '').replace(/\s+/g, ' ');
+                html += `
+                    <div class="list-item list-item-link" onclick="location.href='algo.html#${encodeURIComponent(a.id)}'">
+                        <div class="item-header">
+                            <span class="item-subject">算法讲义</span>
+                            <span class="item-info">${a.chapter || ''}${a.page ? ' · 讲义 p' + a.page : ''}</span>
+                        </div>
+                        <div class="item-content">${highlight(esc(preview), kw)}</div>
+                    </div>`;
+            }
+        }
+        // 思维导图结果（co/os_map.json 懒加载索引）
+        const maps = data.map || [];
+        if (maps.length) {
+            const mt = data.map_total || maps.length;
+            const mtTail = mt > maps.length ? `（共 ${mt} 条，显示前 ${maps.length} 条）` : '';
+            html += `<div class="list-header notes-result-head"><span>🗺️ 思维导图 ${mt} 条${mtTail}，点击定位导图节点</span></div>`;
+            for (const m of maps) {
+                html += `
+                    <div class="list-item list-item-link" onclick="location.href='map.html?subject=${m.subject}&goto=${encodeURIComponent(m.id)}'">
+                        <div class="item-header">
+                            <span class="item-subject">${m.subject_name} · 导图</span>
+                            <span class="item-info">节点 ${m.id}</span>
+                        </div>
+                        <div class="item-content">${highlight(esc(m.path || ''), kw)}</div>
                     </div>`;
             }
         }

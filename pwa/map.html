@@ -613,6 +613,11 @@
                     onMapSearch();
                 }
                 PS.restoreScroll();
+                // 搜索结果直达：map.html?subject=xx&goto=节点id
+                const gotoParam = _params.get('goto');
+                if (gotoParam) {
+                    setTimeout(() => gotoNode(gotoParam), 120);
+                }
             } catch (err) {
                 document.getElementById('mapSubtitle').textContent = '导图数据加载失败：' + err.message;
                 document.getElementById('mapRoot').innerHTML = '<div class="map-empty">加载失败，请检查网络后刷新。</div>';
