@@ -929,8 +929,9 @@ body {
 }
 
 .num-btn.done {
-    border: 1px solid #c8cdd4;
-    background: var(--light);
+    border: 1px solid #81c784;
+    background: #c8e6c9;
+    color: #1b5e20;
 }
 
 .num-btn.current {
@@ -2423,7 +2424,9 @@ a.review-chip-all:hover {
 }
 
 .dark .num-btn.done {
-    border-color: #4a4f58;
+    border-color: #3c5c40;
+    background: #1c2f22;
+    color: #81c784;
 }
 
 .dark .num-btn.current.correct { color: #81c784; }

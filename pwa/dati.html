@@ -131,6 +131,7 @@
             <button class="dati-chip" id="fReal" onclick="setFilter('real')">统考真题 <span class="dati-count" id="cntReal"></span></button>
             <button class="dati-chip" id="fFav" onclick="setFilter('fav')">★ 我的收藏 <span class="dati-count" id="cntFav"></span></button>
             <button class="dati-chip" id="fTodo" onclick="setFilter('todo')">○ 未练 <span class="dati-count" id="cntTodo"></span></button>
+            <button class="dati-chip" id="fDone" onclick="setFilter('done')">✅ 已练 <span class="dati-count" id="cntDone"></span></button>
             <button class="dati-chip" id="datiExpandAll" onclick="toggleAllChapters()">展开全部</button>
             <select class="dati-year" id="yearSel" onchange="setYear(this.value)" style="display:none"></select>
         </div>
@@ -150,7 +151,7 @@
     <script>
     let DATI = null;
     let activeSubject = localStorage.getItem('datiSubject') || 'os';
-    let filter = localStorage.getItem('datiFilter') || 'all';   // all | real | fav
+    let filter = localStorage.getItem('datiFilter') || 'all';   // all | real | fav | todo | done
     let year = localStorage.getItem('datiYear') || '';          // '' = 全部年份
     let favSet = new Set();      // 当前科目已收藏的题 id
     const ansTpl = {};           // 答案图片 HTML 模板，首次展开时注入
@@ -194,6 +195,7 @@
             document.getElementById('fReal').classList.toggle('active', filter === 'real');
             document.getElementById('fFav').classList.toggle('active', filter === 'fav');
             document.getElementById('fTodo').classList.toggle('active', filter === 'todo');
+            document.getElementById('fDone').classList.toggle('active', filter === 'done');
             document.getElementById('yearSel').style.display = filter === 'real' ? '' : 'none';
             document.getElementById('yearSel').value = year;
             render();
@@ -265,6 +267,7 @@
         document.getElementById('fReal').classList.toggle('active', f === 'real');
         document.getElementById('fFav').classList.toggle('active', f === 'fav');
         document.getElementById('fTodo').classList.toggle('active', f === 'todo');
+        document.getElementById('fDone').classList.toggle('active', f === 'done');
         render();
     }
 
@@ -274,6 +277,7 @@
         if (filter === 'real') return q.real && (!year || String(q.year) === String(year));
         if (filter === 'fav') return favSet.has(q.id);
         if (filter === 'todo') return !doneSet.has(q.id);
+        if (filter === 'done') return doneSet.has(q.id);
         return true;
     }
 
@@ -291,6 +295,7 @@
         document.getElementById('cntReal').textContent = visibleQuestionsOf(sub, q => q.real).length;
         document.getElementById('cntFav').textContent = visibleQuestionsOf(sub, q => favSet.has(q.id)).length;
         document.getElementById('cntTodo').textContent = visibleQuestionsOf(sub, q => !doneSet.has(q.id)).length;
+        document.getElementById('cntDone').textContent = visibleQuestionsOf(sub, q => doneSet.has(q.id)).length;
     }
 
     // ==================== 已练标记（P3：只看未练） ====================
@@ -304,7 +309,8 @@
             btn.classList.toggle('done', done);
         }
         updateCounts();
-        if (filter === 'todo') render();
+        if (filter === 'todo' || filter === 'done') { render(); return; }
+        renderNav();   // 其它筛选下题单不变，但导航的已练标识要刷新
     }
 
     function questionCard(subKey, secName, q, isFav) {
@@ -414,7 +420,7 @@
                 const qs = sec.questions.filter(q => passFilter(q));
                 if (!qs.length) continue;
                 const chips = qs.map(q =>
-                    `<button class="num-btn" data-jump="${q.id}" onclick="jumpTo('${q.id}')" title="${sec.name}">${q.num}</button>`
+                    `<button class="num-btn${doneSet.has(q.id) ? ' done' : ''}" data-jump="${q.id}" onclick="jumpTo('${q.id}')" title="${sec.name}${doneSet.has(q.id) ? ' · 已练' : ''}">${doneSet.has(q.id) ? '✅' : ''}${q.num}</button>`
                 ).join('');
                 secs.push(`<div class="dati-nav-sec">${sec.name}<span class="dati-count">${qs.length}</span></div>
                     <div class="num-grid">${chips}</div>`);

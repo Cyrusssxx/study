@@ -4,7 +4,7 @@ const fs = require('fs');
 const { JSDOM } = require('jsdom');
 
 const dom = new JSDOM(`<!doctype html><html><body>
-  <div id="cntAll"></div><div id="cntReal"></div><div id="cntFav"></div><div id="cntTodo"></div>
+  <div id="cntAll"></div><div id="cntReal"></div><div id="cntFav"></div><div id="cntTodo"></div><div id="cntDone"></div>
 </body></html>`, { url: 'https://x.test/dati.html' });
 const { window } = dom;
 const document = window.document;
@@ -31,6 +31,7 @@ window.filter = 'all';
 window.year = '';
 window.openChapters = new Set();
 window.lastSeenQ = '';
+window.renderNav = function(){ window._navRendered = (window._navRendered || 0) + 1; };
 window.activeSubject = 'os';
 window.saveDoneSet = function(){ window.localStorage.setItem('datiDone', JSON.stringify([...window.doneSet])); };
 window.updateCounts = function(){};
@@ -55,7 +56,7 @@ function extractFn(src, name) {
 // 模板字符串：字面部分不动，${...} 插值区是 JS 代码 → 递归 windowify（避免漏掉 ${q.year}/${fn => qimg(...)}）
 function windowifyIdentifiers(code, names_) {
   const names = names_ || ['doneSet', 'lastSeenQ', 'openChapters', 'ansTpl', 'noteMap', 'noteOpen',
-    'favSet', 'DATI', 'filter', 'year', 'saveDoneSet', 'localStorage', 'qimg', 'aimg', 'activeSubject'];
+    'favSet', 'DATI', 'filter', 'year', 'saveDoneSet', 'localStorage', 'qimg', 'aimg', 'activeSubject', 'renderNav'];
 
   function matchName(at) {
     for (const nm of names) {
@@ -261,6 +262,11 @@ window.DATI = [sub];
   window.filter = 'real'; assert(window.passFilter(q1) === true && window.passFilter(q2) === false, 'real 档不变(非真题过滤)');
   window.favSet.add('dati_os_002');
   window.filter = 'fav'; assert(window.passFilter(q2) === true && window.passFilter(q1) === false, 'fav 档不变');
+  // done 档：只放行已练（与 todo 互补）
+  window.doneSet.add('dati_os_001');
+  window.filter = 'done';
+  assert(window.passFilter(q1) === true, 'done 下已练题通过');
+  assert(window.passFilter(q2) === false, 'done 下未练题被过滤');
   window.filter = 'all';
 }
 
@@ -270,6 +276,7 @@ window.DATI = [sub];
   window.doneSet.add('dati_os_001');
   window.updateCounts();
   assert(document.getElementById('cntTodo').textContent === '1', '未练计数=1 (2题已练1)');
+  assert(document.getElementById('cntDone').textContent === '1', '已练计数=1');
   assert(document.getElementById('cntAll').textContent === '2', '全部计数=2');
 }
 
