@@ -3495,6 +3495,16 @@ h3.algo-h:first-child, h4.algo-h:first-child, h5.algo-h:first-child { margin-top
     text-align: center;
 }
 
+/* 报文段/帧/IP首部格式格子图（章首「格式总览」小节）：字段名+长度单格居中，像教材结构图 */
+.fmt-fig {
+    min-width: 420px;
+}
+.fmt-fig th,
+.fmt-fig td {
+    text-align: center;
+    vertical-align: middle;
+}
+
 /* 右侧内容区 */
 .notes-content {
     flex: 1;
