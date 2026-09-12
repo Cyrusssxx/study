@@ -759,6 +759,8 @@
                     <div class="note-images" id="noteImages"></div>
                     <div class="note-actions">
                         <button class="btn btn-primary btn-sm note-save-btn${hasNote ? ' saved' : ''}" id="noteSaveBtn" onclick="saveNote()">保存笔记</button>
+                        <button class="btn btn-sm btn-note-addimg" onclick="document.getElementById('noteFileInput').click()" title="从本地选择图片（支持多选），比剪贴板更可靠">+ 图片</button>
+                        <input type="file" id="noteFileInput" accept="image/*" multiple hidden onchange="onNoteFilePick(this)">
                         <span class="note-hint" id="noteHint"></span>
                     </div>
                 </div>`;
@@ -947,33 +949,65 @@
         el.style.overflowY = el.scrollHeight > maxH ? 'auto' : 'hidden';
     }
 
+    // ==================== 笔记保存（串行队列 + 本地权威） ====================
+    // 为什么需要串行：粘贴/删除图片时会立即保存，文字输入又有 800ms 防抖保存，
+    // 两者容易并发。旧实现用「响应」回写 q.note/q.note_images，一旦先发请求的响应
+    // 后到，就会把刚 push 的新图覆盖掉（内存丢图 → 下次保存写回旧值 → 图片永久丢失，
+    // 症状为"贴两张只留一张"）。现改为：① 保存按调用顺序串行执行；
+    // ② 本地状态为唯一权威，响应只用于提示，绝不回写数组。
+    let _noteSaveSeq = 0;
+    let _noteSaveChain = Promise.resolve();
+    let _noteHintTimer = null;
+
+    function setNoteHint(text, ms = 2000) {
+        const hint = document.getElementById('noteHint');
+        if (!hint) return;
+        hint.textContent = text || '';
+        clearTimeout(_noteHintTimer);
+        if (text) _noteHintTimer = setTimeout(() => { const h = document.getElementById('noteHint'); if (h) h.textContent = ''; }, ms);
+    }
+
     async function saveNote(isAuto = false) {
         const q = questions[currentIndex];
+        if (!q) return;
         const inputEl = document.getElementById('noteInput');
         const content = inputEl ? serializeNote(inputEl) : (q.note || '');   // 面板未展开时安全兜底
         // 保存前是否已有笔记：用于区分「已删除」和「本来就是空的」
         const hadNote = !!(q.note || (q.note_images || []).length);
-        try {
-            const resp = await api(`/api/note/${q.id}`, {
+        // 快照：调用瞬间的图片数组。避免保存过程中用户又贴图，导致落库内容与提示不一致
+        const images = (q.note_images || []).slice();
+        const qid = q.id;
+        const seq = ++_noteSaveSeq;
+
+        // 串行链：上一个保存完成后才发下一个，保证写入顺序 == 用户操作顺序
+        const task = _noteSaveChain.then(async () => {
+            const resp = await api(`/api/note/${qid}`, {
                 method: 'POST',
                 headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({content, images: q.note_images || []})
+                body: JSON.stringify({content, images})
             });
-            const result = await resp.json();
-            q.note = result.note || '';
-            q.note_images = result.images || [];
-            const hasNote = hasNoteOf({ note: q.note, note_images: q.note_images });
-            const hint = document.getElementById('noteHint');
-            hint.textContent = hasNote ? (isAuto ? '已自动保存 ✓' : '已保存 ✓') : (hadNote ? '已删除笔记' : '笔记是空的，没有保存');
-            setTimeout(() => { if (hint) hint.textContent = ''; }, 2000);
+            return resp.json();
+        });
+        _noteSaveChain = task.catch(() => { });   // 失败不阻断后续保存
+
+        try {
+            const result = await task;
+            if (seq !== _noteSaveSeq) return;     // 过期响应：已有更新的保存，丢弃本次提示/回写
+            const savedCount = (result && result.images ? result.images.length : 0);
+            const hasNote = hasNoteOf({ note: content, note_images: images });
+            if (savedCount !== images.length) {
+                // 数量对不上：明确提示而不是静默丢图，便于定位问题
+                setNoteHint(`保存异常：${images.length} 张图片只写入 ${savedCount} 张，请重试`, 4000);
+            } else {
+                setNoteHint(hasNote ? (isAuto ? '已自动保存 ✓' : '已保存 ✓') : (hadNote ? '已删除笔记' : '笔记是空的，没有保存'));
+            }
             // 保存成功后淡化保存按钮（提示已保存），再次编辑时恢复
             const btn = document.getElementById('noteSaveBtn');
             if (btn) btn.classList.toggle('saved', hasNote);
         } catch (e) {
+            if (seq !== _noteSaveSeq) return;
             if (isAuto) {
-                // 自动保存失败静默提示，不弹窗打断输入
-                const hint = document.getElementById('noteHint');
-                if (hint) hint.textContent = '自动保存失败，请点「保存笔记」重试';
+                setNoteHint('自动保存失败，请点「保存笔记」重试', 4000);
             } else {
                 alert('笔记保存失败: ' + e.message);
             }
@@ -1021,30 +1055,69 @@
         });
     }
 
+    // 从剪贴板 HTML 片段提取内嵌 base64 图片（从网页/Word 复制图文时，图片常只出现在 HTML 里）
+    function extractHtmlClipboardImages(html) {
+        if (!html) return [];
+        const out = [];
+        const re = /<img[^>]+src=["'](data:image\/[a-z0-9.+-]+;base64,[^"']+)["']/gi;
+        let m;
+        while ((m = re.exec(html))) out.push(m[1]);
+        return out;
+    }
+
+    // 把一批「图片文件 / dataURL」统一压缩后追加到当前题 note_images。
+    // 逐张独立 try/catch：旧实现单张抛错会中断整个循环，导致后面的图整批丢失（"贴两张只留一张"）。
+    async function appendNoteImages(sources) {
+        const q = questions[currentIndex];
+        if (!q || !sources.length) return 0;
+        const added = [];
+        let failed = 0;
+        for (const src of sources) {
+            try {
+                let file = src;
+                if (typeof src === 'string') {
+                    // dataURL → File，统一走压缩，避免未压缩的超大 base64 直接入库
+                    const blob = await (await fetch(src)).blob();
+                    file = new File([blob], 'clipboard.png', { type: blob.type || 'image/png' });
+                }
+                added.push(await compressImage(file));
+            } catch (e) {
+                failed++;
+            }
+        }
+        if (added.length) {
+            q.note_images = (q.note_images || []).concat(added);
+            renderNoteImages();
+            await saveNote();
+        }
+        if (failed) setNoteHint(`${failed} 张图片读取失败${added.length ? `，已保存其余 ${added.length} 张` : ''}`, 4000);
+        return added.length;
+    }
+
     // 从剪贴板粘贴图片（截图后在笔记框 Ctrl+V），压缩后随笔记入库；纯文字粘贴不受影响
     /* 接管 paste 事件：
-       1) 含图片 → 走 compressImage 入 note_images（不接管默认行为，让图片以 file 形式被处理）
+       1) 含图片 → 逐张收集（file 项 + HTML 内嵌 base64 兜底）后入 note_images
        2) 仅文本/HTML → preventDefault + 强制转纯文本插入（避免浏览器把外部样式错位
-         地套到 contenteditable 上、且避免 XSS 风险）
+          地套到 contenteditable 上、且避免 XSS 风险）
        3) 混合格式（html + 文字）→ 转纯文本插入（笔记编辑器的 H1/H2/加粗 用工具条而不是外部格式） */
     async function pasteNoteImage(event) {
         const cd = event.clipboardData;
         if (!cd) return;
-        const items = [...cd.items];
-        const files = items.filter(it => it.type.startsWith('image/'))
-            .map(it => it.getAsFile()).filter(Boolean);
-        // 有图片：让浏览器自己处理图片插入，文本不动
-        if (files.length) {
-            // 图片单独存到 note_images
+        // 逐项收集，不用 filter(Boolean) 静默丢弃（getAsFile() 在部分浏览器对第 2 项返回 null，
+        // 静默丢弃正是"贴两张只存一张"的成因之一）
+        const files = [];
+        for (const it of [...cd.items]) {
+            if (it.kind === 'file' && String(it.type || '').startsWith('image/')) {
+                const f = it.getAsFile();
+                if (f) files.push(f);
+            }
+        }
+        const htmlImgs = extractHtmlClipboardImages(cd.getData('text/html') || '');
+        // HTML 中图片数多于 file 数 → 说明有图未暴露为 file，改用 HTML 版本补齐（避免少图）
+        const sources = htmlImgs.length > files.length ? htmlImgs : files;
+        if (sources.length) {
             event.preventDefault();
-            const q = questions[currentIndex];
-            try {
-                for (const f of files) {
-                    (q.note_images = q.note_images || []).push(await compressImage(f));
-                }
-            } catch (e) { alert(e.message); }
-            renderNoteImages();
-            saveNote();
+            await appendNoteImages(sources);
             return;
         }
         // 无图片：拦截默认粘贴，把任何富文本转纯文本后插入
@@ -1064,6 +1137,14 @@
             }
             onNoteInput();   // 触发自动保存
         }
+    }
+
+    // 从「+ 图片」按钮选择本地图片（支持多选）。剪贴板行为在不同浏览器/来源差异大，
+    // 提供一个确定性的多图入口，彻底绕开"剪贴板只给一张"的问题。
+    async function onNoteFilePick(input) {
+        const files = [...(input && input.files ? input.files : [])];
+        if (input) input.value = '';   // 清空，允许重复选择同一文件
+        if (files.length) await appendNoteImages(files);
     }
 
     function delNoteImage(i) {
@@ -1158,6 +1239,7 @@
 
     function prevQuestion() {
         if (currentIndex > 0) {
+            flushNoteSave();   // 切题前冲刷未入库的笔记（须在 currentIndex 变更前，读的是当前题）
             currentIndex--;
             explanationShown = false;
             noteShown = hasNoteOf(questions[currentIndex]);
@@ -1167,6 +1249,7 @@
 
     function nextQuestion() {
         if (currentIndex < questions.length - 1) {
+            flushNoteSave();   // 切题前冲刷未入库的笔记（须在 currentIndex 变更前，读的是当前题）
             currentIndex++;
             explanationShown = false;
             noteShown = hasNoteOf(questions[currentIndex]);

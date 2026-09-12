@@ -189,7 +189,10 @@ async function loadMapIndex() {
 
 // ==================== IndexedDB ====================
 const DB_NAME = 'quiz408';
-const DB_VER = 2;
+// v3：新增 unfamiliar / dontknow 两个 store（「不熟 / 不会」标记）。
+// 注意：新增 store 必须同时提升 DB_VER，否则老用户库不会被升级、
+// onupgradeneeded 不触发 → 新 store 不存在 → 写入静默失败。
+const DB_VER = 3;
 let _dbPromise = null;
 
 function openDB() {

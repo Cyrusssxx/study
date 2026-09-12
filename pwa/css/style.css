@@ -2018,6 +2018,24 @@ mark {
     opacity: 0.8;
 }
 
+/* 「+ 图片」次级按钮：与主保存按钮并排，视觉降级不抢焦点 */
+.btn-note-addimg {
+    background: none;
+    border: 1px dashed var(--border);
+    color: var(--text-light);
+    padding: 4px 12px;
+    font-size: 0.85rem;
+    border-radius: var(--radius-sm, 6px);
+    cursor: pointer;
+    transition: all 0.2s;
+    white-space: nowrap;
+}
+.btn-note-addimg:hover {
+    border-color: var(--primary);
+    color: var(--primary);
+    border-style: solid;
+}
+
 /* 笔记贴图：全宽大图 + 右上角删除 + 点击放大遮罩 */
 .note-images {
     display: flex;
