@@ -5158,14 +5158,6 @@ a.chapter-badge-link:hover {
 .dark .notes-prac-link { color: #a5b4fc; border-color: #a5b4fc; }
 .dark .notes-prac-link:hover { background: #a5b4fc; color: #1e1e2e; }
 
-/* ============ 真题年份筛选下拉（P2） ============ */
-.quiz-year-filter {
-    padding: 5px 10px; border-radius: 8px;
-    border: 1px solid var(--border, #ccc); font-size: 13px;
-    background: var(--card-bg, #fff); color: var(--text, #333);
-}
-.dark .quiz-year-filter { background: #1e1e2e; border-color: #444; color: #ccc; }
-
 /* ==================== 笔记内嵌流程图（计组 3.6.6 访存全流程） ==================== */
 .notes-content svg.co-flow { width: 100%; height: auto; display: block; margin: 10px 0 14px; }
 .notes-content svg.co-flow .cb-p { fill: #f0edfc; stroke: #7f77dd; stroke-width: 0.6; }

@@ -62,9 +62,6 @@
                         <span class="mode-badge" id="modeBadge"></span>
                         <button class="opt-shuffle-btn" id="shuffleBtn" onclick="toggleShuffle()" title="打乱选项显示顺序（字母跟随内容，答案字母不变）">选项乱序 <span id="shuffleState">关</span></button>
                         <button class="opt-shuffle-btn" onclick="openKeybindDialog()" title="切换练习模式 / 自定义上一题/下一题快捷键">设置 ⚙</button>
-                        <select class="quiz-year-filter" id="yearFilter" onchange="onYearChange()" style="display:none" title="按统考真题年份筛选">
-                            <option value="">全部年份</option>
-                        </select>
                         <button class="opt-shuffle-btn" id="favResetBtn" style="display:none" onclick="resetFavProgress()" title="清空收藏题的作答与错题记录，重新刷一遍（收藏保留）">清空重做 ⟳</button>
                         <button class="opt-shuffle-btn" id="favWrongResetBtn" style="display:none" onclick="resetFavWrong()" title="只把收藏模式下的错题从错题本移除：其他题的错题不受影响，作答记录与正确率保留，收藏也保留">清空收藏错题 🗑</button>
                         <div class="review-chips" id="reviewChips" style="display:none"></div>
@@ -147,7 +144,6 @@
     }
     if (!MODE) MODE = 'sequential';
     let SECTION = _params.get('section') || '';
-    const YEAR = _params.get('year') || '';   // 真题年份筛选（仅真题模式生效）
     const STAGE = _params.get('stage') || ''; // 复习阶段筛选（仅 review 模式生效）：2/4/7/15 天期
     const FRESH = _params.get('fresh') === '1'; // fresh=1：跳过位置恢复，从第 1 题开始
     let questions = [];
@@ -287,7 +283,6 @@
         } catch (e) { }
         // 重置瞬态状态后整列重载
         currentIndex = 0;
-        document.getElementById('yearFilter').style.display = 'none';
         document.getElementById('favResetBtn').style.display = 'none';
         document.getElementById('favWrongResetBtn').style.display = 'none';
         document.getElementById('reviewChips').style.display = 'none';
@@ -435,8 +430,6 @@
                     .then(full => { if (seq !== _loadSeq) return; _buildSecOrdinal(full.questions); if (questions[currentIndex]) renderQuestion(); })
                     .catch(() => { });
             }
-            // 真题年份筛选（P2）：仅真题模式展示下拉，前端按 exam_year 过滤，无需额外请求
-            setupYearFilter();
             totalQuestions = questions.length;
 
             // 恢复历史答题记录（last_status），刷新/跳转页面后不丢失
@@ -529,33 +522,6 @@
         } catch (e) {
             document.getElementById('questionArea').innerHTML = `<div class="error">加载失败: ${e.message}</div>`;
         }
-    }
-
-    // 真题年份下拉：从已加载题目的 exam_year 收集可选年份；真题模式才显示
-    function setupYearFilter() {
-        const ys = document.getElementById('yearFilter');
-        if (!ys) return;
-        if (!(MODE === 'real' || MODE === 'fav_real')) { ys.style.display = 'none'; return; }
-        ys.style.display = '';
-        const years = [...new Set(quizAllQuestions.map(q => q.exam_year).filter(Boolean))].sort((a, b) => b - a);
-        ys.innerHTML = '<option value="">全部年份</option>' + years.map(y =>
-            `<option value="${y}">${y} 年 (${quizAllQuestions.filter(q => q.exam_year === y).length})</option>`).join('');
-        if (YEAR) ys.value = YEAR;
-        else { const py = PS.get({ year: '' }).year; if (py && [...ys.options].some(o => o.value === py)) ys.value = py; }
-        const y = ys.value;
-        if (y) questions = quizAllQuestions.filter(q => String(q.exam_year) === String(y));
-    }
-
-    // 切换年份：重新筛选题目并回到第一题
-    function onYearChange() {
-        const y = document.getElementById('yearFilter').value;
-        PS.set({ year: y });
-        questions = y ? quizAllQuestions.filter(q => String(q.exam_year) === String(y)) : quizAllQuestions.slice();
-        totalQuestions = questions.length;
-        currentIndex = 0;
-        explanationShown = false;
-        noteShown = false;
-        renderQuestion();
     }
 
     // ============ 侧边栏章节树 ============
