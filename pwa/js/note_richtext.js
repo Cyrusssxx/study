@@ -109,6 +109,7 @@
             <span class="note-color-dot" data-cmd="color" data-color="#8430ce" title="紫色字" style="color:#8430ce">A</span>
             <span class="note-color-dot" data-cmd="color" data-color="#5f6368" title="灰字" style="color:#5f6368">A</span>
             <span class="note-toolbar-sep"></span>
+            <button type="button" data-cmd="painter" title="格式刷：先选中带格式的文字点此按钮，再选中目标文字，即可复制颜色/加粗/高亮等格式">🖌 格式刷</button>
             <button type="button" data-cmd="clear" title="清除格式">⌫ 清除</button>
         </div>`;
     };
@@ -135,6 +136,7 @@
             else if (cmd === 'h2') document.execCommand('formatBlock', false, 'H2');
             else if (cmd === 'hl') window.applyNoteHighlight(el, btn.dataset.color);
             else if (cmd === 'color') window.applyNoteForeColor(el, btn.dataset.color);
+            else if (cmd === 'painter') window.toggleFormatPainter(el, btn);
             else if (cmd === 'clear') window.clearNoteFormat(el);
             // 页面可选回调（quiz 用于刷新保存按钮状态；notes/map 批注无需）
             if (typeof onNoteInput === 'function') onNoteInput();
@@ -210,6 +212,101 @@
         try { document.execCommand('formatBlock', false, 'P'); } catch (e) {}
         // 3) 高亮：剥掉 class 化 span 与内联 background（removeFormat 不处理这两类）
         window.stripNoteHighlight(sel.getRangeAt(0), el);
+        if (typeof onNoteInput === 'function') onNoteInput();
+    };
+
+    // ==================== 格式刷（Format Painter） ====================
+    // 用法：① 选中一段带格式的文字（颜色/加粗/斜体/高亮）→ 点「🖌 格式刷」
+    //       ② 再选中目标文字，格式自动套用（一次性的，用完自动解除）
+    // 实现：从选区元素里读取内联样式与标签，目标选区用 execCommand 回放。
+    // 兼容三种编辑器容器（quiz 笔记 / notes-map 批注），格式刷按钮由工具栏事件委托触发。
+    let _painterFmt = null;          // 捕获到的格式 {bold, italic, hl, color}
+    let _painterBtn = null;          // 当前高亮的格式刷按钮
+    let _painterEl = null;           // 当前绑定的编辑器元素
+    let _painterListening = false;   // 是否已挂 selectionchange 监听（全局只挂一次）
+
+    window.toggleFormatPainter = function (el, btn) {
+        // 已武装：再次点击 = 取消
+        if (_painterFmt) { window.cancelFormatPainter(); return; }
+        const sel = window.getSelection();
+        if (!sel || sel.isCollapsed || !sel.rangeCount) return;
+        const range = sel.getRangeAt(0);
+        if (!el.contains(range.startContainer) || !el.contains(range.endContainer)) return;
+
+        // 采集格式：克隆选区内容遍历元素（cloneContents 比 TreeWalker+intersectsNode 兼容性好，
+        // jsdom 与各浏览器均支持；无需依赖 intersectsNode 的实现差异）
+        const fmt = { bold: false, italic: false, hl: null, color: null };
+        const frag = range.cloneContents();
+        frag.querySelectorAll('*').forEach(n => {
+            const t = n.tagName;
+            if (t === 'B' || t === 'STRONG') fmt.bold = true;
+            if (t === 'I' || t === 'EM') fmt.italic = true;
+            if (!fmt.color && n.style && n.style.color) fmt.color = n.style.color;
+            if (!fmt.hl && n.classList && (n.classList.contains('hl') || /^hl-/.test(n.className))) {
+                fmt.hl = [...n.classList].find(c => /^hl-/.test(c)) || 'hl-yellow';
+            }
+        });
+        // 选区起止文本节点上浮一层再扫一次，覆盖"样式在文本节点父级"的情况
+        const scan = (node) => {
+            let n = node && node.nodeType === 3 ? node.parentElement : node;
+            while (n && n !== el) {
+                if (n.style && n.style.color && !fmt.color) fmt.color = n.style.color;
+                if (n.classList && n.classList.contains('hl') && !fmt.hl) fmt.hl = [...n.classList].find(c => /^hl-/.test(c)) || 'hl-yellow';
+                if ((n.tagName === 'B' || n.tagName === 'STRONG') && !fmt.bold) fmt.bold = true;
+                if ((n.tagName === 'I' || n.tagName === 'EM') && !fmt.italic) fmt.italic = true;
+                n = n.parentElement;
+            }
+        };
+        scan(range.startContainer); scan(range.endContainer);
+
+        if (!fmt.bold && !fmt.italic && !fmt.hl && !fmt.color) {
+            // 源选区没有可复制的格式，给出轻提示
+            const hint = document.querySelector('#noteHint, .anno-hint');
+            if (hint) { hint.textContent = '源文字没有可复制的格式（颜色/加粗/斜体/高亮）'; setTimeout(() => { hint.textContent = ''; }, 1800); }
+            return;
+        }
+        _painterFmt = fmt;
+        _painterEl = el;
+        _painterBtn = btn || null;
+        if (btn) btn.classList.add('painter-active');
+        if (!_painterListening) {
+            document.addEventListener('selectionchange', () => {
+                if (!_painterFmt || !_painterEl) return;
+                const s = window.getSelection();
+                if (!s || s.isCollapsed || !s.rangeCount) return;
+                const r = s.getRangeAt(0);
+                // 要求新选区在编辑器内且不是源选区本身
+                if (!_painterEl.contains(r.startContainer) || !_painterEl.contains(r.endContainer)) return;
+                const sameAsSource = r.toString() === '' && r.collapsed;
+                if (sameAsSource) return;
+                window.applyFormatPainter();
+            });
+            _painterListening = true;
+        }
+    };
+
+    window.cancelFormatPainter = function () {
+        _painterFmt = null;
+        _painterEl = null;
+        if (_painterBtn) { _painterBtn.classList.remove('painter-active'); _painterBtn = null; }
+    };
+
+    // 把捕获到的格式回放到当前选区
+    window.applyFormatPainter = function () {
+        const el = _painterEl;
+        const fmt = _painterFmt;
+        window.cancelFormatPainter();
+        if (!el || !fmt) return;
+        const sel = window.getSelection();
+        if (!sel || sel.isCollapsed || !sel.rangeCount) return;
+        const range = sel.getRangeAt(0);
+        if (!el.contains(range.startContainer) || !el.contains(range.endContainer)) return;
+        // 高亮/颜色先恢复选区（execCommand 依赖当前选区），按"颜色→加粗→斜体→高亮"顺序回放
+        if (fmt.color) window.applyNoteForeColor(el, fmt.color);
+        if (fmt.bold) document.execCommand('bold');
+        if (fmt.italic) document.execCommand('italic');
+        if (fmt.hl) window.applyNoteHighlight(el, fmt.hl.replace(/^hl-/, ''));
+        // 回放可能改变了选区；无需恢复，用户可继续输入
         if (typeof onNoteInput === 'function') onNoteInput();
     };
 

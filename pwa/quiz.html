@@ -154,6 +154,7 @@
     let quizAllQuestions = [];   // 真题年份前端筛选的基准集合
     let _secOrdinal = {};        // {qid: 节内序号}——按全库编号顺序，题在其 section 内排第几
     let currentIndex = 0;
+    let _preserveQid = null;   // 切换模式时保留的当前题 id（新题集若包含则优先停留，避免跳章节）
     let totalQuestions = 0;
     let answered = {};  // {questionId: {answer, isCorrect}}
     let explanationShown = false;  // 当前题解析面板是否展开
@@ -271,6 +272,10 @@
 
     function switchPracticeMode(m) {
         if (m === MODE || !SWITCHABLE_MODES.includes(m)) { closeKeybindDialog(); return; }
+        // 切模式前冲刷当前题未入库的笔记（防抖保存 pending 时，若等切完再触发会读错 currentIndex）
+        flushNoteSave();
+        // 记住当前题：切模式后若新题集仍含该题，优先停在原题，避免"切模式跳章节"
+        _preserveQid = questions[currentIndex] ? questions[currentIndex].id : null;
         MODE = m;
         try { localStorage.setItem('quiz_mode_pref_' + SUBJECT, m); } catch (e) { }
         // 同步 URL：刷新/分享保持所选模式；清掉定位参数避免被钉回旧题
@@ -463,8 +468,18 @@
                 updateFavWrongCount();
             }
 
+            // 切换模式保留当前题：新模式题集若仍包含刚才那道题，优先停在那里，
+            // 不做章节定位/位置恢复（旧逻辑无条件 currentIndex=0 + 按新模式存档恢复 → 跳章节）
+            const preserveId = _preserveQid;
+            _preserveQid = null;
+            let preserved = false;
+            if (preserveId) {
+                const pi = questions.findIndex(q => q.id === preserveId);
+                if (pi >= 0) { currentIndex = pi; preserved = true; }
+            }
+
             // 章节定位：不限制筛选，直接跳到该章节首题，仍可顺序刷到后面的题
-            if (CHAPTER) {
+            if (CHAPTER && !preserved) {
                 const idx = questions.findIndex(q =>
                     q.chapter === CHAPTER && (!SECTION || q.section === SECTION));
                 if (idx >= 0) currentIndex = idx;
@@ -487,7 +502,8 @@
             // fresh=1（首页「顺序刷题」）跳过恢复，从第 1 题开始
             // ① 优先读本页专用位置存档（quiz_pos_<科目>_<模式>，不受全局历史6条上限挤掉）
             // ② 兜底再查 practiceHistory（供首页「继续上次练习」的共享记录）
-            if (!CHAPTER && !GOTO && !FRESH) {
+            // preserved=true（切模式且原题在新题集）时跳过恢复，避免把刚定位的原题又盖掉
+            if (!CHAPTER && !GOTO && !FRESH && !preserved) {
                 try {
                     const pos = JSON.parse(localStorage.getItem('quiz_pos_' + SUBJECT + '_' + MODE) || 'null');
                     if (pos && pos.qid) {
