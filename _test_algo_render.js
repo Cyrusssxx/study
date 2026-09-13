@@ -37,6 +37,7 @@ const document = {
   documentElement: { classList: { add() {}, contains() { return false; } } },
 };
 const window = { addEventListener() {}, scrollTo() {}, scrollY: 0 };
+const location = { hash: '', search: '', pathname: '/algo.html', href: 'https://x.test/algo.html' };
 const dataUrl = path.join(NODE_ROOT, 'pwa/data/algo_notes.json');
 const fetch = async () => ({ ok: true, json: async () => JSON.parse(fs.readFileSync(dataUrl, 'utf8')) });
 const IntersectionObserver = function () { this.observe = () => {}; };

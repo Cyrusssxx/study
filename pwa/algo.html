@@ -198,12 +198,12 @@
     function classifyTitle(rawText) {
         const t = (rawText || '').trim();
         if (/^[*]\s*/.test(t)) return 'optional';
-        // 直接的"暴力解"标题
-        if (/(暴力解|暴力枚举|枚举法|枚举求解)/.test(t)) return 'strong';
+        // 直接的"暴力解"标题（含代码题主力解法：快排也属第一梯队暴力解）
+        if (/(暴力解|暴力枚举|枚举法|枚举求解|快速排序|快排)/.test(t)) return 'strong';
         // 4-5 章通用暴力解信号：递归/DFS/BFS/遍历/回溯/分治穷举
         if (/(递归遍历|DFS\s*\/?\s*BFS|深度优先|广度优先|树遍历|前序|中序|后序|层序|回溯|穷举|分治|暴力)/.test(t)) return 'strong';
-        // 重要性信号
-        if (/(真题|重要|核心|考点|常考|总结|思路|方法|做题方法|模板)/.test(t)) return 'strong';
+        // 重要性信号（"模板"不放这里：2.4 优化解下的模板是扩展内容，不该因此加粗并连锁扩散）
+        if (/(真题|重要|核心|考点|常考|总结|思路|方法|做题方法|基本概念)/.test(t)) return 'strong';
         // 可选/了解信号
         if (/(选|了解|扩展|选学|选读|难题|相对不重要|选看|进阶)/.test(t)) return 'optional';
         return '';
@@ -211,8 +211,6 @@
 
     function renderItems(items) {
         let html = '';
-        // 上下文：上一个标题是否是 strong（暴力解），若是则其下子节跟随
-        let lastStrong = false;
         for (const it of items) {
             if (it.t === 'h') {
                 const lvl = Math.min(5, Math.max(3, it.lvl || 3));
@@ -228,11 +226,9 @@
                 if (direct === 'strong') { cls += ' algo-h-strong'; clsToc = 'algo-toc-strong'; }
                 else if (direct === 'optional') { cls += ' algo-h-optional'; clsToc = 'algo-toc-optional'; }
                 else if (isBrute) { cls += ' algo-h-strong'; clsToc = 'algo-toc-strong'; }
-                else if (lvl >= 4 && lastStrong) { cls += ' algo-h-strong'; clsToc = 'algo-toc-strong'; }
                 it._tocClass = clsToc;
                 // 显示文本：把开头的 "* " 保留（CSS 已经在 strong/optional 上加 ▶/☆ 标识）
                 html += `<h${lvl} class="${cls}" id="${id}" data-anchor="${id}">${esc(norm(it.text))}</h${lvl}>`;
-                lastStrong = (cls.indexOf('algo-h-strong') >= 0);
             } else if (it.t === 'code') {
                 html += `<pre class="code-block algo-code">${esc(norm(it.text))}</pre>`;
             } else {
