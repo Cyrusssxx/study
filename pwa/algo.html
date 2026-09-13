@@ -57,6 +57,8 @@
     <script src="js/common.js"></script>
     <script src="js/background.js"></script>
     <script src="js/lightbox.js"></script>
+    <script src="js/backend.js"></script>
+    <script src="js/note_richtext.js"></script>
     <script>
     /* 讲义方法论知识库：data/algo_notes.json（懒加载，不进主包预缓存）
        内容一字未改，仅还原排版结构：标题层级 / 表格 / 代码块 / 真题·例题卡片
@@ -403,7 +405,401 @@
         algoTopBtn.hidden = window.scrollY < 600;
     }, { passive: true });
 
-    loadAlgo();
+    /* ==================== 划词高亮 + 行级批注（复用笔记/导图页机制） ====================
+       锚定：块元素 data-blk（渲染完成后在 DOM 上统一分配），高亮按块内字符偏移，
+       批注按块 id；均走 /api/note 持久化（key 用 cn_ 前缀满足 note 路由的科目解析）。
+       函数无条件定义（测试 stub 无 api/工具条函数时自然短路），实际调用点带 typeof 守卫。 */
+    const ANNO_KEY = 'cn_algo_anno';
+    const HL_KEY = 'cn_algo_hl';
+
+        const blkEl = el => el.closest('[data-blk]');
+        function inAnno(n) {
+            const el = n.nodeType === 1 ? n : n.parentElement;
+            return !!(el && el.closest('.line-anno'));
+        }
+        const hlWalkFilter = { acceptNode: n => inAnno(n) ? NodeFilter.FILTER_REJECT : NodeFilter.FILTER_ACCEPT };
+
+        function cleanTextOf(root) {
+            const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, hlWalkFilter);
+            let t = '', node;
+            while ((node = walker.nextNode())) t += node.nodeValue;
+            return t;
+        }
+        function offsetInRoot(root, container, offset) {
+            const target = container.nodeType === 3 ? container : (container.childNodes[offset] || null);
+            const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, hlWalkFilter);
+            let pos = 0, node;
+            while ((node = walker.nextNode())) {
+                if (container.nodeType === 3) { if (node === container) return pos + offset; }
+                else if (target && (target === node || (target.contains && target.contains(node)))) return pos;
+                pos += node.nodeValue.length;
+            }
+            return pos;
+        }
+        function wrapRange(root, start, end, cls, ds) {
+            const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, hlWalkFilter);
+            let pos = 0, node;
+            const pieces = [];
+            while ((node = walker.nextNode())) {
+                const len = node.nodeValue.length;
+                const ns = pos, ne = pos + len;
+                pos = ne;
+                if (ne <= start || ns >= end) continue;
+                pieces.push({ node, s: Math.max(start, ns) - ns, e: Math.min(end, ne) - ns });
+            }
+            for (let i = pieces.length - 1; i >= 0; i--) {
+                const p = pieces[i];
+                const range = document.createRange();
+                range.setStart(p.node, p.s);
+                range.setEnd(p.node, p.e);
+                const span = document.createElement('span');
+                span.className = cls;
+                if (ds) { span.dataset.start = ds.start; span.dataset.color = ds.color; }
+                range.surroundContents(span);
+            }
+        }
+
+        let hlItems = [];          // [{blk, start, end, color, text}]
+        let hlSaveTimer = null;
+        let hlToolbar = null;
+        let hlMouseupTimer = null;
+        const HL_COLORS = ['yellow', 'green', 'blue', 'pink'];
+
+        let annoItems = [];        // [{blk, text, images}]
+        let annoSaveTimer = null;
+        let annoEditor = null;     // {blk, el, images}
+
+        function initAlgoAnno() {
+            // 给渲染好的内容块分配稳定 id：按文档序索引（幂等，重复 init 不漂移，方便重渲染/测试）
+            const body = document.getElementById('algoBody');
+            body.querySelectorAll('.algo-para, .algo-tbl, .algo-raw, .algo-qa, .algo-code-pair, pre.algo-code').forEach((el, idx) => {
+                el.dataset.blk = 'algo-blk-' + (idx + 1);
+            });
+            body.addEventListener('click', e => {
+                const span = e.target.closest && e.target.closest('.note-hl');
+                if (span) { e.stopPropagation(); showHlCancelFor(span); }
+            });
+            body.addEventListener('mouseup', () => {
+                clearTimeout(hlMouseupTimer);
+                hlMouseupTimer = setTimeout(showHlToolbar, 0);
+            });
+            document.addEventListener('mousedown', e => {
+                if (hlToolbar && !hlToolbar.contains(e.target)) hideHlToolbar();
+            });
+            loadHighlights();
+            loadAnnos();
+        }
+
+        function hideHlToolbar() { if (hlToolbar) { hlToolbar.remove(); hlToolbar = null; } }
+
+        function showHlToolbar() {
+            if (hlToolbar && hlToolbar.classList.contains('hl-cancel-only')) return;
+            const sel = window.getSelection();
+            if (!sel || sel.isCollapsed || !sel.rangeCount) { hideHlToolbar(); return; }
+            const range = sel.getRangeAt(0);
+            const blk = blkEl(range.startContainer);
+            if (!blk || blkEl(range.endContainer) !== blk) { hideHlToolbar(); return; }
+            if (inAnno(range.startContainer) || inAnno(range.endContainer)) { hideHlToolbar(); return; }
+            hideHlToolbar();
+            const rect = range.getBoundingClientRect();
+            hlToolbar = document.createElement('div');
+            hlToolbar.className = 'hl-toolbar';
+            hlToolbar.innerHTML = HL_COLORS.map(c =>
+                `<span class="hl-dot hl-dot-${c}" data-color="${c}" title="${c}"></span>`).join('') +
+                '<span class="hl-anno-btn" title="批注此块">📝批注</span>' +
+                '<span class="hl-cancel" title="取消高亮">✕</span>';
+            document.body.appendChild(hlToolbar);
+            hlToolbar.style.top = (window.scrollY + rect.top - hlToolbar.offsetHeight - 8) + 'px';
+            hlToolbar.style.left = (window.scrollX + rect.left) + 'px';
+            hlToolbar.querySelectorAll('.hl-dot').forEach(dot =>
+                dot.addEventListener('click', () => applyHighlight(blk, range, dot.dataset.color)));
+            hlToolbar.querySelector('.hl-anno-btn').addEventListener('click', () => {
+                window.getSelection().removeAllRanges();
+                hideHlToolbar();
+                openAnnoEditor(blk.dataset.blk);
+            });
+            hlToolbar.querySelector('.hl-cancel').addEventListener('click', () => {
+                const span = (range.startContainer.parentElement || range.startContainer).closest
+                    ? (range.startContainer.parentElement || range.startContainer).closest('.note-hl') : null;
+                if (span) removeHighlight(span);
+                hideHlToolbar();
+            });
+        }
+
+        function showHlCancelFor(span) {
+            clearTimeout(hlMouseupTimer);
+            hideHlToolbar();
+            const rect = span.getBoundingClientRect();
+            hlToolbar = document.createElement('div');
+            hlToolbar.className = 'hl-toolbar hl-cancel-only';
+            hlToolbar.innerHTML = '<span class="hl-cancel" title="取消高亮">✕ 取消高亮</span>';
+            document.body.appendChild(hlToolbar);
+            hlToolbar.style.top = (window.scrollY + rect.top - hlToolbar.offsetHeight - 8) + 'px';
+            hlToolbar.style.left = (window.scrollX + rect.left) + 'px';
+            hlToolbar.querySelector('.hl-cancel').addEventListener('click', () => {
+                removeHighlight(span);
+                hideHlToolbar();
+            });
+        }
+
+        function applyHighlight(blk, range, color) {
+            const root = blk;
+            const start = offsetInRoot(root, range.startContainer, range.startOffset);
+            const end = offsetInRoot(root, range.endContainer, range.endOffset);
+            if (end <= start) { hideHlToolbar(); return; }
+            const text = range.toString();
+            const id = blk.dataset.blk;
+            hlItems.push({ blk: id, start, end, color, text });
+            wrapRange(root, start, end, 'note-hl note-hl-' + color, { start, color });
+            window.getSelection().removeAllRanges();
+            hideHlToolbar();
+            saveHl();
+        }
+
+        function removeHighlight(span) {
+            const blk = span.closest('[data-blk]');
+            const start = +span.dataset.start;
+            const color = span.dataset.color;
+            const id = blk.dataset.blk;
+            hlItems = hlItems.filter(it => !(it.blk === id && it.start === start && it.color === color));
+            span.closest('[data-blk]').querySelectorAll('.note-hl').forEach(s => {
+                if (+s.dataset.start === start && s.dataset.color === color) {
+                    const parent = s.parentNode;
+                    while (s.firstChild) parent.insertBefore(s.firstChild, s);
+                    parent.removeChild(s);
+                    parent.normalize();
+                }
+            });
+            saveHl();
+        }
+
+        function saveHl() {
+            clearTimeout(hlSaveTimer);
+            hlSaveTimer = setTimeout(async () => {
+                try {
+                    await api('/api/note/' + encodeURIComponent(HL_KEY), {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ content: JSON.stringify(hlItems), images: [] })
+                    });
+                } catch (e) { /* 高亮保存失败静默 */ }
+            }, 500);
+        }
+
+        function reapplyHighlights() {
+            const retained = [];
+            document.querySelectorAll('[data-blk]').forEach(el => {
+                const id = el.dataset.blk;
+                const list = hlItems.filter(it => it.blk === id);
+                if (!list.length) return;
+                const full = cleanTextOf(el);
+                list.sort((a, b) => a.start - b.start);
+                for (const it of list) {
+                    let { start, end } = it;
+                    if (full.slice(start, end) !== it.text) {
+                        const idx = full.indexOf(it.text);
+                        if (idx < 0 || !it.text) continue;
+                        start = idx; end = idx + it.text.length;
+                    }
+                    wrapRange(el, start, end, 'note-hl note-hl-' + it.color, { start, color: it.color });
+                    retained.push({ blk: id, start, end, color: it.color, text: it.text });
+                }
+            });
+            hlItems = retained;
+        }
+
+        async function loadHighlights() {
+            if (typeof api !== 'function') return;
+            let items = [];
+            try {
+                const resp = await api('/api/note/' + encodeURIComponent(HL_KEY));
+                const d = await resp.json();
+                items = d.note ? JSON.parse(d.note) : [];
+            } catch (e) { return; }
+            if (!Array.isArray(items) || !items.length) return;
+            hlItems = items.filter(it => it && typeof it.blk === 'string');
+            reapplyHighlights();
+        }
+
+        // ---------- 批注 ----------
+        const annoOf = id => annoItems.find(a => a.blk === id);
+
+        function annoBlockEl(id) {
+            return document.querySelector(`.line-anno-block[data-blk="${CSS.escape(id)}"]`);
+        }
+        function viewAnnoImage(id, i) {
+            const item = annoOf(id);
+            if (!item || !item.images) return;
+            const src = item.images[i];
+            if (!src) return;
+            const ov = document.createElement('div');
+            ov.className = 'img-lightbox';
+            ov.innerHTML = `<img src="${src}" alt="批注图片">`;
+            ov.onclick = () => ov.remove();
+            document.body.appendChild(ov);
+        }
+        function annoBlockHtml(id) {
+            const item = annoOf(id);
+            if (!item) return '';
+            const imgs = (item.images || []).map((src, i) =>
+                `<img class="line-anno-img" src="${src}" alt="批注图片" onclick="viewAlgoAnnoImg('${id}', ${i})">`).join('');
+            const textHtml = item.text ? (isHtmlNote(item.text) ? sanitizeNoteHtml(item.text) : esc(item.text)) : '';
+            return `<div class="line-anno line-anno-block" data-blk="${CSS.escape(id)}">
+                <span class="line-anno-icon">📝</span>
+                <div class="line-anno-body">
+                    ${item.text ? `<div class="line-anno-text">${textHtml}</div>` : ''}
+                    ${imgs}
+                </div>
+                <div class="line-anno-ops">
+                    <button type="button" class="line-anno-op" onclick="openAlgoAnnoEditor('${id}')">改</button>
+                    <button type="button" class="line-anno-op line-anno-del" onclick="delAlgoAnno('${id}')">删</button>
+                </div>
+            </div>`;
+        }
+        function isHtmlNote(s) { return /<[a-zA-Z][^>]*>/.test(s || ''); }
+        function sanitizeNoteHtml(s) { return s || ''; }
+
+        function openAnnoEditor(id) {
+            closeAnnoEditor();
+            const blk = document.querySelector(`[data-blk="${CSS.escape(id)}"]`);
+            if (!blk) return;
+            const item = annoOf(id);
+            const el = document.createElement('div');
+            el.className = 'line-anno line-anno-editor';
+            el.innerHTML = `
+                ${noteToolbarHtml()}
+                <div class="note-input line-anno-input" contenteditable="true" spellcheck="false"
+                    data-placeholder="写批注，可 Ctrl+V 粘贴截图…"></div>
+                <div class="note-images line-anno-editor-imgs"></div>
+                <div class="line-anno-bar">
+                    <button type="button" class="btn btn-primary line-anno-save">保存</button>
+                    <button type="button" class="btn btn-secondary line-anno-cancel">取消</button>
+                </div>`;
+            annoEditor = { blk: id, el, images: item ? (item.images || []).slice() : [] };
+            const blkEl2 = annoBlockEl(id);
+            if (blkEl2) blkEl2.style.display = 'none';
+            blk.insertAdjacentElement('afterend', el);
+            const input = el.querySelector('.line-anno-input');
+            loadNoteIntoEditor(input, item ? (item.text || '') : '');
+            updateNotePlaceholder(input);
+            renderEditorImages();
+            input.addEventListener('paste', pasteAnnoImage);
+            bindNoteToolbar(input);
+            el.querySelector('.line-anno-save').addEventListener('click', saveAnnoEditor);
+            el.querySelector('.line-anno-cancel').addEventListener('click', () => closeAnnoEditor());
+            input.focus();
+        }
+        function closeAnnoEditor() {
+            if (!annoEditor) return;
+            const blkEl2 = annoBlockEl(annoEditor.blk);
+            if (blkEl2) blkEl2.style.display = '';
+            annoEditor.el.remove();
+            annoEditor = null;
+        }
+        function renderEditorImages() {
+            if (!annoEditor) return;
+            const box = annoEditor.el.querySelector('.line-anno-editor-imgs');
+            box.innerHTML = annoEditor.images.map((src, i) => `
+                <div class="note-img-item">
+                    <img src="${src}" alt="批注图片">
+                    <span class="note-img-del" data-i="${i}" title="删除图片">×</span>
+                </div>`).join('');
+            box.querySelectorAll('.note-img-del').forEach(d => d.onclick = () => {
+                annoEditor.images.splice(+d.dataset.i, 1);
+                renderEditorImages();
+            });
+        }
+        function compressImage(file) {
+            return new Promise((resolve, reject) => {
+                const img = new Image();
+                img.onload = () => {
+                    const scale = Math.min(1, 1200 / Math.max(img.width, img.height));
+                    const canvas = document.createElement('canvas');
+                    canvas.width = Math.round(img.width * scale);
+                    canvas.height = Math.round(img.height * scale);
+                    const ctx = canvas.getContext('2d');
+                    ctx.fillStyle = '#fff';
+                    ctx.fillRect(0, 0, canvas.width, canvas.height);
+                    ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+                    URL.revokeObjectURL(img.src);
+                    resolve(canvas.toDataURL('image/jpeg', 0.85));
+                };
+                img.onerror = () => reject(new Error('图片读取失败'));
+                img.src = URL.createObjectURL(file);
+            });
+        }
+        async function pasteAnnoImage(event) {
+            if (!annoEditor) return;
+            const files = [...(event.clipboardData ? event.clipboardData.items : [])]
+                .filter(it => it.type.startsWith('image/'))
+                .map(it => it.getAsFile())
+                .filter(Boolean);
+            if (!files.length) return;
+            event.preventDefault();
+            try {
+                for (const f of files) annoEditor.images.push(await compressImage(f));
+            } catch (e) { alert(e.message); }
+            renderEditorImages();
+        }
+        function saveAnnoEditor() {
+            if (!annoEditor) return;
+            const id = annoEditor.blk;
+            const text = serializeNote(annoEditor.el.querySelector('.line-anno-input'));
+            const images = annoEditor.images;
+            annoItems = annoItems.filter(a => a.blk !== id);
+            if (text || images.length) annoItems.push({ blk: id, text, images });
+            annoEditor.el.remove();
+            annoEditor = null;
+            renderAnnos();
+            saveAnnos();
+        }
+        function delAnno(id) {
+            if (!confirm('删除这条批注？')) return;
+            annoItems = annoItems.filter(a => a.blk !== id);
+            renderAnnos();
+            saveAnnos();
+        }
+        function saveAnnos() {
+            clearTimeout(annoSaveTimer);
+            annoSaveTimer = setTimeout(async () => {
+                try {
+                    await api('/api/note/' + encodeURIComponent(ANNO_KEY), {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ content: JSON.stringify(annoItems), images: [] })
+                    });
+                } catch (e) { /* 静默 */ }
+            }, 300);
+        }
+        function renderAnnos() {
+            document.querySelectorAll('.algo-body .line-anno-block').forEach(b => b.remove());
+            document.querySelectorAll('[data-blk]').forEach(el => {
+                if (annoOf(el.dataset.blk)) el.insertAdjacentHTML('afterend', annoBlockHtml(el.dataset.blk));
+            });
+        }
+        async function loadAnnos() {
+            if (typeof api !== 'function') return;
+            let items = [];
+            try {
+                const resp = await api('/api/note/' + encodeURIComponent(ANNO_KEY));
+                const d = await resp.json();
+                items = d.note ? JSON.parse(d.note) : [];
+            } catch (e) { return; }
+            if (!Array.isArray(items) || !items.length) return;
+            annoItems = items.filter(it => it && typeof it.blk === 'string');
+            renderAnnos();
+        }
+
+        window.viewAlgoAnnoImg = viewAnnoImage;
+        window.openAlgoAnnoEditor = openAnnoEditor;
+        window.delAlgoAnno = delAnno;
+
+    /* 渲染完成后才分配块锚点并加载已存高亮/批注（api 缺失的测试环境短路） */
+    function initAlgoAnnoIfReady() {
+        if (typeof api !== 'function') return;
+        loadAlgo().then(() => initAlgoAnno());
+    }
+    initAlgoAnnoIfReady();
     </script>
 </body>
 </html>
