@@ -2831,7 +2831,7 @@ h3.algo-h:first-child, h4.algo-h:first-child, h5.algo-h:first-child { margin-top
     -webkit-box-decoration-break: clone;
 }
 .algo-key-sentence::before {
-    content: "🔑 ";
+    content: "⭐ ";
     margin-right: 1px;
 }
 .dark .algo-kw {
@@ -2842,6 +2842,23 @@ h3.algo-h:first-child, h4.algo-h:first-child, h5.algo-h:first-child { margin-top
 }
 
 .algo-code { margin: 12px 0 14px; }
+
+/* 长代码块拆两块并排：grid 双栏,宽屏并排、窄屏(<720px)自动堆叠回单列 */
+.algo-code-pair {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    margin: 12px 0 14px;
+    align-items: start;
+}
+.algo-code-pair .algo-code {
+    margin: 0;
+    min-width: 0;
+    overflow-x: auto;
+}
+@media (max-width: 720px) {
+    .algo-code-pair { grid-template-columns: 1fr; }
+}
 
 /* 做题思路表（讲义原文的 | 分隔表） */
 .algo-tbl {

@@ -209,6 +209,22 @@
         return '';
     }
 
+    /* 长代码块（≥28 个非空行）拆成两块并排：按行均分,宽屏 grid 两栏,窄屏自动堆叠。
+       只影响展示,数据不动；短块保持单个 pre。 */
+    function renderCode(text) {
+        const lines = String(text).split('\n');
+        const nonEmpty = lines.filter(l => l.trim()).length;
+        if (nonEmpty >= 28) {
+            const half = Math.ceil(lines.length / 2);
+            const part = (arr) => arr.join('\n');
+            return `<div class="algo-code-pair">`
+                + `<pre class="code-block algo-code">${esc(part(lines.slice(0, half)))}</pre>`
+                + `<pre class="code-block algo-code">${esc(part(lines.slice(half)))}</pre>`
+                + `</div>`;
+        }
+        return `<pre class="code-block algo-code">${esc(text)}</pre>`;
+    }
+
     function renderItems(items) {
         let html = '';
         for (const it of items) {
@@ -230,7 +246,7 @@
                 // 显示文本：把开头的 "* " 保留（CSS 已经在 strong/optional 上加 ▶/☆ 标识）
                 html += `<h${lvl} class="${cls}" id="${id}" data-anchor="${id}">${esc(norm(it.text))}</h${lvl}>`;
             } else if (it.t === 'code') {
-                html += `<pre class="code-block algo-code">${esc(norm(it.text))}</pre>`;
+                html += renderCode(norm(it.text));
             } else {
                 html += renderText(it.text);
             }
