@@ -8,6 +8,7 @@ const { JSDOM } = require('jsdom');
 const SRC = fs.readFileSync(path.join(__dirname, 'pwa/js/note_richtext.js'), 'utf8');
 
 let pass = 0, fail = 0;
+const sleep = ms => new Promise(r => setTimeout(r, ms));
 function check(name, got, want) {
   const ok = JSON.stringify(got) === JSON.stringify(want);
   console.log((ok ? 'PASS' : 'FAIL').padEnd(5), name, ok ? '' : `→ 实际 ${JSON.stringify(got)} 期望 ${JSON.stringify(want)}`);
@@ -62,20 +63,31 @@ function check(name, got, want) {
   const r2 = makeRange(targetP);
   sel.addRange(r2);
   w.document.dispatchEvent(new w.Event('selectionchange'));
-  // applyFormatPainter 会先 cancel（按钮解除武装），再 execCommand 回放
-  check('回放后按钮解除武装', btnOn, false);
+  // 连续刷模式：回放后仍保持武装（不再自动取消），按钮保持激活
+  check('回放后保持武装(连续刷)', btnOn, true);
   // style.color getter 会把 #d93025 规范化为 rgb(217, 48, 37)（Chrome 亦如此），断言匹配 rgb
   check('回放了 foreColor(红色)', cmds.some(c => c.startsWith('foreColor:') && c.includes('217, 48, 37')), true);
   check('回放了 bold', cmds.includes('bold'), true);
 
-  // ---------- 3. 取消武装 ----------
+  // ---------- 2b. 连续刷：换第二个目标再次回放（保持武装） ----------
+  await sleep(450);   // 越过 400ms 防连锁窗口（真实用户划选间隔远超此值）
+  cmds.length = 0;
+  sel.removeAllRanges();
+  const r2b = w.document.createRange();
+  r2b.selectNodeContents(targetP);   // 复用目标段当作第二个目标
+  sel.addRange(r2b);
+  w.document.dispatchEvent(new w.Event('selectionchange'));
+  check('连续刷第二次仍回放 bold', cmds.includes('bold'), true);
+  check('连续刷后仍保持武装', btnOn, true);
+
+  // ---------- 3. 再点按钮 = 手动取消武装 ----------
   cmds.length = 0;
   sel.removeAllRanges();
   const r3 = w.document.createRange();
   r3.selectNodeContents(sourceP);
   sel.addRange(r3);
-  w.toggleFormatPainter(ed, painterBtn);
-  check('再次武装成功', btnOn, true);
+  w.toggleFormatPainter(ed, painterBtn);   // 已武装 → 再次点击 = 取消
+  check('再次点击后解除', btnOn, false);
   w.cancelFormatPainter();
   check('cancel 后解除', btnOn, false);
   sel.removeAllRanges();
@@ -107,6 +119,7 @@ function check(name, got, want) {
   sel.addRange(r6);
   w.toggleFormatPainter(ed, painterBtn);
   check('高亮源武装成功', btnOn, true);
+  await sleep(450);   // 越过防连锁窗口
   cmds.length = 0;
   sel.removeAllRanges();
   const r7 = w.document.createRange();
@@ -114,6 +127,19 @@ function check(name, got, want) {
   sel.addRange(r7);
   w.document.dispatchEvent(new w.Event('selectionchange'));
   check('回放了 hiliteColor(yellow)', cmds.some(c => c.startsWith('hiliteColor:#fff3a3')), true);
+
+  // ---------- 6. Esc 取消武装（连续刷模式下已保持武装，直接按 Esc 退出） ----------
+  check('连续刷中仍保持武装', btnOn, true);
+  w.document.dispatchEvent(new w.KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
+  check('Esc 后解除武装', btnOn, false);
+  cmds.length = 0;
+  await sleep(450);
+  sel.removeAllRanges();
+  const r9 = w.document.createRange();
+  r9.selectNodeContents(targetP);
+  sel.addRange(r9);
+  w.document.dispatchEvent(new w.Event('selectionchange'));
+  check('Esc 后不再回放', cmds.length, 0);
 
   console.log(`\nPASS ${pass} / FAIL ${fail}`);
   dom.window.close();

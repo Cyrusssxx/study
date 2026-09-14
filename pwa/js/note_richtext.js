@@ -109,7 +109,7 @@
             <span class="note-color-dot" data-cmd="color" data-color="#8430ce" title="紫色字" style="color:#8430ce">A</span>
             <span class="note-color-dot" data-cmd="color" data-color="#5f6368" title="灰字" style="color:#5f6368">A</span>
             <span class="note-toolbar-sep"></span>
-            <button type="button" data-cmd="painter" title="格式刷：先选中带格式的文字点此按钮，再选中目标文字，即可复制颜色/加粗/高亮等格式">🖌 格式刷</button>
+            <button type="button" data-cmd="painter" title="格式刷：先选中带格式的文字点此按钮，再连续选中多个目标文字即可批量复制格式（再点此按钮或按 Esc 退出）">🖌 格式刷</button>
             <button type="button" data-cmd="clear" title="清除格式">⌫ 清除</button>
         </div>`;
     };
@@ -224,6 +224,7 @@
     let _painterBtn = null;          // 当前高亮的格式刷按钮
     let _painterEl = null;           // 当前绑定的编辑器元素
     let _painterListening = false;   // 是否已挂 selectionchange 监听（全局只挂一次）
+    let _painterIgnoreUntil = 0;     // 回放后防连锁的时间戳（execCommand/后备 span 可能引发 selectionchange）
 
     window.toggleFormatPainter = function (el, btn) {
         // 已武装：再次点击 = 取消
@@ -272,6 +273,7 @@
         if (!_painterListening) {
             document.addEventListener('selectionchange', () => {
                 if (!_painterFmt || !_painterEl) return;
+                if (Date.now() < _painterIgnoreUntil) return;   // 回放刚结束的连锁窗口，忽略
                 const s = window.getSelection();
                 if (!s || s.isCollapsed || !s.rangeCount) return;
                 const r = s.getRangeAt(0);
@@ -280,6 +282,10 @@
                 const sameAsSource = r.toString() === '' && r.collapsed;
                 if (sameAsSource) return;
                 window.applyFormatPainter();
+            });
+            document.addEventListener('keydown', (e) => {
+                // Esc 取消格式刷武装（连续刷模式下手动退出的入口之一）
+                if (e.key === 'Escape' && _painterFmt) window.cancelFormatPainter();
             });
             _painterListening = true;
         }
@@ -291,11 +297,10 @@
         if (_painterBtn) { _painterBtn.classList.remove('painter-active'); _painterBtn = null; }
     };
 
-    // 把捕获到的格式回放到当前选区
+    // 把捕获到的格式回放到当前选区（连续刷：回放后保持武装，直到再点按钮 / Esc 取消）
     window.applyFormatPainter = function () {
         const el = _painterEl;
         const fmt = _painterFmt;
-        window.cancelFormatPainter();
         if (!el || !fmt) return;
         const sel = window.getSelection();
         if (!sel || sel.isCollapsed || !sel.rangeCount) return;
@@ -306,7 +311,9 @@
         if (fmt.bold) document.execCommand('bold');
         if (fmt.italic) document.execCommand('italic');
         if (fmt.hl) window.applyNoteHighlight(el, fmt.hl.replace(/^hl-/, ''));
-        // 回放可能改变了选区；无需恢复，用户可继续输入
+        // 回放可能改变选区/触发 selectionchange → 短窗口内忽略，防止对同一选区重复回放；
+        // 用户继续刷下一个目标需重新划选，间隔远超此窗口
+        _painterIgnoreUntil = Date.now() + 400;
         if (typeof onNoteInput === 'function') onNoteInput();
     };
 
