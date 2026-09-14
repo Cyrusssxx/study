@@ -195,10 +195,20 @@
         return html;
     }
 
+    /* 指定标题强制加粗（用户显式要求的章节/小节）：去空白后精确匹配，优先于关键词规则。
+       链表章基础：3.1 概述系 + 3.2 基本操作系（含 遍历链表 的两种元素个数情形） */
+    const FORCED_STRONG = new Set([
+        '3.1链表概述', '3.1.1特点', '3.1.2题目的要求', '3.1.3链表定义',
+        '3.2基本操作', '3.2.1删除p', '3.2.2p插入到pre后面', '3.2.3尾插法和头插法', '3.2.4遍历链表',
+        '元素个数n已知', '元素个数未知'
+    ]);
+    const normKey = s => String(s || '').replace(/[\s\u00a0]+/g, '');
+
     /* 给标题加"重点"判定：暴力解信号（直接命中+正文语义信号）都打 strong；可选项信号打 optional。
        用户主刷暴力解：4-5 章的 DFS/BFS/枚举/递归/遍历也属于"暴力解通用模式"，统一标 strong 醒目提示。 */
     function classifyTitle(rawText) {
         const t = (rawText || '').trim();
+        if (FORCED_STRONG.has(normKey(t))) return 'strong';
         if (/^[*]\s*/.test(t)) return 'optional';
         // 直接的"暴力解"标题（含代码题主力解法：快排也属第一梯队暴力解）
         if (/(暴力解|暴力枚举|枚举法|枚举求解|快速排序|快排)/.test(t)) return 'strong';
