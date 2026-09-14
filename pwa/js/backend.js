@@ -559,14 +559,18 @@ async function api(url, opts = {}) {
             const subject = qid.split('_')[0];
             if (!SUBJECTS[subject]) return jsonResp({ error: '无效的题目ID' }, 400);
             const store = kind === 'unfamiliar' ? 'unfamiliar' : 'dontknow';
+            const otherStore = kind === 'unfamiliar' ? 'dontknow' : 'unfamiliar';
             const key = kind === 'unfamiliar' ? 'is_unfamiliar' : 'is_dontknow';
+            const otherKey = kind === 'unfamiliar' ? 'is_dontknow' : 'is_unfamiliar';
             const existing = await dbGet(store, qid);
             if (existing) {
                 await dbDelete(store, qid);
-                return jsonResp({ question_id: qid, [key]: false });
+                return jsonResp({ question_id: qid, [key]: false, [otherKey]: !!(await dbGet(otherStore, qid)) });
             }
+            // 互斥：标记「不熟」自动清除「不会」，反之亦然（同一题两种标记不能共存）
+            await dbDelete(otherStore, qid);
             await dbPut(store, { question_id: qid, subject, added_at: now() });
-            return jsonResp({ question_id: qid, [key]: true });
+            return jsonResp({ question_id: qid, [key]: true, [otherKey]: false });
         }
 
         // ---------- 不熟/不会 列表 ----------

@@ -1258,20 +1258,22 @@
 
     async function toggleMark(kind, questionId) {
         // kind: 'unfamiliar' | 'dontknow' —— 标记「不熟」（黄）或「不会」（红）
+        // 两标记互斥：响应同时带回 is_unfamiliar / is_dontknow（标一个自动清另一个）
         try {
             const resp = await api(`/api/mark/${kind}/${questionId}`, {method: 'POST'});
             const result = await resp.json();
             const q = questions[currentIndex];
             if (q.id === questionId) {
-                if (kind === 'unfamiliar') q.is_unfamiliar = !!result.is_unfamiliar;
-                else q.is_dontknow = !!result.is_dontknow;
+                q.is_unfamiliar = !!result.is_unfamiliar;
+                q.is_dontknow = !!result.is_dontknow;
                 renderQuestion();
             }
-            // 当前正处于该标记模式：切掉该题后若集合已空，刷新列表显示空状态
-            if ((MODE === 'unfamiliar' && kind === 'unfamiliar') || (MODE === 'dontknow' && kind === 'dontknow')) {
-                if ((MODE === 'unfamiliar' && !q.is_unfamiliar) || (MODE === 'dontknow' && !q.is_dontknow)) {
-                    loadQuizQuestions();
-                }
+            // 若本次操作导致「当前模式的集合」发生变化（取消本模式标记，或因互斥被另一标记顶掉），重载列表
+            const removedFromCurrent =
+                (MODE === 'unfamiliar' && !q.is_unfamiliar) ||
+                (MODE === 'dontknow' && !q.is_dontknow);
+            if (removedFromCurrent) {
+                loadQuizQuestions();
             }
         } catch (e) {
             console.error('标记失败:', e);

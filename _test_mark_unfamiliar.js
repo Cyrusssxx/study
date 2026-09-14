@@ -74,6 +74,25 @@ function check(name, got, want) {
   check('dontknow store = [os_2]', (await dbAll('dontknow')).map(x => x.question_id), ['os_2']);
   check('favorites 不受影响 = 0', (await dbAll('favorites')).length, 0);
 
+  console.log('\n--- 互斥：标「不会」清除「不熟」（同一题） ---');
+  // os_1 当前是「不熟」；标为「不会」应清除不熟、落库到 dontknow
+  const excl = await post('/api/mark/dontknow/os_1');
+  check('标不会返回 is_dontknow=true', excl.is_dontknow, true);
+  check('标不会同时返回 is_unfamiliar=false(互斥)', excl.is_unfamiliar, false);
+  check('标不会后 unfamiliar store 移除 os_1', (await dbAll('unfamiliar')).map(x => x.question_id), []);
+  check('标不会后 dontknow store 含 os_1', (await dbAll('dontknow')).map(x => x.question_id).sort(), ['os_1', 'os_2']);
+  // 反向：把 os_1 标回「不熟」应清除「不会」
+  const excl2 = await post('/api/mark/unfamiliar/os_1');
+  check('标回不熟返回 is_unfamiliar=true', excl2.is_unfamiliar, true);
+  check('标回不熟同时 is_dontknow=false(互斥)', excl2.is_dontknow, false);
+  check('标回不熟后 dontknow store 只剩 os_2', (await dbAll('dontknow')).map(x => x.question_id), ['os_2']);
+  // 取消互斥标记本身不误伤另一题
+  check('取消 os_2 不会(不受 os_1 操作影响)', (await post('/api/mark/dontknow/os_2')).is_dontknow, false);
+  check('重新标回 os_2 不会', (await post('/api/mark/dontknow/os_2')).is_dontknow, true);
+  // 模式过滤在互斥后仍正确：unfamiliar 只出 os_1，dontknow 只出 os_2
+  check('互斥后 mode=unfamiliar 只出 os_1', await qsInMode('unfamiliar'), ['os_1']);
+  check('互斥后 mode=dontknow 只出 os_2', await qsInMode('dontknow'), ['os_2']);
+
   console.log('\n--- 模式过滤 ---');
   check('mode=unfamiliar 只出不熟题', await qsInMode('unfamiliar'), ['os_1']);
   check('mode=dontknow 只出不会题', await qsInMode('dontknow'), ['os_2']);
