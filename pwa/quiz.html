@@ -63,7 +63,7 @@
                         <button class="opt-shuffle-btn" id="shuffleBtn" onclick="toggleShuffle()" title="打乱选项显示顺序（字母跟随内容，答案字母不变）">选项乱序 <span id="shuffleState">关</span></button>
                         <button class="opt-shuffle-btn" onclick="openKeybindDialog()" title="切换练习模式 / 自定义上一题/下一题快捷键">设置 ⚙</button>
                         <button class="opt-shuffle-btn" id="favResetBtn" style="display:none" onclick="resetFavProgress()" title="清空收藏题的作答与错题记录，重新刷一遍（收藏保留）">清空重做 ⟳</button>
-                        <button class="opt-shuffle-btn" id="favWrongResetBtn" style="display:none" onclick="resetFavWrong()" title="只把收藏模式下的错题从错题本移除：其他题的错题不受影响，作答记录与正确率保留，收藏也保留">清空收藏错题 🗑</button>
+                        <button class="opt-shuffle-btn" id="favWrongResetBtn" style="display:none" onclick="resetFavWrong()" title="把收藏模式下答错的题清空重做：作答与错题记录一起清，重新刷（收藏保留，其他题不受影响）">清空收藏错题 🗑</button>
                         <div class="review-chips" id="reviewChips" style="display:none"></div>
                     </div>
                     <div class="quiz-nav-info">
@@ -1303,34 +1303,43 @@
         const btn = document.getElementById('favWrongResetBtn');
         if (!btn || btn.style.display === 'none') return 0;
         try {
-            const resp = await api(`/api/wrong?subject=${encodeURIComponent(SUBJECT)}`);
-            const data = await resp.json();
-            const favIds = new Set(quizAllQuestions.map(q => q.id));
-            favWrongCount = (data.wrong_questions || []).filter(w => favIds.has(w.question_id)).length;
+            // 收藏错题数 = 错题记录 ∩ 收藏题（必须用收藏 id 集合，不能用全科目题——旧实现
+            // 把 quizAllQuestions 当收藏集合，统计成了全科目错题数，按钮数字与实际清除范围不符）
+            const [wrongResp, favResp] = await Promise.all([
+                api(`/api/wrong?subject=${encodeURIComponent(SUBJECT)}`),
+                api(`/api/favorites?subject=${encodeURIComponent(SUBJECT)}`)
+            ]);
+            const wrongData = await wrongResp.json();
+            const favData = await favResp.json();
+            const favIds = new Set((favData.favorites || []).map(f => f.question_id));
+            favWrongCount = (wrongData.wrong_questions || []).filter(w => favIds.has(w.question_id)).length;
         } catch (e) {
             favWrongCount = -1;  // 取不到就当有内容，宁可让用户看到确认框
         }
         btn.textContent = favWrongCount > 0 ? `清空收藏错题 ${favWrongCount} 🗑` : '清空收藏错题 🗑';
-        btn.disabled = favWrongCount === 0;
         btn.title = favWrongCount === 0
-            ? '收藏题中暂无错题（已连对2次移出的历史记录不计入）'
-            : `把收藏模式下的 ${favWrongCount} 道错题从错题本移除：只动收藏题，其他题的错题不受影响；作答记录与正确率保留，收藏也保留`;
+            ? '收藏题中暂无错题记录（连对2次自动移出的历史记录不计入）'
+            : `把收藏模式下 ${favWrongCount} 道错题的作答与错题记录清空，重新刷一遍（收藏保留）`;
         return favWrongCount;
     }
 
     async function resetFavWrong() {
-        // 仅清收藏题的错题记录：作答记录/正确率不动，收藏也保留
+        // 清空收藏题中「答错」的题：作答记录 + 错题记录一起清，重新刷一遍（重做语义）
         // 点下时现取一次计数，避免用户在页面上又答错几题导致按钮上显示的旧数字过期
         const n = await updateFavWrongCount();
-        if (n === 0) { alert('收藏模式下的题目里没有错题了'); return; }
+        if (n === 0) { alert('收藏题中暂无错题记录（已连对2次自动移出的不计入）'); return; }
         // n<0 表示计数接口取数失败：不带具体数字照样执行，宁可多问一句也不要漏删
         const msg = n > 0
-            ? `把收藏模式下的 ${n} 道错题从错题本移除？\n\n只动收藏里的题，其他题的错题记录不受影响\n作答记录与正确率保留，收藏也保留`
-            : '把收藏模式下的错题从错题本移除？\n\n（未能读取当前条数；只动收藏里的题，其他题的错题记录不受影响）';
+            ? `把收藏模式下答错的 ${n} 道题的作答与错题记录清空，重新刷一遍？\n\n只动收藏里答错的题，其他题的作答/错题不受影响\n收藏保留`
+            : '把收藏模式下答错的题清空重做？\n\n（未能读取当前条数；只动收藏里答错的题，其他题不受影响）';
         if (!confirm(msg)) return;
         try {
-            await api(`/api/favorites/reset-wrong/${SUBJECT}`, {method: 'POST'});
+            const resp = await api(`/api/favorites/reset-wrong-replay/${SUBJECT}`, {method: 'POST'});
+            const r = await resp.json();
             await updateFavWrongCount();
+            alert(`已清空 ${r.cleared} 条收藏错题的记录（${r.replay_count} 道题），可重新作答`);
+            // 重载列表：收藏/错题模式下被清的题状态已变化
+            loadQuizQuestions();
         } catch (e) {
             alert('清空失败: ' + e.message);
         }

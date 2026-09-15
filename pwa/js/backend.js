@@ -620,26 +620,42 @@ async function api(url, opts = {}) {
             // reset       → 清收藏题的作答记录 + 错题记录（重刷一遍）
             // reset-wrong → 只清收藏题的错题记录（作答记录/正确率保留，题仍在收藏中）
             // 收藏本身始终保留（对应 app.py /api/favorites/reset）
-            if (seg[2] === 'reset' || seg[2] === 'reset-wrong') {
+            if (seg[2] === 'reset' || seg[2] === 'reset-wrong' || seg[2] === 'reset-wrong-replay') {
+                // reset              → 清收藏题的作答记录 + 错题记录（重刷一遍）
+                // reset-wrong        → 只清收藏题的错题记录（作答记录/正确率保留，题仍在收藏中）
+                // reset-wrong-replay → 只清「收藏题中答错的题」的作答 + 错题记录（清空重做，收藏保留）
                 const wrongOnly = seg[2] === 'reset-wrong';
+                const replayOnly = seg[2] === 'reset-wrong-replay';
                 const subject = seg[3];
                 if (!SUBJECTS[subject]) return jsonResp({ error: '科目不存在' }, 404);
                 const favIds = new Set((await dbAll('favorites')).filter(f => f.subject === subject).map(f => f.question_id));
-                let cleared = 0;
+                let cleared = 0, replayCount = 0;
                 if (favIds.size) {
                     const db = await openDB();
+                    // replay：先把范围缩小到「收藏题 ∩ 错题」，只重做这些题
+                    let scope = null;
+                    if (replayOnly) {
+                        const wrongRows = (await dbAll('wrong')).filter(w => w.subject === subject && favIds.has(w.question_id));
+                        scope = new Set(wrongRows.map(w => w.question_id));
+                        replayCount = scope.size;
+                    }
                     for (const store of wrongOnly ? ['wrong'] : ['progress', 'wrong']) {
                         const rows = await dbAll(store);
                         const tx = db.transaction(store, 'readwrite');
                         for (const r of rows) {
                             if (!favIds.has(r.question_id)) continue;
+                            if (replayOnly && scope && !scope.has(r.question_id)) continue;
                             tx.objectStore(store).delete(store === 'progress' ? r.pk : r.question_id);
                             cleared++;
                         }
                         await new Promise((res, rej) => { tx.oncomplete = res; tx.onerror = () => rej(tx.error); });
                     }
                 }
-                return jsonResp({ success: true, cleared, favs: favIds.size, scope: wrongOnly ? 'wrong' : 'all' });
+                return jsonResp({
+                    success: true, cleared, favs: favIds.size,
+                    scope: wrongOnly ? 'wrong' : (replayOnly ? 'wrong-replay' : 'all'),
+                    replay_count: replayCount
+                });
             }
             const subject = p.get('subject') || null;
             const list = (await dbAll('favorites')).filter(f => !subject || f.subject === subject);

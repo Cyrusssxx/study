@@ -107,6 +107,20 @@ function check(name, got, want) {
   check('os_2 作答记录仍在', !!(await lastStatus('sequential', 'os_2')), true);
   check('收藏依然保留 = 2 条', (await dbAll('favorites')).length, 2);
 
+  console.log('\n--- /api/favorites/reset-wrong-replay：清收藏题中错题的作答+错题(重做) ---');
+  // 重新造数据：os_1（收藏题）再答错一次；os_2 仍是非收藏错题
+  await post('/api/submit', { question_id: 'os_1', answer: 'B' });   // os_1 答错
+  check('重造后 os_1 在错题本', await wrongIds(), ['os_1', 'os_2']);
+  const r3j = await (await api('/api/favorites/reset-wrong-replay/os')).json();
+  check('scope=wrong-replay', r3j.scope, 'wrong-replay');
+  check('replay_count=1（仅收藏题 os_1）', r3j.replay_count, 1);
+  check('cleared=2（os_1 的 progress + wrong 各 1 条）', r3j.cleared, 2);
+  check('错题记录只剩非收藏的 os_2', await wrongIds(), ['os_2']);
+  check('progress 只剩非收藏的 os_2 = 1 条', (await dbAll('progress')).length, 1);
+  check('os_1 作答记录已清（可重做）', await lastStatus('favorite', 'os_1'), null);
+  check('收藏依然保留 = 2 条', (await dbAll('favorites')).length, 2);
+  check('非收藏题的作答记录未误删', !!(await lastStatus('sequential', 'os_2')), true);
+
   console.log('\n--- 边界 ---');
   check('非法科目 404', (await api('/api/favorites/reset-wrong/bad')).status, 404);
   check('无收藏的科目 cleared=0', (await (await api('/api/favorites/reset-wrong/cn')).json()).cleared, 0);
