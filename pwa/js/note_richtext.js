@@ -225,6 +225,7 @@
     let _painterEl = null;           // 当前绑定的编辑器元素
     let _painterListening = false;   // 是否已挂 selectionchange 监听（全局只挂一次）
     let _painterIgnoreUntil = 0;     // 回放后防连锁的时间戳（execCommand/后备 span 可能引发 selectionchange）
+    let _painterTimer = null;        // 划选防抖定时器（selectionchange 连续触发时取最后一次稳定选区）
 
     window.toggleFormatPainter = function (el, btn) {
         // 已武装：再次点击 = 取消
@@ -269,19 +270,28 @@
         _painterFmt = fmt;
         _painterEl = el;
         _painterBtn = btn || null;
+        // 重新武装后清除旧的防连锁窗口与待执行防抖，保证「第二次使用」第一次划选立即生效
+        _painterIgnoreUntil = 0;
+        if (_painterTimer) { clearTimeout(_painterTimer); _painterTimer = null; }
         if (btn) btn.classList.add('painter-active');
         if (!_painterListening) {
             document.addEventListener('selectionchange', () => {
                 if (!_painterFmt || !_painterEl) return;
+                // 编辑器已被重建/移除（切题、面板重开等）：武装自动失效，避免静默拦截新编辑器的划选
+                if (!_painterEl.isConnected) { window.cancelFormatPainter(); return; }
                 if (Date.now() < _painterIgnoreUntil) return;   // 回放刚结束的连锁窗口，忽略
                 const s = window.getSelection();
                 if (!s || s.isCollapsed || !s.rangeCount) return;
                 const r = s.getRangeAt(0);
-                // 要求新选区在编辑器内且不是源选区本身
+                // 要求新选区在编辑器内
                 if (!_painterEl.contains(r.startContainer) || !_painterEl.contains(r.endContainer)) return;
-                const sameAsSource = r.toString() === '' && r.collapsed;
-                if (sameAsSource) return;
-                window.applyFormatPainter();
+                // 划选是连续 selectionchange 流（拖动/松开各触发多次）：30ms 防抖到选区稳定
+                // 再回放，避免拖选中途用半截选区回放、并把最终选区挡在防连锁窗口外
+                if (_painterTimer) clearTimeout(_painterTimer);
+                _painterTimer = setTimeout(() => {
+                    _painterTimer = null;
+                    window.applyFormatPainter();
+                }, 30);
             });
             document.addEventListener('keydown', (e) => {
                 // Esc 取消格式刷武装（连续刷模式下手动退出的入口之一）
@@ -294,6 +304,9 @@
     window.cancelFormatPainter = function () {
         _painterFmt = null;
         _painterEl = null;
+        // 取消时同时清掉防连锁窗口与待执行防抖，否则旧窗口/旧定时器会吞掉下一次武装的首次划选
+        _painterIgnoreUntil = 0;
+        if (_painterTimer) { clearTimeout(_painterTimer); _painterTimer = null; }
         if (_painterBtn) { _painterBtn.classList.remove('painter-active'); _painterBtn = null; }
     };
 

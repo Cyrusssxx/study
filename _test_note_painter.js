@@ -63,6 +63,7 @@ function check(name, got, want) {
   const r2 = makeRange(targetP);
   sel.addRange(r2);
   w.document.dispatchEvent(new w.Event('selectionchange'));
+  await sleep(60);   // 划选防抖 30ms 后回放
   // 连续刷模式：回放后仍保持武装（不再自动取消），按钮保持激活
   check('回放后保持武装(连续刷)', btnOn, true);
   // style.color getter 会把 #d93025 规范化为 rgb(217, 48, 37)（Chrome 亦如此），断言匹配 rgb
@@ -77,6 +78,7 @@ function check(name, got, want) {
   r2b.selectNodeContents(targetP);   // 复用目标段当作第二个目标
   sel.addRange(r2b);
   w.document.dispatchEvent(new w.Event('selectionchange'));
+  await sleep(60);
   check('连续刷第二次仍回放 bold', cmds.includes('bold'), true);
   check('连续刷后仍保持武装', btnOn, true);
 
@@ -126,7 +128,20 @@ function check(name, got, want) {
   r7.selectNodeContents(plainP);
   sel.addRange(r7);
   w.document.dispatchEvent(new w.Event('selectionchange'));
+  await sleep(60);
   check('回放了 hiliteColor(yellow)', cmds.some(c => c.startsWith('hiliteColor:#fff3a3')), true);
+
+  // ---------- 5b. 第二次武装后连续刷第二个目标（回归：曾只刷一个就失效） ----------
+  await sleep(450);   // 越过防连锁窗口
+  cmds.length = 0;
+  sel.removeAllRanges();
+  const r8 = w.document.createRange();
+  r8.selectNodeContents(plainP);
+  sel.addRange(r8);
+  w.document.dispatchEvent(new w.Event('selectionchange'));
+  await sleep(60);
+  check('第二次武装后再刷第二个目标仍回放', cmds.some(c => c.startsWith('hiliteColor:') || c === 'bold'), true);
+  check('第二次武装后连续刷仍保持武装', btnOn, true);
 
   // ---------- 6. Esc 取消武装（连续刷模式下已保持武装，直接按 Esc 退出） ----------
   check('连续刷中仍保持武装', btnOn, true);
@@ -140,6 +155,27 @@ function check(name, got, want) {
   sel.addRange(r9);
   w.document.dispatchEvent(new w.Event('selectionchange'));
   check('Esc 后不再回放', cmds.length, 0);
+
+  // ---------- 7. 编辑器被重建/移除（切题、面板重开）→ 武装自动失效不再静默拦截 ----------
+  sel.removeAllRanges();
+  const r10 = w.document.createRange();
+  r10.selectNodeContents(hlSpan);
+  sel.addRange(r10);
+  w.toggleFormatPainter(ed, painterBtn);
+  check('重建前武装成功', btnOn, true);
+  // 模拟切题重建：旧编辑器脱离文档，新编辑器划选
+  ed.remove();
+  const newEd = w.document.createElement('div');
+  newEd.contentEditable = 'true';
+  newEd.textContent = '新编辑器文字';
+  w.document.body.appendChild(newEd);
+  sel.removeAllRanges();
+  const r11 = w.document.createRange();
+  r11.selectNodeContents(newEd.firstChild);
+  sel.addRange(r11);
+  w.document.dispatchEvent(new w.Event('selectionchange'));
+  await sleep(60);
+  check('编辑器失联后武装自动取消(不静默拦截)', btnOn, false);
 
   console.log(`\nPASS ${pass} / FAIL ${fail}`);
   dom.window.close();
