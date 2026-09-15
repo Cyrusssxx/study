@@ -1978,7 +1978,7 @@
         "D": "0x8049822"
       },
       "answer": "A",
-      "explanation": "<p>结构体按边界对齐存放的要求：数据成员的起始地址是其数据类型大小的整数倍，char型占1字节，char型的起始地址必须是1字节的整数倍；unsigned型占4字节，所以unsigned型的起始地址必须是4字节的整数倍。据此分析，id的起始地址为0x8049820，p0st的起始地址为0x8049824，所以phone的起始地址为0x8049828。结构体x的存放方式如下所示。</p><p>地址8049820H8049821H8049822H8049823Hchar地址8049824H8049825H8049826H8049827Hpost地址8049828H8049829H804982AH804982BHphone</p>",
+      "explanation": "<p>结构体按边界对齐存放的要求：数据成员的起始地址是其数据类型大小的整数倍，char型占1字节，char型的起始地址必须是1字节的整数倍；unsigned型占4字节，所以unsigned型的起始地址必须是4字节的整数倍。据此分析，id的起始地址为0x8049820，post的起始地址为0x8049824，所以phone的起始地址为0x8049828。结构体x的存放方式如下所示。</p><p>地址8049820H8049821H8049822H8049823Hchar地址8049824H8049825H8049826H8049827Hpost地址8049828H8049829H804982AH804982BHphone</p>",
       "chapter": "第2章 数据的表示和运算",
       "section": "2.3 浮点数的表示与运算",
       "subsection": "2.3.4 数据的宽度和存储"
@@ -2088,7 +2088,7 @@
         "D": "0x11,0xC00E"
       },
       "answer": "D",
-      "explanation": "<p>尽管record大小为7B（成员a有4B，成员b有1B，成员c有2B），因为数据按边界对齐方式存储，所以record共占用8B。record.a的十六进制表示为0x00000111，因为采用小端方式存放数据，所以地址0xC008中的内容应为低字节0x11；record.b只占1B，后面的1B留空；record.c占2B，因此其地址为0xC00E。各字节的存储分配如下表所示。</p><p>地址OxC0080xC009OxC00AOxC0OB内容record.a(0x11)record.a(0x01)record.a(0x00)record.a(0x00)地址OxC00COxC0ODOxC00EOxC00F内容record.brecord.crecord.c</p>",
+      "explanation": "<p>尽管record大小为7B（成员a有4B，成员b有1B，成员c有2B），因为数据按边界对齐方式存储，所以record共占用8B。record.a的十六进制表示为0x00000111，因为采用小端方式存放数据，所以地址0xC008中的内容应为低字节0x11；record.b只占1B，后面的1B留空；record.c占2B，因此其地址为0xC00E。各字节的存储分配如下表所示。</p><p>地址0xC0080xC0090xC00A0xC00B内容record.a(0x11)record.a(0x01)record.a(0x00)record.a(0x00)地址0xC00C0xC00D0xC00E0xC00F内容record.brecord.crecord.c</p>",
       "chapter": "第2章 数据的表示和运算",
       "section": "2.3 浮点数的表示与运算",
       "subsection": "2.3.4 数据的宽度和存储"
