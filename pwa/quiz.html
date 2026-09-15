@@ -917,7 +917,8 @@
     function flushNoteSave() {
         if (_noteTimer) {
             clearTimeout(_noteTimer); _noteTimer = null;
-            try { saveNote(true); } catch (e) { }
+            // saveNote 是 async：不加 .catch 会产生未处理的 rejection（保存失败静默无提示）
+            try { saveNote(true).catch(() => { }); } catch (e) { }
         }
     }
     window.addEventListener('pagehide', flushNoteSave);
@@ -1284,11 +1285,15 @@
         // 收藏模式清空重做：只清收藏题的作答记录，收藏本身保留
         if (!confirm('清空所有收藏题的作答记录，重新刷一遍？（收藏保留，不影响其他题）')) return;
         try {
-            await api(`/api/favorites/reset/${SUBJECT}`, {method: 'POST'});
-            answered = {};
-            questions.forEach(q => { q.last_status = null; });
+            const resp = await api(`/api/favorites/reset/${SUBJECT}`, {method: 'POST'});
+            const r = await resp.json();
+            // 只清收藏题的本轮作答（后端也只清了收藏题的 progress）：
+            // 旧实现 answered = {} 会把其他模式的本轮作答一并清掉，UI 显示"未答"而后端记录还在 → 刷新后不一致
+            questions.forEach(q => { q.last_status = null; delete answered[q.id]; });
             updateFavWrongCount();  // 全量重刷后错题记录已清空，同步按钮计数
             gotoQuestion(0);
+            // 清除后必须给反馈：静默回到第一题会让人以为"点了没反应"
+            alert(`已清空 ${r.cleared} 条记录（收藏的 ${r.favs} 道题重新刷）\n收藏保留，其他题不受影响`);
         } catch (e) {
             alert('清空失败: ' + e.message);
         }
