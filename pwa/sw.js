@@ -18,7 +18,7 @@
  *          ③ 懒加载数据既不占首屏，改完也能凭 LAZY_VER 正确失效。
  */
 const APP_VER = 'quiz408-app-5a13688f95';
-const DATA_VER = 'quiz408-data-d6722a4500';
+const DATA_VER = 'quiz408-data-1b5c02ae06';
 const LAZY_VER = 'quiz408-lazy-d4dc54b92d';
 
 // 应用外壳：保证离线骨架与最新脚本。meta.json 仅几百字节，随外壳一起预缓存。
