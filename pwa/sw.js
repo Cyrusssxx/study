@@ -168,10 +168,33 @@ self.addEventListener('fetch', (e) => {
         return;
     }
 
-    // 数据/图片/图标：按资源归属选择缓存命名空间（懒加载层 / 数据层 / 外壳层），缓存优先。
+    // 数据/图片/图标：按资源归属选择缓存命名空间（懒加载层 / 数据层 / 外壳层）。
     // 三者必须互斥：懒加载前缀优先判定，避免被外壳层「吃掉」而长期命中旧内容。
     const inLazy = LAZY_PREFIXES.some(u => path.includes('/' + u));
     const inData = !inLazy && DATA_PRECACHE.some(u => path.endsWith('/' + u) || path === '/' + u);
+    const isDataJson = inData && path.endsWith('.json');
+
+    // 数据 JSON（题库/笔记等）：网络优先 —— 在线时永远拿最新数据（改题后刷新一次即见），
+    // 离线/网络失败回退缓存。外壳(HTML/JS/CSS)同策略；旧 cache-first 需「两次刷新」才能
+    // 越过 install 预取时序，用户改完题刷新一次仍看到旧数据，投诉不断。
+    if (isDataJson) {
+        e.respondWith((async () => {
+            try {
+                const resp = await fetch(e.request);
+                if (resp && resp.ok && isSameOrigin) {
+                    const c = await caches.open(DATA_VER);
+                    c.put(e.request, resp.clone());
+                }
+                return resp;
+            } catch (err) {
+                const hit = await caches.match(e.request, { ignoreSearch: true });
+                return hit || Response.error();
+            }
+        })());
+        return;
+    }
+
+    // 图片/懒加载资源：缓存优先（量大、更新少，网络优先会拖慢加载）。
     const cacheName = inLazy ? LAZY_VER : (inData ? DATA_VER : APP_VER);
     e.respondWith((async () => {
         const hit = await caches.match(e.request, { ignoreSearch: true });
