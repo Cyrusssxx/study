@@ -6122,7 +6122,7 @@
     {
       "id": "os_0383",
       "number": 383,
-      "content": "【2016统考真题】某进程的段表内容如下所示。 访问段号为2、段内地址为400的逻辑地址时，进行地址转换的结果是( )",
+      "content": "【2016统考真题】某进程的段表内容如下所示<table class=\"mc-table\" style=\"margin:6px 0 8px;min-width:auto\"><tr><th>段号</th><th>段长</th><th>内存起始地址</th><th>权限</th><th>状态</th></tr><tr><td>0</td><td>100</td><td>6000</td><td>只读</td><td>在内存</td></tr><tr><td>1</td><td>200</td><td>——</td><td>读写</td><td>不在内存</td></tr><tr><td>2</td><td>300</td><td>4000</td><td>读写</td><td>在内存</td></tr></table><table class=\"mc-table\" style=\"margin:6px 0 8px;min-width:auto\"><tr><th>段号</th><th>段长</th><th>内存起始地址</th><th>权限</th><th>状态</th></tr><tr><td>0</td><td>100</td><td>6000</td><td>只读</td><td>在内存</td></tr><tr><td>1</td><td>200</td><td>——</td><td>读写</td><td>不在内存</td></tr><tr><td>2</td><td>300</td><td>4000</td><td>读写</td><td>在内存</td></tr></table>。 访问段号为2、段内地址为400的逻辑地址时，进行地址转换的结果是( )",
       "options": {
         "A": "段缺失异常",
         "B": "得到内存地址4400",
