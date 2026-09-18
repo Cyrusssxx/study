@@ -96,6 +96,31 @@
         .dati-nav-fab.hide { display: none; }
         .dati-nav-mask { display: none; position: fixed; inset: 0; background: rgba(0,0,0,.4); z-index: 200; }
         .dati-nav-mask.open { display: block; }
+
+        /* ============ 单题模式（一题一题加载） ============ */
+        .dati-view-sep { width: 1px; height: 20px; background: var(--border); margin: 0 2px; }
+        .dati-single-top {
+            display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+            margin: 0 0 10px; font-size: .86rem; color: var(--text-light);
+        }
+        .dati-single-crumb { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 72%; }
+        .dati-single-crumb b { color: var(--text); font-weight: 600; }
+        .dati-single-prog {
+            margin-left: auto; font-weight: 700; color: var(--primary);
+            font-variant-numeric: tabular-nums;
+        }
+        /* 底栏用 sticky（在文档流内），避开右下角悬浮按钮，不与其争位 */
+        .dati-single-bar {
+            position: sticky; bottom: 10px; z-index: 50;
+            display: flex; align-items: center; justify-content: center; gap: 10px; flex-wrap: wrap;
+            margin: 14px 0 4px; padding: 10px 14px;
+            background: var(--card-bg); border: 1px solid var(--border); border-radius: 12px;
+            box-shadow: 0 6px 20px rgba(0,0,0,.16);
+        }
+        .dati-single-bar button:disabled { opacity: .45; cursor: not-allowed; }
+        .dati-single-bar .dati-step-key { font-size: .78rem; color: var(--text-light); font-weight: 400; }
+        .dati-single-pos { font-size: .86rem; color: var(--text-light); font-variant-numeric: tabular-nums; }
+        .num-btn.current { background: var(--primary); color: #fff; border-color: var(--primary); font-weight: 700; }
     </style>
 </head>
 <body>
@@ -122,7 +147,7 @@
     <main class="container">
         <div class="page-header">
             <h1>📝 大题专项</h1>
-            <p>王道综合应用题真题截图（操作系统 / 计算机组成原理 / 计算机网络），一题一图、题目与答案分开查看，可收藏</p>
+            <p>王道综合应用题真题截图（操作系统 / 计算机组成原理 / 计算机网络）。默认<b>单题模式</b>：一次一题、图片逐题加载，左右键或底栏切换；也可切「列表模式」按章节浏览。</p>
         </div>
 
         <div class="dati-tabs" id="datiTabs"></div>
@@ -134,6 +159,9 @@
             <button class="dati-chip" id="fDone" onclick="setFilter('done')">✅ 已练 <span class="dati-count" id="cntDone"></span></button>
             <button class="dati-chip" id="datiExpandAll" onclick="toggleAllChapters()">展开全部</button>
             <select class="dati-year" id="yearSel" onchange="setYear(this.value)" style="display:none"></select>
+            <span class="dati-view-sep"></span>
+            <button class="dati-chip dati-view-chip" id="fSingle" onclick="setView('single')" title="一次只做一道题，题目图逐题加载（省流量）">📄 单题模式</button>
+            <button class="dati-chip dati-view-chip" id="fList" onclick="setView('list')" title="整章列表浏览，章节折叠展开">📃 列表模式</button>
         </div>
         <div class="dati-layout">
             <div id="datiRoot">
@@ -161,6 +189,32 @@
     let openChapters = new Set(JSON.parse(localStorage.getItem('datiOpenCh') || '[]'));  // 已展开的章节（默认收起，按需加载图片）
     let doneSet = new Set(JSON.parse(localStorage.getItem('datiDone') || '[]'));        // 已练过的大题 qid（只看未练筛选用）
     let lastSeenQ = localStorage.getItem('datiLastSeenQ') || '';                         // 上次浏览/跳转的题（刷新后自动定位）
+    let viewMode = localStorage.getItem('datiView') || 'single';                         // single（默认，一题一题做）| list（整章列表）
+    let singleQid = localStorage.getItem('datiSingleQ') || '';                           // 单题模式当前题 id
+
+    // 当前科目 + 当前筛选下的有序题目（带章节/小节上下文）——单题模式与列表模式共用
+    function flatItems() {
+        const sub = DATI.find(s => s.key === activeSubject);
+        if (!sub) return [];
+        const out = [];
+        for (const ch of sub.chapters)
+            for (const sec of ch.sections)
+                for (const q of sec.questions)
+                    if (passFilter(q)) out.push({ q, chName: ch.name, secName: sec.name });
+        return out;
+    }
+
+    // 切题前把未保存的笔记落库（单题模式下切换/跳题前调用），避免输入内容丢失
+    function flushDatiNote() {
+        const openPanel = [...document.querySelectorAll('.dati-note-panel[data-note]')]
+            .find(p => p.style.display !== 'none');
+        if (!openPanel) return;
+        const qid = openPanel.dataset.note;
+        const ta = openPanel.querySelector('.dati-note-input');
+        if (!ta) return;
+        const cur = noteMap[qid] || { content: '', images: [] };
+        if (ta.value !== (cur.content || '')) saveNote(qid);   // 内容有变动才写库
+    }
 
     function saveDoneSet() {
         localStorage.setItem('datiDone', JSON.stringify([...doneSet]));
@@ -190,14 +244,10 @@
             await loadNotes();
             renderTabs();
             renderYearOptions();
-            // 恢复上次的筛选/年份 UI 状态
-            document.getElementById('fAll').classList.toggle('active', filter === 'all');
-            document.getElementById('fReal').classList.toggle('active', filter === 'real');
-            document.getElementById('fFav').classList.toggle('active', filter === 'fav');
-            document.getElementById('fTodo').classList.toggle('active', filter === 'todo');
-            document.getElementById('fDone').classList.toggle('active', filter === 'done');
-            document.getElementById('yearSel').style.display = filter === 'real' ? '' : 'none';
+            // 恢复上次的筛选/年份/视图模式 UI 状态
+            syncFilterChips();
             document.getElementById('yearSel').value = year;
+            syncViewChips();
             render();
             restoreLastSeen();
         } catch (e) {
@@ -259,15 +309,20 @@
             [...years].sort((a, b) => b - a).map(y => `<option value="${y}">${y}年</option>`).join('');
     }
 
+    // 筛选按钮/年份下拉的 UI 同步（初始化、切筛选、单题模式兜底改筛选时复用）
+    function syncFilterChips() {
+        document.getElementById('yearSel').style.display = filter === 'real' ? '' : 'none';
+        document.getElementById('fAll').classList.toggle('active', filter === 'all');
+        document.getElementById('fReal').classList.toggle('active', filter === 'real');
+        document.getElementById('fFav').classList.toggle('active', filter === 'fav');
+        document.getElementById('fTodo').classList.toggle('active', filter === 'todo');
+        document.getElementById('fDone').classList.toggle('active', filter === 'done');
+    }
+
     function setFilter(f) {
         filter = f;
         localStorage.setItem('datiFilter', f);
-        document.getElementById('yearSel').style.display = f === 'real' ? '' : 'none';
-        document.getElementById('fAll').classList.toggle('active', f === 'all');
-        document.getElementById('fReal').classList.toggle('active', f === 'real');
-        document.getElementById('fFav').classList.toggle('active', f === 'fav');
-        document.getElementById('fTodo').classList.toggle('active', f === 'todo');
-        document.getElementById('fDone').classList.toggle('active', f === 'done');
+        syncFilterChips();
         render();
     }
 
@@ -361,6 +416,7 @@
             ansOpen.delete(qid);
             saveAnsOpen();
             if (btn) btn.textContent = '查看答案';
+            syncSingleBarAnsBtn();
             return;
         }
         if (!box.dataset.filled) {
@@ -372,9 +428,125 @@
         saveAnsOpen();
         if (btn) btn.textContent = '收起答案';
         box.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        syncSingleBarAnsBtn();
     }
 
+    // 单题模式底栏的「看答案」入口：题目图很长时无需滚回题卡操作区
+    function singleToggleAnswer() {
+        if (!singleQid) return;
+        toggleAnswer(singleQid);
+    }
+
+    // 底栏答案按钮文案与答案区展开状态保持一致
+    function syncSingleBarAnsBtn() {
+        const b = document.querySelector('.dati-single-bar .dati-single-ans');
+        if (!b) return;
+        const box = document.querySelector(`.dati-abody[data-ans="${singleQid}"]`);
+        b.textContent = (box && box.classList.contains('open')) ? '🙈 收起答案' : '👁 看答案';
+    }
+
+    // ==================== 渲染分派：单题（默认） / 列表 ====================
     function render() {
+        updateCounts();   // 两种模式共用筛选条计数（单题模式无列表渲染，不能漏）
+        if (viewMode === 'single') renderSingle(); else renderList();
+        renderNav();
+    }
+
+    function setView(m) {
+        if (m !== 'single' && m !== 'list') return;
+        if (m === viewMode) return;
+        flushDatiNote();
+        viewMode = m;
+        localStorage.setItem('datiView', m);
+        syncViewChips();
+        render();
+        window.scrollTo({ top: 0, behavior: 'auto' });
+    }
+
+    function syncViewChips() {
+        const s = document.getElementById('fSingle'), l = document.getElementById('fList');
+        if (s) s.classList.toggle('active', viewMode === 'single');
+        if (l) l.classList.toggle('active', viewMode === 'list');
+        // 仅列表模式需要「展开全部」；单题模式下无意义
+        const exp = document.getElementById('datiExpandAll');
+        if (exp) exp.style.display = viewMode === 'list' ? '' : 'none';
+    }
+
+    // ---------- 单题模式：一次只渲染一道题，图片逐题按需加载 ----------
+    function renderSingle() {
+        const root = document.getElementById('datiRoot');
+        const items = flatItems();
+        if (!items.length) {
+            root.innerHTML = `<div class="dati-none">该筛选条件下暂无题目</div>`;
+            return;
+        }
+        let idx = items.findIndex(it => it.q.id === singleQid);
+        if (idx < 0) idx = 0;                       // 上次的题不在当前筛选集内 → 回到第一题
+        const cur = items[idx];
+        singleQid = cur.q.id;
+        localStorage.setItem('datiSingleQ', singleQid);
+        localStorage.setItem('datiLastSeenQ', singleQid);
+        const q = cur.q;
+        root.innerHTML = `
+            <div class="dati-single-top">
+                <span class="dati-single-crumb"><b>${cur.chName}</b> · ${cur.secName}</span>
+                <span class="dati-single-prog">${idx + 1} / ${items.length}</span>
+            </div>
+            ${questionCard(activeSubject, cur.secName, q, favSet.has(q.id))}
+            <div class="dati-single-bar">
+                <button class="btn btn-secondary" onclick="singleStep(-1)" ${idx === 0 ? 'disabled' : ''}>◀ 上一题</button>
+                <span class="dati-single-pos">第 ${idx + 1} / ${items.length} 题</span>
+                <button class="btn btn-secondary dati-single-ans" onclick="singleToggleAnswer()">${ansOpen.has(q.id) ? '🙈 收起答案' : '👁 看答案'}</button>
+                <button class="btn btn-secondary" onclick="toggleNav()">☰ 选题</button>
+                <button class="btn btn-primary" onclick="singleStep(1)" ${idx === items.length - 1 ? 'disabled' : ''}>下一题 ▶</button>
+                <span class="dati-step-key">← → 键切换</span>
+            </div>`;
+        afterRender();
+        activateChapterImgs(root);   // 本模式仅当前一题在 DOM 中，直接挂图（即一题一题加载）
+        prefetchSingleNeighbor(idx, items);
+        window.scrollTo({ top: 0, behavior: 'auto' });
+    }
+
+    // 静默预取相邻题的题干首页图：切「下一题」时先看到题干、不必等白屏
+    // 仅预取 1 张（下一题的首图），整体仍是一题一题加载，不会累积整章请求
+    function prefetchSingleNeighbor(idx, items) {
+        const next = items[idx + 1];
+        if (!next || !next.q.q.length) return;
+        const im = new Image();
+        im.src = `data/dati_figs/${activeSubject}/${next.q.q[0]}`;
+    }
+
+    // 单题模式下按顺序切题（d=±1）
+    function singleStep(d) {
+        const items = flatItems();
+        if (!items.length) return;
+        let idx = items.findIndex(it => it.q.id === singleQid);
+        if (idx < 0) idx = 0;
+        const t = idx + d;
+        if (t < 0 || t >= items.length) return;
+        flushDatiNote();
+        singleQid = items[t].q.id;
+        renderSingle();
+        renderNav();
+    }
+
+    // 单题模式下直接跳到指定题（侧栏导航/收藏夹等入口复用）
+    function singleGoTo(qid) {
+        const items = flatItems();
+        if (!items.some(it => it.q.id === qid)) {
+            // 该题不在当前筛选集内：退回「全部」筛选后再定位，避免点了没反应
+            flushDatiNote();
+            filter = 'all';
+            localStorage.setItem('datiFilter', 'all');
+            syncFilterChips();
+        }
+        flushDatiNote();
+        singleQid = qid;
+        renderSingle();
+        renderNav();
+    }
+
+    function renderList() {
         const sub = DATI.find(s => s.key === activeSubject);
         const root = document.getElementById('datiRoot');
         if (!sub) return;
@@ -404,7 +576,6 @@
             ? chaptersHtml.join('')
             : `<div class="dati-none">该筛选条件下暂无题目</div>`;
         afterRender();
-        renderNav();
     }
 
     // ==================== 题目导航栏 ====================
@@ -419,9 +590,10 @@
             for (const sec of ch.sections) {
                 const qs = sec.questions.filter(q => passFilter(q));
                 if (!qs.length) continue;
-                const chips = qs.map(q =>
-                    `<button class="num-btn${doneSet.has(q.id) ? ' done' : ''}" data-jump="${q.id}" onclick="jumpTo('${q.id}')" title="${sec.name}${doneSet.has(q.id) ? ' · 已练' : ''}">${doneSet.has(q.id) ? '✅' : ''}${q.num}</button>`
-                ).join('');
+                const chips = qs.map(q => {
+                    const isCur = viewMode === 'single' && q.id === singleQid;
+                    return `<button class="num-btn${doneSet.has(q.id) ? ' done' : ''}${isCur ? ' current' : ''}" data-jump="${q.id}" onclick="jumpTo('${q.id}')" title="${sec.name}${doneSet.has(q.id) ? ' · 已练' : ''}${isCur ? ' · 当前' : ''}">${doneSet.has(q.id) ? '✅' : ''}${q.num}</button>`;
+                }).join('');
                 secs.push(`<div class="dati-nav-sec">${sec.name}<span class="dati-count">${qs.length}</span></div>
                     <div class="num-grid">${chips}</div>`);
             }
@@ -447,6 +619,12 @@
     }
 
     function jumpTo(qid) {
+        // 单题模式：切到该题并重渲染（只有当前题在 DOM 中，故不用滚动定位）
+        if (viewMode === 'single') {
+            singleGoTo(qid);
+            closeNavMobile();
+            return;
+        }
         const el = document.getElementById('q' + qid);
         if (el) {
             const d = el.closest('details.daka-group');
@@ -470,6 +648,8 @@
     // E2：刷新后自动定位到上次浏览的题（从收藏/未练等筛选下也能恢复）
     // 延迟到渲染与滚动恢复完成后执行，避免被 PS.restoreScroll 覆盖
     function restoreLastSeen() {
+        // 单题模式：当前题已在 renderSingle 中按 singleQid 定位，无需滚动恢复
+        if (viewMode === 'single') return;
         if (!lastSeenQ || filter === 'fav') return;
         setTimeout(() => {
             const el = document.getElementById('q' + lastSeenQ);
@@ -703,6 +883,16 @@
         ov.onclick = () => ov.remove();
         document.body.appendChild(ov);
     }
+
+    // 单题模式键盘导航：← / → 切换上一题 / 下一题
+    // 在笔记输入框内不拦截，避免打断输入；左右键原本无页面级行为，不与其他快捷键冲突
+    document.addEventListener('keydown', e => {
+        if (viewMode !== 'single') return;
+        const t = e.target;
+        if (t && (t.tagName === 'TEXTAREA' || t.tagName === 'INPUT' || t.isContentEditable)) return;
+        if (e.key === 'ArrowLeft') { e.preventDefault(); singleStep(-1); }
+        else if (e.key === 'ArrowRight') { e.preventDefault(); singleStep(1); }
+    });
 
     loadDati();
     // 状态持久化：页面交互状态已持久化，此处补滚动位置恢复（数据渲染完成后）
