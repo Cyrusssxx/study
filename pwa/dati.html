@@ -502,18 +502,31 @@
                 <span class="dati-step-key">← → 键切换</span>
             </div>`;
         afterRender();
-        activateChapterImgs(root);   // 本模式仅当前一题在 DOM 中，直接挂图（即一题一题加载）
+        activateChapterImgs(root);   // 题干图：本模式仅当前一题在 DOM 中，直接挂图
+        primeAnswer(q.id);           // 答案图：与题干一并加载（节点已在 DOM、但不展开）
         prefetchSingleNeighbor(idx, items);
         window.scrollTo({ top: 0, behavior: 'auto' });
     }
 
-    // 静默预取相邻题的题干首页图：切「下一题」时先看到题干、不必等白屏
-    // 仅预取 1 张（下一题的首图），整体仍是一题一题加载，不会累积整章请求
+    // 答案图随题干一并加载：先把答案节点填进 DOM（.dati-abody 默认 display:none，不显示），
+    // 于是点「看答案」只是展开、不必再等网络。列表模式不这么做——一屏多题，全量填图会把
+    // 整章的答案图都拉下来，那里仍保持"点开才注入"。
+    function primeAnswer(qid) {
+        const box = document.querySelector(`.dati-abody[data-ans="${qid}"]`);
+        if (!box || box.dataset.filled) return;   // 已展开过的题（ansOpen 恢复）无需重复填充
+        box.innerHTML = ansTpl[qid] || '';
+        box.dataset.filled = '1';
+    }
+
+    // 预取下一题的题干首图 + 答案首图（各 1 张）：切到下一题时题干与答案都已就绪
+    // 总量固定 2 张，仍属逐题加载，不会累积整章请求
     function prefetchSingleNeighbor(idx, items) {
         const next = items[idx + 1];
-        if (!next || !next.q.q.length) return;
-        const im = new Image();
-        im.src = `data/dati_figs/${activeSubject}/${next.q.q[0]}`;
+        if (!next) return;
+        const firstQ = next.q.q[0];
+        if (firstQ) new Image().src = `data/dati_figs/${activeSubject}/${firstQ}`;
+        const firstA = next.q.a && next.q.a[0];
+        if (firstA) new Image().src = `data/dati_figs/${activeSubject}/${firstA}`;
     }
 
     // 单题模式下按顺序切题（d=±1）

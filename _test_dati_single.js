@@ -3,7 +3,7 @@
 // 覆盖点：
 //   1) 默认进入单题模式，DOM 中只有 1 张题卡；题干图直接挂 src（不走 data-src 懒挂载）
 //   2) 切题时上一题整体从 DOM 移除 —— 即"一题一题加载"，不会累积请求
-//   3) 答案图默认不进 DOM（点「查看答案」才注入）
+//   3) 答案图与题干一并加载（节点在 DOM 内但不展开）——点「查看答案」只是展开，不再等网络
 //   4) 首题「上一题」/ 末题「下一题」不越界；切换后进度与 localStorage 同步
 //   5) 键盘 ← / → 切题；焦点在笔记输入框时不拦截
 //   6) singleGoTo：目标题不在当前筛选集内时自动退回「全部」再定位（避免点了没反应）
@@ -125,7 +125,9 @@ function flat(subKey) {
   const imgsOfQ = (q) => srcImgs().filter(i => q.q.some(fn => i.getAttribute('src').endsWith(fn)));
   check('第 1 题题干图已进 DOM', imgsOfQ(q0).length, q0.q.length);
   check('第 2 题题干图未进 DOM', imgsOfQ(q1).length, 0);
-  check('答案图未进 DOM（点开才加载）', root().querySelectorAll('img[src*="_a_"]').length, 0);
+  check('答案图随题干一并就绪', root().querySelectorAll('img[src*="_a_"]').length, q0.a.length);
+  check('答案区默认不展开（仍是做题状态）', root().querySelector('.dati-abody').classList.contains('open'), false);
+  check('答案区已填充（filled=1，无需再注入）', root().querySelector('.dati-abody').dataset.filled, '1');
 
   w.singleStep(1);
   await sleep(60);
@@ -135,14 +137,21 @@ function flat(subKey) {
   check('当前题切换到第 2 题', curId(), q1.id);
   check('localStorage 记住当前题', w.localStorage.getItem('datiSingleQ'), q1.id);
   check('进度更新为 2 / N', prog(), `2 / ${L.length}`);
+  check('切题后答案图同步就绪', root().querySelectorAll('img[src*="_a_"]').length, q1.a.length);
+  check('切换后答案区仍未展开', root().querySelector('.dati-abody').classList.contains('open'), false);
 
-  console.log('\n--- 场景 3：答案按需加载 ---');
+  console.log('\n--- 场景 3：答案点开即显示（图已随题一并加载） ---');
+  const abox = () => root().querySelector('.dati-abody');
+  check('点开前答案区已填充 filled=1', abox().dataset.filled, '1');
+  const aCountBefore = root().querySelectorAll('img[src*="_a_"]').length;
   w.toggleAnswer(q1.id);
   await sleep(30);
-  check('点「查看答案」后答案图进 DOM', root().querySelectorAll('img[src*="_a_"]').length, q1.a.length);
+  check('点「查看答案」后展开（无需等网络）', abox().classList.contains('open'), true);
+  check('展开未产生重复注入', root().querySelectorAll('img[src*="_a_"]').length, aCountBefore);
   w.toggleAnswer(q1.id);
   await sleep(30);
-  check('收起答案后答案区不再显示但已填充不重复注入', root().querySelector('.dati-abody').dataset.filled, '1');
+  check('收起后 open 类移除', abox().classList.contains('open'), false);
+  check('收起后填充状态保留（再次点开不重复注入）', abox().dataset.filled, '1');
 
   console.log('\n--- 场景 3b：底栏「看答案」入口 ---');
   const q2 = L[2].q;
@@ -150,10 +159,12 @@ function flat(subKey) {
   await sleep(60);
   check('底栏存在答案按钮', !!root().querySelector('.dati-single-bar .dati-single-ans'), true);
   check('新题底栏按钮文案为「看答案」', root().querySelector('.dati-single-bar .dati-single-ans').textContent.trim(), '👁 看答案');
-  check('新题答案图未进 DOM', root().querySelectorAll('img[src*="_a_"]').length, 0);
+  check('新题答案图已就绪', root().querySelectorAll('img[src*="_a_"]').length, q2.a.length);
+  check('新题答案区未展开', root().querySelector('.dati-abody').classList.contains('open'), false);
   root().querySelector('.dati-single-bar .dati-single-ans').click();
   await sleep(80);
-  check('底栏看答案后答案图进 DOM', root().querySelectorAll('img[src*="_a_"]').length, q2.a.length);
+  check('底栏看答案后答案区展开', root().querySelector('.dati-abody').classList.contains('open'), true);
+  check('展开后图片数量不变（未重复注入）', root().querySelectorAll('img[src*="_a_"]').length, q2.a.length);
   check('底栏按钮文案切换为「收起答案」', root().querySelector('.dati-single-bar .dati-single-ans').textContent.trim(), '🙈 收起答案');
   root().querySelector('.dati-single-bar .dati-single-ans').click();
   await sleep(80);
