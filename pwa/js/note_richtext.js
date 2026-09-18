@@ -285,13 +285,26 @@
                 const r = s.getRangeAt(0);
                 // 要求新选区在编辑器内
                 if (!_painterEl.contains(r.startContainer) || !_painterEl.contains(r.endContainer)) return;
-                // 划选是连续 selectionchange 流（拖动/松开各触发多次）：30ms 防抖到选区稳定
-                // 再回放，避免拖选中途用半截选区回放、并把最终选区挡在防连锁窗口外
+                // 划选是连续 selectionchange 流（拖动/松开各触发多次，间隔约 50ms）：
+                // 防抖窗口必须覆盖完整拖选（30ms 太短会在拖到一半时就回放半截选区，
+                // 最终选区反而被 400ms 防连锁窗口吞掉 →「只会刷第一个」），取最后一次稳定选区回放
                 if (_painterTimer) clearTimeout(_painterTimer);
                 _painterTimer = setTimeout(() => {
                     _painterTimer = null;
                     window.applyFormatPainter();
-                }, 30);
+                }, 250);
+            });
+            // mouseup = 划选结束的确切信号：选区已稳定，立即回放（比等待 250ms 防抖更跟手，
+            // 也避免快速连续划选时旧防抖残留吞掉下一次）
+            document.addEventListener('mouseup', () => {
+                if (!_painterFmt || !_painterEl) return;
+                if (Date.now() < _painterIgnoreUntil) return;
+                const s = window.getSelection();
+                if (!s || s.isCollapsed || !s.rangeCount) return;
+                const r = s.getRangeAt(0);
+                if (!_painterEl.contains(r.startContainer) || !_painterEl.contains(r.endContainer)) return;
+                if (_painterTimer) { clearTimeout(_painterTimer); _painterTimer = null; }
+                window.applyFormatPainter();
             });
             document.addEventListener('keydown', (e) => {
                 // Esc 取消格式刷武装（连续刷模式下手动退出的入口之一）
