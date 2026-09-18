@@ -252,35 +252,40 @@ function flat(subKey) {
   w.setFilter('all');
   await sleep(60);
 
-  console.log('\n--- 场景 9：底栏收起 / 展开（切题时保持） ---');
+  console.log('\n--- 场景 9：底栏整条收起 / 展开（切题时保持） ---');
   const sbar = () => doc.getElementById('datiSingleBar');
   const tbtn = () => root().querySelector('.dati-bar-toggle');
-  check('底栏默认展开', sbar().classList.contains('collapsed'), false);
-  check('切换按钮文案为「▾ 收起」', tbtn().textContent.trim(), '▾ 收起');
-  check('收起前「看答案」「选题」按钮在 DOM 中', root().querySelectorAll('.dati-single-bar .dati-single-ans, .dati-single-bar .dati-nav-open-btn').length, 2);
+  const barBtns = () => root().querySelectorAll('#datiSingleBar .btn').length;
+  const barAllBtns = () => root().querySelectorAll('#datiSingleBar button').length;
+  check('底栏默认展开（无 collapsed）', sbar().classList.contains('collapsed'), false);
+  check('展开态把手文案为「▾ 收起」', tbtn().textContent.trim(), '▾ 收起');
+  check('展开态底栏操作按钮齐全', barBtns(), 4);
+  check('展开态「看答案」「选题」在 DOM 中', root().querySelectorAll('.dati-single-bar .dati-single-ans, .dati-single-bar .dati-nav-open-btn').length, 2);
 
   tbtn().click();
   await sleep(40);
-  check('点击后底栏进入收起态', sbar().classList.contains('collapsed'), true);
+  check('收起后整条栏的操作按钮全部移除', barBtns(), 0);
+  check('收起后底栏只剩 1 枚把手', barAllBtns(), 1);
+  check('收起后进度/切题文字也不在 DOM', root().querySelector('.dati-single-pos'), null);
+  check('收起态标记 .collapsed 在位', sbar().classList.contains('collapsed'), true);
   check('收起状态已持久化', w.localStorage.getItem('datiBarCollapsed'), '1');
-  check('按钮文案切换为「▴ 展开」', tbtn().textContent.trim(), '▴ 展开');
-  check('收起态下上一题/下一题按钮仍保留', root().querySelectorAll('.dati-single-bar .btn').length >= 2, true);
+  check('把手文案切换为「▴ 展开底栏」', tbtn().textContent.trim(), '▴ 展开底栏');
 
   w.singleStep(1);
   await sleep(60);
-  check('切题后仍保持收起', sbar().classList.contains('collapsed'), true);
-  check('切题后按钮文案仍为「▴ 展开」', tbtn().textContent.trim(), '▴ 展开');
+  check('切题后仍为整条收起（只有把手）', barAllBtns(), 1);
+  check('切题后把手文案不变', tbtn().textContent.trim(), '▴ 展开底栏');
   check('切题后收起状态持久化不变', w.localStorage.getItem('datiBarCollapsed'), '1');
 
   w.singleStep(-1);
   await sleep(60);
-  check('反向切题同样保持收起', sbar().classList.contains('collapsed'), true);
+  check('反向切题同样保持整条收起', barAllBtns(), 1);
 
   tbtn().click();
-  await sleep(40);
-  check('再点展开恢复', sbar().classList.contains('collapsed'), false);
+  await sleep(60);
+  check('再点展开后操作按钮恢复', barBtns(), 4);
   check('展开状态持久化', w.localStorage.getItem('datiBarCollapsed'), '0');
-  check('展开后文案回到「▾ 收起」', tbtn().textContent.trim(), '▾ 收起');
+  check('展开后把手文案回到「▾ 收起」', tbtn().textContent.trim(), '▾ 收起');
 
   console.log(`\nPASS ${pass} / FAIL ${fail}`);
   dom.window.close();

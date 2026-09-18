@@ -120,17 +120,23 @@
         .dati-single-bar button:disabled { opacity: .45; cursor: not-allowed; }
         .dati-single-bar .dati-step-key { font-size: .78rem; color: var(--text-light); font-weight: 400; }
         .dati-single-pos { font-size: .86rem; color: var(--text-light); font-variant-numeric: tabular-nums; }
-        /* 收起/展开底栏：细条样式，状态切题时保持（localStorage 记忆） */
+        /* 收起/展开底栏：收起后整条栏不渲染，仅在底部留一枚小把手（状态切题时保持） */
         .dati-bar-toggle {
             border: none; background: none; cursor: pointer;
             color: var(--text-light); font-size: .82rem; line-height: 1;
             padding: 4px 6px; border-radius: 6px;
         }
         .dati-bar-toggle:hover { background: rgba(128,128,128,.16); color: var(--text); }
-        .dati-single-bar.collapsed { padding: 5px 10px; gap: 6px; margin-top: 10px; }
-        .dati-single-bar.collapsed .dati-single-ans,
-        .dati-single-bar.collapsed .dati-step-key,
-        .dati-single-bar.collapsed .dati-nav-open-btn { display: none; }
+        .dati-single-bar.collapsed {
+            padding: 0; gap: 0; margin: 10px 0 0;
+            background: transparent; border-color: transparent; box-shadow: none;
+            justify-content: center;
+        }
+        .dati-single-bar.collapsed .dati-bar-toggle {
+            padding: 3px 12px; border-radius: 999px;
+            background: var(--card-bg); border: 1px solid var(--border);
+            box-shadow: 0 2px 8px rgba(0,0,0,.12);
+        }
         .num-btn.current { background: var(--primary); color: #fff; border-color: var(--primary); font-weight: 700; }
     </style>
 </head>
@@ -457,21 +463,36 @@
         b.textContent = (box && box.classList.contains('open')) ? '🙈 收起答案' : '👁 看答案';
     }
 
-    // 底栏收起 / 展开：就地切 class（不重渲染整题——重渲染会让题干图重新挂载、白闪一次）
-    // 状态写入 localStorage，切题时由 renderSingle 按 barCollapsed 重建，故收起后翻多少题都保持
+    // 底栏收起 / 展开：收起后整条栏都不渲染（只留一枚小把手），不是隐藏部分按钮。
+    // 只替换底栏自身的 DOM（不重渲染整题——重渲染会让题干图重新挂载、白闪一次）。
+    // 状态写入 localStorage，切题时由 renderSingle 按 barCollapsed 重建，故收起后翻多少题都保持。
     function toggleSingleBar() {
         barCollapsed = !barCollapsed;
         localStorage.setItem('datiBarCollapsed', barCollapsed ? '1' : '0');
         const bar = document.getElementById('datiSingleBar');
-        if (bar) bar.classList.toggle('collapsed', barCollapsed);
-        syncBarToggleBtn();
+        if (bar) bar.outerHTML = singleBarHtml();
     }
 
-    function syncBarToggleBtn() {
-        const b = document.querySelector('.dati-single-bar .dati-bar-toggle');
-        if (!b) return;
-        b.textContent = barCollapsed ? '▴ 展开' : '▾ 收起';
-        b.title = barCollapsed ? '展开底栏（切题时保持）' : '收起底栏（切题时保持）';
+    // 单题模式底栏 HTML（收起态只输出把手按钮）
+    function singleBarHtml() {
+        if (barCollapsed) {
+            return `<div class="dati-single-bar collapsed" id="datiSingleBar">
+                <button class="dati-bar-toggle" onclick="toggleSingleBar()" title="展开底栏（切题时保持）">▴ 展开底栏</button>
+            </div>`;
+        }
+        const items = flatItems();
+        let idx = items.findIndex(it => it.q.id === singleQid);
+        if (idx < 0) idx = 0;
+        const qid = singleQid;
+        return `<div class="dati-single-bar" id="datiSingleBar">
+            <button class="btn btn-secondary" onclick="singleStep(-1)" ${idx === 0 ? 'disabled' : ''}>◀ 上一题</button>
+            <span class="dati-single-pos">第 ${idx + 1} / ${items.length} 题</span>
+            <button class="btn btn-secondary dati-single-ans" onclick="singleToggleAnswer()">${ansOpen.has(qid) ? '🙈 收起答案' : '👁 看答案'}</button>
+            <button class="btn btn-secondary dati-nav-open-btn" onclick="toggleNav()">☰ 选题</button>
+            <button class="btn btn-primary" onclick="singleStep(1)" ${idx === items.length - 1 ? 'disabled' : ''}>下一题 ▶</button>
+            <span class="dati-step-key">← → 键切换</span>
+            <button class="dati-bar-toggle" onclick="toggleSingleBar()" title="收起底栏（整条收起，切题时保持）">▾ 收起</button>
+        </div>`;
     }
 
     // ==================== 渲染分派：单题（默认） / 列表 ====================
@@ -522,15 +543,7 @@
                 <span class="dati-single-prog">${idx + 1} / ${items.length}</span>
             </div>
             ${questionCard(activeSubject, cur.secName, q, favSet.has(q.id))}
-            <div class="dati-single-bar${barCollapsed ? ' collapsed' : ''}" id="datiSingleBar">
-                <button class="btn btn-secondary" onclick="singleStep(-1)" ${idx === 0 ? 'disabled' : ''}>◀ 上一题</button>
-                <span class="dati-single-pos">第 ${idx + 1} / ${items.length} 题</span>
-                <button class="btn btn-secondary dati-single-ans" onclick="singleToggleAnswer()">${ansOpen.has(q.id) ? '🙈 收起答案' : '👁 看答案'}</button>
-                <button class="btn btn-secondary dati-nav-open-btn" onclick="toggleNav()">☰ 选题</button>
-                <button class="btn btn-primary" onclick="singleStep(1)" ${idx === items.length - 1 ? 'disabled' : ''}>下一题 ▶</button>
-                <span class="dati-step-key">← → 键切换</span>
-                <button class="dati-bar-toggle" onclick="toggleSingleBar()" title="${barCollapsed ? '展开底栏（切题时保持）' : '收起底栏（切题时保持）'}">${barCollapsed ? '▴ 展开' : '▾ 收起'}</button>
-            </div>`;
+            ${singleBarHtml()}`;
         afterRender();
         activateChapterImgs(root);   // 题干图：本模式仅当前一题在 DOM 中，直接挂图
         primeAnswer(q.id);           // 答案图：与题干一并加载（节点已在 DOM、但不展开）
