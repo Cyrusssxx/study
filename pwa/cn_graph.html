@@ -305,19 +305,23 @@
         .cg-topo-seg h4 b { display: block; color: var(--c); font-size: .76rem; }
         .cg-topo-seg h4 s { text-decoration: none; font-size: .64rem; opacity: .8; }
         .cg-topo-dev {
-            display: flex; align-items: center; gap: 6px; padding: 4px 7px;
+            display: flex; align-items: center; gap: 7px; padding: 4px 7px;
             border: 1px solid var(--c); border-radius: 6px; background: var(--card-bg);
             font-size: .7rem; line-height: 1.25; text-align: left;
         }
         .cg-topo-dev b { display: block; font-size: .73rem; }
-        .cg-topo-dev i { font-style: normal; color: var(--text-light); font-size: .62rem; }
-        .cg-topo-dev.rt {
-            border-radius: 50%; justify-content: center; text-align: center;
-            min-height: 48px; width: 74px; align-self: center; flex-direction: column;
-            border-width: 2px; padding: 4px;
+        .cg-topo-dev i { display: block; font-style: normal; color: var(--text-light); font-size: .62rem; }
+        /* 设备小图标（内联 SVG sprite） */
+        .cg-ico {
+            width: 21px; height: 21px; flex: 0 0 auto;
+            fill: none; stroke: var(--c); stroke-width: 1.5;
+            stroke-linecap: round; stroke-linejoin: round;
         }
-        .cg-topo-dev.rt b { font-size: .76rem; }
-        .cg-topo-dev.srv { border-style: solid; background: var(--cb2); }
+        .cg-dev-txt { min-width: 0; }
+        .cg-topo-dev.rt {
+            border-radius: 6px;
+        }
+        .cg-topo-dev.srv { background: var(--cb2); }
         .cg-topo-link {
             display: flex; flex-direction: column; align-items: center; justify-content: center;
             color: var(--text-light); font-size: .8rem; font-weight: 700; padding: 0 4px; gap: 3px; flex: 0 0 auto;
@@ -374,6 +378,41 @@
             </div>
         </div>
     </nav>
+
+    <!-- 拓扑设备图标（内联 SVG sprite，供 <use href="#ico-*"> 引用） -->
+    <svg width="0" height="0" style="position:absolute;overflow:hidden" aria-hidden="true" focusable="false">
+        <symbol id="ico-cloud" viewBox="0 0 24 24">
+            <path d="M7.2 18.5h10.3a3.6 3.6 0 0 0 .4-7.18 5.6 5.6 0 0 0-10.6-1.9A4 4 0 0 0 7.2 18.5z"/>
+        </symbol>
+        <symbol id="ico-router" viewBox="0 0 24 24">
+            <circle cx="12" cy="12" r="7.6"/>
+            <path d="M12 6.2v11.6M6.2 12h11.6"/>
+            <path d="M9.6 8.6 12 6.2l2.4 2.4M9.6 15.4 12 17.8l2.4-2.4M8.6 9.6 6.2 12l2.4 2.4M15.4 9.6 17.8 12l-2.4 2.4"/>
+        </symbol>
+        <symbol id="ico-switch" viewBox="0 0 24 24">
+            <rect x="3" y="8.2" width="18" height="7.6" rx="1.3"/>
+            <path d="M6.6 10.6h3.2M14.2 10.6h3.2M6.6 13.2h3.2M14.2 13.2h3.2"/>
+            <path d="M12 15.8v3.4"/>
+        </symbol>
+        <symbol id="ico-hub" viewBox="0 0 24 24">
+            <rect x="3" y="9.4" width="18" height="5.6" rx="1.3"/>
+            <circle cx="7" cy="12.2" r="0.85"/><circle cx="12" cy="12.2" r="0.85"/><circle cx="17" cy="12.2" r="0.85"/>
+        </symbol>
+        <symbol id="ico-server" viewBox="0 0 24 24">
+            <rect x="6" y="3.4" width="12" height="17.2" rx="1.5"/>
+            <path d="M9 7.4h6M9 10.8h6"/>
+            <circle cx="9.6" cy="15" r="0.85"/>
+            <path d="M11.6 15h3.4"/>
+        </symbol>
+        <symbol id="ico-pc" viewBox="0 0 24 24">
+            <rect x="3" y="4.4" width="18" height="11.4" rx="1.5"/>
+            <path d="M12 15.8v3.4M8.6 19.2h6.8"/>
+        </symbol>
+        <symbol id="ico-laptop" viewBox="0 0 24 24">
+            <rect x="5" y="5" width="14" height="9.4" rx="1.2"/>
+            <path d="M3 17.4h18l-1.2 2.1H4.2z"/>
+        </symbol>
+    </svg>
 
     <!-- 左侧竖悬浮层目录（桌面） / 移动端 ☰ 抽屉 -->
     <button class="cg-side-fab" id="cgSideFab" onclick="cgSideToggle()" title="层目录">☰ 目录</button>
@@ -1486,26 +1525,27 @@
                         <div class="cg-topo-in">
                             <div class="cg-topo-seg">
                                 <h4><b>AS 1 园区网</b><s>192.168.1.0/24 · 私网</s></h4>
-                                <div class="cg-topo-dev">PC-A<i>192.168.1.10/.24</i></div>
-                                <div class="cg-topo-dev">PC-B<i>192.168.1.11/.24</i></div>
-                                <div class="cg-topo-dev">DHCP 服务器<i>自动分配 IP/网关/DNS</i></div>
-                                <div class="cg-topo-dev">交换机 SW1<i>VLAN 10 · 自学习</i></div>
-                                <div class="cg-topo-dev rt"><b>R1</b><i>网关 .1<br>NAT · OSPF</i></div>
+                                <div class="cg-topo-dev"><svg class="cg-ico"><use href="#ico-pc"/></svg><span class="cg-dev-txt"><b>PC-A</b><i>192.168.1.10/.24</i></span></div>
+                                <div class="cg-topo-dev"><svg class="cg-ico"><use href="#ico-laptop"/></svg><span class="cg-dev-txt"><b>PC-B</b><i>192.168.1.11/.24</i></span></div>
+                                <div class="cg-topo-dev"><svg class="cg-ico"><use href="#ico-server"/></svg><span class="cg-dev-txt"><b>DHCP 服务器</b><i>自动分配 IP/网关/DNS</i></span></div>
+                                <div class="cg-topo-dev"><svg class="cg-ico"><use href="#ico-switch"/></svg><span class="cg-dev-txt"><b>交换机 SW1</b><i>VLAN 10 · 自学习</i></span></div>
+                                <div class="cg-topo-dev rt"><svg class="cg-ico"><use href="#ico-router"/></svg><span class="cg-dev-txt"><b>R1</b><i>网关 .1 · NAT · OSPF</i></span></div>
                             </div>
                             <div class="cg-topo-link"><s>──→</s><i>OSPF<br>AS 内<br>动态路由</i></div>
                             <div class="cg-topo-seg cloud">
                                 <h4><b>Internet · NET 云</b><s>跨自治系统</s></h4>
-                                <div class="cg-topo-dev rt"><b>ISP-A</b><i>AS 2</i></div>
+                                <div class="cg-topo-dev"><svg class="cg-ico"><use href="#ico-cloud"/></svg><span class="cg-dev-txt"><b>互联网</b><i>分组逐跳转发</i></span></div>
+                                <div class="cg-topo-dev rt"><svg class="cg-ico"><use href="#ico-router"/></svg><span class="cg-dev-txt"><b>ISP-A</b><i>AS 2</i></span></div>
                                 <div class="cg-topo-link"><s>═══</s><i>BGP<br>AS 间</i></div>
-                                <div class="cg-topo-dev rt"><b>ISP-B</b><i>AS 3</i></div>
+                                <div class="cg-topo-dev rt"><svg class="cg-ico"><use href="#ico-router"/></svg><span class="cg-dev-txt"><b>ISP-B</b><i>AS 3</i></span></div>
                             </div>
                             <div class="cg-topo-link"><s>←──</s><i>BGP<br>域间可达</i></div>
                             <div class="cg-topo-seg">
                                 <h4><b>AS 4 公司总部</b><s>200.1.2.0/24 · 公网</s></h4>
-                                <div class="cg-topo-dev rt"><b>R2</b><i>网关 .1</i></div>
-                                <div class="cg-topo-dev">交换机 SW2<i>自学习</i></div>
-                                <div class="cg-topo-dev srv"><b>Web 服务器</b><i>200.1.2.10:80<br>域名 www.company.com</i></div>
-                                <div class="cg-topo-dev srv"><b>DNS 服务器</b><i>200.1.2.53:53</i></div>
+                                <div class="cg-topo-dev rt"><svg class="cg-ico"><use href="#ico-router"/></svg><span class="cg-dev-txt"><b>R2</b><i>网关 .1</i></span></div>
+                                <div class="cg-topo-dev"><svg class="cg-ico"><use href="#ico-switch"/></svg><span class="cg-dev-txt"><b>交换机 SW2</b><i>自学习</i></span></div>
+                                <div class="cg-topo-dev srv"><svg class="cg-ico"><use href="#ico-server"/></svg><span class="cg-dev-txt"><b>Web 服务器</b><i>200.1.2.10:80 · www.company.com</i></span></div>
+                                <div class="cg-topo-dev srv"><svg class="cg-ico"><use href="#ico-server"/></svg><span class="cg-dev-txt"><b>DNS 服务器</b><i>200.1.2.53:53</i></span></div>
                             </div>
                         </div>
                     </div>

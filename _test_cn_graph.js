@@ -181,9 +181,22 @@ const sleep = ms => new Promise(r => setTimeout(r, ms));
   check('拓扑容器存在', doc.querySelectorAll('.cg-topo').length, 1);
   check('拓扑 3 段（AS1/Internet云/AS4）', doc.querySelectorAll('.cg-topo-seg').length, 3);
   check('含 NET 云样式段', doc.querySelectorAll('.cg-topo-seg.cloud').length, 1);
-  check('拓扑设备节点 ≥ 9 个', doc.querySelectorAll('.cg-topo-dev').length >= 9, true);
+  check('拓扑设备节点 ≥ 12 个', doc.querySelectorAll('.cg-topo-dev').length >= 12, true);
   check('圆形路由器 4 个（R1/ISP-A/ISP-B/R2）', doc.querySelectorAll('.cg-topo-dev.rt').length, 4);
   check('服务器节点 2 个（Web/DNS）', doc.querySelectorAll('.cg-topo-dev.srv').length, 2);
+
+  console.log('\n--- 场景 11a：设备图形图标（内联 SVG） ---');
+  const icos = doc.querySelectorAll('.cg-topo-dev .cg-ico');
+  check('每个设备都有图标', icos.length, doc.querySelectorAll('.cg-topo-dev').length);
+  const symbols = ['ico-cloud', 'ico-router', 'ico-switch', 'ico-server', 'ico-pc', 'ico-laptop', 'ico-hub'];
+  const missSym = symbols.filter(s => !doc.getElementById(s));
+  check('图标 symbol 定义齐全（7 种）', missSym, []);
+  const used = [...doc.querySelectorAll('.cg-ico use')].map(u => (u.getAttribute('href') || '').replace('#', ''));
+  check('用到的图标都指向已定义 symbol', used.filter(u => !doc.getElementById(u)), []);
+  ['ico-pc', 'ico-laptop', 'ico-server', 'ico-switch', 'ico-router', 'ico-cloud'].forEach(s => {
+    check(`拓扑用到「${s}」`, used.includes(s), true);
+  });
+
   const stepItems = doc.querySelectorAll('.cg-tsteps > li');
   check('事件步骤 ≥ 12 步', stepItems.length >= 12, true);
   const topoText = doc.querySelector('.cg-topo').textContent + doc.querySelector('.cg-tsteps').textContent;
