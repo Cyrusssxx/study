@@ -12,23 +12,21 @@
     <link rel="stylesheet" href="css/style.css">
     <style>
         /* ================= 计网分层考点图谱 ================= */
-        /* 左侧竖悬浮层目录（桌面） */
+        /* 左侧悬浮目录：默认细条，悬停/点击才浮出，不占布局、不挤内容 */
         .cg-bar {
-            position: fixed; left: 12px; top: 50%; transform: translateY(-50%);
-            z-index: 95; width: 104px;
+            position: fixed; left: 10px; top: 50%; transform: translateY(-50%);
+            z-index: 95; width: 32px;
             background: rgba(var(--card-rgb), var(--ui-alpha));
             border: 1px solid var(--border); border-radius: var(--radius);
             box-shadow: var(--shadow); backdrop-filter: blur(8px);
-            padding: 11px 8px; box-sizing: border-box;
+            padding: 10px 4px; box-sizing: border-box; overflow: hidden;
             transition: width .15s ease, padding .15s ease;
         }
-        .cg-bar.cg-min {
-            width: 30px; padding: 11px 4px;
-        }
+        .cg-bar:hover, .cg-bar.pinned { width: 104px; padding: 11px 8px; }
         .cg-bar-inner {
-            display: flex; flex-direction: column; gap: 7px;
+            flex-direction: column; gap: 7px; display: none;
         }
-        .cg-bar.cg-min .cg-bar-inner { display: none; }
+        .cg-bar:hover .cg-bar-inner, .cg-bar.pinned .cg-bar-inner { display: flex; }
         .cg-bar-brand { display: none; }
         .cg-jump {
             display: flex; flex-direction: column; gap: 4px;
@@ -51,14 +49,15 @@
             white-space: nowrap; width: 100%;
         }
         .cg-chip:hover { border-color: var(--primary); color: var(--primary); }
-        /* 收起的竖排把手（点它展开目录） */
+        /* 细条态的竖排把手（点它或悬停即展开） */
         .cg-bar-v {
-            display: none; writing-mode: vertical-rl; letter-spacing: 4px;
-            font-size: .78rem; font-weight: 700; color: var(--text-light);
+            writing-mode: vertical-rl; letter-spacing: 4px;
+            font-size: .76rem; font-weight: 700; color: var(--text-light);
             text-align: center; cursor: pointer; padding: 10px 0; height: 100%;
+            display: flex; align-items: center; justify-content: center;
         }
         .cg-bar-v:hover { color: var(--primary); }
-        .cg-bar.cg-min .cg-bar-v { display: flex; align-items: center; justify-content: center; }
+        .cg-bar:hover .cg-bar-v, .cg-bar.pinned .cg-bar-v { display: none; }
         /* 移动端：目录收成左下 ☰ 抽屉 */
         .cg-side-fab {
             display: none; position: fixed; left: 14px; bottom: 20px; z-index: 300;
@@ -71,22 +70,19 @@
             background: rgba(0, 0, 0, .4);
         }
         .cg-side-mask.open { display: block; }
-        /* 主内容右移让位（桌面） */
-        .cg-main { padding-left: 132px; transition: padding-left .15s ease; }
-        body.cg-min-main .cg-main { padding-left: 48px; }
+        /* 主内容不被目录挤占，整幅自然展开 */
+        .cg-main { padding-left: 0; }
         @media (max-width: 900px) {
             .cg-bar {
                 transform: translateX(-110%); top: 60px; bottom: 0; height: calc(100vh - 60px);
                 left: 0; width: 220px; border-radius: 0; border-top: none; border-left: none;
-                transition: transform .2s ease; overflow-y: auto;
+                transition: transform .2s ease; overflow-y: auto; padding: 13px 16px;
             }
             .cg-bar.open { transform: translateX(0); }
-            .cg-bar.cg-min { width: 220px; padding: 11px 16px; }
-            .cg-bar.cg-min .cg-bar-inner { display: flex; }
-            .cg-bar.cg-min .cg-bar-v { display: none; }
+            .cg-bar .cg-bar-inner { display: flex; }
+            .cg-bar .cg-bar-v { display: none; }
             .cg-side-fab { display: block; }
             .cg-main { padding-left: 0; }
-            body.cg-min-main .cg-main { padding-left: 0; }
         }
 
         /* 层配色：统一主色调（去彩虹，重点靠 cg-key 标签区分） */
@@ -431,9 +427,9 @@
                 <a href="#LTOPO" class="cg-hl">综合大题全景拓扑</a>
             </nav>
             <button class="cg-chip" id="cgFoldBtn" onclick="cgToggleAll()">折叠全部</button>
-            <button class="cg-chip" onclick="cgBarMin()" title="向左收缩目录">◀ 收起</button>
+            <button class="cg-chip" onclick="cgBarMin()" title="收回目录细条">◀ 收回</button>
         </div>
-        <div class="cg-bar-v" onclick="cgBarMax()" title="展开目录">目录 ☰</div>
+        <div class="cg-bar-v" onclick="cgBarToggle()" title="展开/收起目录">目录 ☰</div>
     </aside>
 
     <main class="container cg-main">
@@ -1642,8 +1638,9 @@
                         if (arr) arr.textContent = '▾ 折叠';
                     }
                 }
-                // 移动端：点目录项后收起抽屉
+                // 点完目录项：移动端收抽屉、桌面收回细条
                 cgSideClose();
+                cgBarMin();
             });
         });
 
@@ -1664,14 +1661,15 @@
             document.getElementById('cgSideFab').textContent = '☰ 目录';
         }
 
-        // 桌面：目录向左收缩 / 展开（状态不持久化）
-        function cgBarMin() {
-            document.getElementById('cgBar').classList.add('cg-min');
-            document.body.classList.add('cg-min-main');
-        }
+        // 桌面：目录默认细条悬浮（不占布局），悬停即浮出；点击可固定展开/收回
         function cgBarMax() {
-            document.getElementById('cgBar').classList.remove('cg-min');
-            document.body.classList.remove('cg-min-main');
+            document.getElementById('cgBar').classList.add('pinned');
+        }
+        function cgBarMin() {
+            document.getElementById('cgBar').classList.remove('pinned');
+        }
+        function cgBarToggle() {
+            document.getElementById('cgBar').classList.toggle('pinned');
         }
 
         // 回到顶部按钮：滚动超过一屏才出现

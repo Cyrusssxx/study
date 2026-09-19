@@ -148,16 +148,22 @@ const sleep = ms => new Promise(r => setTimeout(r, ms));
   check('点「综合大题全景拓扑」后 LX 自动展开', lxSec.classList.contains('collapsed'), false);
   check('箭头同步为「▾ 折叠」', doc.querySelector('#LX .cg-layer-arrow').textContent, '▾ 折叠');
 
-  console.log('\n--- 场景 8b：桌面目录向左收缩 ---');
+  console.log('\n--- 场景 8b：桌面目录悬浮浮出（不占布局） ---');
   check('cgBarMin 已定义', typeof w.cgBarMin, 'function');
   check('cgBarMax 已定义', typeof w.cgBarMax, 'function');
+  check('cgBarToggle 已定义', typeof w.cgBarToggle, 'function');
   check('竖排把手元素存在', !!doc.querySelector('.cg-bar-v'), true);
-  w.cgBarMin();
-  check('收缩后 cgBar 加 cg-min', doc.getElementById('cgBar').classList.contains('cg-min'), true);
-  check('收缩后 body 加 cg-min-main', doc.body.classList.contains('cg-min-main'), true);
+  check('主内容不因目录留白（.cg-main padding-left:0）', /\.cg-main\s*\{\s*padding-left:\s*0\s*;?\s*\}/.test(SRC), true);
+  check('默认非固定展开', doc.getElementById('cgBar').classList.contains('pinned'), false);
   w.cgBarMax();
-  check('展开后 cg-min 移除', doc.getElementById('cgBar').classList.contains('cg-min'), false);
-  check('展开后 cg-min-main 移除', doc.body.classList.contains('cg-min-main'), false);
+  check('固定展开：cgBar 加 pinned', doc.getElementById('cgBar').classList.contains('pinned'), true);
+  w.cgBarMin();
+  check('收回细条：pinned 移除', doc.getElementById('cgBar').classList.contains('pinned'), false);
+  w.cgBarToggle();
+  check('点把手再展开', doc.getElementById('cgBar').classList.contains('pinned'), true);
+  w.cgBarToggle();
+  check('再点收回', doc.getElementById('cgBar').classList.contains('pinned'), false);
+  check('页面已无 cg-min-main 残留', doc.body.classList.contains('cg-min-main'), false);
 
   console.log('\n--- 场景 9：序号消耗与 NAV 考点 ---');
   const handshakeText = doc.querySelector('#L4').textContent;
