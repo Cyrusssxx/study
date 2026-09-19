@@ -188,6 +188,16 @@ const sleep = ms => new Promise(r => setTimeout(r, ms));
   check('协议列含 ICMP/OSPF（网络层）', addrRows.some(t => t.includes('ICMP') && t.includes('OSPF')), true);
   check('协议列含 ARP/以太网（链路层）', addrRows.some(t => t.includes('ARP') && t.includes('以太网')), true);
 
+  console.log('\n--- 场景 10b：淡雅配色（防彩虹/高饱和回潮） ---');
+  const RAINBOW = ['#8b5cf6', '#059669', '#ea580c', '#0891b2', '#2563eb', '#db2777', '#4f46e5'];
+  const hits = RAINBOW.filter(c => SRC.includes(c)).filter(c => c !== '#4f46e5');
+  check('页面无彩虹高饱和色', hits, []);
+  check('层的统一主色为低饱和灰蓝 #55637d', SRC.includes('--c: #55637d'), true);
+  check('层编号非实心色块（淡底 + 描边）', /\.cg-layer-no \{[^}]*background: var\(--cb2\)/.test(SRC.replace(/\n\s*/g, ' ')), true);
+  check('步骤编号非实心圆（淡底 + 描边）', /\.cg-tsteps > li::before \{[^}]*background: var\(--cb2\)/.test(SRC.replace(/\n\s*/g, ' ')), true);
+  check('重点标签保留（必考橙）', SRC.includes('.cg-key {'), true);
+  check('重点标签保留（易错红 k2）', SRC.includes('.cg-key.k2 {'), true);
+
   console.log('\n--- 场景 11：综合大题全景拓扑 ---');
   check('拓扑容器存在', doc.querySelectorAll('.cg-topo').length, 1);
   check('拓扑 3 段（AS1/Internet云/AS4）', doc.querySelectorAll('.cg-topo-seg').length, 3);
