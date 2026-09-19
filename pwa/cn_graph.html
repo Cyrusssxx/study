@@ -29,11 +29,11 @@
             display: flex; flex-direction: column; gap: 7px;
         }
         .cg-bar.cg-min .cg-bar-inner { display: none; }
-        .cg-bar-brand { font-weight: 700; font-size: .8rem; text-align: center; padding: 2px 0 7px; border-bottom: 1px dashed var(--border); }
-        .cg-bar-brand em { font-style: normal; color: var(--primary); }
+        .cg-bar-brand { display: none; }
         .cg-jump {
             display: flex; flex-direction: column; gap: 4px;
         }
+        .cg-sep { border-top: 1px dashed var(--border); margin: 3px 2px; }
         .cg-jump a {
             font-size: .76rem; padding: 4px 6px; border-radius: 7px;
             border: 1px solid var(--border); color: var(--text-light);
@@ -41,6 +41,9 @@
             display: block; transition: border-color .15s, color .15s;
         }
         .cg-jump a:hover { border-color: var(--primary); color: var(--primary); }
+        .cg-jump a.cg-hl { color: var(--text); font-weight: 600; }
+        /* 锚点跳转时给 sticky 顶栏留位 */
+        .cg-layer, #LTOPO { scroll-margin-top: 76px; }
         .cg-chip {
             font-size: .74rem; padding: 4px 6px; border-radius: 7px;
             border: 1px solid var(--border); background: transparent;
@@ -375,9 +378,8 @@
     <!-- 左侧竖悬浮层目录（桌面） / 移动端 ☰ 抽屉 -->
     <button class="cg-side-fab" id="cgSideFab" onclick="cgSideToggle()" title="层目录">☰ 目录</button>
     <div class="cg-side-mask" id="cgSideMask" onclick="cgSideToggle()"></div>
-    <aside class="cg-bar" id="cgBar" aria-label="层目录">
+    <aside class="cg-bar" id="cgBar" aria-label="目录">
         <div class="cg-bar-inner">
-            <span class="cg-bar-brand">🧭 计网<em>分层考点图谱</em></span>
             <nav class="cg-jump">
                 <a href="#L0">体系结构</a>
                 <a href="#L5">⑤ 应用层</a>
@@ -386,11 +388,13 @@
                 <a href="#L2">② 数据链路层</a>
                 <a href="#L1">① 物理层</a>
                 <a href="#LX">★ 跨层串联</a>
+                <span class="cg-sep"></span>
+                <a href="#LTOPO" class="cg-hl">综合大题全景拓扑</a>
             </nav>
             <button class="cg-chip" id="cgFoldBtn" onclick="cgToggleAll()">折叠全部</button>
             <button class="cg-chip" onclick="cgBarMin()" title="向左收缩目录">◀ 收起</button>
         </div>
-        <div class="cg-bar-v" onclick="cgBarMax()" title="展开目录">层目录 ☰</div>
+        <div class="cg-bar-v" onclick="cgBarMax()" title="展开目录">目录 ☰</div>
     </aside>
 
     <main class="container cg-main">
@@ -1476,7 +1480,7 @@
                     </ul>
                 </div>
 
-                <div class="cg-block">
+                <div class="cg-block" id="LTOPO">
                     <h3>⑥ 综合大题全景拓扑 <small>（多自治系统 · PC-A 访问 www.company.com 全流程）</small></h3>
                     <div class="cg-topo">
                         <div class="cg-topo-in">
@@ -1586,14 +1590,17 @@
             document.getElementById('cgFoldBtn').textContent = anyOpen ? '展开全部' : '折叠全部';
         }
 
-        // 跳到某层时自动展开该层
+        // 跳到某层/某小节时，自动展开其所在的折叠层
         document.querySelectorAll('.cg-jump a').forEach(a => {
             a.addEventListener('click', () => {
-                const sec = document.querySelector(a.getAttribute('href'));
-                if (sec && sec.classList.contains('collapsed')) {
-                    sec.classList.remove('collapsed');
-                    const arr = sec.querySelector('.cg-layer-arrow');
-                    if (arr) arr.textContent = '▾ 折叠';
+                const target = document.querySelector(a.getAttribute('href'));
+                if (target) {
+                    const sec = target.classList.contains('cg-layer') ? target : target.closest('.cg-layer');
+                    if (sec && sec.classList.contains('collapsed')) {
+                        sec.classList.remove('collapsed');
+                        const arr = sec.querySelector('.cg-layer-arrow');
+                        if (arr) arr.textContent = '▾ 折叠';
+                    }
                 }
                 // 移动端：点目录项后收起抽屉
                 cgSideClose();

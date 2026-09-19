@@ -58,11 +58,14 @@ const sleep = ms => new Promise(r => setTimeout(r, ms));
 
   console.log('\n--- 场景 2：层跳转链接指向有效目标 ---');
   const links = [...doc.querySelectorAll('.cg-jump a')];
-  check('跳转链接 7 个', links.length, 7);
+  check('跳转链接 8 个（7 层 + 拓扑）', links.length, 8);
   const badHref = links.filter(a => !doc.querySelector(a.getAttribute('href')));
   check('全部指向存在的元素', badHref.map(a => a.getAttribute('href')), []);
   const ids = links.map(a => a.getAttribute('href').slice(1));
-  check('覆盖 L0/L5/L4/L3/L2/L1/LX', ids.sort().join(','), 'L0,L1,L2,L3,L4,L5,LX');
+  check('覆盖 L0/L5/L4/L3/L2/L1/LX/LTOPO', ids.sort().join(','), 'L0,L1,L2,L3,L4,L5,LTOPO,LX');
+  check('目录不含「分层考点图谱」字样', doc.querySelector('.cg-bar').textContent.includes('分层考点图谱'), false);
+  check('目录含独立项「综合大题全景拓扑」', doc.querySelector('.cg-bar').textContent.includes('综合大题全景拓扑'), true);
+  check('目录有分隔线', doc.querySelectorAll('.cg-sep').length, 1);
 
   console.log('\n--- 场景 3：单层折叠 / 展开 ---');
   const sec5 = doc.getElementById('L5');
@@ -130,11 +133,20 @@ const sleep = ms => new Promise(r => setTimeout(r, ms));
   check('遮罩存在', !!doc.getElementById('cgSideMask'), true);
   check('cgSideToggle 已定义', typeof w.cgSideToggle, 'function');
   const navLinks = doc.querySelectorAll('.cg-jump a');
-  check('目录项链接仍为 7 个', navLinks.length, 7);
+  check('目录项链接仍为 8 个', navLinks.length, 8);
   w.cgSideToggle();
   check('打开抽屉：cgBar 加 open', doc.getElementById('cgBar').classList.contains('open'), true);
   w.cgSideToggle();
   check('关闭抽屉：open 移除', doc.getElementById('cgBar').classList.contains('open'), false);
+
+  console.log('\n--- 场景 8a：点目录项自动展开所在折叠层 ---');
+  const lxSec = doc.getElementById('LX');
+  w.cgToggle(doc.querySelector('#LX .cg-layer-head'));
+  check('先折叠 LX', lxSec.classList.contains('collapsed'), true);
+  doc.querySelector('.cg-jump a[href="#LTOPO"]').click();
+  await sleep(20);
+  check('点「综合大题全景拓扑」后 LX 自动展开', lxSec.classList.contains('collapsed'), false);
+  check('箭头同步为「▾ 折叠」', doc.querySelector('#LX .cg-layer-arrow').textContent, '▾ 折叠');
 
   console.log('\n--- 场景 8b：桌面目录向左收缩 ---');
   check('cgBarMin 已定义', typeof w.cgBarMin, 'function');
