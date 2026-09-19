@@ -165,6 +165,18 @@ const sleep = ms => new Promise(r => setTimeout(r, ms));
   check('协议列含 ICMP/OSPF（网络层）', addrRows.some(t => t.includes('ICMP') && t.includes('OSPF')), true);
   check('协议列含 ARP/以太网（链路层）', addrRows.some(t => t.includes('ARP') && t.includes('以太网')), true);
 
+  console.log('\n--- 场景 11：综合大题全景拓扑 ---');
+  check('拓扑容器存在', doc.querySelectorAll('.cg-topo').length, 1);
+  check('拓扑 2 个网段（A/B）', doc.querySelectorAll('.cg-topo-seg').length, 2);
+  check('拓扑设备节点 ≥ 6 个', doc.querySelectorAll('.cg-topo-dev').length >= 6, true);
+  check('路由器节点 2 个（R1/R2）', doc.querySelectorAll('.cg-topo-dev.rt').length, 2);
+  const stepItems = doc.querySelectorAll('.cg-tsteps > li');
+  check('事件步骤 ≥ 12 步', stepItems.length >= 12, true);
+  const topoText = doc.querySelector('.cg-tsteps').textContent;
+  ['DNS', 'ARP', '三次握手', '封装', '自学习', '路由表', 'TTL', 'NAT', '分片', '解封装', '四次挥手', 'TIME_WAIT', '2MSL', '默认网关', '冲突域', '广播域'].forEach(tok => {
+    check(`事件链含「${tok}」`, topoText.includes(tok), true);
+  });
+
   console.log(`\nPASS ${pass} / FAIL ${fail}`);
   process.exit(fail ? 1 : 0);
 })();

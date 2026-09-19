@@ -287,6 +287,57 @@
         .cg-chart svg { width: 100%; height: auto; display: block; }
         .cg-chart-cap { font-size: .74rem; color: var(--text-light); text-align: center; margin-top: 3px; }
 
+        /* ---- 综合拓扑图 ---- */
+        .cg-topo { margin: 10px 0; overflow-x: auto; padding-bottom: 4px; }
+        .cg-topo::-webkit-scrollbar { height: 5px; }
+        .cg-topo::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+        .cg-topo-in { display: flex; align-items: stretch; min-width: 820px; }
+        .cg-topo-seg {
+            flex: 1 1 0; display: flex; flex-direction: column; gap: 5px;
+            padding: 8px; border: 1px solid var(--border); border-radius: 8px;
+            background: var(--cb); min-width: 150px;
+        }
+        .cg-topo-seg h4 { margin: 0 0 4px; text-align: center; font-size: .76rem; color: var(--text-light); font-weight: 600; }
+        .cg-topo-seg h4 b { color: var(--c); }
+        .cg-topo-dev {
+            display: flex; align-items: center; gap: 6px; padding: 4px 7px;
+            border: 1px solid var(--c); border-radius: 6px; background: var(--card-bg);
+            font-size: .7rem; line-height: 1.2; text-align: left;
+        }
+        .cg-topo-dev b { display: block; font-size: .73rem; }
+        .cg-topo-dev i { font-style: normal; color: var(--text-light); font-size: .62rem; }
+        .cg-topo-dev.rt {
+            border-radius: 50%; justify-content: center; text-align: center;
+            min-height: 46px; width: 66px; align-self: center; flex-direction: column;
+            border-width: 2px;
+        }
+        .cg-topo-dev.rt b { font-size: .78rem; }
+        .cg-topo-link {
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            color: var(--c); font-size: .82rem; font-weight: 700; padding: 0 5px; gap: 3px; flex: 0 0 auto;
+        }
+        .cg-topo-link i { font-style: normal; font-size: .62rem; color: var(--text-light); font-weight: 400; text-align: center; line-height: 1.25; }
+        .cg-topo-cap { font-size: .72rem; color: var(--text-light); margin-top: 6px; line-height: 1.5; }
+        .cg-topo-cap b { color: var(--c); }
+        .cg-tsteps { counter-reset: ts; list-style: none; padding: 0; margin: 12px 0 0; }
+        .cg-tsteps > li {
+            position: relative; padding: 6px 0 6px 34px; font-size: .84rem; line-height: 1.6;
+            border-bottom: 1px dashed rgba(128,128,128,.18);
+        }
+        .cg-tsteps > li:last-child { border-bottom: none; }
+        .cg-tsteps > li::before {
+            counter-increment: ts; content: counter(ts);
+            position: absolute; left: 0; top: 7px; width: 22px; height: 22px;
+            border-radius: 50%; background: var(--c); color: #fff; font-size: .72rem; font-weight: 700;
+            display: flex; align-items: center; justify-content: center;
+        }
+        .cg-tsteps b { color: var(--c); }
+        .cg-tsteps code {
+            background: var(--cb); color: var(--c); padding: 1px 5px;
+            border-radius: 4px; font-size: .8rem; font-family: Consolas, Monaco, monospace;
+        }
+        .cg-tsteps em { font-style: normal; background: var(--cb2); padding: 0 4px; border-radius: 3px; }
+
         @media (max-width: 640px) {
             .cg-layer-body { padding: 4px 11px 13px; }
             .cg-seq { grid-template-columns: 46px 1fr 46px; }
@@ -1420,6 +1471,49 @@
                         <li><span class="cg-key">必考</span><b>每一跳变化的东西</b>：MAC 地址、FCS、帧长、TTL、首部校验和；<b>不变的东西</b>：IP 地址、TCP 端口、seq/ack 序号、应用层报文内容。</li>
                         <li><b>总时延</b> = 各跳传播时延 + 传输时延 + 处理时延 + 排队时延；RTT 计算题里通常只保留<b>传播时延与传输时延</b>，其余按题目"忽略"处理。</li>
                         <li><b>综合题答题顺序推荐</b>：先分层定位考点（这是哪一层的问题）→ 写出该层协议与字段 → 再算数值 → 最后补一句"为什么这样设计"（如"防止失效连接"）。</li>
+                    </ul>
+                </div>
+
+                <div class="cg-block">
+                    <h3>⑥ 综合大题全景拓扑 <small>（一图串起全部考点 · PC-A 访问 Web 服务器全流程）</small></h3>
+                    <div class="cg-topo">
+                        <div class="cg-topo-in">
+                            <div class="cg-topo-seg">
+                                <h4>网段 A <b>192.168.1.0/24</b></h4>
+                                <div class="cg-topo-dev">🖥 <div><b>PC-A</b><i>192.168.1.10<br>MAC: A-A1</i></div></div>
+                                <div class="cg-topo-dev" style="border-style:dashed">🔀 <div><b>交换机 SW1</b><i>自学习 · 隔离冲突域<br>不隔离广播域</i></div></div>
+                                <div class="cg-topo-dev rt">🌐<div><b>R1</b><i>网关 .1<br>NAT 出口</i></div></div>
+                            </div>
+                            <div class="cg-topo-link">═══→<i>广域网 WAN<br>R1 ↔ R2<br>MTU 1500</i></div>
+                            <div class="cg-topo-seg">
+                                <h4>网段 B <b>200.1.2.0/24</b></h4>
+                                <div class="cg-topo-dev rt">🌐<div><b>R2</b><i>网关 .1</i></div></div>
+                                <div class="cg-topo-dev" style="border-style:dashed">🔀 <div><b>交换机 SW2</b><i>自学习</i></div></div>
+                                <div class="cg-topo-dev">🖥 <div><b>Web 服务器</b><i>200.1.2.10<br>端口 80/443</i></div></div>
+                                <div class="cg-topo-dev">🗄 <div><b>DNS 服务器</b><i>200.1.2.53<br>端口 53</i></div></div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="cg-topo-cap">拓扑要点：PC-A 与服务器分处两个网段 → 通信<b>必经 R1 路由转发</b>；PC-A 私网地址（192.168.x.x）访问公网服务器时经 <b>R1 做 NAT</b>；同网段用 <b>ARP 直通</b>，跨网段必须 <b>查默认网关</b>。</div>
+
+                    <ol class="cg-tsteps">
+                        <li><span class="cg-key">① 应用层 DNS</span><b>PC-A 输入域名 → 先查本机缓存与 hosts，未命中则向 DNS 服务器发起查询</b>（UDP，端口 53）。<code>www.example.com → 200.1.2.10</code>。可考点：递归 vs 迭代查询、DNS 缓存、UDP 不握手。</li>
+                        <li><span class="cg-key">② 判断同/跨网段</span>PC-A 用<b>子网掩码与目的 IP 相与</b>：200.1.2.10 ∉ 192.168.1.0/24 → <b>跨网段</b>，目的 MAC 填<b>默认网关 R1 的 MAC</b>，而非服务器 MAC。</li>
+                        <li><span class="cg-key k2">③ 链路层 ARP</span>PC-A 查 ARP 缓存，无 R1 条目 → <b>广播 ARP 请求</b>（目的 MAC FF-FF-FF-FF-FF-FF）"谁是 192.168.1.1？"；SW1 收到后<b>洪泛</b>到所有端口，R1 应答，PC-A 记录 <code>192.168.1.1 → MAC(R1)</code>。可考点：ARP 广播只在<b>本网段</b>，路由器不转发广播。</li>
+                        <li><span class="cg-key">④ 传输层 TCP 连接</span>PC-A 发起<b>三次握手</b>（SYN seq=x → SYN+ACK seq=y,ack=x+1 → ACK seq=x+1,ack=y+1），建立与 200.1.2.10:80 的连接。可考点：SYN 消耗序号、第三次握手不携带数据不消耗序号、1 个 RTT 建立连接。</li>
+                        <li><span class="cg-key">⑤ 封装</span>HTTP 报文依次封装：<b>应用层</b> HTTP 报文 → <b>传输层</b> 加 TCP 首部(20B) → <b>网络层</b> 加 IP 首部(20B，源 192.168.1.10 目的 200.1.2.10，TTL=64) → <b>链路层</b> 加 MAC 首部(14B：源 MAC(A1) 目的 MAC(R1)) + FCS(4B)。</li>
+                        <li><span class="cg-key">⑥ 链路层转发（一跳）</span>帧到 SW1：SW1 <b>自学习</b>记录「MAC(A1)→端口1」，查转发表把帧从 R1 所在端口送出。<b>冲突域被隔离</b>（每端口一个），广播域仍为 1（不划 VLAN）。可考点：交换机自学习、转发表项、冲突域/广播域计数。</li>
+                        <li><span class="cg-key">⑦ 网络层路由（R1）</span>R1 解帧得 IP 数据报，<b>查路由表</b>：目的 200.1.2.0/24 经 WAN 口转发 → 重新封装：<b>源 MAC 换成 R1 WAN 口 MAC，目的 MAC 换成 R2 的 MAC，TTL −1</b>（64→63）；IP 地址与 TCP 端口<b>不变</b>。若源是私网地址，R1 做 <b>NAT</b>：源 IP 改为公网地址 + 端口映射。</li>
+                        <li><span class="cg-key k2">⑧ 广域网逐跳</span>数据报经 R1→R2 之间的链路（可能还有 ISP 路由器），每跳都做「解帧→查表→改 MAC→TTL−1→重封装」。若某链路 MTU 小于报文长度 → <b>IP 分片</b>（片偏移、MF/DF 标志），到目的端重组。可考点：TTL 变化、分片与重组、MTU。</li>
+                        <li><span class="cg-key">⑨ 网络层路由（R2）</span>R2 查路由表：目的 200.1.2.10 是本网段 → 目的 MAC 改为 Web 服务器 MAC（查 ARP 表），从对应端口经 SW2 送出。SW2 同样自学习转发。</li>
+                        <li><span class="cg-key">⑩ 服务器接收</span>Web 服务器收到帧：<b>逐层解封装</b>（去 MAC → 去 IP → 去 TCP 首部）→ 按<b>目的端口 80</b> 把 HTTP 请求交给 Web 进程 → 处理并构造 HTTP 响应（200 OK + 页面）。</li>
+                        <li><span class="cg-key">⑪ 返回响应</span>响应沿<b>相反路径</b>逐跳返回：目的 MAC 逐跳换、TTL 递减，IP/端口不变；回到 PC-A 后同样逐层解封装交给浏览器渲染。可考点：往返路径、TCP 确认与重传、拥塞控制（慢开始/拥塞避免/快重传/快恢复）。</li>
+                        <li><span class="cg-key">⑫ 释放连接</span>数据传输完毕 → <b>四次挥手</b>（FIN → ACK → FIN → ACK），主动关闭方进入 <b>TIME_WAIT</b> 并等待 <b>2MSL</b>（保证最后一个 ACK 可达、防止旧报文干扰新连接）。</li>
+                    </ol>
+                    <ul class="cg-pts">
+                        <li><span class="cg-key">易混</span><b>MAC 地址每跳都变，IP 地址全程不变</b>（除非 NAT）——判断帧里目的 MAC 填什么，先看"同一网段还是跨网段"：同网段填目标主机 MAC，跨网段填<b>默认网关 MAC</b>。</li>
+                        <li><b>时延综合计算</b>：总时间 = DNS 解析时间 + TCP 建立（1 RTT）+ HTTP 请求/响应（1 RTT）+ 各段传播/传输时延；若题目给"忽略 DNS/处理时延"按条件去掉即可。</li>
+                        <li><b>错误排查思路（大题常考）</b>：PC-A 能 ping 通网关但 ping 不通 Web 服务器 → 检查路由表/R1 配置；能 ping 通 IP 但打不开网页 → 检查 DNS 与端口 80；同网段互 ping 不通 → 查 ARP 与 MAC 地址。</li>
                     </ul>
                 </div>
 
