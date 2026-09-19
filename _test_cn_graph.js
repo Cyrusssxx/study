@@ -111,7 +111,9 @@ const sleep = ms => new Promise(r => setTimeout(r, ms));
     'OSPF', 'RIP', 'BGP', '自治系统',
     '奈奎斯特', '香农', '曼彻斯特', 'PCM', 'CDMA',
     'VLAN', '冲突域', '广播域', 'PPP', 'HDLC',
-    '端口', '私有地址', '域名服务器', 'HTTP', 'SMTP', 'POP3', 'FTP'
+    '端口', '私有地址', '域名服务器', 'HTTP', 'SMTP', 'POP3', 'FTP',
+    'NAV', '网络分配向量', '虚拟载波监听', 'RTS', 'CTS',
+    '不消耗序号', '消耗一个序号'
   ];
   const missing = KEYWORDS.filter(k => !body.includes(k));
   check(`考点关键词 ${KEYWORDS.length} 个全部覆盖`, missing, []);
@@ -121,6 +123,26 @@ const sleep = ms => new Promise(r => setTimeout(r, ms));
   check('考点条目 ≥ 130 条', doc.querySelectorAll('.cg-pts > li').length >= 130, true);
   check('协议字段盒存在（≥ 8 组）', doc.querySelectorAll('.cg-fields').length >= 8, true);
   check('cwnd 曲线 SVG 存在', doc.querySelectorAll('.cg-chart svg').length, 1);
+
+  console.log('\n--- 场景 8：左侧悬浮目录 ---');
+  check('目录为 fixed 悬浮（有 cg-bar 元素）', !!doc.getElementById('cgBar'), true);
+  check('移动端 ☰ 按钮存在', !!doc.getElementById('cgSideFab'), true);
+  check('遮罩存在', !!doc.getElementById('cgSideMask'), true);
+  check('cgSideToggle 已定义', typeof w.cgSideToggle, 'function');
+  const navLinks = doc.querySelectorAll('.cg-jump a');
+  check('目录项链接仍为 7 个', navLinks.length, 7);
+  w.cgSideToggle();
+  check('打开抽屉：cgBar 加 open', doc.getElementById('cgBar').classList.contains('open'), true);
+  w.cgSideToggle();
+  check('关闭抽屉：open 移除', doc.getElementById('cgBar').classList.contains('open'), false);
+
+  console.log('\n--- 场景 9：序号消耗与 NAV 考点 ---');
+  const handshakeText = doc.querySelector('#L4').textContent;
+  check('第三次握手不消耗序号已补全', handshakeText.includes('不消耗序号') && handshakeText.includes('仍为 x+1'), true);
+  const navText = doc.querySelector('#L2').textContent;
+  ['NAV', '3×SIFS', '2×SIFS', 'SIFS', 'CTS', 'ACK', 'Duration'].forEach(tok => {
+    check(`链路层含 NAV 计算「${tok}」`, navText.includes(tok), true);
+  });
 
   console.log(`\nPASS ${pass} / FAIL ${fail}`);
   process.exit(fail ? 1 : 0);

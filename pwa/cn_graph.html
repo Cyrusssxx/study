@@ -12,36 +12,61 @@
     <link rel="stylesheet" href="css/style.css">
     <style>
         /* ================= 计网分层考点图谱 ================= */
+        /* 左侧竖悬浮层目录（桌面） */
         .cg-bar {
-            position: sticky; top: 60px; z-index: 90;
+            position: fixed; left: 14px; top: 50%; transform: translateY(-50%);
+            z-index: 95; width: 158px;
             background: rgba(var(--card-rgb), var(--ui-alpha));
-            border-bottom: 1px solid var(--border);
-            backdrop-filter: blur(8px);
+            border: 1px solid var(--border); border-radius: var(--radius);
+            box-shadow: var(--shadow); backdrop-filter: blur(8px);
+            padding: 12px 10px; box-sizing: border-box;
         }
         .cg-bar-inner {
-            max-width: 1100px; margin: 0 auto; padding: 7px 20px;
-            display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
+            display: flex; flex-direction: column; gap: 8px;
         }
-        .cg-bar-brand { font-weight: 700; font-size: .9rem; white-space: nowrap; }
+        .cg-bar-brand { font-weight: 700; font-size: .82rem; text-align: center; padding: 2px 0 8px; border-bottom: 1px dashed var(--border); }
         .cg-bar-brand em { font-style: normal; color: var(--primary); }
         .cg-jump {
-            display: flex; gap: 6px; overflow-x: auto; flex: 1;
-            padding: 2px 0; scrollbar-width: none;
+            display: flex; flex-direction: column; gap: 4px;
         }
-        .cg-jump::-webkit-scrollbar { display: none; }
         .cg-jump a {
-            font-size: .78rem; padding: 3px 10px; border-radius: 999px;
+            font-size: .78rem; padding: 5px 8px; border-radius: 8px;
             border: 1px solid var(--border); color: var(--text-light);
-            text-decoration: none; white-space: nowrap; flex: 0 0 auto;
+            text-decoration: none; white-space: nowrap; text-align: center;
+            display: block; transition: border-color .15s, color .15s;
         }
         .cg-jump a:hover { border-color: var(--primary); color: var(--primary); }
         .cg-chip {
-            font-size: .78rem; padding: 3px 10px; border-radius: 999px;
+            font-size: .78rem; padding: 5px 8px; border-radius: 8px;
             border: 1px solid var(--border); background: transparent;
             color: var(--text-light); cursor: pointer; font-family: inherit;
-            white-space: nowrap; flex: 0 0 auto;
+            white-space: nowrap; width: 100%;
         }
         .cg-chip:hover { border-color: var(--primary); color: var(--primary); }
+        /* 移动端：目录收成左下 ☰ 抽屉 */
+        .cg-side-fab {
+            display: none; position: fixed; left: 14px; bottom: 20px; z-index: 300;
+            border: none; background: var(--primary); color: #fff;
+            padding: 10px 15px; border-radius: 24px; font-size: .9rem;
+            box-shadow: 0 4px 14px rgba(74, 144, 217, .4); cursor: pointer;
+        }
+        .cg-side-mask {
+            display: none; position: fixed; inset: 0; z-index: 296;
+            background: rgba(0, 0, 0, .4);
+        }
+        .cg-side-mask.open { display: block; }
+        /* 主内容右移让位（桌面） */
+        .cg-main { padding-left: 200px; }
+        @media (max-width: 900px) {
+            .cg-bar {
+                transform: translateX(-110%); top: 60px; bottom: 0; height: calc(100vh - 60px);
+                left: 0; width: 220px; border-radius: 0; border-top: none; border-left: none;
+                transition: transform .2s ease; overflow-y: auto;
+            }
+            .cg-bar.open { transform: translateX(0); }
+            .cg-side-fab { display: block; }
+            .cg-main { padding-left: 0; }
+        }
 
         /* 层配色：自顶向下 5 层 + 总览 + 跨层 */
         .cg-l0 { --c: #4f46e5; --cb: rgba(79,70,229,.10); --cb2: rgba(79,70,229,.20); }
@@ -245,9 +270,6 @@
         .cg-chart-cap { font-size: .74rem; color: var(--text-light); text-align: center; margin-top: 3px; }
 
         @media (max-width: 640px) {
-            .cg-bar { top: 56px; }
-            .cg-bar-inner { padding: 6px 12px; gap: 6px; }
-            .cg-bar-brand { font-size: .82rem; }
             .cg-layer-body { padding: 4px 11px 13px; }
             .cg-seq { grid-template-columns: 46px 1fr 46px; }
             .cg-enc-tag { flex: 0 0 48px; font-size: .68rem; }
@@ -277,7 +299,10 @@
         </div>
     </nav>
 
-    <div class="cg-bar">
+    <!-- 左侧竖悬浮层目录（桌面） / 移动端 ☰ 抽屉 -->
+    <button class="cg-side-fab" id="cgSideFab" onclick="cgSideToggle()" title="层目录">☰ 目录</button>
+    <div class="cg-side-mask" id="cgSideMask" onclick="cgSideToggle()"></div>
+    <aside class="cg-bar" id="cgBar" aria-label="层目录">
         <div class="cg-bar-inner">
             <span class="cg-bar-brand">🧭 计网<em>分层考点图谱</em></span>
             <nav class="cg-jump">
@@ -291,12 +316,12 @@
             </nav>
             <button class="cg-chip" id="cgFoldBtn" onclick="cgToggleAll()">折叠全部</button>
         </div>
-    </div>
+    </aside>
 
-    <main class="container">
+    <main class="container cg-main">
         <div class="page-header">
             <h1>🧭 计算机网络 · 分层考点图谱</h1>
-            <p>自顶向下五层贯通（OSI 七层 / TCP-IP 四层 / 教学五层三套模型对照），每一层只写<b>考点</b>：协议首部字段、计算公式、流程时序、易混对比。顶部可跳层，点层标题可折叠。</p>
+            <p>自顶向下五层贯通（OSI 七层 / TCP-IP 四层 / 教学五层三套模型对照），每一层只写<b>考点</b>：协议首部字段、计算公式、流程时序、易混对比。左侧层目录可跳层，点层标题可折叠。</p>
         </div>
 
         <!-- ============ §0 体系结构与分层模型 ============ -->
@@ -640,6 +665,7 @@
                     <ul class="cg-pts">
                         <li><span class="cg-key">必考</span><b>为什么必须三次？</b>① <b>同步双方初始序号</b>；② <b>防止已失效的连接请求报文段</b>突然到达服务器，造成服务器建立无用连接、浪费资源。</li>
                         <li>第 ② 个报文段（SYN+ACK）<b>不携带数据，但要消耗一个序号</b>，故第 ③ 个报文段的 ack = y+1。</li>
+                        <li><span class="cg-key k2">易错</span><b>第三次握手（纯 ACK，seq=x+1）不携带数据时则不消耗序号</b>——若紧接着发送携带数据的报文段，其 seq <b>仍为 x+1</b>（不 +1）。<b>规律：只有 SYN、FIN 与携带数据的报文段才消耗序号</b>；纯 ACK（确认报文段）不消耗序号。</li>
                         <li><b>SYN 洪泛攻击</b>：攻击者大量发送 SYN 而不完成第三次握手，耗尽服务器半连接队列 → 防御手段 SYN Cookie。</li>
                     </ul>
                 </div>
@@ -1036,7 +1062,18 @@
                     <ul class="cg-pts">
                         <li><span class="cg-key">必考</span><b>CSMA/CD 为什么不能用于无线？</b>① 无线网卡<b>收发不能同时</b>（无法边听边发）；② 存在<b>隐蔽站</b>问题，冲突检测不到。故无线改用 <b>CSMA/CA（冲突避免）</b>。</li>
                         <li><b>CSMA/CA 机制</b>：<em>DIFS</em>（普通帧等待）/ <em>SIFS</em>（ACK 等短帧优先，SIFS &lt; DIFS）｜<b>RTS/CTS 握手</b>解决隐蔽站｜<b>ACK 确认</b>（无线不能靠冲突检测，只能靠确认）。</li>
+                        <li><span class="cg-key">必考</span><b>NAV（网络分配向量）虚拟载波监听</b>：除<b>物理载波监听</b>（真的去听信道）外，无线还有<b>虚拟载波监听</b>——站点从监听到的帧（RTS/CTS/数据帧）中读取 <b>Duration 字段</b>，据此设置自己的 <b>NAV 计时器</b>，在 NAV 未清零期间<b>认为自己「信道忙」而保持沉默</b>，从而避免冲突。</li>
                     </ul>
+                    <div class="cg-flow" style="margin:10px 0">
+                        <div class="cg-flow-i"><b>① 源站发 RTS</b><i>Duration = 3×SIFS<br>+ CTS + 数据 + ACK</i></div>
+                        <span class="cg-flow-a">→</span>
+                        <div class="cg-flow-i"><b>② 目的站回 CTS</b><i>Duration = 2×SIFS<br>+ 数据 + ACK</i></div>
+                        <span class="cg-flow-a">→</span>
+                        <div class="cg-flow-i"><b>③ 源站发数据</b><i>Duration = SIFS<br>+ ACK</i></div>
+                        <span class="cg-flow-a">→</span>
+                        <div class="cg-flow-i"><b>④ 目的站回 ACK</b><i>Duration = 0</i></div>
+                    </div>
+                    <div class="cg-cap">NAV 递减规律：<b>每进入下一阶段，Duration 就少「1 个 SIFS + 上一帧的时长」</b>。其他站只要听到 RTS <b>或</b> CTS 就更新自己的 NAV，在 NAV 未清零前<b>不发送任何帧</b>——这正是「虚拟载波监听 + RTS/CTS」解决<b>隐蔽站</b>问题的核心机制。</div>
                 </div>
 
                 <div class="cg-block">
@@ -1406,8 +1443,27 @@
                     const arr = sec.querySelector('.cg-layer-arrow');
                     if (arr) arr.textContent = '▾ 折叠';
                 }
+                // 移动端：点目录项后收起抽屉
+                cgSideClose();
             });
         });
+
+        // 移动端层目录抽屉开关（≤900px 生效）
+        function cgSideToggle() {
+            const bar = document.getElementById('cgBar');
+            const mask = document.getElementById('cgSideMask');
+            const open = !bar.classList.contains('open');
+            bar.classList.toggle('open', open);
+            mask.classList.toggle('open', open);
+            document.getElementById('cgSideFab').textContent = open ? '✕ 关闭' : '☰ 目录';
+        }
+        function cgSideClose() {
+            const bar = document.getElementById('cgBar');
+            if (!bar.classList.contains('open')) return;
+            bar.classList.remove('open');
+            document.getElementById('cgSideMask').classList.remove('open');
+            document.getElementById('cgSideFab').textContent = '☰ 目录';
+        }
 
         // 回到顶部按钮：滚动超过一屏才出现
         window.addEventListener('scroll', () => {
