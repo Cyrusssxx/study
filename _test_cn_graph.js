@@ -167,15 +167,22 @@ const sleep = ms => new Promise(r => setTimeout(r, ms));
 
   console.log('\n--- 场景 11：综合大题全景拓扑 ---');
   check('拓扑容器存在', doc.querySelectorAll('.cg-topo').length, 1);
-  check('拓扑 2 个网段（A/B）', doc.querySelectorAll('.cg-topo-seg').length, 2);
-  check('拓扑设备节点 ≥ 6 个', doc.querySelectorAll('.cg-topo-dev').length >= 6, true);
-  check('路由器节点 2 个（R1/R2）', doc.querySelectorAll('.cg-topo-dev.rt').length, 2);
+  check('拓扑 3 段（AS1/Internet云/AS4）', doc.querySelectorAll('.cg-topo-seg').length, 3);
+  check('含 NET 云样式段', doc.querySelectorAll('.cg-topo-seg.cloud').length, 1);
+  check('拓扑设备节点 ≥ 9 个', doc.querySelectorAll('.cg-topo-dev').length >= 9, true);
+  check('圆形路由器 4 个（R1/ISP-A/ISP-B/R2）', doc.querySelectorAll('.cg-topo-dev.rt').length, 4);
+  check('服务器节点 2 个（Web/DNS）', doc.querySelectorAll('.cg-topo-dev.srv').length, 2);
   const stepItems = doc.querySelectorAll('.cg-tsteps > li');
   check('事件步骤 ≥ 12 步', stepItems.length >= 12, true);
-  const topoText = doc.querySelector('.cg-tsteps').textContent;
-  ['DNS', 'ARP', '三次握手', '封装', '自学习', '路由表', 'TTL', 'NAT', '分片', '解封装', '四次挥手', 'TIME_WAIT', '2MSL', '默认网关', '冲突域', '广播域'].forEach(tok => {
-    check(`事件链含「${tok}」`, topoText.includes(tok), true);
+  const topoText = doc.querySelector('.cg-topo').textContent + doc.querySelector('.cg-tsteps').textContent;
+  ['DHCP', 'DNS', '域名', 'OSPF', 'BGP', 'NAT', 'ARP', '三次握手', '自学习', '路由表', 'TTL', '分片', '四次挥手', '2MSL', 'VLAN', 'MTU', 'AS 1', 'ISP'].forEach(tok => {
+    check(`拓扑/事件链含「${tok}」`, topoText.includes(tok), true);
   });
+  const qTable = doc.querySelector('#LX').textContent;
+  ['子网划分', 'IP 分片', '路由表构造', 'OSPF 求路由', '最短帧长', '滑动窗口计算', 'TTL 与跳数', '冲突域/广播域', '无线帧地址'].forEach(tok => {
+    check(`真题题型表含「${tok}」`, qTable.includes(tok), true);
+  });
+  check('已删除「错误排查思路」段', !doc.body.textContent.includes('错误排查思路'), true);
 
   console.log(`\nPASS ${pass} / FAIL ${fail}`);
   process.exit(fail ? 1 : 0);

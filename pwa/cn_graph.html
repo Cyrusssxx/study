@@ -98,7 +98,7 @@
         .cg-layer {
             background: var(--card-bg);
             border: 1px solid var(--border);
-            border-left: 5px solid var(--c);
+            border-left: 3px solid var(--c);
             border-radius: var(--radius);
             margin-bottom: 18px;
             overflow: hidden;
@@ -107,13 +107,13 @@
         .cg-layer-head {
             display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
             padding: 13px 16px; cursor: pointer; user-select: none;
-            background: linear-gradient(90deg, var(--cb) 0%, transparent 62%);
+            background: var(--cb);
             border-bottom: 1px solid var(--border);
         }
-        .cg-layer-head:hover { background: linear-gradient(90deg, var(--cb2) 0%, transparent 62%); }
+        .cg-layer-head:hover { background: var(--cb2); }
         .cg-layer-no {
-            flex: 0 0 auto; width: 30px; height: 30px; border-radius: 8px;
-            background: var(--c); color: #fff; font-weight: 700; font-size: .95rem;
+            flex: 0 0 auto; width: 28px; height: 28px; border-radius: 6px;
+            background: var(--c); color: #fff; font-weight: 700; font-size: .9rem;
             display: flex; align-items: center; justify-content: center;
         }
         .cg-layer-head h2 { font-size: 1.08rem; margin: 0; }
@@ -204,7 +204,7 @@
         .cg-tb th, .cg-tb td { border: 1px solid var(--border); padding: 6px 8px; text-align: left; vertical-align: top; }
         .cg-tb th { background: var(--cb); font-weight: 600; white-space: nowrap; }
         .cg-tb td b { color: var(--c); }
-        .cg-tb tr:nth-child(even) td { background: rgba(128,128,128,.045); }
+        .cg-tb tr:nth-child(even) td { background: rgba(128,128,128,.028); }
 
         /* ---- 考点条目 ---- */
         .cg-pts { list-style: none; padding: 0; margin: 8px 0; }
@@ -225,13 +225,13 @@
         .cg-pts em { font-style: normal; background: var(--cb2); padding: 0 4px; border-radius: 3px; }
 
         .cg-key {
-            display: inline-block; font-size: .68rem; font-weight: 700; line-height: 1.5;
+            display: inline-block; font-size: .67rem; font-weight: 700; line-height: 1.5;
             padding: 0 6px; border-radius: 4px; margin-right: 5px;
-            background: #fde68a; color: #92400e;
+            background: rgba(217,119,6,.14); color: #b45309;
         }
-        .dark .cg-key { background: #4d3800; color: #fde68a; }
-        .cg-key.k2 { background: #fecaca; color: #991b1b; }
-        .dark .cg-key.k2 { background: #4c1d1d; color: #fca5a5; }
+        .dark .cg-key { background: rgba(253,230,138,.16); color: #fcd34d; }
+        .cg-key.k2 { background: rgba(220,38,38,.12); color: #b91c1c; }
+        .dark .cg-key.k2 { background: rgba(248,113,113,.16); color: #fca5a5; }
 
         .cg-tip {
             margin: 10px 0; padding: 9px 12px; border-radius: 8px;
@@ -291,33 +291,37 @@
         .cg-topo { margin: 10px 0; overflow-x: auto; padding-bottom: 4px; }
         .cg-topo::-webkit-scrollbar { height: 5px; }
         .cg-topo::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
-        .cg-topo-in { display: flex; align-items: stretch; min-width: 820px; }
+        .cg-topo-in { display: flex; align-items: center; min-width: 1020px; }
         .cg-topo-seg {
             flex: 1 1 0; display: flex; flex-direction: column; gap: 5px;
             padding: 8px; border: 1px solid var(--border); border-radius: 8px;
-            background: var(--cb); min-width: 150px;
+            background: var(--cb); min-width: 168px;
         }
-        .cg-topo-seg h4 { margin: 0 0 4px; text-align: center; font-size: .76rem; color: var(--text-light); font-weight: 600; }
-        .cg-topo-seg h4 b { color: var(--c); }
+        .cg-topo-seg.cloud { border-style: dashed; background: transparent; }
+        .cg-topo-seg h4 { margin: 0 0 4px; text-align: center; font-size: .74rem; color: var(--text-light); font-weight: 600; line-height: 1.35; }
+        .cg-topo-seg h4 b { display: block; color: var(--c); font-size: .76rem; }
+        .cg-topo-seg h4 s { text-decoration: none; font-size: .64rem; opacity: .8; }
         .cg-topo-dev {
             display: flex; align-items: center; gap: 6px; padding: 4px 7px;
             border: 1px solid var(--c); border-radius: 6px; background: var(--card-bg);
-            font-size: .7rem; line-height: 1.2; text-align: left;
+            font-size: .7rem; line-height: 1.25; text-align: left;
         }
         .cg-topo-dev b { display: block; font-size: .73rem; }
         .cg-topo-dev i { font-style: normal; color: var(--text-light); font-size: .62rem; }
         .cg-topo-dev.rt {
             border-radius: 50%; justify-content: center; text-align: center;
-            min-height: 46px; width: 66px; align-self: center; flex-direction: column;
-            border-width: 2px;
+            min-height: 48px; width: 74px; align-self: center; flex-direction: column;
+            border-width: 2px; padding: 4px;
         }
-        .cg-topo-dev.rt b { font-size: .78rem; }
+        .cg-topo-dev.rt b { font-size: .76rem; }
+        .cg-topo-dev.srv { border-style: solid; background: var(--cb2); }
         .cg-topo-link {
             display: flex; flex-direction: column; align-items: center; justify-content: center;
-            color: var(--c); font-size: .82rem; font-weight: 700; padding: 0 5px; gap: 3px; flex: 0 0 auto;
+            color: var(--text-light); font-size: .8rem; font-weight: 700; padding: 0 4px; gap: 3px; flex: 0 0 auto;
         }
-        .cg-topo-link i { font-style: normal; font-size: .62rem; color: var(--text-light); font-weight: 400; text-align: center; line-height: 1.25; }
-        .cg-topo-cap { font-size: .72rem; color: var(--text-light); margin-top: 6px; line-height: 1.5; }
+        .cg-topo-link s { text-decoration: none; color: var(--c); font-size: .74rem; }
+        .cg-topo-link i { font-style: normal; font-size: .62rem; color: var(--text-light); font-weight: 400; text-align: center; line-height: 1.3; }
+        .cg-topo-cap { font-size: .72rem; color: var(--text-light); margin-top: 6px; line-height: 1.55; }
         .cg-topo-cap b { color: var(--c); }
         .cg-tsteps { counter-reset: ts; list-style: none; padding: 0; margin: 12px 0 0; }
         .cg-tsteps > li {
@@ -1179,7 +1183,6 @@
                         · <b>交换机</b>：<b>每个端口是一个独立冲突域</b>，整个交换机仍是<b>一个广播域</b>；<br>
                         · <b>路由器</b>：<b>隔离广播域</b>（每个接口一个广播域）。</li>
                         <li><b>VLAN</b>：把一个物理交换机逻辑划分为多个广播域，<b>隔离广播、提高安全</b>。IEEE <code>802.1Q</code> 标签 4B（2B TPID + 2B TCI，含 12 位 VLAN ID，最多 4094 个）。</li>
-                        <li><b>生成树协议 STP</b>：在冗余链路中逻辑地阻塞部分端口，消除环路、避免广播风暴。</li>
                     </ul>
                 </div>
 
@@ -1264,7 +1267,6 @@
                                 <tr><td><b>NRZ</b> 不归零</td><td>高电平=1，低电平=0</td><td>简单，<b>无法自同步</b>（长串同电平时收不到时钟）</td></tr>
                                 <tr><td><b>曼彻斯特</b></td><td>每个码元<b>中间必有一次跳变</b>（高→低=1，低→高=0）</td><td><b>自带时钟同步</b>；<b>频带宽度是数据率的 2 倍</b>（考点！）</td></tr>
                                 <tr><td><b>差分曼彻斯特</b></td><td>位中间总有跳变；<b>位开始处有跳变=0，无跳变=1</b></td><td>抗干扰能力更强</td></tr>
-                                <tr><td><b>4B/5B</b></td><td>4 位数据映射成 5 位码</td><td>提高编码效率（100Mb/s 以太网用）</td></tr>
                             </tbody>
                         </table>
                     </div>
@@ -1475,46 +1477,82 @@
                 </div>
 
                 <div class="cg-block">
-                    <h3>⑥ 综合大题全景拓扑 <small>（一图串起全部考点 · PC-A 访问 Web 服务器全流程）</small></h3>
+                    <h3>⑥ 综合大题全景拓扑 <small>（多自治系统 · PC-A 访问 www.company.com 全流程）</small></h3>
                     <div class="cg-topo">
                         <div class="cg-topo-in">
                             <div class="cg-topo-seg">
-                                <h4>网段 A <b>192.168.1.0/24</b></h4>
-                                <div class="cg-topo-dev">🖥 <div><b>PC-A</b><i>192.168.1.10<br>MAC: A-A1</i></div></div>
-                                <div class="cg-topo-dev" style="border-style:dashed">🔀 <div><b>交换机 SW1</b><i>自学习 · 隔离冲突域<br>不隔离广播域</i></div></div>
-                                <div class="cg-topo-dev rt">🌐<div><b>R1</b><i>网关 .1<br>NAT 出口</i></div></div>
+                                <h4><b>AS 1 园区网</b><s>192.168.1.0/24 · 私网</s></h4>
+                                <div class="cg-topo-dev">PC-A<i>192.168.1.10/.24</i></div>
+                                <div class="cg-topo-dev">PC-B<i>192.168.1.11/.24</i></div>
+                                <div class="cg-topo-dev">DHCP 服务器<i>自动分配 IP/网关/DNS</i></div>
+                                <div class="cg-topo-dev">交换机 SW1<i>VLAN 10 · 自学习</i></div>
+                                <div class="cg-topo-dev rt"><b>R1</b><i>网关 .1<br>NAT · OSPF</i></div>
                             </div>
-                            <div class="cg-topo-link">═══→<i>广域网 WAN<br>R1 ↔ R2<br>MTU 1500</i></div>
+                            <div class="cg-topo-link"><s>──→</s><i>OSPF<br>AS 内<br>动态路由</i></div>
+                            <div class="cg-topo-seg cloud">
+                                <h4><b>Internet · NET 云</b><s>跨自治系统</s></h4>
+                                <div class="cg-topo-dev rt"><b>ISP-A</b><i>AS 2</i></div>
+                                <div class="cg-topo-link"><s>═══</s><i>BGP<br>AS 间</i></div>
+                                <div class="cg-topo-dev rt"><b>ISP-B</b><i>AS 3</i></div>
+                            </div>
+                            <div class="cg-topo-link"><s>←──</s><i>BGP<br>域间可达</i></div>
                             <div class="cg-topo-seg">
-                                <h4>网段 B <b>200.1.2.0/24</b></h4>
-                                <div class="cg-topo-dev rt">🌐<div><b>R2</b><i>网关 .1</i></div></div>
-                                <div class="cg-topo-dev" style="border-style:dashed">🔀 <div><b>交换机 SW2</b><i>自学习</i></div></div>
-                                <div class="cg-topo-dev">🖥 <div><b>Web 服务器</b><i>200.1.2.10<br>端口 80/443</i></div></div>
-                                <div class="cg-topo-dev">🗄 <div><b>DNS 服务器</b><i>200.1.2.53<br>端口 53</i></div></div>
+                                <h4><b>AS 4 公司总部</b><s>200.1.2.0/24 · 公网</s></h4>
+                                <div class="cg-topo-dev rt"><b>R2</b><i>网关 .1</i></div>
+                                <div class="cg-topo-dev">交换机 SW2<i>自学习</i></div>
+                                <div class="cg-topo-dev srv"><b>Web 服务器</b><i>200.1.2.10:80<br>域名 www.company.com</i></div>
+                                <div class="cg-topo-dev srv"><b>DNS 服务器</b><i>200.1.2.53:53</i></div>
                             </div>
                         </div>
                     </div>
-                    <div class="cg-topo-cap">拓扑要点：PC-A 与服务器分处两个网段 → 通信<b>必经 R1 路由转发</b>；PC-A 私网地址（192.168.x.x）访问公网服务器时经 <b>R1 做 NAT</b>；同网段用 <b>ARP 直通</b>，跨网段必须 <b>查默认网关</b>。</div>
+                    <div class="cg-topo-cap">
+                        拓扑要点：PC-A 与服务器<b>分处不同网段</b> → 必经路由器转发；私网 → 公网经 <b>R1 做 NAT</b>；AS 内用 <b>OSPF</b>（链路状态，洪泛 LSI 后各自算最短路径），AS 间用 <b>BGP</b>（路径向量，跑在 TCP 179 上）；同网段靠 <b>ARP 直通</b>，跨网段必查<b>默认网关</b>；主机地址由 <b>DHCP</b> 动态获取。
+                    </div>
 
                     <ol class="cg-tsteps">
-                        <li><span class="cg-key">① 应用层 DNS</span><b>PC-A 输入域名 → 先查本机缓存与 hosts，未命中则向 DNS 服务器发起查询</b>（UDP，端口 53）。<code>www.example.com → 200.1.2.10</code>。可考点：递归 vs 迭代查询、DNS 缓存、UDP 不握手。</li>
-                        <li><span class="cg-key">② 判断同/跨网段</span>PC-A 用<b>子网掩码与目的 IP 相与</b>：200.1.2.10 ∉ 192.168.1.0/24 → <b>跨网段</b>，目的 MAC 填<b>默认网关 R1 的 MAC</b>，而非服务器 MAC。</li>
-                        <li><span class="cg-key k2">③ 链路层 ARP</span>PC-A 查 ARP 缓存，无 R1 条目 → <b>广播 ARP 请求</b>（目的 MAC FF-FF-FF-FF-FF-FF）"谁是 192.168.1.1？"；SW1 收到后<b>洪泛</b>到所有端口，R1 应答，PC-A 记录 <code>192.168.1.1 → MAC(R1)</code>。可考点：ARP 广播只在<b>本网段</b>，路由器不转发广播。</li>
-                        <li><span class="cg-key">④ 传输层 TCP 连接</span>PC-A 发起<b>三次握手</b>（SYN seq=x → SYN+ACK seq=y,ack=x+1 → ACK seq=x+1,ack=y+1），建立与 200.1.2.10:80 的连接。可考点：SYN 消耗序号、第三次握手不携带数据不消耗序号、1 个 RTT 建立连接。</li>
-                        <li><span class="cg-key">⑤ 封装</span>HTTP 报文依次封装：<b>应用层</b> HTTP 报文 → <b>传输层</b> 加 TCP 首部(20B) → <b>网络层</b> 加 IP 首部(20B，源 192.168.1.10 目的 200.1.2.10，TTL=64) → <b>链路层</b> 加 MAC 首部(14B：源 MAC(A1) 目的 MAC(R1)) + FCS(4B)。</li>
-                        <li><span class="cg-key">⑥ 链路层转发（一跳）</span>帧到 SW1：SW1 <b>自学习</b>记录「MAC(A1)→端口1」，查转发表把帧从 R1 所在端口送出。<b>冲突域被隔离</b>（每端口一个），广播域仍为 1（不划 VLAN）。可考点：交换机自学习、转发表项、冲突域/广播域计数。</li>
-                        <li><span class="cg-key">⑦ 网络层路由（R1）</span>R1 解帧得 IP 数据报，<b>查路由表</b>：目的 200.1.2.0/24 经 WAN 口转发 → 重新封装：<b>源 MAC 换成 R1 WAN 口 MAC，目的 MAC 换成 R2 的 MAC，TTL −1</b>（64→63）；IP 地址与 TCP 端口<b>不变</b>。若源是私网地址，R1 做 <b>NAT</b>：源 IP 改为公网地址 + 端口映射。</li>
-                        <li><span class="cg-key k2">⑧ 广域网逐跳</span>数据报经 R1→R2 之间的链路（可能还有 ISP 路由器），每跳都做「解帧→查表→改 MAC→TTL−1→重封装」。若某链路 MTU 小于报文长度 → <b>IP 分片</b>（片偏移、MF/DF 标志），到目的端重组。可考点：TTL 变化、分片与重组、MTU。</li>
-                        <li><span class="cg-key">⑨ 网络层路由（R2）</span>R2 查路由表：目的 200.1.2.10 是本网段 → 目的 MAC 改为 Web 服务器 MAC（查 ARP 表），从对应端口经 SW2 送出。SW2 同样自学习转发。</li>
-                        <li><span class="cg-key">⑩ 服务器接收</span>Web 服务器收到帧：<b>逐层解封装</b>（去 MAC → 去 IP → 去 TCP 首部）→ 按<b>目的端口 80</b> 把 HTTP 请求交给 Web 进程 → 处理并构造 HTTP 响应（200 OK + 页面）。</li>
-                        <li><span class="cg-key">⑪ 返回响应</span>响应沿<b>相反路径</b>逐跳返回：目的 MAC 逐跳换、TTL 递减，IP/端口不变；回到 PC-A 后同样逐层解封装交给浏览器渲染。可考点：往返路径、TCP 确认与重传、拥塞控制（慢开始/拥塞避免/快重传/快恢复）。</li>
-                        <li><span class="cg-key">⑫ 释放连接</span>数据传输完毕 → <b>四次挥手</b>（FIN → ACK → FIN → ACK），主动关闭方进入 <b>TIME_WAIT</b> 并等待 <b>2MSL</b>（保证最后一个 ACK 可达、防止旧报文干扰新连接）。</li>
+                        <li><span class="cg-key">① DHCP 获取地址</span>PC-A 开机无 IP → 广播 <b>DHCP DISCOVER</b>（源 0.0.0.0、目的 255.255.255.255，<b>目的 MAC 全 1 = FF-FF-FF-FF-FF-FF</b>）→ 服务器回 <b>OFFER</b> → 客户端广播 <b>REQUEST</b> → 服务器 <b>ACK</b>。获得：IP 192.168.1.10、掩码 /24、网关 192.168.1.1、DNS 地址。可考点：DISCOVER 是广播，同广播域设备都能收到。</li>
+                        <li><span class="cg-key">② DNS 域名解析</span>浏览器输入 <code>www.company.com</code> → 查本机缓存/hosts 未命中 → 向 DNS 服务器查询（<b>UDP 53</b>）：本地 DNS → 根 → 顶级域 → 权威服务器（<b>迭代查询</b>），得 <code>www.company.com → 200.1.2.10</code>。可考点：递归/迭代、UDP 丢包由应用层超时重试、DNS 缓存 TTL。</li>
+                        <li><span class="cg-key">③ 子网判断</span>PC-A 把<b>目的 IP 与本机掩码相与</b>：200.1.2.10 &amp; 255.255.255.0 = 200.1.2.0 ≠ 192.168.1.0 → <b>跨网段</b>，目的 MAC 填<b>默认网关 R1 的 MAC</b>（不是服务器 MAC）。</li>
+                        <li><span class="cg-key k2">④ ARP 解析网关</span>查 ARP 缓存无 192.168.1.1 → <b>广播 ARP 请求</b>"谁是 192.168.1.1？"；SW1 <b>洪泛</b>到所有端口；R1 单播应答 → PC-A 记录 <code>192.168.1.1 → MAC(R1)</code>。<b>ARP 请求是广播、路由器不转发广播</b>，故只能解析本网段地址。</li>
+                        <li><span class="cg-key">⑤ TCP 三次握手</span>SYN(seq=x) → SYN+ACK(seq=y, ack=x+1) → ACK(seq=x+1, ack=y+1)，与 200.1.2.10:80 建立连接。<b>SYN 消耗序号；第三次握手不带数据则不消耗序号</b>；建立连接耗时 1 个 RTT。</li>
+                        <li><span class="cg-key">⑥ 逐层封装</span>HTTP 报文 → <b>TCP 首部 20B</b>（源端口随机、目的 80）→ <b>IP 首部 20B</b>（源 192.168.1.10、目的 200.1.2.10、TTL=64）→ <b>MAC 首部 14B</b>（源 MAC(A)、目的 MAC(R1)）+ <b>FCS 4B</b>。最小以太网帧 64B、最大 1518B。</li>
+                        <li><span class="cg-key">⑦ 交换机转发</span>SW1 <b>自学习</b>「源 MAC → 入端口」并查转发表输出。<b>交换机隔离冲突域（每端口一个）、不隔离广播域</b>；划 <b>VLAN</b> 才能隔离广播域；<b>集线器 Hub 两者都不隔离</b>。</li>
+                        <li><span class="cg-key">⑧ R1 查表 + NAT + 改 MAC</span>R1 解帧后<b>查路由表</b>（表项由 <b>OSPF</b> 在 AS 内学得）→ 从 WAN 口转发：<b>源/目的 MAC 换成该段链路的，TTL −1（64→63）</b>，IP 与端口不变；私网源地址经 <b>NAT</b> 换成公网地址 + 端口映射（维护 NAT 表）。</li>
+                        <li><span class="cg-key">⑨ AS 间与逐跳</span>R1 与 ISP 之间靠 <b>BGP</b>（路径向量，跑在 <b>TCP 179</b>，只在路由变化时增量更新）交换域间可达性；数据报在 NET 云中经 ISP-A → ISP-B <b>逐跳转发</b>，每跳「解帧→查表→TTL−1→重封装」；若某链路 <b>MTU 小于报文长度 → IP 分片</b>（片偏移、MF/DF），到目的端重组。</li>
+                        <li><span class="cg-key">⑩ R2 → 服务器</span>R2 查表：目的 200.1.2.10 在本网段 → 查 ARP 得服务器 MAC → 经 SW2 送出；SW2 自学习转发。</li>
+                        <li><span class="cg-key">⑪ 服务器解封装与响应</span>服务器逐层去首部 → 按<b>目的端口 80</b> 交给 Web 进程 → 回 HTTP 响应（200 OK）沿相反路径返回，PC-A 解封装后由浏览器渲染。</li>
+                        <li><span class="cg-key">⑫ 传输与释放</span>传输中 TCP 靠<b>滑动窗口 + 累积确认 + 超时重传</b>保证可靠，靠<b>慢开始/拥塞避免/快重传/快恢复</b>调节速率；传完 <b>四次挥手</b>（FIN → ACK → FIN → ACK），主动关闭方 <b>TIME_WAIT 等 2MSL</b>。</li>
                     </ol>
                     <ul class="cg-pts">
-                        <li><span class="cg-key">易混</span><b>MAC 地址每跳都变，IP 地址全程不变</b>（除非 NAT）——判断帧里目的 MAC 填什么，先看"同一网段还是跨网段"：同网段填目标主机 MAC，跨网段填<b>默认网关 MAC</b>。</li>
-                        <li><b>时延综合计算</b>：总时间 = DNS 解析时间 + TCP 建立（1 RTT）+ HTTP 请求/响应（1 RTT）+ 各段传播/传输时延；若题目给"忽略 DNS/处理时延"按条件去掉即可。</li>
-                        <li><b>错误排查思路（大题常考）</b>：PC-A 能 ping 通网关但 ping 不通 Web 服务器 → 检查路由表/R1 配置；能 ping 通 IP 但打不开网页 → 检查 DNS 与端口 80；同网段互 ping 不通 → 查 ARP 与 MAC 地址。</li>
+                        <li><span class="cg-key">易混</span><b>MAC 每跳变、IP 全程不变</b>（除非 NAT）——判断目的 MAC 填什么：同网段填目标主机 MAC，跨网段填<b>默认网关 MAC</b>。</li>
+                        <li><span class="cg-key">答题骨架</span>先答"<b>这是哪一层的事</b>"（封装/转发/寻址/连接/释放）→ 再写该层协议与字段 → 最后算数值。大题给分点几乎都落在「<b>地址怎么变、序号怎么走、表项怎么查</b>」三件事上。</li>
                     </ul>
+
+                    <h4 style="margin:14px 0 6px;font-size:.9rem">本拓扑能出的真题题型（均来自历年统考大题）</h4>
+                    <div class="cg-tw">
+                        <table class="cg-tb">
+                            <thead><tr><th>题型</th><th>真题问法</th><th>解题抓手</th></tr></thead>
+                            <tbody>
+                                <tr><td><b>子网划分</b></td><td>几台主机分属几个网段？哪几台同网段？某地址的网络地址/广播地址/可用范围？</td><td>IP 与掩码相与 → 网络号；广播地址 = 主机位全 1；可用范围去掉首尾</td></tr>
+                                <tr><td><b>IP 分片</b></td><td>4000B 数据报经 MTU 1500 的网络 → 分几片？各片长度、片偏移、MF？</td><td>数据部分按 <b>8B 整数倍</b>切片；片偏移 = 该片首字节 ÷ 8；最后一片 MF=0</td></tr>
+                                <tr><td><b>路由表构造</b></td><td>写出 R1 到各子网的路由表（目的网络 / 掩码 / 下一跳）</td><td>直连网段写"直接"；非直连写下一跳路由器接口 IP</td></tr>
+                                <tr><td><b>OSPF 求路由</b></td><td>给出各路由器 LSI（含 Metric），构造拓扑并求 R1 路由表</td><td>按费用累加算<b>最短路径</b>，选代价最小的下一跳</td></tr>
+                                <tr><td><b>转发过程描述</b></td><td>描述 H1 发数据报到 H2 的过程（含物理地址解析）</td><td>逐步写：判断同/跨网段 → ARP → 封装 → 每跳改 MAC、TTL−1 → 解封装</td></tr>
+                                <tr><td><b>最短帧长/争用期</b></td><td>求 Hub 到主机的最大距离、争用期、最短帧长</td><td>发送时延 ≥ 往返传播时延 → <code>最短帧长 = 数据率 × 2τ</code>；注意 Hub 转发时延要扣除</td></tr>
+                                <tr><td><b>滑动窗口计算</b></td><td>GBN/SR 窗口能用多大？序号至少几位？利用率不低于 80% 时窗口多少？</td><td>利用率 = 发送时间 ÷(发送 + 等确认)；GBN 需 <code>2<sup>n</sup> ≥ W+1</code>、SR 需 <code>2<sup>n</sup> ≥ 2W</code></td></tr>
+                                <tr><td><b>TCP 序号/字节数</b></td><td>给出十六进制首部，问哪个分组是发送方发的？已收到多少应用层字节？</td><td>看 IP 源地址判方向；seq/ack 按<b>字节</b>编号；SYN/FIN 各占 1 个序号</td></tr>
+                                <tr><td><b>TTL 与跳数</b></td><td>某分组到达时 TTL 为 58，问经过几个路由器？</td><td>经过路由器数 = 初始 TTL − 到达时 TTL（每跳减 1）</td></tr>
+                                <tr><td><b>时延/吞吐计算</b></td><td>卫星链路单向传播时延？上传 4000B 文件最短时间？最大吞吐量？</td><td>传播时延 = 距离 ÷ 光速；吞吐量受带宽与窗口限制；文件时间 = 建连 + 发送 + 传播</td></tr>
+                                <tr><td><b>冲突域/广播域</b></td><td>某位置该选交换机还是集线器？图中几个冲突域/广播域？</td><td>Hub 不隔离任何域；交换机隔离冲突域；<b>只有路由器（或 VLAN）隔离广播域</b></td></tr>
+                                <tr><td><b>DHCP 与广播</b></td><td>DHCP DISCOVER 的目的 IP/MAC 是什么？哪些设备能收到？</td><td>目的 IP 255.255.255.255、目的 MAC 全 1；同广播域内都能收到</td></tr>
+                                <tr><td><b>无线帧地址</b></td><td>802.11 帧中的地址 1 / 2 / 3 分别是什么？</td><td>地址 1 = 接收方、地址 2 = 发送方、地址 3 = 经 AP 中转时的源/目的地址</td></tr>
+                                <tr><td><b>协议对比说理</b></td><td>RIP 用 UDP、OSPF 用 IP、BGP 用 TCP 有何好处？为何 RIP 周期交换而 BGP 不？</td><td>RIP 简单开销小、OSPF 直接封装进 IP（协议号 89）、BGP 需可靠长会话；BGP 只在<b>变化时</b>增量更新</td></tr>
+                                <tr><td><b>CSMA/CD 对比 TDM</b></td><td>与时分复用相比，争用式接入的优缺点？</td><td>优点：轻载利用率高、无需集中控制；缺点：重载冲突多、时延不确定</td></tr>
+                                <tr><td><b>应用层协议说理</b></td><td>DNS 用 UDP 丢包会有问题吗？邮件用 TCP 为何还会发送失败/收不到？为什么要 UDP？</td><td>UDP 丢包由应用层超时重试；邮件失败在<b>非 TCP 环节</b>（对方服务器拒收/故障/垃圾过滤）；UDP 省去建连开销、适合短报文与实时流</td></tr>
+                                <tr><td><b>TCP 确认机制说理</b></td><td>某个确认报文段丢了，为什么不一定引起对应数据重传？</td><td>TCP 采用<b>累积确认</b>，后续确认可覆盖丢失的，只要新数据收到就不必重传</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
 
             </div>
