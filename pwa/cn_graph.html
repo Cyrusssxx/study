@@ -14,35 +14,48 @@
         /* ================= 计网分层考点图谱 ================= */
         /* 左侧竖悬浮层目录（桌面） */
         .cg-bar {
-            position: fixed; left: 14px; top: 50%; transform: translateY(-50%);
-            z-index: 95; width: 158px;
+            position: fixed; left: 12px; top: 50%; transform: translateY(-50%);
+            z-index: 95; width: 104px;
             background: rgba(var(--card-rgb), var(--ui-alpha));
             border: 1px solid var(--border); border-radius: var(--radius);
             box-shadow: var(--shadow); backdrop-filter: blur(8px);
-            padding: 12px 10px; box-sizing: border-box;
+            padding: 11px 8px; box-sizing: border-box;
+            transition: width .15s ease, padding .15s ease;
+        }
+        .cg-bar.cg-min {
+            width: 30px; padding: 11px 4px;
         }
         .cg-bar-inner {
-            display: flex; flex-direction: column; gap: 8px;
+            display: flex; flex-direction: column; gap: 7px;
         }
-        .cg-bar-brand { font-weight: 700; font-size: .82rem; text-align: center; padding: 2px 0 8px; border-bottom: 1px dashed var(--border); }
+        .cg-bar.cg-min .cg-bar-inner { display: none; }
+        .cg-bar-brand { font-weight: 700; font-size: .8rem; text-align: center; padding: 2px 0 7px; border-bottom: 1px dashed var(--border); }
         .cg-bar-brand em { font-style: normal; color: var(--primary); }
         .cg-jump {
             display: flex; flex-direction: column; gap: 4px;
         }
         .cg-jump a {
-            font-size: .78rem; padding: 5px 8px; border-radius: 8px;
+            font-size: .76rem; padding: 4px 6px; border-radius: 7px;
             border: 1px solid var(--border); color: var(--text-light);
             text-decoration: none; white-space: nowrap; text-align: center;
             display: block; transition: border-color .15s, color .15s;
         }
         .cg-jump a:hover { border-color: var(--primary); color: var(--primary); }
         .cg-chip {
-            font-size: .78rem; padding: 5px 8px; border-radius: 8px;
+            font-size: .74rem; padding: 4px 6px; border-radius: 7px;
             border: 1px solid var(--border); background: transparent;
             color: var(--text-light); cursor: pointer; font-family: inherit;
             white-space: nowrap; width: 100%;
         }
         .cg-chip:hover { border-color: var(--primary); color: var(--primary); }
+        /* 收起的竖排把手（点它展开目录） */
+        .cg-bar-v {
+            display: none; writing-mode: vertical-rl; letter-spacing: 4px;
+            font-size: .78rem; font-weight: 700; color: var(--text-light);
+            text-align: center; cursor: pointer; padding: 10px 0; height: 100%;
+        }
+        .cg-bar-v:hover { color: var(--primary); }
+        .cg-bar.cg-min .cg-bar-v { display: flex; align-items: center; justify-content: center; }
         /* 移动端：目录收成左下 ☰ 抽屉 */
         .cg-side-fab {
             display: none; position: fixed; left: 14px; bottom: 20px; z-index: 300;
@@ -56,7 +69,8 @@
         }
         .cg-side-mask.open { display: block; }
         /* 主内容右移让位（桌面） */
-        .cg-main { padding-left: 200px; }
+        .cg-main { padding-left: 132px; transition: padding-left .15s ease; }
+        body.cg-min-main .cg-main { padding-left: 48px; }
         @media (max-width: 900px) {
             .cg-bar {
                 transform: translateX(-110%); top: 60px; bottom: 0; height: calc(100vh - 60px);
@@ -64,18 +78,22 @@
                 transition: transform .2s ease; overflow-y: auto;
             }
             .cg-bar.open { transform: translateX(0); }
+            .cg-bar.cg-min { width: 220px; padding: 11px 16px; }
+            .cg-bar.cg-min .cg-bar-inner { display: flex; }
+            .cg-bar.cg-min .cg-bar-v { display: none; }
             .cg-side-fab { display: block; }
             .cg-main { padding-left: 0; }
+            body.cg-min-main .cg-main { padding-left: 0; }
         }
 
-        /* 层配色：自顶向下 5 层 + 总览 + 跨层 */
-        .cg-l0 { --c: #4f46e5; --cb: rgba(79,70,229,.10); --cb2: rgba(79,70,229,.20); }
-        .cg-l5 { --c: #8b5cf6; --cb: rgba(139,92,246,.10); --cb2: rgba(139,92,246,.22); }
-        .cg-l4 { --c: #2563eb; --cb: rgba(37,99,235,.10); --cb2: rgba(37,99,235,.22); }
-        .cg-l3 { --c: #059669; --cb: rgba(5,150,105,.10); --cb2: rgba(5,150,105,.22); }
-        .cg-l2 { --c: #ea580c; --cb: rgba(234,88,12,.10); --cb2: rgba(234,88,12,.22); }
-        .cg-l1 { --c: #0891b2; --cb: rgba(8,145,178,.10); --cb2: rgba(8,145,178,.22); }
-        .cg-lx { --c: #db2777; --cb: rgba(219,39,119,.10); --cb2: rgba(219,39,119,.22); }
+        /* 层配色：统一主色调（去彩虹，重点靠 cg-key 标签区分） */
+        .cg-l0 { --c: #4f46e5; --cb: rgba(79,70,229,.08); --cb2: rgba(79,70,229,.16); }
+        .cg-l5 { --c: #4f46e5; --cb: rgba(79,70,229,.08); --cb2: rgba(79,70,229,.16); }
+        .cg-l4 { --c: #4f46e5; --cb: rgba(79,70,229,.08); --cb2: rgba(79,70,229,.16); }
+        .cg-l3 { --c: #4f46e5; --cb: rgba(79,70,229,.08); --cb2: rgba(79,70,229,.16); }
+        .cg-l2 { --c: #4f46e5; --cb: rgba(79,70,229,.08); --cb2: rgba(79,70,229,.16); }
+        .cg-l1 { --c: #4f46e5; --cb: rgba(79,70,229,.08); --cb2: rgba(79,70,229,.16); }
+        .cg-lx { --c: #db2777; --cb: rgba(219,39,119,.07); --cb2: rgba(219,39,119,.14); }
 
         .cg-layer {
             background: var(--card-bg);
@@ -237,12 +255,12 @@
             border-radius: 6px; padding: 5px 4px; border: 1px solid transparent;
         }
         .cg-mc small { display: block; font-size: .67rem; font-weight: 400; color: var(--text-light); }
-        .cg-mc.a { background: rgba(139,92,246,.16); border-color: #8b5cf6; }
-        .cg-mc.b { background: rgba(37,99,235,.16); border-color: #2563eb; }
-        .cg-mc.c { background: rgba(5,150,105,.16); border-color: #059669; }
-        .cg-mc.d { background: rgba(234,88,12,.16); border-color: #ea580c; }
-        .cg-mc.e { background: rgba(8,145,178,.16); border-color: #0891b2; }
-        .cg-mc.f { background: rgba(79,70,229,.16); border-color: #4f46e5; }
+        .cg-mc.a { background: rgba(79,70,229,.14); border-color: rgba(79,70,229,.55); }
+        .cg-mc.b { background: rgba(79,70,229,.10); border-color: rgba(79,70,229,.40); }
+        .cg-mc.c { background: rgba(79,70,229,.07); border-color: rgba(79,70,229,.30); }
+        .cg-mc.d { background: rgba(79,70,229,.05); border-color: rgba(79,70,229,.22); }
+        .cg-mc.e { background: rgba(79,70,229,.03); border-color: rgba(79,70,229,.16); }
+        .cg-mc.f { background: rgba(79,70,229,.02); border-color: rgba(79,70,229,.12); }
 
         .cg-fab {
             position: fixed; right: 20px; bottom: 20px; z-index: 2000;
@@ -315,7 +333,9 @@
                 <a href="#LX">★ 跨层串联</a>
             </nav>
             <button class="cg-chip" id="cgFoldBtn" onclick="cgToggleAll()">折叠全部</button>
+            <button class="cg-chip" onclick="cgBarMin()" title="向左收缩目录">◀ 收起</button>
         </div>
+        <div class="cg-bar-v" onclick="cgBarMax()" title="展开目录">层目录 ☰</div>
     </aside>
 
     <main class="container cg-main">
@@ -1251,7 +1271,7 @@
                 <div class="cg-block">
                     <h3>① 封装与解封装全流程 <small>（自顶向下的「层层加壳」，必背首部长度）</small></h3>
                     <div class="cg-enc">
-                        <div class="cg-enc-row" style="--ec:#8b5cf6;--eb:rgba(139,92,246,.12)">
+                        <div class="cg-enc-row" style="--ec:#4f46e5;--eb:rgba(79,70,229,.10)">
                             <div class="cg-enc-tag">传输层<br>TCP 报文段</div>
                             <div class="cg-enc-box">
                                 <div class="cg-enc-h">TCP 首部<i>20B</i></div>
@@ -1261,12 +1281,12 @@
 
                         <div class="cg-enc-arrow">↓ 加 <b>20B</b> IP 首部 → 成为 IP 数据报</div>
 
-                        <div class="cg-enc-row" style="--ec:#059669;--eb:rgba(5,150,105,.12)">
+                        <div class="cg-enc-row" style="--ec:#4f46e5;--eb:rgba(79,70,229,.08)">
                             <div class="cg-enc-tag">网络层<br>IP 数据报</div>
                             <div class="cg-enc-box">
                                 <div class="cg-enc-h">IP 首部<i>20B</i></div>
                                 <div class="cg-enc-in">
-                                    <span style="border:1px dashed #8b5cf6;border-radius:4px;padding:5px 10px">
+                                    <span style="border:1px dashed #4f46e5;border-radius:4px;padding:5px 10px">
                                         TCP 首部 20B ＋ 数据（即整个 TCP 报文段）
                                     </span>
                                 </div>
@@ -1275,12 +1295,12 @@
 
                         <div class="cg-enc-arrow">↓ 加 <b>14B</b> MAC 首部 ＋ <b>4B</b> FCS 尾部 → 成为以太网帧</div>
 
-                        <div class="cg-enc-row" style="--ec:#ea580c;--eb:rgba(234,88,12,.12)">
+                        <div class="cg-enc-row" style="--ec:#4f46e5;--eb:rgba(79,70,229,.06)">
                             <div class="cg-enc-tag">链路层<br>以太网 MAC 帧</div>
                             <div class="cg-enc-box">
                                 <div class="cg-enc-h">MAC 首部<i>14B<br>目的 6 ＋ 源 6 ＋ 类型 2</i></div>
                                 <div class="cg-enc-in">
-                                    <span style="border:1px dashed #059669;border-radius:4px;padding:5px 10px">
+                                    <span style="border:1px dashed #4f46e5;border-radius:4px;padding:5px 10px">
                                         IP 首部 20B ＋ TCP 首部 20B ＋ 数据（整个 IP 数据报，46~1500B）
                                     </span>
                                 </div>
@@ -1290,12 +1310,12 @@
 
                         <div class="cg-enc-arrow">↓ 加 <b>8B</b> 前导码，转为比特流在线路上传输</div>
 
-                        <div class="cg-enc-row" style="--ec:#0891b2;--eb:rgba(8,145,178,.12)">
+                        <div class="cg-enc-row" style="--ec:#4f46e5;--eb:rgba(79,70,229,.04)">
                             <div class="cg-enc-tag">物理层<br>比特流</div>
                             <div class="cg-enc-box">
                                 <div class="cg-enc-h">前导码<i>8B<br>7B 同步码 ＋ 1B 定界符</i></div>
                                 <div class="cg-enc-in">
-                                    <span style="border:1px dashed #ea580c;border-radius:4px;padding:5px 10px">
+                                    <span style="border:1px dashed #4f46e5;border-radius:4px;padding:5px 10px">
                                         14B MAC 首部 ＋ IP 数据报 ＋ 4B FCS（整帧被转换成 0101… 的比特流）
                                     </span>
                                 </div>
@@ -1317,12 +1337,12 @@
                     <h3>② 四类地址体系 <small>（每一层有各自的「门牌号」）</small></h3>
                     <div class="cg-tw">
                         <table class="cg-tb">
-                            <thead><tr><th>所在层</th><th>地址类型</th><th>长度</th><th>作用范围</th><th>分配者</th></tr></thead>
+                            <thead><tr><th>所在层</th><th>地址类型</th><th>长度</th><th>每层用到的协议</th></tr></thead>
                             <tbody>
-                                <tr><td><b>应用层</b></td><td>域名 / URL</td><td>可变</td><td>全球</td><td>ICANN 及注册商</td></tr>
-                                <tr><td><b>传输层</b></td><td><b>端口号</b></td><td>16 位</td><td>本主机内的进程</td><td>系统 / 应用申请</td></tr>
-                                <tr><td><b>网络层</b></td><td><b>IP 地址</b></td><td>32 位（IPv6 128 位）</td><td>全网络 / 全球</td><td>ISP / DHCP</td></tr>
-                                <tr><td><b>数据链路层</b></td><td><b>MAC 地址</b></td><td>48 位</td><td>本地链路（一跳内）</td><td>网卡厂商烧写</td></tr>
+                                <tr><td><b>应用层</b></td><td>域名 / URL</td><td>可变</td><td>DNS（域名→IP）、HTTP、FTP、SMTP</td></tr>
+                                <tr><td><b>传输层</b></td><td><b>端口号</b></td><td>16 位</td><td>TCP / UDP（用端口区分进程）</td></tr>
+                                <tr><td><b>网络层</b></td><td><b>IP 地址</b></td><td>32 位（IPv6 128 位）</td><td>IP、ICMP、OSPF、RIP、BGP</td></tr>
+                                <tr><td><b>数据链路层</b></td><td><b>MAC 地址</b></td><td>48 位</td><td>ARP（IP→MAC）、以太网、PPP、HDLC</td></tr>
                             </tbody>
                         </table>
                     </div>
@@ -1463,6 +1483,16 @@
             bar.classList.remove('open');
             document.getElementById('cgSideMask').classList.remove('open');
             document.getElementById('cgSideFab').textContent = '☰ 目录';
+        }
+
+        // 桌面：目录向左收缩 / 展开（状态不持久化）
+        function cgBarMin() {
+            document.getElementById('cgBar').classList.add('cg-min');
+            document.body.classList.add('cg-min-main');
+        }
+        function cgBarMax() {
+            document.getElementById('cgBar').classList.remove('cg-min');
+            document.body.classList.remove('cg-min-main');
         }
 
         // 回到顶部按钮：滚动超过一屏才出现

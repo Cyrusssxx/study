@@ -136,6 +136,17 @@ const sleep = ms => new Promise(r => setTimeout(r, ms));
   w.cgSideToggle();
   check('关闭抽屉：open 移除', doc.getElementById('cgBar').classList.contains('open'), false);
 
+  console.log('\n--- 场景 8b：桌面目录向左收缩 ---');
+  check('cgBarMin 已定义', typeof w.cgBarMin, 'function');
+  check('cgBarMax 已定义', typeof w.cgBarMax, 'function');
+  check('竖排把手元素存在', !!doc.querySelector('.cg-bar-v'), true);
+  w.cgBarMin();
+  check('收缩后 cgBar 加 cg-min', doc.getElementById('cgBar').classList.contains('cg-min'), true);
+  check('收缩后 body 加 cg-min-main', doc.body.classList.contains('cg-min-main'), true);
+  w.cgBarMax();
+  check('展开后 cg-min 移除', doc.getElementById('cgBar').classList.contains('cg-min'), false);
+  check('展开后 cg-min-main 移除', doc.body.classList.contains('cg-min-main'), false);
+
   console.log('\n--- 场景 9：序号消耗与 NAV 考点 ---');
   const handshakeText = doc.querySelector('#L4').textContent;
   check('第三次握手不消耗序号已补全', handshakeText.includes('不消耗序号') && handshakeText.includes('仍为 x+1'), true);
@@ -143,6 +154,16 @@ const sleep = ms => new Promise(r => setTimeout(r, ms));
   ['NAV', '3×SIFS', '2×SIFS', 'SIFS', 'CTS', 'ACK', 'Duration'].forEach(tok => {
     check(`链路层含 NAV 计算「${tok}」`, navText.includes(tok), true);
   });
+
+  console.log('\n--- 场景 10：四类地址体系表格列 ---');
+  const addrTh = [...doc.querySelectorAll('#LX .cg-tb th')].map(th => th.textContent);
+  check('表头不再含「作用范围/分配者」', !addrTh.includes('作用范围') && !addrTh.includes('分配者'), true);
+  check('表头含「每层用到的协议」', addrTh.includes('每层用到的协议'), true);
+  const addrRows = [...doc.querySelectorAll('#LX .cg-tb tr')].map(r => r.textContent);
+  check('协议列含 DNS（应用层）', addrRows.some(t => t.includes('DNS')), true);
+  check('协议列含 TCP/UDP（传输层）', addrRows.some(t => t.includes('TCP / UDP')), true);
+  check('协议列含 ICMP/OSPF（网络层）', addrRows.some(t => t.includes('ICMP') && t.includes('OSPF')), true);
+  check('协议列含 ARP/以太网（链路层）', addrRows.some(t => t.includes('ARP') && t.includes('以太网')), true);
 
   console.log(`\nPASS ${pass} / FAIL ${fail}`);
   process.exit(fail ? 1 : 0);
