@@ -12,47 +12,54 @@
     <link rel="stylesheet" href="css/style.css">
     <style>
         /* ================= 计网分层考点图谱 ================= */
-        /* 左侧悬浮目录：默认细条，悬停/点击才浮出，不占布局、不挤内容 */
+        /* 左侧悬浮目录：淡雅纯文字样式，默认细条，悬停/点击才浮出，不占布局 */
         .cg-bar {
-            position: fixed; left: 10px; top: 50%; transform: translateY(-50%);
-            z-index: 95; width: 32px;
-            background: rgba(var(--card-rgb), var(--ui-alpha));
-            border: 1px solid var(--border); border-radius: var(--radius);
-            box-shadow: var(--shadow); backdrop-filter: blur(8px);
-            padding: 10px 4px; box-sizing: border-box; overflow: hidden;
-            transition: width .15s ease, padding .15s ease;
+            position: fixed; left: 8px; top: 50%; transform: translateY(-50%);
+            z-index: 95; width: 30px;
+            background: transparent; border: none; box-shadow: none;
+            padding: 8px 6px; box-sizing: border-box; border-radius: 10px;
+            transition: width .15s ease, padding .15s ease, background .15s ease;
         }
-        .cg-bar:hover, .cg-bar.pinned { width: 104px; padding: 11px 8px; }
+        .cg-bar:hover, .cg-bar.pinned {
+            width: 178px; padding: 12px 14px;
+            background: rgba(var(--card-rgb), .94);
+            backdrop-filter: blur(10px);
+            box-shadow: 0 2px 18px rgba(0, 0, 0, .09);
+        }
         .cg-bar-inner {
-            flex-direction: column; gap: 7px; display: none;
+            flex-direction: column; display: none;
         }
         .cg-bar:hover .cg-bar-inner, .cg-bar.pinned .cg-bar-inner { display: flex; }
-        .cg-bar-brand { display: none; }
+        .cg-bar-title {
+            font-size: .84rem; font-weight: 700; color: var(--text);
+            padding: 0 0 8px 11px;
+        }
         .cg-jump {
-            display: flex; flex-direction: column; gap: 4px;
+            display: flex; flex-direction: column;
+            border-left: 1px solid var(--border); padding-left: 11px;
         }
-        .cg-sep { border-top: 1px dashed var(--border); margin: 3px 2px; }
+        .cg-sep { display: block; height: 1px; background: var(--border); margin: 5px 0; opacity: .7; }
         .cg-jump a {
-            font-size: .76rem; padding: 4px 6px; border-radius: 7px;
-            border: 1px solid var(--border); color: var(--text-light);
-            text-decoration: none; white-space: nowrap; text-align: center;
-            display: block; transition: border-color .15s, color .15s;
+            font-size: .82rem; padding: 5px 0; line-height: 1.45;
+            color: var(--text-light); text-decoration: none;
+            white-space: nowrap; text-align: left; display: block;
+            transition: color .15s ease;
         }
-        .cg-jump a:hover { border-color: var(--primary); color: var(--primary); }
+        .cg-jump a:hover { color: var(--primary); }
         .cg-jump a.cg-hl { color: var(--text); font-weight: 600; }
         /* 锚点跳转时给 sticky 顶栏留位 */
         .cg-layer, #LTOPO { scroll-margin-top: 76px; }
+        .cg-bar-acts { display: flex; gap: 14px; padding: 8px 0 0 11px; }
         .cg-chip {
-            font-size: .74rem; padding: 4px 6px; border-radius: 7px;
-            border: 1px solid var(--border); background: transparent;
+            font-size: .74rem; padding: 0; border: none; background: transparent;
             color: var(--text-light); cursor: pointer; font-family: inherit;
-            white-space: nowrap; width: 100%;
+            white-space: nowrap;
         }
-        .cg-chip:hover { border-color: var(--primary); color: var(--primary); }
-        /* 细条态的竖排把手（点它或悬停即展开） */
+        .cg-chip:hover { color: var(--primary); }
+        /* 细条态的竖排把手（悬停或点击即浮出） */
         .cg-bar-v {
-            writing-mode: vertical-rl; letter-spacing: 4px;
-            font-size: .76rem; font-weight: 700; color: var(--text-light);
+            writing-mode: vertical-rl; letter-spacing: 3px;
+            font-size: .78rem; font-weight: 600; color: var(--text-light);
             text-align: center; cursor: pointer; padding: 10px 0; height: 100%;
             display: flex; align-items: center; justify-content: center;
         }
@@ -79,6 +86,7 @@
                 transition: transform .2s ease; overflow-y: auto; padding: 13px 16px;
             }
             .cg-bar.open { transform: translateX(0); }
+            .cg-bar:hover, .cg-bar.pinned { width: 220px; padding: 13px 16px; border-radius: 0; box-shadow: none; }
             .cg-bar .cg-bar-inner { display: flex; }
             .cg-bar .cg-bar-v { display: none; }
             .cg-side-fab { display: block; }
@@ -413,8 +421,9 @@
     <!-- 左侧竖悬浮层目录（桌面） / 移动端 ☰ 抽屉 -->
     <button class="cg-side-fab" id="cgSideFab" onclick="cgSideToggle()" title="层目录">☰ 目录</button>
     <div class="cg-side-mask" id="cgSideMask" onclick="cgSideToggle()"></div>
-    <aside class="cg-bar" id="cgBar" aria-label="目录">
+    <aside class="cg-bar" id="cgBar" aria-label="本页目录">
         <div class="cg-bar-inner">
+            <div class="cg-bar-title">本页目录</div>
             <nav class="cg-jump">
                 <a href="#L0">体系结构</a>
                 <a href="#L5">⑤ 应用层</a>
@@ -426,10 +435,12 @@
                 <span class="cg-sep"></span>
                 <a href="#LTOPO" class="cg-hl">综合大题全景拓扑</a>
             </nav>
-            <button class="cg-chip" id="cgFoldBtn" onclick="cgToggleAll()">折叠全部</button>
-            <button class="cg-chip" onclick="cgBarMin()" title="收回目录细条">◀ 收回</button>
+            <div class="cg-bar-acts">
+                <button class="cg-chip" id="cgFoldBtn" onclick="cgToggleAll()">折叠全部</button>
+                <button class="cg-chip" onclick="cgBarMin()" title="收回">收回</button>
+            </div>
         </div>
-        <div class="cg-bar-v" onclick="cgBarToggle()" title="展开/收起目录">目录 ☰</div>
+        <div class="cg-bar-v" onclick="cgBarToggle()" title="展开/收起目录">本页目录</div>
     </aside>
 
     <main class="container cg-main">

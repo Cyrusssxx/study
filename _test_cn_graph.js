@@ -66,6 +66,11 @@ const sleep = ms => new Promise(r => setTimeout(r, ms));
   check('目录不含「分层考点图谱」字样', doc.querySelector('.cg-bar').textContent.includes('分层考点图谱'), false);
   check('目录含独立项「综合大题全景拓扑」', doc.querySelector('.cg-bar').textContent.includes('综合大题全景拓扑'), true);
   check('目录有分隔线', doc.querySelectorAll('.cg-sep').length, 1);
+  check('目录标题「本页目录」存在', doc.querySelector('.cg-bar-title').textContent.trim(), '本页目录');
+  check('目录项为纯文字样式（不含 1px 边框卡片）', /\.cg-jump a \{[^}]*border: 1px/.test(SRC.replace(/\n\s*/g, ' ')), false);
+  check('目录默认无边框无卡片背景', /\.cg-bar \{[^}]*border: none/.test(SRC.replace(/\n\s*/g, ' ')), true);
+  check('目录项左对齐（非居中）', /\.cg-jump a \{[^}]*text-align: left/.test(SRC.replace(/\n\s*/g, ' ')), true);
+  check('目录有左侧竖线导轨', /\.cg-jump \{[^}]*border-left: 1px solid/.test(SRC.replace(/\n\s*/g, ' ')), true);
 
   console.log('\n--- 场景 3：单层折叠 / 展开 ---');
   const sec5 = doc.getElementById('L5');
