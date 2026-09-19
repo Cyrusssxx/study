@@ -1,0 +1,1418 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>计网分层考点图谱 - 408刷题</title>
+    <link rel="manifest" href="manifest.webmanifest">
+    <meta name="theme-color" content="#4f46e5">
+    <link rel="icon" type="image/png" href="icons/icon-192.png">
+    <link rel="apple-touch-icon" href="icons/icon-192.png">
+    <script>if (localStorage.getItem('darkMode') === '1') document.documentElement.classList.add('dark');</script>
+    <link rel="stylesheet" href="css/style.css">
+    <style>
+        /* ================= 计网分层考点图谱 ================= */
+        .cg-bar {
+            position: sticky; top: 60px; z-index: 90;
+            background: rgba(var(--card-rgb), var(--ui-alpha));
+            border-bottom: 1px solid var(--border);
+            backdrop-filter: blur(8px);
+        }
+        .cg-bar-inner {
+            max-width: 1100px; margin: 0 auto; padding: 7px 20px;
+            display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
+        }
+        .cg-bar-brand { font-weight: 700; font-size: .9rem; white-space: nowrap; }
+        .cg-bar-brand em { font-style: normal; color: var(--primary); }
+        .cg-jump {
+            display: flex; gap: 6px; overflow-x: auto; flex: 1;
+            padding: 2px 0; scrollbar-width: none;
+        }
+        .cg-jump::-webkit-scrollbar { display: none; }
+        .cg-jump a {
+            font-size: .78rem; padding: 3px 10px; border-radius: 999px;
+            border: 1px solid var(--border); color: var(--text-light);
+            text-decoration: none; white-space: nowrap; flex: 0 0 auto;
+        }
+        .cg-jump a:hover { border-color: var(--primary); color: var(--primary); }
+        .cg-chip {
+            font-size: .78rem; padding: 3px 10px; border-radius: 999px;
+            border: 1px solid var(--border); background: transparent;
+            color: var(--text-light); cursor: pointer; font-family: inherit;
+            white-space: nowrap; flex: 0 0 auto;
+        }
+        .cg-chip:hover { border-color: var(--primary); color: var(--primary); }
+
+        /* 层配色：自顶向下 5 层 + 总览 + 跨层 */
+        .cg-l0 { --c: #4f46e5; --cb: rgba(79,70,229,.10); --cb2: rgba(79,70,229,.20); }
+        .cg-l5 { --c: #8b5cf6; --cb: rgba(139,92,246,.10); --cb2: rgba(139,92,246,.22); }
+        .cg-l4 { --c: #2563eb; --cb: rgba(37,99,235,.10); --cb2: rgba(37,99,235,.22); }
+        .cg-l3 { --c: #059669; --cb: rgba(5,150,105,.10); --cb2: rgba(5,150,105,.22); }
+        .cg-l2 { --c: #ea580c; --cb: rgba(234,88,12,.10); --cb2: rgba(234,88,12,.22); }
+        .cg-l1 { --c: #0891b2; --cb: rgba(8,145,178,.10); --cb2: rgba(8,145,178,.22); }
+        .cg-lx { --c: #db2777; --cb: rgba(219,39,119,.10); --cb2: rgba(219,39,119,.22); }
+
+        .cg-layer {
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-left: 5px solid var(--c);
+            border-radius: var(--radius);
+            margin-bottom: 18px;
+            overflow: hidden;
+            box-shadow: var(--shadow);
+        }
+        .cg-layer-head {
+            display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+            padding: 13px 16px; cursor: pointer; user-select: none;
+            background: linear-gradient(90deg, var(--cb) 0%, transparent 62%);
+            border-bottom: 1px solid var(--border);
+        }
+        .cg-layer-head:hover { background: linear-gradient(90deg, var(--cb2) 0%, transparent 62%); }
+        .cg-layer-no {
+            flex: 0 0 auto; width: 30px; height: 30px; border-radius: 8px;
+            background: var(--c); color: #fff; font-weight: 700; font-size: .95rem;
+            display: flex; align-items: center; justify-content: center;
+        }
+        .cg-layer-head h2 { font-size: 1.08rem; margin: 0; }
+        .cg-layer-sub { font-size: .8rem; color: var(--text-light); }
+        .cg-layer-arrow { margin-left: auto; color: var(--text-light); font-size: .8rem; }
+        .cg-layer.collapsed .cg-layer-body { display: none; }
+        .cg-layer.collapsed .cg-layer-head { border-bottom: none; }
+        .cg-layer-body { padding: 4px 16px 16px; }
+
+        .cg-block { margin-top: 16px; }
+        .cg-block > h3 {
+            font-size: .96rem; margin: 0 0 8px; padding-left: 9px;
+            border-left: 3px solid var(--c); line-height: 1.35;
+        }
+        .cg-block > h3 small { font-weight: 400; color: var(--text-light); font-size: .78rem; }
+        .cg-note { font-size: .84rem; color: var(--text-light); margin: 6px 0 8px; }
+
+        /* ---- 字段盒（协议首部） ---- */
+        .cg-scroll { overflow-x: auto; padding-bottom: 2px; }
+        .cg-scroll::-webkit-scrollbar { height: 5px; }
+        .cg-scroll::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+        .cg-fields {
+            display: flex; min-width: 470px; margin: 8px 0 4px;
+            border: 1px solid var(--border); border-radius: 6px; overflow: hidden;
+        }
+        .cg-f {
+            flex: 1 1 0; min-width: 44px; padding: 7px 4px;
+            display: flex; flex-direction: column; justify-content: center; gap: 1px;
+            text-align: center; border-right: 1px solid var(--border);
+        }
+        .cg-f:last-child { border-right: none; }
+        .cg-f b { font-size: .76rem; font-weight: 600; line-height: 1.25; }
+        .cg-f i { font-size: .67rem; font-style: normal; color: var(--text-light); line-height: 1.2; }
+        .cg-f.hl { background: var(--cb2); }
+        .cg-f.dim { background: rgba(128,128,128,.07); }
+        .cg-f-row2 { display: flex; min-width: 470px; margin-top: -1px; }
+        .cg-cap { font-size: .75rem; color: var(--text-light); margin: 2px 0 10px; }
+        .cg-cap b { color: var(--danger); }
+
+        /* ---- 封装嵌套图 ---- */
+        .cg-enc { display: flex; flex-direction: column; gap: 8px; margin: 10px 0; }
+        .cg-enc-row { display: flex; align-items: center; gap: 8px; }
+        .cg-enc-tag {
+            flex: 0 0 62px; font-size: .74rem; font-weight: 700; text-align: right;
+            color: var(--ec); line-height: 1.25;
+        }
+        .cg-enc-box {
+            flex: 1; display: flex; border: 2px solid var(--ec); border-radius: 6px;
+            overflow: hidden; min-height: 40px; background: var(--bg);
+        }
+        .cg-enc-h {
+            flex: 0 0 auto; padding: 8px 8px; display: flex; flex-direction: column;
+            justify-content: center; text-align: center; background: var(--eb);
+            border-right: 2px dashed var(--ec); font-size: .74rem; font-weight: 600; line-height: 1.25;
+        }
+        .cg-enc-h i { font-style: normal; font-size: .66rem; color: var(--text-light); font-weight: 400; }
+        .cg-enc-in {
+            flex: 1; display: flex; align-items: center; justify-content: center;
+            font-size: .74rem; color: var(--text-light); padding: 6px; text-align: center;
+        }
+        .cg-enc-in.on { color: var(--text); font-weight: 600; }
+        .cg-enc-arrow { text-align: center; color: var(--text-light); font-size: .9rem; line-height: 1; }
+
+        /* ---- 时序图（HTML 版，文字不缩放） ---- */
+        .cg-seq { display: grid; grid-template-columns: 58px 1fr 58px; gap: 6px 8px; align-items: center; margin: 10px 0; }
+        .cg-seq-h { font-size: .78rem; font-weight: 700; text-align: center; color: var(--c); }
+        .cg-seq-t { font-size: .7rem; color: var(--text-light); text-align: center; }
+        .cg-msg { position: relative; height: 24px; display: flex; align-items: center; justify-content: center; color: var(--c); }
+        .cg-msg::before { content: ''; position: absolute; left: 0; right: 0; top: 50%; height: 2px; background: currentColor; opacity: .75; }
+        .cg-msg > span {
+            position: relative; z-index: 1; background: var(--card-bg);
+            padding: 0 7px; font-size: .77rem; color: var(--text); white-space: nowrap;
+        }
+        .cg-msg.r::after {
+            content: ''; position: absolute; right: -1px; top: 50%; transform: translateY(-50%);
+            border-left: 8px solid currentColor; border-top: 5px solid transparent; border-bottom: 5px solid transparent;
+        }
+        .cg-msg.l::after {
+            content: ''; position: absolute; left: -1px; top: 50%; transform: translateY(-50%);
+            border-right: 8px solid currentColor; border-top: 5px solid transparent; border-bottom: 5px solid transparent;
+        }
+        .cg-seq-state { grid-column: 1 / -1; text-align: center; font-size: .78rem; }
+        .cg-seq-state b { color: var(--success); }
+
+        /* ---- 表格 ---- */
+        .cg-tw { overflow-x: auto; margin: 8px 0; }
+        .cg-tb { width: 100%; border-collapse: collapse; font-size: .81rem; min-width: 420px; }
+        .cg-tb th, .cg-tb td { border: 1px solid var(--border); padding: 6px 8px; text-align: left; vertical-align: top; }
+        .cg-tb th { background: var(--cb); font-weight: 600; white-space: nowrap; }
+        .cg-tb td b { color: var(--c); }
+        .cg-tb tr:nth-child(even) td { background: rgba(128,128,128,.045); }
+
+        /* ---- 考点条目 ---- */
+        .cg-pts { list-style: none; padding: 0; margin: 8px 0; }
+        .cg-pts > li {
+            position: relative; padding: 5px 0 5px 20px; font-size: .84rem;
+            line-height: 1.6; border-bottom: 1px dashed rgba(128,128,128,.18);
+        }
+        .cg-pts > li:last-child { border-bottom: none; }
+        .cg-pts > li::before {
+            content: '◆'; position: absolute; left: 2px; top: 5px;
+            font-size: .62rem; color: var(--c); line-height: 1.9;
+        }
+        .cg-pts b { color: var(--c); }
+        .cg-pts code {
+            background: var(--cb); color: var(--c); padding: 1px 5px;
+            border-radius: 4px; font-size: .8rem; font-family: Consolas, Monaco, monospace;
+        }
+        .cg-pts em { font-style: normal; background: var(--cb2); padding: 0 4px; border-radius: 3px; }
+
+        .cg-key {
+            display: inline-block; font-size: .68rem; font-weight: 700; line-height: 1.5;
+            padding: 0 6px; border-radius: 4px; margin-right: 5px;
+            background: #fde68a; color: #92400e;
+        }
+        .dark .cg-key { background: #4d3800; color: #fde68a; }
+        .cg-key.k2 { background: #fecaca; color: #991b1b; }
+        .dark .cg-key.k2 { background: #4c1d1d; color: #fca5a5; }
+
+        .cg-tip {
+            margin: 10px 0; padding: 9px 12px; border-radius: 8px;
+            background: var(--cb); border-left: 3px solid var(--c);
+            font-size: .83rem; line-height: 1.65;
+        }
+        .cg-tip b { color: var(--c); }
+
+        /* ---- 模型对照图 ---- */
+        .cg-models {
+            display: grid; grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 6px; margin: 12px 0; grid-auto-rows: minmax(40px, auto);
+        }
+        .cg-mh {
+            text-align: center; font-size: .8rem; font-weight: 700;
+            padding: 5px 4px; border-radius: 6px; background: var(--cb2); color: var(--text);
+        }
+        .cg-mc {
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            text-align: center; font-size: .81rem; font-weight: 600; line-height: 1.3;
+            border-radius: 6px; padding: 5px 4px; border: 1px solid transparent;
+        }
+        .cg-mc small { display: block; font-size: .67rem; font-weight: 400; color: var(--text-light); }
+        .cg-mc.a { background: rgba(139,92,246,.16); border-color: #8b5cf6; }
+        .cg-mc.b { background: rgba(37,99,235,.16); border-color: #2563eb; }
+        .cg-mc.c { background: rgba(5,150,105,.16); border-color: #059669; }
+        .cg-mc.d { background: rgba(234,88,12,.16); border-color: #ea580c; }
+        .cg-mc.e { background: rgba(8,145,178,.16); border-color: #0891b2; }
+        .cg-mc.f { background: rgba(79,70,229,.16); border-color: #4f46e5; }
+
+        .cg-fab {
+            position: fixed; right: 20px; bottom: 20px; z-index: 2000;
+            width: 44px; height: 44px; border-radius: 50%; border: none; cursor: pointer;
+            background: var(--primary); color: #fff; font-size: 1.15rem;
+            box-shadow: 0 3px 12px rgba(0,0,0,.25); display: none; align-items: center; justify-content: center;
+        }
+        .cg-fab.show { display: flex; }
+
+        /* ---- 流程步骤条 ---- */
+        .cg-flow { display: flex; align-items: stretch; gap: 4px; flex-wrap: wrap; margin: 10px 0; }
+        .cg-flow-i {
+            flex: 1 1 0; min-width: 84px; padding: 7px 7px; border-radius: 6px;
+            background: var(--cb); border: 1px solid var(--c); font-size: .76rem;
+            line-height: 1.35; text-align: center; display: flex; flex-direction: column;
+            justify-content: center; gap: 2px;
+        }
+        .cg-flow-i b { font-size: .78rem; }
+        .cg-flow-i i { font-style: normal; font-size: .67rem; color: var(--text-light); }
+        .cg-flow-a { display: flex; align-items: center; color: var(--c); font-size: .78rem; font-weight: 700; }
+
+        /* ---- 曲线/柱状小图 ---- */
+        .cg-chart { margin: 10px 0; }
+        .cg-chart svg { width: 100%; height: auto; display: block; }
+        .cg-chart-cap { font-size: .74rem; color: var(--text-light); text-align: center; margin-top: 3px; }
+
+        @media (max-width: 640px) {
+            .cg-bar { top: 56px; }
+            .cg-bar-inner { padding: 6px 12px; gap: 6px; }
+            .cg-bar-brand { font-size: .82rem; }
+            .cg-layer-body { padding: 4px 11px 13px; }
+            .cg-seq { grid-template-columns: 46px 1fr 46px; }
+            .cg-enc-tag { flex: 0 0 48px; font-size: .68rem; }
+            .cg-mc { font-size: .72rem; }
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-container">
+            <a href="index.html" class="nav-brand">408刷题</a>
+            <div class="nav-links">
+                <a href="index.html" class="nav-link">首页</a>
+                <a href="wrong.html" class="nav-link">错题本</a>
+                <a href="favorites.html" class="nav-link">收藏夹</a>
+                <a href="exam.html" class="nav-link">模拟考试</a>
+                <a href="stats.html" class="nav-link">学习统计</a>
+                <a href="search.html" class="nav-link">搜题</a>
+                <a href="algo.html" class="nav-link">算法讲义</a>
+            </div>
+            <div class="nav-tools">
+                <span class="nav-timer" id="navTimer" title="今日刷题时长（切换到其他窗口时暂停）">⏱ 00:00:00</span>
+                <button class="nav-switch" id="darkSwitch" onclick="toggleDark()" title="夜间模式：深色主题护眼">
+                    夜间 <span class="switch-state" id="darkState">关</span>
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <div class="cg-bar">
+        <div class="cg-bar-inner">
+            <span class="cg-bar-brand">🧭 计网<em>分层考点图谱</em></span>
+            <nav class="cg-jump">
+                <a href="#L0">体系结构</a>
+                <a href="#L5">⑤ 应用层</a>
+                <a href="#L4">④ 传输层</a>
+                <a href="#L3">③ 网络层</a>
+                <a href="#L2">② 数据链路层</a>
+                <a href="#L1">① 物理层</a>
+                <a href="#LX">★ 跨层串联</a>
+            </nav>
+            <button class="cg-chip" id="cgFoldBtn" onclick="cgToggleAll()">折叠全部</button>
+        </div>
+    </div>
+
+    <main class="container">
+        <div class="page-header">
+            <h1>🧭 计算机网络 · 分层考点图谱</h1>
+            <p>自顶向下五层贯通（OSI 七层 / TCP-IP 四层 / 教学五层三套模型对照），每一层只写<b>考点</b>：协议首部字段、计算公式、流程时序、易混对比。顶部可跳层，点层标题可折叠。</p>
+        </div>
+
+        <!-- ============ §0 体系结构与分层模型 ============ -->
+        <section class="cg-layer cg-l0" id="L0">
+            <div class="cg-layer-head" onclick="cgToggle(this)">
+                <div class="cg-layer-no">0</div>
+                <div>
+                    <h2>体系结构与分层模型</h2>
+                    <div class="cg-layer-sub">七层 / 四层 / 五层对照 · 各层 PDU · 地址 · 设备 · 协议</div>
+                </div>
+                <span class="cg-layer-arrow">▾ 折叠</span>
+            </div>
+            <div class="cg-layer-body">
+
+                <div class="cg-block">
+                    <h3>① 三套分层模型对照 <small>（必背：对应关系与各层职责）</small></h3>
+                    <div class="cg-models">
+                        <div class="cg-mh" style="grid-column:1;grid-row:1">OSI 七层<br><small style="font-weight:400">法定标准 · 理论完备</small></div>
+                        <div class="cg-mh" style="grid-column:2;grid-row:1">TCP/IP 四层<br><small style="font-weight:400">事实标准 · 工业界</small></div>
+                        <div class="cg-mh" style="grid-column:3;grid-row:1">教学五层<br><small style="font-weight:400">折中 · 考研通用</small></div>
+
+                        <div class="cg-mc a" style="grid-column:1;grid-row:2">应用层<small>用户接口 / 网络应用</small></div>
+                        <div class="cg-mc a" style="grid-column:1;grid-row:3">表示层<small>数据格式 / 加密压缩</small></div>
+                        <div class="cg-mc a" style="grid-column:1;grid-row:4">会话层<small>会话管理 / 同步</small></div>
+                        <div class="cg-mc a" style="grid-column:2;grid-row:2 / 5">应用层<small>HTTP · FTP · SMTP<br>DNS · DHCP · SNMP</small></div>
+                        <div class="cg-mc a" style="grid-column:3;grid-row:2 / 5">应用层<small>报文 message<br>（报文 = 应用数据）</small></div>
+
+                        <div class="cg-mc b" style="grid-column:1;grid-row:5">传输层</div>
+                        <div class="cg-mc b" style="grid-column:2;grid-row:5">传输层</div>
+                        <div class="cg-mc b" style="grid-column:3;grid-row:5">传输层<small>报文段 / 用户数据报</small></div>
+
+                        <div class="cg-mc c" style="grid-column:1;grid-row:6">网络层</div>
+                        <div class="cg-mc c" style="grid-column:2;grid-row:6">网际层 IP</div>
+                        <div class="cg-mc c" style="grid-column:3;grid-row:6">网络层<small>分组 / 数据报 packet</small></div>
+
+                        <div class="cg-mc d" style="grid-column:1;grid-row:7">数据链路层</div>
+                        <div class="cg-mc d" style="grid-column:2;grid-row:7 / 9">网络接口层<small>以太网 · PPP · HDLC</small></div>
+                        <div class="cg-mc d" style="grid-column:3;grid-row:7">数据链路层<small>帧 frame</small></div>
+
+                        <div class="cg-mc e" style="grid-column:1;grid-row:8">物理层</div>
+                        <div class="cg-mc e" style="grid-column:3;grid-row:8">物理层<small>比特 bit</small></div>
+                    </div>
+                    <div class="cg-tip">
+                        <b>考点：</b>OSI 是 ISO 制定的<b>法定标准</b>（理论参考模型），TCP/IP 是<b>事实标准</b>（先有协议后有模型）；考研用<b>五层</b>。OSI 的「表示层 / 会话层」在 TCP/IP 中并入应用层，TCP/IP 的「网络接口层」在五层中拆成数据链路层 + 物理层。
+                    </div>
+                </div>
+
+                <div class="cg-block">
+                    <h3>② 各层速查表 <small>（PDU / 地址 / 设备 / 协议 / 核心考点 一张表记全）</small></h3>
+                    <div class="cg-tw">
+                        <table class="cg-tb">
+                            <thead>
+                                <tr><th>层</th><th>PDU 名称</th><th>寻址</th><th>典型设备</th><th>核心协议</th><th>本质职责</th></tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td><b>应用层 ⑤</b></td><td>报文 message</td><td>域名 / URL</td><td>网关、服务器</td>
+                                    <td>HTTP · FTP · SMTP · POP3 · IMAP · DNS · DHCP · SNMP · Telnet</td>
+                                    <td>直接为用户应用进程提供服务</td>
+                                </tr>
+                                <tr>
+                                    <td><b>传输层 ④</b></td><td>报文段 segment（TCP）<br>用户数据报（UDP）</td><td>端口号 port</td><td>网关</td>
+                                    <td>TCP · UDP</td>
+                                    <td>进程到进程（端到端）的复用分用与可靠传输</td>
+                                </tr>
+                                <tr>
+                                    <td><b>网络层 ③</b></td><td>分组 / 数据报 packet</td><td>IP 地址</td><td>路由器、三层交换机</td>
+                                    <td>IP · ICMP · RIP · OSPF · BGP · (ARP)</td>
+                                    <td>主机到主机的选路与转发</td>
+                                </tr>
+                                <tr>
+                                    <td><b>数据链路层 ②</b></td><td>帧 frame</td><td>MAC 地址</td><td>交换机、网桥、网卡</td>
+                                    <td>以太网 · PPP · HDLC</td>
+                                    <td>相邻结点间的成帧、差错控制、介质访问</td>
+                                </tr>
+                                <tr>
+                                    <td><b>物理层 ①</b></td><td>比特 bit</td><td>无（不寻址）</td><td>中继器、集线器</td>
+                                    <td>—（RS-232、RJ-45 等接口标准）</td>
+                                    <td>在传输介质上透明传输比特流</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <ul class="cg-pts">
+                        <li><span class="cg-key">必考</span><b>数据链路层的三件事</b>：成帧（封装成帧）、差错控制、<em>介质访问控制</em>——只有链路层才有「介质访问控制」这个子层。</li>
+                        <li><span class="cg-key">易混</span><b>ARP 属于哪一层？</b>教材口径：ARP 工作在<b>网络层与链路层之间</b>，考研通常归入网络层（也有书归链路层），考试按题目上下文判断，别死记。</li>
+                        <li><span class="cg-key">规律</span>每一层都<b>只跟对端同层对话</b>（对等通信），下层向上层提供服务；<b>下层看不到上层的语义</b>——这是分层思想的核心。</li>
+                    </ul>
+                </div>
+
+                <div class="cg-block">
+                    <h3>③ 分层思想的考点 <small>（封装 / 解封装 / 协议三要素）</small></h3>
+                    <ul class="cg-pts">
+                        <li><b>协议三要素</b>：语法（格式）、语义（含义）、同步（时序）。</li>
+                        <li><b>封装</b>：数据自上而下逐层加首部（链路层还加尾部 FCS），是<b>「加头不加尾」的规律中唯一的例外</b>——只有以太网帧有尾部。</li>
+                        <li><b>解封装</b>：接收端自下而上逐层剥首部，交给对应上层。</li>
+                        <li><span class="cg-key">必考</span>首部长度速记：<code>TCP 20B</code> / <code>IP 20B</code> / <code>MAC 14B + FCS 4B</code> / <code>前导码 8B（不计入帧长）</code>。四者串联见文末「跨层串联」。</li>
+                        <li><b>SDU 与 PCI</b>：上层数据是下层的 SDU，加上下层的 PCI（协议控制信息）构成下层的 PDU。即 <code>n 层 PDU = n 层首部 + n+1 层 PDU</code>。</li>
+                    </ul>
+                </div>
+
+            </div>
+        </section>
+
+        <!-- ============ ⑤ 应用层 ============ -->
+        <section class="cg-layer cg-l5" id="L5">
+            <div class="cg-layer-head" onclick="cgToggle(this)">
+                <div class="cg-layer-no">⑤</div>
+                <div>
+                    <h2>应用层</h2>
+                    <div class="cg-layer-sub">HTTP · DNS · FTP · 电子邮件 · DHCP —— 直接面向用户应用的协议</div>
+                </div>
+                <span class="cg-layer-arrow">▾ 折叠</span>
+            </div>
+            <div class="cg-layer-body">
+
+                <div class="cg-block">
+                    <h3>① 两种体系结构 <small>C/S 与 P2P</small></h3>
+                    <div class="cg-tw">
+                        <table class="cg-tb">
+                            <thead><tr><th>维度</th><th>客户/服务器 C/S</th><th>对等 P2P</th></tr></thead>
+                            <tbody>
+                                <tr><td>角色</td><td>客户是服务请求方，服务器是提供方，<b>角色固定</b></td><td>每个结点既是客户又是服务器，<b>角色可互换</b></td></tr>
+                                <tr><td>服务器要求</td><td>一直运行、固定 IP 与熟知端口、需大量服务器支撑</td><td>无（或弱）中心服务器，可扩展性强</td></tr>
+                                <tr><td>典型应用</td><td>Web、FTP、SMTP、DNS</td><td>BitTorrent、P2P 文件共享</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <ul class="cg-pts">
+                        <li><span class="cg-key">理论</span>P2P 的最大优势是<b>可扩展性</b>：用户越多，总服务能力反而越大（C/S 是用户越多越慢）。</li>
+                    </ul>
+                </div>
+
+                <div class="cg-block">
+                    <h3>② DNS 域名系统 <small>（端口 53 · 递归与迭代 · 必考流程）</small></h3>
+                    <div class="cg-flow">
+                        <div class="cg-flow-i"><b>① 主机查缓存</b><i>浏览器/DNS 缓存</i></div>
+                        <span class="cg-flow-a">→</span>
+                        <div class="cg-flow-i"><b>② 问本地域名服务器</b><i>★ 递归查询</i></div>
+                        <span class="cg-flow-a">→</span>
+                        <div class="cg-flow-i"><b>③ 本地问根</b><i>★ 迭代查询</i></div>
+                        <span class="cg-flow-a">→</span>
+                        <div class="cg-flow-i"><b>④ 根指向 TLD</b><i>返回 .com 服务器</i></div>
+                        <span class="cg-flow-a">→</span>
+                        <div class="cg-flow-i"><b>⑤ 问 TLD → 权限</b><i>返回权威服务器</i></div>
+                        <span class="cg-flow-a">→</span>
+                        <div class="cg-flow-i"><b>⑥ 取回 IP 并缓存</b><i>写入高速缓存</i></div>
+                    </div>
+                    <div class="cg-tw">
+                        <table class="cg-tb">
+                            <thead><tr><th>服务器层次</th><th>作用</th><th>考点</th></tr></thead>
+                            <tbody>
+                                <tr><td><b>根域名服务器</b></td><td>知道所有顶级域服务器的地址</td><td>全球 13 组，<b>不直接存域名-IP 映射</b></td></tr>
+                                <tr><td><b>顶级域名服务器 TLD</b></td><td>管 com / org / cn / edu 等</td><td>只管自己辖下的二级域</td></tr>
+                                <tr><td><b>权限域名服务器</b></td><td>管一个区（zone）的所有域名</td><td>最终答案出自这里</td></tr>
+                                <tr><td><b>本地域名服务器</b></td><td>主机默认的 DNS（如 8.8.8.8）</td><td><b>不属于层次结构</b>，但每次查询必经</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <ul class="cg-pts">
+                        <li><span class="cg-key k2">易混</span><b>递归 vs 迭代</b>：主机→本地域名服务器是<b>递归</b>（我等你给我最终结果）；本地域名服务器→根/TLD/权限是<b>迭代</b>（你告诉我该问谁）。<em>「主机到本地」永远递归</em>。</li>
+                        <li><b>常用资源记录</b>：<code>A</code>（域名→IPv4）、<code>AAAA</code>（IPv6）、<code>CNAME</code>（别名）、<code>MX</code>（邮件服务器）、<code>NS</code>（该域的域名服务器）、<code>PTR</code>（IP→域名，反向解析）。</li>
+                        <li><span class="cg-key">必考</span><b>DNS 主要用 UDP 53</b>（报文短、快）；<em>区域传送（主辅服务器同步）用 TCP 53</em>。</li>
+                        <li><b>高速缓存</b>：主机与本地域名服务器都缓存，并设<b>生存时间 TTL</b>，以降低查询时延与根服务器负载。</li>
+                        <li><b>为什么用分布式而不是集中式</b>：可扩展性、可靠性、就近查询、负载均衡。</li>
+                    </ul>
+                </div>
+
+                <div class="cg-block">
+                    <h3>③ WWW 与 HTTP <small>（连接方式与 RTT 计算是重中之重）</small></h3>
+                    <div class="cg-tw">
+                        <table class="cg-tb">
+                            <thead><tr><th>连接方式</th><th>建 TCP 次数</th><th>取 1 个对象的耗时</th><th>共取 N 个对象</th></tr></thead>
+                            <tbody>
+                                <tr><td><b>非持久（HTTP/1.0）</b></td><td>每个对象 1 次</td><td><b>2 RTT</b>（1 建连 + 1 请求响应）</td><td>≈ <b>2N RTT</b></td></tr>
+                                <tr><td><b>持久非流水线（1.1 默认）</b></td><td>共 1 次</td><td>1 RTT（首对象 2 RTT）</td><td>≈ <b>(N+1) RTT</b></td></tr>
+                                <tr><td><b>持久流水线</b></td><td>共 1 次</td><td>≈ 1 RTT（连续发请求）</td><td>≈ <b>2 RTT</b> 即完成</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="cg-tip">
+                        <b>RTT 计算题套路：</b>「1 RTT 建立 TCP 连接」+「1 RTT 请求并收到响应」= 2 RTT/对象（非持久）。<b>三次握手恰好是 1.5 RTT 还是 1 RTT？</b>考研题默认<b>建立连接算 1 个 RTT</b>（第 3 次握手的 ACK 与请求可合并/忽略），并通常<b>忽略传输时延与处理时延</b>——务必先读题干的"忽略"条件。
+                    </div>
+                    <ul class="cg-pts">
+                        <li><b>HTTP 报文</b>：请求报文（请求行 + 首部行 + 空行 + 实体）／响应报文（状态行 + 首部行 + 空行 + 实体）。<b>无状态</b>协议——靠 Cookie 维持状态。</li>
+                        <li><b>常用方法</b>：<code>GET</code>（取，参数在 URL）、<code>POST</code>（提交，参数在实体）、<code>HEAD</code>（只要响应头）、<code>PUT</code>、<code>DELETE</code>。</li>
+                        <li><span class="cg-key">必考</span><b>状态码</b>：<code>200</code> 成功 ｜ <code>301</code> 永久移动 ｜ <code>302</code> 临时移动 ｜ <code>304</code> 未修改（命中缓存）｜ <code>400</code> 请求错误 ｜ <code>403</code> 禁止 ｜ <code>404</code> 未找到 ｜ <code>500</code> 服务器内部错误 ｜ <code>503</code> 服务不可用。</li>
+                        <li><b>Cookie</b>：服务器在响应中加 <code>Set-Cookie</code>，客户机保存后每次请求带 <code>Cookie</code> 首部。<b>Cookie 存在客户端</b>，用于会话识别、个性化。</li>
+                        <li><b>Web 缓存 / 代理服务器</b>：以命中缓存的副本直接响应，减少时延与出口带宽；靠 <code>Cache-Control</code> / 条件 GET（<code>If-Modified-Since</code> → <code>304</code>）保证新鲜度。</li>
+                        <li><span class="cg-key k2">区分</span><b>HTTPS = HTTP + TLS</b>，端口 <code>443</code>；HTTP 端口 <code>80</code> 明文传输。</li>
+                        <li><b>URL 结构</b>：<code>协议://主机名:端口/路径?查询#片段</code>。HTTP 默认端口 80 可省略。</li>
+                    </ul>
+                </div>
+
+                <div class="cg-block">
+                    <h3>④ 电子邮件 <small>（SMTP 推、POP3/IMAP 拉）</small></h3>
+                    <div class="cg-flow">
+                        <div class="cg-flow-i"><b>发送方用户代理</b><i>Outlook / Foxmail</i></div>
+                        <span class="cg-flow-a">→</span>
+                        <div class="cg-flow-i"><b>发送方邮件服务器</b><i>SMTP 推 · 端口 25</i></div>
+                        <span class="cg-flow-a">→</span>
+                        <div class="cg-flow-i"><b>接收方邮件服务器</b><i>SMTP 推 · 端口 25</i></div>
+                        <span class="cg-flow-a">→</span>
+                        <div class="cg-flow-i"><b>接收方用户代理</b><i>POP3 110 / IMAP 143 拉</i></div>
+                    </div>
+                    <ul class="cg-pts">
+                        <li><span class="cg-key">必考</span><b>SMTP 是「推 push」</b>（发送方主动推给服务器）；<b>POP3 / IMAP 是「拉 pull」</b>（用户代理主动从服务器取）。二者都用 <b>TCP</b>。</li>
+                        <li><b>SMTP 局限</b>：只能传送 <b>7 位 ASCII 文本</b>，不能直接传图像/中文。</li>
+                        <li><b>MIME</b>：不改变 SMTP，而是在其基础上<b>扩展首部</b>并通过 <code>Base64</code> / <code>Quoted-Printable</code> 编码，使非 ASCII 数据能传输。</li>
+                        <li><span class="cg-key k2">易混</span><b>POP3 vs IMAP</b>：POP3 把邮件<b>下载到本地</b>（默认删除服务器副本），只在客户端管理文件夹；IMAP 邮件<b>保留在服务器</b>，可在服务器端建文件夹、多端同步。</li>
+                        <li><b>基于万维网的电子邮件</b>（如 Gmail）：浏览器↔服务器之间用 <b>HTTP</b>，服务器之间仍用 SMTP。</li>
+                    </ul>
+                </div>
+
+                <div class="cg-block">
+                    <h3>⑤ FTP 文件传输 <small>（两条 TCP 连接是核心考点）</small></h3>
+                    <div class="cg-tw">
+                        <table class="cg-tb">
+                            <thead><tr><th>连接</th><th>端口</th><th>生命周期</th><th>用途</th></tr></thead>
+                            <tbody>
+                                <tr><td><b>控制连接</b></td><td><code>21</code></td><td><b>整个会话期间保持</b></td><td>传命令与应答（带外控制）</td></tr>
+                                <tr><td><b>数据连接</b></td><td><code>20</code>（主动模式）</td><td><b>每传一次文件就关闭</b></td><td>传文件内容</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <ul class="cg-pts">
+                        <li><span class="cg-key">必考</span>FTP 使用 <b>2 条并行的 TCP 连接</b>，<em>控制信息与数据分离传送</em>（带外控制），这是 FTP 区别于其他应用协议的最大特点。</li>
+                        <li><b>主动模式 PORT</b>：客户端告诉服务器自己的端口，<b>由服务器的 20 端口主动连客户端</b>；<b>被动模式 PASV</b>：客户端主动连服务器开的随机端口（利于穿越 NAT/防火墙）。</li>
+                    </ul>
+                </div>
+
+                <div class="cg-block">
+                    <h3>⑥ DHCP 与其余应用层协议 <small>（DHCP 四步广播 · 端口速查）</small></h3>
+                    <div class="cg-flow">
+                        <div class="cg-flow-i"><b>① DHCP Discover</b><i>客户广播 68→67</i></div>
+                        <span class="cg-flow-a">→</span>
+                        <div class="cg-flow-i"><b>② DHCP Offer</b><i>服务器提供可用 IP</i></div>
+                        <span class="cg-flow-a">→</span>
+                        <div class="cg-flow-i"><b>③ DHCP Request</b><i>客户广播选择</i></div>
+                        <span class="cg-flow-a">→</span>
+                        <div class="cg-flow-i"><b>④ DHCP ACK</b><i>确认并给租期</i></div>
+                    </div>
+                    <ul class="cg-pts">
+                        <li><span class="cg-key">必考</span><b>为什么 Discover/Request 用广播？</b>客户机此时<b>还没有 IP 地址</b>，源地址写 <code>0.0.0.0</code>，目的地址 <code>255.255.255.255</code>。</li>
+                        <li><b>DHCP 基于 UDP</b>，服务器端口 <code>67</code>、客户机端口 <code>68</code>；租期到期需续租；跨网段可用 <b>DHCP 中继代理</b>。</li>
+                        <li><b>其余协议端口</b>：Telnet <code>23</code>（明文远程登录）· SSH <code>22</code> · SNMP <code>161/162</code>（网管）· TFTP <code>69</code>（UDP 的简单文件传输）。</li>
+                    </ul>
+                </div>
+
+                <div class="cg-tip">
+                    <b>本层必背（端口表）：</b>FTP <b>21/20</b> ｜ SSH <b>22</b> ｜ Telnet <b>23</b> ｜ SMTP <b>25</b> ｜ DNS <b>53</b> ｜ DHCP <b>67/68</b> ｜ TFTP <b>69</b> ｜ HTTP <b>80</b> ｜ POP3 <b>110</b> ｜ IMAP <b>143</b> ｜ SNMP <b>161</b> ｜ HTTPS <b>443</b>。
+                </div>
+
+            </div>
+        </section>
+
+        <!-- ============ ④ 传输层 ============ -->
+        <section class="cg-layer cg-l4" id="L4">
+            <div class="cg-layer-head" onclick="cgToggle(this)">
+                <div class="cg-layer-no">④</div>
+                <div>
+                    <h2>传输层</h2>
+                    <div class="cg-layer-sub">端口 · TCP 首部 · 三握四挥 · 可靠传输 · 流量控制 · 拥塞控制</div>
+                </div>
+                <span class="cg-layer-arrow">▾ 折叠</span>
+            </div>
+            <div class="cg-layer-body">
+
+                <div class="cg-block">
+                    <h3>① 端口与复用分用 <small>（传输层的寻址方式）</small></h3>
+                    <ul class="cg-pts">
+                        <li><b>端口范围</b>：<code>0~1023</code> 熟知端口（服务器用）｜<code>1024~49151</code> 登记端口｜<code>49152~65535</code> 客户端临时端口。<b>端口号共 16 位</b>。</li>
+                        <li><b>复用</b>：多个应用进程共用同一个传输层协议向外发送；<b>分用</b>：接收端按端口号把数据交付给正确的进程。</li>
+                        <li><span class="cg-key">必考</span><b>套接字（socket）= IP 地址 : 端口号</b>，唯一标识网络中的一个进程。TCP 连接由 <code>{源IP, 源端口, 目的IP, 目的端口}</code> 四元组唯一确定。</li>
+                    </ul>
+                </div>
+
+                <div class="cg-block">
+                    <h3>② UDP 用户数据报协议 <small>（首部仅 8B）</small></h3>
+                    <div class="cg-scroll">
+                        <div class="cg-fields">
+                            <div class="cg-f"><b>源端口</b><i>2B</i></div>
+                            <div class="cg-f"><b>目的端口</b><i>2B</i></div>
+                            <div class="cg-f"><b>长度</b><i>2B（含首部）</i></div>
+                            <div class="cg-f"><b>校验和</b><i>2B</i></div>
+                            <div class="cg-f hl" style="flex:6"><b>数据</b><i>应用层报文</i></div>
+                        </div>
+                    </div>
+                    <div class="cg-cap">UDP 首部固定 <b>8B</b>；「长度」字段的最小值为 8（只有首部、无数据）。</div>
+                    <ul class="cg-pts">
+                        <li><b>四大特点</b>：<em>无连接</em>、<em>尽最大努力交付</em>（不可靠）、<em>面向报文</em>（不合并不拆分，一次交付一个完整报文）、<em>无拥塞控制</em>。</li>
+                        <li><span class="cg-key">必考</span><b>UDP 校验和要加 12B 伪首部</b>（源 IP 4B + 目的 IP 4B + 全 0 1B + 协议号 1B + UDP 长度 2B），伪首部<b>只参与校验和计算、不实际传输</b>。</li>
+                        <li><b>适用场景</b>：实时音视频、DNS、DHCP、TFTP、SNMP —— 宁可丢包也不要大延迟。</li>
+                    </ul>
+                </div>
+
+                <div class="cg-block">
+                    <h3>③ TCP 报文段首部 <small>（20B 固定 + 选项，最长 60B）</small></h3>
+                    <div class="cg-scroll">
+                        <div class="cg-fields">
+                            <div class="cg-f"><b>源端口</b><i>2B</i></div>
+                            <div class="cg-f"><b>目的端口</b><i>2B</i></div>
+                            <div class="cg-f" style="flex:2"><b>序号 seq</b><i>4B</i></div>
+                            <div class="cg-f" style="flex:2"><b>确认号 ack</b><i>4B</i></div>
+                            <div class="cg-f"><b>数据偏移</b><i>4 位</i></div>
+                            <div class="cg-f"><b>保留</b><i>6 位</i></div>
+                            <div class="cg-f hl"><b>标志位</b><i>6 位</i></div>
+                            <div class="cg-f"><b>窗口</b><i>2B</i></div>
+                            <div class="cg-f"><b>校验和</b><i>2B</i></div>
+                            <div class="cg-f"><b>紧急指针</b><i>2B</i></div>
+                            <div class="cg-f dim"><b>选项</b><i>可变</i></div>
+                        </div>
+                    </div>
+                    <div class="cg-cap"><b>首部最小 20B、最大 60B</b>；「数据偏移」以 <b>4B 为单位</b>，故该字段最大值 15 → 15×4 = 60B。</div>
+                    <ul class="cg-pts">
+                        <li><b>标志位 6 个</b>：<code>URG</code> 紧急指针有效、<code>ACK</code> 确认号有效、<code>PSH</code> 尽快交付、<code>RST</code> 复位连接、<code>SYN</code> 同步序号、<code>FIN</code> 释放连接。</li>
+                        <li><span class="cg-key k2">易错</span><b>序号与确认号都按「字节」编号</b>，不是按报文段。TCP 是<b>面向字节流</b>的协议。确认号 = <em>期望收到的下一个字节的序号</em>。</li>
+                        <li><span class="cg-key">必考</span><b>SYN 与 FIN 各消耗一个序号</b>（即使不携带数据），而普通 ACK 报文段不携带数据时<b>不消耗序号</b>。</li>
+                    </ul>
+                </div>
+
+                <div class="cg-block">
+                    <h3>④ 连接管理：三次握手 <small>（建立连接）</small></h3>
+                    <div class="cg-seq">
+                        <div class="cg-seq-h">客户端</div>
+                        <div class="cg-seq-t">← 报文方向 →</div>
+                        <div class="cg-seq-h">服务器</div>
+
+                        <div class="cg-seq-t">CLOSED</div>
+                        <div class="cg-msg r"><span>① SYN=1, seq=x（不携带数据）</span></div>
+                        <div class="cg-seq-t">LISTEN</div>
+
+                        <div class="cg-seq-t">SYN_SENT</div>
+                        <div class="cg-msg l"><span>② SYN=1, ACK=1, seq=y, ack=x+1</span></div>
+                        <div class="cg-seq-t">SYN_RCVD</div>
+
+                        <div class="cg-seq-t">ESTABLISHED</div>
+                        <div class="cg-msg r"><span>③ ACK=1, seq=x+1, ack=y+1</span></div>
+                        <div class="cg-seq-t">ESTABLISHED</div>
+                    </div>
+                    <ul class="cg-pts">
+                        <li><span class="cg-key">必考</span><b>为什么必须三次？</b>① <b>同步双方初始序号</b>；② <b>防止已失效的连接请求报文段</b>突然到达服务器，造成服务器建立无用连接、浪费资源。</li>
+                        <li>第 ② 个报文段（SYN+ACK）<b>不携带数据，但要消耗一个序号</b>，故第 ③ 个报文段的 ack = y+1。</li>
+                        <li><b>SYN 洪泛攻击</b>：攻击者大量发送 SYN 而不完成第三次握手，耗尽服务器半连接队列 → 防御手段 SYN Cookie。</li>
+                    </ul>
+                </div>
+
+                <div class="cg-block">
+                    <h3>⑤ 连接管理：四次挥手 <small>（释放连接 · TIME_WAIT 2MSL）</small></h3>
+                    <div class="cg-seq">
+                        <div class="cg-seq-h">客户端</div>
+                        <div class="cg-seq-t">← 报文方向 →</div>
+                        <div class="cg-seq-h">服务器</div>
+
+                        <div class="cg-seq-t">ESTABLISHED</div>
+                        <div class="cg-msg r"><span>① FIN=1, seq=u（不再发数据）</span></div>
+                        <div class="cg-seq-t">ESTABLISHED</div>
+
+                        <div class="cg-seq-t">FIN_WAIT_1<br>FIN_WAIT_2</div>
+                        <div class="cg-msg l"><span>② ACK=1, ack=u+1, seq=v</span></div>
+                        <div class="cg-seq-t">CLOSE_WAIT<br><i style="font-size:.68rem">（可能还有数据要发）</i></div>
+
+                        <div class="cg-seq-t">FIN_WAIT_2</div>
+                        <div class="cg-msg l"><span>③ FIN=1, ACK=1, seq=w, ack=u+1</span></div>
+                        <div class="cg-seq-t">LAST_ACK</div>
+
+                        <div class="cg-seq-t">TIME_WAIT<br><i style="font-size:.68rem">（等 2MSL）</i></div>
+                        <div class="cg-msg r"><span>④ ACK=1, ack=w+1</span></div>
+                        <div class="cg-seq-t">CLOSED</div>
+
+                        <div class="cg-seq-state">客户端等待 <b>2MSL</b>（MSL = 最长报文段寿命，建议 2 分钟）后 → <b>CLOSED</b></div>
+                    </div>
+                    <ul class="cg-pts">
+                        <li><span class="cg-key">必考</span><b>为什么四次？</b>TCP 是<b>全双工</b>。服务器收到 FIN 后只表示"对方没数据要发了"，但自己可能还有数据要发，所以 <b>ACK 与 FIN 必须分开发送</b>（半关闭状态）。</li>
+                        <li><span class="cg-key">必考</span><b>为什么等 2MSL？</b>① 保证最后一个 ACK 能到达服务器（若丢失，服务器会重传 FIN，客户端还能响应）；② 让本连接产生的<b>所有旧报文段从网络中消失</b>，避免干扰后续新连接。</li>
+                        <li><b>保活计时器</b>：服务器每收到一次客户数据就重置，若 2 小时无数据则发探测报文，连续 10 个无响应即关闭连接。</li>
+                    </ul>
+                </div>
+
+                <div class="cg-block">
+                    <h3>⑥ 可靠传输与流量控制 <small>（滑动窗口 · 确认 · 重传 · rwnd）</small></h3>
+                    <ul class="cg-pts">
+                        <li><b>可靠传输四要素</b>：<em>序号</em> + <em>确认</em> + <em>重传</em> + <em>滑动窗口</em>。<b>TCP 采用累积确认</b>（ack=n 表示 n 之前的全部已收到）。</li>
+                        <li><b>超时重传</b>：用加权平均往返时间估计 RTT，超时时间 RTO 略大于估计值（考虑偏差）。<b>超时时间过小 → 无谓重传；过大 → 迟钝</b>。</li>
+                        <li><span class="cg-key">必考</span><b>快速重传</b>：收到 <b>3 个重复确认（dup ACK）</b>时立即重传丢失的报文段，<b>不等超时</b>——这是快恢复的前提。</li>
+                        <li><b>流量控制（接收方主导）</b>：接收方通过首部「窗口」字段通告 <code>rwnd</code>，发送方据此调整发送速率。<b>发送窗口 = min(接收窗口 rwnd, 拥塞窗口 cwnd)</b>。</li>
+                        <li><span class="cg-key k2">易混</span><b>零窗口 + 持续计时器</b>：接收窗口为 0 时发送方停发，但启动持续计时器，超时后发<b>零窗口探测报文</b>，避免双方互相等待形成死锁。</li>
+                        <li><b>糊涂窗口综合症</b>：发送方用 <b>Nagle 算法</b>（攒够一个 MSS 或收到 ACK 才发）；接收方等窗口<b>够大（如半个缓存）或超时</b>再通告。</li>
+                    </ul>
+                </div>
+
+                <div class="cg-block">
+                    <h3>⑦ 拥塞控制 <small>（慢开始 · 拥塞避免 · 快重传 · 快恢复 —— 反复考的图）</small></h3>
+                    <div class="cg-chart">
+                        <svg viewBox="0 0 680 262" style="color:var(--c)">
+                            <!-- 坐标轴 -->
+                            <line x1="45" y1="18" x2="45" y2="230" stroke="currentColor" stroke-width="1.5" opacity=".45"/>
+                            <line x1="45" y1="230" x2="662" y2="230" stroke="currentColor" stroke-width="1.5" opacity=".45"/>
+                            <text x="8" y="14" font-size="11" fill="currentColor" opacity=".75">cwnd</text>
+                            <text x="596" y="249" font-size="11" fill="currentColor" opacity=".75">传输轮次</text>
+                            <!-- ssthresh 虚线 -->
+                            <line x1="45" y1="90" x2="352" y2="90" stroke="#f59e0b" stroke-width="1.4" stroke-dasharray="6 4"/>
+                            <line x1="352" y1="143" x2="662" y2="143" stroke="#f59e0b" stroke-width="1.4" stroke-dasharray="6 4"/>
+                            <text x="330" y="84" font-size="11" fill="#f59e0b" text-anchor="end">ssthresh = 16</text>
+                            <text x="662" y="137" font-size="11" fill="#f59e0b" text-anchor="end">ssthresh = 10（超时后减半）</text>
+                            <!-- 曲线 -->
+                            <polyline points="45,221 83,213 122,195 160,160 199,90" fill="none" stroke="currentColor" stroke-width="2.2"/>
+                            <polyline points="199,90 237,81 276,73 314,64 352,55" fill="none" stroke="currentColor" stroke-width="2.2"/>
+                            <polyline points="391,221 429,213 468,195 506,160" fill="none" stroke="currentColor" stroke-width="2.2"/>
+                            <polyline points="506,160 545,151 583,143 622,134 662,125" fill="none" stroke="currentColor" stroke-width="2.2"/>
+                            <!-- 超时跳变 -->
+                            <line x1="352" y1="55" x2="391" y2="221" stroke="#dc3545" stroke-width="1.3" stroke-dasharray="4 3"/>
+                            <text x="256" y="46" font-size="11" fill="#dc3545">超时 → cwnd = 1，重新慢开始</text>
+                            <!-- 阶段标注 -->
+                            <text x="66" y="176" font-size="11" fill="currentColor" opacity=".85">慢开始</text>
+                            <text x="222" y="42" font-size="11" fill="currentColor" opacity=".85">拥塞避免</text>
+                            <text x="404" y="176" font-size="11" fill="currentColor" opacity=".85">慢开始</text>
+                            <text x="556" y="112" font-size="11" fill="currentColor" opacity=".85">拥塞避免</text>
+                        </svg>
+                        <div class="cg-chart-cap">cwnd 变化示意：指数增长 → 线性增长 → 超时归 1 → 再指数 → 达 ssthresh 转线性</div>
+                    </div>
+                    <div class="cg-tw">
+                        <table class="cg-tb">
+                            <thead><tr><th>阶段</th><th>触发条件</th><th>cwnd 变化</th><th>ssthresh 变化</th></tr></thead>
+                            <tbody>
+                                <tr><td><b>慢开始</b></td><td>连接建立 / 超时重传后</td><td>从 1 开始，<b>每收到一个 ACK 加 1</b> → 每轮<b>翻倍（指数）</b></td><td>不变</td></tr>
+                                <tr><td><b>拥塞避免</b></td><td>cwnd ≥ ssthresh</td><td><b>每轮只加 1</b>（线性增长）</td><td>不变</td></tr>
+                                <tr><td><b>快重传</b></td><td>收到 <b>3 个重复 ACK</b></td><td>立即重传丢失报文段</td><td>—</td></tr>
+                                <tr><td><b>快恢复</b></td><td>快重传后（未超时）</td><td><b>cwnd = ssthresh = cwnd/2</b>，直接进入拥塞避免</td><td><b>减半</b></td></tr>
+                                <tr><td><b>超时重传</b></td><td>超时计时器到期</td><td><b>cwnd = 1</b>，重新慢开始（最严重）</td><td><b>减半</b></td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <ul class="cg-pts">
+                        <li><span class="cg-key">必考</span><b>快恢复与超时的区别</b>：快恢复是<b>收到重复 ACK</b>（网络只是轻微拥塞，还能收到 ACK）→ cwnd 减半后<b>不回到 1</b>；超时说明网络<b>严重拥塞</b> → cwnd 直接归 1。</li>
+                        <li><span class="cg-key k2">陷阱</span>做图题时注意看<b>横轴是「传输轮次」还是「时间」</b>；慢开始的"翻倍"是<b>按轮次</b>，不是按每个 ACK。</li>
+                        <li><b>发送方实际能发多少</b>：取 <code>min(rwnd, cwnd)</code>，再考虑已发送未确认的数据量，方得真正可发送窗口。</li>
+                        <li><b>TCP 的四种计时器</b>：重传计时器、坚持（持续）计时器、保活计时器、时间等待计时器（2MSL）。</li>
+                    </ul>
+                </div>
+
+                <div class="cg-block">
+                    <h3>⑧ TCP 与 UDP 对比 <small>（一张表收尾）</small></h3>
+                    <div class="cg-tw">
+                        <table class="cg-tb">
+                            <thead><tr><th>对比项</th><th>TCP</th><th>UDP</th></tr></thead>
+                            <tbody>
+                                <tr><td>连接性</td><td><b>面向连接</b>（三握四挥）</td><td><b>无连接</b></td></tr>
+                                <tr><td>可靠性</td><td><b>可靠</b>（确认+重传+排序）</td><td>不可靠，尽最大努力</td></tr>
+                                <tr><td>数据边界</td><td><b>面向字节流</b>（无边界，可能粘包）</td><td><b>面向报文</b>（保留边界）</td></tr>
+                                <tr><td>首部开销</td><td>20B（最长 60B）</td><td><b>8B</b></td></tr>
+                                <tr><td>拥塞/流量控制</td><td>都有（cwnd + rwnd）</td><td>都没有</td></tr>
+                                <tr><td>传输效率</td><td>较低（开销大）</td><td>较高（实时性好）</td></tr>
+                                <tr><td>适用</td><td>文件传输、邮件、Web</td><td>音视频、DNS、DHCP、TFTP、SNMP</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+            </div>
+        </section>
+
+        <!-- ============ ③ 网络层 ============ -->
+        <section class="cg-layer cg-l3" id="L3">
+            <div class="cg-layer-head" onclick="cgToggle(this)">
+                <div class="cg-layer-no">③</div>
+                <div>
+                    <h2>网络层</h2>
+                    <div class="cg-layer-sub">IP 首部 · 地址与子网 · ARP/ICMP · 路由协议 · NAT/IPv6</div>
+                </div>
+                <span class="cg-layer-arrow">▾ 折叠</span>
+            </div>
+            <div class="cg-layer-body">
+
+                <div class="cg-block">
+                    <h3>① IPv4 数据报首部 <small>（固定 20B，最长 60B）</small></h3>
+                    <div class="cg-scroll">
+                        <div class="cg-fields" style="margin:10px 0 -1px;border-radius:6px 6px 0 0">
+                            <div class="cg-f" style="flex:1"><b>版本</b><i>4 位</i></div>
+                            <div class="cg-f" style="flex:1.4"><b>首部长度</b><i>4 位</i></div>
+                            <div class="cg-f" style="flex:1.4"><b>区分服务</b><i>8 位</i></div>
+                            <div class="cg-f hl" style="flex:3"><b>总长度</b><i>16 位</i></div>
+                        </div>
+                        <div class="cg-fields" style="margin:0 0 -1px;border-radius:0">
+                            <div class="cg-f" style="flex:3"><b>标识</b><i>16 位</i></div>
+                            <div class="cg-f" style="flex:1.4"><b>标志</b><i>3 位</i></div>
+                            <div class="cg-f" style="flex:2.6"><b>片偏移</b><i>13 位</i></div>
+                        </div>
+                        <div class="cg-fields" style="margin:0 0 -1px;border-radius:0">
+                            <div class="cg-f" style="flex:1.6"><b>生存时间 TTL</b><i>8 位</i></div>
+                            <div class="cg-f" style="flex:1.4"><b>协议</b><i>8 位</i></div>
+                            <div class="cg-f" style="flex:3"><b>首部校验和</b><i>16 位</i></div>
+                        </div>
+                        <div class="cg-fields" style="margin:0 0 -1px;border-radius:0">
+                            <div class="cg-f" style="flex:6"><b>源 IP 地址</b><i>32 位</i></div>
+                        </div>
+                        <div class="cg-fields" style="margin:0 0 -1px;border-radius:0">
+                            <div class="cg-f" style="flex:6"><b>目的 IP 地址</b><i>32 位</i></div>
+                        </div>
+                        <div class="cg-fields" style="margin:0 0 0;border-radius:0 0 6px 6px">
+                            <div class="cg-f dim" style="flex:6"><b>可选字段（长度可变，用于排错/测量/安全）</b><i>不足 4B 用填充补齐</i></div>
+                        </div>
+                    </div>
+                    <div class="cg-cap">单位速记：<b>首部长度以 4B 为单位</b> ｜ <b>总长度以 1B 为单位</b>（最大 65535B）｜ <b>片偏移以 8B 为单位</b>。</div>
+                    <ul class="cg-pts">
+                        <li><span class="cg-key">必考</span><b>TTL</b>：每经过一个路由器减 1，为 0 则丢弃并回送 ICMP 超时报文。<em>作用是防止分组在网络中循环</em>。</li>
+                        <li><b>协议字段</b>：<code>1</code> = ICMP ｜ <code>6</code> = TCP ｜ <code>17</code> = UDP ｜ <code>89</code> = OSPF。</li>
+                        <li><b>标志 3 位</b>：<code>DF</code>（禁止分片）｜ <code>MF</code>（后面还有分片）｜ 保留位。</li>
+                        <li><span class="cg-key k2">易错</span><b>只有首部参与校验和</b>（不校验数据部分），且<b>每经一跳都要重新计算</b>（因为 TTL 变了）。</li>
+                    </ul>
+                </div>
+
+                <div class="cg-block">
+                    <h3>② IP 地址与特殊地址 <small>（分类 + 私有 + 特殊用途）</small></h3>
+                    <div class="cg-tw">
+                        <table class="cg-tb">
+                            <thead><tr><th>类别</th><th>首字节范围</th><th>默认掩码</th><th>网络号位数 / 主机号位数</th></tr></thead>
+                            <tbody>
+                                <tr><td><b>A 类</b></td><td>1 ~ 126</td><td><code>/8</code> 255.0.0.0</td><td>8 位 / 24 位</td></tr>
+                                <tr><td><b>B 类</b></td><td>128 ~ 191</td><td><code>/16</code> 255.255.0.0</td><td>16 位 / 16 位</td></tr>
+                                <tr><td><b>C 类</b></td><td>192 ~ 223</td><td><code>/24</code> 255.255.255.0</td><td>24 位 / 8 位</td></tr>
+                                <tr><td><b>D 类</b></td><td>224 ~ 239</td><td>—</td><td>组播地址</td></tr>
+                                <tr><td><b>E 类</b></td><td>240 ~ 255</td><td>—</td><td>保留</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <ul class="cg-pts">
+                        <li><span class="cg-key">必考</span><b>私有地址（不参与全球路由）</b>：<code>10.0.0.0/8</code> ｜ <code>172.16.0.0/12</code> ｜ <code>192.168.0.0/16</code>。</li>
+                        <li><b>特殊地址</b>：<code>0.0.0.0</code> 本网络本主机（DHCP 源地址）｜ <code>255.255.255.255</code> 受限广播｜ <code>127.0.0.0/8</code> 环回测试｜ <code>169.254.0.0/16</code> 自动私有地址（DHCP 失败时）。</li>
+                        <li><b>主机号全 1 = 广播地址</b>，主机号全 0 = 网络地址，<b>两者都不可分配给主机</b>——所以「可用主机数 = 2^主机位 − 2」。</li>
+                    </ul>
+                </div>
+
+                <div class="cg-block">
+                    <h3>③ 子网划分与 CIDR <small>（计算题必出）</small></h3>
+                    <div class="cg-tip">
+                        <b>例题：</b>主机 <code>192.168.1.100/26</code>，求网络地址、广播地址、可用主机范围。<br>
+                        <b>① 块大小</b>：32 − 26 = 6 位主机号 → 每块 2<sup>6</sup> = <b>64</b> 个地址。<br>
+                        <b>② 网络地址</b>：100 ÷ 64 = 1 余 36 → 落在第 1 段（从 64 开始）→ <code>192.168.1.64</code>。<br>
+                        <b>③ 广播地址</b>：<code>192.168.1.127</code>（该段最后一个）。<br>
+                        <b>④ 可用范围</b>：<code>192.168.1.65 ~ 192.168.1.126</code>，共 <b>62</b> 台。
+                    </div>
+                    <ul class="cg-pts">
+                        <li><b>子网掩码</b>：网络号位全 1、主机号位全 0。<code>掩码 AND IP = 网络地址</code>；<code>掩码取反 OR 网络地址 = 广播地址</code>。</li>
+                        <li><span class="cg-key">必考</span><b>CIDR 记法</b>：<code>a.b.c.d/n</code>，n 为前缀长度（网络前缀位数）。CIDR 把「网络号 + 子网号」合并为<b>网络前缀</b>，不再区分 A/B/C。</li>
+                        <li><span class="cg-key">必考</span><b>路由聚合（构成超网）</b>：把多条前缀相同的路由合并为一条，如 <code>192.168.0.0/24</code> 与 <code>192.168.1.0/24</code> 可聚合为 <code>192.168.0.0/23</code>（能聚合的前提是<b>前缀相同、地址连续</b>）。</li>
+                        <li><b>最长前缀匹配</b>：转发时若有多条路由匹配，选<b>前缀最长</b>（最具体）的那条。</li>
+                    </ul>
+                </div>
+
+                <div class="cg-block">
+                    <h3>④ ARP 地址解析 <small>（IP → MAC）</small></h3>
+                    <div class="cg-flow">
+                        <div class="cg-flow-i"><b>① 查 ARP 缓存</b><i>命中则直接用</i></div>
+                        <span class="cg-flow-a">→</span>
+                        <div class="cg-flow-i"><b>② 广播 ARP 请求</b><i>“谁是 192.168.1.5？”</i></div>
+                        <span class="cg-flow-a">→</span>
+                        <div class="cg-flow-i"><b>③ 目标单播响应</b><i>“我是，MAC 是 xx-xx”</i></div>
+                        <span class="cg-flow-a">→</span>
+                        <div class="cg-flow-i"><b>④ 写入 ARP 缓存</b><i>有生存期</i></div>
+                    </div>
+                    <ul class="cg-pts">
+                        <li><span class="cg-key">必考</span><b>请求是广播、响应是单播</b>；ARP 只能解析<b>同一局域网内</b>的地址。</li>
+                        <li><span class="cg-key k2">关键</span><b>跨网段时，主机解析的是「默认网关」的 MAC</b>，而不是最终目的主机的 MAC——之后每跳路由器各自再解析下一跳。</li>
+                        <li>ARP 报文直接封装在以太网帧中（类型字段 <code>0x0806</code>），<b>无需 IP 首部</b>。</li>
+                        <li><b>ARP 欺骗</b>：伪造 ARP 响应使流量被劫持，防御靠静态绑定 / DAI。</li>
+                    </ul>
+                </div>
+
+                <div class="cg-block">
+                    <h3>⑤ ICMP 网际控制报文协议 <small>（ping 与 traceroute 的原理）</small></h3>
+                    <div class="cg-tw">
+                        <table class="cg-tb">
+                            <thead><tr><th>类型</th><th>报文</th><th>用途</th></tr></thead>
+                            <tbody>
+                                <tr><td rowspan="4"><b>差错报告</b></td><td>终点不可达</td><td>路由/端口不可达（类型 3）</td></tr>
+                                <tr><td>时间超过</td><td>TTL 归零（类型 11）——<b>traceroute 靠它</b></td></tr>
+                                <tr><td>参数问题</td><td>首部字段有误</td></tr>
+                                <tr><td>改变路由（重定向）</td><td>告知更优的下一跳（类型 5）</td></tr>
+                                <tr><td rowspan="2"><b>询问</b></td><td>回送请求 / 回答</td><td><b>ping</b> 用它探测连通性与往返时延</td></tr>
+                                <tr><td>时间戳请求 / 回答</td><td>测量时延、时钟同步</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <ul class="cg-pts">
+                        <li><span class="cg-key">必考</span><b>traceroute 原理</b>：依次发送 <b>TTL = 1, 2, 3…</b> 的报文，每经过一台路由器 TTL 归零 → 该路由器回送 <b>ICMP 时间超过</b>报文，从而逐跳获得路径与 RTT。</li>
+                        <li><b>ICMP 不报告差错的情况</b>：对 ICMP 差错报文本身、对分片后的非首片、对多播/广播地址。</li>
+                        <li>ICMP 封装在 IP 数据报中（协议号 <code>1</code>），<b>属于网络层协议，不是传输层</b>。</li>
+                    </ul>
+                </div>
+
+                <div class="cg-block">
+                    <h3>⑥ 路由协议三兄弟 <small>RIP / OSPF / BGP 对比</small></h3>
+                    <div class="cg-tw">
+                        <table class="cg-tb">
+                            <thead><tr><th></th><th>RIP</th><th>OSPF</th><th>BGP</th></tr></thead>
+                            <tbody>
+                                <tr><td>类别</td><td>内部网关协议 IGP</td><td>内部网关协议 IGP</td><td><b>外部网关协议 EGP</b></td></tr>
+                                <tr><td>算法</td><td>距离向量（Bellman-Ford）</td><td>链路状态（Dijkstra）</td><td>路径向量</td></tr>
+                                <tr><td>度量</td><td><b>跳数</b>（最大 15，16 = 不可达）</td><td>带宽 / 费用 / 时延 / 负载</td><td>AS 路径 + 策略（不追求最优）</td></tr>
+                                <tr><td>交换方式</td><td>仅与<b>相邻</b>路由器交换全部路由表</td><td><b>洪泛</b>链路状态给全网</td><td>AS 边界路由器之间</td></tr>
+                                <tr><td>承载</td><td>UDP <code>520</code> · 30s 广播</td><td>直接用 IP（协议号 <code>89</code>）</td><td>TCP <code>179</code></td></tr>
+                                <tr><td>特点</td><td>简单、收敛慢、<b>坏消息传得慢</b></td><td>收敛快、支持区域划分、负载均衡</td><td>策略优先、规模大</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <ul class="cg-pts">
+                        <li><span class="cg-key k2">经典</span><b>坏消息传得慢（RIP）</b>：网络故障后，错误路由会被相邻节点反复"纠正"式传播，导致慢收敛（计数到无穷）。对策：<b>限定最大跳数 16、水平分割、毒性逆转</b>。</li>
+                        <li><b>自治系统 AS</b>：由同一管理机构管辖的网络集合。AS 内部用 IGP（RIP/OSPF），AS 之间用 EGP（BGP）。</li>
+                        <li><span class="cg-key">必考</span><b>RIP 一条路由的"距离"是跳数</b>，与链路带宽无关——所以 RIP 会选「跳数少但很慢」的路径，这是它的固有缺陷。</li>
+                        <li><b>路由器结构</b>：输入端口 → <b>交换结构</b> → 输出端口，外加路由处理器。路由表项 = {目的网络, 下一跳, 接口}。</li>
+                    </ul>
+                </div>
+
+                <div class="cg-block">
+                    <h3>⑦ NAT 与 IPv6 <small>（地址枯竭的两条出路）</small></h3>
+                    <ul class="cg-pts">
+                        <li><b>NAT</b>：在私有网与公网交界处做地址转换，把内网私有 IP 换成公网 IP。<b>NAPT（端口复用）</b>使多台内网主机共用一个公网 IP：维护 <code>{内网IP:端口} ↔ {公网IP:端口}</code> 的映射表。</li>
+                        <li><span class="cg-key k2">代价</span>NAT 破坏了端到端透明性，使外网无法主动发起连接（需端口映射/打洞），也影响 IPsec 等协议。</li>
+                        <li><b>IPv6 要点</b>：地址 <b>128 位</b>（冒号十六进制，可用 <code>::</code> 压缩连续 0，但一个地址中只能用一次）；<b>首部固定 40B</b>；取消了<b>校验和、首部长度、标识/标志/片偏移</b>字段。</li>
+                        <li><span class="cg-key">必考</span><b>IPv6 的分片由源主机完成</b>（路径 MTU 发现），中间路由器不分片——与 IPv4 的根本区别。</li>
+                        <li><b>过渡技术</b>：双协议栈、隧道技术（把 IPv6 封装进 IPv4 数据报）。</li>
+                    </ul>
+                </div>
+
+                <div class="cg-block">
+                    <h3>⑧ IP 分片 <small>（片偏移以 8B 为单位）</small></h3>
+                    <div class="cg-tip">
+                        <b>例题：</b>一个总长 <code>4000B</code> 的 IP 数据报（首部 20B、数据 3980B），要经过 MTU = 1500 的网络，如何分片？<br>
+                        每片最大数据 = 1500 − 20 = <b>1480B</b>（须为 <b>8 的整数倍</b>）<br>
+                        → 片 1：数据 1480，片偏移 <code>0</code>，MF=1<br>
+                        → 片 2：数据 1480，片偏移 <code>1480/8 = 185</code>，MF=1<br>
+                        → 片 3：数据 1020，片偏移 <code>2960/8 = 370</code>，MF=0<br>
+                        三片总长分别 1500 / 1500 / 1040。
+                    </div>
+                    <ul class="cg-pts">
+                        <li><span class="cg-key">必考</span>分片只发生在<b>网络层</b>；同一数据报的所有分片<b>标识字段相同</b>，靠标识 + 片偏移 + MF 重组。</li>
+                        <li><b>DF = 1</b> 且必须分片时：丢弃该数据报并回送 ICMP 终点不可达（需要分片但 DF 置位）。</li>
+                    </ul>
+                </div>
+
+            </div>
+        </section>
+
+        <!-- ============ ② 数据链路层 ============ -->
+        <section class="cg-layer cg-l2" id="L2">
+            <div class="cg-layer-head" onclick="cgToggle(this)">
+                <div class="cg-layer-no">②</div>
+                <div>
+                    <h2>数据链路层</h2>
+                    <div class="cg-layer-sub">组帧 · CRC/海明码 · 停等/GBN/SR · CSMA-CD · 以太网与交换机</div>
+                </div>
+                <span class="cg-layer-arrow">▾ 折叠</span>
+            </div>
+            <div class="cg-layer-body">
+
+                <div class="cg-block">
+                    <h3>① 三大功能与两种信道 <small>（点对点 vs 广播）</small></h3>
+                    <ul class="cg-pts">
+                        <li><b>三大功能</b>：<em>封装成帧</em>（帧定界）、<em>差错控制</em>、<em>流量控制与可靠传输</em>。</li>
+                        <li><b>点对点信道</b>：一对一（如 PPP 拨号），使用 <b>PPP 协议</b>。</li>
+                        <li><b>广播信道</b>：一对多（如以太网局域网），<b>必须使用介质访问控制协议</b>协调共享信道。</li>
+                        <li><b>链路 vs 数据链路</b>：链路是物理线路；<b>数据链路 = 物理链路 + 实现通信协议的硬件和软件</b>（网卡即典型）。</li>
+                    </ul>
+                </div>
+
+                <div class="cg-block">
+                    <h3>② 组帧的四种方法 <small>（透明传输是核心）</small></h3>
+                    <div class="cg-tw">
+                        <table class="cg-tb">
+                            <thead><tr><th>方法</th><th>原理</th><th>优点 / 缺点</th></tr></thead>
+                            <tbody>
+                                <tr><td><b>字符计数法</b></td><td>帧首部用一个计数字段标明帧长</td><td>简单；<b>计数字段一出错就全乱</b>，鲁棒性差</td></tr>
+                                <tr><td><b>字节填充法</b></td><td>用 <code>ESC</code> 转义标志字符（面向字节）</td><td>PPP 采用；实现简单，但依赖 8 位字符</td></tr>
+                                <tr><td><b>零比特填充法</b></td><td>发送方遇<b>连续 5 个 1 就插 1 个 0</b>，接收方删</td><td><b>HDLC 采用</b>；透明性好、效率高（面向比特）</td></tr>
+                                <tr><td><b>违规编码法</b></td><td>用编码中不会出现的电平组合做定界</td><td>无需填充；依赖特定编码（如曼彻斯特）</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <ul class="cg-pts">
+                        <li><span class="cg-key">必考</span><b>零比特填充的判定</b>：看到 <code>111110</code> 就是"5 个 1 + 填充 0"，接收方要删掉最后那个 0。标志字段是 <code>01111110</code>。</li>
+                        <li><b>透明传输</b>：无论数据里出现什么比特/字节组合，都能原样正确传输（不把数据误判为定界符）。</li>
+                    </ul>
+                </div>
+
+                <div class="cg-block">
+                    <h3>③ 差错控制：CRC 与海明码 <small>（检错 vs 纠错）</small></h3>
+                    <ul class="cg-pts">
+                        <li><span class="cg-key">必考</span><b>CRC 计算步骤</b>：① 数据后补 r 个 0（r = 生成多项式最高次幂）；② 与生成多项式做<b>模 2 除法</b>（异或，不借位）；③ 余数即 FCS，附在数据后发送；④ 接收方整体再做一次除法，<b>余数为 0 则无错</b>。</li>
+                        <li>CRC 能检出多位错误，但<b>只能检错、不能纠错</b>；有 r 个校验位时能检出所有长度 ≤ r 的突发错误。</li>
+                        <li><span class="cg-key">必考</span><b>海明码位数</b>：要能纠正 1 位错，需满足 <code>2<sup>k</sup> ≥ n + k + 1</code>（n 为信息位，k 为校验位）。<b>海明距离 d 与检错纠错能力</b>：检 e 位错需 d ≥ e+1；纠 t 位错需 d ≥ 2t+1。</li>
+                        <li><b>奇偶校验</b>：只能检出<b>奇数个</b>比特错，不能检出偶数个。</li>
+                    </ul>
+                </div>
+
+                <div class="cg-block">
+                    <h3>④ 流量控制与可靠传输 <small>（停等 / GBN / SR 三张图必背）</small></h3>
+                    <div class="cg-tw">
+                        <table class="cg-tb">
+                            <thead><tr><th></th><th>停止等待</th><th>后退 N 帧 GBN</th><th>选择重传 SR</th></tr></thead>
+                            <tbody>
+                                <tr><td>发送窗口 W<sub>T</sub></td><td>1</td><td><b>≤ 2<sup>n</sup> − 1</b></td><td><b>≤ 2<sup>n−1</sup></b></td></tr>
+                                <tr><td>接收窗口 W<sub>R</sub></td><td>1</td><td><b>1</b></td><td>&gt; 1（通常 = W<sub>T</sub>）</td></tr>
+                                <tr><td>确认方式</td><td>逐帧确认</td><td><b>累积确认</b>（ack=n 表示 n 之前全收到）</td><td>逐帧确认 / 否认帧 NAK</td></tr>
+                                <tr><td>重传策略</td><td>超时重传 1 帧</td><td><b>回退重传 n 帧</b>（已发出的全重传）</td><td><b>只重传出错的那一帧</b></td></tr>
+                                <tr><td>乱序处理</td><td>丢弃</td><td>丢弃</td><td><b>先缓存，等缺失帧到达后一并交付</b></td></tr>
+                                <tr><td>n 的含义</td><td>1 位序号</td><td colspan="2">n 为<b>序号位数</b>；窗口上限的差别是为了<b>区分新旧帧</b></td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="cg-tip">
+                        <b>信道利用率公式（必背）</b><br>
+                        停止等待：<code>U = T<sub>D</sub> / (T<sub>D</sub> + RTT + T<sub>A</sub>)</code><br>
+                        连续 ARQ（GBN/SR）：<code>U = W<sub>T</sub> × T<sub>D</sub> / (T<sub>D</sub> + RTT + T<sub>A</sub>)</code>，且 <b>U ≤ 1</b><br>
+                        其中 T<sub>D</sub> = 帧发送时延，T<sub>A</sub> = 确认帧发送时延。
+                    </div>
+                    <ul class="cg-pts">
+                        <li><span class="cg-key k2">易混</span><b>为什么 GBN 的窗口上限是 2<sup>n</sup> − 1 而 SR 是 2<sup>n−1</sup>？</b>GBN 接收窗口恒为 1，只需保证发送窗口内序号不重复即可多留 1 个；SR 接收窗口 &gt; 1，若发送窗口 = 2<sup>n</sup>，则新旧帧序号会重合导致无法区分。</li>
+                        <li><b>最小序号位数</b>：若窗口大小为 W，GBN 需 <code>2<sup>n</sup> ≥ W + 1</code>；SR 需 <code>2<sup>n</sup> ≥ 2W</code>。</li>
+                    </ul>
+                </div>
+
+                <div class="cg-block">
+                    <h3>⑤ 介质访问控制 <small>（ALOHA · CSMA · CSMA/CD · CSMA/CA）</small></h3>
+                    <ul class="cg-pts">
+                        <li><b>信道划分（静态）</b>：频分 FDM、时分 TDM、波分 WDM、<b>码分 CDM</b>（CDMA 靠正交码片序列区分用户）。</li>
+                        <li><b>纯 ALOHA</b>：想发就发，冲突则随机等待重发，最大吞吐率 <b>18.4%</b>；<b>时隙 ALOHA</b>：只在时隙起点发，最大吞吐率 <b>36.8%</b>（翻倍）。</li>
+                        <li><b>CSMA 三种坚持策略</b>：<em>1-坚持</em>（空闲就发，冲突概率高）｜<em>非坚持</em>（空闲也不一定马上发，随机等一段）｜<em>p-坚持</em>（空闲时以概率 p 发送）。</li>
+                    </ul>
+                    <div class="cg-tip">
+                        <b>CSMA/CD（有线以太网）：先听后发、边听边发、冲突停发、随机重发</b><br>
+                        <b>① 争用期（冲突窗口）</b> = <code>2τ</code>（τ 为单程传播时延）—— <b>最迟要 2τ 才能确定没冲突</b>。<br>
+                        <b>② 最短帧长</b> = <code>2τ × 数据率</code>。以太网 10Mb/s、2τ = 51.2μs → <b>512 bit = 64B</b>。<br>
+                        <b>③ 截断二进制指数退避</b>：重传第 k 次时取 <code>k = min(重传次数, 10)</code>，从 <code>[0, 2<sup>k</sup>−1]</code> 随机取 r，退避 <code>r × 2τ</code>；<b>连续 16 次失败即丢弃并报告</b>。<br>
+                        <b>④ 为什么最短帧长是考点</b>：帧太短会导致<b>发完了冲突才回来</b>，发送方误以为发送成功。凡帧长 &lt; 64B 的帧一律视为<b>无效帧（碎片）丢弃</b>。
+                    </div>
+                    <ul class="cg-pts">
+                        <li><span class="cg-key">必考</span><b>CSMA/CD 为什么不能用于无线？</b>① 无线网卡<b>收发不能同时</b>（无法边听边发）；② 存在<b>隐蔽站</b>问题，冲突检测不到。故无线改用 <b>CSMA/CA（冲突避免）</b>。</li>
+                        <li><b>CSMA/CA 机制</b>：<em>DIFS</em>（普通帧等待）/ <em>SIFS</em>（ACK 等短帧优先，SIFS &lt; DIFS）｜<b>RTS/CTS 握手</b>解决隐蔽站｜<b>ACK 确认</b>（无线不能靠冲突检测，只能靠确认）。</li>
+                    </ul>
+                </div>
+
+                <div class="cg-block">
+                    <h3>⑥ 以太网与 MAC 帧 <small>（帧格式 + 最短帧长 + 地址）</small></h3>
+                    <div class="cg-scroll">
+                        <div class="cg-fields" style="margin:10px 0 -1px;border-radius:6px 6px 0 0">
+                            <div class="cg-f dim" style="flex:3"><b>前导码</b><i>8B（7B 同步码 1010… + 1B 帧开始定界符 10101011）</i></div>
+                            <div class="cg-f" style="flex:2.4"><b>目的 MAC</b><i>6B</i></div>
+                            <div class="cg-f" style="flex:2.4"><b>源 MAC</b><i>6B</i></div>
+                            <div class="cg-f" style="flex:0.9"><b>类型</b><i>2B</i></div>
+                            <div class="cg-f hl" style="flex:5"><b>数据</b><i>46 ~ 1500B</i></div>
+                            <div class="cg-f" style="flex:1.2"><b>FCS</b><i>4B</i></div>
+                        </div>
+                    </div>
+                    <div class="cg-cap">帧首部 = 6 + 6 + 2 = <b>14B</b>；帧尾 FCS = <b>4B</b>（以太网是<b>唯一「加头又加尾」</b>的常见协议）。<b>前导码不计入帧长</b>。</div>
+                    <ul class="cg-pts">
+                        <li><span class="cg-key">必考</span><b>最短帧 64B、最长 1518B</b>（= 14 + 1500 + 4，不含前导码）；加前导码 8B 则为 72B / 1526B。<b>数据字段最小 46B</b>，不足时<b>填充</b>。</li>
+                        <li><b>类型字段</b>：<code>0x0800</code> = IP ｜ <code>0x0806</code> = ARP ｜ <code>0x86DD</code> = IPv6。</li>
+                        <li><b>MAC 地址 48 位</b>（6B，全球唯一，烧写在网卡上）。<code>FF-FF-FF-FF-FF-FF</code> 为<b>广播地址</b>；第一字节最低位为 1 表示<b>组播</b>。</li>
+                        <li><span class="cg-key k2">易错</span>以太网提供<b>无连接、不可靠</b>服务：收到坏帧<b>直接丢弃</b>，不确认、不重传，可靠性交给上层 TCP。</li>
+                        <li><b>10BASE-T 等命名</b>：10 = 速率 10Mb/s，BASE = 基带传输，T = 双绞线。</li>
+                    </ul>
+                </div>
+
+                <div class="cg-block">
+                    <h3>⑦ 交换机、网桥与 VLAN <small>（自学习 + 冲突域/广播域）</small></h3>
+                    <ul class="cg-pts">
+                        <li><span class="cg-key">必考</span><b>交换机自学习</b>：收到帧时，把<b>源 MAC 与入端口</b>记入交换表；转发时查目的 MAC — 有表项则从对应端口<b>单播转发</b>，无表项则<b>从其它所有端口洪泛</b>。</li>
+                        <li><b>转发方式</b>：直通式（收到目的地址就转发，快、不检错）｜存储转发式（收完整帧并校验再转发，可靠、时延大）。</li>
+                        <li><span class="cg-key">必考</span><b>冲突域与广播域</b>：<br>
+                        · <b>集线器</b>：所有端口在<b>同一个冲突域、同一个广播域</b>；<br>
+                        · <b>交换机</b>：<b>每个端口是一个独立冲突域</b>，整个交换机仍是<b>一个广播域</b>；<br>
+                        · <b>路由器</b>：<b>隔离广播域</b>（每个接口一个广播域）。</li>
+                        <li><b>VLAN</b>：把一个物理交换机逻辑划分为多个广播域，<b>隔离广播、提高安全</b>。IEEE <code>802.1Q</code> 标签 4B（2B TPID + 2B TCI，含 12 位 VLAN ID，最多 4094 个）。</li>
+                        <li><b>生成树协议 STP</b>：在冗余链路中逻辑地阻塞部分端口，消除环路、避免广播风暴。</li>
+                    </ul>
+                </div>
+
+                <div class="cg-block">
+                    <h3>⑧ PPP 与 HDLC <small>（点对点协议对比）</small></h3>
+                    <div class="cg-tw">
+                        <table class="cg-tb">
+                            <thead><tr><th></th><th>PPP</th><th>HDLC</th></tr></thead>
+                            <tbody>
+                                <tr><td>面向</td><td><b>面向字节</b></td><td><b>面向比特</b></td></tr>
+                                <tr><td>透明传输</td><td>字节填充（0x7E 标志、0x7D 转义）</td><td><b>零比特填充</b></td></tr>
+                                <tr><td>可靠性</td><td><b>不提供</b>纠错与序号，只检错（FCS）</td><td>提供序号与确认，可可靠传输</td></tr>
+                                <tr><td>组成</td><td>LCP（链路控制）+ NCP（网络控制）+ 多种网络层协议封装</td><td>标志 / 地址 / 控制 / 信息 / FCS</td></tr>
+                                <tr><td>应用</td><td>拨号、宽带接入（PPPoE）</td><td>早期广域网链路</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <ul class="cg-pts">
+                        <li><span class="cg-key">必考</span>PPP <b>只检错不纠错</b>，且<b>不使用序号、不做流量控制</b>——因为可靠性由上层负责，「简单」是它的设计哲学。</li>
+                    </ul>
+                </div>
+
+            </div>
+        </section>
+
+        <!-- ============ ① 物理层 ============ -->
+        <section class="cg-layer cg-l1" id="L1">
+            <div class="cg-layer-head" onclick="cgToggle(this)">
+                <div class="cg-layer-no">①</div>
+                <div>
+                    <h2>物理层</h2>
+                    <div class="cg-layer-sub">码元与速率 · 奈奎斯特/香农 · 编码调制 · 信道复用 · 介质与设备</div>
+                </div>
+                <span class="cg-layer-arrow">▾ 折叠</span>
+            </div>
+            <div class="cg-layer-body">
+
+                <div class="cg-block">
+                    <h3>① 码元与两大速率 <small>（比特率 = 波特率 × log₂N）</small></h3>
+                    <ul class="cg-pts">
+                        <li><b>码元</b>：承载数据的一段基本波形。<b>N 种离散状态的一个码元可携带 <code>log<sub>2</sub>N</code> 个比特</b>。</li>
+                        <li><span class="cg-key">必考</span><b>波特率 R<sub>B</sub></b>（码元/秒，Baud）与 <b>比特率 R<sub>b</sub></b>（bit/s）的关系：<code>R<sub>b</sub> = R<sub>B</sub> × log<sub>2</sub>N</code>。</li>
+                        <li><b>例</b>：波特率 2000 Baud、每码元 4 种状态 → 比特率 = 2000 × 2 = <b>4000 bit/s</b>。若每码元 8 种状态则 ×3。</li>
+                    </ul>
+                </div>
+
+                <div class="cg-block">
+                    <h3>② 两大定理 <small>（算最大数据率，必出计算题）</small></h3>
+                    <div class="cg-tw">
+                        <table class="cg-tb">
+                            <thead><tr><th>定理</th><th>适用条件</th><th>公式</th><th>含义</th></tr></thead>
+                            <tbody>
+                                <tr>
+                                    <td><b>奈奎斯特准则</b></td>
+                                    <td>理想低通信道，<b>无噪声</b></td>
+                                    <td><code>C = 2W · log<sub>2</sub>N</code></td>
+                                    <td>带宽 W 决定了码元速率上限（2W 波特），再乘每码元比特数</td>
+                                </tr>
+                                <tr>
+                                    <td><b>香农定理</b></td>
+                                    <td>有<b>高斯噪声</b>的信道</td>
+                                    <td><code>C = W · log<sub>2</sub>(1 + S/N)</code></td>
+                                    <td>噪声限定了可用的码元数，<b>W 或信噪比越大，极限速率越大</b></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="cg-tip">
+                        <b>两道典型题</b><br>
+                        ① 带宽 3kHz、每个码元 4 种取值、无噪声：<code>C = 2×3000×log<sub>2</sub>4 = 12000 bit/s</code>。<br>
+                        ② 带宽 3kHz、信噪比 <b>30dB</b>：先换算 <code>S/N = 10<sup>30/10</sup> = 1000</code>，再算 <code>C = 3000×log<sub>2</sub>(1001) ≈ 3000×9.97 ≈ 30 kbit/s</code>。<br>
+                        <b>坑：题目给的是 dB，必须先换算成倍数 S/N 再代入！</b>
+                    </div>
+                </div>
+
+                <div class="cg-block">
+                    <h3>③ 编码与调制 <small>（数字↔数字 / 数字↔模拟 / 模拟→数字）</small></h3>
+                    <div class="cg-tw">
+                        <table class="cg-tb">
+                            <thead><tr><th>编码方式</th><th>规则</th><th>考点</th></tr></thead>
+                            <tbody>
+                                <tr><td><b>NRZ</b> 不归零</td><td>高电平=1，低电平=0</td><td>简单，<b>无法自同步</b>（长串同电平时收不到时钟）</td></tr>
+                                <tr><td><b>曼彻斯特</b></td><td>每个码元<b>中间必有一次跳变</b>（高→低=1，低→高=0）</td><td><b>自带时钟同步</b>；<b>频带宽度是数据率的 2 倍</b>（考点！）</td></tr>
+                                <tr><td><b>差分曼彻斯特</b></td><td>位中间总有跳变；<b>位开始处有跳变=0，无跳变=1</b></td><td>抗干扰能力更强</td></tr>
+                                <tr><td><b>4B/5B</b></td><td>4 位数据映射成 5 位码</td><td>提高编码效率（100Mb/s 以太网用）</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <ul class="cg-pts">
+                        <li><b>数字数据 → 模拟信号（调制）</b>：<code>ASK</code> 幅移键控 ｜ <code>FSK</code> 频移键控 ｜ <code>PSK</code> 相移键控 ｜ <code>QAM</code> 正交幅度调制（幅+相结合，<b>每码元承载更多比特</b>）。</li>
+                        <li><span class="cg-key">必考</span><b>模拟数据 → 数字信号（PCM）</b>三步：<em>采样 → 量化 → 编码</em>。采样必须满足<b>采样定理 <code>f ≥ 2f<sub>max</sub></code></b>（否则失真/混叠）。</li>
+                        <li><b>电话系统的经典数据</b>：语音最高 4kHz → 采样 8000 次/秒 → 每次量化编码 8 位 → <b>8000 × 8 = 64 kbit/s</b>。</li>
+                    </ul>
+                </div>
+
+                <div class="cg-block">
+                    <h3>④ 信道复用 <small>（五种复用 + CDMA 计算）</small></h3>
+                    <div class="cg-tw">
+                        <table class="cg-tb">
+                            <thead><tr><th>复用方式</th><th>划分维度</th><th>特点</th></tr></thead>
+                            <tbody>
+                                <tr><td><b>FDM 频分</b></td><td>频率</td><td>各用户占不同频段，同时发送，需<b>保护频带</b>防串扰</td></tr>
+                                <tr><td><b>TDM 时分</b></td><td>时间</td><td>各用户占固定时隙，<b>时隙固定分配、空闲也浪费</b></td></tr>
+                                <tr><td><b>STDM 统计时分</b></td><td>时间（按需）</td><td><b>按需分配时隙</b>，效率高于 TDM，但需地址标识</td></tr>
+                                <tr><td><b>WDM 波分</b></td><td>波长（光纤）</td><td>本质是光的频分复用，一根光纤跑多路</td></tr>
+                                <tr><td><b>CDM 码分</b></td><td>编码</td><td>各用户用<b>正交码片序列</b>，同频同时发送互不干扰</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <ul class="cg-pts">
+                        <li><span class="cg-key">必考</span><b>CDMA 计算套路</b>：每个站的码片序列互相<b>正交</b>（规格化内积为 0）。站发 1 → 发自己的码片序列；发 0 → 发<b>反码</b>；不发 → 全 0。接收时用该站码片序列与收到的信号做规格化内积：得 <b>+1 → 该站发了 1</b>，<b>−1 → 发了 0</b>，<b>0 → 没发</b>。</li>
+                    </ul>
+                </div>
+
+                <div class="cg-block">
+                    <h3>⑤ 传输介质与物理层设备 <small>（会看会选即可）</small></h3>
+                    <ul class="cg-pts">
+                        <li><b>导向介质</b>：双绞线 UTP/STP（成本低、易受干扰）｜ 同轴电缆（抗干扰较好）｜ <b>光纤</b>（带宽极大、抗电磁干扰、衰减小、保密性好，分<b>单模</b>（远距离、贵）与<b>多模</b>（近距离））。</li>
+                        <li><b>非导向介质</b>：无线电波、微波（直线传播，需中继）、红外。</li>
+                        <li><span class="cg-key">必考</span><b>中继器</b>：对信号<b>整形、放大、再生</b>，仅延长传输距离，<b>不隔离冲突域</b>；<b>集线器（Hub）</b>是多端口中继器，<b>所有端口共享带宽、同属一个冲突域</b>。</li>
+                        <li><b>物理层不寻址</b>：它只负责在介质上透明地传输比特流，不关心比特的含义，也不识别地址。</li>
+                    </ul>
+                </div>
+
+            </div>
+        </section>
+
+        <!-- ============ ★ 跨层串联 ============ -->
+        <section class="cg-layer cg-lx" id="LX">
+            <div class="cg-layer-head" onclick="cgToggle(this)">
+                <div class="cg-layer-no">★</div>
+                <div>
+                    <h2>跨层串联</h2>
+                    <div class="cg-layer-sub">封装解封装 · 四类地址 · 设备与域 · 端到端全过程</div>
+                </div>
+                <span class="cg-layer-arrow">▾ 折叠</span>
+            </div>
+            <div class="cg-layer-body">
+
+                <div class="cg-block">
+                    <h3>① 封装与解封装全流程 <small>（自顶向下的「层层加壳」，必背首部长度）</small></h3>
+                    <div class="cg-enc">
+                        <div class="cg-enc-row" style="--ec:#8b5cf6;--eb:rgba(139,92,246,.12)">
+                            <div class="cg-enc-tag">传输层<br>TCP 报文段</div>
+                            <div class="cg-enc-box">
+                                <div class="cg-enc-h">TCP 首部<i>20B</i></div>
+                                <div class="cg-enc-in on">数据（应用层报文）</div>
+                            </div>
+                        </div>
+
+                        <div class="cg-enc-arrow">↓ 加 <b>20B</b> IP 首部 → 成为 IP 数据报</div>
+
+                        <div class="cg-enc-row" style="--ec:#059669;--eb:rgba(5,150,105,.12)">
+                            <div class="cg-enc-tag">网络层<br>IP 数据报</div>
+                            <div class="cg-enc-box">
+                                <div class="cg-enc-h">IP 首部<i>20B</i></div>
+                                <div class="cg-enc-in">
+                                    <span style="border:1px dashed #8b5cf6;border-radius:4px;padding:5px 10px">
+                                        TCP 首部 20B ＋ 数据（即整个 TCP 报文段）
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="cg-enc-arrow">↓ 加 <b>14B</b> MAC 首部 ＋ <b>4B</b> FCS 尾部 → 成为以太网帧</div>
+
+                        <div class="cg-enc-row" style="--ec:#ea580c;--eb:rgba(234,88,12,.12)">
+                            <div class="cg-enc-tag">链路层<br>以太网 MAC 帧</div>
+                            <div class="cg-enc-box">
+                                <div class="cg-enc-h">MAC 首部<i>14B<br>目的 6 ＋ 源 6 ＋ 类型 2</i></div>
+                                <div class="cg-enc-in">
+                                    <span style="border:1px dashed #059669;border-radius:4px;padding:5px 10px">
+                                        IP 首部 20B ＋ TCP 首部 20B ＋ 数据（整个 IP 数据报，46~1500B）
+                                    </span>
+                                </div>
+                                <div class="cg-enc-h" style="border-right:none;border-left:2px dashed var(--ec)">FCS<i>4B</i></div>
+                            </div>
+                        </div>
+
+                        <div class="cg-enc-arrow">↓ 加 <b>8B</b> 前导码，转为比特流在线路上传输</div>
+
+                        <div class="cg-enc-row" style="--ec:#0891b2;--eb:rgba(8,145,178,.12)">
+                            <div class="cg-enc-tag">物理层<br>比特流</div>
+                            <div class="cg-enc-box">
+                                <div class="cg-enc-h">前导码<i>8B<br>7B 同步码 ＋ 1B 定界符</i></div>
+                                <div class="cg-enc-in">
+                                    <span style="border:1px dashed #ea580c;border-radius:4px;padding:5px 10px">
+                                        14B MAC 首部 ＋ IP 数据报 ＋ 4B FCS（整帧被转换成 0101… 的比特流）
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="cg-tip">
+                        <b>首部长度速记（考试反复考）：</b><code>TCP 首部 20B</code> ｜ <code>IP 首部 20B</code> ｜ <code>MAC 首部 14B ＋ MAC 尾部 4B</code> ｜ <code>前导码 8B（不计入帧长）</code>。<br>
+                        <b>最小以太网帧 = 64B</b>（14＋46＋4），<b>最大 1518B</b>（14＋1500＋4）。
+                    </div>
+                    <ul class="cg-pts">
+                        <li><span class="cg-key">必考</span><b>解封装</b>：接收端自下而上剥壳 —— 先按 FCS 校验收帧（链路层），再看类型字段交给 IP（网络层），再按协议字段交给 TCP（传输层），最后按端口号交给应用进程（应用层）。</li>
+                        <li><b>中间路由器</b>：只解封装到<b>网络层</b>（查路由表转发），然后<b>重新封装新的 MAC 首部</b>（换下一跳地址）——所以<b>MAC 地址逐跳改变，IP 地址全程不变</b>。</li>
+                        <li><b>端到端 vs 点到点</b>：传输层与应用层是<b>端到端</b>（只有两端处理）；网络层以下（含）是<b>点到点</b>（每一跳都要处理）。</li>
+                    </ul>
+                </div>
+
+                <div class="cg-block">
+                    <h3>② 四类地址体系 <small>（每一层有各自的「门牌号」）</small></h3>
+                    <div class="cg-tw">
+                        <table class="cg-tb">
+                            <thead><tr><th>所在层</th><th>地址类型</th><th>长度</th><th>作用范围</th><th>分配者</th></tr></thead>
+                            <tbody>
+                                <tr><td><b>应用层</b></td><td>域名 / URL</td><td>可变</td><td>全球</td><td>ICANN 及注册商</td></tr>
+                                <tr><td><b>传输层</b></td><td><b>端口号</b></td><td>16 位</td><td>本主机内的进程</td><td>系统 / 应用申请</td></tr>
+                                <tr><td><b>网络层</b></td><td><b>IP 地址</b></td><td>32 位（IPv6 128 位）</td><td>全网络 / 全球</td><td>ISP / DHCP</td></tr>
+                                <tr><td><b>数据链路层</b></td><td><b>MAC 地址</b></td><td>48 位</td><td>本地链路（一跳内）</td><td>网卡厂商烧写</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="cg-flow">
+                        <div class="cg-flow-i"><b>域名</b><i>www.abc.com</i></div>
+                        <span class="cg-flow-a">→DNS→</span>
+                        <div class="cg-flow-i"><b>IP 地址</b><i>192.168.1.5</i></div>
+                        <span class="cg-flow-a">→ARP→</span>
+                        <div class="cg-flow-i"><b>MAC 地址</b><i>00-1A-2B-…</i></div>
+                        <span class="cg-flow-a">→→</span>
+                        <div class="cg-flow-i"><b>端口号</b><i>80 / 443</i></div>
+                    </div>
+                    <ul class="cg-pts">
+                        <li><span class="cg-key">必考</span><b>为什么 IP 与 MAC 都需要？</b>IP 是<b>逻辑地址</b>，用于跨网段的路由与统一编址（可变、体现所在网络）；MAC 是<b>物理地址</b>，用于<b>同一链路内</b>精确定位网卡（不可变、全球唯一）。二者分工：<em>IP 负责"送到哪个网络"，MAC 负责"送到哪台设备"</em>。</li>
+                    </ul>
+                </div>
+
+                <div class="cg-block">
+                    <h3>③ 设备、层次与冲突域/广播域 <small>（一表定音）</small></h3>
+                    <div class="cg-tw">
+                        <table class="cg-tb">
+                            <thead><tr><th>设备</th><th>工作层</th><th>隔离冲突域</th><th>隔离广播域</th><th>关键词</th></tr></thead>
+                            <tbody>
+                                <tr><td><b>中继器 / 集线器</b></td><td>物理层</td><td><b>否</b></td><td><b>否</b></td><td>放大再生信号，共享带宽</td></tr>
+                                <tr><td><b>网桥 / 交换机</b></td><td>数据链路层</td><td><b>是</b>（每端口一个）</td><td><b>否</b></td><td>自学习，VLAN 可划分广播域</td></tr>
+                                <tr><td><b>路由器</b></td><td>网络层</td><td><b>是</b></td><td><b>是</b>（每接口一个）</td><td>查路由表，TTL 减 1</td></tr>
+                                <tr><td><b>网关</b></td><td>应用层</td><td>—</td><td>—</td><td>协议转换（如邮件网关）</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <ul class="cg-pts">
+                        <li><span class="cg-key k2">常错</span><b>「交换机隔离广播域」是错的</b>——交换机默认不隔离广播域（除非划 VLAN）；<b>只有路由器（或 VLAN）能隔离广播域</b>。</li>
+                        <li><b>域的计算</b>：n 台集线器互联仍只有 <b>1 个冲突域</b>；一台 24 口交换机 + 若干集线器，则冲突域 = 集线器上联的端口数，广播域仍为 1（若不划 VLAN）。</li>
+                    </ul>
+                </div>
+
+                <div class="cg-block">
+                    <h3>④ 双重（甚至三重）控制机制 <small>（同一件事在不同层各做一遍）</small></h3>
+                    <div class="cg-tw">
+                        <table class="cg-tb">
+                            <thead><tr><th>功能</th><th>数据链路层</th><th>传输层</th></tr></thead>
+                            <tbody>
+                                <tr><td><b>差错控制</b></td><td>CRC 检错，坏帧丢弃（<b>点到点</b>）</td><td>校验和 + 确认 + 重传（<b>端到端</b>）</td></tr>
+                                <tr><td><b>流量控制</b></td><td>滑动窗口（GBN / SR，<b>相邻结点间</b>）</td><td>接收窗口 rwnd（<b>两端进程间</b>）</td></tr>
+                                <tr><td><b>拥塞控制</b></td><td>—</td><td>慢开始 / 拥塞避免 / 快重传快恢复</td></tr>
+                                <tr><td><b>可靠传输</b></td><td>可选（PPP 就不做）</td><td>TCP 必做，UDP 不做</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <ul class="cg-pts">
+                        <li><span class="cg-key">理解</span><b>「链路层负责一跳，传输层负责全程」</b>——链路层的可靠只保证一段线路，若中间路由器出问题仍可能丢包，所以端到端的可靠性必须由 TCP 兜底。</li>
+                    </ul>
+                </div>
+
+                <div class="cg-block">
+                    <h3>⑤ 一张图走完：从输入网址到页面显示 <small>（综合题的答题骨架）</small></h3>
+                    <div class="cg-flow">
+                        <div class="cg-flow-i"><b>① DNS 解析</b><i>应用层 · UDP 53<br>域名 → IP</i></div>
+                        <span class="cg-flow-a">→</span>
+                        <div class="cg-flow-i"><b>② ARP 求网关 MAC</b><i>若目的不在本网<br>先解析默认网关</i></div>
+                        <span class="cg-flow-a">→</span>
+                        <div class="cg-flow-i"><b>③ TCP 三次握手</b><i>传输层 · 建立连接</i></div>
+                        <span class="cg-flow-a">→</span>
+                        <div class="cg-flow-i"><b>④ 发 HTTP 请求</b><i>应用层 → 逐层封装</i></div>
+                        <span class="cg-flow-a">→</span>
+                        <div class="cg-flow-i"><b>⑤ 逐跳转发</b><i>每跳换 MAC、TTL−1<br>IP 不变</i></div>
+                        <span class="cg-flow-a">→</span>
+                        <div class="cg-flow-i"><b>⑥ 服务器解封装</b><i>按端口交给 Web 进程</i></div>
+                        <span class="cg-flow-a">→</span>
+                        <div class="cg-flow-i"><b>⑦ 返回响应</b><i>HTTP 报文反向封装</i></div>
+                        <span class="cg-flow-a">→</span>
+                        <div class="cg-flow-i"><b>⑧ 四次挥手</b><i>请求结束后释放</i></div>
+                    </div>
+                    <ul class="cg-pts">
+                        <li><span class="cg-key">必考</span><b>每一跳变化的东西</b>：MAC 地址、FCS、帧长、TTL、首部校验和；<b>不变的东西</b>：IP 地址、TCP 端口、seq/ack 序号、应用层报文内容。</li>
+                        <li><b>总时延</b> = 各跳传播时延 + 传输时延 + 处理时延 + 排队时延；RTT 计算题里通常只保留<b>传播时延与传输时延</b>，其余按题目"忽略"处理。</li>
+                        <li><b>综合题答题顺序推荐</b>：先分层定位考点（这是哪一层的问题）→ 写出该层协议与字段 → 再算数值 → 最后补一句"为什么这样设计"（如"防止失效连接"）。</li>
+                    </ul>
+                </div>
+
+            </div>
+        </section>
+
+
+
+    </main>
+
+    <button class="cg-fab" id="cgFab" onclick="window.scrollTo({top:0,behavior:'smooth'})" title="回到顶部">↑</button>
+
+    <script src="js/common.js"></script>
+    <script src="js/background.js"></script>
+    <script>
+        // 层折叠/展开（状态不持久化：图谱每次打开都完整展开，便于通读）
+        function cgToggle(head) {
+            const sec = head.closest('.cg-layer');
+            sec.classList.toggle('collapsed');
+            head.querySelector('.cg-layer-arrow').textContent =
+                sec.classList.contains('collapsed') ? '▸ 展开' : '▾ 折叠';
+        }
+
+        function cgToggleAll() {
+            const secs = document.querySelectorAll('.cg-layer');
+            const anyOpen = [...secs].some(s => !s.classList.contains('collapsed'));
+            secs.forEach(s => {
+                s.classList.toggle('collapsed', anyOpen);
+                const a = s.querySelector('.cg-layer-arrow');
+                if (a) a.textContent = anyOpen ? '▸ 展开' : '▾ 折叠';
+            });
+            document.getElementById('cgFoldBtn').textContent = anyOpen ? '展开全部' : '折叠全部';
+        }
+
+        // 跳到某层时自动展开该层
+        document.querySelectorAll('.cg-jump a').forEach(a => {
+            a.addEventListener('click', () => {
+                const sec = document.querySelector(a.getAttribute('href'));
+                if (sec && sec.classList.contains('collapsed')) {
+                    sec.classList.remove('collapsed');
+                    const arr = sec.querySelector('.cg-layer-arrow');
+                    if (arr) arr.textContent = '▾ 折叠';
+                }
+            });
+        });
+
+        // 回到顶部按钮：滚动超过一屏才出现
+        window.addEventListener('scroll', () => {
+            document.getElementById('cgFab').classList.toggle('show', window.scrollY > 600);
+        }, { passive: true });
+    </script>
+</body>
+</html>

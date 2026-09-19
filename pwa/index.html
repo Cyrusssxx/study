@@ -127,7 +127,9 @@
                         </div>` : ''}
                         <div class="card-note-row">
                             <a href="notes.html?subject=${key}" class="btn btn-note">📖 知识笔记</a>
-                            <a href="map.html?subject=${key}" class="btn btn-map" title="思维导图：大纲式阅读 + 划词高亮批注">🗺️ 思维导图</a>
+                            ${key === 'cn'
+                                ? `<a href="cn_graph.html" class="btn btn-map" title="计网分层考点图谱：自顶向下五层贯通 · OSI七层/四层/五层对照 · 全是考点">🧭 分层考点图谱</a>`
+                                : `<a href="map.html?subject=${key}" class="btn btn-map" title="思维导图：大纲式阅读 + 划词高亮批注">🗺️ 思维导图</a>`}
                         </div>
                     </div>`;
                 }
