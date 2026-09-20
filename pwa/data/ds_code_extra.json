@@ -2,7 +2,7 @@
   "subject": "数据结构代码题",
   "subject_key": "ds_code_extra",
   "name": "数据结构教材算法题精选（王道课后习题）",
-  "total": 8,
+  "total": 31,
   "questions": [
     {
       "id": "ds_extra_seq_1",
@@ -215,6 +215,627 @@
             "thought": "以表首元素为基准对 [low, high] 做一趟划分，基准落到位置 m：若 m == k 则基准即第 k 小元素，直接返回；若 m > k 则答案在左区间，递归 [low, m-1]；若 m < k 则在右区间，递归 [m+1, high]。因为每趟只深入一侧，期望规模减半。",
             "code": "int Partition(SqList &L, int low, int high)\n{\n    ElemType pivot = L.data[low];\n    while (low < high) {\n        while (low < high && L.data[high] >= pivot) high--;\n        L.data[low] = L.data[high];\n        while (low < high && L.data[low] <= pivot) low++;\n        L.data[high] = L.data[low];\n    }\n    L.data[low] = pivot;        // 基准就位\n    return low;                 // 返回基准最终位置\n}\nElemType Kth(SqList &L, int low, int high, int k)\n{\n    if (low > high) return -1;              // 越界保护\n    int m = Partition(L, low, high);        // 一趟划分\n    if (m == k) return L.data[m];           // 恰为第 k 小\n    if (m > k) return Kth(L, low, m - 1, k);\n    else       return Kth(L, m + 1, high, k);\n}\n// 调用：Kth(L, 0, L.length-1, k-1)（k 从 1 计 → 下标 k-1）",
             "complexity": "时间复杂度：平均 O(n)，最坏 O(n²)（每次划分极不均衡时）   空间复杂度：O(log n)（递归栈，平均）",
+            "note": ""
+          }
+        ]
+      }
+    },
+    {
+      "id": "ds_extra_list_1",
+      "year": null,
+      "real": "",
+      "kaodian": "单链表的基本功训练",
+      "module": "教材习题",
+      "source": "王道书 2.3.7_大题_1",
+      "content_text": "【教材习题】设计一个递归算法，删除不带头结点的单链表 L 中所有值为 x 的结点。",
+      "answer_full": "",
+      "figs": null,
+      "analysis": "考点：递归删除的两种写法（先删当前再递归 / 递归结果接回链表）。易错点：① 不带头结点时头指针本身可能被删，要用引用参数（&L）才能改头指针；② 释放结点的时机要在断链之后；③ 递归终止条件是 L 为空。",
+      "weblink": "",
+      "solutions": {
+        "list": [
+          {
+            "tag": "解法1",
+            "kind": "递归（引用头指针）",
+            "name": "先删当前结点再递归处理后续",
+            "analysis": "",
+            "thought": "对当前结点 L：若 L 为空递归终止；若 L->data==x，暂存 p=L，L 指向下一个结点并 free(p)，再递归处理新 L；否则递归处理 L->next（要把返回的新链表接回 L->next）。不带头结点时靠引用参数修改头指针。",
+            "code": "void delX(LinkList &L, ElemType x)\n{\n    if (L == NULL) return;              // 递归终止\n    if (L->data == x) {                 // 当前结点值等于 x\n        LNode *p = L;\n        L = L->next;                    // 改头指针（引用参数生效）\n        free(p);\n        delX(L, x);                     // 继续处理剩余\n    } else {\n        delX(L->next, x);               // 递归删除后续，结果接回\n    }\n}",
+            "complexity": "时间复杂度：O(n)（每个结点访问一次）   空间复杂度：O(n)（递归栈深度）",
+            "note": ""
+          }
+        ]
+      }
+    },
+    {
+      "id": "ds_extra_list_2",
+      "year": null,
+      "real": "",
+      "kaodian": "单链表的基本功训练",
+      "module": "教材习题",
+      "source": "王道书 2.3.7_大题_2",
+      "content_text": "【教材习题】在带头结点的单链表 L 中，删除所有值为 x 的结点，并释放其空间。假设值为 x 的结点不唯一。",
+      "answer_full": "",
+      "figs": null,
+      "analysis": "考点：删除链表结点必须知道**前驱**。易错点：① p 指向当前结点、pre 指向前驱；② 删除时 pre 不动、p 指向 p->next（因为 pre->next 已被改写）；③ 不删除时 pre 和 p 同步后移；④ 用临时指针 q 承接被删结点再 free，防止断链后丢失。",
+      "weblink": "",
+      "solutions": {
+        "list": [
+          {
+            "tag": "解法1",
+            "kind": "前驱后继双指针",
+            "name": "pre 记录前驱，遇 x 断链释放",
+            "analysis": "",
+            "thought": "用指针 pre 始终指向当前结点 p 的前驱：若 p->data==x，则 pre->next=p->next 并 free(p)，p=pre->next 继续；否则 pre=p、p=p->next。因为每次都更新了前驱的 next，删除后链表不断。",
+            "code": "void delX2(LinkList &L, ElemType x)\n{\n    LNode *pre = L, *p = L->next;       // pre 为 p 的前驱\n    while (p != NULL) {\n        if (p->data == x) {\n            LNode *q = p;               // 暂存被删结点\n            pre->next = p->next;        // 前驱跳过一个结点\n            p = p->next;                // p 后移（pre 不动）\n            free(q);\n        } else {\n            pre = p;                    // 同步后移\n            p = p->next;\n        }\n    }\n}",
+            "complexity": "时间复杂度：O(n)   空间复杂度：O(1)",
+            "note": ""
+          }
+        ]
+      }
+    },
+    {
+      "id": "ds_extra_list_3",
+      "year": null,
+      "real": "",
+      "kaodian": "单链表的\"原地逆置\"技巧",
+      "module": "教材习题",
+      "source": "王道书 2.3.7_大题_3",
+      "content_text": "【教材习题】设 L 为带头结点的单链表，编写算法实现从尾到头反向输出每个结点的值。",
+      "answer_full": "",
+      "figs": null,
+      "analysis": "考点：逆序输出的两种手段——**递归**（利用递归栈天然逆序）或**栈**。易错点：① 递归先输出后继再输出当前；② 调用时从第一个数据结点 L->next 开始递归；③ 不能直接就地逆置后输出（题目只要输出顺序倒过来，不要求真正逆置，逆置则改变了原链表）。",
+      "weblink": "",
+      "solutions": {
+        "list": [
+          {
+            "tag": "解法1",
+            "kind": "递归逆序输出",
+            "name": "先递归后继，再输出当前",
+            "analysis": "",
+            "thought": "从 L->next 起递归：先递归处理下一个结点，返回后再输出当前结点值——由于递归深处先执行输出，自然实现从尾到头。不改变链表本身。",
+            "code": "void ReversePrint(LNode *p)\n{\n    if (p == NULL) return;\n    ReversePrint(p->next);          // 先处理后继\n    printf(\"%d \", p->data);         // 后输出当前 → 从尾到头\n}\n// 调用：ReversePrint(L->next);",
+            "complexity": "时间复杂度：O(n)   空间复杂度：O(n)（递归栈）",
+            "note": ""
+          }
+        ]
+      }
+    },
+    {
+      "id": "ds_extra_list_4",
+      "year": null,
+      "real": "",
+      "kaodian": "单链表的基本功训练",
+      "module": "教材习题",
+      "source": "王道书 2.3.7_大题_4",
+      "content_text": "【教材习题】试编写在带头结点的单链表 L 中删除一个最小值结点的高效算法（假设最小值结点唯一），并返回被删结点的值。",
+      "answer_full": "",
+      "figs": null,
+      "analysis": "考点：一遍扫描同时记录最小值结点**及其前驱**（删除需要前驱）。易错点：① 不能只记当前最小值结点，必须记录前驱 pre_min；② 边扫描边更新 min 与 minpre；③ 删除通过 minpre->next = min->next 完成，再 free；④ 空表与单结点边界处理。",
+      "weblink": "",
+      "solutions": {
+        "list": [
+          {
+            "tag": "解法1",
+            "kind": "前驱指针跟踪",
+            "name": "扫描一遍记录最小结点及其前驱",
+            "analysis": "",
+            "thought": "初始化 p=L->next、pre=L，并令 minpre=L、minp=L->next。扫描过程中若 p->data < minp->data，则更新 minp=p、minpre=pre；pre、p 同步后移。结束后通过 minpre 把 minp 摘下并释放，返回其值。",
+            "code": "ElemType delMin(LinkList L)\n{\n    if (L->next == NULL) return -1;          // 空表\n    LNode *pre = L, *p = L->next;            // 工作指针\n    LNode *minpre = L, *minp = L->next;      // 最小值及其前驱\n    while (p != NULL) {\n        if (p->data < minp->data) { minpre = pre; minp = p; }\n        pre = p; p = p->next;\n    }\n    ElemType v = minp->data;\n    minpre->next = minp->next;               // 摘下\n    free(minp);\n    return v;\n}",
+            "complexity": "时间复杂度：O(n)（一趟扫描）   空间复杂度：O(1)",
+            "note": ""
+          }
+        ]
+      }
+    },
+    {
+      "id": "ds_extra_list_6",
+      "year": null,
+      "real": "",
+      "kaodian": "单链表的\"原地逆置\"技巧",
+      "module": "教材习题",
+      "source": "王道书 2.3.7_大题_6",
+      "content_text": "【教材习题】有一个带头结点的单链表 L，设计一个算法使其元素递增有序。",
+      "answer_full": "",
+      "figs": null,
+      "analysis": "考点：链表的直接插入排序——**断链后逐个摘结点、按序插入已排序部分**。易错点：① 先把链表断开（L->next=NULL），逐个从原链摘 p；② 找插入位置要在已排序区从头扫（temp、pre）；③ r 暂存 p 的后继防止断链；④ 时间复杂度 O(n²)，额外空间 O(1)。",
+      "weblink": "",
+      "solutions": {
+        "list": [
+          {
+            "tag": "解法1",
+            "kind": "直接插入排序",
+            "name": "断链后逐个摘结点插入有序区",
+            "analysis": "",
+            "thought": "将 L 与原链表断开（L->next=NULL，此时无数据），然后每次从原链摘下一个结点 p（用 r 保存 p->next），在 L 的有序区从头部扫描找到第一个大于 p->data 的结点 temp，把 p 插在 temp 前（pre 是 temp 的前驱）。直到原链取空。",
+            "code": "void SortList(LinkList &L)\n{\n    LNode *p = L->next, *r;              // r 保存 p 的后继\n    L->next = NULL;                      // 断开，L 变为空有序链\n    while (p != NULL) {\n        r = p->next;                     // 先存后继\n        LNode *temp = L->next, *pre = L; // 在有序区找插入位置\n        while (temp != NULL && temp->data < p->data) { pre = temp; temp = temp->next; }\n        p->next = temp;                  // 前插到 pre 之后、temp 之前\n        pre->next = p;\n        p = r;                           // 处理原链下一个\n    }\n}",
+            "complexity": "时间复杂度：O(n²)（最坏）   空间复杂度：O(1)",
+            "note": ""
+          }
+        ]
+      }
+    },
+    {
+      "id": "ds_extra_list_7",
+      "year": null,
+      "real": "",
+      "kaodian": "单链表的基本功训练",
+      "module": "教材习题",
+      "source": "王道书 2.3.7_大题_7",
+      "content_text": "【教材习题】设在一个带头结点的单链表中所有元素结点的数据值无序，试编写一个函数，删除表中所有介于给定的两个值（作为函数参数给出）之间的元素（若存在）。",
+      "answer_full": "",
+      "figs": null,
+      "analysis": "考点：单链表按条件删除——前驱后继双指针 + 值域判断。易错点：① 值域是开区间 (s, t) 还是闭区间要看题（本处以 s<data<t）；② 删除后 pre 不动、p 指向摘下结点的后继；③ 与 2.3.7-2 删除值=x 完全同构，只是判断条件换成值域。",
+      "weblink": "",
+      "solutions": {
+        "list": [
+          {
+            "tag": "解法1",
+            "kind": "前驱后继双指针",
+            "name": "值域判断 + 断链释放",
+            "analysis": "",
+            "thought": "pre 始终指向 p 的前驱：若 s < p->data 且 p->data < t，则删除 p（pre->next=p->next，free(p)，p=pre->next）；否则 pre=p、p=p->next。一趟完成。",
+            "code": "void delRange(LinkList &L, ElemType s, ElemType t)\n{\n    LNode *pre = L, *p = L->next;\n    while (p != NULL) {\n        if (p->data > s && p->data < t) {   // 值落在 (s,t) 内\n            LNode *q = p;\n            pre->next = p->next;\n            p = p->next;\n            free(q);\n        } else { pre = p; p = p->next; }\n    }\n}",
+            "complexity": "时间复杂度：O(n)   空间复杂度：O(1)",
+            "note": ""
+          }
+        ]
+      }
+    },
+    {
+      "id": "ds_extra_list_8",
+      "year": null,
+      "real": "",
+      "kaodian": "单链表的其他训练题",
+      "module": "教材习题",
+      "source": "王道书 2.3.7_大题_8",
+      "content_text": "【教材习题】给定两个单链表，编写算法找出两个链表的公共结点。（公共结点：地址相同的同一个结点，两链自该结点起合为一条链）",
+      "answer_full": "",
+      "figs": null,
+      "analysis": "考点：公共结点 = 两链从某结点起地址完全相同 → **长度差先行法**：长链先走 |len1-len2| 步，再同步走，遇到地址相等的第一个结点即公共结点。易错点：① 比的是**地址**（p1==p2）不是值；② 先求两链长度；③ 两链无公共结点时返回 NULL。",
+      "weblink": "",
+      "solutions": {
+        "list": [
+          {
+            "tag": "解法1",
+            "kind": "长度对齐同步走",
+            "name": "长链先走差值，再同步找首个相同地址",
+            "analysis": "",
+            "thought": "先分别遍历求 len1、len2；较长链表指针先走 |len1-len2| 步，使两指针到尾部剩余长度相同；然后同步后移并比较地址，第一个 p1==p2 的结点即公共结点（没有则 NULL）。",
+            "code": "int Len(LinkList L) { int n = 0; L = L->next; while (L) { n++; L = L->next; } return n; }\nLNode *findCommon(LinkList A, LinkList B)\n{\n    int na = Len(A), nb = Len(B), d = na > nb ? na - nb : nb - na;\n    LNode *p = A->next, *q = B->next;\n    if (na > nb) while (d--) p = p->next;\n    else         while (d--) q = q->next;\n    while (p != NULL && p != q) { p = p->next; q = q->next; }\n    return p;                           // 公共结点或 NULL\n}",
+            "complexity": "时间复杂度：O(len1+len2)   空间复杂度：O(1)",
+            "note": ""
+          }
+        ]
+      }
+    },
+    {
+      "id": "ds_extra_list_9",
+      "year": null,
+      "real": "",
+      "kaodian": "单链表的其他训练题",
+      "module": "教材习题",
+      "source": "王道书 2.3.7_大题_9",
+      "content_text": "【教材习题】给定一个带头结点的单链表 L（结点结构 data,next），试写出算法：按递增次序输出单链表中各结点的数据元素，并释放结点所占的存储空间（要求：不允许使用数组作为辅助空间）。",
+      "answer_full": "",
+      "figs": null,
+      "analysis": "考点：每轮找**最小值**输出并释放，重复 n 轮 → O(n²)；不能用数组所以不能先排序后输出。易错点：① 每轮要记录最小值结点及其前驱（删除需要）；② 找完一轮就摘下释放；③ 时间复杂度 O(n²) 是题目\"不用数组\"限制下的下界，直接写即可。",
+      "weblink": "",
+      "solutions": {
+        "list": [
+          {
+            "tag": "解法1",
+            "kind": "每轮取最小并删除",
+            "name": "重复 n 轮：找最小→输出→释放",
+            "analysis": "",
+            "thought": "外层 while 直到链表为空：每轮扫描剩余链表，记录最小结点 minp 及其前驱 minpre，输出 minp->data，通过 minpre 摘下并 free。下一轮在剩余结点中再找最小，自然按递增输出。",
+            "code": "void delMinPrint(LinkList &L)\n{\n    while (L->next != NULL) {\n        LNode *pre = L, *p = L->next;\n        LNode *minpre = L, *minp = L->next;\n        while (p != NULL) {\n            if (p->data < minp->data) { minpre = pre; minp = p; }\n            pre = p; p = p->next;\n        }\n        printf(\"%d \", minp->data);      // 输出当前最小值\n        minpre->next = minp->next;      // 摘下\n        free(minp);\n    }\n    printf(\"\\n\");\n}",
+            "complexity": "时间复杂度：O(n²)（每轮 O(n)，n 轮；题目禁数组下的必然）   空间复杂度：O(1)",
+            "note": ""
+          }
+        ]
+      }
+    },
+    {
+      "id": "ds_extra_list_10",
+      "year": null,
+      "real": "",
+      "kaodian": "单链表的其他训练题",
+      "module": "教材习题",
+      "source": "王道书 2.3.7_大题_10",
+      "content_text": "【教材习题】将一个带头结点的单链表 A 分解为两个带头结点的单链表 A 和 B，使得 A 中含有原表中序号为奇数的元素，B 中含有序号为偶数的元素，且保持其相对顺序不变。",
+      "answer_full": "",
+      "figs": null,
+      "analysis": "考点：按位置奇偶拆分 + **尾插法保持相对顺序**。易错点：① 用计数（奇数/偶数交替）或布尔标记区分；② 新表 B 也带头结点；③ 用尾插法需维护尾指针，防止破坏顺序；④ 原 A 表被拆完后要置空尾指针。",
+      "weblink": "",
+      "solutions": {
+        "list": [
+          {
+            "tag": "解法1",
+            "kind": "尾插法交替",
+            "name": "号奇数进 A、偶数进 B，尾插保持顺序",
+            "analysis": "",
+            "thought": "用布尔变量奇偶标记：每摘下一个结点，按标记尾插入 A 或 B 并切换标记（尾指针 ra、rb 维护）。原链拆完后 ra->next=NULL、rb->next=NULL。",
+            "code": "void split(LinkList A, LinkList &B)\n{\n    B = (LNode*)malloc(sizeof(LNode));  B->next = NULL;  // B 带头结点\n    LNode *ra = A, *rb = B;             // 两表尾指针\n    LNode *p = A->next;\n    A->next = NULL;                     // 断开\n    int odd = 1;                        // 从 1 号开始标记奇偶\n    while (p != NULL) {\n        LNode *r = p->next;\n        if (odd) { ra->next = p; ra = p; }     // 奇数 → A\n        else    { rb->next = p; rb = p; }     // 偶数 → B\n        odd = !odd;\n        p = r;\n    }\n    ra->next = NULL; rb->next = NULL;\n}",
+            "complexity": "时间复杂度：O(n)   空间复杂度：O(1)",
+            "note": ""
+          }
+        ]
+      }
+    },
+    {
+      "id": "ds_extra_list_11",
+      "year": null,
+      "real": "",
+      "kaodian": "针对\"双链表\"的训练",
+      "module": "教材习题",
+      "source": "王道书 2.3.7_大题_11",
+      "content_text": "【教材习题】设 C={a1,b1,a2,b2,…,an,bn} 为线性表，采用带头结点的 hc 单链表存放。设计一个就地算法，将其拆分为两个线性表，使得 A={a1,a2,…,an}，B={bn,…,b2,b1}。",
+      "answer_full": "",
+      "figs": null,
+      "analysis": "考点：交替拆链 + B 用**头插法**实现 b 序的逆序（bn…b1）。易错点：① A 保持原顺序用尾插，B 要逆序用头插（头插到 B 头结点后）；② 每摘两个结点为一组（a 尾插 A、b 头插 B）；③ 就地 = 不新建结点，只改指针；④ 循环结束后注意 A、B 尾指针置空。",
+      "weblink": "",
+      "solutions": {
+        "list": [
+          {
+            "tag": "解法1",
+            "kind": "尾插 A + 头插 B",
+            "name": "a 尾插保持序，b 头插得逆序",
+            "analysis": "",
+            "thought": "指针 p 遍历 hc：每轮摘一个 a（尾插入 A，ra 维护）、再摘一个 b（头插到 B->next 前）。因为 b 按 a1->b1, a2->b2 顺序摘出，头插后 B 中为 bn…b2,b1，正好是题目要求。",
+            "code": "void splitAB(LinkList hc, LinkList &A, LinkList &B)\n{\n    A = (LNode*)malloc(sizeof(LNode)); A->next = NULL;\n    B = (LNode*)malloc(sizeof(LNode)); B->next = NULL;\n    LNode *ra = A, *p = hc->next;          // ra 为 A 尾\n    while (p != NULL) {\n        LNode *r = p->next;                // 记录后继（可能是空）\n        ra->next = p; ra = p;              // a 尾插进 A\n        p = r;\n        if (p != NULL) {                   // 还有 b\n            r = p->next;\n            p->next = B->next; B->next = p;// b 头插进 B（得逆序）\n            p = r;\n        }\n    }\n    ra->next = NULL;                       // 封尾\n}",
+            "complexity": "时间复杂度：O(n)   空间复杂度：O(1)",
+            "note": ""
+          }
+        ]
+      }
+    },
+    {
+      "id": "ds_extra_list_12",
+      "year": null,
+      "real": "",
+      "kaodian": "单链表的基本功训练",
+      "module": "教材习题",
+      "source": "王道书 2.3.7_大题_12",
+      "content_text": "【教材习题】在一个递增有序的线性表中，有数值相同的元素存在。若存储方式为单链表，设计算法去掉数值相同的元素，使表中不再有重复的元素。",
+      "answer_full": "",
+      "figs": null,
+      "analysis": "考点：有序表去重只需**相邻比较**（值相同必相邻）。易错点：① 用 p 指向当前不重复区尾部，q 向后扫描，q->data != p->data 时把 q 接到 p 后；② 值相同直接删 q；③ 由于有序，不需要哈希/两层循环。",
+      "weblink": "",
+      "solutions": {
+        "list": [
+          {
+            "tag": "解法1",
+            "kind": "相邻比较去重",
+            "name": "p 记录唯一值区尾，q 扫描删除重复",
+            "analysis": "",
+            "thought": "p 指向第一个结点；q=p->next 向后扫描：若 q->data == p->data 则删除 q（p->next=q->next，free，q=p->next）；否则 p=q、q=q->next。一趟完成，保留每个不同值的第一个结点。",
+            "code": "void dedup(LinkList &L)\n{\n    LNode *p = L->next;\n    while (p != NULL && p->next != NULL) {\n        if (p->data == p->next->data) {     // 相邻相同 → 删后一个\n            LNode *q = p->next;\n            p->next = q->next;\n            free(q);\n        } else p = p->next;\n    }\n}",
+            "complexity": "时间复杂度：O(n)（有序前提下）   空间复杂度：O(1)",
+            "note": ""
+          }
+        ]
+      }
+    },
+    {
+      "id": "ds_extra_list_13",
+      "year": null,
+      "real": "",
+      "kaodian": "针对\"双链表\"的训练",
+      "module": "教材习题",
+      "source": "王道书 2.3.7_大题_13",
+      "content_text": "【教材习题】假设有两个按元素值递增次序排列的线性表，均以单链表形式存储。请编写算法将这两个单链表归并为一个按元素值递减次序排列的单链表，并要求利用原来两个单链表的结点存放归并后的单链表。",
+      "answer_full": "",
+      "figs": null,
+      "analysis": "考点：归并 + **头插法**得递减序（用原结点、不新分配）。易错点：① 两链各一个指针 p、q，比较 data 取小者；② 用头插法把结点插到结果链头 → 自动递减；③ 不用新建结点，直接借用；④ 一链取完后把另一链剩余结点逐个头插。",
+      "weblink": "",
+      "solutions": {
+        "list": [
+          {
+            "tag": "解法1",
+            "kind": "归并 + 头插",
+            "name": "较小者头插入结果链，天然递减",
+            "analysis": "",
+            "thought": "设结果链 C（可借 A 的头结点）。比较 A、B 当前结点值，把较小者从原链摘下头插到 C 头结点之后；重复直至一链为空，再把另一链剩余结点依次头插。头插法保证了最终链从大到小。",
+            "code": "LinkList mergeDesc(LinkList A, LinkList B)\n{\n    LNode *p = A->next, *q = B->next;\n    A->next = NULL;                       // A 头结点作结果链头\n    while (p != NULL && q != NULL) {\n        if (p->data <= q->data) {         // 取较小的 p\n            LNode *r = p->next;\n            p->next = A->next; A->next = p;   // 头插\n            p = r;\n        } else {\n            LNode *r = q->next;\n            q->next = A->next; A->next = q;   // 头插\n            q = r;\n        }\n    }\n    while (p) { LNode *r = p->next; p->next = A->next; A->next = p; p = r; }\n    while (q) { LNode *r = q->next; q->next = A->next; A->next = q; q = r; }\n    return A;\n}",
+            "complexity": "时间复杂度：O(m+n)   空间复杂度：O(1)（借用原结点）",
+            "note": ""
+          }
+        ]
+      }
+    },
+    {
+      "id": "ds_extra_list_14",
+      "year": null,
+      "real": "",
+      "kaodian": "单链表的其他训练题",
+      "module": "教材习题",
+      "source": "王道书 2.3.7_大题_14",
+      "content_text": "【教材习题】设 A 和 B 是两个单链表（带头结点），其中元素递增有序。设计一个算法从 A 和 B 中的公共元素产生单链表 C，要求不破坏 A、B 的结点。",
+      "answer_full": "",
+      "figs": null,
+      "analysis": "考点：有序表交集 = 归并式比较（小的走，相等则复制结点进 C）；\"不破坏\" = 公共元素要**新分配结点**（复制，不借用）。易错点：① p->data < q->data 时 p 走，> 时 q 走，相等时**两个都走**并把值复制进新结点尾插 C；② 新结点 malloc；③ C 也是带头结点。",
+      "weblink": "",
+      "solutions": {
+        "list": [
+          {
+            "tag": "解法1",
+            "kind": "归并取交集（复制）",
+            "name": "小者走、相等复制进 C",
+            "analysis": "",
+            "thought": "p、q 分别遍历 A、B：data 小的一侧指针后移；相等时 new 一个结点存放该值，尾插入 C（rc 维护尾指针），然后 p、q 同时后移（因为每个表的元素唯一时相等只计算一次）。A、B 原结点不动。",
+            "code": "LinkList getCommon(LinkList A, LinkList B)\n{\n    LinkList C = (LNode*)malloc(sizeof(LNode));\n    C->next = NULL;\n    LNode *p = A->next, *q = B->next, *rc = C;\n    while (p != NULL && q != NULL) {\n        if (p->data < q->data) p = p->next;\n        else if (p->data > q->data) q = q->next;\n        else {                            // 相等：复制进 C\n            LNode *s = (LNode*)malloc(sizeof(LNode));\n            s->data = p->data;\n            rc->next = s; rc = s;\n            p = p->next; q = q->next;\n        }\n    }\n    rc->next = NULL;\n    return C;\n}",
+            "complexity": "时间复杂度：O(m+n)   空间复杂度：O(n)（新结点，公共元素个数的量级）",
+            "note": ""
+          }
+        ]
+      }
+    },
+    {
+      "id": "ds_extra_list_16",
+      "year": null,
+      "real": "",
+      "kaodian": "单链表的\"原地逆置\"技巧",
+      "module": "教材习题",
+      "source": "王道书 2.3.7_大题_16",
+      "content_text": "【教材习题】判断单链表 B 是否是单链表 A 的连续子序列（如 A=abcde、B=bcd 则是，B=adb 不是）。",
+      "answer_full": "",
+      "figs": null,
+      "analysis": "考点：链表的模式匹配 = 串匹配思想的链表版（朴素匹配即可，可扩展 KMP 思想）。易错点：① 从 A 的每个结点起与 B 逐个比对；② 不匹配时 A 回溯到下一位置、B 回到头；③ 匹配成功条件是 B 走完（pb==NULL）；④ A 剩余不足时提前结束。",
+      "weblink": "",
+      "solutions": {
+        "list": [
+          {
+            "tag": "解法1",
+            "kind": "朴素匹配",
+            "name": "两指针比对，失配回溯 A 下一位",
+            "analysis": "",
+            "thought": "用 pre 记录 A 中每轮比对起点（用于回溯），pa、pb 同步后移比对；若 pb 走完说明匹配；若因 data 不等或 pa 走空而 pb 未到 NULL，则 pre=pre->next、pa=pre、pb=B->next 重新开始。",
+            "code": "int isSubSeq(LinkList A, LinkList B)\n{\n    LNode *pre = A->next, *pa = A->next, *pb = B->next;\n    while (pa && pb) {\n        if (pa->data == pb->data) { pa = pa->next; pb = pb->next; }\n        else {                       // 失配：A 回溯到下一位\n            pre = pre->next; pa = pre; pb = B->next;\n        }\n    }\n    return pb == NULL;               // B 走完 = 匹配成功\n}",
+            "complexity": "时间复杂度：O(m×n)（m、n 为两链长，朴素匹配最坏）   空间复杂度：O(1)",
+            "note": ""
+          }
+        ]
+      }
+    },
+    {
+      "id": "ds_extra_tree_4",
+      "year": null,
+      "real": "",
+      "kaodian": "二叉树的基本功训练",
+      "module": "教材习题",
+      "source": "王道书 5.3.3_大题_4",
+      "content_text": "【教材习题】假设二叉树采用二叉链表存储结构，设计一个算法求二叉树的高度（深度）。",
+      "answer_full": "",
+      "figs": null,
+      "analysis": "考点：树高 = max(左高, 右高) + 1。易错点：① 递归终止条件是空树返回 0；② 口诀\"后序求和、先序求路径\"——求高度用后序式递归（先取左右结果再加工）；③ 非递归用层序记录层数也可以，但递归最简洁。",
+      "weblink": "",
+      "solutions": {
+        "list": [
+          {
+            "tag": "解法1",
+            "kind": "递归后序",
+            "name": "空树返回 0，否则 1+max(左高,右高)",
+            "analysis": "",
+            "thought": "若根为空返回 0；否则递归求左子树高度 lh、右子树高度 rh，返回 max(lh, rh)+1。天然的后序遍历次序（先处理孩子再由父结点汇总）。",
+            "code": "typedef struct BTNode {\n    int data;\n    struct BTNode *left, *right;\n} BTNode;\nint treeHeight(BTNode *p)\n{\n    if (p == NULL) return 0;\n    int lh = treeHeight(p->left);\n    int rh = treeHeight(p->right);\n    return (lh > rh ? lh : rh) + 1;\n}",
+            "complexity": "时间复杂度：O(n)（每个结点访问一次）   空间复杂度：O(h)（递归栈，最坏退化链 O(n)）",
+            "note": ""
+          }
+        ]
+      }
+    },
+    {
+      "id": "ds_extra_tree_5",
+      "year": null,
+      "real": "",
+      "kaodian": "二叉树的基本功训练",
+      "module": "教材习题",
+      "source": "王道书 5.3.3_大题_5",
+      "content_text": "【教材习题】假设二叉树采用二叉链表存储结构，设计一个算法统计二叉树中叶子结点的个数。",
+      "answer_full": "",
+      "figs": null,
+      "analysis": "考点：叶子 = 左右孩子皆空。易错点：① 判断条件 p->left==NULL && p->right==NULL；② 空树返回 0；③ 递归相加：叶子数 = 左子树叶子数 + 右子树叶子数（根是叶子时计 1）。",
+      "weblink": "",
+      "solutions": {
+        "list": [
+          {
+            "tag": "解法1",
+            "kind": "递归先序",
+            "name": "叶子计数递归相加",
+            "analysis": "",
+            "thought": "若 p 为空返回 0；若 p 是叶子（左右孩子都空）返回 1；否则返回左子树叶子数 + 右子树叶子数。",
+            "code": "typedef struct BTNode {\n    int data;\n    struct BTNode *left, *right;\n} BTNode;\nint leafCount(BTNode *p)\n{\n    if (p == NULL) return 0;\n    if (p->left == NULL && p->right == NULL) return 1;   // 叶子\n    return leafCount(p->left) + leafCount(p->right);\n}",
+            "complexity": "时间复杂度：O(n)   空间复杂度：O(h)（递归栈）",
+            "note": ""
+          }
+        ]
+      }
+    },
+    {
+      "id": "ds_extra_tree_6",
+      "year": null,
+      "real": "",
+      "kaodian": "\"二叉树\"的拔高训练",
+      "module": "教材习题",
+      "source": "王道书 5.3.3_大题_6",
+      "content_text": "【教材习题】设一棵二叉树按二叉链表形式存储，编写算法判别给定二叉树是否为完全二叉树。",
+      "answer_full": "",
+      "figs": null,
+      "analysis": "考点：**层序（BFS）遍历 + 空标记**：把空孩子也入队，一旦遇到空结点，其后不得再出现非空结点。易错点：① 必须用队列层序遍历；② 遇到 NULL 结点后设标记 flag=1，之后任何非空结点出现都判否；③ 不要用\"递归/先序判断左右子树是否填满\"（只适用满二叉树）。",
+      "weblink": "",
+      "solutions": {
+        "list": [
+          {
+            "tag": "解法1",
+            "kind": "层序 + 空标记",
+            "name": "BFS，遇空后不准再出非空",
+            "analysis": "",
+            "thought": "初始化队列，根入队。循环出队：若结点非空，左右孩子依次入队（孩子为空也照常标记）；若结点为空，置 flag=1。之后凡出队遇到非空结点且 flag==1 → 非完全二叉树。队列为空则遍历完毕，为完全二叉树。",
+            "code": "typedef struct BTNode {\n    int data;\n    struct BTNode *left, *right;\n} BTNode;\n// Q 为队列（顺序存储，front/rear 下标），EnQ / DeQ 为入队出队\nint isComplete(BTNode *root)\n{\n    if (root == NULL) return 1;\n    BTNode *Q[1000]; int front = 0, rear = 0;\n    BTNode *p;\n    Q[rear++] = root;\n    int flag = 0;                       // 0 未遇空，1 已遇空\n    while (front < rear) {\n        p = Q[front++];\n        if (p == NULL) { flag = 1; continue; }   // 遇空标记\n        if (flag) return 0;             // 空后还有非空 → 非完全\n        Q[rear++] = p->left;            // 空孩子也入队\n        Q[rear++] = p->right;\n    }\n    return 1;\n}",
+            "complexity": "时间复杂度：O(n)   空间复杂度：O(w)（队列宽度，最坏 O(n)）",
+            "note": ""
+          }
+        ]
+      }
+    },
+    {
+      "id": "ds_extra_tree_7",
+      "year": null,
+      "real": "",
+      "kaodian": "二叉树的基本功训练",
+      "module": "教材习题",
+      "source": "王道书 5.3.3_大题_7",
+      "content_text": "【教材习题】假设二叉树采用二叉链表存储结构，计算一棵二叉树中所有双分支（度为 2）结点的个数。",
+      "answer_full": "",
+      "figs": null,
+      "analysis": "考点：双分支 = 左右孩子**都非空**。易错点：① 判断条件是 left 与 right 同时非空；② 与\"叶子结点（双空）\"区分；③ 递归相加即可。",
+      "weblink": "",
+      "solutions": {
+        "list": [
+          {
+            "tag": "解法1",
+            "kind": "递归先序",
+            "name": "左右孩子都不空计 1 并累加子树",
+            "analysis": "",
+            "thought": "若 p 为空返回 0；若 p 的左右孩子都不为空则记 1；继续递归累加左右子树的双分支结点数。",
+            "code": "typedef struct BTNode {\n    int data;\n    struct BTNode *left, *right;\n} BTNode;\nint doubleCount(BTNode *p)\n{\n    if (p == NULL) return 0;\n    int c = (p->left && p->right) ? 1 : 0;   // 双分支结点\n    return c + doubleCount(p->left) + doubleCount(p->right);\n}",
+            "complexity": "时间复杂度：O(n)   空间复杂度：O(h)（递归栈）",
+            "note": ""
+          }
+        ]
+      }
+    },
+    {
+      "id": "ds_extra_tree_8",
+      "year": null,
+      "real": "",
+      "kaodian": "\"二叉树\"的拔高训练",
+      "module": "教材习题",
+      "source": "王道书 5.3.3_大题_8",
+      "content_text": "【教材习题】设一棵二叉树中各结点的值互不相同，其先序遍历序列和中序遍历序列分别存于两个一维数组 A[1…n] 与 B[1…n] 中，试编写算法建立该二叉树的二叉链表。",
+      "answer_full": "",
+      "figs": null,
+      "analysis": "考点：先序定根、中序分左右。易错点：① 先序第一个元素是根；② 在中序中找到根的位置 k，左边是左子树（k-1 个）、右边是右子树；③ 递归时两序列的子区间下标要对应（先序里左子树起点=当前+1，右子树起点=当前位置+k）；④ 用区间参数 (preL,preR,inL,inR) 避免切片。",
+      "weblink": "",
+      "solutions": {
+        "list": [
+          {
+            "tag": "解法1",
+            "kind": "递归分治",
+            "name": "先序首元素为根，中序定位左右子树",
+            "analysis": "",
+            "thought": "递归函数 build(preL, preR, inL, inR)：取 A[preL] 建根；在 B[inL..inR] 中线性查找根位置 k，左子树区间为 B[inL..k-1]（长度 lsize=k-inL），对应的先序左子树为 A[preL+1..preL+lsize]，递归建左右子树；返回根。",
+            "code": "typedef struct BTNode {\n    int data;\n    struct BTNode *left, *right;\n} BTNode;\nBTNode* build(int A[], int B[], int preL, int preR, int inL, int inR)\n{\n    if (preL > preR) return NULL;\n    BTNode *r = (BTNode*)malloc(sizeof(BTNode));\n    r->data = A[preL];                  // 先序首元素为根\n    int k = inL;\n    while (B[k] != A[preL]) k++;        // 中序中定位根\n    int lsize = k - inL;                // 左子树结点数\n    r->left  = build(A, B, preL + 1,   preL + lsize, inL,   k - 1);\n    r->right = build(A, B, preL + lsize + 1, preR, k + 1, inR);\n    return r;\n}",
+            "complexity": "时间复杂度：O(n²)（每次中序线性查根）   空间复杂度：O(n)（递归栈 + 结点空间）",
+            "note": "可将中序值的下标预先存入哈希表把查根降为 O(1)，总时间 O(n)"
+          }
+        ]
+      }
+    },
+    {
+      "id": "ds_extra_tree_9",
+      "year": null,
+      "real": "",
+      "kaodian": "\"二叉树\"的拔高训练",
+      "module": "教材习题",
+      "source": "王道书 5.3.3_大题_9",
+      "content_text": "【教材习题】设树 B 是一棵采用链式结构存储的二叉树，编写一个把树 B 中所有结点的左右子树进行交换的函数。",
+      "answer_full": "",
+      "figs": null,
+      "analysis": "考点：后序交换（先递归交换孩子，再交换当前结点的左右指针）。易错点：① 必须**后序**：先 swap 左子树内部、再 swap 右子树内部，最后交换当前两个孩子指针；若先换当前结点再递归会乱；② 交换用临时指针；③ 空树直接返回。",
+      "weblink": "",
+      "solutions": {
+        "list": [
+          {
+            "tag": "解法1",
+            "kind": "后序交换",
+            "name": "递归交换左右指针",
+            "analysis": "",
+            "thought": "先递归交换左子树的左右孩子、右子树的左右孩子，再把当前结点的 left 与 right 指针互换。",
+            "code": "typedef struct BTNode {\n    int data;\n    struct BTNode *left, *right;\n} BTNode;\nvoid swapLR(BTNode *p)\n{\n    if (p == NULL) return;\n    swapLR(p->left);                    // 左子树内部互换\n    swapLR(p->right);                   // 右子树内部互换\n    BTNode *t = p->left;                // 当前结点左右互换\n    p->left = p->right;\n    p->right = t;\n}",
+            "complexity": "时间复杂度：O(n)   空间复杂度：O(h)（递归栈）",
+            "note": ""
+          }
+        ]
+      }
+    },
+    {
+      "id": "ds_extra_tree_10",
+      "year": null,
+      "real": "",
+      "kaodian": "\"二叉树\"的拔高训练",
+      "module": "教材习题",
+      "source": "王道书 5.3.3_大题_10",
+      "content_text": "【教材习题】假设二叉树采用二叉链表存储结构存储，设计一个算法求先序遍历序列中第 k 个结点的值（k 从 1 计）。",
+      "answer_full": "",
+      "figs": null,
+      "analysis": "考点：先序（根左右）位置计数。易错点：① 计数器必须是**全局或引用变量**，不能局部累加（会每次递归清零）；② 先序访问顺序：先根、再左、再右，数到第 k 个即返回；③ 提前返回注意标记已找到，避免继续遍历。",
+      "weblink": "",
+      "solutions": {
+        "list": [
+          {
+            "tag": "解法1",
+            "kind": "先序 + 全局计数",
+            "name": "访问到第 k 个结点即返回其值",
+            "analysis": "",
+            "thought": "设全局 count；先序遍历：每访问一个非空结点 count++，若 count==k 则记录答案并设 found，后续递归入口先判 found 提前return。因为先序先根后左右，第 k 个被访问到的结点就是先序第 k 个。",
+            "code": "typedef struct BTNode {\n    int data;\n    struct BTNode *left, *right;\n} BTNode;\nint count = 0, found = 0, ans = -1;\nvoid preKth(BTNode *p, int k)\n{\n    if (p == NULL || found) return;     // 已找到则停止\n    if (++count == k) { ans = p->data; found = 1; return; }\n    preKth(p->left, k);\n    preKth(p->right, k);\n}",
+            "complexity": "时间复杂度：O(n)（最坏遍历到第 k 个前）   空间复杂度：O(h)（递归栈）",
+            "note": ""
+          }
+        ]
+      }
+    },
+    {
+      "id": "ds_extra_tree_12",
+      "year": null,
+      "real": "",
+      "kaodian": "\"二叉树\"的拔高训练",
+      "module": "教材习题",
+      "source": "王道书 5.3.3_大题_12",
+      "content_text": "【教材习题】编写算法打印值为 x 的结点的所有祖先（假设值为 x 的结点不多于一个）。",
+      "answer_full": "",
+      "figs": null,
+      "analysis": "考点：**后序非递归的栈特性**：后序遍历访问某结点时，栈中恰好保存从根到该结点路径上的全部祖先。易错点：① 必须用非递归后序（带标志位区分左/右返回）维护栈；② 找到 x 结点时栈中即它的祖先链，依次输出；③ 不要用递归返回路径（需要额外数组）。",
+      "weblink": "",
+      "solutions": {
+        "list": [
+          {
+            "tag": "解法1",
+            "kind": "后序非递归 + 栈",
+            "name": "后序访问到 x 时栈内即祖先链",
+            "analysis": "",
+            "thought": "按非递归后序遍历（用标志数组 tag 或二次入栈标记），每访问一个结点判断 data 是否等于 x：相等则栈内自底向上即为全部祖先，打印后结束；否则继续。",
+            "code": "typedef struct BTNode {\n    int data;\n    struct BTNode *left, *right;\n} BTNode;\n// 栈项类型：结点 + 访问标志（0 首次，1 表示左子树已处理完）\nvoid printAncestors(BTNode *root, int x)\n{\n    BTNode *S[1000]; int tag[1000], top = -1;\n    BTNode *p = root;\n    while (p != NULL || top != -1) {\n        while (p != NULL) { S[++top] = p; tag[top] = 0; p = p->left; }\n        if (tag[top] == 0) { tag[top] = 1; p = S[top]->right; }\n        else {\n            BTNode *v = S[top--];\n            if (v->data == x) {          // 栈中剩余即为祖先\n                while (top >= 0) printf(\"%d \", S[top--]->data);\n                return;\n            }\n        }\n    }\n}",
+            "complexity": "时间复杂度：O(n)   空间复杂度：O(h)（栈）",
+            "note": ""
+          }
+        ]
+      }
+    },
+    {
+      "id": "ds_extra_tree_14",
+      "year": null,
+      "real": "",
+      "kaodian": "\"二叉树\"的拔高训练",
+      "module": "教材习题",
+      "source": "王道书 5.3.3_大题_14",
+      "content_text": "【教材习题】假设二叉树采用二叉链表存储结构，设计一个算法求非空二叉树的宽度（即结点数最多的那一层的结点个数）。",
+      "answer_full": "",
+      "figs": null,
+      "analysis": "考点：层序遍历 + 按层计数。易错点：① 用队列层序，每一层结束时统计本轮入队前的队内结点数（当前层结点数）；② 用 last（本层末尾）与 newlast 指针区分层边界；③ 比较各层结点数取最大；④ 空树不适用（题设非空）。",
+      "weblink": "",
+      "solutions": {
+        "list": [
+          {
+            "tag": "解法1",
+            "kind": "层序按层计数",
+            "name": "last 标定层边界，统计每层结点数取最大",
+            "analysis": "",
+            "thought": "根入队，last=根。循环：出队 p，入队 p 的左右孩子并更新 newlast；当 p==last 时本层结束：count 与该层计数值比较更新 max，然后 last=newlast、层计数值清零。队列空即遍历完成，返回 max。",
+            "code": "typedef struct BTNode {\n    int data;\n    struct BTNode *left, *right;\n} BTNode;\nint treeWidth(BTNode *root)\n{\n    BTNode *Q[1000]; int front = 0, rear = 0;\n    Q[rear++] = root;\n    BTNode *last = root, *newlast = root;   // 层尾标记\n    int cur = 0, maxW = 0;\n    while (front < rear) {\n        BTNode *p = Q[front++];\n        cur++;\n        if (p->left)  { Q[rear++] = p->left;  newlast = p->left; }\n        if (p->right) { Q[rear++] = p->right; newlast = p->right; }\n        if (p == last) {                     // 本层结束\n            if (cur > maxW) maxW = cur;\n            cur = 0;\n            last = newlast;\n        }\n    }\n    return maxW;\n}",
+            "complexity": "时间复杂度：O(n)   空间复杂度：O(w)（队列最宽层）",
             "note": ""
           }
         ]

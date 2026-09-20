@@ -43,11 +43,11 @@ const EXTRA = fs.readFileSync(path.resolve(__dirname, 'pwa/data/ds_code_extra.js
   const lectures = d.querySelectorAll('details.daka-answer summary');
   check('讲义折叠面板总数 = 62（每卡一个）', lectures.length, 62);
   const lectureHeads = [...lectures].filter(s => s.textContent.indexOf('考点分析 · 易错点 · 讲义解法') > -1);
-  check('升级为完整讲义的折叠面板 = 23（15 真题 + 8 教材习题）', lectureHeads.length, 23);
+  check('升级为完整讲义的折叠面板 = 46（15 真题 + 31 教材习题）', lectureHeads.length, 46);
   // 讲义内容关卡：解法条目与代码块存在于页面
-  check('页面含 sol-item 解法条目 ≥ 23', d.querySelectorAll('div.sol-item').length >= 23, true);
-  check('页面含 code-block 代码块 ≥ 23', d.querySelectorAll('pre.code-block').length >= 23, true);
-  check('页面含复杂度行 sol-cx ≥ 23', d.querySelectorAll('div.sol-cx').length >= 23, true);
+  check('页面含 sol-item 解法条目 ≥ 46', d.querySelectorAll('div.sol-item').length >= 46, true);
+  check('页面含 code-block 代码块 ≥ 46', d.querySelectorAll('pre.code-block').length >= 46, true);
+  check('页面含复杂度行 sol-cx ≥ 46', d.querySelectorAll('div.sol-cx').length >= 46, true);
   // 抽查：2009 算法题卡（2.3.7_17=ds_code_2009）有完整讲义
   const q2009 = d.getElementById('card-ds_daka_2_3_7_17');
   check('2009 卡存在', !!q2009, true);
