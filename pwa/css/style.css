@@ -2995,6 +2995,69 @@ h3.algo-h:first-child, h4.algo-h:first-child, h5.algo-h:first-child { margin-top
 .dark .algo-toc-ch.algo-toc-strong,
 .dark .notes-toc-sub.algo-toc-strong { color: #a5b4fc !important; }
 
+/* ===== 快排可视化演示（algo.html 2.2.2 快排代码块下方自动挂载） ===== */
+.qs-demo {
+    margin: 8px 0 18px; padding: 14px 16px 12px;
+    background: rgba(var(--card-rgb), var(--ui-alpha));
+    border: 1px solid var(--border);
+    border-left: 3px solid var(--primary);
+    border-radius: 8px;
+}
+.qs-demo-title { font-weight: 700; font-size: .88rem; margin-bottom: 4px; color: var(--text); }
+.qs-demo-cap { font-size: .76rem; color: var(--text-light); margin-bottom: 12px; }
+.qs-stage {
+    display: flex; align-items: flex-end; gap: 2px;
+    min-height: 170px; padding: 0 4px; overflow-x: auto;
+}
+.qs-bar {
+    flex: 1 1 0; min-width: 18px; max-width: 54px;
+    display: flex; flex-direction: column; justify-content: flex-end;
+    align-items: center; gap: 3px; padding: 0 2px;
+}
+.qs-bar > b { font-size: .78rem; color: var(--text); font-weight: 600; }
+.qs-bar > i {
+    display: block; width: 100%; border-radius: 4px 4px 0 0;
+    background: rgba(128,128,128,.28);
+    transition: height .12s ease, background .15s ease;
+}
+.qs-bar.pivot > i { background: rgba(234,88,12,.85); }
+.qs-bar.pivot > b { color: #b45309; }
+.qs-bar.li > i { background: rgba(74,122,184,.85); }
+.qs-bar.li > b { color: #4a7ab8; }
+.qs-bar.rj > i { background: rgba(8,145,178,.85); }
+.qs-bar.rj > b { color: #0891b2; }
+.qs-bar.swp > i { background: rgba(220,38,38,.8); }
+.qs-bar.swp > b { color: #b3261e; }
+.qs-bar.done > i { background: rgba(5,150,105,.45); }
+.qs-bar.done > b { color: #059669; font-weight: 700; }
+.qs-legend { display: flex; flex-wrap: wrap; gap: 4px 14px; margin: 10px 0 4px; font-size: .72rem; color: var(--text-light); }
+.qs-legend s { text-decoration: none; }
+.qs-legend i { display: inline-block; width: 12px; height: 12px; border-radius: 3px; margin-right: 4px; vertical-align: -1px; }
+.qs-legend i.pv { background: rgba(234,88,12,.85); }
+.qs-legend i.li { background: rgba(74,122,184,.85); }
+.qs-legend i.rj { background: rgba(8,145,178,.85); }
+.qs-legend i.sw { background: rgba(220,38,38,.8); }
+.qs-legend i.dn { background: rgba(5,150,105,.45); }
+.qs-ctrl { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-top: 10px; }
+.qs-btn {
+    font-family: inherit; font-size: .82rem; cursor: pointer;
+    border: 1px solid var(--border); background: transparent;
+    color: var(--text-light); padding: 5px 14px; border-radius: 999px;
+    transition: border-color .15s, color .15s, background .15s;
+}
+.qs-btn:hover { border-color: var(--primary); color: var(--primary); }
+.qs-btn.run { border-color: var(--primary); color: #fff; background: var(--primary); }
+.qs-btn.run:hover { opacity: .9; }
+.qs-spd { font-size: .76rem; color: var(--text-light); margin-left: 6px; }
+.qs-spd button {
+    font-family: inherit; font-size: .76rem; cursor: pointer;
+    border: 1px solid transparent; background: transparent;
+    color: var(--text-light); padding: 3px 9px; border-radius: 999px;
+}
+.qs-spd button.on { border-color: var(--primary); color: var(--primary); font-weight: 600; }
+.qs-msg { min-height: 1.6em; margin-top: 8px; font-size: .8rem; color: var(--text-light); }
+.qs-msg b { color: var(--text); }
+
 /* 代码题页 -> 算法讲义 的悬浮入口（放左下角，避开右下角的 🎨 与 ☰） */
 .algo-fab {
     position: fixed; left: 20px; bottom: 20px; z-index: 200;

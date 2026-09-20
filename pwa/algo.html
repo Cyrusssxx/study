@@ -259,6 +259,10 @@
                 html += `<h${lvl} class="${cls}" id="${id}" data-anchor="${id}">${esc(norm(it.text))}</h${lvl}>`;
             } else if (it.t === 'code') {
                 html += renderCode(norm(it.text));
+                // 快排完整定义代码块下方自动挂载可视化演示（唯一签名：含空格版 + 递归调用）
+                if (/void Qsort\(int A\[\], int L, int R\)[\s\S]*Qsort\(A, L, i - 1\)/.test(it.text)) {
+                    html += qsDemoHtml();
+                }
             } else {
                 html += renderText(it.text);
             }
@@ -287,6 +291,163 @@
 
     /* ---------- 加载 ---------- */
 
+    /* 快速排序可视化演示容器（挂载在快排完整代码块下方） */
+    function qsDemoHtml() {
+        return `<div class="qs-demo" data-qs-demo>
+            <div class="qs-demo-title">① 快速排序 · 可视化演示</div>
+            <div class="qs-demo-cap">观察「选基准 → i/j 双向扫描 → 交换 → 基准归位 → 递归」的完整过程；可随时暂停 / 换一组数据 / 调速。</div>
+            <div class="qs-stage" data-qs-stage></div>
+            <div class="qs-legend">
+                <s><i class="pv"></i>基准 pivot</s>
+                <s><i class="li"></i>左指针 i</s>
+                <s><i class="rj"></i>右指针 j</s>
+                <s><i class="sw"></i>交换</s>
+                <s><i class="dn"></i>已归位</s>
+            </div>
+            <div class="qs-ctrl">
+                <button class="qs-btn run" data-qs-run>▶ 启动</button>
+                <button class="qs-btn" data-qs-shuffle>↺ 换一组</button>
+                <span class="qs-spd">速度
+                    <button data-qs-spd="900" class="on">慢</button>
+                    <button data-qs-spd="480">中</button>
+                    <button data-qs-spd="200">快</button>
+                </span>
+            </div>
+            <div class="qs-msg" data-qs-msg>准备好，点「▶ 启动」开始。</div>
+        </div>`;
+    }
+
+    /* ------------------------------------------------------------------
+     * 快速排序可视化演示引擎
+     * 预演快排（记录每一步的数组快照与指针状态），按间隔逐步播放，可暂停/继续/换组/调速
+     * ------------------------------------------------------------------ */
+    function qsBuildFrames(arr0) {
+        const frames = [];
+        const push = (a, pi, li, rj, swp, fixed, lo, hi, msg) => {
+            frames.push({ a: a.slice(), pi, li, rj, swp: swp ? [swp[0], swp[1]] : null, fixed: new Set(fixed), lo, hi, msg });
+        };
+        const qs = (a, L, R, fixed) => {
+            if (L > R) return;
+            if (L === R) { fixed.add(L); push(a, L, -1, -1, null, fixed, L, R, `区间只剩一个元素 A[${L}]=${a[L]}，天然有序，直接归位`); return; }
+            const pivot = a[L];
+            push(a, L, -1, -1, null, fixed, L, R, `进入区间 [${L}, ${R}]：选基准 pivot = A[${L}] = ${pivot}`);
+            let i = L, j = R;
+            while (i < j) {
+                push(a, L, i, j, null, fixed, L, R, `i=${i}、j=${j} 开始双向扫描：先让 j 向左找 < ${pivot} 的元素`);
+                while (i < j && a[j] >= pivot) { j--; push(a, L, i, j, null, fixed, L, R, `A[${j}]=${a[j]} ≥ ${pivot}，j 继续左移 → j=${j}`); }
+                while (i < j && a[i] <= pivot) { i++; push(a, L, i, j, null, fixed, L, R, `A[${i}]=${a[i]} ≤ ${pivot}，i 继续右移 → i=${i}`); }
+                if (i < j) {
+                    [a[i], a[j]] = [a[j], a[i]];
+                    push(a, L, i, j, [i, j], fixed, L, R, `A[${i}] 与 A[${j}] 互换：${a[i]} ⇌ ${a[j]}`);
+                }
+            }
+            [a[L], a[i]] = [a[i], a[L]];
+            fixed.add(i);
+            push(a, L, i, i, null, fixed, L, R, `基准 ${pivot} 归位到 A[${i}] ✅（左侧都 ≤ 它，右侧都 ≥ 它）`);
+            qs(a, L, i - 1, fixed);
+            qs(a, i + 1, R, fixed);
+        };
+        qs(arr0.slice(), 0, arr0.length - 1, new Set());
+        return frames;
+    }
+
+    function qsRenderFrame(dm, f) {
+        const stage = dm.querySelector('[data-qs-stage]');
+        const max = Math.max.apply(null, f.a);
+        stage.innerHTML = '';
+        f.a.forEach((v, idx) => {
+            const bar = document.createElement('div');
+            bar.className = 'qs-bar';
+            const cls = f.fixed.has(idx) ? 'done'
+                : (f.swp && (idx === f.swp[0] || idx === f.swp[1])) ? 'swp'
+                : (idx === f.li) ? (idx === f.rj ? 'swp' : 'li')
+                : (idx === f.rj) ? 'rj'
+                : (idx === f.pi) ? 'pivot' : '';
+            if (cls) bar.classList.add(cls);
+            const h = Math.max(8, Math.round(v / max * 118));
+            bar.innerHTML = `<b>${v}</b><i style="height:${h}px"></i>`;
+            stage.appendChild(bar);
+        });
+        const msg = dm.querySelector('[data-qs-msg]');
+        msg.innerHTML = `<b>[${f.lo},${f.hi}]</b>　${f.msg}`;
+    }
+
+    function qsInitDemo(dm) {
+        const state = { cur: [], frames: [], idx: 0, timer: null, speed: 480, running: false };
+        const runBtn = dm.querySelector('[data-qs-run]');
+        const stage = dm.querySelector('[data-qs-stage]');
+
+        function fresh() {
+            state.cur = [];
+            const n = 8;
+            while (state.cur.length < n) {
+                const v = 5 + Math.floor(Math.random() * 95);
+                if (state.cur.indexOf(v) === -1) state.cur.push(v);
+            }
+            state.frames = qsBuildFrames(state.cur);
+            state.idx = 0;
+        }
+        function tick() {
+            if (state.idx >= state.frames.length) {
+                state.running = false;
+                runBtn.textContent = '▶ 重播';
+                runBtn.classList.add('run');
+                dm.querySelector('[data-qs-msg]').innerHTML = '🎉 排序完成！可点「换一组」再来一轮，或「重播」再看一遍。';
+                return;
+            }
+            qsRenderFrame(dm, state.frames[state.idx++]);
+            if (state.idx < state.frames.length) state.timer = setTimeout(tick, state.speed);
+            else { state.running = false; runBtn.textContent = '▶ 重播'; runBtn.classList.add('run'); dm.querySelector('[data-qs-msg]').innerHTML = '🎉 排序完成！可点「换一组」再来一轮，或「重播」再看一遍。'; }
+        }
+        function stopTimer() { if (state.timer) { clearTimeout(state.timer); state.timer = null; } }
+
+        runBtn.addEventListener('click', () => {
+            if (state.running) {                       // 运行中 → 暂停
+                stopTimer(); state.running = false;
+                runBtn.textContent = '▶ 继续';
+                runBtn.classList.add('run');
+                dm.querySelector('[data-qs-msg]').innerHTML += '（已暂停）';
+                return;
+            }
+            if (state.idx === 0 || state.idx >= state.frames.length) {   // 首帧或播完 → 从头/重播
+                state.idx = 0;
+                fresh();
+                state.idx = 0;
+                if (!stage.children.length) qsRenderFrame(dm, state.frames[0]);
+            }
+            stopTimer(); state.running = true;
+            runBtn.textContent = '⏸ 暂停';
+            runBtn.classList.remove('run');
+            tick();
+        });
+
+        dm.querySelector('[data-qs-shuffle]').addEventListener('click', () => {
+            stopTimer(); state.running = false;
+            fresh();
+            runBtn.textContent = '▶ 启动';
+            runBtn.classList.add('run');
+            qsRenderFrame(dm, state.frames[0]);
+            dm.querySelector('[data-qs-msg]').innerHTML = '已生成一组新数据，点「▶ 启动」开始。';
+        });
+
+        dm.querySelectorAll('[data-qs-spd]').forEach(btn => {
+            btn.addEventListener('click', () => {
+                dm.querySelectorAll('[data-qs-spd]').forEach(b => b.classList.remove('on'));
+                btn.classList.add('on');
+                state.speed = parseInt(btn.dataset.qsSpd, 10);
+                if (state.running) { stopTimer(); tick(); }
+            });
+        });
+
+        fresh();
+        qsRenderFrame(dm, state.frames[0]);
+        dm.querySelector('[data-qs-msg]').innerHTML = '准备好，点「▶ 启动」开始。';
+    }
+
+    function initQsDemos() {
+        document.querySelectorAll('[data-qs-demo]').forEach(dm => qsInitDemo(dm));
+    }
+
     async function loadAlgo() {
         const body = document.getElementById('algoBody');
         let data;
@@ -313,6 +474,7 @@
                     '</section>';
         }
         body.innerHTML = html;
+        initQsDemos();
         document.getElementById('algoToc').innerHTML = buildNav(data.chapters);
         setupScrollSpy();
         // 搜索结果直达：algo.html#条目id
