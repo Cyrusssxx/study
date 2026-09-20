@@ -23,7 +23,7 @@ function check(name, got, want) {
   const weval = s => dom.window.eval('(' + s + ')');
 
   // 提取 qsDemoHtml 并执行（在 jsdom 上下文求值，使函数内 document 指向 jsdom）
-  const m1 = SRC.match(/function qsDemoHtml\(\) \{[\s\S]*?\n    \}/);
+  const m1 = SRC.match(/function qsDemoHtml\(opts\) \{[\s\S]*?\n    \}/);
   const demoHtml = weval(m1[0])();
   check('qsDemoHtml 能生成容器', demoHtml.indexOf('data-qs-demo') > -1, true);
   check('容器含启动按钮(data-qs-run)', demoHtml.indexOf('data-qs-run') > -1, true);
@@ -49,9 +49,12 @@ function check(name, got, want) {
   const dm = d.querySelector('[data-qs-demo]');
   qsRenderFrame(dm, frames[0]);
   check('渲染 7 根柱子', d.querySelectorAll('.qs-bar').length, 7);
+  check('每根柱子顶部都有指针占位行', d.querySelectorAll('.qs-bar s.qs-tip').length, 7);
   check('第一根柱子高亮为基准(pivot)', d.querySelectorAll('.qs-bar.pivot').length, 1);
-  const msg = dm.querySelector('[data-qs-msg]').textContent;
-  check('消息含区间[0,6]', msg.indexOf('[0,6]') > -1, true);
+  check('基准柱子顶部显示箭头 ▾', d.querySelector('.qs-bar.pivot s.qs-tip').textContent, '▾');
+  // 速度三档已放慢 2 倍（快档 400ms 起步）
+  check('速度档已放慢(快=400)', demoHtml.indexOf('data-qs-spd="400"') > -1, true);
+  check('默认档为慢(1800)', demoHtml.indexOf('data-qs-spd="1800" class="on"') > -1, true);
 
   console.log('\nPASS ' + pass + ' / FAIL ' + fail);
   process.exit(fail ? 1 : 0);

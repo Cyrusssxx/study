@@ -3014,6 +3014,16 @@ h3.algo-h:first-child, h4.algo-h:first-child, h5.algo-h:first-child { margin-top
     display: flex; flex-direction: column; justify-content: flex-end;
     align-items: center; gap: 3px; padding: 0 2px;
 }
+.qs-bar > s.qs-tip {
+    display: block; height: 15px; line-height: 15px;
+    font-size: .62rem; font-weight: 700; text-align: center;
+    color: transparent; white-space: nowrap;
+}
+.qs-bar.pivot > s.qs-tip { color: #b45309; }
+.qs-bar.li > s.qs-tip { color: #4a7ab8; }
+.qs-bar.rj > s.qs-tip { color: #0891b2; }
+.qs-bar.swp > s.qs-tip { color: #b3261e; }
+.qs-bar.done > s.qs-tip { color: transparent; }
 .qs-bar > b { font-size: .78rem; color: var(--text); font-weight: 600; }
 .qs-bar > i {
     display: block; width: 100%; border-radius: 4px 4px 0 0;
@@ -3057,6 +3067,52 @@ h3.algo-h:first-child, h4.algo-h:first-child, h5.algo-h:first-child { margin-top
 .qs-spd button.on { border-color: var(--primary); color: var(--primary); font-weight: 600; }
 .qs-msg { min-height: 1.6em; margin-top: 8px; font-size: .8rem; color: var(--text-light); }
 .qs-msg b { color: var(--text); }
+
+/* ---- 通用数组演示（data-demo 容器：多行数组 + 多指针，复用 qs 播放器） ---- */
+.array-demo { margin: 8px 0 18px; padding: 14px 16px 12px;
+    background: rgba(var(--card-rgb), var(--ui-alpha));
+    border: 1px solid var(--border); border-left: 3px solid var(--primary); border-radius: 8px; }
+.array-demo .ad-title { font-weight: 700; font-size: .88rem; color: var(--text); margin-bottom: 2px; }
+.array-demo .ad-cap { font-size: .76rem; color: var(--text-light); margin-bottom: 10px; }
+.ad-stage { display: flex; flex-direction: column; gap: 10px; overflow-x: auto; }
+.ad-row { display: flex; align-items: flex-end; gap: 2px; min-height: 104px; }
+.ad-row-lab {
+    flex: 0 0 auto; width: 26px; font-size: .76rem; font-weight: 700;
+    color: var(--text-light); display: flex; align-items: flex-end; justify-content: center;
+    padding-bottom: 2px; border-bottom: 1px solid transparent;
+}
+.ad-bar {
+    flex: 1 1 0; min-width: 16px; max-width: 46px;
+    display: flex; flex-direction: column; justify-content: flex-end; align-items: center;
+    gap: 2px; padding: 0 1px; position: relative;
+}
+.ad-bar > b { font-size: .74rem; color: var(--text); font-weight: 600; }
+.ad-bar > i {
+    display: block; width: 100%; border-radius: 3px 3px 0 0;
+    background: rgba(128,128,128,.26);
+    transition: height .12s ease, background .15s ease;
+}
+.ad-bar .pivot { position: absolute; top: -9px; font-size: .6rem; color: #b45309; font-weight: 700; }
+.ad-bar .pli { position: absolute; top: -14px; left: 50%; transform: translateX(-50%); font-size: .62rem; color: #4a7ab8; font-weight: 700; }
+.ad-bar .prj { position: absolute; top: -14px; left: 14%; font-size: .62rem; color: #0891b2; font-weight: 700; }
+.ad-bar.pk { position: absolute; top: -14px; right: 14%; font-size: .62rem; color: #7c3aed; font-weight: 700; }
+.ad-bar.pivot > i { background: rgba(234,88,12,.85) !important; }
+.ad-bar.uli > i { background: rgba(74,122,184,.85) !important; }
+.ad-bar.urj > i { background: rgba(8,145,178,.85) !important; }
+.ad-bar.usw > i { background: rgba(220,38,38,.8) !important; }
+.ad-bar.done > i { background: rgba(5,150,105,.45) !important; }
+.ad-bar.done > b { color: #059669; font-weight: 700; }
+.ad-bar.cmp > i { background: rgba(124,58,237,.55) !important; }
+.ad-bar.gray > i { background: rgba(128,128,128,.14) !important; }
+.ad-bar a-del { position: absolute; top: -6px; right: -3px; width: 12px; height: 12px; border-radius: 50%;
+    background: #dc2626; color: #fff; font-size: .62rem; line-height: 12px; text-align: center; font-style: normal; }
+.ad-row + .ad-row { border-top: 1px dashed var(--border); padding-top: 8px; }
+.ad-ctrl { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-top: 10px; }
+.ad-msg { font-size: .8rem; color: var(--text-light); margin-top: 8px; min-height: 1.4em; }
+.ad-msg b { color: var(--text); }
+.ad-legend { display: flex; flex-wrap: wrap; gap: 4px 12px; margin-top: 8px; font-size: .72rem; color: var(--text-light); }
+.ad-legend s { text-decoration: none; }
+.ad-legend i { display: inline-block; width: 12px; height: 12px; border-radius: 3px; margin-right: 4px; vertical-align: -1px; }
 
 /* 代码题页 -> 算法讲义 的悬浮入口（放左下角，避开右下角的 🎨 与 ☰） */
 .algo-fab {
@@ -3326,6 +3382,10 @@ h3.algo-h:first-child, h4.algo-h:first-child, h5.algo-h:first-child { margin-top
     border-color: var(--success);
     color: white;
 }
+
+/* 解答教材原图独立展开区（与解法面板分开） */
+.code-ansfig { margin-top: 10px; }
+.ansfig-toggle.checked { background: var(--primary); border-color: var(--primary); color: #fff; }
 
 .daka-kaodian {
     color: var(--text-light);
