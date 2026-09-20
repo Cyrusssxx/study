@@ -1145,7 +1145,7 @@
     {
       "id": "ds_0074",
       "number": 74,
-      "content": "【2021统考真题】已知头指针h指向一个带头结点的非空循环单链表，结点结构为data丨next，其 中next是指向直接后继结点的指针，p是尾指针，q是临时指针。现要删除该链表的第一个元素， 正确的语句序列是( )。<br><img src=\"data/ds_figs/ds_0074.png\" alt=\"ds题图\" style=\"max-width:100%;margin:8px 0;border:1px solid #ddd;border-radius:4px;\" />",
+      "content": "【2021统考真题】已知头指针h指向一个带头结点的非空循环单链表，结点结构为data丨next，其 中next是指向直接后继结点的指针，p是尾指针，q是临时指针。现要删除该链表的第一个元素， 正确的语句序列是( )。",
       "options": {
         "A": "h->next=h->next->next;q=h->next;free(q);",
         "B": "q=h->next;h->next=h->next->next;free(q);",
@@ -1160,7 +1160,7 @@
     {
       "id": "ds_0075",
       "number": 75,
-      "content": "【2023统考真题】现有非空双链表L，其结点结构为prevdatanext，prev是指向直接前驱结点的 指针，next是指向直接后继结点的指针。若要在L中指针p所指向的结点(非尾结点)之后插入指 针s指向的新结点，则在执行语句序列<s->next=p->next；p->next=s；”后，下列语句序 列中还需要执行的是( )。<br><img src=\"data/ds_figs/ds_0075.png\" alt=\"ds题图\" style=\"max-width:100%;margin:8px 0;border:1px solid #ddd;border-radius:4px;\" />",
+      "content": "【2023统考真题】现有非空双链表L，其结点结构为prevdatanext，prev是指向直接前驱结点的 指针，next是指向直接后继结点的指针。若要在L中指针p所指向的结点(非尾结点)之后插入指 针s指向的新结点，则在执行语句序列<s->next=p->next；p->next=s；”后，下列语句序 列中还需要执行的是( )。",
       "options": {
         "A": "s->next->prev=p;s->prev=p;",
         "B": "p->next->prev=s;s->prev=p;",
@@ -1175,7 +1175,7 @@
     {
       "id": "ds_0076",
       "number": 76,
-      "content": "【2024统考真题】已知带头结点的非空单链表L的头指针为h，结点结构为datanext.其中next是 指向直接后继结点的指针。现有指针p和q，若p指向L中非首且非尾的任意一个结点，则执行语 句序列“q=p->next；p->next=q->next；q->next=h->next；h->next=q；”的结果是( )<br><img src=\"data/ds_figs/ds_0076.png\" alt=\"ds题图\" style=\"max-width:100%;margin:8px 0;border:1px solid #ddd;border-radius:4px;\" />",
+      "content": "【2024统考真题】已知带头结点的非空单链表L的头指针为h，结点结构为datanext.其中next是 指向直接后继结点的指针。现有指针p和q，若p指向L中非首且非尾的任意一个结点，则执行语 句序列“q=p->next；p->next=q->next；q->next=h->next；h->next=q；”的结果是( )",
       "options": {
         "A": "在p所指结点后插入q所指结点",
         "B": "在q所指结点后插入p所指结点",
@@ -1608,7 +1608,7 @@
     {
       "id": "ds_0104",
       "number": 104,
-      "content": "【2011统考真题】元素a，b，c，d，e依次进入初始为空的栈中，若元素入栈后可停留、可出栈，直 到所有元素都出栈，则在所有可能的出栈序列中，以元素d开头的序列个数是( )。<br><img src=\"data/ds_figs/ds_0104.png\" alt=\"ds题图\" style=\"max-width:100%;margin:8px 0;border:1px solid #ddd;border-radius:4px;\" />",
+      "content": "【2011统考真题】元素a，b，c，d，e依次进入初始为空的栈中，若元素入栈后可停留、可出栈，直 到所有元素都出栈，则在所有可能的出栈序列中，以元素d开头的序列个数是( )。",
       "options": {
         "A": "3",
         "B": "4",
@@ -1964,7 +1964,7 @@
     {
       "id": "ds_0127",
       "number": 127,
-      "content": "【2010统考真题】某队列允许在其两端进行入队操作，但仅允许在一端进行出队操作。若元素 a，b，c，d，e依次入此队列后再进行出队操作，则不可能得到的出队序列是( )。<br><img src=\"data/ds_figs/ds_0127.png\" alt=\"ds题图\" style=\"max-width:100%;margin:8px 0;border:1px solid #ddd;border-radius:4px;\" />",
+      "content": "【2010统考真题】某队列允许在其两端进行入队操作，但仅允许在一端进行出队操作。若元素 a，b，c，d，e依次入此队列后再进行出队操作，则不可能得到的出队序列是( )。",
       "options": {
         "A": "b,a,c,d,e",
         "B": "d,b,a,c,e",
@@ -2119,7 +2119,7 @@
     {
       "id": "ds_0137",
       "number": 137,
-      "content": "设有如下递归函数，则计算F(8)需要调用该递归函数的次数为( )。\n<pre class=\"code-block\">int F(int n){\n    if(n&lt;=3)return 1;\n    else return F(n-2)+F(n-4)+1;\n}</pre><br><img src=\"data/ds_figs/ds_0137.png\" alt=\"ds题图\" style=\"max-width:100%;margin:8px 0;border:1px solid #ddd;border-radius:4px;\" />",
+      "content": "设有如下递归函数，则计算F(8)需要调用该递归函数的次数为( )。\n<pre class=\"code-block\">int F(int n){\n    if(n&lt;=3)return 1;\n    else return F(n-2)+F(n-4)+1;\n}</pre>",
       "options": {
         "A": "7",
         "B": "8",
@@ -2323,7 +2323,7 @@
     {
       "id": "ds_0150",
       "number": 150,
-      "content": "【2024统考真题】与表达式x+y* (z-u) /v等价的后缀表达式是( )。<br><img src=\"data/ds_figs/ds_0150.png\" alt=\"ds题图\" style=\"max-width:100%;margin:8px 0;border:1px solid #ddd;border-radius:4px;\" />",
+      "content": "【2024统考真题】与表达式x+y* (z-u) /v等价的后缀表达式是( )。",
       "options": {
         "A": "xyzu-*v/+",
         "B": "xyzu-v/​*+",
@@ -2995,7 +2995,7 @@
     {
       "id": "ds_0193",
       "number": 193,
-      "content": "具有10个叶结点的二叉树中有( )个度为2的结点。<br><img src=\"data/ds_figs/ds_0193.png\" alt=\"ds题图\" style=\"max-width:100%;margin:8px 0;border:1px solid #ddd;border-radius:4px;\" />",
+      "content": "具有10个叶结点的二叉树中有( )个度为2的结点。",
       "options": {
         "A": "8",
         "B": "9",
@@ -3435,7 +3435,7 @@
     {
       "id": "ds_0222",
       "number": 222,
-      "content": "设n，m为一棵二叉树上的两个结点，在中序遍历时，n在m前的条件是( )。<br><img src=\"data/ds_figs/ds_0222.png\" alt=\"ds题图\" style=\"max-width:100%;margin:8px 0;border:1px solid #ddd;border-radius:4px;\" />",
+      "content": "设n，m为一棵二叉树上的两个结点，在中序遍历时，n在m前的条件是( )。",
       "options": {
         "A": "n在m右方",
         "B": "n是m祖先",
@@ -3529,7 +3529,7 @@
     {
       "id": "ds_0228",
       "number": 228,
-      "content": "先序序列为A，B，C，后序序列为C，B，A的二叉树共有( )。<br><img src=\"data/ds_figs/ds_0228.png\" alt=\"ds题图\" style=\"max-width:100%;margin:8px 0;border:1px solid #ddd;border-radius:4px;\" />",
+      "content": "先序序列为A，B，C，后序序列为C，B，A的二叉树共有( )。",
       "options": {
         "A": "1棵",
         "B": "2棵",
@@ -3576,7 +3576,7 @@
     {
       "id": "ds_0231",
       "number": 231,
-      "content": "若二叉树中结点的先序序列是⋯a⋯b⋯，中序序列是⋯b⋯a⋯，则( )。<br><img src=\"data/ds_figs/ds_0231.png\" alt=\"ds题图\" style=\"max-width:100%;margin:8px 0;border:1px solid #ddd;border-radius:4px;\" />",
+      "content": "若二叉树中结点的先序序列是⋯a⋯b⋯，中序序列是⋯b⋯a⋯，则( )。",
       "options": {
         "A": "结点a和结点b分别在某结点的左子树和右子树中",
         "B": "结点b在结点a的右子树中",
@@ -3607,7 +3607,7 @@
     {
       "id": "ds_0233",
       "number": 233,
-      "content": "下列序列中，不能唯一地确定一棵二叉树的是( )。<br><img src=\"data/ds_figs/ds_0233.png\" alt=\"ds题图\" style=\"max-width:100%;margin:8px 0;border:1px solid #ddd;border-radius:4px;\" />",
+      "content": "下列序列中，不能唯一地确定一棵二叉树的是( )。",
       "options": {
         "A": "层次序列和中序序列",
         "B": "先序序列和中序序列",
@@ -3639,7 +3639,7 @@
     {
       "id": "ds_0235",
       "number": 235,
-      "content": "已知一棵二叉树的后序序列为DABEC，中序序列为DEBAC，则先序序列为( )。<br><img src=\"data/ds_figs/ds_0235.png\" alt=\"ds题图\" style=\"max-width:100%;margin:8px 0;border:1px solid #ddd;border-radius:4px;\" />",
+      "content": "已知一棵二叉树的后序序列为DABEC，中序序列为DEBAC，则先序序列为( )。",
       "options": {
         "A": "ACBED",
         "B": "DECAB",
@@ -3671,7 +3671,7 @@
     {
       "id": "ds_0237",
       "number": 237,
-      "content": "已知一棵二叉树的层次序列为ABCDEF，中序序列为BADCFE，则先序序列为( )。<br><img src=\"data/ds_figs/ds_0237.png\" alt=\"ds题图\" style=\"max-width:100%;margin:8px 0;border:1px solid #ddd;border-radius:4px;\" />",
+      "content": "已知一棵二叉树的层次序列为ABCDEF，中序序列为BADCFE，则先序序列为( )。",
       "options": {
         "A": "ACBEDF",
         "B": "ABCDEF",
@@ -3812,7 +3812,7 @@
     {
       "id": "ds_0246",
       "number": 246,
-      "content": "二叉树在线索化后，仍不能有效求解的问题是( )。<br><img src=\"data/ds_figs/ds_0246.png\" alt=\"ds题图\" style=\"max-width:100%;margin:8px 0;border:1px solid #ddd;border-radius:4px;\" />",
+      "content": "二叉树在线索化后，仍不能有效求解的问题是( )。",
       "options": {
         "A": "先序线索二叉树中求先序后继",
         "B": "中序线索二叉树中求中序后继",
@@ -4019,7 +4019,7 @@
     {
       "id": "ds_0259",
       "number": 259,
-      "content": "【2022统考真题】若结点p与q在二叉树T的中序遍历序列中相邻，且p在q之前，则下列p与 q的关系中，不可能的是( )。 I.q是p的双亲 II.q是p的右孩子 III.q是p的右兄弟 IV.q是p的双亲的双亲<br><img src=\"data/ds_figs/ds_0259.png\" alt=\"ds题图\" style=\"max-width:100%;margin:8px 0;border:1px solid #ddd;border-radius:4px;\" />",
+      "content": "【2022统考真题】若结点p与q在二叉树T的中序遍历序列中相邻，且p在q之前，则下列p与 q的关系中，不可能的是( )。 I.q是p的双亲 II.q是p的右孩子 III.q是p的右兄弟 IV.q是p的双亲的双亲",
       "options": {
         "A": "仅I",
         "B": "仅III",
@@ -4065,7 +4065,7 @@
     {
       "id": "ds_0262",
       "number": 262,
-      "content": "下列关于树的说法中，正确的是( )。 I.对于有n个结点的二叉树，其高度为log<sub>2</sub>n II.完全二叉树中，若一个结点没有左孩子，则它必是叶结点 III.高度为h(h>0)的完全二叉树对应的森林所含的树的个数一定是h IV.一棵树中的叶子数一定等于与其对应的二叉树的叶子数<br><img src=\"data/ds_figs/ds_0262.png\" alt=\"ds题图\" style=\"max-width:100%;margin:8px 0;border:1px solid #ddd;border-radius:4px;\" />",
+      "content": "下列关于树的说法中，正确的是( )。 I.对于有n个结点的二叉树，其高度为log<sub>2</sub>n II.完全二叉树中，若一个结点没有左孩子，则它必是叶结点 III.高度为h(h>0)的完全二叉树对应的森林所含的树的个数一定是h IV.一棵树中的叶子数一定等于与其对应的二叉树的叶子数",
       "options": {
         "A": "I和III",
         "B": "IV",
@@ -4145,7 +4145,7 @@
     {
       "id": "ds_0267",
       "number": 267,
-      "content": "设森林F对应的二叉树是一棵具有16个结点的完全二叉树，则森林F中树的数目和结点最多的树 的结点数分别是( )。<br><img src=\"data/ds_figs/ds_0267.png\" alt=\"ds题图\" style=\"max-width:100%;margin:8px 0;border:1px solid #ddd;border-radius:4px;\" />",
+      "content": "设森林F对应的二叉树是一棵具有16个结点的完全二叉树，则森林F中树的数目和结点最多的树 的结点数分别是( )。",
       "options": {
         "A": "2和8",
         "B": "2和9",
@@ -4287,7 +4287,7 @@
     {
       "id": "ds_0276",
       "number": 276,
-      "content": "【2009统考真题】将森林转换为对应的二叉树，若在二叉树中，结点u是结点v的父结点的父结 点，则在原来的森林中，u和v可能具有的关系是( )。 I.父子关系 II.兄弟关系 III.u的父结点与v的父结点是兄弟关系<br><img src=\"data/ds_figs/ds_0276.png\" alt=\"ds题图\" style=\"max-width:100%;margin:8px 0;border:1px solid #ddd;border-radius:4px;\" />",
+      "content": "【2009统考真题】将森林转换为对应的二叉树，若在二叉树中，结点u是结点v的父结点的父结 点，则在原来的森林中，u和v可能具有的关系是( )。 I.父子关系 II.兄弟关系 III.u的父结点与v的父结点是兄弟关系",
       "options": {
         "A": "只有II",
         "B": "I和II",
@@ -4303,7 +4303,7 @@
     {
       "id": "ds_0277",
       "number": 277,
-      "content": "【2011统考真题】已知一棵有2011个结点的树，其叶结点数为116，该树对应的二叉树中无右孩子 的结点数是( )。<br><img src=\"data/ds_figs/ds_0277.png\" alt=\"ds题图\" style=\"max-width:100%;margin:8px 0;border:1px solid #ddd;border-radius:4px;\" />",
+      "content": "【2011统考真题】已知一棵有2011个结点的树，其叶结点数为116，该树对应的二叉树中无右孩子 的结点数是( )。",
       "options": {
         "A": "115",
         "B": "116",
@@ -4335,7 +4335,7 @@
     {
       "id": "ds_0279",
       "number": 279,
-      "content": "【2019统考真题】若将一棵树T转化为对应的二叉树BT，则下列对BT的遍历中，其遍历序列 与T的后根遍历序列相同的是( )。<br><img src=\"data/ds_figs/ds_0279.png\" alt=\"ds题图\" style=\"max-width:100%;margin:8px 0;border:1px solid #ddd;border-radius:4px;\" />",
+      "content": "【2019统考真题】若将一棵树T转化为对应的二叉树BT，则下列对BT的遍历中，其遍历序列 与T的后根遍历序列相同的是( )。",
       "options": {
         "A": "先序遍历",
         "B": "中序遍历",
@@ -4366,7 +4366,7 @@
     {
       "id": "ds_0281",
       "number": 281,
-      "content": "【2021统考真题】某森林F对应的二叉树为T，若T的先序遍历序列是a，b，d，c，e，g，f，中序遍历序 列是b，d，a，e，g，c，f，则F中树的棵数是( )。<br><img src=\"data/ds_figs/ds_0281.png\" alt=\"ds题图\" style=\"max-width:100%;margin:8px 0;border:1px solid #ddd;border-radius:4px;\" />",
+      "content": "【2021统考真题】某森林F对应的二叉树为T，若T的先序遍历序列是a，b，d，c，e，g，f，中序遍历序 列是b，d，a，e，g，c，f，则F中树的棵数是( )。",
       "options": {
         "A": "1",
         "B": "2",
@@ -4460,7 +4460,7 @@
     {
       "id": "ds_0287",
       "number": 287,
-      "content": "设某哈夫曼树有5个叶结点，则该哈夫曼树的高度最高可以是( )。<br><img src=\"data/ds_figs/ds_0287.png\" alt=\"ds题图\" style=\"max-width:100%;margin:8px 0;border:1px solid #ddd;border-radius:4px;\" />",
+      "content": "设某哈夫曼树有5个叶结点，则该哈夫曼树的高度最高可以是( )。",
       "options": {
         "A": "3",
         "B": "4",
@@ -4652,7 +4652,7 @@
     {
       "id": "ds_0299",
       "number": 299,
-      "content": "【2018统考真题】已知字符集{a，b，c，d，e，f}，若各字符出现的次数分别为6，3，8，2，10，4，则对 应字符集中各字符的哈夫曼编码可能是( )。<br><img src=\"data/ds_figs/ds_0299.png\" alt=\"ds题图\" style=\"max-width:100%;margin:8px 0;border:1px solid #ddd;border-radius:4px;\" />",
+      "content": "【2018统考真题】已知字符集{a，b，c，d，e，f}，若各字符出现的次数分别为6，3，8，2，10，4，则对 应字符集中各字符的哈夫曼编码可能是( )。",
       "options": {
         "A": "00,1011,01,1010,11,100",
         "B": "00,100,110,000,0010,01",
@@ -4684,7 +4684,7 @@
     {
       "id": "ds_0301",
       "number": 301,
-      "content": "【2021统考真题】若某二叉树有5个叶结点，其权值分别为10，12，16，21，30，则其最小的带权路径 长度(WPL)是( )。<br><img src=\"data/ds_figs/ds_0301.png\" alt=\"ds题图\" style=\"max-width:100%;margin:8px 0;border:1px solid #ddd;border-radius:4px;\" />",
+      "content": "【2021统考真题】若某二叉树有5个叶结点，其权值分别为10，12，16，21，30，则其最小的带权路径 长度(WPL)是( )。",
       "options": {
         "A": "89",
         "B": "200",
@@ -4716,7 +4716,7 @@
     {
       "id": "ds_0303",
       "number": 303,
-      "content": "【2023统考真题】在由6个字符组成的字符集S中，各字符出现的频次分别为3，4，5，6，8，10，为S 构造的哈夫曼编码的加权平均长度为( )。<br><img src=\"data/ds_figs/ds_0303.png\" alt=\"ds题图\" style=\"max-width:100%;margin:8px 0;border:1px solid #ddd;border-radius:4px;\" />",
+      "content": "【2023统考真题】在由6个字符组成的字符集S中，各字符出现的频次分别为3，4，5，6，8，10，为S 构造的哈夫曼编码的加权平均长度为( )。",
       "options": {
         "A": "2.4",
         "B": "2.5",
@@ -4732,7 +4732,7 @@
     {
       "id": "ds_0304",
       "number": 304,
-      "content": "【2025统考真题】设字符集S中包含7个字符，各字符出现的频次分别为2，3，4，6，8，10，11。现为 S中的各字符构造哈夫曼编码，编码长度不小于3的字符数是( )。<br><img src=\"data/ds_figs/ds_0304.png\" alt=\"ds题图\" style=\"max-width:100%;margin:8px 0;border:1px solid #ddd;border-radius:4px;\" />",
+      "content": "【2025统考真题】设字符集S中包含7个字符，各字符出现的频次分别为2，3，4，6，8，10，11。现为 S中的各字符构造哈夫曼编码，编码长度不小于3的字符数是( )。",
       "options": {
         "A": "2",
         "B": "3",
@@ -4973,7 +4973,7 @@
     {
       "id": "ds_0320",
       "number": 320,
-      "content": "【2010统考真题】若无向图G=(V，E)中含有7个顶点，要保证图G在任何情况下都是连通的，则 需要的边数最少是( )。<br><img src=\"data/ds_figs/ds_0320.png\" alt=\"ds题图\" style=\"max-width:100%;margin:8px 0;border:1px solid #ddd;border-radius:4px;\" />",
+      "content": "【2010统考真题】若无向图G=(V，E)中含有7个顶点，要保证图G在任何情况下都是连通的，则 需要的边数最少是( )。",
       "options": {
         "A": "6",
         "B": "15",
@@ -5003,7 +5003,7 @@
     {
       "id": "ds_0322",
       "number": 322,
-      "content": "【2022统考真题】对于无向图G=(V，E)，下列选项中，正确的是( )。<br><img src=\"data/ds_figs/ds_0322.png\" alt=\"ds题图\" style=\"max-width:100%;margin:8px 0;border:1px solid #ddd;border-radius:4px;\" />",
+      "content": "【2022统考真题】对于无向图G=(V，E)，下列选项中，正确的是( )。",
       "options": {
         "A": "当|V|>|E|时,G一定是连通的",
         "B": "当|V|<|E|时,G一定是连通的",
@@ -5650,7 +5650,7 @@
     {
       "id": "ds_0363",
       "number": 363,
-      "content": "设有n个顶点的无向连通图的最小生成树不唯一，则下列说法中正确的是( )。<br><img src=\"data/ds_figs/ds_0363.png\" alt=\"ds题图\" style=\"max-width:100%;margin:8px 0;border:1px solid #ddd;border-radius:4px;\" />",
+      "content": "设有n个顶点的无向连通图的最小生成树不唯一，则下列说法中正确的是( )。",
       "options": {
         "A": "图的边数一定大于n-1",
         "B": "图的权值最小的边一定有多条",
@@ -5730,7 +5730,7 @@
     {
       "id": "ds_0368",
       "number": 368,
-      "content": "已知带权连通无向图G=(V,E)，其中V={v<sub>1</sub>，v<sub>2</sub>，v<sub>3</sub>，v<sub>4</sub>，v<sub>5</sub>，v<sub>6</sub>，v<sub>7</sub>}，E={(v<sub>1</sub>,v<sub>2</sub>)10，(v<sub>1</sub>,v<sub>3</sub>)2，(v<sub>3</sub>,v<sub>4</sub>)2，(v<sub>3</sub>,v<sub>6</sub>)11，(v<sub>2</sub>,v<sub>5</sub>)1，(v<sub>4</sub>,v<sub>5</sub>)4，(v<sub>4</sub>,v<sub>6</sub>)6，(v<sub>5</sub>,v<sub>7</sub>)7，(v<sub>6</sub>,v<sub>7</sub>)3}(注：顶点偶对括号外的数据表示边上的权值)，从源点v<sub>1</sub>到顶点v<sub>7</sub>的最短路径上经过的顶点序列是( )。<br><img src=\"data/ds_figs/ds_0368.png\" alt=\"ds题图\" style=\"max-width:100%;margin:8px 0;border:1px solid #ddd;border-radius:4px;\" />",
+      "content": "已知带权连通无向图G=(V,E)，其中V={v<sub>1</sub>，v<sub>2</sub>，v<sub>3</sub>，v<sub>4</sub>，v<sub>5</sub>，v<sub>6</sub>，v<sub>7</sub>}，E={(v<sub>1</sub>,v<sub>2</sub>)10，(v<sub>1</sub>,v<sub>3</sub>)2，(v<sub>3</sub>,v<sub>4</sub>)2，(v<sub>3</sub>,v<sub>6</sub>)11，(v<sub>2</sub>,v<sub>5</sub>)1，(v<sub>4</sub>,v<sub>5</sub>)4，(v<sub>4</sub>,v<sub>6</sub>)6，(v<sub>5</sub>,v<sub>7</sub>)7，(v<sub>6</sub>,v<sub>7</sub>)3}(注：顶点偶对括号外的数据表示边上的权值)，从源点v<sub>1</sub>到顶点v<sub>7</sub>的最短路径上经过的顶点序列是( )。",
       "options": {
         "A": "v<sub>1</sub>,v<sub>2</sub>,v<sub>5</sub>,v<sub>7</sub>",
         "B": "v<sub>1</sub>,v<sub>3</sub>,v<sub>4</sub>,v<sub>6</sub>,v<sub>7</sub>",
@@ -5809,7 +5809,7 @@
     {
       "id": "ds_0373",
       "number": 373,
-      "content": "下列关于拓扑排序的说法中，正确的是( )。 I.顶点数大于1的强连通图不能进行拓扑排序 II.在一个有向图的拓扑序列中，若顶点a在顶点b之前，则图中必有一条弧<a，b> III.若有向无环图的拓扑序列唯一，则可以唯一确定该图<br><img src=\"data/ds_figs/ds_0373.png\" alt=\"ds题图\" style=\"max-width:100%;margin:8px 0;border:1px solid #ddd;border-radius:4px;\" />",
+      "content": "下列关于拓扑排序的说法中，正确的是( )。 I.顶点数大于1的强连通图不能进行拓扑排序 II.在一个有向图的拓扑序列中，若顶点a在顶点b之前，则图中必有一条弧<a，b> III.若有向无环图的拓扑序列唯一，则可以唯一确定该图",
       "options": {
         "A": "I和II",
         "B": "I、II和III",
@@ -5903,7 +5903,7 @@
     {
       "id": "ds_0379",
       "number": 379,
-      "content": "用DFS算法遍历一个无环有向图，并在DFS算法退栈返回时输出相应的顶点，则输出的顶点序列 是( )。<br><img src=\"data/ds_figs/ds_0379.png\" alt=\"ds题图\" style=\"max-width:100%;margin:8px 0;border:1px solid #ddd;border-radius:4px;\" />",
+      "content": "用DFS算法遍历一个无环有向图，并在DFS算法退栈返回时输出相应的顶点，则输出的顶点序列 是( )。",
       "options": {
         "A": "逆拓扑有序",
         "B": "拓扑有序",
@@ -5918,7 +5918,7 @@
     {
       "id": "ds_0380",
       "number": 380,
-      "content": "下列关于图的说法中，正确的是( )。 I.有向图中顶点V的度等于其邻接矩阵中第V行中1的个数 II.无向图的邻接矩阵一定是对称矩阵，有向图的邻接矩阵一定是非对称矩阵 III.在带权图G的最小生成树G 中，某条边的权值可能会超过未选边的权值 1 IV.若有向无环图的拓扑序列唯一，则可以唯一确定该图<br><img src=\"data/ds_figs/ds_0380.png\" alt=\"ds题图\" style=\"max-width:100%;margin:8px 0;border:1px solid #ddd;border-radius:4px;\" />",
+      "content": "下列关于图的说法中，正确的是( )。 I.有向图中顶点V的度等于其邻接矩阵中第V行中1的个数 II.无向图的邻接矩阵一定是对称矩阵，有向图的邻接矩阵一定是非对称矩阵 III.在带权图G的最小生成树G 中，某条边的权值可能会超过未选边的权值 1 IV.若有向无环图的拓扑序列唯一，则可以唯一确定该图",
       "options": {
         "A": "I、II和III",
         "B": "III和IV",
@@ -6204,7 +6204,7 @@
     {
       "id": "ds_0398",
       "number": 398,
-      "content": "【2019统考真题】用有向无环图描述表达式(x+y) (x+y) (/x)，需要的顶点个数至少是( )。<br><img src=\"data/ds_figs/ds_0398.png\" alt=\"ds题图\" style=\"max-width:100%;margin:8px 0;border:1px solid #ddd;border-radius:4px;\" />",
+      "content": "【2019统考真题】用有向无环图描述表达式(x+y) (x+y) (/x)，需要的顶点个数至少是( )。",
       "options": {
         "A": "5",
         "B": "6",
@@ -6550,7 +6550,7 @@
     {
       "id": "ds_0420",
       "number": 420,
-      "content": "具有12个关键字的有序表中，对每个关键字的查找概率相同，折半查找算法查找成功的平均查找 长度为( )，折半查找查找失败的平均查找长度为( )。<br><img src=\"data/ds_figs/ds_0420.png\" alt=\"ds题图\" style=\"max-width:100%;margin:8px 0;border:1px solid #ddd;border-radius:4px;\" />",
+      "content": "具有12个关键字的有序表中，对每个关键字的查找概率相同，折半查找算法查找成功的平均查找 长度为( )，折半查找查找失败的平均查找长度为( )。",
       "options": {
         "A": "37/12",
         "B": "35/12",
@@ -6835,7 +6835,7 @@
     {
       "id": "ds_0438",
       "number": 438,
-      "content": "从空树开始，依次插入元素52，26，14，32，71，60，93，58，24和41后构成了一棵二叉排序树。在该树 查找60，要进行比较的次数为( )。<br><img src=\"data/ds_figs/ds_0438.png\" alt=\"ds题图\" style=\"max-width:100%;margin:8px 0;border:1px solid #ddd;border-radius:4px;\" />",
+      "content": "从空树开始，依次插入元素52，26，14，32，71，60，93，58，24和41后构成了一棵二叉排序树。在该树 查找60，要进行比较的次数为( )。",
       "options": {
         "A": "3",
         "B": "4",
@@ -6914,7 +6914,7 @@
     {
       "id": "ds_0443",
       "number": 443,
-      "content": "具有5层结点的平衡二叉树至少有( )个结点。<br><img src=\"data/ds_figs/ds_0443.png\" alt=\"ds题图\" style=\"max-width:100%;margin:8px 0;border:1px solid #ddd;border-radius:4px;\" />",
+      "content": "具有5层结点的平衡二叉树至少有( )个结点。",
       "options": {
         "A": "10",
         "B": "12",
@@ -6930,7 +6930,7 @@
     {
       "id": "ds_0444",
       "number": 444,
-      "content": "高度为3的平衡二叉排序树的形态共有( )种。<br><img src=\"data/ds_figs/ds_0444.png\" alt=\"ds题图\" style=\"max-width:100%;margin:8px 0;border:1px solid #ddd;border-radius:4px;\" />",
+      "content": "高度为3的平衡二叉排序树的形态共有( )种。",
       "options": {
         "A": "13",
         "B": "14",
@@ -7071,7 +7071,7 @@
     {
       "id": "ds_0453",
       "number": 453,
-      "content": "【2011统考真题】对下列关键字序列，不可能构成某二叉排序树中一条查找路径的是( )。<br><img src=\"data/ds_figs/ds_0453.png\" alt=\"ds题图\" style=\"max-width:100%;margin:8px 0;border:1px solid #ddd;border-radius:4px;\" />",
+      "content": "【2011统考真题】对下列关键字序列，不可能构成某二叉排序树中一条查找路径的是( )。",
       "options": {
         "A": "95,22,91,24,94,71",
         "B": "92,20,91,34,88,35",
@@ -7087,7 +7087,7 @@
     {
       "id": "ds_0454",
       "number": 454,
-      "content": "【2012统考真题】若平衡二叉树的高度为6，且所有非叶结点的平衡因子均为1，则该平衡二叉树 的结点总数为( )。<br><img src=\"data/ds_figs/ds_0454.png\" alt=\"ds题图\" style=\"max-width:100%;margin:8px 0;border:1px solid #ddd;border-radius:4px;\" />",
+      "content": "【2012统考真题】若平衡二叉树的高度为6，且所有非叶结点的平衡因子均为1，则该平衡二叉树 的结点总数为( )。",
       "options": {
         "A": "12",
         "B": "20",
@@ -7119,7 +7119,7 @@
     {
       "id": "ds_0456",
       "number": 456,
-      "content": "【2013统考真题】若将关键字1，2，3，4，5，6，7依次插入初始为空的平衡二叉树T，则T中平衡因子 为0的分支结点的个数是( )。<br><img src=\"data/ds_figs/ds_0456.png\" alt=\"ds题图\" style=\"max-width:100%;margin:8px 0;border:1px solid #ddd;border-radius:4px;\" />",
+      "content": "【2013统考真题】若将关键字1，2，3，4，5，6，7依次插入初始为空的平衡二叉树T，则T中平衡因子 为0的分支结点的个数是( )。",
       "options": {
         "A": "0",
         "B": "1",
@@ -7261,7 +7261,7 @@
     {
       "id": "ds_0465",
       "number": 465,
-      "content": "下列关于高度为3的3阶B树的说法中，正确的是( )。 I.每个内部结点至少有两棵非空子树 II.树中每个结点至多有2个关键字 III.树中最多能存储26个关键字 IV.插入一个元素引起B树结点分裂后，树的高度变为4<br><img src=\"data/ds_figs/ds_0465.png\" alt=\"ds题图\" style=\"max-width:100%;margin:8px 0;border:1px solid #ddd;border-radius:4px;\" />",
+      "content": "下列关于高度为3的3阶B树的说法中，正确的是( )。 I.每个内部结点至少有两棵非空子树 II.树中每个结点至多有2个关键字 III.树中最多能存储26个关键字 IV.插入一个元素引起B树结点分裂后，树的高度变为4",
       "options": {
         "A": "I、II",
         "B": "I、II、III",
@@ -7466,7 +7466,7 @@
     {
       "id": "ds_0478",
       "number": 478,
-      "content": "【2013统考真题】在一棵高度为2的5阶B树中，所含关键字的个数至少是( )。<br><img src=\"data/ds_figs/ds_0478.png\" alt=\"ds题图\" style=\"max-width:100%;margin:8px 0;border:1px solid #ddd;border-radius:4px;\" />",
+      "content": "【2013统考真题】在一棵高度为2的5阶B树中，所含关键字的个数至少是( )。",
       "options": {
         "A": "5",
         "B": "7",
@@ -8327,7 +8327,7 @@
     {
       "id": "ds_0533",
       "number": 533,
-      "content": "【2018统考真题】对初始数据序列(8，3，9，11，2，1，4，7，5，10，6)进行希尔排序。若第一趟排序结果 为(1，3，7，5，2，6，4，9，11，10，8)，第二趟排序结果为(1，2，6，4，3，7，5，8，11，10，9)，则两趟排序采用的增量 (间隔)依次是( )。<br><img src=\"data/ds_figs/ds_0533.png\" alt=\"ds题图\" style=\"max-width:100%;margin:8px 0;border:1px solid #ddd;border-radius:4px;\" />",
+      "content": "【2018统考真题】对初始数据序列(8，3，9，11，2，1，4，7，5，10，6)进行希尔排序。若第一趟排序结果 为(1，3，7，5，2，6，4，9，11，10，8)，第二趟排序结果为(1，2，6，4，3，7，5，8，11，10，9)，则两趟排序采用的增量 (间隔)依次是( )。",
       "options": {
         "A": "3,1",
         "B": "3,2",
@@ -8711,7 +8711,7 @@
     {
       "id": "ds_0557",
       "number": 557,
-      "content": "下列( )是一个堆。<br><img src=\"data/ds_figs/ds_0557.png\" alt=\"ds题图\" style=\"max-width:100%;margin:8px 0;border:1px solid #ddd;border-radius:4px;\" />",
+      "content": "下列( )是一个堆。",
       "options": {
         "A": "19,75,34,26,97,56",
         "B": "97,26,34,75,19,56",
@@ -8809,7 +8809,7 @@
     {
       "id": "ds_0563",
       "number": 563,
-      "content": "有一组数据(15，9，7，8，20，-1，7，4)，用堆排序的筛选方法建立的初始小根堆为( )。<br><img src=\"data/ds_figs/ds_0563.png\" alt=\"ds题图\" style=\"max-width:100%;margin:8px 0;border:1px solid #ddd;border-radius:4px;\" />",
+      "content": "有一组数据(15，9，7，8，20，-1，7，4)，用堆排序的筛选方法建立的初始小根堆为( )。",
       "options": {
         "A": "-1,4,8,9,20,7,15,7",
         "B": "-1,7,15,7,4,8,20,9",
@@ -8857,7 +8857,7 @@
     {
       "id": "ds_0566",
       "number": 566,
-      "content": "已知大根堆{62，34，53，12，8，46，22}，删除堆顶元素后需要重新调整堆，则在此过程中关键字的比 较次数为( )。<br><img src=\"data/ds_figs/ds_0566.png\" alt=\"ds题图\" style=\"max-width:100%;margin:8px 0;border:1px solid #ddd;border-radius:4px;\" />",
+      "content": "已知大根堆{62，34，53，12，8，46，22}，删除堆顶元素后需要重新调整堆，则在此过程中关键字的比 较次数为( )。",
       "options": {
         "A": "2",
         "B": "3",
@@ -8888,7 +8888,7 @@
     {
       "id": "ds_0568",
       "number": 568,
-      "content": "【2009统考真题】已知关键字序列{5，8，12，19，28，20，15，22}是小根堆，插入关键字3，调整好后得 到的小根堆为( )。<br><img src=\"data/ds_figs/ds_0568.png\" alt=\"ds题图\" style=\"max-width:100%;margin:8px 0;border:1px solid #ddd;border-radius:4px;\" />",
+      "content": "【2009统考真题】已知关键字序列{5，8，12，19，28，20，15，22}是小根堆，插入关键字3，调整好后得 到的小根堆为( )。",
       "options": {
         "A": "3,5,12,8,28,20,15,22,19",
         "B": "3,5,12,19,20,15,22,8,28",
@@ -8904,7 +8904,7 @@
     {
       "id": "ds_0569",
       "number": 569,
-      "content": "【2011统考真题】已知序列{25，13，10，12，9}是大根堆，在序列尾部插入新元素18，再将其调整 为大根堆，调整过程中元素之间进行的比较次数是( )。<br><img src=\"data/ds_figs/ds_0569.png\" alt=\"ds题图\" style=\"max-width:100%;margin:8px 0;border:1px solid #ddd;border-radius:4px;\" />",
+      "content": "【2011统考真题】已知序列{25，13，10，12，9}是大根堆，在序列尾部插入新元素18，再将其调整 为大根堆，调整过程中元素之间进行的比较次数是( )。",
       "options": {
         "A": "1",
         "B": "2",
@@ -8934,7 +8934,7 @@
     {
       "id": "ds_0571",
       "number": 571,
-      "content": "【2018统考真题】在将序列(6，1，5，9，8，4，7)建成大根堆时，正确的序列变化过程是( )。<br><img src=\"data/ds_figs/ds_0571.png\" alt=\"ds题图\" style=\"max-width:100%;margin:8px 0;border:1px solid #ddd;border-radius:4px;\" />",
+      "content": "【2018统考真题】在将序列(6，1，5，9，8，4，7)建成大根堆时，正确的序列变化过程是( )。",
       "options": {
         "A": "6,1,7,9,8,4,5→6,9,7,1,8,4,5→9,6,7,1,8,4,5→9,8,7,1,6,4,5",
         "B": "6,9,5,1,8,4,7→6,9,7,1,8,4,5→9,6,7,1,8,4,5→9,8,7,1,6,4,5",
@@ -8966,7 +8966,7 @@
     {
       "id": "ds_0573",
       "number": 573,
-      "content": "【2021统考真题】将关键字6，9，1，5，8，4，7依次插入初始为空的大根堆H，得到的H是( )。<br><img src=\"data/ds_figs/ds_0573.png\" alt=\"ds题图\" style=\"max-width:100%;margin:8px 0;border:1px solid #ddd;border-radius:4px;\" />",
+      "content": "【2021统考真题】将关键字6，9，1，5，8，4，7依次插入初始为空的大根堆H，得到的H是( )。",
       "options": {
         "A": "9,8,7,6,5,4,1",
         "B": "9,8,7,5,6,1,4",
@@ -9232,7 +9232,7 @@
     {
       "id": "ds_0590",
       "number": 590,
-      "content": "【2013统考真题】对给定的关键字序列110，119，007，911，114，120，122进行基数排序，第二趟分 配、收集后得到的关键字序列为( )。<br><img src=\"data/ds_figs/ds_0590.png\" alt=\"ds题图\" style=\"max-width:100%;margin:8px 0;border:1px solid #ddd;border-radius:4px;\" />",
+      "content": "【2013统考真题】对给定的关键字序列110，119，007，911，114，120，122进行基数排序，第二趟分 配、收集后得到的关键字序列为( )。",
       "options": {
         "A": "007,110,119,114,911,120,122",
         "B": "007,110,119,114,911,122,120",
