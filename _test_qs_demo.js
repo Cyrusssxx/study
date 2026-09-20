@@ -27,6 +27,7 @@ function check(name, got, want) {
   const demoHtml = weval(m1[0])();
   check('qsDemoHtml 能生成容器', demoHtml.indexOf('data-qs-demo') > -1, true);
   check('容器含启动按钮(data-qs-run)', demoHtml.indexOf('data-qs-run') > -1, true);
+  check('容器含重来按钮(data-qs-restart)', demoHtml.indexOf('data-qs-restart') > -1, true);
   check('容器含换组按钮(data-qs-shuffle)', demoHtml.indexOf('data-qs-shuffle') > -1, true);
   check('容器含调速按钮(data-qs-spd)', demoHtml.indexOf('data-qs-spd') > -1, true);
 

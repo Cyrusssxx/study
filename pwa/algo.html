@@ -306,6 +306,7 @@
             </div>
             <div class="qs-ctrl">
                 <button class="qs-btn run" data-qs-run>▶ 启动</button>
+                <button class="qs-btn" data-qs-restart>↻ 重来</button>
                 <button class="qs-btn" data-qs-shuffle>↺ 换一组</button>
                 <span class="qs-spd">速度
                     <button data-qs-spd="900" class="on">慢</button>
@@ -419,6 +420,15 @@
             runBtn.textContent = '⏸ 暂停';
             runBtn.classList.remove('run');
             tick();
+        });
+
+        dm.querySelector('[data-qs-restart]').addEventListener('click', () => {
+            stopTimer(); state.running = false;
+            state.idx = 0;
+            runBtn.textContent = '▶ 启动';
+            runBtn.classList.add('run');
+            qsRenderFrame(dm, state.frames[0]);
+            dm.querySelector('[data-qs-msg]').innerHTML = '已重置到第一帧，点「▶ 启动」重新观看这一组。';
         });
 
         dm.querySelector('[data-qs-shuffle]').addEventListener('click', () => {

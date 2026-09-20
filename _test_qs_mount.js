@@ -33,7 +33,7 @@ const DATA = fs.readFileSync(path.resolve(__dirname, 'pwa/data/algo_notes.json')
   check('演示容器内有条形图', demo.querySelectorAll('.qs-bar').length, 8);
   check('有基准高亮', demo.querySelectorAll('.qs-bar.pivot').length, 1);
   check('图例 5 项', demo.querySelectorAll('.qs-legend s').length, 5);
-  check('按钮: 启动 + 换一组', !!demo.querySelector('[data-qs-run]') && !!demo.querySelector('[data-qs-shuffle]'), true);
+  check('按钮: 启动 + 重来 + 换一组', !!demo.querySelector('[data-qs-run]') && !!demo.querySelector('[data-qs-restart]') && !!demo.querySelector('[data-qs-shuffle]'), true);
   check('调速档 3 个', demo.querySelectorAll('[data-qs-spd]').length, 3);
   check('初始消息就绪', /准备好/.test(demo.querySelector('[data-qs-msg]').textContent), true);
 
@@ -45,9 +45,20 @@ const DATA = fs.readFileSync(path.resolve(__dirname, 'pwa/data/algo_notes.json')
   const stage1 = demo.querySelector('[data-qs-msg]').textContent;
   check('运行中产生进度消息(非初始就绪)', !/准备好/.test(stage1), true);
 
+  // 播放中点击"重来"→ 停回第一帧、按钮回启动
+  demo.querySelector('[data-qs-restart]').click();
+  await new Promise(r => setTimeout(r, 30));
+  check('重来后按钮回启动', runBtn.textContent.indexOf('启动') > -1, true);
+  check('重来后停在第一帧(消息提示已重置)', /已重置到第一帧/.test(demo.querySelector('[data-qs-msg]').textContent), true);
+  check('重来后条形图仍在(8 根)', demo.querySelectorAll('.qs-bar').length, 8);
+
+  // 重来后点击启动 → 进入运行；再点 → 暂停
+  runBtn.click();
+  await new Promise(r => setTimeout(r, 40));
+  check('重来后点击进入运行(按钮含暂停)', runBtn.textContent.indexOf('暂停') > -1, true);
   runBtn.click();
   check('暂停后按钮含继续', runBtn.textContent.indexOf('继续') > -1, true);
-  await new Promise(r => setTimeout(r, 900));
+  await new Promise(r => setTimeout(r, 500));
   check('暂停后文字保持继续', runBtn.textContent.indexOf('继续') > -1, true);
 
   demo.querySelector('[data-qs-shuffle]').click();
