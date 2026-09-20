@@ -58,6 +58,14 @@ const EXTRA = fs.readFileSync(path.resolve(__dirname, 'pwa/data/ds_code_extra.js
   check('应用题卡存在', !!qApp, true);
   check('应用题卡仍为「查看答案」', qApp && qApp.querySelector('summary').textContent, '查看答案');
   check('应用题卡无 sol-item', qApp ? qApp.querySelectorAll('.sol-item').length : 99, 0);
+  // 左侧目录项：真题只留年份、教材习题去掉「王道书」前缀
+  const nav2009 = d.querySelector('.ol-nav-item.sub[data-target="card-ds_daka_2_3_7_17"]');
+  check('真题目录项只显示年份 2009', nav2009 ? nav2009.textContent.trim() : '缺失', '2009');
+  const navSeq1 = d.querySelector('.ol-nav-item.sub[data-target="card-ds_daka_2_2_3_1"]');
+  check('教材习题目录项去掉「王道书」前缀', navSeq1 ? navSeq1.textContent.trim() : '缺失', '2.2.3_大题_1');
+  const navAll = [...d.querySelectorAll('.ol-nav-item.sub')].map(a => a.textContent.trim());
+  check('无目录项含「王道书」', navAll.every(t => t.indexOf('王道书') < 0), true);
+  check('全部真题目录项均为 4 位年份', navAll.filter(t => /^\d{4}$/.test(t)).length >= 20, true);
 
   console.log(`\nPASS ${pass} / FAIL ${fail}`);
   process.exit(fail ? 1 : 0);

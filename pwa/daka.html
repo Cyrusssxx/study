@@ -204,9 +204,12 @@
             const subs = qs.map(q => {
                 const done = !!dakaProgress[q.id];
                 const year = (q.real || '').match(/\d{4}/);
-                const item = `${q.source}${year ? ' · ' + year[0] : ''}`;
+                // 左目录项：真题只留年份（如 2009），教材习题去掉「王道书」前缀（如 2.3.7_大题_1）
+                let item;
+                if (year) item = year[0];
+                else item = (q.source || '').replace(/^王道书\s*/, '');
                 return `<a class="ol-nav-item sub${done ? ' daka-nav-done' : ''}" data-target="card-${q.id}" data-label="${esc(item)}"
-                    title="${esc(q.module)} / ${esc(q.kaodian)} · ${esc(q.real || '')}">${done ? '✓ ' : ''}${esc(item)}</a>`;
+                    title="${esc(q.module)} / ${esc(q.kaodian)} · ${esc(q.real || q.source || '')}">${done ? '✓ ' : ''}${esc(item)}</a>`;
             }).join('');
             nav += `<div class="ol-nav-sec">
                 <a class="ol-nav-item root" data-group="${gi}">${esc(label)}（${gDone}/${qs.length}）</a>
