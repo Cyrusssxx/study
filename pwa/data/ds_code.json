@@ -729,7 +729,7 @@
             "analysis": "",
             "thought": "步骤如下：\n1. 遍历链表，统计链表的结点数 n。\n2. 将链表分成两半，前一半是 (n+1)/2 个结点，后一半 n/2 个结点。\n3. 将链表后半的所有结点依次插入。",
             "code": "void ans(Node* L)\n{\n    // 统计链表结点数\n    Node *p = L->next;\n    int n = 0;\n    while (p != NULL)\n    {\n        n++;\n        p = p->next;\n    }\n    // 链表分成两半，p 指向后一半第一个结点\n    p = L->next;\n    for (int i=0; i<(n+1)/2; i++)\n        p = p->next;\n    Node *temp = p;\n    p = p->next;\n    temp->next = NULL;\n    //将后一半结点依次插入到前一半\n    for (int i=0; i<n/2; i++)\n    {\n        temp = p->next;\n        Node *pre = L;\n        for (int j=0; j<n/2-i; j++)\n            pre = pre->next;\n        p->next = pre->next;\n        pre->next = p;\n        p = temp;                           // 更新下一个待处理元素 p\n    }\n}",
-            "complexity": "时间复杂度：O(n2)",
+            "complexity": "时间复杂度：O(n²)（后半每个结点插入前需找到插入位置）   空间复杂度：O(1)（原地，仅常数个指针）",
             "note": ""
           },
           {
@@ -739,7 +739,7 @@
             "analysis": "",
             "thought": "步骤如下：\n1. 前后指针找到中间结点。\n2. 从中间结点处将链表分成两半，前一半是 (n+1)/2 个结点，后一半 n/2 个结点。\n3. 使用头插法将链表后半的所有结点逆置。\n4. 将前一半链表和逆置后的后一半链表交叉排列合并成一个链表。",
             "code": "// 头插法\nvoid Head_Insert(Node* L, Node* p)\n{\n    p->next=L->next;\n    L->next=p;\n}\nvoid ans(Node* L)\n{\n    // 找中间结点 p\n    Node *p, *q;\n    p = q = L->next;\n    while (p != NULL && q != NULL)\n    {\n        q = q->next;\n        if (q == NULL || q->next == NULL)\n            break;\n        q = q->next;\n        p = p->next;\n    }\n    // 链表从 p 后分成两半\n    Node *temp = p;\n    p = p->next;\n    temp->next = NULL;\n    // 为链表后一半设置新的头结点\n    Node *L2 = (Node*)malloc(sizeof(Node));\n    L2->next = NULL;\n    // 将后一半结点逆置\n    while (p != NULL)\n    {\n        temp = p->next;\n        Head_Insert(L2, p);\n        p = temp;\n    }\n    Node *p1 = L->next;\n    Node *p2 = L2->next;\n    // 将前一半链表和逆置后的后一半链表交叉合并\n    while (p2 != NULL)\n    {\n        暂存 p1 和 p2 的下一个结点\n        Node* temp1 = p1->next;\n        Node* temp2 = p2->next;\n        // p2 插入到 p1 后面\n        p2->next = p1->next;\n        p1->next = p2;\n        // 更新 p1 和 p2\n        p1 = temp1;\n        p2 = temp2;\n    }\n}",
-            "complexity": "时间复杂度：O(n)",
+            "complexity": "时间复杂度：O(n)（找中点在 O(n)，逆置 O(n)，交叉合并 O(n)）   空间复杂度：O(1)（原地，仅常数个指针）",
             "note": ""
           }
         ]
