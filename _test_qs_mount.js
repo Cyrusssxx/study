@@ -26,7 +26,9 @@ const DATA = fs.readFileSync(path.resolve(__dirname, 'pwa/data/algo_notes.json')
 
   check('页面加载无致命错误', !!d.getElementById('algoBody'), true);
   const demos = d.querySelectorAll('[data-qs-demo]');
-  check('快排演示组件已挂载(1 个)', demos.length, 1);
+  check('排序演示已挂载 2 个(快排+冒泡)', demos.length, 2);
+  const kinds = [...demos].map(x => x.dataset.qsKind);
+  check('演示类型含快排(qs)与冒泡(bs)', kinds.includes('qs') && kinds.includes('bs'), true);
   const demo = demos[0];
   const pre = demo.previousElementSibling;
   check('紧挨在代码块之后', pre && pre.classList.contains('algo-code'), true);
