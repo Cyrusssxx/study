@@ -3955,7 +3955,7 @@
     {
       "id": "ds_0255",
       "number": 255,
-      "content": "【2014统考真题】若对右图所示的二叉树进行中序线索化，则结点X的左右线索指向的结点分 别是( )。",
+      "content": "【2014统考真题】若对右图所示的二叉树进行中序线索化，则结点X的左右线索指向的结点分 别是( )。<br><img src=\"data/ds_figs/ds_0255.png\" alt=\"ds题图\" style=\"max-width:100%;margin:8px 0;border:1px solid #ddd;border-radius:4px;\" />",
       "options": {
         "A": "e,c",
         "B": "e,a",
@@ -5587,7 +5587,7 @@
     {
       "id": "ds_0359",
       "number": 359,
-      "content": "【2016统考真题】下列选项中，不是右图所示深度优先搜索序列的是( )。",
+      "content": "【2016统考真题】下列选项中，不是右图所示深度优先搜索序列的是( )。<br><img src=\"data/ds_figs/ds_0359.png\" alt=\"ds题图\" style=\"max-width:100%;margin:8px 0;border:1px solid #ddd;border-radius:4px;\" />",
       "options": {
         "A": "V<sub>1</sub>,V<sub>5</sub>,V<sub>4</sub>,V<sub>3</sub>,V<sub>2</sub>",
         "B": "V<sub>1</sub>,V<sub>3</sub>,V<sub>2</sub>,V<sub>5</sub>,V<sub>4</sub>",
@@ -6045,7 +6045,7 @@
     {
       "id": "ds_0388",
       "number": 388,
-      "content": "【2012统考真题】对右图所示的有向带权图，若采用Dijkstra算法求从源点a到其他各顶点的最短 路径，则得到的第一条最短路径的目标顶点是b，第二条最短路径的目标顶点是c，后续得到的其余各 最短路径的目标顶点依次是( )。",
+      "content": "【2012统考真题】对右图所示的有向带权图，若采用Dijkstra算法求从源点a到其他各顶点的最短 路径，则得到的第一条最短路径的目标顶点是b，第二条最短路径的目标顶点是c，后续得到的其余各 最短路径的目标顶点依次是( )。<br><img src=\"data/ds_figs/ds_0388.png\" alt=\"ds题图\" style=\"max-width:100%;margin:8px 0;border:1px solid #ddd;border-radius:4px;\" />",
       "options": {
         "A": "d,e,f",
         "B": "e,d,f",
@@ -6093,7 +6093,7 @@
     {
       "id": "ds_0391",
       "number": 391,
-      "content": "【2014统考真题】对右图所示的有向图进行拓扑排序，得到的拓扑序列可能是( )。",
+      "content": "【2014统考真题】对右图所示的有向图进行拓扑排序，得到的拓扑序列可能是( )。<br><img src=\"data/ds_figs/ds_0391.png\" alt=\"ds题图\" style=\"max-width:100%;margin:8px 0;border:1px solid #ddd;border-radius:4px;\" />",
       "options": {
         "A": "3,1,2,4,5,6",
         "B": "3,1,2,4,6,5",
@@ -6109,7 +6109,7 @@
     {
       "id": "ds_0392",
       "number": 392,
-      "content": "【2015统考真题】求右图所示带权图的最小(代价)生成树时，可能是Kruskal算法第2次选中但 不是Prim算法(从V 开始)第2次选中的边是( )。 4",
+      "content": "【2015统考真题】求右图所示带权图的最小(代价)生成树时，可能是Kruskal算法第2次选中但 不是Prim算法(从V 开始)第2次选中的边是( )。 4<br><img src=\"data/ds_figs/ds_0392.png\" alt=\"ds题图\" style=\"max-width:100%;margin:8px 0;border:1px solid #ddd;border-radius:4px;\" />",
       "options": {
         "A": "(V<sub>1</sub>,V<sub>3</sub>)",
         "B": "(V<sub>1</sub>,V<sub>4</sub>)",
@@ -6220,7 +6220,7 @@
     {
       "id": "ds_0399",
       "number": 399,
-      "content": "【2020统考真题】已知无向图G如右所示，使用Kruskal算法求图G的最小生成树，加到最小生成 树中的边依次是( )。",
+      "content": "【2020统考真题】已知无向图G如右所示，使用Kruskal算法求图G的最小生成树，加到最小生成 树中的边依次是( )。<br><img src=\"data/ds_figs/ds_0399.png\" alt=\"ds题图\" style=\"max-width:100%;margin:8px 0;border:1px solid #ddd;border-radius:4px;\" />",
       "options": {
         "A": "(b,f),(b,d),(a,e),(c,e),(b,e)",
         "B": "(b,f),(b,d),(b,e),(a,e),(c,e)",
@@ -6268,7 +6268,7 @@
     {
       "id": "ds_0402",
       "number": 402,
-      "content": "【2021统考真题】给定右图所示有向图，该图的拓扑有序序列的个数是( )。",
+      "content": "【2021统考真题】给定右图所示有向图，该图的拓扑有序序列的个数是( )。<br><img src=\"data/ds_figs/ds_0402.png\" alt=\"ds题图\" style=\"max-width:100%;margin:8px 0;border:1px solid #ddd;border-radius:4px;\" />",
       "options": {
         "A": "1",
         "B": "2",
@@ -7230,7 +7230,7 @@
     {
       "id": "ds_0463",
       "number": 463,
-      "content": "右图所示是一棵( )。",
+      "content": "右图所示是一棵( )。<br><img src=\"data/ds_figs/ds_0463.png\" alt=\"ds题图\" style=\"max-width:100%;margin:8px 0;border:1px solid #ddd;border-radius:4px;\" />",
       "options": {
         "A": "4阶B树",
         "B": "3阶B树",
