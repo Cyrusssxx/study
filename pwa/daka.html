@@ -380,10 +380,10 @@
             answer = [fmtAnswer(q.answer || '')].join('') || '（解答见上方「解答原图」）';
         }
         const ansfigOpen = dakaAnsfigOpen.has(q.id);
-        const ansfigBtn = (isReal && hasAnsFig) ? `
-                    <button class="btn-daka ansfig-toggle${ansfigOpen ? ' checked' : ''}" onclick="toggleAnsFig('${q.id}')" title="只看解答教材原图">
-                        📷 解答原图${ansfigOpen ? ' ▴' : ' ▾'}
-                    </button>` : '';
+        // 按钮紧贴折叠标题右侧；点击只切换原图区，不展开/收起面板（preventDefault + stopPropagation）
+        const ansfigBtn = (isReal && hasAnsFig) ? `<button class="btn-daka ansfig-toggle${ansfigOpen ? ' checked' : ''}" onclick="event.preventDefault();event.stopPropagation();toggleAnsFig('${q.id}')" title="只看解答教材原图">
+                    📷 解答原图${ansfigOpen ? ' ▴' : ' ▾'}
+                </button>` : '';
         const ansfigBlock = (isReal && hasAnsFig) ? `
                 <div class="code-ansfig" id="ansfig-${q.id}"${ansfigOpen ? '' : ' hidden'}>
                     ${figWrap(figs.answer, '解答教材原图')}
@@ -393,18 +393,17 @@
                 <div class="daka-card-header">
                     <span class="daka-badge ${badgeClass(q.priority)}">${q.priority_label}</span>
                     <span class="daka-source">${q.source}${q.real ? ' · ' + q.real : ''}</span>
-                    ${ansfigBtn}
                     <button class="btn-daka${done ? ' checked' : ''}" onclick="toggleDaka('${q.id}')">
                         ${done ? '已打卡 ✓' : '打卡'}
                     </button>
                 </div>
                 <div class="daka-kaodian">${q.module} / ${q.kaodian}</div>
                 <div class="daka-content">${content}</div>
-                ${ansfigBlock}
                 <details class="daka-answer">
-                    <summary>${summary}</summary>
+                    <summary>${summary}${ansfigBtn}</summary>
                     <div class="daka-answer-body">${answer}</div>
                 </details>
+                ${ansfigBlock}
             </div>
         `;
     }

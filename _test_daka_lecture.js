@@ -53,10 +53,16 @@ const EXTRA = fs.readFileSync(path.resolve(__dirname, 'pwa/data/ds_code_extra.js
   check('2009 卡存在', !!q2009, true);
   check('2009 卡含「链表」讲义解法', q2009 && q2009.textContent.indexOf('解法') > -1, true);
   check('2009 卡化合物复杂度 O(', q2009 && /O\(/.test(q2009.textContent), true);
+  // 面板内容顺序：考点分析·易错点（daka-analysis）必须排在解法一（sol-item）之前
+  const y2009Body = q2009 && q2009.querySelector('.daka-answer-body');
+  if (y2009Body) {
+    const h = y2009Body.innerHTML;
+    check('考点分析/易错点排在解法一之前', h.indexOf('daka-analysis') > -1 && h.indexOf('daka-analysis') < h.indexOf('sol-item'), true);
+  }
   // 未映射应用题卡仍是「查看答案」
   const qApp = d.getElementById('card-ds_daka_6_4_6_8');
   check('应用题卡存在', !!qApp, true);
-  check('应用题卡仍为「查看答案」', qApp && qApp.querySelector('summary').textContent, '查看答案');
+  check('应用题卡仍为「查看答案」', qApp && /^查看答案/.test(qApp.querySelector('summary').textContent.trim()), true);
   check('应用题卡无 sol-item', qApp ? qApp.querySelectorAll('.sol-item').length : 99, 0);
   // 左侧目录项：真题只留年份、教材习题去掉「王道书」前缀
   const nav2009 = d.querySelector('.ol-nav-item.sub[data-target="card-ds_daka_2_3_7_17"]');
@@ -69,6 +75,10 @@ const EXTRA = fs.readFileSync(path.resolve(__dirname, 'pwa/data/ds_code_extra.js
   // 「📷 解答原图」独立按钮：仅真题卡片有，点击单独展开解答教材原图
   const realBtn = qApp && qApp.querySelector('button.ansfig-toggle');   // 应用题卡=真题
   check('真题卡片有「📷 解答原图」按钮', !!realBtn, true);
+  // 按钮必须紧贴在折叠标题（summary）内右侧，而不是卡片头部
+  check('按钮位于折叠标题 summary 内', qApp ? qApp.querySelectorAll('summary button.ansfig-toggle').length : 0, 1);
+  check('卡片头部不再放按钮', qApp ? qApp.querySelectorAll('.daka-card-header button.ansfig-toggle').length : 9, 0);
+  check('按钮文案含「解答原图」', realBtn ? realBtn.textContent.indexOf('解答原图') > -1 : false, true);
   const realBlock = d.getElementById('ansfig-ds_daka_6_4_6_8');
   check('真题卡片有独立解答原图区(默认隐藏)', !!realBlock && realBlock.hidden, true);
   const nonRealCard = d.getElementById('card-ds_daka_2_2_3_1');   // 教材习题=非真题

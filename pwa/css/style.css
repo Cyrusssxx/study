@@ -3386,6 +3386,14 @@ h3.algo-h:first-child, h4.algo-h:first-child, h5.algo-h:first-child { margin-top
 /* 解答教材原图独立展开区（与解法面板分开） */
 .code-ansfig { margin-top: 10px; }
 .ansfig-toggle.checked { background: var(--primary); border-color: var(--primary); color: #fff; }
+/* 「📷 解答原图」小按钮：紧贴折叠标题右侧 */
+.daka-answer > summary .ansfig-toggle {
+    margin-left: 8px;
+    padding: 2px 10px;
+    font-size: 0.76rem;
+    border-radius: 999px;
+    vertical-align: middle;
+}
 
 .daka-kaodian {
     color: var(--text-light);

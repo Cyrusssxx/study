@@ -136,10 +136,10 @@
             <div class="code-ansfig" id="ansfig-${q.id}"${codeAnsfigOpen.has(q.id) ? '' : ' hidden'}>
                 ${figHtml(answerFigs, '解答教材原图')}
             </div>` : '';
-        const ansfigBtn = answerFigs.length ? `
-            <button class="btn-daka ansfig-toggle${codeAnsfigOpen.has(q.id) ? ' checked' : ''}" onclick="toggleAnsFig('${q.id}')">
-                📷 解答原图${codeAnsfigOpen.has(q.id) ? ' ▴' : ' ▾'}
-            </button>` : '';
+        // 按钮紧贴折叠标题右侧，点击只切换原图区、不展开/收起讲义面板（preventDefault + stopPropagation）
+        const ansfigBtn = answerFigs.length ? `<button class="btn-daka ansfig-toggle${codeAnsfigOpen.has(q.id) ? ' checked' : ''}" onclick="event.preventDefault();event.stopPropagation();toggleAnsFig('${q.id}')" title="只看解答教材原图">
+                    📷 解答原图${codeAnsfigOpen.has(q.id) ? ' ▴' : ' ▾'}
+                </button>` : '';
         // 讲义解法（优先）；讲义未收录时退回自生成暴力解
         const solHtml = (q) => {
             const s = q.solutions || {};
@@ -180,19 +180,18 @@
                     <span class="daka-badge badge-must">${esc(q.kaodian)}</span>
                     <span class="daka-source">${esc(q.real)}${q.source ? ' · ' + esc(q.source) : ''}</span>
                     ${q.weblink ? `<a class="btn-daka" href="${esc(q.weblink)}" target="_blank" rel="noopener">解析原文 ↗</a>` : ''}
-                    ${ansfigBtn}
                     <button class="btn-daka code-toggle${done ? ' checked' : ''}" onclick="toggleCode('${q.id}')">
                         ${done ? '已会 ✓' : '标记已会'}
                     </button>
                 </div>
                 ${hasQFig ? '' : `<div class="daka-content">${fmtC(q.content)}</div>`}
                 ${figHtml(figs.content, '题目教材原图')}
-                ${answerFigBlock}
                 <details class="daka-answer">
-                    <summary>考点分析 · 易错点 · 讲义解法</summary>
-                    ${solHtml(q)}
+                    <summary>考点分析 · 易错点 · 讲义解法${ansfigBtn}</summary>
                     <div class="daka-analysis">${esc((q.analysis || '').replace('易错点：', '\n易错点：'))}</div>
+                    ${solHtml(q)}
                 </details>
+                ${answerFigBlock}
             </div>
         `;
     }
