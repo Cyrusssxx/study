@@ -93,22 +93,23 @@
             .cg-main { padding-left: 0; }
         }
 
-        /* 层配色：统一低饱和灰蓝（淡雅基调），重点一律交给 cg-key 标签的橙/红 */
+        /* 层配色：统一柔和蓝（有颜色但不刺眼），重点交给 cg-key 标签的橙/红 */
         .cg-l0, .cg-l5, .cg-l4, .cg-l3, .cg-l2, .cg-l1, .cg-lx {
-            --c: #55637d; --cb: rgba(85,99,125,.06); --cb2: rgba(85,99,125,.13);
+            --c: #4a7ab8; --cb: rgba(74,122,184,.09); --cb2: rgba(74,122,184,.18);
         }
         .dark .cg-l0, .dark .cg-l5, .dark .cg-l4, .dark .cg-l3,
         .dark .cg-l2, .dark .cg-l1, .dark .cg-lx {
-            --c: #97a3b8; --cb: rgba(151,163,184,.10); --cb2: rgba(151,163,184,.18);
+            --c: #8fb0d9; --cb: rgba(143,176,217,.14); --cb2: rgba(143,176,217,.24);
         }
 
         .cg-layer {
             background: var(--card-bg);
             border: 1px solid var(--border);
-            border-left: 2px solid var(--c);
+            border-left: 3px solid var(--c);
             border-radius: var(--radius);
             margin-bottom: 18px;
             overflow: hidden;
+            box-shadow: var(--shadow);
         }
         .cg-layer-head {
             display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
@@ -234,11 +235,11 @@
         .cg-key {
             display: inline-block; font-size: .67rem; font-weight: 700; line-height: 1.5;
             padding: 0 6px; border-radius: 4px; margin-right: 5px;
-            background: rgba(217,119,6,.14); color: #b45309;
+            background: rgba(234,88,12,.16); color: #b45309;
         }
-        .dark .cg-key { background: rgba(253,230,138,.16); color: #fcd34d; }
-        .cg-key.k2 { background: rgba(220,38,38,.12); color: #b91c1c; }
-        .dark .cg-key.k2 { background: rgba(248,113,113,.16); color: #fca5a5; }
+        .dark .cg-key { background: rgba(253,230,138,.20); color: #fcd34d; }
+        .cg-key.k2 { background: rgba(220,38,38,.15); color: #b3261e; }
+        .dark .cg-key.k2 { background: rgba(248,113,113,.20); color: #fca5a5; }
 
         .cg-tip {
             margin: 10px 0; padding: 9px 12px; border-radius: 8px;
@@ -262,12 +263,12 @@
             border-radius: 6px; padding: 5px 4px; border: 1px solid transparent;
         }
         .cg-mc small { display: block; font-size: .67rem; font-weight: 400; color: var(--text-light); }
-        .cg-mc.a { background: rgba(85,99,125,.14); border-color: rgba(85,99,125,.55); }
-        .cg-mc.b { background: rgba(85,99,125,.10); border-color: rgba(85,99,125,.40); }
-        .cg-mc.c { background: rgba(85,99,125,.07); border-color: rgba(85,99,125,.30); }
-        .cg-mc.d { background: rgba(85,99,125,.05); border-color: rgba(85,99,125,.22); }
-        .cg-mc.e { background: rgba(85,99,125,.03); border-color: rgba(85,99,125,.16); }
-        .cg-mc.f { background: rgba(85,99,125,.02); border-color: rgba(85,99,125,.12); }
+        .cg-mc.a { background: rgba(74,122,184,.14); border-color: rgba(74,122,184,.55); }
+        .cg-mc.b { background: rgba(74,122,184,.10); border-color: rgba(74,122,184,.40); }
+        .cg-mc.c { background: rgba(74,122,184,.07); border-color: rgba(74,122,184,.30); }
+        .cg-mc.d { background: rgba(74,122,184,.05); border-color: rgba(74,122,184,.22); }
+        .cg-mc.e { background: rgba(74,122,184,.03); border-color: rgba(74,122,184,.16); }
+        .cg-mc.f { background: rgba(74,122,184,.02); border-color: rgba(74,122,184,.12); }
 
         .cg-fab {
             position: fixed; right: 20px; bottom: 20px; z-index: 2000;
@@ -1375,7 +1376,7 @@
                 <div class="cg-block">
                     <h3>① 封装与解封装全流程 <small>（自顶向下的「层层加壳」，必背首部长度）</small></h3>
                     <div class="cg-enc">
-                        <div class="cg-enc-row" style="--ec:#55637d;--eb:rgba(85,99,125,.10)">
+                        <div class="cg-enc-row" style="--ec:#4a7ab8;--eb:rgba(74,122,184,.10)">
                             <div class="cg-enc-tag">传输层<br>TCP 报文段</div>
                             <div class="cg-enc-box">
                                 <div class="cg-enc-h">TCP 首部<i>20B</i></div>
@@ -1385,12 +1386,12 @@
 
                         <div class="cg-enc-arrow">↓ 加 <b>20B</b> IP 首部 → 成为 IP 数据报</div>
 
-                        <div class="cg-enc-row" style="--ec:#55637d;--eb:rgba(85,99,125,.08)">
+                        <div class="cg-enc-row" style="--ec:#4a7ab8;--eb:rgba(74,122,184,.08)">
                             <div class="cg-enc-tag">网络层<br>IP 数据报</div>
                             <div class="cg-enc-box">
                                 <div class="cg-enc-h">IP 首部<i>20B</i></div>
                                 <div class="cg-enc-in">
-                                    <span style="border:1px dashed #55637d;border-radius:4px;padding:5px 10px">
+                                    <span style="border:1px dashed #4a7ab8;border-radius:4px;padding:5px 10px">
                                         TCP 首部 20B ＋ 数据（即整个 TCP 报文段）
                                     </span>
                                 </div>
@@ -1399,12 +1400,12 @@
 
                         <div class="cg-enc-arrow">↓ 加 <b>14B</b> MAC 首部 ＋ <b>4B</b> FCS 尾部 → 成为以太网帧</div>
 
-                        <div class="cg-enc-row" style="--ec:#55637d;--eb:rgba(85,99,125,.06)">
+                        <div class="cg-enc-row" style="--ec:#4a7ab8;--eb:rgba(74,122,184,.06)">
                             <div class="cg-enc-tag">链路层<br>以太网 MAC 帧</div>
                             <div class="cg-enc-box">
                                 <div class="cg-enc-h">MAC 首部<i>14B<br>目的 6 ＋ 源 6 ＋ 类型 2</i></div>
                                 <div class="cg-enc-in">
-                                    <span style="border:1px dashed #55637d;border-radius:4px;padding:5px 10px">
+                                    <span style="border:1px dashed #4a7ab8;border-radius:4px;padding:5px 10px">
                                         IP 首部 20B ＋ TCP 首部 20B ＋ 数据（整个 IP 数据报，46~1500B）
                                     </span>
                                 </div>
@@ -1414,12 +1415,12 @@
 
                         <div class="cg-enc-arrow">↓ 加 <b>8B</b> 前导码，转为比特流在线路上传输</div>
 
-                        <div class="cg-enc-row" style="--ec:#55637d;--eb:rgba(85,99,125,.04)">
+                        <div class="cg-enc-row" style="--ec:#4a7ab8;--eb:rgba(74,122,184,.04)">
                             <div class="cg-enc-tag">物理层<br>比特流</div>
                             <div class="cg-enc-box">
                                 <div class="cg-enc-h">前导码<i>8B<br>7B 同步码 ＋ 1B 定界符</i></div>
                                 <div class="cg-enc-in">
-                                    <span style="border:1px dashed #55637d;border-radius:4px;padding:5px 10px">
+                                    <span style="border:1px dashed #4a7ab8;border-radius:4px;padding:5px 10px">
                                         14B MAC 首部 ＋ IP 数据报 ＋ 4B FCS（整帧被转换成 0101… 的比特流）
                                     </span>
                                 </div>
