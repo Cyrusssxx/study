@@ -112,17 +112,19 @@
 
     async function loadDaka() {
         try {
-            const [qResp, pResp, cResp] = await Promise.all([
+            const [qResp, pResp, cResp, eResp] = await Promise.all([
                 fetch('data/ds_daka.json'),
                 api('/api/daka/progress'),
-                fetch('data/ds_code.json')
+                fetch('data/ds_code.json'),
+                fetch('data/ds_code_extra.json')
             ]);
             dakaQuestions = (await qResp.json()).questions;
             dakaProgress = (await pResp.json()).progress || {};
             // 按 source 建立 daka 卡 → 代码题讲义 的映射（source 形如"王道书 2.3.7_大题_17"，两边逐字一致）
-            const codeQs = (await cResp.json()).questions || [];
+            // 真题讲义 ds_code.json + 教材习题讲义 ds_code_extra.json 合并（source 互不冲突）
             codeBySource = new Map();
-            for (const c of codeQs) if (c.source) codeBySource.set(c.source, c);
+            for (const c of (await cResp.json()).questions || []) if (c.source) codeBySource.set(c.source, c);
+            for (const c of (await eResp.json()).questions || []) if (c.source) codeBySource.set(c.source, c);
             restoreDakaFilter();
             renderFilters(true);
             renderDaka();

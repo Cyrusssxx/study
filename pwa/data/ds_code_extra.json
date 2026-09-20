@@ -1,0 +1,224 @@
+{
+  "subject": "数据结构代码题",
+  "subject_key": "ds_code_extra",
+  "name": "数据结构教材算法题精选（王道课后习题）",
+  "total": 8,
+  "questions": [
+    {
+      "id": "ds_extra_seq_1",
+      "year": null,
+      "real": "",
+      "kaodian": "\"顺序表\"基本功训练",
+      "module": "教材习题",
+      "source": "王道书 2.2.3_大题_1",
+      "content_text": "【教材习题】从顺序表中删除具有最小值的元素（假设唯一），并由函数返回被删元素的值。空出的位置由最后一个元素填补；若顺序表为空，则显示出错信息并退出运行。<br>1)给出算法的基本设计思想；<br>2)采用 C 或 C++ 语言描述算法，关键之处给出注释。",
+      "answer_full": "",
+      "figs": null,
+      "analysis": "考点：顺序表删除操作的本质＝元素前移覆盖。易错点：① 表空要先判（否则数组越界）；② 删除的是\"最小值\"而不是\"第一个元素\"，最小值和它的位置要分开记录；③ 用末元素补位后原末元素在逻辑上被\"复制\"，长度 −1，无需遍历移动（这正是本题能做到 O(n) 的关键）；④ 引用参数返回被删值要写 &。",
+      "weblink": "",
+      "solutions": {
+        "list": [
+          {
+            "tag": "解法1",
+            "kind": "顺序扫描",
+            "name": "一趟找最小 + 末元素补位",
+            "analysis": "",
+            "thought": "扫描顺序表一趟，用变量 value 记录当前最小值、pos 记录其下标；扫描结束后，用最后一个元素 L.data[L.length-1] 覆盖 pos 处，长度减一，被删的最小值经引用参数返回。由于\"空位由最后一个元素填补\"，填补是 O(1) 的，整体只扫描一趟。",
+            "code": "bool Del_Min(SqList &L, ElemType &value)\n{\n    if (L.length == 0) return false;        // 表空，报错退出\n    value = L.data[0];                      // 先假定 0 号元素最小\n    int pos = 0;\n    for (int i = 1; i < L.length; i++)      // 遍历找最小值与其位置\n        if (L.data[i] < value) { value = L.data[i]; pos = i; }\n    L.data[pos] = L.data[L.length - 1];     // 最后一个元素填补空位\n    L.length--;                             // 表长减一\n    return true;\n}",
+            "complexity": "时间复杂度：O(n)（一趟扫描）   空间复杂度：O(1)",
+            "note": ""
+          }
+        ]
+      }
+    },
+    {
+      "id": "ds_extra_seq_2",
+      "year": null,
+      "real": "",
+      "kaodian": "顺序表的\"逆置\"在算法题中的应用",
+      "module": "教材习题",
+      "source": "王道书 2.2.3_大题_2",
+      "content_text": "【教材习题】设计一个高效算法，将顺序表 L 的所有元素逆置，要求算法的空间复杂度为 O(1)。",
+      "answer_full": "",
+      "figs": null,
+      "analysis": "考点：逆置是交换类算法的基本操作（本题、循环左移、两段互换都围绕它）。易错点：① 交换须用临时变量 temp；② 只需扫描前半部分（i < L.length/2），对应交换 L.data[i] 与 L.data[L.length-1-i]，扫整表会换回去等于没换；③ 空间 O(1) 的含义＝只用常数个辅助变量，不能另开数组。",
+      "weblink": "",
+      "solutions": {
+        "list": [
+          {
+            "tag": "解法1",
+            "kind": "前后对折交换",
+            "name": "首尾交换直至中点",
+            "analysis": "",
+            "thought": "用两个下标 i、j 分别指向前端与末端，交换 L.data[i] 与 L.data[j]，i 后移、j 前移，直到 i ≥ j（即扫描到中点）。整个过程中只用了一个临时变量 temp。",
+            "code": "void Reverse(SqList &L)\n{\n    ElemType temp;\n    for (int i = 0; i < L.length / 2; i++) {\n        temp = L.data[i];\n        L.data[i] = L.data[L.length - 1 - i];\n        L.data[L.length - 1 - i] = temp;\n    }\n}",
+            "complexity": "时间复杂度：O(n)   空间复杂度：O(1)",
+            "note": ""
+          }
+        ]
+      }
+    },
+    {
+      "id": "ds_extra_seq_3",
+      "year": null,
+      "real": "",
+      "kaodian": "\"顺序表\"基本功训练",
+      "module": "教材习题",
+      "source": "王道书 2.2.3_大题_3",
+      "content_text": "【教材习题】对长度为 n 的顺序表 L，编写一个时间复杂度为 O(n)、空间复杂度为 O(1) 的算法，该算法删除线性表中所有值为 x 的数据元素。",
+      "answer_full": "",
+      "figs": null,
+      "analysis": "考点：一趟扫描 + 两指针（k 记录应保留元素的个数）把删除摊平成\"保留元素前移\"。易错点：① 不能用\"每删一个就把后面整体前移\"的写法（最坏 O(n²)）；② 记录的是\"不等于 x 的元素个数\"k，遇到非 x 元素就放在 L.data[k] 并 k++，最后 L.length = k；③ 别忘记更新表长。",
+      "weblink": "",
+      "solutions": {
+        "list": [
+          {
+            "tag": "解法1",
+            "kind": "一趟扫描前移",
+            "name": "k 记录保留个数，边扫边前移",
+            "analysis": "",
+            "thought": "用 k 记录当前已保留（不等于 x）的元素个数：扫描整个表，凡是 L.data[i] != x，就把它存到 L.data[k] 处并 k++。扫描结束后，表的新长度为 k。每个元素至多移动一次，一趟完成。",
+            "code": "void del_x(SqList &L, ElemType x)\n{\n    int k = 0;                              // k 记录不等于 x 的元素个数\n    for (int i = 0; i < L.length; i++)\n        if (L.data[i] != x)\n            L.data[k++] = L.data[i];        // 直接保留，覆盖前移\n    L.length = k;                           // 新表长\n}",
+            "complexity": "时间复杂度：O(n)   空间复杂度：O(1)",
+            "note": ""
+          }
+        ]
+      }
+    },
+    {
+      "id": "ds_extra_seq_4",
+      "year": null,
+      "real": "",
+      "kaodian": "\"顺序表\"基本功训练",
+      "module": "教材习题",
+      "source": "王道书 2.2.3_大题_4",
+      "content_text": "【教材习题】从顺序表中删除其值在给定值 s 与 t 之间（包含 s 和 t，要求 s < t）的所有元素，若 s 或 t 不合理或顺序表为空，则显示出错信息并退出运行。<br>1)给出算法的基本设计思想；<br>2)采用 C 或 C++ 语言描述算法，关键之处给出注释。",
+      "answer_full": "",
+      "figs": null,
+      "analysis": "考点：无序表的区间删除——用 k 记录\"落在区间内\"的个数，边扫边把不在区间内的元素前移 k 位。易错点：① 先判 L.length==0 或 s>=t 非法输入；② 与前移法（删 x）同构，把条件从 !=x 换成 值不在 [s,t]；③ 此题与\"有序表删 s~t\"不同：有序表可二分定位区间边界后一次性删除。",
+      "weblink": "",
+      "solutions": {
+        "list": [
+          {
+            "tag": "解法1",
+            "kind": "一趟扫描前移",
+            "name": "k 记录区间内个数，不在区间的前移 k 位",
+            "analysis": "",
+            "thought": "从前向后扫描顺序表，用 k 记录元素值在 s 与 t 之间的个数（初始 k=0）。对当前元素 L.data[i]：若其值落在 [s,t] 内则 k++（该元素将被覆盖删除）；否则前移 k 个位置 L.data[i-k]=L.data[i]。结束时表长减去 k。每个不在区间内的元素只移动一次。",
+            "code": "bool del_s_t(SqList &L, ElemType s, ElemType t)\n{\n    if (L.length == 0 || s >= t) return false;   // 空表或 s、t 不合法\n    int k = 0;\n    for (int i = 0; i < L.length; i++) {\n        if (L.data[i] >= s && L.data[i] <= t) k++;      // 落在区间：计数待删\n        else L.data[i - k] = L.data[i];                 // 不在区间：前移 k 位\n    }\n    L.length -= k;\n    return true;\n}",
+            "complexity": "时间复杂度：O(n)   空间复杂度：O(1)",
+            "note": ""
+          }
+        ]
+      }
+    },
+    {
+      "id": "ds_extra_seq_5",
+      "year": null,
+      "real": "",
+      "kaodian": "\"顺序表\"基本功训练",
+      "module": "教材习题",
+      "source": "王道书 2.2.3_大题_5",
+      "content_text": "【教材习题】从有序顺序表中删除其值在给定值 s 与 t 之间（包含 s 和 t，要求 s < t）的所有元素，若 s 或 t 不合理或顺序表为空，则显示出错信息并退出运行。<br>1)给出算法的基本设计思想；<br>2)采用 C 或 C++ 语言描述算法，关键之处给出注释。",
+      "answer_full": "",
+      "figs": null,
+      "analysis": "考点：**有序表**的区间删除——值相同的元素必为连续区间，先线性找到第一个 ≥s 的位置 i、第一个 >t 的位置 j，直接把 [i, j) 整体删除（元素从 j 起整体前移）。易错点：① 与无序表删区间的区别：这里删除的是\"一整段连续元素\"，不需要逐个判断；② 找不到 ≥s（i==L.length）说明无元素可删；③ 前移后要 L.length -= (j-i)。",
+      "weblink": "",
+      "solutions": {
+        "list": [
+          {
+            "tag": "解法1",
+            "kind": "定位区间整体前移",
+            "name": "找 ≥s 首元素与 >t 首元素，整体覆盖",
+            "analysis": "",
+            "thought": "由于有序表中值在区间内的元素必然连续存放：先找第一个值 ≥ s 的元素下标 i（第一个待删元素）；再从 i 起找第一个值 > t 的元素下标 j（最后一个待删元素的后继）；最后把 [j, L.length) 的元素整体前移到 [i, ...)，表长减去 j-i。",
+            "code": "bool del_s_t2(SqList &L, ElemType s, ElemType t)\n{\n    if (L.length == 0 || s >= t) return false;\n    int i, j;\n    for (i = 0; i < L.length && L.data[i] < s; i++);   // 找第一个 >=s 的元素\n    if (i >= L.length) return false;                    // 所有元素都 < s，无可删\n    for (j = i; j < L.length && L.data[j] <= t; j++);   // 找第一个 >t 的元素\n    for (; j < L.length; i++, j++) L.data[i] = L.data[j]; // 整体前移覆盖\n    L.length = i;\n    return true;\n}",
+            "complexity": "时间复杂度：O(n)   空间复杂度：O(1)",
+            "note": ""
+          }
+        ]
+      }
+    },
+    {
+      "id": "ds_extra_seq_7",
+      "year": null,
+      "real": "",
+      "kaodian": "\"顺序表\"基本功训练",
+      "module": "教材习题",
+      "source": "王道书 2.2.3_大题_7",
+      "content_text": "【教材习题】将两个有序顺序表合并为一个新的有序顺序表，并由函数返回结果顺序表（假设结果表容量足够）。<br>1)给出算法的基本设计思想；<br>2)采用 C 或 C++ 语言描述算法，关键之处给出注释。",
+      "answer_full": "",
+      "figs": null,
+      "analysis": "考点：归并（Merge）——两指针各指一个表头，每次取较小者写入结果表；一个表先耗尽后，把另一个表的剩余部分整体拷贝。易错点：① 先判 A.length+B.length 是否超过结果表最大容量；② 三指针 i/j/k 的推进逻辑要对应正确；③ 剩余元素是两个 while，不是 if。",
+      "weblink": "",
+      "solutions": {
+        "list": [
+          {
+            "tag": "解法1",
+            "kind": "归并",
+            "name": "两指针取小写入，剩余整体拷贝",
+            "analysis": "",
+            "thought": "设置 i、j、k 三个下标：i 遍历 A、j 遍历 B、k 写 C。循环比较 A.data[i] 与 B.data[j]，把较小者写入 C.data[k] 并让对应游标 +1；某表耗尽后，把另一表的剩余元素依次拷入 C。最后 C.length = k。",
+            "code": "bool Merge(SqList A, SqList B, SqList &C)\n{\n    if (A.length + B.length > C.MaxSize) return false;  // 容量不足\n    int i = 0, j = 0, k = 0;\n    while (i < A.length && j < B.length) {              // 两两比较，小者先入\n        if (A.data[i] <= B.data[j]) C.data[k++] = A.data[i++];\n        else C.data[k++] = B.data[j++];\n    }\n    while (i < A.length) C.data[k++] = A.data[i++];     // A 剩余\n    while (j < B.length) C.data[k++] = B.data[j++];     // B 剩余\n    C.length = k;\n    return true;\n}",
+            "complexity": "时间复杂度：O(m+n)（两表长度和）   空间复杂度：O(1)（结果表为输出，辅助空间常数）",
+            "note": ""
+          }
+        ]
+      }
+    },
+    {
+      "id": "ds_extra_seq_8",
+      "year": null,
+      "real": "",
+      "kaodian": "顺序表的\"逆置\"在算法题中的应用",
+      "module": "教材习题",
+      "source": "王道书 2.2.3_大题_8",
+      "content_text": "【教材习题】已知在一维数组 A[m+n] 中依次存放两个线性表 (a1, a2, …, am) 和 (b1, b2, …, bn)。试编写一个函数，将数组中两个顺序表的位置互换，即将 (b1, b2, …, bn) 放在 (a1, a2, …, am) 的前面（不新开数组）。",
+      "answer_full": "",
+      "figs": null,
+      "analysis": "考点：三段逆置法（循环左移/两段互换的通用模板）＝ 整体逆置 → 前 n 个逆置 → 后 m 个逆置。易错点：① 逆置区间下标要写对（left=0, right=m+n-1 先整体，再对 0~n-1 与 n~m+n-1 分别逆置）；② 本题目标是 b 在前 a 在后；③ 与 2010 真题\"循环左移 p 位\"本质相同，可互相印证。",
+      "weblink": "",
+      "solutions": {
+        "list": [
+          {
+            "tag": "解法1",
+            "kind": "三次逆置",
+            "name": "整体逆置 + 前 n 逆置 + 后 m 逆置",
+            "analysis": "",
+            "thought": "先将整个数组 A[0..m+n-1] 逆置，得到 (bn,…,b1,am,…,a1)；再对前 n 个元素 A[0..n-1] 逆置得 (b1,…,bn)；最后对后 m 个元素 A[n..m+n-1] 逆置得 (a1,…,am)。三次逆置后即为目标 (b1..bn, a1..am)，全程原地、空间 O(1)。",
+            "code": "void Reverse(ElemType A[], int left, int right)   // 逆置 A[left..right]\n{\n    while (left < right) {\n        ElemType t = A[left];\n        A[left] = A[right];\n        A[right] = t;\n        left++; right--;\n    }\n}\nvoid Exchange(ElemType A[], int m, int n)         // A[m+n] 中前 m 个与后 n 个互换\n{\n    Reverse(A, 0, m + n - 1);   // 整体逆置\n    Reverse(A, 0, n - 1);       // 前 n 个逆置\n    Reverse(A, n, m + n - 1);   // 后 m 个逆置\n}",
+            "complexity": "时间复杂度：O(m+n)（三次逆置各扫一遍）   空间复杂度：O(1)",
+            "note": ""
+          }
+        ]
+      }
+    },
+    {
+      "id": "ds_extra_kth",
+      "year": null,
+      "real": "",
+      "kaodian": "快速排序的\"划分\"思想在算法题中",
+      "module": "教材习题",
+      "source": "王道书 8.3.3_大题_2",
+      "content_text": "【教材习题】已知一个无序的顺序表 L，请借助快速排序算法中\"划分\"的思想，设计算法查找其中第 k（1 ≤ k ≤ L.length）小的元素，并返回该元素的值。要求给出算法思想并写出伪代码/代码。",
+      "answer_full": "",
+      "figs": null,
+      "analysis": "考点：快速选择（Quick Select）——每次划分确定一个基准的最终位置 m：若 m==k 基准即答案；m>k 只递归左区间；m<k 只递归右区间（下标从 0 计）。易错点：① k 与下标的关系（若题面 k 从 1 计，比较时用 k-1 或统一换算）；② 只处理一侧区间，不要对两侧都递归（否则退化成快排 O(n log n)）；③ 平均 O(n)，最坏 O(n²)——划分越均匀越快。",
+      "weblink": "",
+      "solutions": {
+        "list": [
+          {
+            "tag": "解法1",
+            "kind": "快速选择（递归）",
+            "name": "划分后只进一侧区间，平均 O(n)",
+            "analysis": "",
+            "thought": "以表首元素为基准对 [low, high] 做一趟划分，基准落到位置 m：若 m == k 则基准即第 k 小元素，直接返回；若 m > k 则答案在左区间，递归 [low, m-1]；若 m < k 则在右区间，递归 [m+1, high]。因为每趟只深入一侧，期望规模减半。",
+            "code": "int Partition(SqList &L, int low, int high)\n{\n    ElemType pivot = L.data[low];\n    while (low < high) {\n        while (low < high && L.data[high] >= pivot) high--;\n        L.data[low] = L.data[high];\n        while (low < high && L.data[low] <= pivot) low++;\n        L.data[high] = L.data[low];\n    }\n    L.data[low] = pivot;        // 基准就位\n    return low;                 // 返回基准最终位置\n}\nElemType Kth(SqList &L, int low, int high, int k)\n{\n    if (low > high) return -1;              // 越界保护\n    int m = Partition(L, low, high);        // 一趟划分\n    if (m == k) return L.data[m];           // 恰为第 k 小\n    if (m > k) return Kth(L, low, m - 1, k);\n    else       return Kth(L, m + 1, high, k);\n}\n// 调用：Kth(L, 0, L.length-1, k-1)（k 从 1 计 → 下标 k-1）",
+            "complexity": "时间复杂度：平均 O(n)，最坏 O(n²)（每次划分极不均衡时）   空间复杂度：O(log n)（递归栈，平均）",
+            "note": ""
+          }
+        ]
+      }
+    }
+  ]
+}

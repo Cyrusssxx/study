@@ -6,6 +6,7 @@ const path = require('path');
 const html = fs.readFileSync(path.join(__dirname, 'pwa', 'daka.html'), 'utf8');
 const data = JSON.parse(fs.readFileSync(path.join(__dirname, 'pwa', 'data', 'ds_daka.json'), 'utf8'));
 const codeData = JSON.parse(fs.readFileSync(path.join(__dirname, 'pwa', 'data', 'ds_code.json'), 'utf8'));
+const extraData = JSON.parse(fs.readFileSync(path.join(__dirname, 'pwa', 'data', 'ds_code_extra.json'), 'utf8'));
 const figDir = path.join(__dirname, 'pwa', 'data', 'daka_figs');
 
 // 用大括号配平截取 renderCard（非贪婪正则会截断在函数体内第一个 4 空格右括号上）
@@ -57,6 +58,7 @@ const body = full.slice(full.indexOf('{') + 1, full.lastIndexOf('}')).replace(/\
 const esc = s2 => String(s2 == null ? '' : s2).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 const codeBySource = new Map();
 for (const c of codeData.questions) if (c.source) codeBySource.set(c.source, c);
+for (const c of extraData.questions) if (c.source) codeBySource.set(c.source, c);
 const solFull = extractFn(html, 'solHtml');
 const solBody = solFull.slice(solFull.indexOf('{') + 1, solFull.lastIndexOf('}')).replace(/\bconst /g, 'var ');
 // 页面里 solHtml(q) 依赖全局 esc；new Function 无法闭包捕获 → 包一层：esc 作为注入参数，对外暴露单参 q
@@ -90,12 +92,13 @@ assert(placeholderHits === 0, '仍有 ' + placeholderHits + ' 题落入占位兜
 assert(labelHits === data.questions.length, '渲染题数不符');
 assert(lectureHits > 0, '没有任何题命中代码题讲义映射');
 
-// 3b. 映射覆盖核对：ds_code 中能对应到打卡表的题（2024-2026 无王道书 source 除外）应全部命中
-const codeSources = codeData.questions.map(c => c.source).filter(s => s && s.indexOf('王道书') === 0);
+// 3b. 映射覆盖核对：ds_code + ds_code_extra 中能对应到打卡表的题应全部命中
+const codeSources = codeData.questions.map(c => c.source).filter(s => s && s.indexOf('王道书') === 0)
+    .concat(extraData.questions.map(c => c.source).filter(s => s && s.indexOf('王道书') === 0));
 let mappedInDaka = 0;
 for (const s of codeSources) if (data.questions.some(q => q.source === s)) mappedInDaka++;
 assert(mappedInDaka === lectureHits, '打卡表命中的讲义数应等于可映射数（' + mappedInDaka + ' ≠ ' + lectureHits + '）');
-console.log('代码题讲义映射命中', lectureHits, '题（ds_code source 与打卡表逐字匹配）');
+console.log('代码题讲义映射命中', lectureHits, '题（ds_code+ds_code_extra 与打卡表逐字匹配）');
 
 // 4. 向后兼容：若数据重新带回文字字段，文字应排在图前且不报占位
 const legacy = { id: 'legacy_1', priority: 0, priority_label: '必做', module: 'm', kaodian: 'k', source: 's',

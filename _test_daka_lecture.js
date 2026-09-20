@@ -9,6 +9,7 @@ if (!JSDOM) { console.log('跳过：需要 jsdom'); process.exit(0); }
 const SRC = fs.readFileSync(path.resolve(__dirname, 'pwa/daka.html'), 'utf8');
 const DATA = fs.readFileSync(path.resolve(__dirname, 'pwa/data/ds_daka.json'), 'utf8');
 const CODE = fs.readFileSync(path.resolve(__dirname, 'pwa/data/ds_code.json'), 'utf8');
+const EXTRA = fs.readFileSync(path.resolve(__dirname, 'pwa/data/ds_code_extra.json'), 'utf8');
 
 (async () => {
   const dom = new JSDOM(SRC, {
@@ -18,6 +19,7 @@ const CODE = fs.readFileSync(path.resolve(__dirname, 'pwa/data/ds_code.json'), '
         const u = String(url);
         if (u.indexOf('ds_daka.json') > -1) return Promise.resolve({ ok: true, status: 200, json: () => Promise.resolve(JSON.parse(DATA)) });
         if (u.indexOf('ds_code.json') > -1) return Promise.resolve({ ok: true, status: 200, json: () => Promise.resolve(JSON.parse(CODE)) });
+        if (u.indexOf('ds_code_extra.json') > -1) return Promise.resolve({ ok: true, status: 200, json: () => Promise.resolve(JSON.parse(EXTRA)) });
         return Promise.resolve({ ok: true, status: 200, json: () => Promise.resolve({ progress: {} }) });
       };
       w.api = (path) => Promise.resolve({ ok: true, status: 200, json: () => Promise.resolve({ progress: {} }) });
@@ -41,11 +43,11 @@ const CODE = fs.readFileSync(path.resolve(__dirname, 'pwa/data/ds_code.json'), '
   const lectures = d.querySelectorAll('details.daka-answer summary');
   check('讲义折叠面板总数 = 62（每卡一个）', lectures.length, 62);
   const lectureHeads = [...lectures].filter(s => s.textContent.indexOf('考点分析 · 易错点 · 讲义解法') > -1);
-  check('升级为完整讲义的折叠面板 = 15', lectureHeads.length, 15);
+  check('升级为完整讲义的折叠面板 = 23（15 真题 + 8 教材习题）', lectureHeads.length, 23);
   // 讲义内容关卡：解法条目与代码块存在于页面
-  check('页面含 sol-item 解法条目 ≥ 15', d.querySelectorAll('div.sol-item').length >= 15, true);
-  check('页面含 code-block 代码块 ≥ 15', d.querySelectorAll('pre.code-block').length >= 15, true);
-  check('页面含复杂度行 sol-cx ≥ 15', d.querySelectorAll('div.sol-cx').length >= 15, true);
+  check('页面含 sol-item 解法条目 ≥ 23', d.querySelectorAll('div.sol-item').length >= 23, true);
+  check('页面含 code-block 代码块 ≥ 23', d.querySelectorAll('pre.code-block').length >= 23, true);
+  check('页面含复杂度行 sol-cx ≥ 23', d.querySelectorAll('div.sol-cx').length >= 23, true);
   // 抽查：2009 算法题卡（2.3.7_17=ds_code_2009）有完整讲义
   const q2009 = d.getElementById('card-ds_daka_2_3_7_17');
   check('2009 卡存在', !!q2009, true);
