@@ -90,6 +90,8 @@
     let dakaNavCollapsed = localStorage.getItem('daka_nav_collapsed') === '1';
     // 筛选状态：算法类型 / 题型 / 优先级 / 完成状态(默认 all)
     let dakaFilter = { module: '全部', sheet: '全部', priority: '全部', done: '全部' };
+    // 代码题讲义映射：daka 题 source（如"王道书 2.3.7_大题_17"）→ ds_code.json 完整讲义条目
+    let codeBySource = new Map();
 
     // 从题目元数据推导可用的算法类型（module），
     // 但由于 module 文案带"基于“X”的算法训练"，统一映射为短分类；
@@ -110,12 +112,17 @@
 
     async function loadDaka() {
         try {
-            const [qResp, pResp] = await Promise.all([
+            const [qResp, pResp, cResp] = await Promise.all([
                 fetch('data/ds_daka.json'),
-                api('/api/daka/progress')
+                api('/api/daka/progress'),
+                fetch('data/ds_code.json')
             ]);
             dakaQuestions = (await qResp.json()).questions;
             dakaProgress = (await pResp.json()).progress || {};
+            // 按 source 建立 daka 卡 → 代码题讲义 的映射（source 形如"王道书 2.3.7_大题_17"，两边逐字一致）
+            const codeQs = (await cResp.json()).questions || [];
+            codeBySource = new Map();
+            for (const c of codeQs) if (c.source) codeBySource.set(c.source, c);
             restoreDakaFilter();
             renderFilters(true);
             renderDaka();
@@ -304,6 +311,41 @@
         return p === 0 ? 'badge-must' : p === 1 ? 'badge-high' : p === 4 ? 'badge-low' : 'badge-mid';
     }
 
+    // 代码题讲义解法渲染（与 code.html 同构：多解法 → 思路/代码/复杂度，样式由 style.css 的 .sol-* 提供）
+    function solHtml(q) {
+        const s = q.solutions || {};
+        const list = s.list || [];
+        if (!list.length) {
+            const b = q.brute;
+            if (!b) return '';
+            return `<div class="code-brute">
+                <div class="code-brute-head">💪 ${esc(b.method || '暴力解')} <span class="sol-tag-fb">自生成</span></div>
+                <div class="sol-sec">基本设计思想</div>
+                <div class="sol-text">${b.idea || ''}</div>
+                <div class="sol-sec">代码</div>
+                <pre class="code-block">${esc(b.code || '')}</pre>
+            </div>`;
+        }
+        const table = (s.score_rows || []).length ? `
+            <table class="sol-score">
+                <tr><th>做题思路</th><th>方法</th><th>预计得分</th></tr>
+                ${s.score_rows.map(r => `<tr><td>${esc(r.approach)}</td><td>${esc(r.method)}</td><td class="sol-score-num">${esc(r.score)}</td></tr>`).join('')}
+            </table>` : '';
+        return `<div class="sol-wrap">
+            <div class="sol-source">📘 ${esc(s.source || '')}</div>
+            ${table}
+            ${list.map(x => `
+                <div class="sol-item">
+                    <div class="sol-head">${esc(x.tag || '')}${x.kind ? ' · ' + esc(x.kind) : ''}${x.name ? ' · ' + esc(x.name) : ''}</div>
+                    ${x.analysis ? `<div class="sol-sec">解析</div><div class="sol-text">${esc(x.analysis)}</div>` : ''}
+                    ${x.thought ? `<div class="sol-sec">基本设计思想</div><div class="sol-text">${esc(x.thought)}</div>` : ''}
+                    ${x.code ? `<div class="sol-sec">代码</div><pre class="code-block">${esc(x.code)}</pre>` : ''}
+                    ${x.complexity ? `<div class="sol-cx">${esc(x.complexity)}</div>` : ''}
+                    ${x.note ? `<div class="sol-note">${esc(x.note)}</div>` : ''}
+                </div>`).join('')}
+        </div>`;
+    }
+
     function renderCard(q) {
         const done = !!dakaProgress[q.id];
         const figs = q.figs || {content: [], answer: []};
@@ -312,7 +354,19 @@
         // 打卡表已改纯教材原图：ds_daka.json 不再存题目/答案文字，卡片只渲染教材原图。
         // 文字字段仍兼容（若有则排在图前）；图与文字都缺时给占位，避免出现空白卡片。
         const content = [fmtContent(q.content || ''), figWrap(figs.content, '题目教材原图')].join('') || '（题目见教材原图）';
-        const answer = [fmtAnswer(q.answer || ''), figWrap(figs.answer, '解答教材原图')].join('') || '（解答见教材原图）';
+        // 打卡表算法题若在代码题讲义(ds_code.json)中有映射(source 逐字一致)，
+        // 答案折叠区升级为 code.html 同款完整讲义：考点分析·易错点 + 各解法(思路/代码/复杂度) + 保留解答教材原图。
+        const cd = codeBySource.get(q.source);
+        const hasLecture = cd && (cd.solutions || {}).list && cd.solutions.list.length;
+        let summary = '查看答案';
+        let answer = [fmtAnswer(q.answer || ''), figWrap(figs.answer, '解答教材原图')].join('') || '（解答见教材原图）';
+        if (hasLecture) {
+            summary = '考点分析 · 易错点 · 讲义解法';
+            answer = `
+                <div class="daka-analysis">${esc((cd.analysis || '').replace('易错点：', '\n易错点：'))}</div>
+                ${solHtml(cd)}
+                ${figWrap(figs.answer, '解答教材原图')}`;
+        }
         return `
             <div class="daka-card${done ? ' daka-done' : ''}" id="card-${q.id}">
                 <div class="daka-card-header">
@@ -325,7 +379,7 @@
                 <div class="daka-kaodian">${q.module} / ${q.kaodian}</div>
                 <div class="daka-content">${content}</div>
                 <details class="daka-answer">
-                    <summary>查看答案</summary>
+                    <summary>${summary}</summary>
                     <div class="daka-answer-body">${answer}</div>
                 </details>
             </div>

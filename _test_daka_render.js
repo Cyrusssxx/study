@@ -5,6 +5,7 @@ const path = require('path');
 
 const html = fs.readFileSync(path.join(__dirname, 'pwa', 'daka.html'), 'utf8');
 const data = JSON.parse(fs.readFileSync(path.join(__dirname, 'pwa', 'data', 'ds_daka.json'), 'utf8'));
+const codeData = JSON.parse(fs.readFileSync(path.join(__dirname, 'pwa', 'data', 'ds_code.json'), 'utf8'));
 const figDir = path.join(__dirname, 'pwa', 'data', 'daka_figs');
 
 // 用大括号配平截取 renderCard（非贪婪正则会截断在函数体内第一个 4 空格右括号上）
@@ -52,11 +53,21 @@ assert(missing.length === 0, '图片文件缺失 ' + missing.slice(0, 5).join(',
 // 只取函数体：整段声明喂给 new Function 会变成“函数声明语句”，返回值恒为 undefined
 const full = extractFn(html, 'renderCard');
 const body = full.slice(full.indexOf('{') + 1, full.lastIndexOf('}')).replace(/\bconst /g, 'var ');
-const buildCard = new Function('fmtContent', 'fmtAnswer', 'dakaProgress', 'q', 'badgeClass', body);
+// renderCard 依赖 codeBySource（source→ds_code 讲义映射）与 solHtml（讲义渲染），从页面与数据构建
+const esc = s2 => String(s2 == null ? '' : s2).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+const codeBySource = new Map();
+for (const c of codeData.questions) if (c.source) codeBySource.set(c.source, c);
+const solFull = extractFn(html, 'solHtml');
+const solBody = solFull.slice(solFull.indexOf('{') + 1, solFull.lastIndexOf('}')).replace(/\bconst /g, 'var ');
+// 页面里 solHtml(q) 依赖全局 esc；new Function 无法闭包捕获 → 包一层：esc 作为注入参数，对外暴露单参 q
+const solHtmlImpl = new Function('esc', 'q', solBody);
+const solHtml = q2 => solHtmlImpl(esc, q2);
+const buildCard = new Function('fmtContent', 'fmtAnswer', 'dakaProgress', 'q', 'badgeClass', 'codeBySource', 'solHtml', 'esc', body);
 
 let placeholderHits = 0, labelHits = 0, imgCount = 0;
+let lectureHits = 0;
 for (const q of data.questions) {
-    const card = buildCard(fmt, fmt, { [q.id]: null }, q, p => 'badge');
+    const card = buildCard(fmt, fmt, { [q.id]: null }, q, p => 'badge', codeBySource, solHtml, esc);
     assert(/<div class="daka-card/.test(card), q.id + ' 未生成卡片');
     assert(/题目教材原图/.test(card), q.id + ' 缺题目原图标签');
     assert(/解答教材原图/.test(card), q.id + ' 缺解答原图标签');
@@ -65,14 +76,31 @@ for (const q of data.questions) {
     imgCount += (card.match(/<img /g) || []).length;
     if (/题目见教材原图|解答见教材原图|解答见教材/.test(card)) placeholderHits++;
     assert(!/fmtContent|fmtAnswer/.test(card), q.id + ' 渲染出函数名（未求值）');
+    // 算法题讲义映射：命中 ds_code 的题答案区升级为完整讲义
+    if (codeBySource.has(q.source)) {
+        lectureHits++;
+        assert(/考点分析 · 易错点 · 讲义解法/.test(card), q.id + ' 映射题缺讲义折叠标题');
+        assert(/<div class="sol-item">/.test(card), q.id + ' 映射题缺解法条目 sol-item');
+        assert(/<pre class="code-block">/.test(card), q.id + ' 映射题缺代码块');
+        assert(/sol-cx|复杂度/.test(card), q.id + ' 映射题缺复杂度');
+        assert(/daka-analysis/.test(card), q.id + ' 映射题缺考点分析区');
+    }
 }
 assert(placeholderHits === 0, '仍有 ' + placeholderHits + ' 题落入占位兜底（应有图有标签）');
 assert(labelHits === data.questions.length, '渲染题数不符');
+assert(lectureHits > 0, '没有任何题命中代码题讲义映射');
+
+// 3b. 映射覆盖核对：ds_code 中能对应到打卡表的题（2024-2026 无王道书 source 除外）应全部命中
+const codeSources = codeData.questions.map(c => c.source).filter(s => s && s.indexOf('王道书') === 0);
+let mappedInDaka = 0;
+for (const s of codeSources) if (data.questions.some(q => q.source === s)) mappedInDaka++;
+assert(mappedInDaka === lectureHits, '打卡表命中的讲义数应等于可映射数（' + mappedInDaka + ' ≠ ' + lectureHits + '）');
+console.log('代码题讲义映射命中', lectureHits, '题（ds_code source 与打卡表逐字匹配）');
 
 // 4. 向后兼容：若数据重新带回文字字段，文字应排在图前且不报占位
 const legacy = { id: 'legacy_1', priority: 0, priority_label: '必做', module: 'm', kaodian: 'k', source: 's',
     content: '旧版文字题目', answer: '旧版文字答案', figs: { content: ['x.jpg'], answer: ['y.jpg'] } };
-const legacyCard = buildCard(s => s, s => s, {}, legacy, p => 'badge');
+const legacyCard = buildCard(s => s, s => s, {}, legacy, p => 'badge', codeBySource, solHtml, esc);
 assert(legacyCard.indexOf('旧版文字题目') < legacyCard.indexOf('题目教材原图'), '旧数据下文字应排在图前');
 assert(legacyCard.indexOf('旧版文字答案') < legacyCard.indexOf('解答教材原图'), '旧数据下答案文字应排在图前');
 
