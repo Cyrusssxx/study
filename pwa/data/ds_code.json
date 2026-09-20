@@ -55,7 +55,7 @@
             "analysis": "",
             "thought": "两层循环，外层是遍历i，内层是找到倒数第i个元素，比如上一轮查找到倒数第i-1个结点是q，那下一轮当p->link\n== q时p就是倒数第i个结点。",
             "code": "int ans(node* list, int k)\n{\n    node* p;\n    node* q=NULL;                               // q=NULL是倒数第0个结点\n    for (int i=1; i<=k; i++)\n    {\n        p=list->link;\n        if (q==p) return 0;                     // 找不到倒数第k个结点\n        while (p->link!=q)\n            p=p->link;                          // p最终是倒数第i个结点\n        q=p;\n    }\n    printf(\"%d\\n\", p->data);                    // 输出倒数第k个结点的值\n    return 1;\n}",
-            "complexity": "时间复杂度： | 空间复杂度：",
+            "complexity": "时间复杂度：O(k·n)，最坏 O(n²)（k 趟扫描，每趟 O(n)）   空间复杂度：O(1)",
             "note": ""
           },
           {
@@ -65,7 +65,7 @@
             "analysis": "",
             "thought": "遍历链表，将所有结点都存放在数组中，最后输出数组中倒数第k个元素即可。",
             "code": "int ans(node* list, int k)\n{\n    node* A[maxn];                              // 结点数组\n    node* p=list->link;                         // 正在遍历的结点\n    int n=0;                                    // 数组中结点个数\n    while (p!=NULL)\n    {\n        A[n++]=p;\n        p=p->link;\n    }\n    if (n<k) return 0;\n    printf(\"%d\\n\", A[n-k]->data);               // 输出倒数第k个元素的值\n    return 1;\n}",
-            "complexity": "时间复杂度： | 空间复杂度：",
+            "complexity": "时间复杂度：O(n)（完整遍历两趟）   空间复杂度：O(n)（结点指针数组）",
             "note": ""
           },
           {
@@ -75,7 +75,7 @@
             "analysis": "",
             "thought": "要找到倒数第k个结点，但链表不能回退，所以需要知道他是从前往后数第t个结点（不算头结点），t=n-k+1，n是\n总结点数，那我们只需要先遍历一次链表求出n，然后再遍历一次链表找到第t个结点。",
             "code": "int ans(node* list, int k)\n{\n    node* p=list->link;\n    int t, n=0;\n    while (p!=NULL)\n    {\n        n++;\n        p=p->link;\n    }\n    t=n-k+1;\n    if (t<=0) return 0;\n    p=list;                                     // 从头结点开始往后移t次\n    for (int i=0; i<t; i++)\n        p=p->link;\n    printf(\"%d\\n\", p->data);                    // 输出倒数第k个元素的值\n    return 1;\n}",
-            "complexity": "时间复杂度： | 空间复杂度：",
+            "complexity": "时间复杂度：O(n)（完整遍历两趟）   空间复杂度：O(1)",
             "note": ""
           },
           {
@@ -85,7 +85,7 @@
             "analysis": "",
             "thought": "初始时设置两个指针left和right都指向头结点，right指针先后移k次，若此过程中left指向了NULL则查找失败，返回\n0。然后将left和right同时后移，直到right指向NULL为止，因为left和right直接相差k次移动，所以此时left一定指向倒数\n第k个结点，输出left，返回1。",
             "code": "int ans(node* list, int k)\n{\n    node* left=list;\n    node* right=list;\n    for (int i=0; i<k; i++)\n    {\n        right=right->link;\n        if (right==NULL) return 0;              // 链表长度不足k\n    }\n    while (right!=NULL)\n    {\n        left=left->link;\n        right=right->link;\n    }\n    printf(\"%d\\n\", left->data);                 // 输出倒数第k个元素的值\n    return 1;\n}",
-            "complexity": "时间复杂度： | 空间复杂度：",
+            "complexity": "时间复杂度：O(n)（right 先走 k 步，两指针再同步走 n 步）   空间复杂度：O(1)",
             "note": ""
           }
         ]
@@ -143,8 +143,8 @@
             "analysis": "",
             "thought": "原序列保存在数组A中，将数组 A 的前 p 个元素 A[0] ~ A[p-1] 翻转，再将后面的 A[p] ~ A[n-1] 翻转，最后整体翻\n转 A[0] ~ A[n-1]。",
             "code": "void Reverse(int A[], int L, int R)\n{\n    int num=(R-L+1)/2;\n    for (int i=0; i<num; i++)\n        swap(A[L+i], A[R-i]);\n}\nvoid ans(int A[], int n, int p)\n{\n    Reverse(A, 0, p-1);                         // 翻转A[0~p-1]\n    Reverse(A, p, n-1);                         // 翻转A[p~n-1]\n    Reverse(A, 0, n-1);                         // 翻转A[0~n-1]\n    for (int i=0; i<n; i++)\n        printf(\"%d \", A[i]);                    // 输出翻转后的数组\n}",
-            "complexity": "时间复杂度： | 空间复杂度： 三次翻转顺序很关键：先左段、再右段、最后整体。",
-            "note": ""
+            "complexity": "时间复杂度：O(n)（三次翻转，每次 O(n/2)）   空间复杂度：O(1)",
+            "note": "三次翻转顺序很关键：先左段、再右段、最后整体。"
           }
         ]
       }
@@ -201,8 +201,8 @@
             "analysis": "",
             "thought": "将数组A和数组B中的数据都存入数组C中，C数组长度为2n，对数组C进行快速排序，输出排序后数组中的C[n-1]。",
             "code": "void Qsort(int A[], int L, int R)\n{ \n    if (L>=R)\n        return;                                 // 当前区间元素个数<=1则退出\n    int pivot, i=L, j=R;                        // i和j是左右两个数组下标移动\n    pivot=A[L];                                 // pivot作为基准值参与比较\n    while (i<j){\n        while (i<j && A[j]>=pivot)\n            j--;\n        while (i<j && A[i]<=pivot)\n            i++;\n        if (i<j)\n            swap(A[i], A[j]);                   // A[j]<pivot，A[i]>pivot\n    }\n    swap(A[L], A[i]);                           // 将基准值放入他的最终位置\n    Qsort(A, L, i-1);                           // 递归处理左区间\n    Qsort(A, i+1, R);                           // 递归处理右区间\n}\nint ans(int A[], int B[], int n)\n{\n    int C[2*n];\n    for (int i=0; i<n; i++)\n    {\n        C[i]=A[i];\n        C[n+i]=B[i];\n    }\n    Qsort(C, 0, 2*n-1);                         // 快速排序处理C[0]~C[2n-1]\n    return C[n-1];                              // 中位数输出C[n-1]\n}",
-            "complexity": "时间复杂度： | 空间复杂度： 这种解法完全不利用 A、B 原本已升序的特性，因此效率较低。",
-            "note": ""
+            "complexity": "时间复杂度：O(n log n)（快速排序平均）   空间复杂度：O(n)（数组 C）",
+            "note": "这种解法完全不利用 A、B 原本已升序的特性，因此效率较低。"
           },
           {
             "tag": "解法2",
@@ -211,7 +211,7 @@
             "analysis": "",
             "thought": "采用归并的方式合并数组A和B到新的数组C中，给A、B数组设置变量i和j保存数组下标，初始时都为0，每次比较\nA[i]和B[j]，数组C的下一个空位保存小的那个数，并且对应指针后移，直到一个数组遍历完，将另一个数组中剩下的元素\n依次保存到C空位中。",
             "code": "int ans(int A[], int B[], int n)\n{\n    int C[2*n];\n    int i=0,j=0,k=0;\n    while (i<n && j<n)\n        if (A[i]<B[j])\n            C[k++]=A[i++];\n        else\n    C[k++]=B[j++];\n    while (i<n) C[k++]=A[i++];\n    while (j<n) C[k++]=B[j++];\n    return C[n-1];                              // 输出C[n-1]\n}",
-            "complexity": "时间复杂度： | 空间复杂度：",
+            "complexity": "时间复杂度：O(n)（归并两数组一趟）   空间复杂度：O(n)（数组 C）",
             "note": ""
           },
           {
@@ -221,8 +221,8 @@
             "analysis": "",
             "thought": "给 A、B 数组设置变量 i 和 j 保存数组下标，计数 k 表示此时是第几小的元素，初始时都为 0，每次比较 A[i] 和 B[j]，\n取较小的那个数对应指针后移且 k++，直到 k 等于 n，输出这个数。",
             "code": "int ans(int A[], int B[], int n)\n{\n    int i=0, j=0, k;\n    for (k=1; k<n; k++)                         // 只需要移动 n-1 次，最后一次取当前较小值\n        if (A[i]<B[j]) i++;\n        else j++;\n    return min(A[i], B[j]);                     // 输出A[i]和B[j]中的小值\n}",
-            "complexity": "时间复杂度： | 空间复杂度： 归并两个有序数组时，中位数一定是整个合并序列第 n 小的元素，因此只需要知道该位置的元素，无需完整合并后 的数组。",
-            "note": "即为中位数。"
+            "complexity": "时间复杂度：O(n)（比较计数到第 n 小即止）   空间复杂度：O(1)",
+            "note": "即为中位数。归并两个有序数组时，中位数一定是整个合并序列第 n 小的元素，因此只需要知道该位置的元素，无需完整合并后 的数组。"
           },
           {
             "tag": "解法4",
@@ -284,7 +284,7 @@
             "analysis": "",
             "thought": "设str1和str2的长度较大的值是n，两层for循环枚举str1和str2相同后缀的起始位置。",
             "code": "Node* ans(Node *str1, Node *str2)\n{\n    Node* p1=str1->next;                        // str1的后缀起始位置\n    Node* p2;                                   // 之后循环中会赋初值\n    while (p1!=NULL)\n    {\n        p2=str2->next;\n        while (p2!=NULL)\n        {\n            if (p1==p2)\n                return p1;                      // 后缀完全匹配，返回p1\n            p2=p2->next;\n        }\n        p1=p1->next;\n    }\n    return NULL;\n}",
-            "complexity": "时间复杂度： | 空间复杂度：",
+            "complexity": "时间复杂度：O(n²)（两层循环枚举后缀起点）   空间复杂度：O(1)",
             "note": ""
           },
           {
@@ -294,7 +294,7 @@
             "analysis": "",
             "thought": "设str1和str2的长度较大的值是n，设置两个新数组S1和S2分别保存str1和str2链中的每个结点的地址（这里用为了\n方便，从S1[1]和S2[1]开始存）。",
             "code": "Node* ans(Node *str1, Node *str2)\n{\n    Node* S1[maxn], S2[maxn];                   // 保存str1和str2各结点地址，maxn是最大可\n    Node* p1=str1->next;                        // str1的后缀起始位置\n    Node* p2=str2->next;                        // str2的后缀起始位置\n    int Len1=0, Len2=0;\n    while (p1!=NULL)\n    {\n        S1[Len1]=p1;\n        Len1++;\n        p1=p1->next;\n    }\n    while (p2!=NULL)\n    {\n        S2[Len2]=p2;\n        Len2++;\n        p2=p2->next;\n    }\n    if (S1[Len1-1]!=S2[Len2-1])\n        return NULL;                            // 无相同后缀，可不写\n    for (int i=1; i<=min(Len1, Len2); i++)      // 讨论相同后缀长度\n        if (S1[Len1-i]!=S2[Len2-i])\n            return S1[Len1-i+1];                // 输出起始地址\n    return S1[0];                               // 如果S1和S2完全相同则返回他们的第一个字母\n}",
-            "complexity": "时间复杂度： | 空间复杂度：",
+            "complexity": "时间复杂度：O(n)（遍历链表存入数组）   空间复杂度：O(n)（两个结点地址数组）",
             "note": "能长度\n地址"
           },
           {
@@ -304,7 +304,7 @@
             "analysis": "",
             "thought": "每个链表设置一个指针，先求出两个链的长度，然后长的链指针往后移动x次（x是长度差的绝对值），使得两链剩\n余未访问结点数相同，然后两链表的指针同步往后移动比较，直到指向的是同一个结点。",
             "code": "Node* ans(Node *str1, Node *str2)\n{\n    Node* p1=str1->next;                        // 指针p1用来遍历str1\n    Node* p2=str2->next;                        // 指针p2用来遍历str2\n    int Len1=0, Len2=0;\n    while (p1!=NULL)\n    {\n        Len1++;\n        p1=p1->next;\n    }\n    while (p2!=NULL)\n    {\n        Len2++;\n        p2=p2->next;\n    }\n    p1=str1->next;\n    p2=str2->next;\n    if (Len1>Len2)\n        for (int i=0; i<Len1-Len2; i++)         // str1更长，p1先移动一段\n            p1=p1->next;\n    else\n        for (int i=0; i<Len2-Len1; i++)         // str2更长，p2先移动一段\n            p2=p2->next;\n    while (p1!=NULL && p2!=NULL)\n    {\n        if (p1==p2) return p1;                  // 返回相同后缀起始地址\n        p1=p1->next;\n        p2=p2->next;\n    }\n    return NULL;                                // 无相同后缀，可不写\n}",
-            "complexity": "时间复杂度： | 空间复杂度：",
+            "complexity": "时间复杂度：O(n)（先求两链长度再同步后移比较）   空间复杂度：O(1)",
             "note": ""
           }
         ]
@@ -362,7 +362,7 @@
             "analysis": "",
             "thought": "两层循环：外层循环枚举数组中每个候选元素，内层循环统计该元素在数组中出现的次数，若次数大于 n/2 则为主\n元素。",
             "code": "int ans(int A[], int n)\n{\n    int m;                                      // m统计当前枚举元素出现次数\n    for (int i=0; i<n; i++)\n    {\n        m=0;                                    // 每次换元素的时候m要清零\n        for (int j=0; j<n; j++)\n            if (A[i]==A[j])\n                m++;\n        if (m>n/2)\n            return A[i];                        // 找到了主元素\n    }\n    return -1;                                  // 未找到主元素\n}",
-            "complexity": "时间复杂度： | 空间复杂度：",
+            "complexity": "时间复杂度：O(n²)（两层循环统计出现次数）   空间复杂度：O(1)",
             "note": ""
           },
           {
@@ -372,7 +372,7 @@
             "analysis": "",
             "thought": "先快速排序得到升序序列，权值相同的元素都会相邻，扫描一趟数组，L是之前相邻的相同元素最左边的元素下标，i\n是此时正在扫描的元素下标，如果A[i]不等于A[L]则说明碰到了新的元素。",
             "code": "void Qsort(int A[], int L, int R)\n{ \n    if (L>=R)\n        return;                                 // 当前区间元素个数<=1则退出\n    int pivot, i=L, j=R;                        // i和j是左右两个数组下标移动\n    pivot=A[L];                                 // pivot作为基准值参与比较\n    while (i<j){\n        while (i<j && A[j]>=pivot)\n            j--;\n        while (i<j && A[i]<=pivot)\n            i++;\n        if (i<j)\n            swap(A[i], A[j]);                   // A[j]<pivot，A[i]>pivot\n    }\n    swap(A[L], A[i]);                           // 将基准值放入他的最终位置\n    Qsort(A, L, i-1);                           // 递归处理左区间\n    Qsort(A, i+1, R);                           // 递归处理右区间\n}\nint ans(int A[], int n)\n{\n    Qsort(A, 0, n-1);\n    int t=A[(n-1)/2];                           // 主元素只可能是A[(n-1)/2]\n    int m=0;                                    // m统计当前枚举元素出现次数\n    for (int i=0; i<n; i++)\n        if (A[i]==t)\n            m++;\n    if (m>n/2)\n        return t;                               // 找到了主元素\n    return -1;                                  // 未找到主元素\n}",
-            "complexity": "时间复杂度： | 空间复杂度：",
+            "complexity": "时间复杂度：O(n log n)（快速排序平均）   空间复杂度：O(log n)（快排递归栈，最坏 O(n)）",
             "note": ""
           },
           {
@@ -382,7 +382,7 @@
             "analysis": "",
             "thought": "设置一个数组count[0…n-1]统计每个数字出现的次数，比如count[i]=1表示数字i出现了1次，遍历一次A数组统计\n所有数字出现的次数，处理完后扫描一次count数组找到是否有主元素，如果有则输出主元素，否则输出-1。",
             "code": "int ans(int A[], int n)\n{\n    int count[n]={0};                           // count统计数字出现频率\n    for (int i=0; i<n; i++)\n        count[A[i]]++;                          // 0<=A[i]<=n，不会越界\n    for (int j=0; j<n; j++)\n        if (count[j]>n/2)\n            return j;                           // 找到了主元素，输出主元素\n    return -1;                                  // 未找到主元素，输出-1\n}",
-            "complexity": "时间复杂度： | 空间复杂度：",
+            "complexity": "时间复杂度：O(n)（一趟统计 + 一趟扫描 count）   空间复杂度：O(n)（计数数组）",
             "note": ""
           },
           {
@@ -392,8 +392,8 @@
             "analysis": "",
             "thought": "利用抵消法（摩尔投票法）：\n扫描数组，用变量 j 记录当前候选主元素，t 记录其票数。遇到与 j 相同的元素时票数加 1，不同则减 1，票数为 0 时更新\n候选元素。第一轮结束后，j 为可能主元素，再次遍历确认其出现次数是否超过 n/2，若超过则为主元素，否则不存在主元\n素。",
             "code": "int ans(int A[], int n)\n{\n    int j=A[0], t=1;                        // 取A[0]作为可能主元素\n    for (int i=1; i<n; i++)\n        if (A[i]==j) t++;\n        else\n        {\n            t--;\n            if (t<0)\n            {\n                j=A[i];\n                t=1;\n            }\n        }\n    int m=0;                                        // m统计j出现的次数\n    for (int i=0; i<n; i++)\n        if (A[i]==j) m++;\n    if (m>n/2) return j;                        // j是主元素，输出j\n    else return -1;                             // j不是主元素，输出-1\n}",
-            "complexity": "时间复杂度： | 空间复杂度： 摩尔投票法最早由 Boyer 和 Moore 在 1981 年提出，原本用于处理在线序列中寻找主元素问题。主元素定义为：在 长度为 n 的序列中，出现次数严格超过 n/2 的元素。 其核心思想是 “抵消法” —— 把不同的元素互相抵消掉，主元素由于数量超过一半，最终必然“存活”下来。 摩尔投票法正确性证明: 主元素出现次数 > n/2，非主元素出现次数 < n/2。 每次遇到不同元素，抵消一对“主元素-非主元素”。 最多能抵消掉 n-m 次（m是主元素出现次数）。 剩余主元素个数为 m - (n-m) = 2m - n > 0，说明主元素一定存活到最后。 最后留下的候选人若存在主元素，必然是主元素。 再次扫描确认其出现次数是否 > n/2 即可。",
-            "note": ""
+            "complexity": "时间复杂度：O(n)（两趟线性扫描）   空间复杂度：O(1)",
+            "note": "摩尔投票法最早由 Boyer 和 Moore 在 1981 年提出，原本用于处理在线序列中寻找主元素问题。主元素定义为：在 长度为 n 的序列中，出现次数严格超过 n/2 的元素。 其核心思想是 “抵消法” —— 把不同的元素互相抵消掉，主元素由于数量超过一半，最终必然“存活”下来。 摩尔投票法正确性证明: 主元素出现次数 > n/2，非主元素出现次数 < n/2。 每次遇到不同元素，抵消一对“主元素-非主元素”。 最多能抵消掉 n-m 次（m是主元素出现次数）。 剩余主元素个数为 m - (n-m) = 2m - n > 0，说明主元素一定存活到最后。 最后留下的候选人若存在主元素，必然是主元素。 再次扫描确认其出现次数是否 > n/2 即可。"
           }
         ]
       }
@@ -429,7 +429,7 @@
             "analysis": "",
             "thought": "先序遍历二叉树，设置全局变量 WPL，每次 p 访问到叶子结点时 p 的权值与深度相乘（根结点深度 depth=0），\n再累加到 WPL 中。\n（3）算法如下：",
             "code": "typedef struct BTNode{\n    int weight;\n    struct BTNode *left, *right;\n}BTNode;\nint WPL=0;                                      // WPL是全局变量\nvoid PreOrder(BTNode *p, int depth)             // 当前结点p，深度depth\n{\n    if (p==NULL)                                // p是空结点\n        return;\n    if (p->left==NULL && p->right==NULL)        // p是叶结点\n        WPL+=depth*p->weight;\n    PreOrder(p->left, depth+1);                 // 递归调用左孩子\n    PreOrder(p->right, depth+1);                // 递归调用右孩子\n}",
-            "complexity": "",
+            "complexity": "时间复杂度：O(n)（一次先序遍历）   空间复杂度：O(n)（递归栈，树退化链时 O(n)）",
             "note": ""
           },
           {
@@ -439,7 +439,7 @@
             "analysis": "",
             "thought": "后序遍历二叉树，设置全局变量 WPL，如果访问到叶结点则把权值返回给父亲，如果是非叶结点则该结点权值等于\n左、右孩子的权值和，累加到 WPL 中，并将该权值返回给父亲。\n（3）算法如下：",
             "code": "typedef struct BTNode{\n    int weight;\n    struct BTNode *left, *right;\n}BTNode;\nint WPL=0;                                      // WPL是全局变量\nint PostOrder(BTNode *p)\n{\n    if (p==NULL)                                // p是空结点\n        return 0;\n    int L=PostOrder(p->left);                   // 递归调用左孩子\n    int R=PostOrder(p->right);                  // 递归调用右孩子\n    if (p->left==NULL && p->right==NULL)\n        return p->weight;                       // p是叶结点\n    WPL=WPL+L+R;                                // p是非叶结点\n    return L+R;\n}",
-            "complexity": "",
+            "complexity": "时间复杂度：O(n)（一次后序遍历）   空间复杂度：O(n)（递归栈，树退化链时 O(n)）",
             "note": ""
           }
         ]
@@ -487,7 +487,7 @@
             "analysis": "",
             "thought": "两层循环枚举所有结点的两两比较，外层遍历链表中的结点p，内层q遍历p之后的结点，将和p绝对值相等的结点删\n除（只保留第一个出现的p）。\n（3）算法如下：",
             "code": "typedef struct Node{\n    int data;                                   // 该结点权值\n    struct Node *link;                          // 下一个结点\n}Node;\nvoid ans(Node* HEAD)\n{\n    Node* p=HEAD->link;                         // 外层遍历结点p\n    Node *pre, *r;                              // pre是q前一个结点\n    // 外层循环固定p，pre从p的下一个结点开始，遍历对比p的数据\n    while (p!=NULL)\n    {\n        pre=p;                                  // 每次都需要更新pre，从p开始\n        while (pre->link!=NULL)\n        {\n            q=pre->link;                        // q表示待比较结点\n            if (abs(p->data)==abs(q->data))\n            {\n                pre->link=q->link;\n                free(q);\n            }\n            else\n                pre=pre->link;\n        }\n        p=p->link;\n    }\n}",
-            "complexity": "时间复杂度： | 空间复杂度：",
+            "complexity": "时间复杂度：O(n²)（两层循环两两比较）   空间复杂度：O(1)",
             "note": ""
           },
           {
@@ -497,7 +497,7 @@
             "analysis": "",
             "thought": "data的绝对值≤n，那可以用数组count[0~n]来保存对于每一个绝对值是否出现过，比如count[1]>0表示该绝对值已\n经出现过了，之后再出现就可以删除当前访问的结点。遍历一次链表，更新count数组以及删除后面重复出现的结点。\n（3）算法如下：",
             "code": "typedef struct Node{\n    int data;                                   // 该结点权值\n    struct Node *link;                          // 下一个结点\n}Node;\nvoid ans(Node* HEAD, int m, int n)\n{\n    Node* p=HEAD->link;                         // 当前访问结点p\n    Node* pre=HEAD;                             // p的前一个结点pre\n    int count[n+1]={0};\n    while (p!=NULL)\n    {\n        if (count[abs(p->data)]==0)\n        {\n            count[abs(p->data)]=1;              // p的权值第一次出现\n            pre=p;\n            p=p->next;\n        }\n        else\n        {                                       // p的权值前面已经出现过,删除p结点\n            pre->link=p->link;\n            free(p);\n            p=pre->link;\n        }\n    }\n}",
-            "complexity": "",
+            "complexity": "时间复杂度：O(n)（一趟遍历即删）   空间复杂度：O(n)（计数数组）",
             "note": "（4）时间复杂度： | 空间复杂度："
           }
         ]
@@ -550,7 +550,7 @@
             "analysis": "",
             "thought": "对数组 A[0…n-1] 进行快速排序得到升序，排序后集合 S1 是 A[0...n/2-1]（向下取整），集合S2是 A[n/2…n-1]（向\n下取整）。",
             "code": "void Qsort(int A[], int L, int R, int )\n{ \n    if (L>=R)\n        return;                                 // 当前区间元素个数<=1则退出\n    int pivot, i=L, j=R;                        // i和j是左右两个数组下标移动\n    pivot=A[L];                                 // pivot作为基准值参与比较\n    while (i<j){\n        while (i<j && A[j]>=pivot)\n            j--;\n        while (i<j && A[i]<=pivot)\n            i++;\n        if (i<j)\n            swap(A[i], A[j]);                   // A[j]<pivot，A[i]>pivot\n    }\n    swap(A[L], A[i]);                           // 将基准值放入他的最终位置\n    Qsort(A, L, i-1);                           // 递归处理左区间\n    Qsort(A, i+1, R);                           // 递归处理右区间\n}\nvoid ans(int A[], int n)\n{\n    Qsort(A, 0, n-1);\n    输出A1：A[0~n/2-1]\n    输出A2：A[n/2~n-1]                           // 奇数时中间数分给A2\n}",
-            "complexity": "时间复杂度： | 空间复杂度：",
+            "complexity": "时间复杂度：O(n log n)（快速排序平均）   空间复杂度：O(log n)（快排递归栈）",
             "note": ""
           },
           {
@@ -570,7 +570,7 @@
             "analysis": "",
             "thought": "对数组A[0~n-1]进行类似快速排序的做法，在处理左右区间时只处理可能包含中位数的区间，即如果区间的范围是\n[l, r]，则只有l<=n/2-1<=r才会处理该区间，可以不用递归来写，每次划分后修改l和r的范围即可。",
             "code": "void ans(int A[], int n)\n{\n    int L=0, R=n-1;\n    while (L<R){                                // 类快排划分过程\n        int pivot, i=L, j=R;                    // i和j是左右两个数组下标移动\n        pivot=A[L];                             // pivot作为基准值参与比较\n        while (i<j){\n            while (i<j && A[j]>=pivot)\n                j--;\n            while (i<j && A[i]<=pivot)\n                i++;\n            if (i<j)\n                swap(A[i], A[j]);               // A[j]<pivot，A[i]>pivot\n        }\n        swap(A[L], A[i]);                       // 将基准值放入他的最终位置\n        if (n/2-1==i) break;                    // 分成所需要的两个区间\n        if (n/2-1>=L && n/2-1<=i-1) R=i-1;      // n/2-1在左区间范围中，修改右边界R\n        else L=i+1;                             // n/2-1在右区间范围中，修改左边界L\n    }\n    输出A1：A[0~n/2-1]\n    输出A2：A[n/2~n-1]                           // 奇数时中间数分给A2\n}",
-            "complexity": "时间复杂度： | 空间复杂度：",
+            "complexity": "时间复杂度：O(n)（类快排划分，平均；最坏 O(n²)）   空间复杂度：O(1)（非递归）",
             "note": ""
           }
         ]
@@ -608,7 +608,7 @@
             "analysis": "",
             "thought": "中序遍历二叉树，对于当前访问的非空结点 p，则先输出 “(”，然后递归调用左子树，输出 p 的权值，递归调用右子\n树，输出 “)”，如果 p 是根或者叶结点则不需要输出 “(” 或 “)”。",
             "code": "void InOrder(BTree* p, BTree* root)\n{\n    if (p==NULL) return;                        // p是空结点\n    if ((p->left!=NULL || p->right!=NULL) && (p!=root))\n        printf(\"(\");\n    InOrder(p->left, root);                     // 递归调用左子树\n    printf(\"%s\", p->data);                      // 输出操作数\n    InOrder(p->right, root);                    // 递归调用右子树\n    if ((p->left!=NULL || p->right!=NULL) && (p!=root))\n        printf(\")\");\n}",
-            "complexity": "",
+            "complexity": "时间复杂度：O(n)（一次中序遍历）   空间复杂度：O(n)（递归栈，树退化链时 O(n)）",
             "note": ""
           }
         ]
@@ -661,7 +661,7 @@
             "analysis": "",
             "thought": "可以证明最小未出现的正整数t一定≤n+1（因为如果t>n+1，则1~t-1都会出现一次，但只有n个整数，所以t-1≤n，\n即t≤n+1），枚举所有可能的未出现最小正整数，扫描一次数组判断是否符合。",
             "code": "int ans(int A[], int n)\n{\n    for (int i=1; i<=n+1; i++)\n    {\n        bool flag=false;                        // 先假设i未出现\n        for (int j=0; j<n; j++)\n            if (i==A[j])\n        flag=true;                              // 此时i出现了，flag变成true\n        if (flag==false)                        // 若i未出现过则输出i\n            return i;\n    }\n}",
-            "complexity": "时间复杂度： | 空间复杂度：",
+            "complexity": "时间复杂度：O(n²)（枚举候选，内层全扫描）   空间复杂度：O(1)",
             "note": ""
           },
           {
@@ -671,7 +671,7 @@
             "analysis": "",
             "thought": "先对数组A快速排序得到升序序列，然后遍历数组找到第一个未出现的最小正整数。",
             "code": "void Qsort(int A[], int L, int R)\n{ \n    if (L>=R)\n        return;                                 // 当前区间元素个数<=1则退出\n    int pivot, i=L, j=R;                        // i和j是左右两个数组下标移动\n    pivot=A[L];                                 // pivot作为基准值参与比较\n    while (i<j){\n        while (i<j && A[j]>=pivot)\n            j--;\n        while (i<j && A[i]<=pivot)\n            i++;\n        if (i<j)\n            swap(A[i], A[j]);                   // A[j]<pivot，A[i]>pivot\n    }\n    swap(A[L], A[i]);                           // 将基准值放入他的最终位置\n    Qsort(A, L, i-1);                           // 递归处理左区间\n    Qsort(A, i+1, R);                           // 递归处理右区间\n}\nint ans(int A[], int n)\n{\n    Qsort(A, 0, n-1);\n    int t=1;                                    // 假设初始最小未出现正整数t=1\n    for (int i=0; i<n; i++)\n        if (A[i]==t)\n            t++;                                // t已出现，此时最小未出现正整数是t+1\n    return t;                                   // 输出最小未出现正整数\n}",
-            "complexity": "时间复杂度： | 空间复杂度：",
+            "complexity": "时间复杂度：O(n log n)（快速排序平均）   空间复杂度：O(log n)（快排递归栈）",
             "note": ""
           },
           {
@@ -681,7 +681,7 @@
             "analysis": "",
             "thought": "可以证明最小未出现的正整数t一定≤n+1（因为如果t>n+1，则1~t-1都会出现一次，但只有n个整数，所以t-1≤n，\n即t≤n+1），设置一个数组count，count[i]表示i是否在原数组A中出现过，扫描一遍数组A，更新count数组，之后再扫描\n一遍count数组输出未出现的最小正整数。",
             "code": "int ans(int A[],int n)\n{\n    int count[n+2]={0};                         // 0~n+1\n    for (int i=0; i<n; i++)                     // 扫描数组A\n        if (A[i]>0 && A[i]<=n+1)                // 当0<A[i]<=n+1时才修改\n            count[A[i]]++;\n    for (int j=1; j<=n+1; j++)                  // 扫描count数组\n        if (count[j]==0)                        // j未出现过，是最小未出现正整数\n            return j;                           // 输出j\n}",
-            "complexity": "时间复杂度： | 空间复杂度：",
+            "complexity": "时间复杂度：O(n)（两趟扫描）   空间复杂度：O(n)（计数数组）",
             "note": ""
           }
         ]
@@ -797,7 +797,7 @@
             "analysis": "",
             "thought": "数组A、B、C的长度分别为n、m、l，三重循环枚举a、b、c，对于每一组a、b、c求出对应的距离D，并从中选出最小\n的距离。",
             "code": "int ans(int A[],int n,int B[],int m,int C[],int l)\n{ \n    int D_min=INT_MAX, D;                       // D_min初值为最大整数\n    for (int i=0; i<n; i++)\n        for (int j=0; j<m; j++)\n            for (int k=0; k<l; k++){            // 三重循环枚举abc\n                D=abs(A[i]-B[j])+abs(B[j]-C[k])+abs(C[k]-A[i]);\n                D_min=min(D_min, D);            // 更新最小D值\n            }\n    return D_min;                               // 输出最小D值\n}",
-            "complexity": "时间复杂度： | 或 | 空间复杂度：",
+            "complexity": "时间复杂度：O(n·m·l)（三重循环枚举 a、b、c）   空间复杂度：O(1)",
             "note": ""
           },
           {
@@ -807,7 +807,7 @@
             "analysis": "",
             "thought": "数组A、B、C的长度分别为n、m、l，两重循环枚举a、b，对数组C设置变量k存储数组下标不断后移，初始k=0，只要\n移动后的D更小，就选择往后移动，然后对于每一组a、b、c求出对应的距离D，并从中选出最小的距离。",
             "code": "int DD(int a,int b,int c)\n{                                               // DD(a,b,c)=|a-b|+|b-c|+|b-a|\n    return abs(a-b)+abs(b-c)+abs(c-a);\n}\nint ans(int A[],int n,int B[],int m,int C[],int l)\n{\n    int D, D_min=INT_MAX;                       // D_min初值为最大整数\n    int k=0;\n    for (int i=0; i<n; i++)\n        for (int j=0; j<n; j++)\n        {                                       // 两重循环枚举a、b\n            D = DD(A[i], B[j], C[k]);           // 枚举a、b得到的初始D\n            while (k<l-1 && DD(A[i], B[j], C[k+1])<D)\n                D = DD(A[i], B[j], C[++k]);     // 更新下标k和距离D\n            D_min = min(D_min, D);              // 更新最小D值\n        }\n    return D_min;                               // 输出最小D值\n}",
-            "complexity": "时间复杂度： | 或 | 空间复杂度：",
+            "complexity": "时间复杂度：O(n·m·l)（枚举 a、b，每对 c 扫描一趟）   空间复杂度：O(1)",
             "note": ""
           },
           {
@@ -817,7 +817,7 @@
             "analysis": "",
             "thought": "本解法可以证明当a确定时，b只能是数组B中<a且最接近a的那个数或>=a且最接近a的那个数，c也只能是数组C中\n<a且最接近a的那个数或>=a且最接近a的那个数，所以只需要枚举a并折半查找确定b和c可能的值然后选择最小的D。\n数组A、B、C的长度分别为n、m、l，一重循环枚举a=A[i]，通过两次折半查找可以查找到插入位点j和k保证B[j]<A[i]\n<B[j+1]，C[k]<A[i]<C[k+1]（如果插入位点是最左端和最右端另外判断），然后判断<A[i], B[j], C[k]>、<A[i], B[j+1],\nC[k]>、<A[i], B[j], C[k+1]>、<A[i], B[j+1], C[k+1]>哪种情况D最小即可，就能得到a确定的情况下最小可能的D，枚举a\n更新D_min即可。最后输出最小值D_min。",
             "code": "int DD(int a,int b,int c)                       // DD(a,b,c)=|a-b|+|b-c|+|b-a|\n{\n    return abs(a-b)+abs(b-c)+abs(c-a);\n}\nint ans(int A[],int n,int B[],int m,int C[],int l)\n{\n    int D, D_min=INT_MAX;                       // D_min初值为最大整数\n    for (int i=0; i<n; i++)\n    {\n        int j=B_Search(B, 0, m-1, A[i]);        // 在B中根据A[i]折半查找\n        int k=B_Search(C, 0, l-1, A[i]);        // 在C中根据A[i]折半查找\n        if (j>=0 && k>=0) \n            D_min=min(D_min, DD(A[i], B[j], C[k]));\n        if (j+1<m && k>=0)\n            D_min=min(D_min, DD(A[i], B[j+1], C[k]));\n        if (j>=0 && k+1<l)\n            D_min=min(D_min, DD(A[i], B[j], C[k+1]));\n        if (j+1<m && k+1<l)\n            D_min=min(D_min, DD(A[i], B[j+1], C[k+1]));\n    }\n    return D_min;                               // 输出最小D值\n}",
-            "complexity": "时间复杂度： | 或 | 空间复杂度：",
+            "complexity": "时间复杂度：O(n·(log m + log l))（枚举 a，两轮折半定 b、c）   空间复杂度：O(1)",
             "note": ""
           },
           {
@@ -827,7 +827,7 @@
             "analysis": "",
             "thought": "数组A、B、C的长度分别为n、m、l，对数组A、B、C分别设置变量i、j、k存储数组下标不断后移，初始i=j=k=0，\n可以证明如果下标是往后移动，只有当移动A[i]、B[j]、C[k]最小的那个时，D=2L3才有可能减小，所以每次都只后移所指\n元素值最小的对应数组下标变量，一直重复进行，并更新D的最小值D_min，直到所指元素值最小的对应数组无法在后\n移，最后输出最小值D_min。",
             "code": "int DD(int a,int b,int c)                       // DD(a,b,c)=|a-b|+|b-c|+|b-a|\n{\n    return abs(a-b)+abs(b-c)+abs(c-a);\n}\nint ans(int A[],int n,int B[],int m,int C[],int l)\n{\n    int D_min=INT_MAX;                          // D_min初值为最大整数\n    int i=0, j=0, k=0;                          // 数组A、B、C的下标i、j、k\n    while(i<n && j<m && k<l)\n    {\n        D_min=min(D_min, DD(A[i], B[j], C[k])); // 更新D_min\n        if (A[i]<B[j] && A[i]<C[k])\n            i++;\n        else\n        if (B[j]<C[k])\n            j++;\n        else\n            k++;\n    }\n    return D_min;                               // 输出最小D值\n}",
-            "complexity": "时间复杂度： | 或 | 空间复杂度：",
+            "complexity": "时间复杂度：O(n+m+l)（三指针一趟扫描，只后移最小者）   空间复杂度：O(1)",
             "note": ""
           }
         ]
@@ -863,7 +863,7 @@
             "analysis": "分析可知本题需要访问所有顶点，统计所有顶点的度，然后判断有多少个度为奇数的顶点，只需要对邻接矩阵一次遍历即\n可实现。",
             "thought": "访问所有的顶点，两层循环判断每两个顶点间是否有边相连、统计所有顶点的度，进而求出有多少个度为奇数的顶\n点，对邻接矩阵一次遍历即可。",
             "code": "int IsExistEL(MGraph G)\n{\n    int count = 0;\n    for (int i = 0; i < G.numVertices; i++)\n    {\n        int degree = 0;\n        for (int j = 0; j < G.numVertices; j++)\n            if (G.Edge[i][j] == 1)\n                degree++;\n        if (degree % 2 == 1)\n            count++;\n    }\n    if (count == 0 || count == 2)\n        return 1;\n    else\n        return 0;\n}",
-            "complexity": "时间复杂度： | 空间复杂度：",
+            "complexity": "时间复杂度：O(n²)（遍历邻接矩阵统计各顶点度数）   空间复杂度：O(1)",
             "note": ""
           }
         ]
@@ -900,7 +900,7 @@
             "analysis": "",
             "thought": "如果当前结点的数组下标为 i 则左孩子下标为 2i+1，右孩子下标为 2i+2，对该树进行递归的中序遍历，pre 保存当\n前访问结点的前驱结点的权值，如果 SqBiTree[i]<pre 则说明中序遍历得到的不是升序，即当前子树返回 false，如果\nSqBiTree[i]>=pre 且左子树和右子树都确定是二叉排序树则返回 true。",
             "code": "int pre=0;                                      // 全局变量pre保存中序前驱的权值，初值0\nbool InOrder(SqBiTree *T, int i)\n{\n    /*指针bt指向二叉树的结构体，i是当前访问的下标*/\n    if (i>=T->ElemNum || T->SqBiTNode[i]==-1)   // 当前结点为空\n        return true;\n    if (InOrder(T, 2*i+1) != true)              // 递归调用左子树\n        return false;                           // 左子树不符合定义\n    if (pre>T->SqBiTNode[i])                    // 访问当前结点visit(p)\n        return false;                           // 前驱大于当前结点，不符合定义\n    pre=T->SqBiTNode[i];                        // 更新pre\n    if (!InOrder(T, 2*i+2) != true)             // 递归调用右子树\n        return false;                           // 右子树不符合定义\n    return true;                                // 根下标为i的子树符合定义\n}",
-            "complexity": "",
+            "complexity": "时间复杂度：O(n)（一次中序遍历）   空间复杂度：O(n)（递归栈，树退化链时 O(n)）",
             "note": ""
           }
         ]
@@ -937,7 +937,7 @@
             "analysis": "出度大于入度的顶点称为 K 顶点，本题关键是遍历图求出所有顶点的入度和出度，才能判断出顶点是否为 K 顶点。依次判\n断所有顶点是否为 K 顶点，并统计数量即可。\n注：以下两种答案本质一样，仅供参考",
             "thought": "图的邻接矩阵 G.Edge[i] [j]>0 表示 i 到 j 有边，二重循环遍历邻接矩阵，算出每个顶点的入读 indegree 和出度\noutdegree，然后判断每个顶点是否为 K 顶点，如果是则输出并且计数器 count+1，最后返回 count 即可。",
             "code": "int printVertices(MGraph G)\n{\n    int indegree, outdegree;                    // 入度和出度\n    int count = 0;                              // 计数器count初值为0\n    for (int i = 0; i < G.numVertices; i++)\n    {\n        indegree = outdegree = 0;               // 更换i之后要清零，重新统计入度和出度\n        for (int j = 0; j < G.numVertices; j++)\n            if (G.Edge[i][j] > 0) outdegree++;  // i到j有边，i的出度+1\n        for (int j = 0; j < G.numVertices; j++)\n            if (G.Edge[j][i] > 0) indegree++;   // j到i有边，i的入度+1\n        if (outdegree > indegree)               // 如果i的出度大于入度则说明i是K顶点\n        {\n            printf(\"%c\", G.VerticesList[i]);\n            count++;\n        }\n    }\n    return count;\n}\nint printVertices(MGraph G)\n{\n    int indegree, outdegree;                    // 入度和出度\n    int count = 0;                              // 计数器count初值为0\n    for (int i = 0; i < G.numVertices; i++)\n    {\n        indegree = outdegree = 0;               // 更换i之后要清零，重新统计入度和出度\n        for (int j = 0; j < G.numVertices; j++)\n        {\n            if (G.Edge[i][j] > 0) outdegree++;  // i到j有边，i的出度+1\n            if (G.Edge[j][i] > 0) indegree++;   // j到i有边，i的入度+1\n        }\n        if (outdegree > indegree)               // 如果i的出度大于入度则说明i是K顶点\n        {\n            输出G.VerticesList[i]\n            count++;\n        }\n    }\n    return count;\n}",
-            "complexity": "",
+            "complexity": "时间复杂度：O(n²)（遍历邻接矩阵统计出入度）   空间复杂度：O(1)",
             "note": "写法 2："
           }
         ]
@@ -965,7 +965,7 @@
             "analysis": "",
             "thought": ". 遍历图统计所有顶点的入度，将入度为 0 的顶点都入队。\n2. 循环执行：\n① 如果队中元素个数不为 1，说明拓扑序列不唯一或不存在，return 0。\n② 出队一个顶点记为 v，count++。\n③ 更新所有与顶点 v 相连的顶点 i 的入度，若 i 的入度为 0，则将 i 入队。\n3. 如果 count 等于顶点数则拓扑序列唯一，return 1；否则拓扑序列不存在，return 0。",
             "code": "int uniquely1(MGraph G)\n{\n    int inDegree[MAXV] = {0};                   // 存储每个顶点的入度\n    int queue[MAXV];                            // 用于存储入度为0的顶点\n    int front = 0, rear = 0;                    // 队列的前后指针\n    int count = 0;                              // 拓扑序列中的顶点计数\n    // 计算每个顶点的入度\n    for (int i = 0; i < G.numVertices; i++)\n        for (int j = 0; j < G.numVertices; j++)\n            if (G.Edge[i][j] != 0)\n                inDegree[j]++;\n    // 将所有入度为0的顶点入队\n    for (int i = 0; i < G.numVertices; i++)\n        if (inDegree[i] == 0)\n            queue[rear++] = i;\n    // 进行拓扑排序\n    while (front < rear)\n    {\n        // 如果队列中有多个顶点，说明图的拓扑序列不唯一\n        if (rear - front > 1)\n            return 0;\n        int v = queue[front++];                 // 取出队首顶点\n        count++;\n        // 更新该顶点的所有邻接顶点的入度\n        for (int i = 0; i < G.numVertices; i++)\n            if (G.Edge[v][i] != 0)\n            {\n                inDegree[i]--;                  // 如果入度变为0，则加入队列\n                if (inDegree[i] == 0)\n                    queue[rear++] = i;\n            }\n    }\n    if (count == G.numVertices)\n        return 1;                               // 拓扑序列包含所有顶点，图的拓扑序列唯一\n    else\n        return 0;                               // 拓扑序列不包含所有顶点，图的拓扑序列不存\n}",
-            "complexity": "",
+            "complexity": "时间复杂度：O(n²)（邻接矩阵统计入度与更新出队后继）   空间复杂度：O(n)（入度数组与队列）",
             "note": "在"
           },
           {
@@ -975,7 +975,7 @@
             "analysis": "",
             "thought": ". 遍历图并统计所有顶点的入度，count 是入度为 0 的顶点的数量，入度为 0 的顶点记为 v。\n2. 循环执行：\n① 如果 count 不为 1，说明拓扑序列不唯一或不存在，return 0。\n② v 是本次选择的顶点，将 count 清零重新计数。\n③ 更新所有与顶点 v 相连的顶点 j 的入度，若 j 的入度为 0，则计数器 count++。\n3. 拓扑序列唯一，return 1。",
             "code": "int uniquely(MGraph G)\n{\n    int v, inDegree[MAXV] = {0};\n    // 计算每个顶点的入度\n    for (int i = 0; i < G.numVertices; i++)\n        for (int j = 0; j < G.numVertices; j++)\n            if (G.Edge[i][j] > 0)\n                inDegree[j]++;\n    int count = 0;\n    for (int j = 0; j < G.numVertices; j++)\n        if (inDegree[j] == 0)\n        {\n            v = j;\n            count++;                            // 统计入度为0的顶点数\n        }\n    // 循环执行次数等于顶点数，若循环执行完则拓扑序列唯一\n    for (int i = 0; i < G.numVertices; i++)\n    {\n        if (count != 1)\n            return 0;                           // 若count不等于1，拓扑序列不存在或不唯一\n        count = 0;                              // 下一次选择时入度为0的顶点数先设为0\n        int temp = v;\n        for (int j = 0; j < G.numVertices; ++j)\n            if (G.Edge[temp][j] != 0)\n            {\n                inDegree[j]--;                  // 将v所连弧尾顶点的入度-1\n                if (inDegree[j] == 0)\n                {\n                    v = j;\n                    count++;                    // 如果j的入度为0则count++\n                }\n            }\n    }\n    return 1; // 循环执行完，拓扑序列唯一\n}",
-            "complexity": "",
+            "complexity": "时间复杂度：O(n²)（邻接矩阵统计入度与更新出队后继）   空间复杂度：O(n)（入度数组与队列）",
             "note": ""
           }
         ]
@@ -1063,10 +1063,30 @@
         "source": "AI 生成（讲义未收录该题）"
       },
       "solutions": {
-        "source": "讲义未收录，沿用自生成暴力解",
-        "score_rows": [],
-        "list": []
-      }
+        "list": [
+          {
+            "tag": "解法1",
+            "kind": "最优解",
+            "name": "沿 BST 搜索路径下溯（O(h)），利用有序性只下探一侧",
+            "analysis": "",
+            "thought": "利用二叉搜索树的有序性：走到某结点 p 时，若 K<p->data，则 p 右子树中所有结点的值都比 p->data 更远离 K（差值更大），与 K 差值最小的结点只可能在当前结点或左子树中，因此只需下探左子树；反之 K>p->data 只需下探右子树。每步比较一次，沿途记录最小差值；遇到差值更小的结点清空重记，差值并列的追加记录。这个性质保证「与 K 差值最小的结点一定在搜索路径上」，不需要遍历整棵树。",
+            "code": "typedef struct BTNode{\n    int data;\n    struct BTNode *left, *right;\n}BTNode;\n\nint minDiff = INT_MAX;   // 当前已找到的最小差值\nint best[3], cnt = 0;    // 并列最小的结点值（最坏情形是 K 两侧各一个，共 2 个）\n\nvoid findMinDiff(BTNode *p, int K)\n{\n    while (p) {\n        int d = (p->data > K) ? p->data - K : K - p->data;\n        if (d < minDiff) {          // 更小差值：清空重记\n            minDiff = d; cnt = 0; best[cnt++] = p->data;\n        } else if (d == minDiff) {  // 并列最小：追加输出\n            if (cnt < 2) best[cnt++] = p->data;\n        }\n        if (d == 0) return;         // 恰好等于 K：差 0 已最优，提前终止\n        if (K < p->data) p = p->left;   // 只可能在其左子树\n        else p = p->right;              // 只可能在其右子树\n    }\n}\n\nvoid solve(BTNode *root, int K)    // 调用入口\n{\n    findMinDiff(root, K);\n    for (int i = 0; i < cnt; i++) printf(\"%d \", best[i]);\n}",
+            "complexity": "时间复杂度：O(h)（h 为树高，每层最多访问 1 个结点；最坏退化单链时 O(n)）   空间复杂度：O(1)（仅几个变量）",
+            "note": ""
+          },
+          {
+            "tag": "解法2",
+            "kind": "保底解",
+            "name": "中序遍历递增序列 + 差值单谷提前终止（O(n)）",
+            "analysis": "",
+            "thought": "BST 的中序遍历序列是递增序列，结点值随遍历单调增大，则 |结点值-K| 的差值先递减、达到最小值、后递增（单谷）。中序遍历过程中记录当前最小差值：遇更小差值清空重记、遇并列差值追加；一旦差值开始回升（比当前最小值大），说明后续结点的差值只会更大，用标志位提前终止递归。该解法不依赖「搜索路径」性质，思路直白，但最坏需遍历整棵树。",
+            "code": "typedef struct BTNode{\n    int data;\n    struct BTNode *left, *right;\n}BTNode;\n\nint minDiff = INT_MAX;   // 当前最小差值\nint best[3], cnt = 0;    // 并列最小的全部结点值\nint stop = 0;            // 提前终止标志\n\nvoid InOrder(BTNode *p, int K)\n{\n    if (p == NULL || stop) return;\n    InOrder(p->left, K);\n    int d = (p->data > K) ? p->data - K : K - p->data;\n    if (d < minDiff) {            // 更小：清空重记\n        minDiff = d; cnt = 0; best[cnt++] = p->data;\n    } else if (d == minDiff) {    // 并列：追加\n        if (cnt < 2) best[cnt++] = p->data;\n    } else stop = 1;              // 差值回升：后续更大，终止\n    InOrder(p->right, K);\n}\n\nvoid solve(BTNode *root, int K)    // 调用入口\n{\n    InOrder(root, K);\n    for (int i = 0; i < cnt; i++) printf(\"%d \", best[i]);\n}",
+            "complexity": "时间复杂度：O(n)（最坏需遍历整棵树）   空间复杂度：O(h)（递归栈，h 为树高）",
+            "note": ""
+          }
+        ]
+      },
+      "content_text": "【2026 统考真题】已知一棵二叉搜索树（BST）采用二叉链表存储，结点结构为 data left right，其中 data 域存放结点关键字。给定一个整数 K，请设计算法在二叉搜索树中查找与 K 差值最小的结点；若存在多个结点与 K 的差值相同（并列最小），则全部输出。要求：<br>1)给出算法的基本设计思想；<br>2)使用 C 或 C++ 语言，给出二叉树结点的数据类型定义；<br>3)根据设计思想，采用 C 或 C++ 语言描述算法，关键之处给出注释；<br>4)说明你所设计算法的时间复杂度和空间复杂度。"
     }
   ]
 }
