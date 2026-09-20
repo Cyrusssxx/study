@@ -74,7 +74,7 @@ function run() {
   /* 111 → 103：修复抽取损坏时删除了 8 个被误标成 code 的碎片 item
      （折半查找模板表 3 个 + 5 处被切开的散文续句）
      103 → 116：长代码块(≥28非空行,共13个)拆两块并排,每个产生2个 pre */
-  check('代码块 = 116', cnt(algoBody, /class="code-block algo-code"/g) === 116, String(cnt(algoBody, /class="code-block algo-code"/g)));
+  check('代码块 = 114', cnt(algoBody, /class="code-block algo-code"/g) === 114, String(cnt(algoBody, /class="code-block algo-code"/g)));
   check('拆块容器 = 13', cnt(algoBody, /class="algo-code-pair"/g) === 13, String(cnt(algoBody, /class="algo-code-pair"/g)));
   check('拆块 = 双pre且并排', cnt(algoBody, /class="algo-code-pair"><pre class="code-block algo-code">/g) === 13);
   check('目录链接 ≥ 104', (algoToc.match(/<a /g) || []).length >= 104, String((algoToc.match(/<a /g) || []).length));

@@ -194,17 +194,7 @@
     },
     {
      "t": "code",
-     "text": "// 快速排序\nvoid Qsort(int A[], int L, int R)\n{\n    if (L >= R) return;                         // 区间内元素个数为 0 或 1，自然有序，递归",
-     "page": 8
-    },
-    {
-     "t": "p",
-     "text": "终止",
-     "page": 8
-    },
-    {
-     "t": "code",
-     "text": "    int i = L, j = R;\n    int pivot = A[L];                           // 选取区间第一个元素作为基准\n    // 不断交换左边比 pivot 大的数和右边比 pivot 小的数\n    while (i < j)\n    {\n        while (i < j && A[j] >= pivot) j--;     // 从右向左找第一个小于 pivot 的数\n        while (i < j && A[i] <= pivot) i++;     // 从左向右找第一个大于 pivot 的数\n        if (i < j) swap(A[i], A[j]);\n    }\n    // 将基准值 A[L] 与 A[i] 交换\n    swap(A[L], A[i]);\n    // 递归处理左右两个子区间\n    Qsort(A, L, i - 1);\n    Qsort(A, i + 1, R);\n}",
+     "text": "// 快速排序\nvoid Qsort(int A[], int L, int R)\n{\n    if (L >= R) return;                         // 区间内元素个数为 0 或 1，自然有序，递归终止\n    int i = L, j = R;\n    int pivot = A[L];                           // 选取区间第一个元素作为基准\n    // 不断交换左边比 pivot 大的数和右边比 pivot 小的数\n    while (i < j)\n    {\n        while (i < j && A[j] >= pivot) j--;     // 从右向左找第一个小于 pivot 的数\n        while (i < j && A[i] <= pivot) i++;     // 从左向右找第一个大于 pivot 的数\n        if (i < j) swap(A[i], A[j]);\n    }\n    // 将基准值 A[L] 与 A[i] 交换\n    swap(A[L], A[i]);\n    // 递归处理左右两个子区间\n    Qsort(A, L, i - 1);\n    Qsort(A, i + 1, R);\n}",
      "page": 8
     },
     {
@@ -641,12 +631,7 @@
     },
     {
      "t": "p",
-     "text": "释放内存：在删除结点时，除了修改前后结点的指针，还需要考虑释放结点所占的内存。如果是 C 语言，需要调用",
-     "page": 73
-    },
-    {
-     "t": "code",
-     "text": "free(p) 。但在考试中为了方便不写也没关系。",
+     "text": "释放内存：在删除结点时，除了修改前后结点的指针，还需要考虑释放结点所占的内存。如果是 C 语言，需要调用free(p) 。但在考试中为了方便不写也没关系。",
      "page": 73
     },
     {
@@ -1479,12 +1464,7 @@
     },
     {
      "t": "code",
-     "text": "#define MAXV 100\n// 边结点\ntypedef struct ArcBox\n{\n    int tailvex, headvex;                       // 弧尾（起点）和弧头（终点）在顶点表中的下",
-     "page": 138
-    },
-    {
-     "t": "p",
-     "text": "标",
+     "text": "#define MAXV 100\n// 边结点\ntypedef struct ArcBox\n{\n    int tailvex, headvex;                       // 弧尾（起点）和弧头（终点）在顶点表中的下标",
      "page": 138
     },
     {
