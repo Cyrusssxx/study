@@ -200,6 +200,16 @@ const sleep = ms => new Promise(r => setTimeout(r, ms));
   check('重点标签保留（必考橙）', SRC.includes('.cg-key {'), true);
   check('重点标签保留（易错红 k2）', SRC.includes('.cg-key.k2 {'), true);
 
+  console.log('\n--- 场景 10c：红色加粗重点标记（.cg-hot） ---');
+  const flat = SRC.replace(/\n\s*/g, ' ');
+  check('.cg-hot 样式已定义（红 + 加粗）', /\.cg-hot \{[^}]*color: #b3261e[^}]*font-weight: 700/.test(flat), true);
+  check('.cg-hot 有深色模式配色', /\.dark \.cg-hot \{[^}]*color:/.test(flat), true);
+  const hotAll = doc.querySelectorAll('.cg-hot');
+  check('全页红标 ≥ 20 处', hotAll.length >= 20, true);
+  const hotInLTOPO = doc.querySelectorAll('#LTOPO .cg-hot');
+  check('真题题型表内红标 ≥ 15 处', hotInLTOPO.length >= 15, true);
+  check('题型表每行都带红标（17 行）', doc.querySelectorAll('#LTOPO table tbody tr').length, 17);
+
   console.log('\n--- 场景 11：综合大题全景拓扑 ---');
   check('拓扑容器存在', doc.querySelectorAll('.cg-topo').length, 1);
   check('拓扑 3 段（AS1/Internet云/AS4）', doc.querySelectorAll('.cg-topo-seg').length, 3);

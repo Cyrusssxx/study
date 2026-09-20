@@ -226,6 +226,9 @@
             font-size: .62rem; color: var(--c); line-height: 1.9;
         }
         .cg-pts b { color: var(--c); }
+        /* 行内「很重要」的红色加粗标记（语义色，不随主色变） */
+        .cg-hot { color: #b3261e; font-weight: 700; }
+        .dark .cg-hot { color: #fca5a5; }
         .cg-pts code {
             background: var(--cb); color: var(--c); padding: 1px 5px;
             border-radius: 4px; font-size: .8rem; font-family: Consolas, Monaco, monospace;
@@ -766,7 +769,7 @@
                     <ul class="cg-pts">
                         <li><b>标志位 6 个</b>：<code>URG</code> 紧急指针有效、<code>ACK</code> 确认号有效、<code>PSH</code> 尽快交付、<code>RST</code> 复位连接、<code>SYN</code> 同步序号、<code>FIN</code> 释放连接。</li>
                         <li><span class="cg-key k2">易错</span><b>序号与确认号都按「字节」编号</b>，不是按报文段。TCP 是<b>面向字节流</b>的协议。确认号 = <em>期望收到的下一个字节的序号</em>。</li>
-                        <li><span class="cg-key">必考</span><b>SYN 与 FIN 各消耗一个序号</b>（即使不携带数据），而普通 ACK 报文段不携带数据时<b>不消耗序号</b>。</li>
+                        <li><span class="cg-key">必考</span><span class="cg-hot">SYN 与 FIN 各消耗一个序号</span>（即使不携带数据），而普通 ACK 报文段不携带数据时<b>不消耗序号</b>。</li>
                     </ul>
                 </div>
 
@@ -792,7 +795,7 @@
                     <ul class="cg-pts">
                         <li><span class="cg-key">必考</span><b>为什么必须三次？</b>① <b>同步双方初始序号</b>；② <b>防止已失效的连接请求报文段</b>突然到达服务器，造成服务器建立无用连接、浪费资源。</li>
                         <li>第 ② 个报文段（SYN+ACK）<b>不携带数据，但要消耗一个序号</b>，故第 ③ 个报文段的 ack = y+1。</li>
-                        <li><span class="cg-key k2">易错</span><b>第三次握手（纯 ACK，seq=x+1）不携带数据时则不消耗序号</b>——若紧接着发送携带数据的报文段，其 seq <b>仍为 x+1</b>（不 +1）。<b>规律：只有 SYN、FIN 与携带数据的报文段才消耗序号</b>；纯 ACK（确认报文段）不消耗序号。</li>
+                        <li><span class="cg-key k2">易错</span><b>第三次握手（纯 ACK，seq=x+1）不携带数据时则不消耗序号</b>——若紧接着发送携带数据的报文段，其 seq <span class="cg-hot">仍为 x+1</span>（不 +1）。<b>规律：只有 SYN、FIN 与携带数据的报文段才消耗序号</b>；纯 ACK（确认报文段）不消耗序号。</li>
                         <li><b>SYN 洪泛攻击</b>：攻击者大量发送 SYN 而不完成第三次握手，耗尽服务器半连接队列 → 防御手段 SYN Cookie。</li>
                     </ul>
                 </div>
@@ -832,7 +835,7 @@
                 <div class="cg-block">
                     <h3>⑥ 可靠传输与流量控制 <small>（滑动窗口 · 确认 · 重传 · rwnd）</small></h3>
                     <ul class="cg-pts">
-                        <li><b>可靠传输四要素</b>：<em>序号</em> + <em>确认</em> + <em>重传</em> + <em>滑动窗口</em>。<b>TCP 采用累积确认</b>（ack=n 表示 n 之前的全部已收到）。</li>
+                        <li><b>可靠传输四要素</b>：<em>序号</em> + <em>确认</em> + <em>重传</em> + <em>滑动窗口</em>。<span class="cg-hot">TCP 采用累积确认</span>（ack=n 表示 n 之前的全部已收到）。</li>
                         <li><b>超时重传</b>：用加权平均往返时间估计 RTT，超时时间 RTO 略大于估计值（考虑偏差）。<b>超时时间过小 → 无谓重传；过大 → 迟钝</b>。</li>
                         <li><span class="cg-key">必考</span><b>快速重传</b>：收到 <b>3 个重复确认（dup ACK）</b>时立即重传丢失的报文段，<b>不等超时</b>——这是快恢复的前提。</li>
                         <li><b>流量控制（接收方主导）</b>：接收方通过首部「窗口」字段通告 <code>rwnd</code>，发送方据此调整发送速率。<b>发送窗口 = min(接收窗口 rwnd, 拥塞窗口 cwnd)</b>。</li>
@@ -996,7 +999,7 @@
                         <li><b>子网掩码</b>：网络号位全 1、主机号位全 0。<code>掩码 AND IP = 网络地址</code>；<code>掩码取反 OR 网络地址 = 广播地址</code>。</li>
                         <li><span class="cg-key">必考</span><b>CIDR 记法</b>：<code>a.b.c.d/n</code>，n 为前缀长度（网络前缀位数）。CIDR 把「网络号 + 子网号」合并为<b>网络前缀</b>，不再区分 A/B/C。</li>
                         <li><span class="cg-key">必考</span><b>路由聚合（构成超网）</b>：把多条前缀相同的路由合并为一条，如 <code>192.168.0.0/24</code> 与 <code>192.168.1.0/24</code> 可聚合为 <code>192.168.0.0/23</code>（能聚合的前提是<b>前缀相同、地址连续</b>）。</li>
-                        <li><b>最长前缀匹配</b>：转发时若有多条路由匹配，选<b>前缀最长</b>（最具体）的那条。</li>
+                        <li><span class="cg-hot">最长前缀匹配</span>：转发时若有多条路由匹配，选<span class="cg-hot">前缀最长</span>（最具体）的那条。</li>
                     </ul>
                 </div>
 
@@ -1182,7 +1185,7 @@
                     <div class="cg-tip">
                         <b>CSMA/CD（有线以太网）：先听后发、边听边发、冲突停发、随机重发</b><br>
                         <b>① 争用期（冲突窗口）</b> = <code>2τ</code>（τ 为单程传播时延）—— <b>最迟要 2τ 才能确定没冲突</b>。<br>
-                        <b>② 最短帧长</b> = <code>2τ × 数据率</code>。以太网 10Mb/s、2τ = 51.2μs → <b>512 bit = 64B</b>。<br>
+                        <b>② 最短帧长</b> = <code>2τ × 数据率</code>。以太网 10Mb/s、2τ = 51.2μs → <span class="cg-hot">512 bit = 64B</span>。<br>
                         <b>③ 截断二进制指数退避</b>：重传第 k 次时取 <code>k = min(重传次数, 10)</code>，从 <code>[0, 2<sup>k</sup>−1]</code> 随机取 r，退避 <code>r × 2τ</code>；<b>连续 16 次失败即丢弃并报告</b>。<br>
                         <b>④ 为什么最短帧长是考点</b>：帧太短会导致<b>发完了冲突才回来</b>，发送方误以为发送成功。凡帧长 &lt; 64B 的帧一律视为<b>无效帧（碎片）丢弃</b>。
                     </div>
@@ -1317,7 +1320,7 @@
                             <thead><tr><th>编码方式</th><th>规则</th><th>考点</th></tr></thead>
                             <tbody>
                                 <tr><td><b>NRZ</b> 不归零</td><td>高电平=1，低电平=0</td><td>简单，<b>无法自同步</b>（长串同电平时收不到时钟）</td></tr>
-                                <tr><td><b>曼彻斯特</b></td><td>每个码元<b>中间必有一次跳变</b>（高→低=1，低→高=0）</td><td><b>自带时钟同步</b>；<b>频带宽度是数据率的 2 倍</b>（考点！）</td></tr>
+                                <tr><td><b>曼彻斯特</b></td><td>每个码元<b>中间必有一次跳变</b>（高→低=1，低→高=0）</td><td><b>自带时钟同步</b>；<span class="cg-hot">频带宽度是数据率的 2 倍</span>（考点！）</td></tr>
                                 <tr><td><b>差分曼彻斯特</b></td><td>位中间总有跳变；<b>位开始处有跳变=0，无跳变=1</b></td><td>抗干扰能力更强</td></tr>
                             </tbody>
                         </table>
@@ -1564,7 +1567,7 @@
 
                     <ol class="cg-tsteps">
                         <li><span class="cg-key">① DHCP 获取地址</span>PC-A 开机无 IP → 广播 <b>DHCP DISCOVER</b>（源 0.0.0.0、目的 255.255.255.255，<b>目的 MAC 全 1 = FF-FF-FF-FF-FF-FF</b>）→ 服务器回 <b>OFFER</b> → 客户端广播 <b>REQUEST</b> → 服务器 <b>ACK</b>。获得：IP 192.168.1.10、掩码 /24、网关 192.168.1.1、DNS 地址。可考点：DISCOVER 是广播，同广播域设备都能收到。</li>
-                        <li><span class="cg-key">② DNS 域名解析</span>浏览器输入 <code>www.company.com</code> → 查本机缓存/hosts 未命中 → 向 DNS 服务器查询（<b>UDP 53</b>）：本地 DNS → 根 → 顶级域 → 权威服务器（<b>迭代查询</b>），得 <code>www.company.com → 200.1.2.10</code>。可考点：递归/迭代、UDP 丢包由应用层超时重试、DNS 缓存 TTL。</li>
+                        <li><span class="cg-key">② DNS 域名解析</span>浏览器输入 <code>www.company.com</code> → 查本机缓存/hosts 未命中 → 向 DNS 服务器查询（<b>UDP 53</b>）：本地 DNS → 根 → 顶级域 → 权威服务器（<b>迭代查询</b>），得 <code>www.company.com → 200.1.2.10</code>。可考点：递归/迭代、<span class="cg-hot">UDP 丢包由应用层超时重试</span>、DNS 缓存 TTL。</li>
                         <li><span class="cg-key">③ 子网判断</span>PC-A 把<b>目的 IP 与本机掩码相与</b>：200.1.2.10 &amp; 255.255.255.0 = 200.1.2.0 ≠ 192.168.1.0 → <b>跨网段</b>，目的 MAC 填<b>默认网关 R1 的 MAC</b>（不是服务器 MAC）。</li>
                         <li><span class="cg-key k2">④ ARP 解析网关</span>查 ARP 缓存无 192.168.1.1 → <b>广播 ARP 请求</b>"谁是 192.168.1.1？"；SW1 <b>洪泛</b>到所有端口；R1 单播应答 → PC-A 记录 <code>192.168.1.1 → MAC(R1)</code>。<b>ARP 请求是广播、路由器不转发广播</b>，故只能解析本网段地址。</li>
                         <li><span class="cg-key">⑤ TCP 三次握手</span>SYN(seq=x) → SYN+ACK(seq=y, ack=x+1) → ACK(seq=x+1, ack=y+1)，与 200.1.2.10:80 建立连接。<b>SYN 消耗序号；第三次握手不带数据则不消耗序号</b>；建立连接耗时 1 个 RTT。</li>
@@ -1577,7 +1580,7 @@
                         <li><span class="cg-key">⑫ 传输与释放</span>传输中 TCP 靠<b>滑动窗口 + 累积确认 + 超时重传</b>保证可靠，靠<b>慢开始/拥塞避免/快重传/快恢复</b>调节速率；传完 <b>四次挥手</b>（FIN → ACK → FIN → ACK），主动关闭方 <b>TIME_WAIT 等 2MSL</b>。</li>
                     </ol>
                     <ul class="cg-pts">
-                        <li><span class="cg-key">易混</span><b>MAC 每跳变、IP 全程不变</b>（除非 NAT）——判断目的 MAC 填什么：同网段填目标主机 MAC，跨网段填<b>默认网关 MAC</b>。</li>
+                        <li><span class="cg-key">易混</span><span class="cg-hot">MAC 每跳变、IP 全程不变</span>（除非 NAT）——判断目的 MAC 填什么：同网段填目标主机 MAC，跨网段填<span class="cg-hot">默认网关 MAC</span>。</li>
                         <li><span class="cg-key">答题骨架</span>先答"<b>这是哪一层的事</b>"（封装/转发/寻址/连接/释放）→ 再写该层协议与字段 → 最后算数值。大题给分点几乎都落在「<b>地址怎么变、序号怎么走、表项怎么查</b>」三件事上。</li>
                     </ul>
 
@@ -1586,23 +1589,23 @@
                         <table class="cg-tb">
                             <thead><tr><th>题型</th><th>真题问法</th><th>解题抓手</th></tr></thead>
                             <tbody>
-                                <tr><td><b>子网划分</b></td><td>几台主机分属几个网段？哪几台同网段？某地址的网络地址/广播地址/可用范围？</td><td>IP 与掩码相与 → 网络号；广播地址 = 主机位全 1；可用范围去掉首尾</td></tr>
-                                <tr><td><b>IP 分片</b></td><td>4000B 数据报经 MTU 1500 的网络 → 分几片？各片长度、片偏移、MF？</td><td>数据部分按 <b>8B 整数倍</b>切片；片偏移 = 该片首字节 ÷ 8；最后一片 MF=0</td></tr>
-                                <tr><td><b>路由表构造</b></td><td>写出 R1 到各子网的路由表（目的网络 / 掩码 / 下一跳）</td><td>直连网段写"直接"；非直连写下一跳路由器接口 IP</td></tr>
-                                <tr><td><b>OSPF 求路由</b></td><td>给出各路由器 LSI（含 Metric），构造拓扑并求 R1 路由表</td><td>按费用累加算<b>最短路径</b>，选代价最小的下一跳</td></tr>
-                                <tr><td><b>转发过程描述</b></td><td>描述 H1 发数据报到 H2 的过程（含物理地址解析）</td><td>逐步写：判断同/跨网段 → ARP → 封装 → 每跳改 MAC、TTL−1 → 解封装</td></tr>
-                                <tr><td><b>最短帧长/争用期</b></td><td>求 Hub 到主机的最大距离、争用期、最短帧长</td><td>发送时延 ≥ 往返传播时延 → <code>最短帧长 = 数据率 × 2τ</code>；注意 Hub 转发时延要扣除</td></tr>
-                                <tr><td><b>滑动窗口计算</b></td><td>GBN/SR 窗口能用多大？序号至少几位？利用率不低于 80% 时窗口多少？</td><td>利用率 = 发送时间 ÷(发送 + 等确认)；GBN 需 <code>2<sup>n</sup> ≥ W+1</code>、SR 需 <code>2<sup>n</sup> ≥ 2W</code></td></tr>
-                                <tr><td><b>TCP 序号/字节数</b></td><td>给出十六进制首部，问哪个分组是发送方发的？已收到多少应用层字节？</td><td>看 IP 源地址判方向；seq/ack 按<b>字节</b>编号；SYN/FIN 各占 1 个序号</td></tr>
-                                <tr><td><b>TTL 与跳数</b></td><td>某分组到达时 TTL 为 58，问经过几个路由器？</td><td>经过路由器数 = 初始 TTL − 到达时 TTL（每跳减 1）</td></tr>
-                                <tr><td><b>时延/吞吐计算</b></td><td>卫星链路单向传播时延？上传 4000B 文件最短时间？最大吞吐量？</td><td>传播时延 = 距离 ÷ 光速；吞吐量受带宽与窗口限制；文件时间 = 建连 + 发送 + 传播</td></tr>
-                                <tr><td><b>冲突域/广播域</b></td><td>某位置该选交换机还是集线器？图中几个冲突域/广播域？</td><td>Hub 不隔离任何域；交换机隔离冲突域；<b>只有路由器（或 VLAN）隔离广播域</b></td></tr>
-                                <tr><td><b>DHCP 与广播</b></td><td>DHCP DISCOVER 的目的 IP/MAC 是什么？哪些设备能收到？</td><td>目的 IP 255.255.255.255、目的 MAC 全 1；同广播域内都能收到</td></tr>
-                                <tr><td><b>无线帧地址</b></td><td>802.11 帧中的地址 1 / 2 / 3 分别是什么？</td><td>地址 1 = 接收方、地址 2 = 发送方、地址 3 = 经 AP 中转时的源/目的地址</td></tr>
-                                <tr><td><b>协议对比说理</b></td><td>RIP 用 UDP、OSPF 用 IP、BGP 用 TCP 有何好处？为何 RIP 周期交换而 BGP 不？</td><td>RIP 简单开销小、OSPF 直接封装进 IP（协议号 89）、BGP 需可靠长会话；BGP 只在<b>变化时</b>增量更新</td></tr>
-                                <tr><td><b>CSMA/CD 对比 TDM</b></td><td>与时分复用相比，争用式接入的优缺点？</td><td>优点：轻载利用率高、无需集中控制；缺点：重载冲突多、时延不确定</td></tr>
+                                <tr><td><b>子网划分</b></td><td>几台主机分属几个网段？哪几台同网段？某地址的网络地址/广播地址/可用范围？</td><td>IP 与掩码相与 → 网络号；<span class="cg-hot">广播地址 = 主机位全 1</span>；可用范围去掉首尾</td></tr>
+                                <tr><td><b>IP 分片</b></td><td>4000B 数据报经 MTU 1500 的网络 → 分几片？各片长度、片偏移、MF？</td><td>数据部分按 <span class="cg-hot">8B 整数倍</span>切片；片偏移 = 该片首字节 ÷ 8；最后一片 MF=0</td></tr>
+                                <tr><td><b>路由表构造</b></td><td>写出 R1 到各子网的路由表（目的网络 / 掩码 / 下一跳）</td><td>直连网段写"直接"；<span class="cg-hot">非直连写下一跳路由器接口 IP</span></td></tr>
+                                <tr><td><b>OSPF 求路由</b></td><td>给出各路由器 LSI（含 Metric），构造拓扑并求 R1 路由表</td><td>按费用累加算<span class="cg-hot">最短路径</span>，选代价最小的下一跳</td></tr>
+                                <tr><td><b>转发过程描述</b></td><td>描述 H1 发数据报到 H2 的过程（含物理地址解析）</td><td>逐步写：判断同/跨网段 → ARP → 封装 → <span class="cg-hot">每跳改 MAC、TTL−1</span> → 解封装</td></tr>
+                                <tr><td><b>最短帧长/争用期</b></td><td>求 Hub 到主机的最大距离、争用期、最短帧长</td><td><span class="cg-hot">发送时延 ≥ 往返传播时延</span> → <code>最短帧长 = 数据率 × 2τ</code>；注意 Hub 转发时延要扣除</td></tr>
+                                <tr><td><b>滑动窗口计算</b></td><td>GBN/SR 窗口能用多大？序号至少几位？利用率不低于 80% 时窗口多少？</td><td>利用率 = 发送时间 ÷(发送 + 等确认)；<span class="cg-hot">GBN 需 <code>2<sup>n</sup> ≥ W+1</code>、SR 需 <code>2<sup>n</sup> ≥ 2W</code></span></td></tr>
+                                <tr><td><b>TCP 序号/字节数</b></td><td>给出十六进制首部，问哪个分组是发送方发的？已收到多少应用层字节？</td><td>看 IP 源地址判方向；seq/ack 按<span class="cg-hot">字节</span>编号；SYN/FIN 各占 1 个序号</td></tr>
+                                <tr><td><b>TTL 与跳数</b></td><td>某分组到达时 TTL 为 58，问经过几个路由器？</td><td><span class="cg-hot">经过路由器数 = 初始 TTL − 到达时 TTL</span>（每跳减 1）</td></tr>
+                                <tr><td><b>时延/吞吐计算</b></td><td>卫星链路单向传播时延？上传 4000B 文件最短时间？最大吞吐量？</td><td><span class="cg-hot">传播时延 = 距离 ÷ 光速</span>；吞吐量受带宽与窗口限制；文件时间 = 建连 + 发送 + 传播</td></tr>
+                                <tr><td><b>冲突域/广播域</b></td><td>某位置该选交换机还是集线器？图中几个冲突域/广播域？</td><td>Hub 不隔离任何域；交换机隔离冲突域；<span class="cg-hot">只有路由器（或 VLAN）隔离广播域</span></td></tr>
+                                <tr><td><b>DHCP 与广播</b></td><td>DHCP DISCOVER 的目的 IP/MAC 是什么？哪些设备能收到？</td><td><span class="cg-hot">目的 IP 255.255.255.255、目的 MAC 全 1</span>；同广播域内都能收到</td></tr>
+                                <tr><td><b>无线帧地址</b></td><td>802.11 帧中的地址 1 / 2 / 3 分别是什么？</td><td><span class="cg-hot">地址 1 = 接收方、地址 2 = 发送方</span>、地址 3 = 经 AP 中转时的源/目的地址</td></tr>
+                                <tr><td><b>协议对比说理</b></td><td>RIP 用 UDP、OSPF 用 IP、BGP 用 TCP 有何好处？为何 RIP 周期交换而 BGP 不？</td><td>RIP 简单开销小、OSPF 直接封装进 IP（协议号 89）、BGP 需可靠长会话；BGP 只在<span class="cg-hot">变化时</span>增量更新</td></tr>
+                                <tr><td><b>CSMA/CD 对比 TDM</b></td><td>与时分复用相比，争用式接入的优缺点？</td><td>优点：<span class="cg-hot">轻载利用率高</span>、无需集中控制；缺点：重载冲突多、时延不确定</td></tr>
                                 <tr><td><b>应用层协议说理</b></td><td>DNS 用 UDP 丢包会有问题吗？邮件用 TCP 为何还会发送失败/收不到？为什么要 UDP？</td><td>UDP 丢包由应用层超时重试；邮件失败在<b>非 TCP 环节</b>（对方服务器拒收/故障/垃圾过滤）；UDP 省去建连开销、适合短报文与实时流</td></tr>
-                                <tr><td><b>TCP 确认机制说理</b></td><td>某个确认报文段丢了，为什么不一定引起对应数据重传？</td><td>TCP 采用<b>累积确认</b>，后续确认可覆盖丢失的，只要新数据收到就不必重传</td></tr>
+                                <tr><td><b>TCP 确认机制说理</b></td><td>某个确认报文段丢了，为什么不一定引起对应数据重传？</td><td>TCP 采用<span class="cg-hot">累积确认</span>，后续确认可覆盖丢失的，只要新数据收到就不必重传</td></tr>
                             </tbody>
                         </table>
                     </div>
