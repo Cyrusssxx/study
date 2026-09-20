@@ -66,6 +66,21 @@ const EXTRA = fs.readFileSync(path.resolve(__dirname, 'pwa/data/ds_code_extra.js
   const navAll = [...d.querySelectorAll('.ol-nav-item.sub')].map(a => a.textContent.trim());
   check('无目录项含「王道书」', navAll.every(t => t.indexOf('王道书') < 0), true);
   check('全部真题目录项均为 4 位年份', navAll.filter(t => /^\d{4}$/.test(t)).length >= 20, true);
+  // 「📷 解答原图」独立按钮：仅真题卡片有，点击单独展开解答教材原图
+  const realBtn = qApp && qApp.querySelector('button.ansfig-toggle');   // 应用题卡=真题
+  check('真题卡片有「📷 解答原图」按钮', !!realBtn, true);
+  const realBlock = d.getElementById('ansfig-ds_daka_6_4_6_8');
+  check('真题卡片有独立解答原图区(默认隐藏)', !!realBlock && realBlock.hidden, true);
+  const nonRealCard = d.getElementById('card-ds_daka_2_2_3_1');   // 教材习题=非真题
+  check('非真题卡片无「解答原图」按钮', nonRealCard ? nonRealCard.querySelectorAll('button.ansfig-toggle').length : 99, 0);
+  check('真题折叠区内不再重复放解答原图', qApp ? qApp.querySelector('.daka-answer-body').textContent.indexOf('解答教材原图') < 0 : false, true);
+  if (realBtn) {
+    realBtn.click();                                   // 点击展开
+    check('点击后解答原图区展开', d.getElementById('ansfig-ds_daka_6_4_6_8').hidden, false);
+    check('按钮进入选中态', realBtn.classList.contains('checked'), true);
+    realBtn.click();                                   // 再点收起
+    check('再点击后收起', d.getElementById('ansfig-ds_daka_6_4_6_8').hidden, true);
+  }
 
   console.log(`\nPASS ${pass} / FAIL ${fail}`);
   process.exit(fail ? 1 : 0);

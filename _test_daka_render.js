@@ -55,7 +55,9 @@ assert(missing.length === 0, '图片文件缺失 ' + missing.slice(0, 5).join(',
 const full = extractFn(html, 'renderCard');
 const body = full.slice(full.indexOf('{') + 1, full.lastIndexOf('}')).replace(/\bconst /g, 'var ');
 // renderCard 依赖 codeBySource（source→ds_code 讲义映射）与 solHtml（讲义渲染），从页面与数据构建
+// 另外依赖 dakaAnsfigOpen（「📷 解答原图」独立展开状态 Set，仅真题卡片用）
 const esc = s2 => String(s2 == null ? '' : s2).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+const dakaAnsfigOpen = new Set();
 const codeBySource = new Map();
 for (const c of codeData.questions) if (c.source) codeBySource.set(c.source, c);
 for (const c of extraData.questions) if (c.source) codeBySource.set(c.source, c);
@@ -64,12 +66,12 @@ const solBody = solFull.slice(solFull.indexOf('{') + 1, solFull.lastIndexOf('}')
 // 页面里 solHtml(q) 依赖全局 esc；new Function 无法闭包捕获 → 包一层：esc 作为注入参数，对外暴露单参 q
 const solHtmlImpl = new Function('esc', 'q', solBody);
 const solHtml = q2 => solHtmlImpl(esc, q2);
-const buildCard = new Function('fmtContent', 'fmtAnswer', 'dakaProgress', 'q', 'badgeClass', 'codeBySource', 'solHtml', 'esc', body);
+const buildCard = new Function('fmtContent', 'fmtAnswer', 'dakaProgress', 'q', 'badgeClass', 'codeBySource', 'solHtml', 'esc', 'dakaAnsfigOpen', body);
 
 let placeholderHits = 0, labelHits = 0, imgCount = 0;
 let lectureHits = 0;
 for (const q of data.questions) {
-    const card = buildCard(fmt, fmt, { [q.id]: null }, q, p => 'badge', codeBySource, solHtml, esc);
+    const card = buildCard(fmt, fmt, { [q.id]: null }, q, p => 'badge', codeBySource, solHtml, esc, dakaAnsfigOpen);
     assert(/<div class="daka-card/.test(card), q.id + ' 未生成卡片');
     assert(/题目教材原图/.test(card), q.id + ' 缺题目原图标签');
     assert(/解答教材原图/.test(card), q.id + ' 缺解答原图标签');
@@ -103,7 +105,7 @@ console.log('代码题讲义映射命中', lectureHits, '题（ds_code+ds_code_e
 // 4. 向后兼容：若数据重新带回文字字段，文字应排在图前且不报占位
 const legacy = { id: 'legacy_1', priority: 0, priority_label: '必做', module: 'm', kaodian: 'k', source: 's',
     content: '旧版文字题目', answer: '旧版文字答案', figs: { content: ['x.jpg'], answer: ['y.jpg'] } };
-const legacyCard = buildCard(s => s, s => s, {}, legacy, p => 'badge', codeBySource, solHtml, esc);
+const legacyCard = buildCard(s => s, s => s, {}, legacy, p => 'badge', codeBySource, solHtml, esc, dakaAnsfigOpen);
 assert(legacyCard.indexOf('旧版文字题目') < legacyCard.indexOf('题目教材原图'), '旧数据下文字应排在图前');
 assert(legacyCard.indexOf('旧版文字答案') < legacyCard.indexOf('解答教材原图'), '旧数据下答案文字应排在图前');
 

@@ -92,6 +92,8 @@
     let dakaFilter = { module: '全部', sheet: '全部', priority: '全部', done: '全部' };
     // 代码题讲义映射：daka 题 source（如"王道书 2.3.7_大题_17"）→ ds_code.json 完整讲义条目
     let codeBySource = new Map();
+    // 「📷 解答原图」独立展开状态（仅真题卡片有此按钮），刷新后保持
+    let dakaAnsfigOpen = new Set(JSON.parse(localStorage.getItem('daka_ansfig_open') || '[]'));
 
     // 从题目元数据推导可用的算法类型（module），
     // 但由于 module 文案带"基于“X”的算法训练"，统一映射为短分类；
@@ -363,32 +365,62 @@
         // 答案折叠区升级为 code.html 同款完整讲义：考点分析·易错点 + 各解法(思路/代码/复杂度) + 保留解答教材原图。
         const cd = codeBySource.get(q.source);
         const hasLecture = cd && (cd.solutions || {}).list && cd.solutions.list.length;
+        // 真题（real 含 4 位年份）卡片：解答教材原图拆出为独立的「📷 解答原图」按钮区，
+        // 点按钮只看该图，不用展开整个讲义/答案面板（与代码题页面一致）。
+        const isReal = !!(q.real && /\d{4}/.test(q.real));
+        const hasAnsFig = (figs.answer || []).length > 0;
         let summary = '查看答案';
         let answer = [fmtAnswer(q.answer || ''), figWrap(figs.answer, '解答教材原图')].join('') || '（解答见教材原图）';
         if (hasLecture) {
             summary = '考点分析 · 易错点 · 讲义解法';
             answer = `
                 <div class="daka-analysis">${esc((cd.analysis || '').replace('易错点：', '\n易错点：'))}</div>
-                ${solHtml(cd)}
-                ${figWrap(figs.answer, '解答教材原图')}`;
+                ${solHtml(cd)}${isReal ? '' : figWrap(figs.answer, '解答教材原图')}`;
+        } else if (isReal) {
+            answer = [fmtAnswer(q.answer || '')].join('') || '（解答见上方「解答原图」）';
         }
+        const ansfigOpen = dakaAnsfigOpen.has(q.id);
+        const ansfigBtn = (isReal && hasAnsFig) ? `
+                    <button class="btn-daka ansfig-toggle${ansfigOpen ? ' checked' : ''}" onclick="toggleAnsFig('${q.id}')" title="只看解答教材原图">
+                        📷 解答原图${ansfigOpen ? ' ▴' : ' ▾'}
+                    </button>` : '';
+        const ansfigBlock = (isReal && hasAnsFig) ? `
+                <div class="code-ansfig" id="ansfig-${q.id}"${ansfigOpen ? '' : ' hidden'}>
+                    ${figWrap(figs.answer, '解答教材原图')}
+                </div>` : '';
         return `
             <div class="daka-card${done ? ' daka-done' : ''}" id="card-${q.id}">
                 <div class="daka-card-header">
                     <span class="daka-badge ${badgeClass(q.priority)}">${q.priority_label}</span>
                     <span class="daka-source">${q.source}${q.real ? ' · ' + q.real : ''}</span>
+                    ${ansfigBtn}
                     <button class="btn-daka${done ? ' checked' : ''}" onclick="toggleDaka('${q.id}')">
                         ${done ? '已打卡 ✓' : '打卡'}
                     </button>
                 </div>
                 <div class="daka-kaodian">${q.module} / ${q.kaodian}</div>
                 <div class="daka-content">${content}</div>
+                ${ansfigBlock}
                 <details class="daka-answer">
                     <summary>${summary}</summary>
                     <div class="daka-answer-body">${answer}</div>
                 </details>
             </div>
         `;
+    }
+
+    function toggleAnsFig(qid) {
+        const block = document.getElementById('ansfig-' + qid);
+        const btn = document.querySelector(`button.ansfig-toggle[onclick*="${qid}"]`);
+        if (!block) return;
+        const open = block.hasAttribute('hidden');
+        block.hidden = !open;
+        if (btn) {
+            btn.classList.toggle('checked', open);
+            btn.textContent = '📷 解答原图' + (open ? ' ▴' : ' ▾');
+        }
+        if (open) dakaAnsfigOpen.add(qid); else dakaAnsfigOpen.delete(qid);
+        localStorage.setItem('daka_ansfig_open', JSON.stringify([...dakaAnsfigOpen]));
     }
 
     async function toggleDaka(qid) {
