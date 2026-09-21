@@ -83,6 +83,7 @@
     <script src="js/background.js"></script>
     <script src="js/lightbox.js"></script>
     <script src="js/backend.js"></script>
+    <script src="js/note_richtext.js"></script>
     <script>
     let dakaQuestions = [];
     let dakaProgress = {};
@@ -130,6 +131,8 @@
             restoreDakaFilter();
             renderFilters(true);
             renderDaka();
+            // 首次渲染完成后启用批注（分配锚点已在 renderCard 中写死 data-blk，此处加载已存高亮/笔记）
+            initDakaAnno();
         } catch (e) {
             document.getElementById('dakaList').innerHTML = `<div class="error">加载失败</div>`;
         }
@@ -239,6 +242,8 @@
         // 视口驱动预热：只对"即将进入视口"的图触发 SW 缓存（常见场景是展开某组时预取其图），
         // 不再一次性 fetch 全库 162 张图（那是首屏慢的根源）。滚动/展开时会按需继续预热。
         warmVisibleFigures('#dakaList img');
+        // 重渲染后重放划词高亮与已存笔记（DOM 被重建，锚点/高亮/笔记块需重新挂载）
+        refreshDakaAnno();
     }
 
     let _dakaWarmObs = null;
@@ -388,8 +393,10 @@
                 <div class="code-ansfig" id="ansfig-${q.id}"${ansfigOpen ? '' : ' hidden'}>
                     ${figWrap(figs.answer, '解答教材原图')}
                 </div>` : '';
+        // 批注按钮：与「📷 解答原图」并排放在折叠标题旁；卡片顶部 .daka-notes 承载已存笔记
+        const annoBtn = `<button class="btn-daka anno-toggle" onclick="event.preventDefault();event.stopPropagation();openDakaAnnoEditor('${q.id}')" title="写批注（支持 Ctrl+V 粘贴截图）">📝 批注</button>`;
         return `
-            <div class="daka-card${done ? ' daka-done' : ''}" id="card-${q.id}">
+            <div class="daka-card${done ? ' daka-done' : ''}" id="card-${q.id}" data-blk="${esc(q.id)}">
                 <div class="daka-card-header">
                     <span class="daka-badge ${badgeClass(q.priority)}">${q.priority_label}</span>
                     <span class="daka-source">${q.source}${q.real ? ' · ' + q.real : ''}</span>
@@ -399,8 +406,9 @@
                 </div>
                 <div class="daka-kaodian">${q.module} / ${q.kaodian}</div>
                 <div class="daka-content">${content}</div>
+                <div class="daka-notes"></div>
                 <details class="daka-answer">
-                    <summary>${summary}${ansfigBtn}</summary>
+                    <summary>${summary}${annoBtn}${ansfigBtn}</summary>
                     <div class="daka-answer-body">${answer}</div>
                 </details>
                 ${ansfigBlock}
@@ -472,6 +480,410 @@
             navItem.innerHTML = (done ? '✓ ' : '') + esc(navItem.getAttribute('data-label') || '');
         }
     }
+
+    /* ==================== 划词高亮 + 行级批注（复用笔记主页机制） ====================
+       锚定：每张卡片 .daka-card 即一个块，data-blk = 题目 id（筛选/重渲染后仍稳定）；
+       高亮按卡片内字符偏移，批注按卡片 id；均走 /api/note 持久化（key 用 cn_ 前缀满足 note 路由的科目解析）。
+       已存笔记统一渲染到卡片顶部 .daka-notes（位于「考点分析·易错点·讲义解法」折叠标题上方），
+       入口按钮「📝 批注」与「📷 解答原图」并排在折叠标题右侧。
+       函数无条件定义（无 api/工具条函数的环境自然短路），调用点带 typeof 守卫。 */
+    const DAKA_ANNO_KEY = 'cn_daka_anno';
+    const DAKA_HL_KEY = 'cn_daka_hl';
+
+    const dakaBlkEl = el => el.closest ? el.closest('[data-blk]') : null;
+    function dakaInAnno(n) {
+        const el = n.nodeType === 1 ? n : n.parentElement;
+        return !!(el && el.closest && el.closest('.line-anno'));
+    }
+    const dakaHlFilter = { acceptNode: n => dakaInAnno(n) ? NodeFilter.FILTER_REJECT : NodeFilter.FILTER_ACCEPT };
+
+    function dakaCleanText(root) {
+        const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, dakaHlFilter);
+        let t = '', node;
+        while ((node = walker.nextNode())) t += node.nodeValue;
+        return t;
+    }
+    function dakaOffsetIn(root, container, offset) {
+        const target = container.nodeType === 3 ? container : (container.childNodes[offset] || null);
+        const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, dakaHlFilter);
+        let pos = 0, node;
+        while ((node = walker.nextNode())) {
+            if (container.nodeType === 3) { if (node === container) return pos + offset; }
+            else if (target && (target === node || (target.contains && target.contains(node)))) return pos;
+            pos += node.nodeValue.length;
+        }
+        return pos;
+    }
+    function dakaWrapRange(root, start, end, cls, ds) {
+        const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, dakaHlFilter);
+        let pos = 0, node;
+        const pieces = [];
+        while ((node = walker.nextNode())) {
+            const len = node.nodeValue.length;
+            const ns = pos, ne = pos + len;
+            pos = ne;
+            if (ne <= start || ns >= end) continue;
+            pieces.push({ node, s: Math.max(start, ns) - ns, e: Math.min(end, ne) - ns });
+        }
+        for (let i = pieces.length - 1; i >= 0; i--) {
+            const p = pieces[i];
+            const range = document.createRange();
+            range.setStart(p.node, p.s);
+            range.setEnd(p.node, p.e);
+            const span = document.createElement('span');
+            span.className = cls;
+            if (ds) { span.dataset.start = ds.start; span.dataset.color = ds.color; }
+            range.surroundContents(span);
+        }
+    }
+
+    let dakaHlItems = [];        // [{blk, start, end, color, text}]
+    let dakaHlTimer = null, dakaHlToolbar = null, dakaHlMouseupTimer = null;
+    const DAKA_HL_COLORS = ['yellow', 'green', 'blue', 'pink'];
+
+    let dakaAnnoItems = [];      // [{blk, text, images}]
+    let dakaAnnoTimer = null;
+    let dakaAnnoEditor = null;   // {blk, el, images}
+    let dakaAnnoReady = false;
+
+    /* 事件只绑一次（容器常驻，内容重渲染不影响委托） */
+    let dakaAnnoEventsBound = false;
+    function initDakaAnnoEvents() {
+        if (dakaAnnoEventsBound) return;
+        dakaAnnoEventsBound = true;
+        const list = document.getElementById('dakaList');
+        if (!list) return;
+        list.addEventListener('click', e => {
+            const span = e.target.closest && e.target.closest('.note-hl');
+            if (span) { e.stopPropagation(); showDakaHlCancelFor(span); }
+        });
+        list.addEventListener('mouseup', () => {
+            clearTimeout(dakaHlMouseupTimer);
+            dakaHlMouseupTimer = setTimeout(showDakaHlToolbar, 0);
+        });
+        document.addEventListener('mousedown', e => {
+            if (dakaHlToolbar && !dakaHlToolbar.contains(e.target)) hideDakaHlToolbar();
+        });
+    }
+
+    function hideDakaHlToolbar() { if (dakaHlToolbar) { dakaHlToolbar.remove(); dakaHlToolbar = null; } }
+
+    function showDakaHlToolbar() {
+        if (dakaHlToolbar && dakaHlToolbar.classList.contains('hl-cancel-only')) return;
+        const sel = window.getSelection();
+        if (!sel || sel.isCollapsed || !sel.rangeCount) { hideDakaHlToolbar(); return; }
+        const range = sel.getRangeAt(0);
+        const blk = dakaBlkEl(range.startContainer);
+        if (!blk || dakaBlkEl(range.endContainer) !== blk) { hideDakaHlToolbar(); return; }
+        if (dakaInAnno(range.startContainer) || dakaInAnno(range.endContainer)) { hideDakaHlToolbar(); return; }
+        hideDakaHlToolbar();
+        const rect = range.getBoundingClientRect();
+        dakaHlToolbar = document.createElement('div');
+        dakaHlToolbar.className = 'hl-toolbar';
+        dakaHlToolbar.innerHTML = DAKA_HL_COLORS.map(c =>
+            `<span class="hl-dot hl-dot-${c}" data-color="${c}" title="${c}"></span>`).join('') +
+            '<span class="hl-anno-btn" title="批注此块">📝批注</span>' +
+            '<span class="hl-cancel" title="取消高亮">✕</span>';
+        document.body.appendChild(dakaHlToolbar);
+        dakaHlToolbar.style.top = (window.scrollY + rect.top - dakaHlToolbar.offsetHeight - 8) + 'px';
+        dakaHlToolbar.style.left = (window.scrollX + rect.left) + 'px';
+        dakaHlToolbar.querySelectorAll('.hl-dot').forEach(dot =>
+            dot.addEventListener('click', () => applyDakaHighlight(blk, range, dot.dataset.color)));
+        dakaHlToolbar.querySelector('.hl-anno-btn').addEventListener('click', () => {
+            window.getSelection().removeAllRanges();
+            hideDakaHlToolbar();
+            openDakaAnnoEditor(blk.dataset.blk);
+        });
+        dakaHlToolbar.querySelector('.hl-cancel').addEventListener('click', () => {
+            const parent = range.startContainer.parentElement || range.startContainer;
+            const span = parent.closest ? parent.closest('.note-hl') : null;
+            if (span) removeDakaHighlight(span);
+            hideDakaHlToolbar();
+        });
+    }
+
+    function showDakaHlCancelFor(span) {
+        clearTimeout(dakaHlMouseupTimer);
+        hideDakaHlToolbar();
+        const rect = span.getBoundingClientRect();
+        dakaHlToolbar = document.createElement('div');
+        dakaHlToolbar.className = 'hl-toolbar hl-cancel-only';
+        dakaHlToolbar.innerHTML = '<span class="hl-cancel" title="取消高亮">✕ 取消高亮</span>';
+        document.body.appendChild(dakaHlToolbar);
+        dakaHlToolbar.style.top = (window.scrollY + rect.top - dakaHlToolbar.offsetHeight - 8) + 'px';
+        dakaHlToolbar.style.left = (window.scrollX + rect.left) + 'px';
+        dakaHlToolbar.querySelector('.hl-cancel').addEventListener('click', () => {
+            removeDakaHighlight(span);
+            hideDakaHlToolbar();
+        });
+    }
+
+    function applyDakaHighlight(blk, range, color) {
+        const start = dakaOffsetIn(blk, range.startContainer, range.startOffset);
+        const end = dakaOffsetIn(blk, range.endContainer, range.endOffset);
+        if (end <= start) { hideDakaHlToolbar(); return; }
+        const text = range.toString();
+        const id = blk.dataset.blk;
+        dakaHlItems.push({ blk: id, start, end, color, text });
+        dakaWrapRange(blk, start, end, 'note-hl note-hl-' + color, { start, color });
+        window.getSelection().removeAllRanges();
+        hideDakaHlToolbar();
+        saveDakaHl();
+    }
+
+    function removeDakaHighlight(span) {
+        const blk = dakaBlkEl(span);
+        if (!blk) return;
+        const start = +span.dataset.start;
+        const color = span.dataset.color;
+        const id = blk.dataset.blk;
+        dakaHlItems = dakaHlItems.filter(it => !(it.blk === id && it.start === start && it.color === color));
+        blk.querySelectorAll('.note-hl').forEach(s => {
+            if (+s.dataset.start === start && s.dataset.color === color) {
+                const parent = s.parentNode;
+                while (s.firstChild) parent.insertBefore(s.firstChild, s);
+                parent.removeChild(s);
+                parent.normalize();
+            }
+        });
+        saveDakaHl();
+    }
+
+    function saveDakaHl() {
+        clearTimeout(dakaHlTimer);
+        dakaHlTimer = setTimeout(async () => {
+            try {
+                await api('/api/note/' + encodeURIComponent(DAKA_HL_KEY), {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ content: JSON.stringify(dakaHlItems), images: [] })
+                });
+            } catch (e) { /* 高亮保存失败静默 */ }
+        }, 500);
+    }
+
+    function reapplyDakaHighlights() {
+        const retained = [];
+        document.querySelectorAll('[data-blk]').forEach(el => {
+            const id = el.dataset.blk;
+            const list = dakaHlItems.filter(it => it.blk === id);
+            if (!list.length) return;
+            const full = dakaCleanText(el);
+            list.sort((a, b) => a.start - b.start);
+            for (const it of list) {
+                let { start, end } = it;
+                if (full.slice(start, end) !== it.text) {
+                    const idx = full.indexOf(it.text);
+                    if (idx < 0 || !it.text) continue;
+                    start = idx; end = idx + it.text.length;
+                }
+                dakaWrapRange(el, start, end, 'note-hl note-hl-' + it.color, { start, color: it.color });
+                retained.push({ blk: id, start, end, color: it.color, text: it.text });
+            }
+        });
+        dakaHlItems = retained;
+    }
+
+    async function loadDakaHighlights() {
+        if (typeof api !== 'function') return;
+        let items = [];
+        try {
+            const resp = await api('/api/note/' + encodeURIComponent(DAKA_HL_KEY));
+            const d = await resp.json();
+            items = d.note ? JSON.parse(d.note) : [];
+        } catch (e) { return; }
+        if (!Array.isArray(items) || !items.length) return;
+        dakaHlItems = items.filter(it => it && typeof it.blk === 'string');
+        reapplyDakaHighlights();
+    }
+
+    // ---------- 批注 ----------
+    const dakaAnnoOf = id => dakaAnnoItems.find(a => a.blk === id);
+    const dakaNotesBox = id => {
+        const el = document.querySelector(`[data-blk="${CSS.escape(id)}"]`);
+        return el ? el.querySelector('.daka-notes') : null;
+    };
+
+    function viewDakaAnnoImg(id, i) {
+        const item = dakaAnnoOf(id);
+        if (!item || !item.images || !item.images[i]) return;
+        const ov = document.createElement('div');
+        ov.className = 'img-lightbox';
+        ov.innerHTML = `<img src="${item.images[i]}" alt="批注图片">`;
+        ov.onclick = () => ov.remove();
+        document.body.appendChild(ov);
+    }
+
+    function isDakaHtmlNote(s) { return /<[a-zA-Z][^>]*>/.test(s || ''); }
+
+    function dakaAnnoBlockHtml(id) {
+        const item = dakaAnnoOf(id);
+        if (!item) return '';
+        const imgs = (item.images || []).map((src, i) =>
+            `<img class="line-anno-img" src="${src}" alt="批注图片" onclick="viewDakaAnnoImg('${id}', ${i})">`).join('');
+        const textHtml = item.text ? (isDakaHtmlNote(item.text) ? item.text : esc(item.text)) : '';
+        return `<div class="line-anno line-anno-block" data-blk="${CSS.escape(id)}">
+            <span class="line-anno-icon">📝</span>
+            <div class="line-anno-body">
+                ${item.text ? `<div class="line-anno-text">${textHtml}</div>` : ''}
+                ${imgs}
+            </div>
+            <div class="line-anno-ops">
+                <button type="button" class="line-anno-op" onclick="openDakaAnnoEditor('${id}')">改</button>
+                <button type="button" class="line-anno-op line-anno-del" onclick="delDakaAnno('${id}')">删</button>
+            </div>
+        </div>`;
+    }
+
+    function openDakaAnnoEditor(id) {
+        closeDakaAnnoEditor();
+        const blk = document.querySelector(`[data-blk="${CSS.escape(id)}"]`);
+        const box = dakaNotesBox(id);
+        if (!blk || !box) return;
+        const item = dakaAnnoOf(id);
+        const el = document.createElement('div');
+        el.className = 'line-anno line-anno-editor';
+        el.innerHTML = `
+            ${noteToolbarHtml()}
+            <div class="note-input line-anno-input" contenteditable="true" spellcheck="false"
+                data-placeholder="写批注，可 Ctrl+V 粘贴截图…"></div>
+            <div class="note-images line-anno-editor-imgs"></div>
+            <div class="line-anno-bar">
+                <button type="button" class="btn btn-primary line-anno-save">保存</button>
+                <button type="button" class="btn btn-secondary line-anno-cancel">取消</button>
+            </div>`;
+        dakaAnnoEditor = { blk: id, el, images: item ? (item.images || []).slice() : [] };
+        const existing = box.querySelector('.line-anno-block');
+        if (existing) existing.style.display = 'none';
+        box.insertAdjacentElement('beforeend', el);
+        const input = el.querySelector('.line-anno-input');
+        loadNoteIntoEditor(input, item ? (item.text || '') : '');
+        updateNotePlaceholder(input);
+        renderDakaEditorImages();
+        input.addEventListener('paste', pasteDakaAnnoImage);
+        bindNoteToolbar(input);
+        el.querySelector('.line-anno-save').addEventListener('click', saveDakaAnnoEditor);
+        el.querySelector('.line-anno-cancel').addEventListener('click', () => closeDakaAnnoEditor());
+        input.focus();
+    }
+    function closeDakaAnnoEditor() {
+        if (!dakaAnnoEditor) return;
+        const box = dakaNotesBox(dakaAnnoEditor.blk);
+        const existing = box && box.querySelector('.line-anno-block');
+        if (existing) existing.style.display = '';
+        dakaAnnoEditor.el.remove();
+        dakaAnnoEditor = null;
+    }
+    function renderDakaEditorImages() {
+        if (!dakaAnnoEditor) return;
+        const box = dakaAnnoEditor.el.querySelector('.line-anno-editor-imgs');
+        box.innerHTML = (dakaAnnoEditor.images || []).map((src, i) => `
+            <div class="note-img-item">
+                <img src="${src}" alt="批注图片">
+                <span class="note-img-del" data-i="${i}" title="删除图片">×</span>
+            </div>`).join('');
+        box.querySelectorAll('.note-img-del').forEach(d => d.onclick = () => {
+            dakaAnnoEditor.images.splice(+d.dataset.i, 1);
+            renderDakaEditorImages();
+        });
+    }
+    function dakaCompressImage(file) {
+        return new Promise((resolve, reject) => {
+            const img = new Image();
+            img.onload = () => {
+                const scale = Math.min(1, 1200 / Math.max(img.width, img.height));
+                const canvas = document.createElement('canvas');
+                canvas.width = Math.round(img.width * scale);
+                canvas.height = Math.round(img.height * scale);
+                const ctx = canvas.getContext('2d');
+                if (ctx) { ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, canvas.width, canvas.height); ctx.drawImage(img, 0, 0, canvas.width, canvas.height); }
+                URL.revokeObjectURL(img.src);
+                resolve(canvas.toDataURL('image/jpeg', 0.85));
+            };
+            img.onerror = () => reject(new Error('图片读取失败'));
+            img.src = URL.createObjectURL(file);
+        });
+    }
+    async function pasteDakaAnnoImage(event) {
+        if (!dakaAnnoEditor) return;
+        const files = [...(event.clipboardData ? event.clipboardData.items : [])]
+            .filter(it => it.type.startsWith('image/'))
+            .map(it => it.getAsFile())
+            .filter(Boolean);
+        if (!files.length) return;
+        event.preventDefault();
+        try {
+            for (const f of files) dakaAnnoEditor.images.push(await dakaCompressImage(f));
+        } catch (e) { if (typeof alert === 'function') alert(e.message); }
+        renderDakaEditorImages();
+    }
+    function saveDakaAnnoEditor() {
+        if (!dakaAnnoEditor) return;
+        const id = dakaAnnoEditor.blk;
+        const text = serializeNote(dakaAnnoEditor.el.querySelector('.line-anno-input'));
+        const images = dakaAnnoEditor.images;
+        dakaAnnoItems = dakaAnnoItems.filter(a => a.blk !== id);
+        if (text || images.length) dakaAnnoItems.push({ blk: id, text, images });
+        dakaAnnoEditor.el.remove();
+        dakaAnnoEditor = null;
+        renderDakaAnnos();
+        saveDakaAnnos();
+    }
+    function delDakaAnno(id) {
+        if (typeof confirm === 'function' && !confirm('删除这条批注？')) return;
+        dakaAnnoItems = dakaAnnoItems.filter(a => a.blk !== id);
+        renderDakaAnnos();
+        saveDakaAnnos();
+    }
+    function saveDakaAnnos() {
+        clearTimeout(dakaAnnoTimer);
+        dakaAnnoTimer = setTimeout(async () => {
+            try {
+                await api('/api/note/' + encodeURIComponent(DAKA_ANNO_KEY), {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ content: JSON.stringify(dakaAnnoItems), images: [] })
+                });
+            } catch (e) { /* 静默 */ }
+        }, 300);
+    }
+    /* 已存笔记统一渲染到卡片顶部 .daka-notes（折叠标题 / 解答原图按钮上方） */
+    function renderDakaAnnos() {
+        document.querySelectorAll('[data-blk] .daka-notes').forEach(box => {
+            const id = box.closest('[data-blk]').dataset.blk;
+            box.innerHTML = dakaAnnoOf(id) ? dakaAnnoBlockHtml(id) : '';
+        });
+    }
+    async function loadDakaAnnos() {
+        if (typeof api !== 'function') return;
+        let items = [];
+        try {
+            const resp = await api('/api/note/' + encodeURIComponent(DAKA_ANNO_KEY));
+            const d = await resp.json();
+            items = d.note ? JSON.parse(d.note) : [];
+        } catch (e) { return; }
+        if (!Array.isArray(items) || !items.length) return;
+        dakaAnnoItems = items.filter(it => it && typeof it.blk === 'string');
+        renderDakaAnnos();
+    }
+
+    /* 渲染（含筛选重渲染）后重放高亮与批注；首屏由 loadDaka 启用 */
+    function refreshDakaAnno() {
+        if (!dakaAnnoReady) return;
+        reapplyDakaHighlights();
+        renderDakaAnnos();
+    }
+
+    function initDakaAnno() {
+        dakaAnnoReady = true;
+        initDakaAnnoEvents();
+        loadDakaHighlights();
+        loadDakaAnnos();
+    }
+
+    window.viewDakaAnnoImg = viewDakaAnnoImg;
+    window.openDakaAnnoEditor = openDakaAnnoEditor;
+    window.delDakaAnno = delDakaAnno;
 
     loadDaka();
     // 状态持久化：恢复组展开状态（折叠面板）+ 滚动位置；离开时保存

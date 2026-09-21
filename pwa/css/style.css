@@ -3394,6 +3394,18 @@ h3.algo-h:first-child, h4.algo-h:first-child, h5.algo-h:first-child { margin-top
     border-radius: 999px;
     vertical-align: middle;
 }
+/* 「📝 批注」按钮：与解答原图按钮并排在折叠标题右侧 */
+.daka-answer > summary .anno-toggle {
+    margin-left: 8px;
+    padding: 2px 10px;
+    font-size: 0.76rem;
+    border-radius: 999px;
+    vertical-align: middle;
+}
+/* 卡片顶部笔记区（已存批注显示在折叠标题 / 解答原图按钮上方）；无笔记时不占位 */
+.daka-notes:empty { display: none; }
+.daka-notes:not(:empty) { margin: 8px 0 4px; }
+.daka-notes .line-anno-block { margin: 0 0 6px; }
 
 .daka-kaodian {
     color: var(--text-light);

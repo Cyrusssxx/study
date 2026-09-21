@@ -91,6 +91,15 @@ const EXTRA = fs.readFileSync(path.resolve(__dirname, 'pwa/data/ds_code_extra.js
     realBtn.click();                                   // 再点收起
     check('再点击后收起', d.getElementById('ansfig-ds_daka_6_4_6_8').hidden, true);
   }
+  // 批注：卡片级块锚点 + 顶部笔记区 + 「📝 批注」按钮（与解答原图按钮并排）
+  check('卡片全部带块锚点 data-blk', d.querySelectorAll('.daka-card[data-blk]').length, 62);
+  check('每卡都有笔记区 .daka-notes', d.querySelectorAll('.daka-notes').length, 62);
+  check('「📝 批注」按钮数 = 卡片数', d.querySelectorAll('summary button.anno-toggle').length, 62);
+  check('批注按钮不在卡片头部', d.querySelectorAll('.daka-card-header button.anno-toggle').length, 0);
+  check('笔记区位于折叠标题上方', [...d.querySelectorAll('.daka-card')].every(c => {
+    const box = c.querySelector('.daka-notes'), det = c.querySelector('details.daka-answer');
+    return !!(box && det && (box.compareDocumentPosition(det) & 4));
+  }), true);
 
   console.log(`\nPASS ${pass} / FAIL ${fail}`);
   process.exit(fail ? 1 : 0);

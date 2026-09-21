@@ -39,7 +39,10 @@ console.log('\n--- daka.html ---');
 const DAKA = read('daka.html');
 const dakaRender = slice(DAKA, 'function renderCard', 'function toggleAnsFig');
 check('renderCard 片段可提取', dakaRender.length > 500, true);
-check('按钮放在折叠标题 summary 内（紧贴）', dakaRender.includes('<summary>${summary}${ansfigBtn}</summary>'), true);
+check('按钮放在折叠标题 summary 内（紧贴）', dakaRender.includes('<summary>${summary}${annoBtn}${ansfigBtn}</summary>'), true);
+check('「📝 批注」按钮与解答原图按钮并排在同一 summary', /<summary>\$\{summary\}\$\{annoBtn\}\$\{ansfigBtn\}<\/summary>/.test(dakaRender), true);
+check('笔记区 .daka-notes 位于折叠面板之前', dakaRender.indexOf('<div class="daka-notes"></div>') > -1
+    && dakaRender.indexOf('<div class="daka-notes"></div>') < dakaRender.indexOf('<details class="daka-answer">'), true);
 const dakaHeader = slice(dakaRender, '<div class="daka-card-header">', '</div>');
 check('卡片头部不再放按钮', dakaHeader.includes('ansfigBtn'), false);
 check('按钮点击阻止冒泡（preventDefault）', dakaRender.includes('event.preventDefault()'), true);
