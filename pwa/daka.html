@@ -346,15 +346,17 @@
         return `<div class="sol-wrap">
             <div class="sol-source">📘 ${esc(s.source || '')}</div>
             ${table}
-            ${list.map(x => `
-                <div class="sol-item">
-                    <div class="sol-head">${esc(x.tag || '')}${x.kind ? ' · ' + esc(x.kind) : ''}${x.name ? ' · ' + esc(x.name) : ''}</div>
+            ${list.map((x, i) => `
+                <details class="sol-fold"${i === 0 ? ' open' : ''}>
+                    <summary class="sol-head">${esc(x.tag || ('解法' + (i + 1)))}${x.kind ? ' · ' + esc(x.kind) : ''}${x.name ? ' · ' + esc(x.name) : ''}</summary>
+                    <div class="sol-item">
                     ${x.analysis ? `<div class="sol-sec">解析</div><div class="sol-text">${esc(x.analysis)}</div>` : ''}
                     ${x.thought ? `<div class="sol-sec">基本设计思想</div><div class="sol-text">${esc(x.thought)}</div>` : ''}
                     ${x.code ? `<div class="sol-sec">代码</div><pre class="code-block">${esc(x.code)}</pre>` : ''}
                     ${x.complexity ? `<div class="sol-cx">${esc(x.complexity)}</div>` : ''}
                     ${x.note ? `<div class="sol-note">${esc(x.note)}</div>` : ''}
-                </div>`).join('')}
+                    </div>
+                </details>`).join('')}
         </div>`;
     }
 

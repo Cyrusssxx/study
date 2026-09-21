@@ -39,8 +39,8 @@ const EXTRA = fs.readFileSync(path.resolve(__dirname, 'pwa/data/ds_code_extra.js
   // 卡片总数（默认显示全部）
   const cards = d.querySelectorAll('.daka-card');
   check('卡片渲染数 = 62', cards.length, 62);
-  // 讲义折叠面板出现（summary 文案）
-  const lectures = d.querySelectorAll('details.daka-answer summary');
+  // 讲义折叠面板出现（summary 文案）；用直接子级选择器，避免把内层解法折叠 .sol-fold 计入
+  const lectures = d.querySelectorAll('details.daka-answer > summary');
   check('讲义折叠面板总数 = 62（每卡一个）', lectures.length, 62);
   const lectureHeads = [...lectures].filter(s => s.textContent.indexOf('考点分析 · 易错点 · 讲义解法') > -1);
   check('升级为完整讲义的折叠面板 = 46（15 真题 + 31 教材习题）', lectureHeads.length, 46);
@@ -48,6 +48,25 @@ const EXTRA = fs.readFileSync(path.resolve(__dirname, 'pwa/data/ds_code_extra.js
   check('页面含 sol-item 解法条目 ≥ 46', d.querySelectorAll('div.sol-item').length >= 46, true);
   check('页面含 code-block 代码块 ≥ 46', d.querySelectorAll('pre.code-block').length >= 46, true);
   check('页面含复杂度行 sol-cx ≥ 46', d.querySelectorAll('div.sol-cx').length >= 46, true);
+  // 解法折叠：面板内默认只展开解法一，其余解法收起、可手动展开
+  const folds = [...d.querySelectorAll('details.sol-fold')];
+  check('解法折叠容器 ≥ 46', folds.length >= 46, true);
+  check('每个解法折叠都有 summary 标题', folds.every(f => !!f.querySelector('summary.sol-head')), true);
+  check('每个讲义卡恰有一个默认展开的解法一', [...new Set(folds.map(f => f.closest('.sol-wrap')))].every(wp =>
+    wp.querySelectorAll('details.sol-fold[open]').length === 1 && wp.querySelectorAll('details.sol-fold').length >= 1), true);
+  check('除解法一外其余解法默认收起',
+    folds.filter(f => !f.hasAttribute('open')).length, folds.length - [...new Set(folds.map(f => f.closest('.sol-wrap')))].length);
+  const multiSol = folds.find(f => f.parentElement.querySelectorAll('details.sol-fold').length > 1);
+  check('存在多解法题（用于验证后续解法需手动展开）', !!multiSol, true);
+  if (multiSol) {
+    const siblings = [...multiSol.parentElement.querySelectorAll('details.sol-fold')];
+    check('多解法题仅第一个 open', siblings.filter(f => f.hasAttribute('open')).length, 1);
+    check('第二个解法默认收起', siblings[1].hasAttribute('open'), false);
+    siblings[1].querySelector('summary').click();     // jsdom 不自动切换 details，手动模拟展开
+    siblings[1].open = true;
+    check('第二个解法可展开', siblings[1].open, true);
+    check('展开后可见其代码块', !!siblings[1].querySelector('pre.code-block') || !!siblings[1].querySelector('.sol-cx'), true);
+  }
   // 抽查：2009 算法题卡（2.3.7_17=ds_code_2009）有完整讲义
   const q2009 = d.getElementById('card-ds_daka_2_3_7_17');
   check('2009 卡存在', !!q2009, true);

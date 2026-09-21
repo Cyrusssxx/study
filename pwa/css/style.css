@@ -2693,6 +2693,21 @@ a.review-chip-all:hover {
     font-weight: 700; font-size: 0.9rem; color: #a06000;
     margin-bottom: 8px; line-height: 1.5;
 }
+/* 解法折叠：面板内默认只展开解法一，其余解法收起、可手动展开（打卡表/讲义共用同一结构） */
+.sol-fold {
+    margin: 10px 0; border: 1px solid #f0e0b8; border-radius: var(--radius);
+    background: #fffaf0; overflow: hidden;
+}
+.sol-fold > summary.sol-head {
+    margin: 0; padding: 10px 14px; cursor: pointer; user-select: none;
+    line-height: 1.5;
+}
+.sol-fold > summary.sol-head:hover { background: rgba(240, 224, 184, .38); }
+.sol-fold[open] > summary.sol-head { border-bottom: 1px solid #f0e0b8; }
+.sol-fold > .sol-item {
+    margin: 0; padding: 10px 14px 12px;
+    background: transparent; border: none; border-radius: 0;
+}
 .sol-sec {
     font-size: 0.75rem; font-weight: 600; color: var(--text-light);
     text-transform: uppercase; letter-spacing: 0.5px; margin: 8px 0 4px;
