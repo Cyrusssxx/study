@@ -717,10 +717,10 @@
       "number": 46,
       "content": "在一个单链表中，已知q所指结点是p所指结点的前驱结点，若在q和p之间插入结点s，则执行 ( )。",
       "options": {
-        "A": "s->next=p->next;p->next=s;",
-        "B": "p->next=s->next;s->next=p;",
-        "C": "q->next=s;s->next=p;",
-        "D": "p->next=s;s->next=q;"
+        "A": "s->next=p->next; p->next=s;",
+        "B": "p->next=s->next; s->next=p;",
+        "C": "q->next=s; s->next=p;",
+        "D": "p->next=s; s->next=q;"
       },
       "answer": "C",
       "explanation": "<p>s插入后，q成为s的前驱，而p成为s的后继，选择选项C。</p><p>注意可能有读者认为选项C中的两条语句交换后才正确。实际上，因为本题插入位置的前后结点都有指针指示（这与前面介绍的插入操作是不同的），所以选项C中的语句顺序并不会造成断链。在此提醒读者在学习过程中一定要多动脑思考，而不要生搬硬套。</p>",
@@ -856,10 +856,10 @@
       "number": 55,
       "content": "在双链表中向p所指的结点之前插入一个结点q的操作为( )。",
       "options": {
-        "A": "p->prior=q;q->next=p;p->prior->next=q;q->prior=p->prior;",
-        "B": "q->prior=p->prior;p->prior->next=q;q->next=p;p->prior=q->next;",
-        "C": "q->next=p;p->next=q;q->prior->next=q;q->next=p;",
-        "D": "p->prior->next=q;q->next=p;q->prior=p->prior;p->prior=q;"
+        "A": "p->prior=q; q->next=p; p->prior->next=q; q->prior=p->prior;",
+        "B": "q->prior=p->prior; p->prior->next=q; q->next=p; p->prior=q->next;",
+        "C": "q->next=p; p->next=q; q->prior->next=q; q->next=p;",
+        "D": "p->prior->next=q; q->next=p; q->prior=p->prior; p->prior=q;"
       },
       "answer": "D",
       "explanation": "<p>为了在p之前插入结点q，可以将p的前一个结点的next域指向q，将q的next域指向p，将q的prior 域指向p 的前一个结点，将p的prior 域指向q。仅选项D满足条件。</p>",
@@ -872,10 +872,10 @@
       "number": 56,
       "content": "在双链表存储结构中，删除p所指的结点时必须修改指针( )。",
       "options": {
-        "A": "p->prior->next=p->next;p->next->prior=p->prior;",
-        "B": "p->prior=p->prior->prior;p->prior->next=p;",
-        "C": "p->next->prior=p;p->next=p->next->next;",
-        "D": "p->next=p->prior->prior;p->prior=p->next->next;"
+        "A": "p->prior->next=p->next; p->next->prior=p->prior;",
+        "B": "p->prior=p->prior->prior; p->prior->next=p;",
+        "C": "p->next->prior=p; p->next=p->next->next;",
+        "D": "p->next=p->prior->prior; p->prior=p->next->next;"
       },
       "answer": "A",
       "explanation": "<p>与上一题的分析基本类似，只不过这里是删除一个结点，注意将p的前、后两结点链接起来。</p><p>关键是要保证在结点指针的修改过程中不断链！</p><p>注意，请读者仔细对比上述两题，弄清双链表的插入和删除方法。</p>",
@@ -1117,10 +1117,10 @@
       "number": 72,
       "content": "【2016统考真题】已知一个带有表头结点的循环双链表L，结点结构为丨prev丨data 丨next丨 其中prev和next分别是指向其直接前驱和直接后继结点的指针。现要删除指针p所指的结点，正确 的语句序列是( )。",
       "options": {
-        "A": "p->next->prev=p->prev;p->prev->next=p->prev;free(p);",
-        "B": "p->next->prev=p->next;p->prev->next=p->next;free(p);",
-        "C": "p->next->prev=p->next;p->prev->next=p->prev;free(p);",
-        "D": "p->next->prev=p->prev;p->prev->next=p->next;free(p);"
+        "A": "p->next->prev=p->prev; p->prev->next=p->prev; free(p);",
+        "B": "p->next->prev=p->next; p->prev->next=p->next; free(p);",
+        "C": "p->next->prev=p->next; p->prev->next=p->prev; free(p);",
+        "D": "p->next->prev=p->prev; p->prev->next=p->next; free(p);"
       },
       "answer": "D",
       "explanation": "<p>选项A的第二句代码，相当于将p前驱结点的后继指针指向其自身，错误；选项B和C的第一句代码，相当于将p后继结点的前驱指针指向其自身，错误。只有选项D正确。</p>",
@@ -1147,10 +1147,10 @@
       "number": 74,
       "content": "【2021统考真题】已知头指针h指向一个带头结点的非空循环单链表，结点结构为data丨next，其 中next是指向直接后继结点的指针，p是尾指针，q是临时指针。现要删除该链表的第一个元素， 正确的语句序列是( )。",
       "options": {
-        "A": "h->next=h->next->next;q=h->next;free(q);",
-        "B": "q=h->next;h->next=h->next->next;free(q);",
-        "C": "q=h->next;h->next=q->next;if(p!=q)p=h;free(q);",
-        "D": "q=h->next;h->next=q->next;if(p==q)p=h;free(q);"
+        "A": "h->next=h->next->next; q=h->next; free(q);",
+        "B": "q=h->next; h->next=h->next->next; free(q);",
+        "C": "q=h->next; h->next=q->next; if(p!=q)p=h; free(q);",
+        "D": "q=h->next; h->next=q->next; if(p==q)p=h; free(q);"
       },
       "answer": "D",
       "explanation": "<p>如图1所示，要删除带头结点的非空循环单链表中的第一个元素，就要先用临时指针g指向待删结点，q=h->next；然后将q从链表中断开，h->next=q->next（这一步也可写成h->next=h->next->next）；此时要考虑一种特殊情况，若待删结点是链表的尾结点，即循环单链表中只有一个元素(p和g指向同一个结点)，如图2所示，则在删除后要将尾指针指向头结点，即if (p==q)p=h；最后释放q结点即可，答案选择选项D。</p><p>表头结点待删结点表头结点待删结点图1图2</p>",
@@ -1162,10 +1162,10 @@
       "number": 75,
       "content": "【2023统考真题】现有非空双链表L，其结点结构为prevdatanext，prev是指向直接前驱结点的 指针，next是指向直接后继结点的指针。若要在L中指针p所指向的结点(非尾结点)之后插入指 针s指向的新结点，则在执行语句序列<s->next=p->next；p->next=s；”后，下列语句序 列中还需要执行的是( )。",
       "options": {
-        "A": "s->next->prev=p;s->prev=p;",
-        "B": "p->next->prev=s;s->prev=p;",
-        "C": "s->prev=s->next->prev;s->next->prev=s;",
-        "D": "p->next->prev=s->prev;s->next->prev=p;"
+        "A": "s->next->prev=p; s->prev=p;",
+        "B": "p->next->prev=s; s->prev=p;",
+        "C": "s->prev=s->next->prev; s->next->prev=s;",
+        "D": "p->next->prev=s->prev; s->next->prev=p;"
       },
       "answer": "C",
       "explanation": "<p>链表的插入操作要保证不会造成断链，画图再依次判断选项。执行语句“① s->next=p->next；②p->next=s；”后的结构如下图所示（虚线表示prev，实线表示next）。</p><p>对于选项 A，s->next->prev=p，错误。对于选项 B，p->next->prev=s，让 s 的 prev指向s，错误。对于选项D，两句代码均错误。对于选项C，执行语句“③s->prev=s->next->prev；④s->next->prev=s；”后的结构如下图所示，满足插入的要求。</p>",
@@ -1335,9 +1335,9 @@
       "content": "向一个栈顶指针为top的链栈(不带头结点)中插入一个X结点，则执行( )。",
       "options": {
         "A": "top->next=x",
-        "B": "x->next=top->next;top->next=x",
-        "C": "x->next=top;top=x",
-        "D": "x->next=top;top=top->next"
+        "B": "x->next=top->next; top->next=x",
+        "C": "x->next=top; top=x",
+        "D": "x->next=top; top=top->next"
       },
       "answer": "C",
       "explanation": "<p>链栈采用不带头结点的单链表表示时，入栈操作在首部插入一个结点x（x->next=top），插入完后需将top指向该插入的结点x。请思考当链栈存在头结点时的情况。</p>",
@@ -1350,10 +1350,10 @@
       "number": 87,
       "content": "链栈(不带头结点)执行Pop操作，并将出栈的元素存在x中，应该执行( )。",
       "options": {
-        "A": "x=top;top=top->next",
+        "A": "x=top; top=top->next",
         "B": "x=top->data",
-        "C": "top=top->next;x=top->data",
-        "D": "x=top->data;top=top->next"
+        "C": "top=top->next; x=top->data",
+        "D": "x=top->data; top=top->next"
       },
       "answer": "D",
       "explanation": "<p>这里假设栈顶指针指向的是栈顶元素，所以选择选项D；而选项A中首先将top指针赋给了x，错误；选项B中没有修改top指针的值；选项C为top指针指向栈顶元素的上一个元素时的答案。</p>",
@@ -1996,10 +1996,10 @@
       "number": 129,
       "content": "【2014统考真题】循环队列放在一维数组A[0...M-1]中，end1指向队首元素，end2指向队尾元素 的后一个位置。假设队列两端均可进行入队和出队操作，队列中最多能容纳M-1个元素。初始时 为空。下列判断队空和队满的条件中，正确的是( )。",
       "options": {
-        "A": "队空:end1==end2;队满:endl==(end2+1)modM",
-        "B": "队空:end1==end2;队满:end2==(end1+1)mod(M-1)",
-        "C": "队空:end2==(end1+1)modM;队满:end1==(end2+1)modM",
-        "D": "队空:end1==(end2+1)modM;队满:end2==(end1+1)mod(M-1)"
+        "A": "队空:end1==end2; 队满:endl==(end2+1)modM",
+        "B": "队空:end1==end2; 队满:end2==(end1+1)mod(M-1)",
+        "C": "队空:end2==(end1+1)modM; 队满:end1==(end2+1)modM",
+        "D": "队空:end1==(end2+1)modM; 队满:end2==(end1+1)mod(M-1)"
       },
       "answer": "A",
       "explanation": "<p>end1指向队首元素，可知出队操作是先从A[end1]读数，然后end1再加1。end2指向队尾元素的后一个位置，可知入队操作是先存数到A[end2]，然后end2再加1。若用A[0]存储第一个元素，则队列初始时，入队操作先把数据放到A[0]中，然后end2自增，即可知end2初值为0；而end1指向的是队首元素，队首元素在数组A中的下标为0，所以得知end1的初值也为0，可知队空条件为end1==end2；然后考虑队列满时，因为队列最多能容纳M-1个元素，假设队列存储在下标为0到M-2的M-1个区域，队头为A[0]，队尾为A[M-2]，此时队列满，考虑在这种情况下end1和end2的状态，end1指向队首元素，可知end1=0，end2指向队尾元素的后一个位置，可知end2=M-2+1=M-1，所以队满条件为end1==（end2+1）modM。</p>",
