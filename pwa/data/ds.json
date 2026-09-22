@@ -1130,7 +1130,7 @@
     {
       "id": "ds_0073",
       "number": 73,
-      "content": "【2016统考真题】已知表头元素为c的单链表在内存中的存储状态如下表所示。<br>地址 元素 链接地址<br>1000H a 1010H<br>1004H b 100CH<br>1008H c 1000H<br>100CH d NULL<br>1010H e 1004H<br>1014H (空)<br>现将f存放于1014H处并插入单链表，若f在逻辑上位于a和e之间，则a、e、f的“链接地址”依次是( )。<br><img src=\"data/ds_figs/ds_0073.png\" alt=\"ds题图\" style=\"max-width:100%;margin:8px 0;border:1px solid #ddd;border-radius:4px;\" />",
+      "content": "【2016统考真题】已知表头元素为c的单链表在内存中的存储状态如下表所示。<br><table class=\"q-table\"><tbody><tr><td>地址</td><td>元素</td><td>链接地址</td></tr><tr><td>1000H</td><td>a</td><td>1010H</td></tr><tr><td>1004H</td><td>b</td><td>100CH</td></tr><tr><td>1008H</td><td>c</td><td>1000H</td></tr><tr><td>100CH</td><td>d</td><td>NULL</td></tr><tr><td>1010H</td><td>e</td><td>1004H</td></tr><tr><td>1014H</td><td>(空)</td><td> </td></tr></tbody></table><br>现将f存放于1014H处并插入单链表，若f在逻辑上位于a和e之间，则a、e、f的“链接地址”依次是( )。<br><img src=\"data/ds_figs/ds_0073.png\" alt=\"ds题图\" style=\"max-width:100%;margin:8px 0;border:1px solid #ddd;border-radius:4px;\" />",
       "options": {
         "A": "1010H、1014H、1004H",
         "B": "1010H、1004H、1014H",
@@ -9666,7 +9666,7 @@
     {
       "id": "ds_0616",
       "number": 616,
-      "content": "【2025统考真题】对含9个关键字的初始序列进行排序，若序列的变化情况如下表所示，则下列排 序算法中，采用的是( )。 初始序列 5，25，40，30，10，20，45，15，35 第1趟排序后的序列 5，10，20，30，15，35，45，25，40 第2趟排序后的序列 5，10，15，25，20，30，40，35，45",
+      "content": "【2025统考真题】对含9个关键字的初始序列进行排序，若序列的变化情况如下表所示，则下列排 序算法中，采用的是( )。 <table class=\"q-table\"><tbody><tr><td>初始序列</td><td>5</td><td>25</td><td>40</td><td>30</td><td>10</td><td>20</td><td>45</td><td>15</td><td>35</td></tr><tr><td>第1趟排序后</td><td>5</td><td>10</td><td>20</td><td>30</td><td>15</td><td>35</td><td>45</td><td>25</td><td>40</td></tr><tr><td>第2趟排序后</td><td>5</td><td>10</td><td>15</td><td>25</td><td>20</td><td>30</td><td>40</td><td>35</td><td>45</td></tr></tbody></table>",
       "options": {
         "A": "希尔排序",
         "B": "基数排序",
