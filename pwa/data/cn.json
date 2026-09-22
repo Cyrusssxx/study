@@ -2336,7 +2336,7 @@
         "D": "32"
       },
       "answer": "B",
-      "explanation": "<p>在选择重传协议中，若用n比特对帧编号，则发送窗口和接收窗口的大小关系为1<WR≤Wr，还需满足WR+W≤2ⁿ，所以接收窗口的最大尺寸不超过序号范围的一半，即WR≤2ⁿ。</p>",
+      "explanation": "<p>在选择重传协议中，若用n比特对帧编号，则发送窗口和接收窗口的大小关系为1&lt;WR≤Wr，还需满足WR+W≤2ⁿ，所以接收窗口的最大尺寸不超过序号范围的一半，即WR≤2ⁿ。</p>",
       "chapter": "第3章 数据链路层",
       "section": "3.4 流量控制与可靠传输机制",
       "subsection": "3.4.1 流量控制与滑动窗口机制",
@@ -2370,7 +2370,7 @@
         "D": "10"
       },
       "answer": "C",
-      "explanation": "<p>在选择重传协议中，若用n比特对帧编号，则发送窗口和接收窗口的大小关系为1<WR≤Wr，此外，还要满足WR+Wr≤2ⁿ，因此发送窗口的最大尺寸为24-7=16-7=9。</p>",
+      "explanation": "<p>在选择重传协议中，若用n比特对帧编号，则发送窗口和接收窗口的大小关系为1&lt;WR≤Wr，此外，还要满足WR+Wr≤2ⁿ，因此发送窗口的最大尺寸为24-7=16-7=9。</p>",
       "chapter": "第3章 数据链路层",
       "section": "3.4 流量控制与可靠传输机制",
       "subsection": "3.4.1 流量控制与滑动窗口机制",
@@ -3486,10 +3486,10 @@
       "number": 201,
       "content": "在CSMA/CA协议中，有三种不同的时间参数：短帧间间隔SIFS、分布式协调帧间间隔DIFS和点 协调帧间间隔PIFS。它们之间的长度关系是( )",
       "options": {
-        "A": "SIFS<PIFS<DIFS",
-        "B": "SIFS<DIFS<PIFS",
-        "C": "PIFS<SIFS<DIFS",
-        "D": "PIFS<DIFS<SIFS"
+        "A": "SIFS&lt;PIFS&lt;DIFS",
+        "B": "SIFS&lt;DIFS&lt;PIFS",
+        "C": "PIFS&lt;SIFS&lt;DIFS",
+        "D": "PIFS&lt;DIFS&lt;SIFS"
       },
       "answer": "A",
       "explanation": "<p>SIFS最短，网络中的控制帧和确认顿都采用SIFS作为发送之前的等待时延。DIFS最长，所有的数据帧都采用DIFS作为等待时延。PIFS中等，用于AP发送管理帧或探测帧的等待时延。</p><p>当源站要发送数据时，先检测信道，在持续检测到信道空闲达到DIFS时间后就开始发送。目的站正确收到数据帧后，等待SIFS时间后发出对应的确认顿。若源站在规定时间内未收到确认帧，就必须重传此帧，直到收到确认帧为止，或经过若干重传失败后，放弃发送。</p>",
@@ -5998,7 +5998,7 @@
     {
       "id": "cn_0348",
       "number": 348,
-      "content": "【2024统考真题】如下图<br><img src=\"data/cn_figs/cn_0348.png\" alt=\"cn题图\" style=\"max-width:100%;margin:8px 0;border:1px solid #ddd;border-radius:4px;\" />所示的支持VLAN划分的交换机，已按端口划分了3个VLAN，部分端口 连接主机的IP地址和MAC地址如图中所示，ARP表结构为<IP地址，MAC地址，TTL>。下列选项 中，不会出现在H4的ARP表中的是( )",
+      "content": "【2024统考真题】如下图<br><img src=\"data/cn_figs/cn_0348.png\" alt=\"cn题图\" style=\"max-width:100%;margin:8px 0;border:1px solid #ddd;border-radius:4px;\" />所示的支持VLAN划分的交换机，已按端口划分了3个VLAN，部分端口 连接主机的IP地址和MAC地址如图中所示，ARP表结构为&lt;IP地址，MAC地址，TTL>。下列选项 中，不会出现在H4的ARP表中的是( )",
       "options": {
         "A": "192.168.3.81,00-18-A2-3B-36-21,14:32:00",
         "B": "192.168.3.91,00-3E-C2-39-12-B5,14:37:00",
@@ -6542,7 +6542,7 @@
     {
       "id": "cn_0380",
       "number": 380,
-      "content": "【2010统考真题】某自治系统内采用RIP，若该自治系统内的路由器R1收到其邻居路由器R2的 距离向量，距离向量中包含信息<Net1，16>，则能得出的结论是( )",
+      "content": "【2010统考真题】某自治系统内采用RIP，若该自治系统内的路由器R1收到其邻居路由器R2的 距离向量，距离向量中包含信息&lt;Net1，16>，则能得出的结论是( )",
       "options": {
         "A": "R2可以经过R1到达Net1,跳数为17",
         "B": "R2可以到达Net1,跳数为16",

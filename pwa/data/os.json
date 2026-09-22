@@ -2826,7 +2826,7 @@
     {
       "id": "os_0177",
       "number": 177,
-      "content": "现在有三个同时到达的作业J<sub>1</sub>，J<sub>2</sub>，J<sub>3</sub>，它们的执行时间分别是T<sub>1</sub>，T<sub>2</sub>，T<sub>3</sub>，且T<sub>1</sub><T<sub>2</sub><T<sub>3</sub>。系统按单道方式运行且采用短作业优先调度算法，则平均周转时间是( )",
+      "content": "现在有三个同时到达的作业J<sub>1</sub>，J<sub>2</sub>，J<sub>3</sub>，它们的执行时间分别是T<sub>1</sub>，T<sub>2</sub>，T<sub>3</sub>，且T<sub>1</sub>&lt;T<sub>2</sub>&lt;T<sub>3</sub>。系统按单道方式运行且采用短作业优先调度算法，则平均周转时间是( )",
       "options": {
         "A": "T<sub>1</sub>+T<sub>2</sub>+T<sub>3</sub>",
         "B": "(3T<sub>1</sub>+2T<sub>2</sub>+T<sub>3</sub>)/3",
@@ -3938,7 +3938,7 @@
         "D": "S.value>=0"
       },
       "answer": "A",
-      "explanation": "<p>参见记录型信号量的介绍。此处极易出关于S.value的概念题，总结如下：①S.value>0，表示某类可用资源的数量。每次P操作，意味着请求分配一个单位的资源。②S.value≤0，表示某类资源已无可用，且存在因请求该资源而被阻塞的进程，S.value的绝对值表示等待进程数量。</p><p>一定要看清题目中的陈述是执行P操作前还是执行P操作后。</p><p>",
+      "explanation": "<p>参见记录型信号量的介绍。此处极易出关于S.value的概念题，总结如下：①S.value>0，表示某类可用资源的数量。每次P操作，意味着请求分配一个单位的资源。②S.value≤0，表示某类资源已无可用，且存在因请求该资源而被阻塞的进程，S.value的绝对值表示等待进程数量。</p><p>一定要看清题目中的陈述是执行P操作前还是执行P操作后。</p><p></p>",
       "chapter": "第2章 进程与线程",
       "section": "2.3 同步与互斥",
       "subsection": "2.3.4 信号量"
