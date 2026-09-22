@@ -660,7 +660,7 @@
             "name": "枚举最小正整数",
             "analysis": "",
             "thought": "可以证明最小未出现的正整数 t 一定 ≤ n+1（若 t>n+1，则 1~t-1 这 t-1 个数都出现过，而数组只有 n 个元素，t-1≤n，即 t≤n+1）。注意 t≤n+1 只是上界，t 不恒等于 n+1：t 由数组内容决定 —— 例 {0,1,2}（n=3）中 1、2 出现、3 未出现，t=3=n；例 {1,2,3}（n=3）中 1、2、3 全出现，t=4=n+1。枚举候选 i 从 1 到 n+1，逐个到数组中判断是否出现，未出现者即答案。",
-            "code": "int ans(int A[], int n)\n{\n    for (int i = 1; i <= n + 1; i++)\n    {\n        bool flag = false;                  // 先假设i未出现\n        for (int j = 0; j < n; j++)\n        {\n            if (i == A[j])\n            {\n                flag = true;                // 此时i出现了，flag变成true\n            }\n        }\n        if (flag == false)                  // 若i未出现过则输出i\n        {\n            return i;\n        }\n    }\n}",
+            "code": "int ans(int A[], int n)\n{\n    for (int i = 1; i <= n + 1; i++) {\n        bool flag = false;                  // 先假设i未出现\n        for (int j = 0; j < n; j++) {\n            if (i == A[j]) flag = true;     // 此时i出现了，flag变成true\n        }\n        if (flag == false) return i;        // 若i未出现过则输出i\n    }\n}",
             "complexity": "时间复杂度：O(n²)（枚举候选，内层全扫描）   空间复杂度：O(1)",
             "note": ""
           },
@@ -670,7 +670,7 @@
             "name": "快速排序，然后扫描一遍数组",
             "analysis": "",
             "thought": "先对数组A快速排序得到升序序列，然后遍历数组找到第一个未出现的最小正整数。",
-            "code": "void Qsort(int A[], int L, int R)\n{\n    if (L >= R)\n    {\n        return;                             // 当前区间元素个数<=1则退出\n    }\n    int pivot, i = L, j = R;                // i和j是左右两个数组下标移动\n    pivot = A[L];                           // pivot作为基准值参与比较\n    while (i < j)\n    {\n        while (i < j && A[j] >= pivot)\n        {\n            j--;\n        }\n        while (i < j && A[i] <= pivot)\n        {\n            i++;\n        }\n        if (i < j)\n        {\n            swap(A[i], A[j]);               // A[j]<pivot，A[i]>pivot\n        }\n    }\n    swap(A[L], A[i]);                       // 将基准值放入他的最终位置\n    Qsort(A, L, i - 1);                     // 递归处理左区间\n    Qsort(A, i + 1, R);                     // 递归处理右区间\n}\nint ans(int A[], int n)\n{\n    Qsort(A, 0, n - 1);\n    int t = 1;                              // 假设初始最小未出现正整数t=1\n    for (int i = 0; i < n; i++)\n    {\n        if (A[i] == t)\n        {\n            t++;                            // t已出现，此时最小未出现正整数是t+1\n        }\n    }\n    return t;                               // 输出最小未出现正整数\n}",
+            "code": "void Qsort(int A[], int L, int R)\n{\n    if (L >= R) return;                     // 当前区间元素个数<=1则退出\n    int pivot, i = L, j = R;                // i和j是左右两个数组下标移动\n    pivot = A[L];                           // pivot作为基准值参与比较\n    while (i < j) {\n        while (i < j && A[j] >= pivot) j--;\n        while (i < j && A[i] <= pivot) i++;\n        if (i < j) swap(A[i], A[j]);        // A[j]<pivot，A[i]>pivot\n    }\n    swap(A[L], A[i]);                       // 将基准值放入他的最终位置\n    Qsort(A, L, i - 1);                     // 递归处理左区间\n    Qsort(A, i + 1, R);                     // 递归处理右区间\n}\nint ans(int A[], int n)\n{\n    Qsort(A, 0, n - 1);\n    int t = 1;                              // 假设初始最小未出现正整数t=1\n    for (int i = 0; i < n; i++) {\n        if (A[i] == t) t++;                 // t已出现，此时最小未出现正整数是t+1\n    }\n    return t;                               // 输出最小未出现正整数\n}",
             "complexity": "时间复杂度：O(n log n)（快速排序平均）   空间复杂度：O(log n)（快排递归栈）",
             "note": ""
           },
@@ -680,7 +680,7 @@
             "name": "散列表",
             "analysis": "",
             "thought": "可以证明最小未出现的正整数 t 一定 ≤ n+1（若 t>n+1，则 1~t-1 都出现过，只有 n 个整数，t-1≤n，即 t≤n+1），故标记数组只需开到 n+1。注意答案不是固定值：含 ≤0 或 >n 的元素时答案落在 1~n（{0,1,2}→3=n），1~n 全出现时才返回 n+1（{1,2,3}→4）。设数组 count，count[i] 记录 i 是否在 A 中出现过；扫描 A 更新 count（只登记 0<A[i]≤n+1 的元素），再扫描 count 输出第一个未出现的正整数。",
-            "code": "int ans(int A[], int n)\n{\n    int count[n + 2] = {0};                 // 0~n+1\n    for (int i = 0; i < n; i++)             // 扫描数组A\n    {\n        if (A[i] > 0 && A[i] <= n + 1)      // 当0<A[i]<=n+1时才修改\n        {\n            count[A[i]]++;\n        }\n    }\n    for (int j = 1; j <= n + 1; j++)        // 扫描count数组\n    {\n        if (count[j] == 0)                  // j未出现过，是最小未出现正整数\n        {\n            return j;                       // 输出j\n        }\n    }\n}",
+            "code": "int ans(int A[], int n)\n{\n    int count[n + 2] = {0};                 // 0~n+1\n    for (int i = 0; i < n; i++) {           // 扫描数组A\n        if (A[i] > 0 && A[i] <= n + 1) count[A[i]]++;   // 当0<A[i]<=n+1时才修改\n    }\n    for (int j = 1; j <= n + 1; j++) {      // 扫描count数组\n        if (count[j] == 0) return j;        // j未出现过，是最小未出现正整数\n    }\n}",
             "complexity": "时间复杂度：O(n)（两趟扫描）   空间复杂度：O(n)（计数数组）",
             "note": ""
           }
