@@ -1115,7 +1115,7 @@
     {
       "id": "ds_0072",
       "number": 72,
-      "content": "【2016统考真题】已知一个带有表头结点的循环双链表L，结点结构为丨prev丨data 丨next丨 其中prev和next分别是指向其直接前驱和直接后继结点的指针。现要删除指针p所指的结点，正确 的语句序列是( )。",
+      "content": "【2016统考真题】已知一个带有表头结点的循环双链表L，结点结构为丨prev丨data丨next丨 其中prev和next分别是指向其直接前驱和直接后继结点的指针。现要删除指针p所指的结点，正确 的语句序列是( )。",
       "options": {
         "A": "p->next->prev=p->prev; p->prev->next=p->prev; free(p);",
         "B": "p->next->prev=p->next; p->prev->next=p->next; free(p);",
@@ -1160,7 +1160,7 @@
     {
       "id": "ds_0075",
       "number": 75,
-      "content": "【2023统考真题】现有非空双链表L，其结点结构为prevdatanext，prev是指向直接前驱结点的 指针，next是指向直接后继结点的指针。若要在L中指针p所指向的结点(非尾结点)之后插入指 针s指向的新结点，则在执行语句序列<s->next=p->next；p->next=s；”后，下列语句序 列中还需要执行的是( )。",
+      "content": "【2023统考真题】现有非空双链表L，其结点结构为丨prev丨data丨next丨，prev是指向直接前驱结点的 指针，next是指向直接后继结点的指针。若要在L中指针p所指向的结点(非尾结点)之后插入指 针s指向的新结点，则在执行语句序列<s->next=p->next；p->next=s；”后，下列语句序 列中还需要执行的是( )。",
       "options": {
         "A": "s->next->prev=p; s->prev=p;",
         "B": "p->next->prev=s; s->prev=p;",
@@ -1175,7 +1175,7 @@
     {
       "id": "ds_0076",
       "number": 76,
-      "content": "【2024统考真题】已知带头结点的非空单链表L的头指针为h，结点结构为datanext.其中next是 指向直接后继结点的指针。现有指针p和q，若p指向L中非首且非尾的任意一个结点，则执行语 句序列“q=p->next；p->next=q->next；q->next=h->next；h->next=q；”的结果是( )",
+      "content": "【2024统考真题】已知带头结点的非空单链表L的头指针为h，结点结构为data丨next。其中next是 指向直接后继结点的指针。现有指针p和q，若p指向L中非首且非尾的任意一个结点，则执行语 句序列“q=p->next；p->next=q->next；q->next=h->next；h->next=q；”的结果是( )",
       "options": {
         "A": "在p所指结点后插入q所指结点",
         "B": "在q所指结点后插入p所指结点",
