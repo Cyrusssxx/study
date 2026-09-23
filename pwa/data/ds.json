@@ -5571,7 +5571,7 @@
     {
       "id": "ds_0358",
       "number": 358,
-      "content": "【2015统考真题】设有向图G=(V，E)，顶点集V={V<sub>0</sub>，V<sub>1</sub>，V<sub>2</sub>，V<sub>3</sub>}，边集E={&lt;v₀,v₁>，&lt;v₀,v₂>，&lt;v₀,v₃>，&lt;v₁,v₃>}。若从顶点V<sub>0</sub>开始对图进行深度优先遍历，则可能得到的不同遍历序列个数是( )。<br><img src=\"data/ds_figs/ds_0358.png\" alt=\"ds题图\" style=\"max-width:100%;margin:8px 0;border:1px solid #ddd;border-radius:4px;\" />",
+      "content": "【2015统考真题】设有向图G=(V，E)，顶点集V={V<sub>0</sub>，V<sub>1</sub>，V<sub>2</sub>，V<sub>3</sub>}，边集E={&lt;v₀,v₁>，&lt;v₀,v₂>，&lt;v₀,v₃>，&lt;v₁,v₃>}。若从顶点V<sub>0</sub>开始对图进行深度优先遍历，则可能得到的不同遍历序列个数是( )。",
       "options": {
         "A": "2",
         "B": "3",
