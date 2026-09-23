@@ -6172,7 +6172,7 @@
     {
       "id": "ds_0396",
       "number": 396,
-      "content": "【2018统考真题】下列选项中，不是右侧有向图的拓扑序列的是( )。",
+      "content": "【2018统考真题】下列选项中，不是右侧有向图的拓扑序列的是( )。<br><img src=\"data/ds_figs/ds_0396.png\" alt=\"2018拓扑有向图\" style=\"max-width:100%;margin:8px 0;border:1px solid #ddd;border-radius:4px;\" />",
       "options": {
         "A": "1,5,2,3,6,4",
         "B": "5,1,2,6,3,4",
