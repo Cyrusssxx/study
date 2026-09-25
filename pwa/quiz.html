@@ -135,12 +135,16 @@
     const SUBJECT = _params.get('subject') || 'os';
     const NOTES_SUBJECTS = ['os', 'co', 'ds', 'cn'];  // 已有考点笔记的科目，徽章白名单化防死链
     // 可在练习设置面板内热切换的模式（无需退出页面）
-    const SWITCHABLE_MODES = ['sequential', 'favorite', 'unfamiliar', 'dontknow', 'real', 'fav_real'];
+    const SWITCHABLE_MODES = ['sequential', 'favorite', 'unfamiliar', 'real', 'fav_real'];
     let MODE = _params.get('mode') || '';
+    if (MODE === 'dontknow') MODE = 'unfamiliar'; // 兼容旧参数：原"不会模式"合并入"不熟/不会"
     let CHAPTER = _params.get('chapter') || '';
     // 记住上次选择的模式：无显式 mode 参数且无定位参数时沿用偏好（首页按钮等显式入口以参数为准）
     if (!MODE && !CHAPTER && !_params.get('goto')) {
-        try { MODE = localStorage.getItem('quiz_mode_pref_' + SUBJECT) || ''; } catch (e) { }
+        try {
+            MODE = localStorage.getItem('quiz_mode_pref_' + SUBJECT) || '';
+            if (MODE === 'dontknow') MODE = 'unfamiliar';
+        } catch (e) { }
     }
     if (!MODE) MODE = 'sequential';
     let SECTION = _params.get('section') || '';
@@ -172,8 +176,8 @@
         'random': '随机模式',
         'wrong': '错题模式',
         'favorite': '收藏模式',
-        'unfamiliar': '不熟模式',
-        'dontknow': '不会模式',
+        'unfamiliar': '不熟/不会',
+        'dontknow': '不熟/不会',
         'unanswered': '未做模式',
         'real': '真题模式',
         'fav_real': '收藏+真题',
@@ -267,6 +271,7 @@
     }
 
     function switchPracticeMode(m) {
+        if (m === 'dontknow') m = 'unfamiliar'; // 兼容历史调用：统一转为"不熟/不会"模式
         if (m === MODE || !SWITCHABLE_MODES.includes(m)) { closeKeybindDialog(); return; }
         // 切模式前冲刷当前题未入库的笔记（防抖保存 pending 时，若等切完再触发会读错 currentIndex）
         flushNoteSave();
@@ -447,7 +452,7 @@
                 document.getElementById('questionArea').innerHTML = `
                     <div class="empty-state">
                         <h3>暂无题目</h3>
-                        <p>${MODE === 'wrong' ? '恭喜！没有错题需要复习' : MODE === 'review' ? '今日没有到期的复习题 🎉' : MODE === 'favorite' ? '还没有收藏任何题目' : MODE === 'unfamiliar' ? '还没有标记"不熟"的题目（刷题时点卡片右上角 🟡不熟 即可标记）' : MODE === 'dontknow' ? '还没有标记"不会"的题目（刷题时点卡片右上角 🔴不会 即可标记）' : MODE === 'fav_real' ? '还没有收藏任何统考真题（先在收藏模式收藏真题，或直接用真题模式）' : MODE === 'code' ? '该科目暂无含代码的题目' : '题库为空'}</p>
+                        <p>${MODE === 'wrong' ? '恭喜！没有错题需要复习' : MODE === 'review' ? '今日没有到期的复习题 🎉' : MODE === 'favorite' ? '还没有收藏任何题目' : (MODE === 'unfamiliar' || MODE === 'dontknow') ? '还没有标记"不熟"或"不会"的题目（刷题时点卡片右上角 🟡不熟 或 🔴不会 即可标记）' : MODE === 'fav_real' ? '还没有收藏任何统考真题（先在收藏模式收藏真题，或直接用真题模式）' : MODE === 'code' ? '该科目暂无含代码的题目' : '题库为空'}</p>
                         <a href="index.html" class="btn btn-primary">返回首页</a>
                     </div>
                 `;
@@ -1269,10 +1274,9 @@
                 q.is_dontknow = !!result.is_dontknow;
                 renderQuestion();
             }
-            // 若本次操作导致「当前模式的集合」发生变化（取消本模式标记，或因互斥被另一标记顶掉），重载列表
+            // 若本次操作导致「当前模式的集合」发生变化（取消标记），重载列表
             const removedFromCurrent =
-                (MODE === 'unfamiliar' && !q.is_unfamiliar) ||
-                (MODE === 'dontknow' && !q.is_dontknow);
+                ((MODE === 'unfamiliar' || MODE === 'dontknow') && !q.is_unfamiliar && !q.is_dontknow);
             if (removedFromCurrent) {
                 loadQuizQuestions();
             }

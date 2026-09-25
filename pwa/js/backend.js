@@ -434,12 +434,9 @@ async function api(url, opts = {}) {
                 qs = qs.filter(q => wrongIds.has(q.id));
             } else if (mode === 'favorite') {
                 qs = qs.filter(q => favSet.has(q.id));
-            } else if (mode === 'unfamiliar') {
-                // 不熟标记：只出不熟的题（可与错题交叠加倍复习）
-                qs = qs.filter(q => unfamSet.has(q.id));
-            } else if (mode === 'dontknow') {
-                // 不会标记：只出完全不会的题
-                qs = qs.filter(q => dontknowSet.has(q.id));
+            } else if (mode === 'unfamiliar' || mode === 'dontknow') {
+                // 不熟/不会模式：包含标记为不熟或不会的全部题目
+                qs = qs.filter(q => unfamSet.has(q.id) || dontknowSet.has(q.id));
             } else if (mode === 'fav_real') {
                 // 收藏+真题混合：既是收藏题又是统考真题
                 qs = qs.filter(q => favSet.has(q.id) && q.is_real_exam);

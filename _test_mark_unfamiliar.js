@@ -89,13 +89,13 @@ function check(name, got, want) {
   // 取消互斥标记本身不误伤另一题
   check('取消 os_2 不会(不受 os_1 操作影响)', (await post('/api/mark/dontknow/os_2')).is_dontknow, false);
   check('重新标回 os_2 不会', (await post('/api/mark/dontknow/os_2')).is_dontknow, true);
-  // 模式过滤在互斥后仍正确：unfamiliar 只出 os_1，dontknow 只出 os_2
-  check('互斥后 mode=unfamiliar 只出 os_1', await qsInMode('unfamiliar'), ['os_1']);
-  check('互斥后 mode=dontknow 只出 os_2', await qsInMode('dontknow'), ['os_2']);
+  // 模式过滤在合并后：unfamiliar 或 dontknow 模式均出全部被标记题目（os_1 + os_2）
+  check('合并后 mode=unfamiliar 出全部标记题', (await qsInMode('unfamiliar')).sort(), ['os_1', 'os_2']);
+  check('合并后 mode=dontknow 同样出全部标记题', (await qsInMode('dontknow')).sort(), ['os_1', 'os_2']);
 
   console.log('\n--- 模式过滤 ---');
-  check('mode=unfamiliar 只出不熟题', await qsInMode('unfamiliar'), ['os_1']);
-  check('mode=dontknow 只出不会题', await qsInMode('dontknow'), ['os_2']);
+  check('mode=unfamiliar 汇总不熟与不会题', (await qsInMode('unfamiliar')).sort(), ['os_1', 'os_2']);
+  check('mode=dontknow 兼容合并模式', (await qsInMode('dontknow')).sort(), ['os_1', 'os_2']);
   check('mode=sequential 全出', (await qsInMode('sequential')).length, 4);
   check('mode=favorite 不受标记影响(空)', await qsInMode('favorite'), []);
 

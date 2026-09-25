@@ -5423,6 +5423,8 @@ a.chapter-badge-link:hover {
 
 /* 题头模式徽章按模式着色（当前模式视觉反馈） */
 .mode-badge[data-mode="favorite"] { background: #fef3c7; color: #92400e; }
+.mode-badge[data-mode="unfamiliar"],
+.mode-badge[data-mode="dontknow"] { background: #fef9c3; color: #854d0e; border: 1px solid #facc15; }
 .mode-badge[data-mode="real"]     { background: #dbeafe; color: #1e40af; }
 .mode-badge[data-mode="fav_real"] { background: linear-gradient(90deg, #ccfbf1, #dbeafe); color: #0f766e; }
 .mode-badge[data-mode="sequential"] { background: #e5e7eb; color: #374151; }
@@ -5446,6 +5448,8 @@ a.chapter-badge-link:hover {
 }
 
 .dark .mode-badge[data-mode="favorite"] { background: #3a2f18; color: #e0b45c; }
+.dark .mode-badge[data-mode="unfamiliar"],
+.dark .mode-badge[data-mode="dontknow"] { background: #383015; color: #fde047; border: 1px solid #715809; }
 .dark .mode-badge[data-mode="real"]     { background: #1a2b45; color: #7fb0ee; }
 .dark .mode-badge[data-mode="fav_real"] { background: linear-gradient(90deg, #123a30, #1a2b45); color: #6fd3c3; }
 .dark .mode-badge[data-mode="sequential"] { background: #26303b; color: #aab6c2; }
