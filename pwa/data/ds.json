@@ -1130,7 +1130,7 @@
     {
       "id": "ds_0073",
       "number": 73,
-      "content": "【2016统考真题】已知表头元素为c的单链表在内存中的存储状态如下表所示。<br><table class=\"q-table\"><tbody><tr><td>地址</td><td>元素</td><td>链接地址</td></tr><tr><td>1000H</td><td>a</td><td>1010H</td></tr><tr><td>1004H</td><td>b</td><td>100CH</td></tr><tr><td>1008H</td><td>c</td><td>1000H</td></tr><tr><td>100CH</td><td>d</td><td>NULL</td></tr><tr><td>1010H</td><td>e</td><td>1004H</td></tr><tr><td>1014H</td><td>(空)</td><td> </td></tr></tbody></table><br>现将f存放于1014H处并插入单链表，若f在逻辑上位于a和e之间，则a、e、f的“链接地址”依次是( )。<br><img src=\"data/ds_figs/ds_0073.png\" alt=\"ds题图\" style=\"max-width:100%;margin:8px 0;border:1px solid #ddd;border-radius:4px;\" />",
+      "content": "【2016统考真题】已知表头元素为c的单链表在内存中的存储状态如下表所示。<br><table class=\"q-table\"><tbody><tr><td>地址</td><td>元素</td><td>链接地址</td></tr><tr><td>1000H</td><td>a</td><td>1010H</td></tr><tr><td>1004H</td><td>b</td><td>100CH</td></tr><tr><td>1008H</td><td>c</td><td>1000H</td></tr><tr><td>100CH</td><td>d</td><td>NULL</td></tr><tr><td>1010H</td><td>e</td><td>1004H</td></tr><tr><td>1014H</td><td>(空)</td><td> </td></tr></tbody></table><br>现将f存放于1014H处并插入单链表，若f在逻辑上位于a和e之间，则a、e、f的“链接地址”依次是( )。",
       "options": {
         "A": "1010H、1014H、1004H",
         "B": "1010H、1004H、1014H",
@@ -3010,7 +3010,7 @@
     {
       "id": "ds_0194",
       "number": 194,
-      "content": "设高度为h的二叉树上只有度为0和度为2的结点，则此类二叉树中所包含的结点数至少为( )。<br><img src=\"data/ds_figs/ds_0194.png\" alt=\"ds题图\" style=\"max-width:100%;margin:8px 0;border:1px solid #ddd;border-radius:4px;\" />",
+      "content": "设高度为h的二叉树上只有度为0和度为2的结点，则此类二叉树中所包含的结点数至少为( )。",
       "options": {
         "A": "h",
         "B": "2h-1",
@@ -3655,7 +3655,7 @@
     {
       "id": "ds_0236",
       "number": 236,
-      "content": "已知一棵二叉树的先序遍历结果为ABCDEF，中序遍历结果为CBAEDF，则后序遍历的结果为( )<br><img src=\"data/ds_figs/ds_0236.png\" alt=\"ds题图\" style=\"max-width:100%;margin:8px 0;border:1px solid #ddd;border-radius:4px;\" />",
+      "content": "已知一棵二叉树的先序遍历结果为ABCDEF，中序遍历结果为CBAEDF，则后序遍历的结果为( )",
       "options": {
         "A": "CBEFDA",
         "B": "FEDCBA",
@@ -4224,7 +4224,7 @@
     {
       "id": "ds_0272",
       "number": 272,
-      "content": "某二叉树结点的中序序列为BDAECF，后序序列为DBEFCA，则该二叉树对应的森林包括( )棵 树。<br><img src=\"data/ds_figs/ds_0272.png\" alt=\"ds题图\" style=\"max-width:100%;margin:8px 0;border:1px solid #ddd;border-radius:4px;\" />",
+      "content": "某二叉树结点的中序序列为BDAECF，后序序列为DBEFCA，则该二叉树对应的森林包括( )棵 树。",
       "options": {
         "A": "1",
         "B": "2",
@@ -4428,7 +4428,7 @@
     {
       "id": "ds_0285",
       "number": 285,
-      "content": "设哈夫曼编码的长度不超过4，若已对两个字符编码为1和01，则还最多可对( )个字符编码。<br><img src=\"data/ds_figs/ds_0285.png\" alt=\"ds题图\" style=\"max-width:100%;margin:8px 0;border:1px solid #ddd;border-radius:4px;\" />",
+      "content": "设哈夫曼编码的长度不超过4，若已对两个字符编码为1和01，则还最多可对( )个字符编码。",
       "options": {
         "A": "2",
         "B": "3",
@@ -7167,7 +7167,7 @@
     {
       "id": "ds_0459",
       "number": 459,
-      "content": "【2019统考真题】在任意一棵非空平衡二叉树(AVL树)T<sub>1</sub>中，删除某结点v之后形成平衡二叉树T<sub>2</sub>，再将v插入T<sub>2</sub>形成平衡二叉树T<sub>3</sub>。下列关于T<sub>1</sub>与T<sub>3</sub>的叙述中，正确的是( )。<br>I.若v是T<sub>1</sub>的叶结点，则T<sub>1</sub>与T<sub>3</sub>可能不相同　II.若v不是T<sub>1</sub>的叶结点，则T<sub>1</sub>与T<sub>3</sub>一定不相同<br>III.若v不是T<sub>1</sub>的叶结点，则T<sub>1</sub>与T<sub>3</sub>一定相同<br><img src=\"data/ds_figs/ds_0459.png\" alt=\"ds题图\" style=\"max-width:100%;margin:8px 0;border:1px solid #ddd;border-radius:4px;\" />",
+      "content": "【2019统考真题】在任意一棵非空平衡二叉树(AVL树)T<sub>1</sub>中，删除某结点v之后形成平衡二叉树T<sub>2</sub>，再将v插入T<sub>2</sub>形成平衡二叉树T<sub>3</sub>。下列关于T<sub>1</sub>与T<sub>3</sub>的叙述中，正确的是( )。<br>I.若v是T<sub>1</sub>的叶结点，则T<sub>1</sub>与T<sub>3</sub>可能不相同　II.若v不是T<sub>1</sub>的叶结点，则T<sub>1</sub>与T<sub>3</sub>一定不相同<br>III.若v不是T<sub>1</sub>的叶结点，则T<sub>1</sub>与T<sub>3</sub>一定相同",
       "options": {
         "A": "仅I",
         "B": "仅II",
