@@ -886,7 +886,7 @@
     {
       "id": "ds_0057",
       "number": 57,
-      "content": "在如下图<br><img src=\"data/ds_figs/ds_0057.png\" alt=\"ds题图\" style=\"max-width:100%;margin:8px 0;border:1px solid #ddd;border-radius:4px;\" />所示的双链表中，已知指针p指向结点A，若要在结点A和C之间插入指针q所指的结 点B，则依次执行的语句序列可以是( )。",
+      "content": "在如下图<br><img src=\"data/ds_figs/ds_0057.png\" alt=\"ds题图\"  />所示的双链表中，已知指针p指向结点A，若要在结点A和C之间插入指针q所指的结 点B，则依次执行的语句序列可以是( )。",
       "options": {
         "A": "①②④③",
         "B": "④③②①",
@@ -2276,7 +2276,7 @@
     {
       "id": "ds_0147",
       "number": 147,
-      "content": "【2016统考真题】设有如下图<br><img src=\"data/ds_figs/ds_0147.png\" alt=\"ds题图\" style=\"max-width:100%;margin:8px 0;border:1px solid #ddd;border-radius:4px;\" />所示的火车车轨，入口和出口之间有n条轨道，列车的行进方向均 为从左至右，列车可驶入任意一条轨道。现有编号为1∼9的9列列车，驶入的次序依次是8，4，2，5， 3，9，1，6，7。若期望驶出的次序依次为1∼9，则n至少是( )。",
+      "content": "【2016统考真题】设有如下图<br><img src=\"data/ds_figs/ds_0147.png\" alt=\"ds题图\"  />所示的火车车轨，入口和出口之间有n条轨道，列车的行进方向均 为从左至右，列车可驶入任意一条轨道。现有编号为1∼9的9列列车，驶入的次序依次是8，4，2，5， 3，9，1，6，7。若期望驶出的次序依次为1∼9，则n至少是( )。",
       "options": {
         "A": "2",
         "B": "3",
@@ -3891,7 +3891,7 @@
     {
       "id": "ds_0251",
       "number": 251,
-      "content": "【2009统考真题】给定二叉树如右图<br><img src=\"data/ds_figs/ds_0251.png\" alt=\"ds题图\" style=\"max-width:100%;margin:8px 0;border:1px solid #ddd;border-radius:4px;\" />所示。设N代表二叉树的根，L代表根结点的左子树，R代表 根结点的右子树。若遍历后的结点序列是3175624，则其遍历方式是( )。",
+      "content": "【2009统考真题】给定二叉树如右图<br><img src=\"data/ds_figs/ds_0251.png\" alt=\"ds题图\"  />所示。设N代表二叉树的根，L代表根结点的左子树，R代表 根结点的右子树。若遍历后的结点序列是3175624，则其遍历方式是( )。",
       "options": {
         "A": "LRN",
         "B": "NRL",
@@ -3955,7 +3955,7 @@
     {
       "id": "ds_0255",
       "number": 255,
-      "content": "【2014统考真题】若对右图所示的二叉树进行中序线索化，则结点X的左右线索指向的结点分 别是( )。<br><img src=\"data/ds_figs/ds_0255.png\" alt=\"ds题图\" style=\"max-width:100%;margin:8px 0;border:1px solid #ddd;border-radius:4px;\" />",
+      "content": "【2014统考真题】若对右图所示的二叉树进行中序线索化，则结点X的左右线索指向的结点分 别是( )。<br><img src=\"data/ds_figs/ds_0255.png\" alt=\"ds题图\"  />",
       "options": {
         "A": "e,c",
         "B": "e,a",
@@ -3987,7 +3987,7 @@
     {
       "id": "ds_0257",
       "number": 257,
-      "content": "【2017统考真题】某二叉树的树形如右图<br><img src=\"data/ds_figs/ds_0257.png\" alt=\"ds题图\" style=\"max-width:100%;margin:8px 0;border:1px solid #ddd;border-radius:4px;\" />所示，其后序序列为e，a，c，b，d，g，f，树中与结点a同 层的结点是( )。",
+      "content": "【2017统考真题】某二叉树的树形如右图<br><img src=\"data/ds_figs/ds_0257.png\" alt=\"ds题图\"  />所示，其后序序列为e，a，c，b，d，g，f，树中与结点a同 层的结点是( )。",
       "options": {
         "A": "c",
         "B": "d",
@@ -4034,7 +4034,7 @@
     {
       "id": "ds_0260",
       "number": 260,
-      "content": "【2023统考真题】已知一棵二叉树的树形如右图<br><img src=\"data/ds_figs/ds_0260.png\" alt=\"ds题图\" style=\"max-width:100%;margin:8px 0;border:1px solid #ddd;border-radius:4px;\" />所示，若其后序遍历序列为 fdbeca，则其先(前)序遍历序列是( )。",
+      "content": "【2023统考真题】已知一棵二叉树的树形如右图<br><img src=\"data/ds_figs/ds_0260.png\" alt=\"ds题图\"  />所示，若其后序遍历序列为 fdbeca，则其先(前)序遍历序列是( )。",
       "options": {
         "A": "aedfbc",
         "B": "acebdf",
@@ -4256,7 +4256,7 @@
     {
       "id": "ds_0274",
       "number": 274,
-      "content": "下图是一棵逻辑上的树T，则在关于该树的存储结构的叙述中，错误的是( )。<br><img src=\"data/ds_figs/ds_0274.png\" alt=\"ds题图\" style=\"max-width:100%;margin:8px 0;border:1px solid #ddd;border-radius:4px;\" />",
+      "content": "下图是一棵逻辑上的树T，则在关于该树的存储结构的叙述中，错误的是( )。<br><img src=\"data/ds_figs/ds_0274.png\" alt=\"ds题图\"  />",
       "options": {
         "A": "若T采用双亲表示法,则有9个指向双亲的指针",
         "B": "若T采用孩子表示法,则在T中查找某个结点的孩子比双亲表示法更方便",
@@ -4913,7 +4913,7 @@
     {
       "id": "ds_0316",
       "number": 316,
-      "content": "在下图所示<br><img src=\"data/ds_figs/ds_0316.png\" alt=\"ds题图\" style=\"max-width:100%;margin:8px 0;border:1px solid #ddd;border-radius:4px;\" />的有向图中，共有( )个强连通分量。",
+      "content": "在下图所示<br><img src=\"data/ds_figs/ds_0316.png\" alt=\"ds题图\"  />的有向图中，共有( )个强连通分量。",
       "options": {
         "A": "1",
         "B": "2",
@@ -5303,7 +5303,7 @@
     {
       "id": "ds_0341",
       "number": 341,
-      "content": "【2024统考真题】若无向图G=(V，E)的邻接多重表如下图<br><img src=\"data/ds_figs/ds_0341.png\" alt=\"ds题图\" style=\"max-width:100%;margin:8px 0;border:1px solid #ddd;border-radius:4px;\" />所示，则G中顶点b与d的度分别是 ( )",
+      "content": "【2024统考真题】若无向图G=(V，E)的邻接多重表如下图<br><img src=\"data/ds_figs/ds_0341.png\" alt=\"ds题图\"  />所示，则G中顶点b与d的度分别是 ( )",
       "options": {
         "A": "0,2",
         "B": "2,4",
@@ -5429,7 +5429,7 @@
     {
       "id": "ds_0349",
       "number": 349,
-      "content": "如下图<br><img src=\"data/ds_figs/ds_0349.png\" alt=\"ds题图\" style=\"max-width:100%;margin:8px 0;border:1px solid #ddd;border-radius:4px;\" />所示，在下面的5个序列中，符合深度优先遍历的序列个数是( )。 ①.aebfdc ②.acfdeb ③.aedfcb ④.aefdb ⑤.aecfdb",
+      "content": "如下图<br><img src=\"data/ds_figs/ds_0349.png\" alt=\"ds题图\"  />所示，在下面的5个序列中，符合深度优先遍历的序列个数是( )。 ①.aebfdc ②.acfdeb ③.aedfcb ④.aefdb ⑤.aecfdb",
       "options": {
         "A": "5",
         "B": "4",
@@ -5461,7 +5461,7 @@
     {
       "id": "ds_0351",
       "number": 351,
-      "content": "一个有向图G的邻接表存储如下图<br><img src=\"data/ds_figs/ds_0351.png\" alt=\"ds题图\" style=\"max-width:100%;margin:8px 0;border:1px solid #ddd;border-radius:4px;\" />所示，从顶点1出发，对图G调用深度优先遍历所得顶点序列 是( )；按广度优先遍历所得顶点序列是( )。",
+      "content": "一个有向图G的邻接表存储如下图<br><img src=\"data/ds_figs/ds_0351.png\" alt=\"ds题图\"  />所示，从顶点1出发，对图G调用深度优先遍历所得顶点序列 是( )；按广度优先遍历所得顶点序列是( )。",
       "options": {
         "A": "125436",
         "B": "124536",
@@ -5555,7 +5555,7 @@
     {
       "id": "ds_0357",
       "number": 357,
-      "content": "【2013统考真题】下列选项中，不是下图所示<br><img src=\"data/ds_figs/ds_0357.png\" alt=\"ds题图\" style=\"max-width:100%;margin:8px 0;border:1px solid #ddd;border-radius:4px;\" />无向图的广度优先遍历序列的是( )。",
+      "content": "【2013统考真题】下列选项中，不是下图所示<br><img src=\"data/ds_figs/ds_0357.png\" alt=\"ds题图\"  />无向图的广度优先遍历序列的是( )。",
       "options": {
         "A": "h,c,a,b,d,e,g,f",
         "B": "e,a,f,g,b,h,c,d",
@@ -5587,7 +5587,7 @@
     {
       "id": "ds_0359",
       "number": 359,
-      "content": "【2016统考真题】下列选项中，不是右图所示深度优先搜索序列的是( )。<br><img src=\"data/ds_figs/ds_0359.png\" alt=\"ds题图\" style=\"max-width:100%;margin:8px 0;border:1px solid #ddd;border-radius:4px;\" />",
+      "content": "【2016统考真题】下列选项中，不是右图所示深度优先搜索序列的是( )。<br><img src=\"data/ds_figs/ds_0359.png\" alt=\"ds题图\"  />",
       "options": {
         "A": "V<sub>1</sub>,V<sub>5</sub>,V<sub>4</sub>,V<sub>3</sub>,V<sub>2</sub>",
         "B": "V<sub>1</sub>,V<sub>3</sub>,V<sub>2</sub>,V<sub>5</sub>,V<sub>4</sub>",
@@ -5840,7 +5840,7 @@
     {
       "id": "ds_0375",
       "number": 375,
-      "content": "下图所示<br><img src=\"data/ds_figs/ds_0375.png\" alt=\"ds题图\" style=\"max-width:100%;margin:8px 0;border:1px solid #ddd;border-radius:4px;\" />有向图的所有拓扑序列共有( )个。",
+      "content": "下图所示<br><img src=\"data/ds_figs/ds_0375.png\" alt=\"ds题图\"  />有向图的所有拓扑序列共有( )个。",
       "options": {
         "A": "4",
         "B": "6",
@@ -5933,7 +5933,7 @@
     {
       "id": "ds_0381",
       "number": 381,
-      "content": "下图所示<br><img src=\"data/ds_figs/ds_0381.png\" alt=\"ds题图\" style=\"max-width:100%;margin:8px 0;border:1px solid #ddd;border-radius:4px;\" />的AOE网中，关键路径长度为( )。",
+      "content": "下图所示<br><img src=\"data/ds_figs/ds_0381.png\" alt=\"ds题图\"  />的AOE网中，关键路径长度为( )。",
       "options": {
         "A": "16",
         "B": "17",
@@ -6013,7 +6013,7 @@
     {
       "id": "ds_0386",
       "number": 386,
-      "content": "【2010统考真题】对下图进行拓扑排序，可得不同拓扑序列的个数是( )。<br><img src=\"data/ds_figs/ds_0386.png\" alt=\"ds题图\" style=\"max-width:100%;margin:8px 0;border:1px solid #ddd;border-radius:4px;\" />",
+      "content": "【2010统考真题】对下图进行拓扑排序，可得不同拓扑序列的个数是( )。<br><img src=\"data/ds_figs/ds_0386.png\" alt=\"ds题图\"  />",
       "options": {
         "A": "4",
         "B": "3",
@@ -6045,7 +6045,7 @@
     {
       "id": "ds_0388",
       "number": 388,
-      "content": "【2012统考真题】对右图所示的有向带权图，若采用Dijkstra算法求从源点a到其他各顶点的最短 路径，则得到的第一条最短路径的目标顶点是b，第二条最短路径的目标顶点是c，后续得到的其余各 最短路径的目标顶点依次是( )。<br><img src=\"data/ds_figs/ds_0388.png\" alt=\"ds题图\" style=\"max-width:100%;margin:8px 0;border:1px solid #ddd;border-radius:4px;\" />",
+      "content": "【2012统考真题】对右图所示的有向带权图，若采用Dijkstra算法求从源点a到其他各顶点的最短 路径，则得到的第一条最短路径的目标顶点是b，第二条最短路径的目标顶点是c，后续得到的其余各 最短路径的目标顶点依次是( )。<br><img src=\"data/ds_figs/ds_0388.png\" alt=\"ds题图\"  />",
       "options": {
         "A": "d,e,f",
         "B": "e,d,f",
@@ -6077,7 +6077,7 @@
     {
       "id": "ds_0390",
       "number": 390,
-      "content": "【2013统考真题】下列AOE网表示一项包含8个活动的工程。通过同时加快若干活动的进度， 可缩短整个工程的工期。在下列选项中，加快其进度就可缩短工程工期的是( )。<br><img src=\"data/ds_figs/ds_0390.png\" alt=\"2013AOE网\" style=\"max-width:100%;margin:8px 0;border:1px solid #ddd;border-radius:4px;\" />",
+      "content": "【2013统考真题】下列AOE网表示一项包含8个活动的工程。通过同时加快若干活动的进度， 可缩短整个工程的工期。在下列选项中，加快其进度就可缩短工程工期的是( )。<br><img src=\"data/ds_figs/ds_0390.png\" alt=\"2013AOE网\"  />",
       "options": {
         "A": "c和e",
         "B": "d和c",
@@ -6093,7 +6093,7 @@
     {
       "id": "ds_0391",
       "number": 391,
-      "content": "【2014统考真题】对右图所示的有向图进行拓扑排序，得到的拓扑序列可能是( )。<br><img src=\"data/ds_figs/ds_0391.png\" alt=\"ds题图\" style=\"max-width:100%;margin:8px 0;border:1px solid #ddd;border-radius:4px;\" />",
+      "content": "【2014统考真题】对右图所示的有向图进行拓扑排序，得到的拓扑序列可能是( )。<br><img src=\"data/ds_figs/ds_0391.png\" alt=\"ds题图\"  />",
       "options": {
         "A": "3,1,2,4,5,6",
         "B": "3,1,2,4,6,5",
@@ -6109,7 +6109,7 @@
     {
       "id": "ds_0392",
       "number": 392,
-      "content": "【2015统考真题】求右图所示带权图的最小(代价)生成树时，可能是Kruskal算法第2次选中但 不是Prim算法(从V 开始)第2次选中的边是( )。 4<br><img src=\"data/ds_figs/ds_0392.png\" alt=\"ds题图\" style=\"max-width:100%;margin:8px 0;border:1px solid #ddd;border-radius:4px;\" />",
+      "content": "【2015统考真题】求右图所示带权图的最小(代价)生成树时，可能是Kruskal算法第2次选中但 不是Prim算法(从V 开始)第2次选中的边是( )。 4<br><img src=\"data/ds_figs/ds_0392.png\" alt=\"ds题图\"  />",
       "options": {
         "A": "(V<sub>1</sub>,V<sub>3</sub>)",
         "B": "(V<sub>1</sub>,V<sub>4</sub>)",
@@ -6140,7 +6140,7 @@
     {
       "id": "ds_0394",
       "number": 394,
-      "content": "【2016统考真题】使用Dijkstra算法求下图中从顶点1到其他各顶点的最短路径，依次得到的各 最短路径的目标顶点是( )。<br><img src=\"data/ds_figs/ds_0394.png\" alt=\"ds题图\" style=\"max-width:100%;margin:8px 0;border:1px solid #ddd;border-radius:4px;\" />",
+      "content": "【2016统考真题】使用Dijkstra算法求下图中从顶点1到其他各顶点的最短路径，依次得到的各 最短路径的目标顶点是( )。<br><img src=\"data/ds_figs/ds_0394.png\" alt=\"ds题图\"  />",
       "options": {
         "A": "5,2,3,4,6",
         "B": "5,2,3,6,4",
@@ -6172,7 +6172,7 @@
     {
       "id": "ds_0396",
       "number": 396,
-      "content": "【2018统考真题】下列选项中，不是右侧有向图的拓扑序列的是( )。<br><img src=\"data/ds_figs/ds_0396.png\" alt=\"2018拓扑有向图\" style=\"max-width:100%;margin:8px 0;border:1px solid #ddd;border-radius:4px;\" />",
+      "content": "【2018统考真题】下列选项中，不是右侧有向图的拓扑序列的是( )。<br><img src=\"data/ds_figs/ds_0396.png\" alt=\"2018拓扑有向图\"  />",
       "options": {
         "A": "1,5,2,3,6,4",
         "B": "5,1,2,6,3,4",
@@ -6188,7 +6188,7 @@
     {
       "id": "ds_0397",
       "number": 397,
-      "content": "【2019统考真题】下图所示的AOE网表示<br><img src=\"data/ds_figs/ds_0397.png\" alt=\"ds题图\" style=\"max-width:100%;margin:8px 0;border:1px solid #ddd;border-radius:4px;\" />一项包含8个活动的工程。活动d的最早开始时间和 最迟开始时间分别是( )。",
+      "content": "【2019统考真题】下图所示的AOE网表示<br><img src=\"data/ds_figs/ds_0397.png\" alt=\"ds题图\"  />一项包含8个活动的工程。活动d的最早开始时间和 最迟开始时间分别是( )。",
       "options": {
         "A": "3和7",
         "B": "12和12",
@@ -6220,7 +6220,7 @@
     {
       "id": "ds_0399",
       "number": 399,
-      "content": "【2020统考真题】已知无向图G如右所示，使用Kruskal算法求图G的最小生成树，加到最小生成 树中的边依次是( )。<br><img src=\"data/ds_figs/ds_0399.png\" alt=\"ds题图\" style=\"max-width:100%;margin:8px 0;border:1px solid #ddd;border-radius:4px;\" />",
+      "content": "【2020统考真题】已知无向图G如右所示，使用Kruskal算法求图G的最小生成树，加到最小生成 树中的边依次是( )。<br><img src=\"data/ds_figs/ds_0399.png\" alt=\"ds题图\"  />",
       "options": {
         "A": "(b,f),(b,d),(a,e),(c,e),(b,e)",
         "B": "(b,f),(b,d),(b,e),(a,e),(c,e)",
@@ -6268,7 +6268,7 @@
     {
       "id": "ds_0402",
       "number": 402,
-      "content": "【2021统考真题】给定右图所示有向图，该图的拓扑有序序列的个数是( )。<br><img src=\"data/ds_figs/ds_0402.png\" alt=\"ds题图\" style=\"max-width:100%;margin:8px 0;border:1px solid #ddd;border-radius:4px;\" />",
+      "content": "【2021统考真题】给定右图所示有向图，该图的拓扑有序序列的个数是( )。<br><img src=\"data/ds_figs/ds_0402.png\" alt=\"ds题图\"  />",
       "options": {
         "A": "1",
         "B": "2",
@@ -6283,7 +6283,7 @@
     {
       "id": "ds_0403",
       "number": 403,
-      "content": "【2021统考真题】使用Dijkstra算法求下图中从顶点1到其余各顶点的最短路径，将当前找到的从 顶点1到顶点2，3，4，5的最短路径长度保存在数组dist中，求出第二条最短路径后，dist中的内容 更新为( )。<br><img src=\"data/ds_figs/ds_0403.png\" alt=\"ds题图\" style=\"max-width:100%;margin:8px 0;border:1px solid #ddd;border-radius:4px;\" />",
+      "content": "【2021统考真题】使用Dijkstra算法求下图中从顶点1到其余各顶点的最短路径，将当前找到的从 顶点1到顶点2，3，4，5的最短路径长度保存在数组dist中，求出第二条最短路径后，dist中的内容 更新为( )。<br><img src=\"data/ds_figs/ds_0403.png\" alt=\"ds题图\"  />",
       "options": {
         "A": "26,3,14,6",
         "B": "25,3,14,6",
@@ -6299,7 +6299,7 @@
     {
       "id": "ds_0404",
       "number": 404,
-      "content": "【2022统考真题】下图是一个有10个活动的AOE网<img src=\"data/ds_figs/ds_0404.jpeg\" alt=\"ds题图\" style=\"max-width:100%;margin:8px 0;border:1px solid #ddd;border-radius:4px;\" />，时间余量最大的活动是( )。",
+      "content": "【2022统考真题】下图是一个有10个活动的AOE网<img src=\"data/ds_figs/ds_0404.jpeg\" alt=\"ds题图\"  />，时间余量最大的活动是( )。",
       "options": {
         "A": "c",
         "B": "g",
@@ -7039,7 +7039,7 @@
     {
       "id": "ds_0451",
       "number": 451,
-      "content": "在下图所示<br><img src=\"data/ds_figs/ds_0451.png\" alt=\"ds题图\" style=\"max-width:100%;margin:8px 0;border:1px solid #ddd;border-radius:4px;\" />的红黑树中插入结点2且染成红色后，则下一步应进行的操作是( )。",
+      "content": "在下图所示<br><img src=\"data/ds_figs/ds_0451.png\" alt=\"ds题图\"  />的红黑树中插入结点2且染成红色后，则下一步应进行的操作是( )。",
       "options": {
         "A": "左旋",
         "B": "右旋",
@@ -7055,7 +7055,7 @@
     {
       "id": "ds_0452",
       "number": 452,
-      "content": "【2010统考真题】在下图所示<br><img src=\"data/ds_figs/ds_0452.png\" alt=\"ds题图\" style=\"max-width:100%;margin:8px 0;border:1px solid #ddd;border-radius:4px;\" />的平衡二叉树中插入关键字48后得到一棵新平衡二叉树，在新平衡 二叉树中，关键字37所在结点的左右子结点中保存的关键字分别是( )。",
+      "content": "【2010统考真题】在下图所示<br><img src=\"data/ds_figs/ds_0452.png\" alt=\"ds题图\"  />的平衡二叉树中插入关键字48后得到一棵新平衡二叉树，在新平衡 二叉树中，关键字37所在结点的左右子结点中保存的关键字分别是( )。",
       "options": {
         "A": "13,48",
         "B": "24,48",
@@ -7151,7 +7151,7 @@
     {
       "id": "ds_0458",
       "number": 458,
-      "content": "【2018统考真题】已知二叉排序树如右图<br><img src=\"data/ds_figs/ds_0458.png\" alt=\"ds题图\" style=\"max-width:100%;margin:8px 0;border:1px solid #ddd;border-radius:4px;\" />所示，元素之间应满足的大小关系是( )。",
+      "content": "【2018统考真题】已知二叉排序树如右图<br><img src=\"data/ds_figs/ds_0458.png\" alt=\"ds题图\"  />所示，元素之间应满足的大小关系是( )。",
       "options": {
         "A": "x<sub>1</sub>&lt;x<sub>2</sub>&lt;x<sub>5</sub>",
         "B": "x<sub>1</sub>&lt;x<sub>4</sub>&lt;x<sub>5</sub>",
@@ -7183,7 +7183,7 @@
     {
       "id": "ds_0460",
       "number": 460,
-      "content": "【2020统考真题】下列给定的关键字输入序列中，不能生成右边二叉排序树的是( )。<br><img src=\"data/ds_figs/ds_0460.png\" alt=\"ds题图\" style=\"max-width:100%;margin:8px 0;border:1px solid #ddd;border-radius:4px;\" />",
+      "content": "【2020统考真题】下列给定的关键字输入序列中，不能生成右边二叉排序树的是( )。<br><img src=\"data/ds_figs/ds_0460.png\" alt=\"ds题图\"  />",
       "options": {
         "A": "4,5,2,1,3",
         "B": "4,5,1,2,3",
@@ -7199,7 +7199,7 @@
     {
       "id": "ds_0461",
       "number": 461,
-      "content": "【2021统考真题】给定平衡二叉树如右图<br><img src=\"data/ds_figs/ds_0461.png\" alt=\"ds题图\" style=\"max-width:100%;margin:8px 0;border:1px solid #ddd;border-radius:4px;\" />所示，插入关键字23后，根中的关键字是( )。",
+      "content": "【2021统考真题】给定平衡二叉树如右图<br><img src=\"data/ds_figs/ds_0461.png\" alt=\"ds题图\"  />所示，插入关键字23后，根中的关键字是( )。",
       "options": {
         "A": "16",
         "B": "20",
@@ -7215,7 +7215,7 @@
     {
       "id": "ds_0462",
       "number": 462,
-      "content": "【2024统考真题】一棵二叉搜索树如右图<br><img src=\"data/ds_figs/ds_0462.png\" alt=\"ds题图\" style=\"max-width:100%;margin:8px 0;border:1px solid #ddd;border-radius:4px;\" />所示，k<sub>1</sub>、k<sub>2</sub>、k<sub>3</sub>分别是对应结点中保存的关键字。子树T的任一结点中保存的关键字x满足的是( )。",
+      "content": "【2024统考真题】一棵二叉搜索树如右图<br><img src=\"data/ds_figs/ds_0462.png\" alt=\"ds题图\"  />所示，k<sub>1</sub>、k<sub>2</sub>、k<sub>3</sub>分别是对应结点中保存的关键字。子树T的任一结点中保存的关键字x满足的是( )。",
       "options": {
         "A": "x&lt;k<sub>1</sub>",
         "B": "x>k<sub>2</sub>",
@@ -7230,7 +7230,7 @@
     {
       "id": "ds_0463",
       "number": 463,
-      "content": "右图所示是一棵( )。<br><img src=\"data/ds_figs/ds_0463.png\" alt=\"ds题图\" style=\"max-width:100%;margin:8px 0;border:1px solid #ddd;border-radius:4px;\" />",
+      "content": "右图所示是一棵( )。<br><img src=\"data/ds_figs/ds_0463.png\" alt=\"ds题图\"  />",
       "options": {
         "A": "4阶B树",
         "B": "3阶B树",
@@ -7450,7 +7450,7 @@
     {
       "id": "ds_0477",
       "number": 477,
-      "content": "【2012统考真题】已知一棵3阶B树，如下图所示<img src=\"data/ds_figs/ds_0477.jpeg\" alt=\"ds题图\" style=\"max-width:100%;margin:8px 0;border:1px solid #ddd;border-radius:4px;\" />。删除关键字78得到一棵新B树，其最右叶结点 中的关键字是( )。",
+      "content": "【2012统考真题】已知一棵3阶B树，如下图所示<img src=\"data/ds_figs/ds_0477.jpeg\" alt=\"ds题图\"  />。删除关键字78得到一棵新B树，其最右叶结点 中的关键字是( )。",
       "options": {
         "A": "60",
         "B": "60,62",
@@ -7574,7 +7574,7 @@
     {
       "id": "ds_0485",
       "number": 485,
-      "content": "【2022统考真题】在下图所示<br><img src=\"data/ds_figs/ds_0485.png\" alt=\"ds题图\" style=\"max-width:100%;margin:8px 0;border:1px solid #ddd;border-radius:4px;\" />的5阶B树T中，删除关键字260之后需要进行必要的调整，得到新的B树T<sub>1</sub>。下列选项中，不可能是T<sub>1</sub>根结点中关键字序列的是( )。",
+      "content": "【2022统考真题】在下图所示<br><img src=\"data/ds_figs/ds_0485.png\" alt=\"ds题图\"  />的5阶B树T中，删除关键字260之后需要进行必要的调整，得到新的B树T<sub>1</sub>。下列选项中，不可能是T<sub>1</sub>根结点中关键字序列的是( )。",
       "options": {
         "A": "60,90,280",
         "B": "60,90,350",

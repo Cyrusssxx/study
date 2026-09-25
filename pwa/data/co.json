@@ -1420,7 +1420,7 @@
     {
       "id": "co_0091",
       "number": 91,
-      "content": "下图是实现32位补码一位乘法的逻辑结构图<img src=\"data/co_figs/co_0091.png\" alt=\"co题图\" style=\"max-width:100%;margin:8px 0;border:1px solid #ddd;border-radius:4px;\" />，下列说法中正确的是( )",
+      "content": "下图是实现32位补码一位乘法的逻辑结构图<img src=\"data/co_figs/co_0091.png\" alt=\"co题图\"  />，下列说法中正确的是( )",
       "options": {
         "A": "32位无符号整数的乘法电路和该图没有区别",
         "B": "在执行过程中，ALU要么做加法，要么做减法，不可能执行空操作",
@@ -1436,7 +1436,7 @@
     {
       "id": "co_0092",
       "number": 92,
-      "content": "某计算机采用下图所示的补码除法器<img src=\"data/co_figs/co_0092.png\" alt=\"co题图\" style=\"max-width:100%;margin:8px 0;border:1px solid #ddd;border-radius:4px;\" />执行32位补码整数除法运算，当除数寄存器Y与余数/商寄 存器的初始值为( )时，除法执行时间最短(Y、Q均为补码表示)",
+      "content": "某计算机采用下图所示的补码除法器<img src=\"data/co_figs/co_0092.png\" alt=\"co题图\"  />执行32位补码整数除法运算，当除数寄存器Y与余数/商寄 存器的初始值为( )时，除法执行时间最短(Y、Q均为补码表示)",
       "options": {
         "A": "Y=FFFF FFFF、Q=80000000",
         "B": "Y=80000000、Q=FFFF FFFF",
@@ -6508,7 +6508,7 @@
     {
       "id": "co_0417",
       "number": 417,
-      "content": "下图是某微程序控制器的基本结构<img src=\"data/co_figs/co_0417.jpeg\" alt=\"co题图\" style=\"max-width:100%;margin:8px 0;border:1px solid #ddd;border-radius:4px;\" />，μPC是一个8位寄存器，μIR是一个32位寄存器，一条机器指 令平均由4条不同的微指令组成(不含取指部分)，则下列描述中错误的是( )",
+      "content": "下图是某微程序控制器的基本结构<img src=\"data/co_figs/co_0417.jpeg\" alt=\"co题图\"  />，μPC是一个8位寄存器，μIR是一个32位寄存器，一条机器指 令平均由4条不同的微指令组成(不含取指部分)，则下列描述中错误的是( )",
       "options": {
         "A": "微指令的地址形成方式是增量法",
         "B": "条件码来自标志寄存器",
