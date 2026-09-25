@@ -65,9 +65,12 @@ function fmtContent(html) {
 // ============ 选项文本：转义 < > & 为文字，但保留合法下标/上标标签 <sub>/<sup> ============
 // 题干里 "则z<x<y" 这类不等式若直接进 innerHTML，浏览器会把 <x 当成标签吃掉导致选项截断。
 // 选项里只有 sub/sup 是预期的合法 HTML，其余一律转义为可见文字。
+// 注意：数据里部分选项存的已是转义实体（"x1&lt;x2"），必须先还原成字面字符再统一转义；
+// 否则 & → &amp; 后变成 &amp;lt;，页面会把 "&lt;" 原样显示出来（ds_0458 等 25 个选项踩过）。
 function fmtOptionText(raw) {
     if (raw == null) return '';
     let s = String(raw);
+    s = s.replace(/&amp;/gi, '&').replace(/&lt;/gi, '<').replace(/&gt;/gi, '>'); // 先还原已存实体（&amp; 必须最先）
     s = s.replace(/<(\/?)(sub|sup)>/gi, '\uE000$1$2\uE000'); // 保护下标/上标
     s = s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
     s = s.replace(/\uE000(\/?)(sub|sup)\uE000/gi, '<$1$2>');   // 还原下标/上标

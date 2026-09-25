@@ -7159,7 +7159,7 @@
         "D": "x<sub>4</sub>&lt;x<sub>3</sub>&lt;x<sub>5</sub>"
       },
       "answer": "C",
-      "explanation": "<p>根据二叉排序树的特性：中序遍历（LNR）得到的是一个递增序列。图中二叉排序树的中序遍历序列为x<sub>1</sub>，X<sub>3</sub>，X<sub>5</sub>，X<sub>4</sub>，X<sub>2</sub>，可知x<sub>3</sub>&lt;x5&lt;x4。</p>",
+      "explanation": "<p>根据二叉排序树的特性：中序遍历（LNR）得到的是一个递增序列。图中二叉排序树的中序遍历序列为 x<sub>1</sub>、x<sub>3</sub>、x<sub>5</sub>、x<sub>4</sub>、x<sub>2</sub>，即 x<sub>1</sub>&lt;x<sub>3</sub>&lt;x<sub>5</sub>&lt;x<sub>4</sub>&lt;x<sub>2</sub>，故必有 x<sub>3</sub>&lt;x<sub>5</sub>&lt;x<sub>4</sub>，选 C。</p><p>逐项排除：A 中 x<sub>5</sub> 位于 x<sub>2</sub> 的左子树内，应有 x<sub>5</sub>&lt;x<sub>2</sub>，而非 x<sub>2</sub>&lt;x<sub>5</sub>；B 中 x<sub>5</sub> 是 x<sub>4</sub> 的左孩子，应有 x<sub>5</sub>&lt;x<sub>4</sub>，而非 x<sub>4</sub>&lt;x<sub>5</sub>；D 中 x<sub>4</sub> 位于 x<sub>3</sub> 的右子树内，应有 x<sub>3</sub>&lt;x<sub>4</sub>，而非 x<sub>4</sub>&lt;x<sub>3</sub>。</p>",
       "chapter": "第7章 查找",
       "section": "7.3 树形查找",
       "subsection": "7.3.1 二叉排序树（BST）"

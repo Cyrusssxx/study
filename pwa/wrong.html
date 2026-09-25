@@ -242,7 +242,8 @@
                 lines.push('**选项**');
                 lines.push('');
                 Object.entries(q.options).forEach(([k, v]) => {
-                    lines.push(`- **${k}.** ${stripHtmlForExport(v)}`);
+                    // 先走 fmtOptionText：把字面 < > & 转成实体，否则 innerHTML 会把 "z<x<y" 的 <x 当标签吃掉
+                    lines.push(`- **${k}.** ${stripHtmlForExport(fmtOptionText(v))}`);
                 });
                 lines.push('');
             }
