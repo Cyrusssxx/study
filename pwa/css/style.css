@@ -5703,3 +5703,44 @@ a.chapter-badge-link:hover {
 .daily-hist-empty { font-size: 0.85rem; color: var(--text-light); padding: 8px 0; }
 
 .dark .daily-hist-btn:hover { background: #1d3350; }
+
+/* ==================== 每日一题 · 卡片内直接作答 ==================== */
+.daily-opts { display: flex; flex-direction: column; gap: 4px; margin: 6px 0; }
+.daily-opt {
+    display: flex; gap: 6px; align-items: flex-start; font-size: 0.84rem; line-height: 1.55;
+    color: var(--text); cursor: pointer; padding: 3px 5px; border-radius: 4px;
+}
+.daily-opt:hover { background: rgba(128, 128, 128, .06); }
+.daily-opt input { margin: 3px 0 0; accent-color: var(--primary); }
+.daily-opt-key { flex: none; font-weight: 600; color: var(--text-light); }
+.daily-opt-text { flex: 1; word-break: break-word; }
+.daily-opt.opt-correct { background: rgba(46, 125, 50, .13); }
+.daily-opt.opt-wrong { background: rgba(220, 53, 69, .13); }
+.daily-multi-hint { font-size: 0.78rem; color: var(--text-light); margin: 4px 0; }
+.daily-result { font-size: 0.82rem; padding: 4px 8px; border-radius: 4px; margin: 4px 0; line-height: 1.5; }
+.daily-result.ok { background: rgba(46, 125, 50, .14); color: #2e7d32; }
+.daily-result.bad { background: rgba(220, 53, 69, .12); color: #c62828; }
+.daily-result.info { background: rgba(128, 128, 128, .12); color: var(--text-light); }
+.daily-submit, .daily-redo {
+    align-self: flex-start; margin-top: 6px; font-size: 0.78rem; padding: 3px 12px;
+    border-radius: 999px; border: 1px solid var(--primary); color: var(--primary);
+    background: none; cursor: pointer; transition: background .15s, color .15s;
+}
+.daily-submit:hover, .daily-redo:hover { background: #eef5fd; }
+.daily-redo { border-color: var(--border); color: var(--text-light); }
+.daily-fold { margin-top: 6px; }
+.daily-fold > summary {
+    font-size: 0.78rem; color: var(--primary); cursor: pointer; list-style: none; user-select: none;
+}
+.daily-fold > summary::-webkit-details-marker { display: none; }
+.daily-fold-body {
+    font-size: 0.8rem; line-height: 1.7; color: var(--text-light);
+    padding: 6px 0 2px; margin-top: 4px; border-top: 1px dashed var(--border);
+}
+.daily-note > summary { color: #b45309; }
+.daily-note-img { display: block; max-width: 100%; border-radius: 4px; margin-top: 5px; }
+
+.dark .daily-submit:hover, .dark .daily-redo:hover { background: #1d3350; }
+.dark .daily-result.ok { color: #81c784; }
+.dark .daily-result.bad { color: #ef9a9a; }
+.dark .daily-note > summary { color: #e0b45c; }

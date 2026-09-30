@@ -92,7 +92,8 @@ w.eval('(function(){' + DAILY + '})()');
     const html = w.document.getElementById('dailySection').innerHTML;
     check('渲染出每日一题卡片', /class="daily-card"/.test(html), true);
     check('含科目名 数据结构', /数据结构/.test(html), true);
-    check('含跳转链接（收藏模式+定位）', /quiz\.html\?subject=ds(&amp;|&)mode=favorite(&amp;|&)goto=/.test(html), true);
+    check('内嵌作答：含选项单选', /name="dq-ds"/.test(html), true);
+    check('内嵌作答：含提交按钮', /submitDaily\('ds'\)/.test(html), true);
     check('无收藏门显示暂无收藏题', /暂无收藏题/.test(html), true);
     const qTexts = [...w.document.querySelectorAll('.daily-q')].map(e => e.textContent).join('');
     check('题干摘要已去标签（无尖括号）', /[<>]/.test(qTexts), false);
@@ -135,6 +136,35 @@ w.eval('(function(){' + DAILY + '})()');
     check('弹层含今日标记', /今天/.test(ov.innerHTML), true);
     w.closeDailyHistory();
     check('关闭后隐藏', w.document.getElementById('dailyHistOverlay').hidden, true);
+
+    console.log('\n--- 内嵌作答（不跳页） ---');
+    const radio = w.document.querySelector('input[name="dq-ds"]');
+    check('选项可点选', !!radio, true);
+    radio.checked = true;
+    await w.submitDaily('ds');
+    const html2 = w.document.getElementById('dailySection').innerHTML;
+    check('提交后原地显示判题结果', /daily-result/.test(html2), true);
+    check('未跳页仍在同一卡片内', /class="daily-card"/.test(html2), true);
+    check('作答状态已记录到本地', !!(todayOf().picks.ds && todayOf().picks.ds.answered), true);
+    w.redoDaily('ds');
+    check('重新作答可清空状态', todayOf().picks.ds.answered === null, true);
+
+    console.log('\n--- 笔记：每日一题默认不展开 ---');
+    const fake = { id: 'x1', content: '笔记题', options: { A: '甲', B: '乙' }, answer: 'A', note: '这是笔记', chapter: '', section: '' };
+    const nh = w.DailyPick.itemHtml('ds', fake);
+    check('渲染出笔记折叠', /daily-note/.test(nh), true);
+    check('笔记默认不展开（无 open）', /<details class="daily-fold daily-note">/.test(nh), true);
+    const noNote = w.DailyPick.itemHtml('ds', { id: 'x2', content: '无笔记', options: { A: '甲' }, answer: 'A' });
+    check('无笔记时不显示笔记折叠', /daily-note/.test(noNote), false);
+
+    console.log('\n--- 抽题优先「没做过」的收藏题 ---');
+    await w.api('/api/submit', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ question_id: 'ds_0001', answer: 'A' })
+    });
+    w.localStorage.removeItem('daily_pick_v1');
+    const dn = await w.DailyPick.rollToday();
+    check('避开已作答的题', dn.picks.ds.id !== 'ds_0001', true);
 
     console.log(`\nPASS ${pass} / FAIL ${fail}`);
     process.exit(fail ? 1 : 0);
