@@ -5744,3 +5744,80 @@ a.chapter-badge-link:hover {
 .dark .daily-result.ok { color: #81c784; }
 .dark .daily-result.bad { color: #ef9a9a; }
 .dark .daily-note > summary { color: #e0b45c; }
+
+/* ==================== 记忆卡（cards.html）——移动端优先 ==================== */
+.fc-page { overflow-x: hidden; -webkit-text-size-adjust: 100%; }
+.fc-wrap {
+    max-width: 680px; margin: 0 auto; display: flex; flex-direction: column;
+    padding: 12px 12px calc(92px + env(safe-area-inset-bottom));
+    min-height: calc(100vh - 60px); box-sizing: border-box;
+}
+.fc-chips { display: flex; gap: 8px; flex-wrap: wrap; justify-content: center; }
+.fc-chip {
+    padding: 6px 13px; border-radius: 999px; border: 1px solid var(--border);
+    background: none; color: var(--text-light); font-size: 0.84rem; cursor: pointer;
+    min-height: 34px; touch-action: manipulation;
+}
+.fc-chip.on { background: var(--primary); color: #fff; border-color: transparent; font-weight: 600; }
+.fc-progress { display: flex; align-items: center; gap: 10px; margin: 10px 0 8px; font-size: 0.78rem; color: var(--text-light); }
+.fc-bar { flex: 1; height: 5px; background: rgba(128, 128, 128, .18); border-radius: 999px; overflow: hidden; }
+.fc-bar-fill { height: 100%; width: 0; background: var(--primary); border-radius: 999px; transition: width .2s ease; }
+
+/* 卡片舞台：随视口伸缩，3D 翻转 */
+.fc-stage { flex: 1; display: flex; align-items: center; justify-content: center; perspective: 1200px; padding: 6px 0; }
+.fc-card {
+    position: relative; width: 100%; min-height: 46vh; max-height: 62vh;
+    transform-style: preserve-3d; transition: transform .38s ease; cursor: pointer;
+    touch-action: manipulation;
+}
+.fc-card.flipped { transform: rotateY(180deg); }
+.fc-face {
+    position: absolute; inset: 0; overflow-y: auto; -webkit-overflow-scrolling: touch;
+    backface-visibility: hidden; -webkit-backface-visibility: hidden;
+    border: 1px solid var(--border); border-radius: 12px;
+    background: rgba(var(--card-rgb), var(--ui-alpha));
+    padding: 18px 16px; display: flex; flex-direction: column; box-sizing: border-box;
+}
+.fc-back { transform: rotateY(180deg); }
+.fc-chapter { font-size: 0.75rem; color: var(--text-light); line-height: 1.5; }
+.fc-title { font-size: 1.18rem; font-weight: 700; line-height: 1.55; margin: 10px 0; color: var(--text); }
+.fc-hint { margin-top: auto; padding-top: 10px; font-size: 0.78rem; color: var(--text-light); text-align: center; }
+.fc-pts { margin: 10px 0 0; padding-left: 20px; font-size: 0.93rem; line-height: 1.8; color: var(--text); }
+.fc-pts li { margin-bottom: 7px; }
+.fc-tip {
+    margin-top: 12px; font-size: 0.83rem; line-height: 1.65; color: #b45309;
+    background: rgba(234, 88, 12, .09); border-radius: 6px; padding: 9px 11px;
+}
+
+/* 底部固定操作栏：大触控区 + iOS 安全区 */
+.fc-actions {
+    position: fixed; left: 0; right: 0; bottom: 0; z-index: 50;
+    display: flex; gap: 8px; padding: 10px 12px calc(10px + env(safe-area-inset-bottom));
+    background: rgba(var(--card-rgb), .96);
+    border-top: 1px solid var(--border);
+    backdrop-filter: blur(6px);
+}
+.fc-btn {
+    flex: 1; min-height: 48px; border-radius: 10px; border: 1px solid var(--border);
+    background: none; color: var(--text); font-size: 0.92rem; cursor: pointer;
+    touch-action: manipulation; -webkit-tap-highlight-color: transparent;
+}
+.fc-btn:active { background: rgba(128, 128, 128, .1); }
+.fc-btn-main { flex: 1.5; border-color: var(--primary); color: var(--primary); font-weight: 600; }
+.fc-btn.on { background: rgba(46, 125, 50, .14); border-color: #2e7d32; color: #2e7d32; }
+
+/* 窄屏（手机）：字号与卡片高度微调 */
+@media (max-width: 600px) {
+    .fc-wrap { padding: 10px 10px calc(92px + env(safe-area-inset-bottom)); }
+    .fc-title { font-size: 1.08rem; margin: 8px 0; }
+    .fc-pts { font-size: 0.9rem; line-height: 1.78; padding-left: 18px; }
+    .fc-card { min-height: 52vh; max-height: 66vh; }
+    .fc-chip { font-size: 0.8rem; padding: 5px 11px; }
+}
+/* 横屏矮屏：压缩卡片高度，保证按钮可见 */
+@media (max-height: 520px) {
+    .fc-card { min-height: 40vh; max-height: 56vh; }
+    .fc-title { font-size: 1rem; }
+}
+.dark .fc-tip { color: #e0b45c; background: rgba(251, 191, 36, .1); }
+.dark .fc-btn.on { color: #81c784; border-color: #3c5c40; }
