@@ -86,19 +86,19 @@ async function run() {
   await sleep(700);
   console.log('--- 卡片块锚点与按钮位置 ---');
   const cards = [...d.querySelectorAll('.daka-card')];
-  check('打卡卡片渲染数', cards.length, 62);
+  check('打卡卡片渲染数', cards.length, 65);
   const blks = [...d.querySelectorAll('[data-blk]')];
-  check('每张卡片都有 data-blk', blks.length, 62);
+  check('每张卡片都有 data-blk', blks.length, 65);
   check('块 id = 题目 id（重渲染稳定）', blks.every(el => /^ds_daka_\d/.test(el.dataset.blk)), true);
-  check('块 id 唯一', new Set(blks.map(b => b.dataset.blk)).size, 62);
+  check('块 id 唯一', new Set(blks.map(b => b.dataset.blk)).size, 65);
 
   const notes = [...d.querySelectorAll('.daka-notes')];
-  check('每张卡片都有笔记区 .daka-notes', notes.length, 62);
+  check('每张卡片都有笔记区 .daka-notes', notes.length, 65);
   check('笔记区位于「考点分析·易错点·讲义解法」折叠标题上方',
     cards.every(c => before(c.querySelector('.daka-notes'), c.querySelector('details.daka-answer'))), true);
 
-  check('每张卡片都有「📝 批注」按钮', d.querySelectorAll('button.anno-toggle').length, 62);
-  check('批注按钮位于折叠标题 summary 内', d.querySelectorAll('summary button.anno-toggle').length, 62);
+  check('每张卡片都有「📝 批注」按钮', d.querySelectorAll('button.anno-toggle').length, 65);
+  check('批注按钮位于折叠标题 summary 内', d.querySelectorAll('summary button.anno-toggle').length, 65);
   check('批注按钮不在卡片头部', d.querySelectorAll('.daka-card-header button.anno-toggle').length, 0);
   const realCard = d.getElementById('card-ds_daka_6_4_6_8');
   const sum = realCard && realCard.querySelector('summary');

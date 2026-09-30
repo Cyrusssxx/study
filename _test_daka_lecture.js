@@ -38,19 +38,19 @@ const EXTRA = fs.readFileSync(path.resolve(__dirname, 'pwa/data/ds_code_extra.js
 
   // 卡片总数（默认显示全部）
   const cards = d.querySelectorAll('.daka-card');
-  check('卡片渲染数 = 62', cards.length, 62);
+  check('卡片渲染数 = 65（62 + 新增 2024/2025/2026 代码题）', cards.length, 65);
   // 讲义折叠面板出现（summary 文案）；用直接子级选择器，避免把内层解法折叠 .sol-fold 计入
   const lectures = d.querySelectorAll('details.daka-answer > summary');
-  check('讲义折叠面板总数 = 62（每卡一个）', lectures.length, 62);
+  check('讲义折叠面板总数 = 65（每卡一个）', lectures.length, 65);
   const lectureHeads = [...lectures].filter(s => s.textContent.indexOf('考点分析 · 易错点 · 讲义解法') > -1);
-  check('升级为完整讲义的折叠面板 = 46（15 真题 + 31 教材习题）', lectureHeads.length, 46);
+  check('升级为完整讲义的折叠面板 = 49（15 真题 + 31 教材习题 + 新增 2024/2025/2026 代码题）', lectureHeads.length, 49);
   // 讲义内容关卡：解法条目与代码块存在于页面
-  check('页面含 sol-item 解法条目 ≥ 46', d.querySelectorAll('div.sol-item').length >= 46, true);
-  check('页面含 code-block 代码块 ≥ 46', d.querySelectorAll('pre.code-block').length >= 46, true);
-  check('页面含复杂度行 sol-cx ≥ 46', d.querySelectorAll('div.sol-cx').length >= 46, true);
+  check('页面含 sol-item 解法条目 ≥ 49', d.querySelectorAll('div.sol-item').length >= 49, true);
+  check('页面含 code-block 代码块 ≥ 49', d.querySelectorAll('pre.code-block').length >= 49, true);
+  check('页面含复杂度行 sol-cx ≥ 49', d.querySelectorAll('div.sol-cx').length >= 49, true);
   // 解法折叠：面板内默认只展开解法一，其余解法收起、可手动展开
   const folds = [...d.querySelectorAll('details.sol-fold')];
-  check('解法折叠容器 ≥ 46', folds.length >= 46, true);
+  check('解法折叠容器 ≥ 49', folds.length >= 49, true);
   check('每个解法折叠都有 summary 标题', folds.every(f => !!f.querySelector('summary.sol-head')), true);
   check('每个讲义卡恰有一个默认展开的解法一', [...new Set(folds.map(f => f.closest('.sol-wrap')))].every(wp =>
     wp.querySelectorAll('details.sol-fold[open]').length === 1 && wp.querySelectorAll('details.sol-fold').length >= 1), true);
@@ -111,9 +111,9 @@ const EXTRA = fs.readFileSync(path.resolve(__dirname, 'pwa/data/ds_code_extra.js
     check('再点击后收起', d.getElementById('ansfig-ds_daka_6_4_6_8').hidden, true);
   }
   // 批注：卡片级块锚点 + 顶部笔记区 + 「📝 批注」按钮（与解答原图按钮并排）
-  check('卡片全部带块锚点 data-blk', d.querySelectorAll('.daka-card[data-blk]').length, 62);
-  check('每卡都有笔记区 .daka-notes', d.querySelectorAll('.daka-notes').length, 62);
-  check('「📝 批注」按钮数 = 卡片数', d.querySelectorAll('summary button.anno-toggle').length, 62);
+  check('卡片全部带块锚点 data-blk', d.querySelectorAll('.daka-card[data-blk]').length, 65);
+  check('每卡都有笔记区 .daka-notes', d.querySelectorAll('.daka-notes').length, 65);
+  check('「📝 批注」按钮数 = 卡片数', d.querySelectorAll('summary button.anno-toggle').length, 65);
   check('批注按钮不在卡片头部', d.querySelectorAll('.daka-card-header button.anno-toggle').length, 0);
   check('笔记区位于折叠标题上方', [...d.querySelectorAll('.daka-card')].every(c => {
     const box = c.querySelector('.daka-notes'), det = c.querySelector('details.daka-answer');

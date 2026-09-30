@@ -31,10 +31,20 @@ function assert(cond, msg) {
     if (!cond) { console.log('✗ ' + msg); fail++; }
 }
 
+// 讲义映射（source → ds_code/ds_code_extra 条目）。提前构建，供数据侧识别「讲义型卡片」
+const codeBySource = new Map();
+for (const c of codeData.questions) if (c.source) codeBySource.set(c.source, c);
+for (const c of extraData.questions) if (c.source) codeBySource.set(c.source, c);
+const hasFig = q => ((q.figs || {}).content || []).length > 0 || ((q.figs || {}).answer || []).length > 0;
+// 讲义型卡片：命中代码题讲义但无教材原图——新增的 2024/2025/2026 算法代码题（良师408解析），
+// 题干用 content 文字（含代码块）、答案区升级为完整讲义，因此不要求教材截图。
+const isLectureCard = q => codeBySource.has(q.source) && !hasFig(q);
+
 console.log('题目总数', data.questions.length);
 
-// 1. 数据侧：文字字段已全部下线
-assert(data.questions.every(q => !('content' in q) && !('answer' in q)), 'ds_daka.json 已无 content/answer 字段');
+// 1. 数据侧：文字字段已全部下线（讲义型卡片允许保留题干 content，答案一律走讲义）
+assert(data.questions.every(q => !('answer' in q) && (isLectureCard(q) || !('content' in q))),
+    'ds_daka.json 已无 answer 字段，且非讲义卡片无 content');
 
 // 2. 渲染侧：每题都有题目图与解答图，且 img src 全部指向真实存在的文件
 let missing = [];
@@ -45,8 +55,10 @@ for (const q of data.questions) {
     for (const name of (q.figs || {}).answer || []) {
         if (!fs.existsSync(path.join(figDir, name))) missing.push(q.id + '/' + name);
     }
-    assert((q.figs || {}).content && q.figs.content.length, q.id + ' 缺题目图');
-    assert((q.figs || {}).answer && q.figs.answer.length, q.id + ' 缺解答图');
+    if (!isLectureCard(q)) {   // 讲义型卡片无教材图，合法豁免
+        assert((q.figs || {}).content && q.figs.content.length, q.id + ' 缺题目图');
+        assert((q.figs || {}).answer && q.figs.answer.length, q.id + ' 缺解答图');
+    }
 }
 assert(missing.length === 0, '图片文件缺失 ' + missing.slice(0, 5).join(', '));
 
@@ -58,9 +70,6 @@ const body = full.slice(full.indexOf('{') + 1, full.lastIndexOf('}')).replace(/\
 // 另外依赖 dakaAnsfigOpen（「📷 解答原图」独立展开状态 Set，仅真题卡片用）
 const esc = s2 => String(s2 == null ? '' : s2).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 const dakaAnsfigOpen = new Set();
-const codeBySource = new Map();
-for (const c of codeData.questions) if (c.source) codeBySource.set(c.source, c);
-for (const c of extraData.questions) if (c.source) codeBySource.set(c.source, c);
 const solFull = extractFn(html, 'solHtml');
 const solBody = solFull.slice(solFull.indexOf('{') + 1, solFull.lastIndexOf('}')).replace(/\bconst /g, 'var ');
 // 页面里 solHtml(q) 依赖全局 esc；new Function 无法闭包捕获 → 包一层：esc 作为注入参数，对外暴露单参 q
@@ -73,9 +82,15 @@ let lectureHits = 0;
 for (const q of data.questions) {
     const card = buildCard(fmt, fmt, { [q.id]: null }, q, p => 'badge', codeBySource, solHtml, esc, dakaAnsfigOpen);
     assert(/<div class="daka-card/.test(card), q.id + ' 未生成卡片');
-    assert(/题目教材原图/.test(card), q.id + ' 缺题目原图标签');
-    assert(/解答教材原图/.test(card), q.id + ' 缺解答原图标签');
-    assert(/<img src="data\/daka_figs\//.test(card), q.id + ' 未引用 daka_figs 图片');
+    if (isLectureCard(q)) {
+        // 讲义型卡片：无教材图，靠题干文字 + 讲义折叠区承载内容
+        assert(q.content && q.content.length, q.id + ' 讲义型卡片缺题干 content');
+        assert(/考点分析 · 易错点 · 讲义解法/.test(card), q.id + ' 讲义型卡片缺讲义折叠标题');
+    } else {
+        assert(/题目教材原图/.test(card), q.id + ' 缺题目原图标签');
+        assert(/解答教材原图/.test(card), q.id + ' 缺解答原图标签');
+        assert(/<img src="data\/daka_figs\//.test(card), q.id + ' 未引用 daka_figs 图片');
+    }
     labelHits++;
     imgCount += (card.match(/<img /g) || []).length;
     if (/题目见教材原图|解答见教材原图|解答见教材/.test(card)) placeholderHits++;
@@ -95,8 +110,9 @@ assert(labelHits === data.questions.length, '渲染题数不符');
 assert(lectureHits > 0, '没有任何题命中代码题讲义映射');
 
 // 3b. 映射覆盖核对：ds_code + ds_code_extra 中能对应到打卡表的题应全部命中
-const codeSources = codeData.questions.map(c => c.source).filter(s => s && s.indexOf('王道书') === 0)
-    .concat(extraData.questions.map(c => c.source).filter(s => s && s.indexOf('王道书') === 0));
+// （不限「王道书」前缀：2024/2025/2026 代码题来源为「良师408解析 20XX-41」，同样须在打卡表命中讲义）
+const codeSources = codeData.questions.map(c => c.source).filter(Boolean)
+    .concat(extraData.questions.map(c => c.source).filter(Boolean));
 let mappedInDaka = 0;
 for (const s of codeSources) if (data.questions.some(q => q.source === s)) mappedInDaka++;
 assert(mappedInDaka === lectureHits, '打卡表命中的讲义数应等于可映射数（' + mappedInDaka + ' ≠ ' + lectureHits + '）');

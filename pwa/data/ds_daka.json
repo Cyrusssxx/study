@@ -1,7 +1,7 @@
 {
   "subject": "ds_daka",
   "name": "数据结构强化打卡",
-  "total": 62,
+  "total": 65,
   "questions": [
     {
       "id": "ds_daka_6_4_6_8",
@@ -1348,6 +1348,60 @@
         "answer": [
           "ds_daka_5_3_3_12_a_0.jpg"
         ]
+      }
+    },
+    {
+      "id": "ds_daka_2024_41",
+      "priority": 0,
+      "priority_label": "必做",
+      "module": "基于“图”的算法训练",
+      "kaodian": "“图”的真题训练",
+      "source": "良师408解析 2024-41",
+      "real": "2024年408真题第41题",
+      "sheet": "算法题",
+      "tasks": [
+        "做408真题_2024_41题，即良师408解析 2024-41"
+      ],
+      "content": "【2024-41】载人航天工程包含众多子工程，可将子工程间的依赖关系抽象为有向图的拓扑序列问题。已知有向图 G 采用邻接矩阵存储：\n<pre class=\"code-block\">typedef struct {\n    int numVertices, numEdges;   // 图的顶点数和有向边数\n    char VerticesList[MAXV];     // 顶点表，MAXV 为已定义常量\n    int Edge[MAXV][MAXV];        // 邻接矩阵\n} MGraph;</pre>\n请设计算法 int uniquely(MGraph G)，判定 G 是否存在唯一的拓扑序列：若是返回 1，否则返回 0。\n要求：(1) 给出算法的基本设计思想；(2) 用 C/C++ 描述算法，关键之处给出注释。",
+      "figs": {
+        "content": [],
+        "answer": []
+      }
+    },
+    {
+      "id": "ds_daka_2025_41",
+      "priority": 0,
+      "priority_label": "必做",
+      "module": "基于“顺序表”的算法训练",
+      "kaodian": "一刷真题",
+      "source": "良师408解析 2025-41",
+      "real": "2025年408真题第41题",
+      "sheet": "算法题",
+      "tasks": [
+        "做408真题_2025_41题，即良师408解析 2025-41"
+      ],
+      "content": "【2025-41】有两个长度均为 n 的一维整型数组 A[n]、res[n]，计算 A[i] 与 A[j]（0<=i<=j<=n-1）乘积的最大值，并将其保存到 res[i] 中。若 A[]={1,4,-9,6}，则得到 res[]={6,24,81,36}。现给定数组 A，请设计时间空间上尽可能高效的算法 CalMulMax，求 res 中各元素的值。\n函数原型：void CalMulMax(int A[], int res[], int n)。\n要求：(1) 给出算法的基本设计思想；(2) 用 C/C++ 描述算法，关键之处给出注释；(3) 说明时间、空间复杂度。",
+      "figs": {
+        "content": [],
+        "answer": []
+      }
+    },
+    {
+      "id": "ds_daka_2026_41",
+      "priority": 0,
+      "priority_label": "必做",
+      "module": "基于“树和二叉树”的算法训练",
+      "kaodian": "“二叉树”的真题训练",
+      "source": "良师408解析 2026-41",
+      "real": "2026年408真题第41题",
+      "sheet": "算法题",
+      "tasks": [
+        "做408真题_2026_41题，即良师408解析 2026-41"
+      ],
+      "content": "【2026-41】二叉搜索树采用二叉链表存储，类型定义如下：\n<pre class=\"code-block\">typedef struct BSTNode {\n    int data;\n    struct BSTNode *left, *right;\n} BSTNode;\ntypedef BSTNode BTNode;</pre>\n给定一棵非空二叉搜索树 T（root 是指向 T 中根结点的指针）和整数 k，请设计一个尽可能高效的算法 void SearchX(BTNode *root, int k)，查找关键字值与 k 的差值的绝对值最小的所有结点，输出差值的绝对值和结点的关键字值。\n要求：(1) 描述算法的基本思想；(2) 根据设计思想，采用 C 或 C++ 语言描述算法，关键之处给出注释。",
+      "figs": {
+        "content": [],
+        "answer": []
       }
     }
   ]

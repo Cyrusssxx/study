@@ -120,7 +120,8 @@ assert(mods.some(m => m.includes('链表')), '含 链表模块');
 
 // 2) 默认全部
 window.renderDaka();
-assert(window._lastList.length === 62, `默认全部 62 题, 实际 ${window._lastList.length}`);
+// 62 → 65：新增 2024/2025/2026 算法代码题（必做）3 张卡片
+assert(window._lastList.length === 65, `默认全部 65 题, 实际 ${window._lastList.length}`);
 
 // 3) 模块筛选: 链表
 window.setDakaFilter('module', mods.find(m => m.includes('链表')));
@@ -135,7 +136,7 @@ assert(window._lastList.length === 16, `应用题 16 题, 实际 ${window._lastL
 // 5) 优先级: 必做
 window.setDakaFilter('sheet', '全部');
 window.setDakaFilter('priority', '必做');
-assert(window._lastList.length === 34, `必做 34 题, 实际 ${window._lastList.length}`);
+assert(window._lastList.length === 37, `必做 37 题, 实际 ${window._lastList.length}`);
 
 // 6) 完成状态: 已完成
 window.setDakaFilter('priority', '全部');
