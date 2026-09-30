@@ -54,6 +54,9 @@
             <div class="loading">加载中...</div>
         </div>
 
+        <!-- 每日一题：从四门收藏里各抽 1 题（js/daily.js 渲染） -->
+        <section id="dailySection"></section>
+
         <!-- 科目列表 + 打卡/大题工具卡 -->
         <div class="subjects-grid" id="subjectsGrid"></div>
     </main>
@@ -61,6 +64,7 @@
     <script src="js/background.js"></script>
     <script src="js/lightbox.js"></script>
     <script src="js/backend.js"></script>
+    <script src="js/daily.js"></script>
     <script>
         // 首页原为服务端渲染，PWA 版改为客户端调 /api/stats 渲染
         const SUBJECT_ORDER = ['os', 'co', 'ds', 'cn'];
@@ -204,6 +208,8 @@
         }
 
         loadHome();
+        // 每日一题：独立于统计加载，失败不影响首页其余内容
+        if (typeof initDaily === 'function') initDaily();
     </script>
 </body>
 </html>

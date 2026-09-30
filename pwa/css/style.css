@@ -5655,3 +5655,51 @@ a.chapter-badge-link:hover {
 .dark .notes-body .bus-h3 { color: #a5b4fc; background: linear-gradient(90deg, rgba(165,180,252,0.08), transparent); }
 .dark .notes-body .bus-h4 { color: #fbbf24; background: rgba(251,191,36,0.05); }
 }
+
+/* ==================== 每日一题（首页 index.html，js/daily.js） ==================== */
+#dailySection { margin: 18px 0 4px; }
+.daily-card {
+    background: rgba(var(--card-rgb), var(--ui-alpha));
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 14px 16px 12px;
+}
+.daily-head { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.daily-title { font-size: 1rem; font-weight: 600; margin: 0; color: var(--text); }
+.daily-date { font-size: 0.8rem; color: var(--text-light); }
+.daily-hist-btn {
+    margin-left: auto; background: none; border: 1px solid var(--border); color: var(--text-light);
+    font-size: 0.78rem; padding: 3px 10px; border-radius: 999px; cursor: pointer;
+    transition: color .15s, border-color .15s, background .15s;
+}
+.daily-hist-btn:hover { border-color: var(--primary); color: var(--primary); background: #eef5fd; }
+.daily-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 10px; margin-top: 12px; }
+.daily-item {
+    border-left: 2px solid var(--primary); padding: 8px 10px; border-radius: 6px;
+    background: rgba(128, 128, 128, .04);
+    display: flex; flex-direction: column; gap: 4px; min-height: 98px;
+}
+.daily-item-empty { border-left-color: var(--border); opacity: .85; }
+.daily-subject { font-size: 0.76rem; color: var(--text-light); }
+.daily-q { font-size: 0.86rem; line-height: 1.6; color: var(--text); flex: 1; }
+.daily-meta { font-size: 0.72rem; color: var(--text-light); }
+.daily-link { font-size: 0.78rem; color: var(--primary); text-decoration: none; }
+.daily-link:hover { text-decoration: underline; }
+.daily-foot { margin-top: 8px; font-size: 0.74rem; color: var(--text-light); }
+.daily-empty { margin-top: 10px; font-size: 0.85rem; color: var(--text-light); }
+
+/* 历史记录弹层（复用 kb-overlay/kb-dialog 骨架） */
+.daily-hist-dialog { width: 480px; max-width: 92vw; }
+.daily-hist-body { max-height: 60vh; overflow-y: auto; margin-bottom: 10px; }
+.daily-hist-day { padding: 8px 0; border-bottom: 1px dashed var(--border); }
+.daily-hist-day:last-child { border-bottom: none; }
+.daily-hist-date { font-size: 0.8rem; font-weight: 600; color: var(--text); margin-bottom: 5px; }
+.daily-hist-list { display: flex; flex-direction: column; gap: 3px; }
+.daily-hist-item { display: flex; gap: 8px; font-size: 0.8rem; text-decoration: none; color: var(--text); padding: 2px 0; }
+.daily-hist-item:hover { color: var(--primary); }
+.daily-hist-item.muted { color: var(--text-light); opacity: .6; }
+.daily-hist-sub { flex: none; width: 84px; color: var(--text-light); font-size: 0.74rem; }
+.daily-hist-q { flex: 1; line-height: 1.5; }
+.daily-hist-empty { font-size: 0.85rem; color: var(--text-light); padding: 8px 0; }
+
+.dark .daily-hist-btn:hover { background: #1d3350; }

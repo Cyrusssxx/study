@@ -1,0 +1,141 @@
+// 每日一题（js/daily.js）回归：
+//   1) 一天从四门（ds/os/cn/co）收藏里各抽 1 题；同一天重复调用结果不变（幂等）
+//   2) 抽过的题记入 daily_seen；跨天重抽时优先抽「没抽过」的（收藏 5 题 → 连续多天不重复）
+//   3) 上一天的结果归档进 daily_history（保留每天抽的题，可回看）
+//   4) 渲染：首页 #dailySection 出卡片（四门科目名 + 跳转链接）；历史弹层能打开并含历史日期
+//   5) 某门无收藏题时不报错，该门留空
+// 用法：NODE_PATH=<workspace>/node_modules node _test_daily_pick.js
+const fs = require('fs');
+const path = require('path');
+
+let JSDOM = null, IDBFactory = null, IDBKeyRange = null;
+try { ({ JSDOM } = require('jsdom')); } catch (e) { }
+try { ({ IDBFactory, IDBKeyRange } = require('fake-indexeddb')); } catch (e) { }
+
+if (!JSDOM || !IDBFactory) {
+    console.log('跳过：需要 jsdom 与 fake-indexeddb（NODE_PATH=<workspace>/node_modules）');
+    process.exit(0);
+}
+
+const ROOT = __dirname;
+const BACKEND = fs.readFileSync(path.join(ROOT, 'pwa', 'js', 'backend.js'), 'utf8');
+const DAILY = fs.readFileSync(path.join(ROOT, 'pwa', 'js', 'daily.js'), 'utf8');
+
+// 四门各 5 题
+const SUBS = ['ds', 'os', 'cn', 'co'];
+const FIX = {};
+for (const s of SUBS) {
+    FIX[s] = {
+        subject: s,
+        title: s,
+        questions: Array.from({ length: 5 }, (_, i) => ({
+            id: `${s}_000${i + 1}`, number: i + 1,
+            content: `${s} 第${i + 1}题 题干内容`,
+            options: { A: '甲', B: '乙' }, answer: 'A',
+            chapter: `第${i + 1}章`, section: `${i + 1}.1 小节`
+        }))
+    };
+}
+
+let pass = 0, fail = 0;
+function check(name, got, want) {
+    const ok = JSON.stringify(got) === JSON.stringify(want);
+    console.log((ok ? 'PASS' : 'FAIL').padEnd(5), name, ok ? '' : `→ 实际 ${JSON.stringify(got)} 期望 ${JSON.stringify(want)}`);
+    ok ? pass++ : fail++;
+}
+
+const dom = new JSDOM('<!doctype html><html><body><div id="dailySection"></div></body></html>', {
+    runScripts: 'outside-only',
+    pretendToBeVisual: true,
+    url: 'https://x.test/index.html',
+    beforeParse(w) {
+        w.indexedDB = new IDBFactory();
+        w.IDBKeyRange = IDBKeyRange;
+        w.alert = () => { };
+    }
+});
+const w = dom.window;
+w.fetch = async (u) => {
+    const m = String(u).match(/data\/(\w+)\.json/);
+    const obj = (m && FIX[m[1]]) ? FIX[m[1]] : { questions: [], chapters: [] };
+    return { ok: true, status: 200, json: async () => obj };
+};
+
+w.eval('(function(){' + BACKEND + '\n;globalThis.api = api; globalThis.SUBJECTS = SUBJECTS;})()');
+w.eval('(function(){' + DAILY + '})()');
+
+(async () => {
+    const post = (url) => w.api(url, { method: 'POST' }).then(r => r.json());
+    const seenOf = () => JSON.parse(w.localStorage.getItem('daily_seen_v1') || '{}');
+    const histOf = () => JSON.parse(w.localStorage.getItem('daily_history_v1') || '[]');
+    const todayOf = () => JSON.parse(w.localStorage.getItem('daily_pick_v1') || 'null');
+
+    console.log('--- 准备收藏：四门各 5 题 ---');
+    for (const s of SUBS) {
+        for (let i = 1; i <= 5; i++) await post('/api/favorite/' + `${s}_000${i}`);
+    }
+    // cn 故意只收藏 2 题，验证“题少也能抽”；co 收藏 0 题，验证“无收藏不报错”
+    for (let i = 3; i <= 5; i++) await post('/api/favorite/cn_000' + i);   // 取消收藏（toggle）
+    for (let i = 1; i <= 5; i++) await post('/api/favorite/co_000' + i);    // 取消收藏（toggle，清空 co）
+
+    console.log('\n--- 首日抽题 ---');
+    const d1 = await w.DailyPick.rollToday();
+    check('返回今日日期格式', /^\d{4}-\d{2}-\d{2}$/.test(d1.date), true);
+    check('四门都抽到题（ds/os/cn）', ['ds', 'os', 'cn'].every(s => !!(d1.picks || {})[s]), true);
+    check('无收藏的 co 留空', 'co' in (d1.picks || {}), false);
+    check('结果写入 localStorage', !!todayOf(), true);
+    const d1b = await w.DailyPick.rollToday();
+    check('同一天重复调用结果不变（幂等）', d1b.picks, d1.picks);
+
+    console.log('\n--- 渲染 ---');
+    w.DailyPick.renderDaily(d1);
+    const html = w.document.getElementById('dailySection').innerHTML;
+    check('渲染出每日一题卡片', /class="daily-card"/.test(html), true);
+    check('含科目名 数据结构', /数据结构/.test(html), true);
+    check('含跳转链接（收藏模式+定位）', /quiz\.html\?subject=ds(&amp;|&)mode=favorite(&amp;|&)goto=/.test(html), true);
+    check('无收藏门显示暂无收藏题', /暂无收藏题/.test(html), true);
+    const qTexts = [...w.document.querySelectorAll('.daily-q')].map(e => e.textContent).join('');
+    check('题干摘要已去标签（无尖括号）', /[<>]/.test(qTexts), false);
+
+    console.log('\n--- 跨天重抽 + 去重（cn 收藏 2 题：两天不重复） ---');
+    const firstCn = d1.picks.cn.id;
+    // 手动把今日结果改成“昨天”，模拟跨天
+    const y = todayOf();
+    y.date = '2020-01-01';
+    w.localStorage.setItem('daily_pick_v1', JSON.stringify(y));
+    const d2 = await w.DailyPick.rollToday();
+    check('跨天后日期刷新', d2.date !== '2020-01-01', true);
+    check('cn 第 2 天抽到不同题', d2.picks.cn.id !== firstCn, true);
+    check('上一天结果归档进历史', histOf().some(h => h.date === '2020-01-01'), true);
+    check('历史里保留了当天抽的题', (histOf()[0].picks || {}).cn.id, firstCn);
+
+    console.log('\n--- 连续多天不重复（ds 收藏 5 题） ---');
+    const ids = [d2.picks.ds.id];
+    for (let k = 0; k < 4; k++) {
+        const cur = todayOf();
+        cur.date = `2021-01-0${k + 1}`;
+        w.localStorage.setItem('daily_pick_v1', JSON.stringify(cur));
+        const dn = await w.DailyPick.rollToday();
+        ids.push(dn.picks.ds.id);
+    }
+    check('ds 前 4 天（未抽过的）互不相同', new Set(ids.slice(0, 4)).size, 4);
+    check('一轮抽完后仍能出题（取最久未抽）', !!ids[4], true);
+    // pickOne 纯函数：全部抽过时取最久未抽的那题
+    const favs = [{ id: 'a' }, { id: 'b' }, { id: 'c' }];
+    const seen = { a: '2020-01-01', b: '2020-05-01', c: '2020-03-01' };
+    check('全部抽过时取最久未抽的题', w.DailyPick.pickOne(favs, seen).id, 'a');
+    check('seen 记录已积累', Object.keys(seenOf().ds || {}).length >= 5, true);
+
+    console.log('\n--- 历史记录弹层 ---');
+    w.showDailyHistory();
+    const ov = w.document.getElementById('dailyHistOverlay');
+    check('弹层已创建', !!ov, true);
+    check('弹层可见', ov && ov.hidden === false, true);
+    check('弹层含历史日期', /2020-01-01/.test(ov.innerHTML), true);
+    check('弹层含今日标记', /今天/.test(ov.innerHTML), true);
+    w.closeDailyHistory();
+    check('关闭后隐藏', w.document.getElementById('dailyHistOverlay').hidden, true);
+
+    console.log(`\nPASS ${pass} / FAIL ${fail}`);
+    process.exit(fail ? 1 : 0);
+})().catch(e => { console.error('测试异常:', e); process.exit(1); });
