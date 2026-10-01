@@ -19,6 +19,8 @@
     --card-rgb: 255,255,255;
     --sidebar-rgb: 255,255,255;
     --ui-alpha: 1;
+    /* 题目内容字体：408 真题卷风格 —— 英文/数字 Times New Roman，中文宋体 */
+    --font-q: "Times New Roman", "STSong", "SimSun", "宋体", "Songti SC", serif;
 }
 
 * {
@@ -472,13 +474,23 @@ body {
 }
 
 .question-content {
+    font-family: var(--font-q);
     font-size: 1.1rem;
-    line-height: 1.8;
-    letter-spacing: 0.03em;
+    line-height: 1.9;
+    letter-spacing: 0.02em;
     text-align: justify;
     margin-bottom: 24px;
     padding-bottom: 16px;
     border-bottom: 1px solid var(--border);
+}
+.question-content p { margin-bottom: 0.6em; }
+
+/* 题干内裸 pre/code 保持等宽（不被宋体栈继承） */
+.question-content pre, .question-content code,
+.item-content pre, .item-content code,
+.daily-q pre, .daily-q code,
+.daily-fold-body pre, .daily-fold-body code {
+    font-family: Consolas, "Courier New", monospace;
 }
 
 /* 题干内嵌表格 */
@@ -611,6 +623,7 @@ body {
     min-width: 28px;
     border-radius: 50%;
     background: var(--light);
+    font-family: var(--font-q);
     font-weight: 600;
     font-size: 0.9rem;
     transition: all 0.2s;
@@ -618,7 +631,9 @@ body {
 
 .option-text {
     flex: 1;
-    line-height: 1.6;
+    font-family: var(--font-q);
+    font-size: 1.04rem;
+    line-height: 1.7;
     padding-top: 2px;
 }
 
@@ -782,8 +797,9 @@ body {
 }
 
 .item-content {
-    font-size: 1rem;
-    line-height: 1.7;
+    font-family: var(--font-q);
+    font-size: 1.02rem;
+    line-height: 1.8;
     letter-spacing: 0.02em;
     text-align: justify;
     margin-bottom: 10px;
@@ -1254,9 +1270,10 @@ body {
 
 .explanation-body {
     padding: 12px 16px;
-    font-size: 0.9rem;
+    font-family: var(--font-q);
+    font-size: 0.98rem;
     color: var(--text);
-    line-height: 1.8;
+    line-height: 1.85;
     letter-spacing: 0.02em;
     text-align: justify;
 }
@@ -5701,7 +5718,7 @@ a.chapter-badge-link:hover {
     padding: 1px 9px; border-radius: 999px;
 }
 .daily-meta { margin-left: auto; font-size: 0.76rem; color: var(--text-light); }
-.daily-q { font-size: 0.94rem; line-height: 1.75; color: var(--text); flex: 1; }
+.daily-q { font-family: var(--font-q); font-size: 1rem; line-height: 1.85; color: var(--text); flex: 1; }
 .daily-link { font-size: 0.78rem; color: var(--primary); text-decoration: none; align-self: flex-start; }
 .daily-link:hover { text-decoration: underline; }
 .daily-foot { margin-top: 10px; font-size: 0.74rem; color: var(--text-light); text-align: center; }
@@ -5757,18 +5774,19 @@ a.chapter-badge-link:hover {
     border-radius: 8px; padding: 9px 11px;
 }
 .daily-opt {
-    display: flex; gap: 6px; align-items: flex-start; font-size: 0.86rem; line-height: 1.6;
+    display: flex; gap: 6px; align-items: flex-start; font-size: 0.94rem; line-height: 1.65;
     color: var(--text); cursor: pointer; padding: 4px 6px; border-radius: 5px;
 }
 .daily-opt:hover { background: rgba(74, 122, 184, .1); }
 .daily-opt input { margin: 4px 0 0; accent-color: var(--primary); }
-.daily-opt-key { flex: none; font-weight: 600; color: var(--primary); }
-.daily-opt-text { flex: 1; word-break: break-word; }
+.daily-opt-key { flex: none; font-weight: 600; color: var(--primary); font-family: var(--font-q); }
+.daily-opt-text { flex: 1; font-family: var(--font-q); word-break: break-word; }
 .daily-opt.opt-correct { background: rgba(46, 125, 50, .14); }
 .daily-opt.opt-wrong { background: rgba(220, 53, 69, .13); }
 .daily-multi-hint { font-size: 0.78rem; color: var(--text-light); margin: 4px 0; }
 .daily-result {
-    font-size: 0.82rem; padding: 6px 10px; border-radius: 6px; margin: 2px 0;
+    font-family: var(--font-q);
+    font-size: 0.88rem; padding: 6px 10px; border-radius: 6px; margin: 2px 0;
     line-height: 1.55; border: 1px solid transparent;
 }
 .daily-result.ok { background: rgba(46, 125, 50, .14); color: #2e7d32; border-color: rgba(46, 125, 50, .3); }
@@ -5792,7 +5810,8 @@ a.chapter-badge-link:hover {
 .daily-fold > summary:hover { background: rgba(74, 122, 184, .14); }
 .daily-fold > summary::-webkit-details-marker { display: none; }
 .daily-fold-body {
-    font-size: 0.83rem; line-height: 1.75; color: var(--text);
+    font-family: var(--font-q);
+    font-size: 0.9rem; line-height: 1.8; color: var(--text);
     margin-top: 6px; padding: 9px 12px;
     background: rgba(74, 122, 184, .06);
     border-left: 3px solid rgba(74, 122, 184, .5);
