@@ -5673,6 +5673,7 @@ a.chapter-badge-link:hover {
     border: 1px solid var(--border);
     border-radius: var(--radius);
     padding: 16px 18px 14px;
+    box-shadow: 0 1px 6px rgba(0, 0, 0, .05);
 }
 .daily-head { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
 .daily-title { font-size: 1.05rem; font-weight: 600; margin: 0; color: var(--text); }
@@ -5683,22 +5684,24 @@ a.chapter-badge-link:hover {
     transition: color .15s, border-color .15s, background .15s;
 }
 .daily-hist-btn:hover { border-color: var(--primary); color: var(--primary); background: #eef5fd; }
-/* 一题一题排下去（单列） */
-.daily-grid { display: flex; flex-direction: column; gap: 14px; margin-top: 14px; }
+/* 一题一题排下去（单列）：实体卡片，3px 主色左导轨 + 极淡阴影 */
+.daily-grid { display: flex; flex-direction: column; gap: 16px; margin-top: 14px; }
 .daily-item {
-    border-left: 2px solid var(--primary); padding: 12px 14px; border-radius: 6px;
-    background: rgba(128, 128, 128, .04);
-    display: flex; flex-direction: column; gap: 6px;
+    border: 1px solid var(--border); border-left: 3px solid var(--primary);
+    padding: 14px 16px; border-radius: 8px;
+    background: rgba(var(--card-rgb), var(--ui-alpha));
+    box-shadow: 0 1px 5px rgba(0, 0, 0, .05);
+    display: flex; flex-direction: column; gap: 8px;
 }
-.daily-item-empty { border-left-color: var(--border); opacity: .85; }
+.daily-item-empty { border-left-color: var(--border); opacity: .85; box-shadow: none; }
 .daily-item-head { display: flex; align-items: baseline; gap: 10px; }
 .daily-subject {
     flex: none; font-size: 0.78rem; font-weight: 600; color: var(--primary);
-    background: rgba(74, 122, 184, .1); border: 1px solid rgba(74, 122, 184, .35);
+    background: rgba(74, 122, 184, .12); border: 1px solid rgba(74, 122, 184, .4);
     padding: 1px 9px; border-radius: 999px;
 }
-.daily-meta { margin-left: auto; font-size: 0.72rem; color: var(--text-light); }
-.daily-q { font-size: 0.92rem; line-height: 1.7; color: var(--text); flex: 1; }
+.daily-meta { margin-left: auto; font-size: 0.76rem; color: var(--text-light); }
+.daily-q { font-size: 0.94rem; line-height: 1.75; color: var(--text); flex: 1; }
 .daily-link { font-size: 0.78rem; color: var(--primary); text-decoration: none; align-self: flex-start; }
 .daily-link:hover { text-decoration: underline; }
 .daily-foot { margin-top: 10px; font-size: 0.74rem; color: var(--text-light); text-align: center; }
@@ -5746,45 +5749,76 @@ a.chapter-badge-link:hover {
 .dark .daily-subject { background: rgba(143, 176, 217, .12); border-color: rgba(143, 176, 217, .4); color: #8fb0d9; }
 
 /* ==================== 每日一题 · 卡片内直接作答 ==================== */
-.daily-opts { display: flex; flex-direction: column; gap: 4px; margin: 6px 0; }
-.daily-opt {
-    display: flex; gap: 6px; align-items: flex-start; font-size: 0.84rem; line-height: 1.55;
-    color: var(--text); cursor: pointer; padding: 3px 5px; border-radius: 4px;
+/* 选项＝明显作答区：淡蓝底块 + 细边框，与题干有边界 */
+.daily-opts {
+    display: flex; flex-direction: column; gap: 4px; margin: 4px 0 2px;
+    background: rgba(74, 122, 184, .06);
+    border: 1px solid rgba(74, 122, 184, .16);
+    border-radius: 8px; padding: 9px 11px;
 }
-.daily-opt:hover { background: rgba(128, 128, 128, .06); }
-.daily-opt input { margin: 3px 0 0; accent-color: var(--primary); }
-.daily-opt-key { flex: none; font-weight: 600; color: var(--text-light); }
+.daily-opt {
+    display: flex; gap: 6px; align-items: flex-start; font-size: 0.86rem; line-height: 1.6;
+    color: var(--text); cursor: pointer; padding: 4px 6px; border-radius: 5px;
+}
+.daily-opt:hover { background: rgba(74, 122, 184, .1); }
+.daily-opt input { margin: 4px 0 0; accent-color: var(--primary); }
+.daily-opt-key { flex: none; font-weight: 600; color: var(--primary); }
 .daily-opt-text { flex: 1; word-break: break-word; }
-.daily-opt.opt-correct { background: rgba(46, 125, 50, .13); }
+.daily-opt.opt-correct { background: rgba(46, 125, 50, .14); }
 .daily-opt.opt-wrong { background: rgba(220, 53, 69, .13); }
 .daily-multi-hint { font-size: 0.78rem; color: var(--text-light); margin: 4px 0; }
-.daily-result { font-size: 0.82rem; padding: 4px 8px; border-radius: 4px; margin: 4px 0; line-height: 1.5; }
-.daily-result.ok { background: rgba(46, 125, 50, .14); color: #2e7d32; }
-.daily-result.bad { background: rgba(220, 53, 69, .12); color: #c62828; }
-.daily-result.info { background: rgba(128, 128, 128, .12); color: var(--text-light); }
+.daily-result {
+    font-size: 0.82rem; padding: 6px 10px; border-radius: 6px; margin: 2px 0;
+    line-height: 1.55; border: 1px solid transparent;
+}
+.daily-result.ok { background: rgba(46, 125, 50, .14); color: #2e7d32; border-color: rgba(46, 125, 50, .3); }
+.daily-result.bad { background: rgba(220, 53, 69, .12); color: #c62828; border-color: rgba(220, 53, 69, .28); }
+.daily-result.info { background: rgba(128, 128, 128, .1); color: var(--text-light); }
 .daily-submit, .daily-redo {
-    align-self: flex-start; margin-top: 6px; font-size: 0.78rem; padding: 3px 12px;
+    align-self: flex-start; margin-top: 4px; font-size: 0.8rem; padding: 4px 14px;
     border-radius: 999px; border: 1px solid var(--primary); color: var(--primary);
     background: none; cursor: pointer; transition: background .15s, color .15s;
 }
 .daily-submit:hover, .daily-redo:hover { background: #eef5fd; }
 .daily-redo { border-color: var(--border); color: var(--text-light); }
-.daily-fold { margin-top: 6px; }
+
+/* 解析 / 笔记：有色块 + 左导轨，与题干明确分区 */
+.daily-fold { margin-top: 2px; }
 .daily-fold > summary {
-    font-size: 0.78rem; color: var(--primary); cursor: pointer; list-style: none; user-select: none;
+    display: inline-block; font-size: 0.78rem; color: var(--primary); cursor: pointer;
+    list-style: none; user-select: none; padding: 2px 10px; border-radius: 999px;
+    background: rgba(74, 122, 184, .08); border: 1px solid rgba(74, 122, 184, .2);
 }
+.daily-fold > summary:hover { background: rgba(74, 122, 184, .14); }
 .daily-fold > summary::-webkit-details-marker { display: none; }
 .daily-fold-body {
-    font-size: 0.8rem; line-height: 1.7; color: var(--text-light);
-    padding: 6px 0 2px; margin-top: 4px; border-top: 1px dashed var(--border);
+    font-size: 0.83rem; line-height: 1.75; color: var(--text);
+    margin-top: 6px; padding: 9px 12px;
+    background: rgba(74, 122, 184, .06);
+    border-left: 3px solid rgba(74, 122, 184, .5);
+    border-radius: 0 6px 6px 0;
 }
-.daily-note > summary { color: #b45309; }
+/* 笔记块：橙色系，与解析区分 */
+.daily-note > summary {
+    color: #b45309; background: rgba(234, 88, 12, .08); border-color: rgba(234, 88, 12, .25);
+}
+.daily-note > summary:hover { background: rgba(234, 88, 12, .14); }
+.daily-note .daily-fold-body {
+    background: rgba(234, 88, 12, .07);
+    border-left-color: rgba(180, 83, 9, .6);
+}
 .daily-note-img { display: block; max-width: 100%; border-radius: 4px; margin-top: 5px; }
 
 .dark .daily-submit:hover, .dark .daily-redo:hover { background: #1d3350; }
-.dark .daily-result.ok { color: #81c784; }
-.dark .daily-result.bad { color: #ef9a9a; }
-.dark .daily-note > summary { color: #e0b45c; }
+.dark .daily-opts { background: rgba(143, 176, 217, .09); border-color: rgba(143, 176, 217, .22); }
+.dark .daily-opt:hover { background: rgba(143, 176, 217, .14); }
+.dark .daily-opt-key { color: #8fb0d9; }
+.dark .daily-result.ok { color: #81c784; border-color: rgba(129, 199, 132, .3); }
+.dark .daily-result.bad { color: #ef9a9a; border-color: rgba(239, 154, 154, .3); }
+.dark .daily-fold > summary { color: #8fb0d9; background: rgba(143, 176, 217, .12); border-color: rgba(143, 176, 217, .3); }
+.dark .daily-fold-body { background: rgba(143, 176, 217, .09); border-left-color: rgba(143, 176, 217, .55); }
+.dark .daily-note > summary { color: #e0b45c; background: rgba(251, 191, 36, .1); border-color: rgba(251, 191, 36, .3); }
+.dark .daily-note .daily-fold-body { background: rgba(251, 191, 36, .08); border-left-color: rgba(224, 180, 92, .6); }
 
 /* ==================== 记忆卡（cards.html）——移动端优先 ==================== */
 .fc-page { overflow-x: hidden; -webkit-text-size-adjust: 100%; }
