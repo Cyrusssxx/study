@@ -5763,22 +5763,29 @@ a.chapter-badge-link:hover {
 .fc-bar { flex: 1; height: 5px; background: rgba(128, 128, 128, .18); border-radius: 999px; overflow: hidden; }
 .fc-bar-fill { height: 100%; width: 0; background: var(--primary); border-radius: 999px; transition: width .2s ease; }
 
-/* 卡片舞台：随视口伸缩，3D 翻转 */
-.fc-stage { flex: 1; display: flex; align-items: center; justify-content: center; perspective: 1200px; padding: 6px 0; }
+/* 卡片舞台：单面卡片，点击查看要点（无 3D 翻面） */
+.fc-stage { flex: 1; display: flex; align-items: center; justify-content: center; padding: 6px 0; }
 .fc-card {
     position: relative; width: 100%; min-height: 46vh; max-height: 62vh;
-    transform-style: preserve-3d; transition: transform .38s ease; cursor: pointer;
-    touch-action: manipulation;
-}
-.fc-card.flipped { transform: rotateY(180deg); }
-.fc-face {
-    position: absolute; inset: 0; overflow-y: auto; -webkit-overflow-scrolling: touch;
-    backface-visibility: hidden; -webkit-backface-visibility: hidden;
     border: 1px solid var(--border); border-radius: 12px;
     background: rgba(var(--card-rgb), var(--ui-alpha));
-    padding: 18px 16px; display: flex; flex-direction: column; box-sizing: border-box;
+    padding: 44px 16px 14px; box-sizing: border-box;
+    display: flex; flex-direction: column; overflow-y: auto; -webkit-overflow-scrolling: touch;
+    cursor: pointer; touch-action: manipulation;
 }
-.fc-back { transform: rotateY(180deg); }
+
+/* 右上角：熟 / 收藏 */
+.fc-corner { position: absolute; top: 8px; right: 8px; display: flex; gap: 6px; z-index: 2; }
+.fc-corner-btn {
+    min-width: 44px; min-height: 32px; padding: 4px 10px; border-radius: 999px;
+    border: 1px solid var(--border); background: rgba(var(--card-rgb), .85);
+    color: var(--text-light); font-size: 0.78rem; cursor: pointer;
+    touch-action: manipulation; -webkit-tap-highlight-color: transparent;
+}
+.fc-corner-btn:active { background: rgba(128, 128, 128, .12); }
+.fc-corner-btn.known { background: rgba(46, 125, 50, .16); border-color: #2e7d32; color: #2e7d32; font-weight: 600; }
+.fc-corner-btn.fav { background: #fef3c7; border-color: #d97706; color: #b45309; font-weight: 600; }
+
 .fc-chapter { font-size: 0.75rem; color: var(--text-light); line-height: 1.5; }
 .fc-title { font-size: 1.18rem; font-weight: 700; line-height: 1.55; margin: 10px 0; color: var(--text); }
 .fc-hint { margin-top: auto; padding-top: 10px; font-size: 0.78rem; color: var(--text-light); text-align: center; }
@@ -5788,6 +5795,13 @@ a.chapter-badge-link:hover {
     margin-top: 12px; font-size: 0.83rem; line-height: 1.65; color: #b45309;
     background: rgba(234, 88, 12, .09); border-radius: 6px; padding: 9px 11px;
 }
+/* 卡片标题旁的状态小标签（不熟/不会） */
+.fc-badge {
+    display: inline-block; margin-left: 8px; padding: 1px 8px; border-radius: 999px;
+    font-size: 0.72rem; font-weight: 600; vertical-align: 3px;
+}
+.fc-badge.u { background: rgba(234, 88, 12, .16); color: #b45309; }
+.fc-badge.d { background: rgba(220, 38, 38, .15); color: #b3261e; }
 
 /* 底部固定操作栏：大触控区 + iOS 安全区 */
 .fc-actions {
@@ -5803,8 +5817,8 @@ a.chapter-badge-link:hover {
     touch-action: manipulation; -webkit-tap-highlight-color: transparent;
 }
 .fc-btn:active { background: rgba(128, 128, 128, .1); }
-.fc-btn-main { flex: 1.5; border-color: var(--primary); color: var(--primary); font-weight: 600; }
-.fc-btn.on { background: rgba(46, 125, 50, .14); border-color: #2e7d32; color: #2e7d32; }
+.fc-btn.on-u { background: rgba(234, 88, 12, .16); border-color: #b45309; color: #b45309; font-weight: 600; }
+.fc-btn.on-d { background: rgba(220, 38, 38, .15); border-color: #b3261e; color: #b3261e; font-weight: 600; }
 
 /* 窄屏（手机）：字号与卡片高度微调 */
 @media (max-width: 600px) {
@@ -5813,6 +5827,7 @@ a.chapter-badge-link:hover {
     .fc-pts { font-size: 0.9rem; line-height: 1.78; padding-left: 18px; }
     .fc-card { min-height: 52vh; max-height: 66vh; }
     .fc-chip { font-size: 0.8rem; padding: 5px 11px; }
+    .fc-corner-btn { min-width: 38px; padding: 3px 8px; }
 }
 /* 横屏矮屏：压缩卡片高度，保证按钮可见 */
 @media (max-height: 520px) {
@@ -5820,4 +5835,9 @@ a.chapter-badge-link:hover {
     .fc-title { font-size: 1rem; }
 }
 .dark .fc-tip { color: #e0b45c; background: rgba(251, 191, 36, .1); }
-.dark .fc-btn.on { color: #81c784; border-color: #3c5c40; }
+.dark .fc-corner-btn.known { color: #81c784; border-color: #3c5c40; background: rgba(46, 125, 50, .18); }
+.dark .fc-corner-btn.fav { color: #e0b45c; border-color: #7a5a20; background: rgba(234, 179, 8, .14); }
+.dark .fc-btn.on-u { color: #f59e6b; border-color: #a34e18; background: rgba(234, 88, 12, .18); }
+.dark .fc-btn.on-d { color: #ef9a9a; border-color: #7f1d1d; background: rgba(220, 38, 38, .18); }
+.dark .fc-badge.u { color: #f59e6b; background: rgba(234, 88, 12, .2); }
+.dark .fc-badge.d { color: #ef9a9a; background: rgba(220, 38, 38, .2); }

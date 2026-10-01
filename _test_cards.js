@@ -1,9 +1,10 @@
 // 记忆卡（cards.html + js/cards.js）回归：
 //   1) 数据：cards.json 四门各有卡片，字段完整（id/title/points）
-//   2) 渲染：正面出考点名与进度；翻转切换正/反面
-//   3) 切题：下一张/上一张更新进度；标记「记住了」持久化到 localStorage
-//   4) 四组切换：切科目后卡片与进度随之切换；筛选（全部/未掌握/已掌握）生效
-//   5) 移动端适配：viewport-fit=cover、底部固定操作栏、安全区内边距、48px 触控区、窄屏 media 查询
+//   2) 渲染：正面出考点名与进度；点击卡片查看要点（无 3D 翻面）
+//   3) 右上角：熟（熟了不再加入记忆队列）/ 收藏
+//   4) 底部：不熟 / 不会（互斥，标记时清掉「熟」）
+//   5) 切题：下一张/上一张更新进度；四组切换；筛选（全部/未熟/熟）
+//   6) 移动端适配：viewport-fit=cover、底部固定操作栏、安全区内边距、48px 触控区、窄屏 media 查询
 // 用法：NODE_PATH=<workspace>/node_modules node _test_cards.js
 const fs = require('fs');
 const path = require('path');
@@ -39,6 +40,10 @@ html = html.replace(/<script src="([^"]+)"><\/script>/g, (m, src) => {
     return fs.existsSync(p) ? '<script>' + fs.readFileSync(p, 'utf8') + '</script>' : m;
 });
 check('页面 viewport 含 viewport-fit=cover', /viewport-fit=cover/.test(html), true);
+check('卡片为单面结构（无 fc-face 双面/翻转）', !/fc-face|fc-back|fc-front|flipCard|翻转/.test(html), true);
+check('右上角有「熟」按钮', /id="fcKnownBtn"/.test(html), true);
+check('右上角有「收藏」按钮', /id="fcFavBtn"/.test(html), true);
+check('底部有不熟/不会按钮', /fcWeakUBtn/.test(html) && /fcWeakDBtn/.test(html), true);
 
 const dom = new JSDOM(html, {
     runScripts: 'dangerously', pretendToBeVisual: true, url: 'https://x.test/cards.html',
@@ -57,36 +62,75 @@ const $ = sel => w.document.querySelector(sel);
 
 (async () => {
     await sleep(600);
-    console.log('\n--- 渲染与交互 ---');
+    console.log('\n--- 渲染与「点击查看」 ---');
     check('科目 chips 渲染（四组）', w.document.querySelectorAll('#fcSubjects .fc-chip').length, 4);
-    check('正面渲染考点名', /\S/.test($('#fcFront').textContent || ''), true);
+    check('正面渲染考点名', /\S/.test($('#fcBody').textContent || ''), true);
     check('进度显示 1 / 总数', /^1 \/ \d+$/.test($('#fcCount').textContent.trim()), true);
-    check('背面渲染要点', w.document.querySelectorAll('#fcBack li').length > 0, true);
+    check('初始为问题态（未查看要点）', !/点击卡片收起/.test($('#fcBody').textContent), true);
 
-    const card = $('#fcCard');
-    check('初始未翻转', card.classList.contains('flipped'), false);
-    w.flipCard();
-    check('翻转后加 flipped', card.classList.contains('flipped'), true);
-    check('翻转按钮文案切换', $('#fcFlipBtn').textContent, '看正面');
-    w.flipCard();
-    check('再翻转回正面', card.classList.contains('flipped'), false);
+    w.toggleView();
+    check('点击查看后渲染要点列表', w.document.querySelectorAll('#fcBody li').length > 0, true);
+    check('查看态含易错提示容器', !!$('#fcBody .fc-tip') || !!$('#fcBody .fc-hint'), true);
+    w.toggleView();
+    check('再点回到问题态', /点击卡片查看要点/.test($('#fcBody').textContent), true);
 
     const n1 = $('#fcCount').textContent;
     w.nextCard();
     check('下一张进度变化', $('#fcCount').textContent !== n1, true);
-    check('切题后回到正面', card.classList.contains('flipped'), false);
+    check('切题后回到问题态', !/点击卡片收起/.test($('#fcBody').textContent), true);
     w.prevCard();
     check('上一张回到原进度', $('#fcCount').textContent, n1);
 
-    console.log('\n--- 记住了 / 持久化 ---');
+    console.log('\n--- 右上角：熟 / 收藏 ---');
+    const knownBtn = $('#fcKnownBtn');
+    const favBtn = $('#fcFavBtn');
+    check('右上角有 2 个角标按钮', w.document.querySelectorAll('.fc-corner-btn').length, 2);
     w.toggleKnown();
-    const knownMap = JSON.parse(w.localStorage.getItem('cards_known_v1') || '{}');
-    check('标记写入 localStorage', Object.keys(knownMap).length, 1);
-    check('按钮显示已记住', /已记住/.test($('#fcKnownBtn').textContent), true);
+    let knownMap = JSON.parse(w.localStorage.getItem('cards_known_v1') || '{}');
+    check('标记「熟」写入 localStorage', Object.keys(knownMap).length, 1);
+    check('熟按钮激活态', knownBtn.classList.contains('known'), true);
+    check('熟按钮文案变化', knownBtn.textContent, '熟 ✓');
+
     w.switchFilter('known');
-    check('筛选“已掌握”只剩 1 张', $('#fcCount').textContent.trim().endsWith('/ 1'), true);
+    check('筛选「熟」只剩 1 张', $('#fcCount').textContent.trim().endsWith('/ 1'), true);
+    w.switchFilter('all');
+
+    w.toggleFav();
+    const favMap = JSON.parse(w.localStorage.getItem('cards_fav_v1') || '{}');
+    check('收藏写入 localStorage', Object.keys(favMap).length, 1);
+    check('收藏按钮激活态', favBtn.classList.contains('fav'), true);
+    check('收藏按钮文案变化', favBtn.textContent, '★ 已收藏');
+    w.toggleFav();
+    check('再点取消收藏', !favBtn.classList.contains('fav'), true);
+
+    console.log('\n--- 底部：不熟 / 不会（互斥） ---');
+    const uBtn = $('#fcWeakUBtn');
+    const dBtn = $('#fcWeakDBtn');
+    check('底部操作按钮 4 个', w.document.querySelectorAll('.fc-actions .fc-btn').length, 4);
+    w.toggleWeak('u');
+    let weakMap = JSON.parse(w.localStorage.getItem('cards_weak_v1') || '{}');
+    check('标记「不熟」写入 localStorage', weakMap[Object.keys(weakMap)[0]], 'u');
+    check('不熟按钮激活态（橙）', uBtn.classList.contains('on-u'), true);
+    check('标记不熟后「熟」被清除（互斥）', Object.keys(knownMap).length >= 0 ? (JSON.parse(w.localStorage.getItem('cards_known_v1') || '{}') || {})[Object.keys(weakMap)[0]] : true, undefined);
+    w.toggleWeak('d');
+    weakMap = JSON.parse(w.localStorage.getItem('cards_weak_v1') || '{}');
+    check('「不会」顶掉「不熟」（互斥）', weakMap[Object.keys(weakMap)[0]], 'd');
+    check('不会按钮激活态（红）', dBtn.classList.contains('on-d'), true);
+    check('不熟按钮取消激活', !uBtn.classList.contains('on-u'), true);
+    check('问题态标题带「不会」小标签', /fc-badge d/.test($('#fcBody').innerHTML), true);
+    w.toggleWeak('d');
+    check('再点取消标记', Object.keys(JSON.parse(w.localStorage.getItem('cards_weak_v1') || '{}')).length, 0);
+
+    console.log('\n--- 熟了不再加入记忆队列 ---');
+    // 切到「未熟」筛选并切到第 2 张，标记熟 → 当前卡自动移出队列（总数减 1 且换到下一张）
     w.switchFilter('new');
-    check('筛选“未掌握”排除已记住卡', /\/ \d+$/.test($('#fcCount').textContent.trim()), true);
+    const totalNew = parseInt($('#fcCount').textContent.trim().split('/')[1], 10);
+    w.nextCard();
+    const posBefore = $('#fcCount').textContent.trim();
+    w.toggleKnown();
+    const totalAfter = parseInt($('#fcCount').textContent.trim().split('/')[1], 10);
+    check('标记熟后「未熟」队列少 1 张', totalAfter, totalNew - 1);
+    check('标记熟后自动切到下一张', $('#fcCount').textContent.trim() !== posBefore, true);
     w.switchFilter('all');
 
     console.log('\n--- 四组切换 ---');
@@ -105,8 +149,10 @@ const $ = sel => w.document.querySelector(sel);
     check('矮屏 media 查询（横屏）', /@media\s*\(max-height:\s*520px\)/.test(CSS), true);
     check('禁用横向溢出', /\.fc-page\s*\{[^}]*overflow-x:\s*hidden/.test(CSS), true);
     check('卡片区随视口（vh 单位）', /\.fc-card\s*\{[^}]*min-height:\s*\d+vh/.test(CSS), true);
+    check('角标绝对定位于卡片右上角', /\.fc-corner\s*\{[^}]*position:\s*absolute/.test(CSS), true);
+    check('不熟按钮橙语义色', /\.fc-btn\.on-u\s*\{[^}]*rgba\(234,\s*88,\s*12/.test(CSS), true);
+    check('不会按钮红语义色', /\.fc-btn\.on-d\s*\{[^}]*rgba\(220,\s*38,\s*38/.test(CSS), true);
     check('页面有底部操作栏元素', !!$('.fc-actions'), true);
-    check('操作按钮 4 个', w.document.querySelectorAll('.fc-actions .fc-btn').length, 4);
 
     console.log(`\nPASS ${pass} / FAIL ${fail}`);
     dom.window.close();

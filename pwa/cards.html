@@ -36,16 +36,20 @@
         <div class="fc-progress">
             <span id="fcCount">0 / 0</span>
             <div class="fc-bar"><div class="fc-bar-fill" id="fcBar"></div></div>
-            <span id="fcKnown">已掌握 0</span>
+            <span id="fcKnown">熟 0</span>
         </div>
 
-        <!-- 筛选：全部 / 未掌握 / 已掌握 -->
+        <!-- 筛选：全部 / 未熟 / 熟 -->
         <div class="fc-chips" id="fcFilters"></div>
 
         <div class="fc-stage" id="fcStage">
             <div class="fc-card" id="fcCard">
-                <div class="fc-face fc-front" id="fcFront"></div>
-                <div class="fc-face fc-back" id="fcBack"></div>
+                <!-- 右上角：熟 / 收藏（点按钮不触发卡片查看） -->
+                <div class="fc-corner">
+                    <button class="fc-corner-btn" id="fcKnownBtn" onclick="event.stopPropagation();toggleKnown()" title="熟了不再加入记忆">熟</button>
+                    <button class="fc-corner-btn" id="fcFavBtn" onclick="event.stopPropagation();toggleFav()" title="收藏卡片">☆ 收藏</button>
+                </div>
+                <div class="fc-body" id="fcBody"></div>
             </div>
         </div>
     </main>
@@ -53,8 +57,8 @@
     <!-- 底部操作栏：固定在视口底，触控区 ≥48px，适配 iOS 安全区 -->
     <div class="fc-actions">
         <button class="fc-btn" onclick="prevCard()" title="上一张">←</button>
-        <button class="fc-btn fc-btn-main" onclick="flipCard()" id="fcFlipBtn">翻转</button>
-        <button class="fc-btn" onclick="toggleKnown()" id="fcKnownBtn">记住了</button>
+        <button class="fc-btn" id="fcWeakUBtn" onclick="toggleWeak('u')" title="标记不熟">不熟</button>
+        <button class="fc-btn" id="fcWeakDBtn" onclick="toggleWeak('d')" title="标记不会">不会</button>
         <button class="fc-btn" onclick="nextCard()" title="下一张">→</button>
     </div>
 
