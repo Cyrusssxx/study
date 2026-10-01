@@ -5718,6 +5718,9 @@ a.chapter-badge-link:hover {
     padding: 1px 9px; border-radius: 999px;
 }
 .daily-meta { margin-left: auto; font-size: 0.76rem; color: var(--text-light); }
+/* 知识点跳转（章节 · 小节 📖）：小节可点，新窗口直达笔记定位 */
+a.daily-meta.daily-kp { color: var(--text-light); text-decoration: none; }
+a.daily-meta.daily-kp:hover { color: var(--primary); text-decoration: underline; }
 .daily-q { font-family: var(--font-q); font-size: 1rem; line-height: 1.85; color: var(--text); flex: 1; }
 .daily-link { font-size: 0.78rem; color: var(--primary); text-decoration: none; align-self: flex-start; }
 .daily-link:hover { text-decoration: underline; }

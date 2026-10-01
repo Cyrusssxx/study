@@ -171,6 +171,14 @@ w.eval('(function(){' + DAILY + '})()');
     check('刷题页题干/选项/解析应用真题字体', /\.question-content\s*\{[^}]*font-family:\s*var\(--font-q\)/.test(CSS) && /\.option-text\s*\{[^}]*font-family:\s*var\(--font-q\)/.test(CSS) && /\.explanation-body\s*\{[^}]*font-family:\s*var\(--font-q\)/.test(CSS), true);
     check('题干内代码块保持等宽', /\.question-content pre, \.question-content code[\s\S]*?font-family:\s*Consolas/.test(CSS), true);
 
+    console.log('\n--- 知识点跳转（同刷题页，新窗口定位笔记） ---');
+    const kp = w.DailyPick.itemHtml('ds', { id: 'x3', content: '题干内容', options: { A: '甲' }, answer: 'A', chapter: '第1章', section: '1.1 节' });
+    check('渲染知识点跳转链接（notes.html 定位小节）', /notes\.html\?subject=ds&goto=/.test(kp), true);
+    check('链接带题干模糊定位参数 q=', /&q=/.test(kp), true);
+    check('新窗口打开', /target="_blank"/.test(kp), true);
+    const noSec = w.DailyPick.itemHtml('ds', { id: 'x4', content: '无小节', options: { A: '甲' }, answer: 'A', chapter: '第1章' });
+    check('无小节时章节为纯文本（无死链）', /daily-kp/.test(noSec), false);
+
     console.log('\n--- 内嵌作答（不跳页） ---');
     const radio = w.document.querySelector('input[name="dq-ds"]');
     check('选项可点选', !!radio, true);

@@ -124,6 +124,17 @@
         return `quiz.html?subject=${sub}&mode=favorite&goto=${encodeURIComponent(qid)}`;
     }
 
+    // 章节小节 → 知识点跳转（同 quiz.html：notes.html 定位到小节，题干片段兜底模糊定位）
+    function kpMetaHtml(sub, p) {
+        const meta = [p.chapter, p.section].filter(Boolean).join(' · ');
+        if (!meta) return '';
+        if (p.section) {
+            return `<a class="daily-meta daily-kp" href="notes.html?subject=${sub}&goto=${encodeURIComponent(p.section)}&q=${encodeURIComponent(String(p.content || '').slice(0, 60))}"
+                target="_blank" title="点击新窗口查看该知识点笔记（已定位到小节）">${esc(meta)} 📖</a>`;
+        }
+        return `<span class="daily-meta">${esc(meta)}</span>`;
+    }
+
     // ---------- 渲染：每题一个内嵌作答块（ctx.date 非空 = 历史日期补做） ----------
     function itemHtml(sub, p, ctx) {
         ctx = ctx || {};
@@ -139,13 +150,12 @@
             return `<div class="daily-item" data-sub="${sub}">
                 <div class="daily-item-head">
                     <span class="daily-subject">${esc(subName(sub))}</span>
-                    ${[p.chapter, p.section].filter(Boolean).length ? `<span class="daily-meta">${esc([p.chapter, p.section].filter(Boolean).join(' · '))}</span>` : ''}
+                    ${kpMetaHtml(sub, p)}
                 </div>
                 <div class="daily-q">${esc(p.content || '（题目）')}</div>
                 <a class="daily-link" href="${quizLink(sub, p.id)}">旧版记录，去刷题页作答 →</a>
             </div>`;
         }
-        const meta = [p.chapter, p.section].filter(Boolean).join(' · ');
         const a = p.answered;
         const locked = !!a;
         const isMulti = !!p.multi_blank;
@@ -197,7 +207,7 @@
         return `<div class="daily-item" data-sub="${sub}">
             <div class="daily-item-head">
                 <span class="daily-subject">${esc(subName(sub))}</span>
-                ${meta ? `<span class="daily-meta">${esc(meta)}</span>` : ''}
+                ${kpMetaHtml(sub, p)}
             </div>
             <div class="daily-q">${(typeof fmtContent === 'function') ? fmtContent(p.content || '') : esc(p.content || '')}</div>
             ${optsHtml}
