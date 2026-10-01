@@ -1,7 +1,7 @@
 // ==================== 每日一题（daily.html） ====================
 // 规则：
-//   ① 每天从四门（ds/os/cn/co）的【收藏 ∪ 不熟/不会】题池里各抽 1 题，共 4 题，四门互不重复；
-//   ② 抽题优先级（四层）：不会 > 不熟 > 没做过 > 其他做过；层内「从未抽过 → 最久未抽」；
+//   ① 每天从四门（ds/os/cn/co）的【收藏 ∪ 不熟/不会 ∪ 今日到期复习】题池里各抽 1 题，共 4 题，四门互不重复；
+//   ② 抽题优先级（五层）：到期复习 > 不会 > 不熟 > 没做过 > 其他做过；层内「从未抽过 → 最久未抽」；
 //   ③ 支持「➕ 再来 4 道」加量：每门再抽 1 题追加到当天列表（与当天已抽不重复，某门抽完则跳过）；
 //   ④ 直接在卡片里作答（选项→提交→判对错→看解析），页面内完成不跳转；
 //   ⑤ 笔记默认【不展开】（刷题页 quiz.html 仍保持有笔记即展开）；
@@ -60,16 +60,24 @@
         } catch (e) { return []; }
     }
 
-    // 抽题池 = 收藏题 ∪ 不熟/不会的题（mode=unfamiliar 返回不熟+不会并集）
-    //   这样「标记了不熟/不会但没收藏」的弱项题也能被每日一题抽到
+    // 抽题池 = 收藏题 ∪ 不熟/不会的题 ∪ 今日到期复习题（艾宾浩斯）
+    //   - unfamiliar 模式返回「不熟+不会」并集；review 模式返回今日到期（逾期越久越前）
+    //   - 到期复习的题打 _due 标记（抽题时最高优先，界面上标「待复习」）
     async function loadPool(sub) {
-        const [favs, weak] = await Promise.all([
+        const [favs, weak, due] = await Promise.all([
             loadMode(sub, 'favorite'),
-            loadMode(sub, 'unfamiliar')
+            loadMode(sub, 'unfamiliar'),
+            loadMode(sub, 'review')
         ]);
         const map = new Map();
-        for (const q of favs) map.set(q.id, q);
-        for (const q of weak) if (!map.has(q.id)) map.set(q.id, q);
+        const add = (q, isDue) => {
+            let o = map.get(q.id);
+            if (!o) { o = Object.assign({}, q); o._due = false; map.set(q.id, o); }
+            if (isDue) o._due = true;
+        };
+        for (const q of favs) add(q, false);
+        for (const q of weak) add(q, false);
+        for (const q of due) add(q, true);
         return Array.from(map.values());
     }
 
@@ -86,8 +94,8 @@
         return out;
     }
 
-    // 抽 1 题（四层优先，层内「从未抽过 → 最久未抽」，随机打破并列）：
-    //   L1 标记「不会」→ L2 标记「不熟」→ L3 没做过 → L4 其他做过的。
+    // 抽 1 题（五层优先，层内「从未抽过 → 最久未抽」，随机打破并列）：
+    //   L1 今日到期复习（艾宾浩斯）→ L2 标记「不会」→ L3 标记「不熟」→ L4 没做过 → L5 其他做过的。
     //   旧写法的缺陷：先按"没做过"整体过滤，导致只要还有没做过的题，弱标记题永远抽不到。
     function pickOne(pool, seenSub, excludeIds) {
         if (!pool || !pool.length) return null;
@@ -100,10 +108,11 @@
         const isU = f => !!f.is_unfamiliar && !isD(f);
         const isNew = f => !isD(f) && !isU(f) && !f.last_status;      // 没做过
         const layers = [
-            cand.filter(isD),
-            cand.filter(isU),
-            cand.filter(isNew),
-            cand.filter(f => !isD(f) && !isU(f) && !!f.last_status)
+            cand.filter(f => f._due),                                    // 到期复习（最该现在看）
+            cand.filter(f => !f._due && isD(f)),
+            cand.filter(f => !f._due && isU(f)),
+            cand.filter(f => !f._due && isNew(f)),
+            cand.filter(f => !f._due && !isD(f) && !isU(f) && !!f.last_status)
         ];
         const tier = layers.find(a => a.length) || cand;
         return pickOldest(tier, seen);
@@ -130,6 +139,7 @@
             section: f.section || '',
             note: f.note || '',
             note_images: f.note_images || [],
+            due: !!f._due,    // 抽到时是「今日到期复习」题（界面标 🔁 待复习）
             answered: null    // {answer, isCorrect, correctAnswer}
         };
     }
@@ -286,6 +296,7 @@
         return `<div class="daily-item" data-sub="${sub}" data-idx="${idx}">
             <div class="daily-item-head">
                 <span class="daily-subject">${esc(subName(sub))}${idx > 0 ? ' · 加量' : ''}</span>
+                ${p.due ? '<span class="daily-tag due">🔁 待复习</span>' : ''}
                 ${kpMetaHtml(sub, p)}
             </div>
             <div class="daily-q">${(typeof fmtContent === 'function') ? fmtContent(p.content || '') : esc(p.content || '')}</div>
@@ -323,8 +334,8 @@
                 </div>
                 ${hasAny
                     ? `<div class="daily-grid">${items}</div>
-                       <div class="daily-foot">共 ${totalQ} 题 · 优先抽「不熟/不会」→ 没做过的收藏题 · 每天 0 点更新</div>`
-                    : `<div class="daily-empty">还没有可抽的题：去刷题收藏几道（或在题上标记不熟/不会），这里每天会从四门各抽 1 题。</div>`}
+                       <div class="daily-foot">共 ${totalQ} 题 · 优先抽 到期复习/不熟/不会 → 没做过的收藏题 · 每天 0 点更新</div>`
+                    : `<div class="daily-empty">还没有可抽的题：去刷题收藏几道、或标记不熟/不会、答错的题会自动进入复习队列，这里每天从四门各抽 1 题。</div>`}
             </div>`;
     }
 

@@ -275,6 +275,34 @@ w.eval('(function(){' + DAILY + '})()');
     const dp = await w.DailyPick.rollToday();
     check('未收藏但标记「不会」的题也能被抽到', dp.picks.ds[0].id, 'ds_0004');
 
+    console.log('\n--- 结合复习列表：到期复习题最高优先 ---');
+    check('L0：今日到期复习题最优先',
+        w.DailyPick.pickOne([P('due', { _due: true }), P('dn', { is_dontknow: true }), P('n')], {}, new Set()).id, 'due');
+    check('到期复习题抽过后让位给「不会」',
+        w.DailyPick.pickOne([P('due', { _due: true }), P('dn', { is_dontknow: true }), P('n')], {}, new Set(['due'])).id, 'dn');
+    check('到期复习题持久化 due 字段',
+        w.DailyPick.itemHtml('ds', { id: 'z1', content: '复习题', options: { A: '甲' }, answer: 'A', due: true }, { idx: 0 }).includes('待复习'), true);
+    check('非复习题无「待复习」标签',
+        w.DailyPick.itemHtml('ds', { id: 'z2', content: '普通题', options: { A: '甲' }, answer: 'A' }, { idx: 0 }).includes('待复习'), false);
+
+    // 集成：stub api，让 review 模式返回一道题 → 抽题时应命中它
+    const realApi = w.api;
+    let reviewCalled = 0;
+    w.api = async (url, opts) => {
+        if (String(url).includes('mode=review')) {
+            reviewCalled++;
+            return { json: async () => ({ questions: [{ id: 'rv_001', content: '到期复习题', options: { A: '甲' }, answer: 'A', chapter: '第1章', section: '1.1 节' }] }) };
+        }
+        return realApi(url, opts);
+    };
+    w.localStorage.removeItem('daily_pick_v1');
+    w.localStorage.removeItem('daily_seen_v1');
+    const dr = await w.DailyPick.rollToday();
+    w.api = realApi;
+    check('抽题时会拉取复习列表（mode=review）', reviewCalled > 0, true);
+    check('到期复习题被优先抽中（ds 门）', dr.picks.ds[0].id, 'rv_001');
+    check('抽中的复习题带 due 标记', dr.picks.ds[0].due, true);
+
     console.log(`\nPASS ${pass} / FAIL ${fail}`);
     process.exit(fail ? 1 : 0);
 })().catch(e => { console.error('测试异常:', e); process.exit(1); });

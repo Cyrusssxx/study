@@ -5736,6 +5736,12 @@ a.chapter-badge-link:hover {
     padding: 1px 9px; border-radius: 999px;
 }
 .daily-meta { margin-left: auto; font-size: 0.76rem; color: var(--text-light); }
+/* 到期复习标签（🔁 待复习） */
+.daily-tag {
+    flex: none; font-size: 0.72rem; font-weight: 600; padding: 1px 8px; border-radius: 999px;
+    background: rgba(234, 88, 12, .12); color: #b45309; border: 1px solid rgba(234, 88, 12, .3);
+}
+.dark .daily-tag { background: rgba(251, 191, 36, .14); color: #e0b45c; border-color: rgba(251, 191, 36, .3); }
 /* 知识点跳转（章节 · 小节 📖）：小节可点，新窗口直达笔记定位 */
 a.daily-meta.daily-kp { color: var(--text-light); text-decoration: none; }
 a.daily-meta.daily-kp:hover { color: var(--primary); text-decoration: underline; }
