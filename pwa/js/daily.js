@@ -1,8 +1,8 @@
 // ==================== 每日一题（daily.html） ====================
 // 规则：
-//   ① 每天从四门（ds/os/cn/co）的【收藏】里各抽 1 题，共 4 题，四门互不重复；
-//   ② 抽题优先级：排除当天已抽 → 没做过 → （全做过时）标了「不熟/不会」的 → 从未抽过 → 最久未抽；
-//   ③ 支持「➕ 再来 4 道」加量：每门再抽 1 题追加到当天列表（与当天已抽不重复，某门收藏抽完则跳过）；
+//   ① 每天从四门（ds/os/cn/co）的【收藏 ∪ 不熟/不会】题池里各抽 1 题，共 4 题，四门互不重复；
+//   ② 抽题优先级（四层）：不会 > 不熟 > 没做过 > 其他做过；层内「从未抽过 → 最久未抽」；
+//   ③ 支持「➕ 再来 4 道」加量：每门再抽 1 题追加到当天列表（与当天已抽不重复，某门抽完则跳过）；
 //   ④ 直接在卡片里作答（选项→提交→判对错→看解析），页面内完成不跳转；
 //   ⑤ 笔记默认【不展开】（刷题页 quiz.html 仍保持有笔记即展开）；
 //   ⑥ 每天首次进入生成结果并归档进历史，历史保留最近 120 天，可回看/页内补做。
@@ -50,14 +50,27 @@
         return t.length > 0;
     }
 
-    // 收藏题（带作答状态 last_status、笔记等）：用 mode=favorite 拉，比 /api/favorites 信息更全
-    async function loadFavs(sub) {
+    // 单模式拉题（带作答状态 last_status、弱标记、笔记等完整字段）
+    async function loadMode(sub, mode) {
         try {
             // 路由是 /api/questions/<subject>（路径段），不是 ?subject= 查询参数
-            const resp = await api(`/api/questions/${encodeURIComponent(sub)}?mode=favorite&page=1&per_page=9999`);
+            const resp = await api(`/api/questions/${encodeURIComponent(sub)}?mode=${mode}&page=1&per_page=9999`);
             const data = await resp.json();
             return (data && data.questions) || [];
         } catch (e) { return []; }
+    }
+
+    // 抽题池 = 收藏题 ∪ 不熟/不会的题（mode=unfamiliar 返回不熟+不会并集）
+    //   这样「标记了不熟/不会但没收藏」的弱项题也能被每日一题抽到
+    async function loadPool(sub) {
+        const [favs, weak] = await Promise.all([
+            loadMode(sub, 'favorite'),
+            loadMode(sub, 'unfamiliar')
+        ]);
+        const map = new Map();
+        for (const q of favs) map.set(q.id, q);
+        for (const q of weak) if (!map.has(q.id)) map.set(q.id, q);
+        return Array.from(map.values());
     }
 
     // picks 归一化：兼容旧数据（单题对象）与新数据（题目数组）
@@ -73,29 +86,34 @@
         return out;
     }
 
-    // 抽 1 题（优化后优先级）：
-    //   ① 排除当天已抽过的（题不够时由调用方决定是否放宽）；
-    //   ② 没做过的题优先；③ 全做过时优先「不熟/不会」标记题（更该复习）；
-    //   ④ 其中「从未抽过」的优先；⑤ 最后取最久未抽的（随机打破并列）。
-    function pickOne(favs, seenSub, excludeIds) {
-        if (!favs || !favs.length) return null;
+    // 抽 1 题（四层优先，层内「从未抽过 → 最久未抽」，随机打破并列）：
+    //   L1 标记「不会」→ L2 标记「不熟」→ L3 没做过 → L4 其他做过的。
+    //   旧写法的缺陷：先按"没做过"整体过滤，导致只要还有没做过的题，弱标记题永远抽不到。
+    function pickOne(pool, seenSub, excludeIds) {
+        if (!pool || !pool.length) return null;
         const seen = seenSub || {};
         const ex = excludeIds || new Set();
-        let pool = favs.filter(f => !ex.has(f.id));
-        if (!pool.length) pool = favs.slice();          // 允许重复兜底（调用方可先自行过滤）
+        let cand = pool.filter(f => !ex.has(f.id));          // 排除当天已抽过的
+        if (!cand.length) cand = pool.slice();               // 题不够时放宽（由调用方决定是否过滤）
 
-        const undone = pool.filter(f => !f.last_status);
-        let c = undone.length ? undone : pool;
-        if (!undone.length) {
-            const weak = c.filter(f => f.is_unfamiliar || f.is_dontknow);   // 做过且标了不熟/不会 → 优先复习
-            if (weak.length) c = weak;
-        }
-        const fresh = c.filter(f => !seen[f.id]);
+        const isD = f => !!f.is_dontknow;
+        const isU = f => !!f.is_unfamiliar && !isD(f);
+        const isNew = f => !isD(f) && !isU(f) && !f.last_status;      // 没做过
+        const layers = [
+            cand.filter(isD),
+            cand.filter(isU),
+            cand.filter(isNew),
+            cand.filter(f => !isD(f) && !isU(f) && !!f.last_status)
+        ];
+        const tier = layers.find(a => a.length) || cand;
+        return pickOldest(tier, seen);
+    }
+    function pickOldest(arr, seen) {
+        const fresh = arr.filter(f => !seen[f.id]);
         if (fresh.length) return pick(fresh);
-
-        const arr = c.slice().sort((a, b) => String(seen[a.id] || '').localeCompare(String(seen[b.id] || '')));
-        const earliest = seen[arr[0].id] || '';
-        return pick(arr.filter(f => (seen[f.id] || '') === earliest));
+        const sorted = arr.slice().sort((a, b) => String(seen[a.id] || '').localeCompare(String(seen[b.id] || '')));
+        const earliest = seen[sorted[0].id] || '';
+        return pick(sorted.filter(f => (seen[f.id] || '') === earliest));
     }
     function pick(a) { return a[Math.floor(Math.random() * a.length)]; }
 
@@ -137,8 +155,8 @@
         const seen = readJson(SEEN_KEY, {});
         const picks = {};
         for (const sub of SUBJ_ORDER) {
-            const favs = await loadFavs(sub);
-            const f = pickOne(favs, seen[sub]);
+            const pool = await loadPool(sub);
+            const f = pickOne(pool, seen[sub]);
             if (!f) continue;
             picks[sub] = [toPick(f)];
             seen[sub] = seen[sub] || {};
@@ -162,8 +180,8 @@
         for (const sub of SUBJ_ORDER) {
             const cur = picks[sub] || [];
             const ex = new Set(cur.map(p => p.id));
-            const favs = await loadFavs(sub);
-            const cand = favs.filter(f => !ex.has(f.id));     // 该门收藏都抽过 → 本题无新题可加
+            const pool = await loadPool(sub);
+            const cand = pool.filter(f => !ex.has(f.id));     // 该门可抽的都抽过 → 本题无新题可加
             if (!cand.length) continue;
             const f = pickOne(cand, seen[sub]);
             if (!f) continue;
@@ -305,15 +323,15 @@
                 </div>
                 ${hasAny
                     ? `<div class="daily-grid">${items}</div>
-                       <div class="daily-foot">共 ${totalQ} 题 · 优先抽没做过的收藏题 · 每天 0 点更新</div>`
-                    : `<div class="daily-empty">还没有收藏题，先去刷题收藏几道，这里每天会从四门收藏里各抽 1 题。</div>`}
+                       <div class="daily-foot">共 ${totalQ} 题 · 优先抽「不熟/不会」→ 没做过的收藏题 · 每天 0 点更新</div>`
+                    : `<div class="daily-empty">还没有可抽的题：去刷题收藏几道（或在题上标记不熟/不会），这里每天会从四门各抽 1 题。</div>`}
             </div>`;
     }
 
     async function addBatchDaily() {
         const r = await addBatch();
         if (!r.added) {
-            alert('四门收藏里能抽的题都抽过了，去刷题页再收藏几道吧～');
+            alert('四门能抽的题都抽过一遍了，去刷题页再收藏几道或标记不熟/不会吧～');
             return;
         }
         renderDaily();

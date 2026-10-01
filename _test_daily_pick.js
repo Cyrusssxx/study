@@ -252,6 +252,29 @@ w.eval('(function(){' + DAILY + '})()');
     const r3 = await w.DailyPick.addBatch();
     check('可继续加量（每门 3 题）', (todayOf().picks.ds || []).length, 3);
 
+    console.log('\n--- 抽题池：收藏 ∪ 不熟/不会 + 四层优先 ---');
+    const P = (id, o) => Object.assign({ id }, o);
+    check('L1：标记「不会」的最优先',
+        w.DailyPick.pickOne([P('dn', { is_dontknow: true }), P('u', { is_unfamiliar: true }), P('n'), P('d', { last_status: { is_correct: true } })], {}, new Set()).id, 'dn');
+    check('L2：无「不会」时「不熟」优先',
+        w.DailyPick.pickOne([P('u', { is_unfamiliar: true }), P('n'), P('d', { last_status: { is_correct: true } })], {}, new Set()).id, 'u');
+    check('L3：无弱标记时「没做过」优先',
+        w.DailyPick.pickOne([P('n'), P('d', { last_status: { is_correct: true } })], {}, new Set()).id, 'n');
+    check('L4：都做过时取其他做过题',
+        w.DailyPick.pickOne([P('d', { last_status: { is_correct: true } })], {}, new Set()).id, 'd');
+    check('排除当天已抽（「不会」题抽过则让位给没做过的）',
+        w.DailyPick.pickOne([P('dn', { is_dontknow: true }), P('n')], {}, new Set(['dn'])).id, 'n');
+
+    // 集成：取消收藏一道题并标记「不会」→ 仍应进池且优先被抽到
+    await post('/api/favorite/ds_0004');                                        // toggle 取消收藏
+    await w.api('/api/mark/dontknow/ds_0004', { method: 'POST' });              // 标记不会
+    const favIds = (await w.api('/api/questions/ds?mode=favorite').then(r => r.json())).questions.map(q => q.id);
+    check('前置：ds_0004 已不在收藏里', favIds.includes('ds_0004'), false);
+    w.localStorage.removeItem('daily_pick_v1');
+    w.localStorage.removeItem('daily_seen_v1');
+    const dp = await w.DailyPick.rollToday();
+    check('未收藏但标记「不会」的题也能被抽到', dp.picks.ds[0].id, 'ds_0004');
+
     console.log(`\nPASS ${pass} / FAIL ${fail}`);
     process.exit(fail ? 1 : 0);
 })().catch(e => { console.error('测试异常:', e); process.exit(1); });
