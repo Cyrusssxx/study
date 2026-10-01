@@ -19,8 +19,8 @@
     --card-rgb: 255,255,255;
     --sidebar-rgb: 255,255,255;
     --ui-alpha: 1;
-    /* 题目内容字体：408 真题卷风格 —— 英文/数字 Times New Roman，中文宋体 */
-    --font-q: "Times New Roman", "STSong", "SimSun", "宋体", "Songti SC", serif;
+    /* 题目内容字体：英文/数字 Times New Roman（真题卷），中文微软雅黑/苹方（宋体小字号发虚，实测不舒服） */
+    --font-q: "Times New Roman", "Microsoft YaHei", "PingFang SC", "Noto Sans SC", sans-serif;
 }
 
 * {
