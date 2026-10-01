@@ -169,8 +169,11 @@ w.eval('(function(){' + DAILY + '})()');
     check('日期块完成度色点（绿/橙/灰）', /\.daily-cal-day\.cal-full \.dc-dot/.test(CSS) && /\.daily-cal-day\.cal-part \.dc-dot/.test(CSS), true);
     check('科目徽章淡底描边', /\.daily-subject\s*\{[^}]*border:/.test(CSS), true);
     check('真题卷字体变量（Times + 宋体）', /--font-q:\s*"Times New Roman"/.test(CSS), true);
+    check('字体栈含跨平台兜底（Nimbus/Liberation/Georgia + 雅黑系）', /"Nimbus Roman"/.test(CSS) && /Georgia/.test(CSS) && /"Hiragino Sans GB"/.test(CSS), true);
+    check('中英混排优化（x-height 补偿 + 等宽数字 + 字距调整）', /font-size-adjust:\s*0?\.\d+/.test(CSS) && /font-variant-numeric:\s*[^;]*tabular-nums/.test(CSS) && /font-kerning:\s*normal/.test(CSS), true);
     check('每日一题题干/选项应用真题字体', /\.daily-q\s*\{[^}]*font-family:\s*var\(--font-q\)/.test(CSS) && /\.daily-opt-text\s*\{[^}]*font-family:\s*var\(--font-q\)/.test(CSS), true);
-    check('刷题页题干/选项/解析应用真题字体', /\.question-content\s*\{[^}]*font-family:\s*var\(--font-q\)/.test(CSS) && /\.option-text\s*\{[^}]*font-family:\s*var\(--font-q\)/.test(CSS) && /\.explanation-body\s*\{[^}]*font-family:\s*var\(--font-q\)/.test(CSS), true);
+    check('刷题页题干/选项/解析应用真题字体（统一分组规则）',
+        /\.question-content,\s*\.option-text[\s\S]{0,420}?font-family:\s*var\(--font-q\)/.test(CSS), true);
     check('题干内代码块保持等宽', /\.question-content pre, \.question-content code[\s\S]*?font-family:\s*Consolas/.test(CSS), true);
 
     console.log('\n--- 知识点跳转（同刷题页，新窗口定位笔记） ---');

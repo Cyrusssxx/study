@@ -19,8 +19,9 @@
     --card-rgb: 255,255,255;
     --sidebar-rgb: 255,255,255;
     --ui-alpha: 1;
-    /* 题目内容字体：英文/数字 Times New Roman（真题卷），中文微软雅黑/苹方（宋体小字号发虚，实测不舒服） */
-    --font-q: "Times New Roman", "Microsoft YaHei", "PingFang SC", "Noto Sans SC", sans-serif;
+    /* 题目内容字体：英文/数字 Times New Roman（真题卷，各平台兜底），中文微软雅黑/苹方 */
+    --font-q: "Times New Roman", "Nimbus Roman", "Liberation Serif", Georgia,
+        "Microsoft YaHei", "PingFang SC", "Hiragino Sans GB", "Noto Sans SC", "Source Han Sans SC", sans-serif;
 }
 
 * {
@@ -473,8 +474,21 @@ body {
     white-space: nowrap;
 }
 
-.question-content {
+/* ===== 题目内容中英混排优化（统一入口）：西文衬线 Times 系 + 中文雅黑系 ===== */
+/* font-size-adjust 补偿 Times 的 x-height 偏小 → 题干里的英文/数字不再显小 */
+/* tabular-nums 让公式与下标数字等宽对齐；kerning/word-spacing 让中英混排更匀 */
+.question-content, .option-text, .option-letter,
+.explanation-body, .item-content,
+.daily-q, .daily-opt-text, .daily-opt-key, .daily-fold-body, .daily-result {
     font-family: var(--font-q);
+    font-kerning: normal;
+    font-variant-numeric: lining-nums tabular-nums;
+    word-spacing: 0.02em;
+    text-rendering: optimizeLegibility;
+    font-size-adjust: 0.52;
+}
+
+.question-content {
     font-size: 1.1rem;
     line-height: 1.9;
     letter-spacing: 0.02em;
