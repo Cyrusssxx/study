@@ -64,13 +64,21 @@ body {
 
 .nav-links {
     display: flex;
-    gap: 24px;
+    gap: 16px;
+    overflow-x: auto;
+    scrollbar-width: none;
+    -webkit-overflow-scrolling: touch;
+    flex: 1;
+    min-width: 0;
+    justify-content: flex-end;
 }
+.nav-links::-webkit-scrollbar { display: none; }
 
 .nav-link {
     color: var(--text-light);
     text-decoration: none;
-    font-size: 0.95rem;
+    font-size: 0.9rem;
+    white-space: nowrap;
     padding: 8px 0;
     transition: color 0.2s;
 }

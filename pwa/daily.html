@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>每日一题 - 408刷题</title>
+    <link rel="manifest" href="manifest.webmanifest">
+    <meta name="theme-color" content="#4f46e5">
+    <link rel="icon" type="image/png" href="icons/icon-192.png">
+    <link rel="apple-touch-icon" href="icons/icon-192.png">
+    <script>if (localStorage.getItem('darkMode') === '1') document.documentElement.classList.add('dark');</script>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-container">
+            <a href="index.html" class="nav-brand">408刷题</a>
+            <div class="nav-links">
+                <a href="index.html" class="nav-link">首页</a>
+                <a href="quiz.html" class="nav-link">刷题</a>
+                <a href="daily.html" class="nav-link active">每日一题</a>
+                <a href="cards.html" class="nav-link">记忆卡</a>
+                <a href="daka.html" class="nav-link">打卡表</a>
+            </div>
+            <div class="nav-tools">
+                <button class="nav-switch" id="darkSwitch" onclick="toggleDark()" title="夜间模式：深色主题护眼">
+                    夜间 <span class="switch-state" id="darkState">关</span>
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <main class="container">
+        <!-- 每日一题：从四门收藏里各抽 1 题，卡片内直接作答（js/daily.js 渲染） -->
+        <section id="dailySection"></section>
+    </main>
+
+    <script src="js/common.js"></script>
+    <script src="js/lightbox.js"></script>
+    <script src="js/backend.js"></script>
+    <script src="js/daily.js"></script>
+    <script>
+        if (typeof initDaily === 'function') initDaily();
+    </script>
+</body>
+</html>
