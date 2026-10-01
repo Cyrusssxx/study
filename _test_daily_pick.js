@@ -109,6 +109,7 @@ w.eval('(function(){' + DAILY + '})()');
     check('cn 第 2 天抽到不同题', d2.picks.cn.id !== firstCn, true);
     check('上一天结果归档进历史', histOf().some(h => h.date === '2020-01-01'), true);
     check('历史里保留了当天抽的题', (histOf()[0].picks || {}).cn.id, firstCn);
+    check('归档为完整数据（含选项，可页内补做）', !!(histOf()[0].picks.cn.options && Object.keys(histOf()[0].picks.cn.options).length), true);
 
     console.log('\n--- 连续多天不重复（ds 收藏 5 题） ---');
     const ids = [d2.picks.ds.id];
@@ -127,15 +128,44 @@ w.eval('(function(){' + DAILY + '})()');
     check('全部抽过时取最久未抽的题', w.DailyPick.pickOne(favs, seen).id, 'a');
     check('seen 记录已积累', Object.keys(seenOf().ds || {}).length >= 5, true);
 
-    console.log('\n--- 历史记录弹层 ---');
+    console.log('\n--- 历史记录弹层（日期形式 + 颜色 + 页内补做） ---');
     w.showDailyHistory();
     const ov = w.document.getElementById('dailyHistOverlay');
     check('弹层已创建', !!ov, true);
     check('弹层可见', ov && ov.hidden === false, true);
+    check('日期列表：含多个日期块', w.document.querySelectorAll('.daily-cal-day').length >= 5, true);
     check('弹层含历史日期', /2020-01-01/.test(ov.innerHTML), true);
     check('弹层含今日标记', /今天/.test(ov.innerHTML), true);
+    check('今日行带完成度色点', !!ov.querySelector('.daily-cal-day.today .dc-dot'), true);
+    check('列表含完成度统计（N/N 已做）', /\d\/\d 已做/.test(ov.innerHTML), true);
+
+    // 点 2020-01-01 进入当天详情，页内补做
+    w.openDailyDay('2020-01-01');
+    check('详情含返回按钮', !!w.document.querySelector('#dailyHistOverlay .daily-hist-back'), true);
+    const histInput = w.document.querySelector('#dailyHistOverlay input[name="dq-ds"]');
+    check('详情含可作答选项（完整数据）', !!histInput, true);
+    check('详情含未抽科目的提示', /当天未抽到该科目的题/.test(ov.innerHTML), true);
+    if (histInput) {
+        histInput.checked = true;
+        await w.submitHist('2020-01-01', 'ds');
+        check('历史补做后原地显示判分结果', /daily-result/.test(ov.innerHTML), true);
+        const dayAfter = histOf().find(h => h.date === '2020-01-01');
+        check('补做状态写回当天记录', !!(dayAfter && dayAfter.picks.ds.answered), true);
+    }
+    w.backDailyHist();
+    check('返回日期列表', !!w.document.querySelector('#dailyHistOverlay .daily-cal-day'), true);
+    check('补做后完成度即时更新（1/3 已做）', /1\/3 已做/.test(ov.innerHTML), true);
     w.closeDailyHistory();
     check('关闭后隐藏', w.document.getElementById('dailyHistOverlay').hidden, true);
+    check('关闭后视图重置回日期列表', (() => { w.showDailyHistory(); return !!w.document.querySelector('#dailyHistOverlay .daily-cal-day'); })(), true);
+    w.closeDailyHistory();
+
+    console.log('\n--- 布局：独立页居中 + 一题一列（样式静态检查） ---');
+    const CSS = fs.readFileSync(path.join(ROOT, 'pwa', 'css', 'style.css'), 'utf8');
+    check('独立页整体限宽居中（.daily-page 780px）', /\.daily-page\s*\{[^}]*max-width:\s*780px/.test(CSS), true);
+    check('一题一列（.daily-grid 纵向排列）', /\.daily-grid\s*\{[^}]*flex-direction:\s*column/.test(CSS), true);
+    check('日期块完成度色点（绿/橙/灰）', /\.daily-cal-day\.cal-full \.dc-dot/.test(CSS) && /\.daily-cal-day\.cal-part \.dc-dot/.test(CSS), true);
+    check('科目徽章淡底描边', /\.daily-subject\s*\{[^}]*border:/.test(CSS), true);
 
     console.log('\n--- 内嵌作答（不跳页） ---');
     const radio = w.document.querySelector('input[name="dq-ds"]');

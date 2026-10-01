@@ -5664,16 +5664,18 @@ a.chapter-badge-link:hover {
 .dark .notes-body .bus-h4 { color: #fbbf24; background: rgba(251,191,36,0.05); }
 }
 
-/* ==================== 每日一题（首页 index.html，js/daily.js） ==================== */
-#dailySection { margin: 18px 0 4px; }
+/* ==================== 每日一题（daily.html，js/daily.js） ==================== */
+/* 独立页：整体限宽居中，左右间距合适 */
+.daily-page { max-width: 780px; margin: 0 auto; padding: 18px 16px 34px; }
+#dailySection { margin: 0; }
 .daily-card {
     background: rgba(var(--card-rgb), var(--ui-alpha));
     border: 1px solid var(--border);
     border-radius: var(--radius);
-    padding: 14px 16px 12px;
+    padding: 16px 18px 14px;
 }
 .daily-head { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
-.daily-title { font-size: 1rem; font-weight: 600; margin: 0; color: var(--text); }
+.daily-title { font-size: 1.05rem; font-weight: 600; margin: 0; color: var(--text); }
 .daily-date { font-size: 0.8rem; color: var(--text-light); }
 .daily-hist-btn {
     margin-left: auto; background: none; border: 1px solid var(--border); color: var(--text-light);
@@ -5681,36 +5683,67 @@ a.chapter-badge-link:hover {
     transition: color .15s, border-color .15s, background .15s;
 }
 .daily-hist-btn:hover { border-color: var(--primary); color: var(--primary); background: #eef5fd; }
-.daily-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 10px; margin-top: 12px; }
+/* 一题一题排下去（单列） */
+.daily-grid { display: flex; flex-direction: column; gap: 14px; margin-top: 14px; }
 .daily-item {
-    border-left: 2px solid var(--primary); padding: 8px 10px; border-radius: 6px;
+    border-left: 2px solid var(--primary); padding: 12px 14px; border-radius: 6px;
     background: rgba(128, 128, 128, .04);
-    display: flex; flex-direction: column; gap: 4px; min-height: 98px;
+    display: flex; flex-direction: column; gap: 6px;
 }
 .daily-item-empty { border-left-color: var(--border); opacity: .85; }
-.daily-subject { font-size: 0.76rem; color: var(--text-light); }
-.daily-q { font-size: 0.86rem; line-height: 1.6; color: var(--text); flex: 1; }
-.daily-meta { font-size: 0.72rem; color: var(--text-light); }
-.daily-link { font-size: 0.78rem; color: var(--primary); text-decoration: none; }
+.daily-item-head { display: flex; align-items: baseline; gap: 10px; }
+.daily-subject {
+    flex: none; font-size: 0.78rem; font-weight: 600; color: var(--primary);
+    background: rgba(74, 122, 184, .1); border: 1px solid rgba(74, 122, 184, .35);
+    padding: 1px 9px; border-radius: 999px;
+}
+.daily-meta { margin-left: auto; font-size: 0.72rem; color: var(--text-light); }
+.daily-q { font-size: 0.92rem; line-height: 1.7; color: var(--text); flex: 1; }
+.daily-link { font-size: 0.78rem; color: var(--primary); text-decoration: none; align-self: flex-start; }
 .daily-link:hover { text-decoration: underline; }
-.daily-foot { margin-top: 8px; font-size: 0.74rem; color: var(--text-light); }
+.daily-foot { margin-top: 10px; font-size: 0.74rem; color: var(--text-light); text-align: center; }
 .daily-empty { margin-top: 10px; font-size: 0.85rem; color: var(--text-light); }
 
-/* 历史记录弹层（复用 kb-overlay/kb-dialog 骨架） */
-.daily-hist-dialog { width: 480px; max-width: 92vw; }
-.daily-hist-body { max-height: 60vh; overflow-y: auto; margin-bottom: 10px; }
-.daily-hist-day { padding: 8px 0; border-bottom: 1px dashed var(--border); }
-.daily-hist-day:last-child { border-bottom: none; }
-.daily-hist-date { font-size: 0.8rem; font-weight: 600; color: var(--text); margin-bottom: 5px; }
-.daily-hist-list { display: flex; flex-direction: column; gap: 3px; }
-.daily-hist-item { display: flex; gap: 8px; font-size: 0.8rem; text-decoration: none; color: var(--text); padding: 2px 0; }
-.daily-hist-item:hover { color: var(--primary); }
-.daily-hist-item.muted { color: var(--text-light); opacity: .6; }
-.daily-hist-sub { flex: none; width: 84px; color: var(--text-light); font-size: 0.74rem; }
-.daily-hist-q { flex: 1; line-height: 1.5; }
-.daily-hist-empty { font-size: 0.85rem; color: var(--text-light); padding: 8px 0; }
+/* 历史记录弹层：日期列表（完成度颜色）+ 当天详情补做（复用 kb-overlay/kb-dialog 骨架） */
+.daily-hist-dialog { width: 560px; max-width: 94vw; }
+.daily-hist-body { max-height: 62vh; overflow-y: auto; -webkit-overflow-scrolling: touch; margin-bottom: 10px; }
+.daily-hist-empty { font-size: 0.85rem; color: var(--text-light); padding: 10px 0; }
+.kb-head .daily-hist-back {
+    background: none; border: none; color: var(--primary); font-size: 0.82rem;
+    cursor: pointer; padding: 2px 6px; margin-right: 4px;
+}
+.kb-head .daily-hist-back:hover { text-decoration: underline; }
+.kb-head .dh-head-date { color: var(--text-light); font-size: 0.8rem; font-weight: 400; margin-left: 8px; }
+
+/* 日期列表：每天一块，色点标记完成度（绿=全做 橙=部分 灰=未做） */
+.daily-cal { display: flex; flex-direction: column; gap: 6px; }
+.daily-cal-day {
+    display: flex; align-items: center; gap: 10px; width: 100%; text-align: left;
+    padding: 9px 12px; border: 1px solid var(--border); border-radius: 8px;
+    background: none; cursor: pointer; color: var(--text); font-size: 0.85rem;
+    touch-action: manipulation; -webkit-tap-highlight-color: transparent;
+    transition: border-color .15s, background .15s;
+}
+.daily-cal-day:hover { border-color: var(--primary); }
+.daily-cal-day.today { border-color: rgba(74, 122, 184, .55); background: rgba(74, 122, 184, .07); }
+.dc-dot { flex: none; width: 10px; height: 10px; border-radius: 50%; background: rgba(128, 128, 128, .4); }
+.daily-cal-day.cal-full .dc-dot { background: #2e7d32; }
+.daily-cal-day.cal-part .dc-dot { background: #ea580c; }
+.daily-cal-day.cal-none .dc-dot { background: rgba(128, 128, 128, .4); }
+.dc-date { color: var(--text); }
+.dc-date em { font-style: normal; color: var(--text-light); font-size: 0.76rem; margin-left: 4px; }
+.dc-stat { margin-left: auto; color: var(--text-light); font-size: 0.76rem; white-space: nowrap; }
+.dc-arrow { flex: none; color: var(--text-light); }
+
+/* 当天详情：与页面作答块同构，纵向排列 */
+.dh-detail-tip { font-size: 0.76rem; color: var(--text-light); margin-bottom: 8px; }
+.dh-detail-grid { display: flex; flex-direction: column; gap: 12px; }
 
 .dark .daily-hist-btn:hover { background: #1d3350; }
+.dark .daily-cal-day.today { border-color: rgba(143, 176, 217, .55); background: rgba(143, 176, 217, .08); }
+.dark .daily-cal-day.cal-full .dc-dot { background: #81c784; }
+.dark .daily-cal-day.cal-part .dc-dot { background: #f59e6b; }
+.dark .daily-subject { background: rgba(143, 176, 217, .12); border-color: rgba(143, 176, 217, .4); color: #8fb0d9; }
 
 /* ==================== 每日一题 · 卡片内直接作答 ==================== */
 .daily-opts { display: flex; flex-direction: column; gap: 4px; margin: 6px 0; }

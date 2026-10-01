@@ -73,7 +73,7 @@
         return oldest[Math.floor(Math.random() * oldest.length)];
     }
 
-    // 今日卡片存的题目数据：作答所需字段 + 历史摘要
+    // 今日卡片存的题目数据：作答所需字段（历史归档也存完整数据，供页内回看/补做）
     function toPick(f) {
         return {
             id: f.id,
@@ -89,22 +89,17 @@
             answered: null    // {answer, isCorrect, correctAnswer}
         };
     }
-    function toSummary(p) {
-        return { id: p.id, content: snippet(p.content, 56), chapter: p.chapter, section: p.section };
-    }
 
     async function rollToday() {
         const today = todayStr();
         const cur = readJson(TODAY_KEY, null);
         if (cur && cur.date === today && cur.picks) return cur;
 
-        // 上一天归档进历史（只存摘要，避免历史体积膨胀）
+        // 上一天归档进历史（存完整题目数据，供日期视图回看与页内补做）
         if (cur && cur.date && cur.picks) {
             const hist = readJson(HISTORY_KEY, []);
             if (!hist.some(h => h.date === cur.date)) {
-                const sum = {};
-                for (const k of Object.keys(cur.picks)) sum[k] = toSummary(cur.picks[k]);
-                hist.unshift({ date: cur.date, picks: sum });
+                hist.unshift({ date: cur.date, picks: cur.picks });
                 writeJson(HISTORY_KEY, hist.slice(0, HISTORY_LIMIT));
             }
         }
@@ -129,13 +124,25 @@
         return `quiz.html?subject=${sub}&mode=favorite&goto=${encodeURIComponent(qid)}`;
     }
 
-    // ---------- 渲染：每题一个内嵌作答块 ----------
-    function itemHtml(sub, p) {
+    // ---------- 渲染：每题一个内嵌作答块（ctx.date 非空 = 历史日期补做） ----------
+    function itemHtml(sub, p, ctx) {
+        ctx = ctx || {};
         if (!p) {
             return `<div class="daily-item daily-item-empty">
-                <span class="daily-subject">${esc(subName(sub))}</span>
-                <div class="daily-q">暂无收藏题</div>
-                <a class="daily-link" href="quiz.html?subject=${sub}&mode=sequential">去刷题收藏 →</a>
+                <div class="daily-item-head"><span class="daily-subject">${esc(subName(sub))}</span></div>
+                <div class="daily-q">${ctx.date ? '当天未抽到该科目的题' : '暂无收藏题'}</div>
+                <a class="daily-link" href="quiz.html?subject=${sub}&mode=sequential">${ctx.date ? '去刷题做题 →' : '去刷题收藏 →'}</a>
+            </div>`;
+        }
+        // 旧版摘要数据（无 options）：无法页内作答，跳刷题页
+        if (!p.options || !Object.keys(p.options).length) {
+            return `<div class="daily-item" data-sub="${sub}">
+                <div class="daily-item-head">
+                    <span class="daily-subject">${esc(subName(sub))}</span>
+                    ${[p.chapter, p.section].filter(Boolean).length ? `<span class="daily-meta">${esc([p.chapter, p.section].filter(Boolean).join(' · '))}</span>` : ''}
+                </div>
+                <div class="daily-q">${esc(p.content || '（题目）')}</div>
+                <a class="daily-link" href="${quizLink(sub, p.id)}">旧版记录，去刷题页作答 →</a>
             </div>`;
         }
         const meta = [p.chapter, p.section].filter(Boolean).join(' · ');
@@ -180,16 +187,19 @@
                </div></details>`
             : '';
 
+        const act = ctx.date ? `submitHist('${ctx.date}','${sub}')` : `submitDaily('${sub}')`;
         const btn = locked
-            ? `<button class="daily-redo" onclick="redoDaily('${sub}')">重新作答 ↺</button>`
+            ? (ctx.date ? '' : `<button class="daily-redo" onclick="redoDaily('${sub}')">重新作答 ↺</button>`)
             : (isMulti
                 ? `<a class="daily-link" href="${quizLink(sub, p.id)}">去刷题页作答 →</a>`
-                : `<button class="daily-submit" onclick="submitDaily('${sub}')">提交答案</button>`);
+                : `<button class="daily-submit" onclick="${act}">提交答案</button>`);
 
         return `<div class="daily-item" data-sub="${sub}">
-            <span class="daily-subject">${esc(subName(sub))}</span>
+            <div class="daily-item-head">
+                <span class="daily-subject">${esc(subName(sub))}</span>
+                ${meta ? `<span class="daily-meta">${esc(meta)}</span>` : ''}
+            </div>
             <div class="daily-q">${(typeof fmtContent === 'function') ? fmtContent(p.content || '') : esc(p.content || '')}</div>
-            ${meta ? `<div class="daily-meta">${esc(meta)}</div>` : ''}
             ${optsHtml}
             ${resultHtml}
             ${btn}
@@ -239,20 +249,38 @@
         if (!p || p.answered) return;
         const sel = document.querySelector(`input[name="dq-${sub}"]:checked`);
         if (!sel) { alert('请先选择一个答案'); return; }
-        const userAnswer = sel.value;
         try {
-            const resp = await api('/api/submit', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ question_id: p.id, answer: userAnswer })
-            });
-            const r = await resp.json();
-            p.answered = { answer: userAnswer, isCorrect: r.is_correct, correctAnswer: r.correct_answer || p.answer };
+            const r = await judgeAnswer(p.id, sel.value);
+            p.answered = { answer: sel.value, isCorrect: r.is_correct, correctAnswer: r.correct_answer || p.answer };
             if (r.explanation) p.explanation = r.explanation;
             const d = readJson(TODAY_KEY, null);
-            if (d && d.picks && d.picks[sub]) d.picks[sub] = p;
-            writeJson(TODAY_KEY, d);
-            renderDaily(d);
+            if (d && d.picks && d.picks[sub]) {
+                d.picks[sub] = p;
+                writeJson(TODAY_KEY, d);
+                renderDaily(d);
+                // 历史弹层开着今天的详情时，同步刷新弹层
+                const ov = document.getElementById('dailyHistOverlay');
+                if (histView === d.date && ov && !ov.hidden) showDailyHistory();
+            }
+        } catch (e) {
+            alert('提交失败: ' + e.message);
+        }
+    }
+
+    // ---------- 历史日期补做：判分后把状态写回当天记录 ----------
+    async function submitHist(date, sub) {
+        const hist = readJson(HISTORY_KEY, []);
+        const day = hist.find(h => h.date === date);
+        const p = day && day.picks && day.picks[sub];
+        if (!p || p.answered) return;
+        const sel = document.querySelector(`input[name="dq-${sub}"]:checked`);
+        if (!sel) { alert('请先选择一个答案'); return; }
+        try {
+            const r = await judgeAnswer(p.id, sel.value);
+            p.answered = { answer: sel.value, isCorrect: r.is_correct, correctAnswer: r.correct_answer || p.answer };
+            if (r.explanation) p.explanation = r.explanation;
+            writeJson(HISTORY_KEY, hist);
+            showDailyHistory();   // 重渲染详情（状态色即时更新）
         } catch (e) {
             alert('提交失败: ' + e.message);
         }
@@ -260,30 +288,102 @@
 
     function redoDaily(sub) {
         const d = readJson(TODAY_KEY, null);
-        if (d && d.picks && d.picks[sub]) { d.picks[sub].answered = null; writeJson(TODAY_KEY, d); renderDaily(d); }
+        if (d && d.picks && d.picks[sub]) {
+            d.picks[sub].answered = null;
+            writeJson(TODAY_KEY, d);
+            renderDaily(d);
+            const ov = document.getElementById('dailyHistOverlay');
+            if (histView === d.date && ov && !ov.hidden) showDailyHistory();   // 弹层同步
+        }
     }
 
-    // ---------- 历史记录弹层 ----------
-    function showDailyHistory() {
+    async function judgeAnswer(qid, val) {
+        const resp = await api('/api/submit', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ question_id: qid, answer: val })
+        });
+        return await resp.json();
+    }
+
+    // ---------- 历史记录弹层：日期列表（带完成度颜色）→ 点击进当天详情补做 ----------
+    let histView = null;   // null = 日期列表；'YYYY-MM-DD' = 当天详情
+
+    function weekdayOfDate(dstr) {
+        try { return weekdayCn(new Date(dstr + 'T00:00:00')); } catch (e) { return ''; }
+    }
+    function fmtDate(dstr) {
+        const d = new Date(dstr + 'T00:00:00');
+        if (isNaN(d)) return dstr;
+        const now = new Date();
+        const md = `${d.getMonth() + 1}月${d.getDate()}日`;
+        return d.getFullYear() === now.getFullYear() ? `${md}` : `${dstr}`;
+    }
+
+    // 当天完成度：今日看 answered；历史看 answered（新数据）或 done（旧摘要兼容）
+    function dayStat(picks, isToday) {
+        let total = 0, done = 0, correct = 0;
+        for (const k of SUBJ_ORDER) {
+            const p = picks && picks[k];
+            if (!p) continue;
+            total++;
+            let st = null;
+            if (p.answered) st = p.answered.isCorrect === true ? 'ok' : (p.answered.isCorrect === false ? 'bad' : 'na');
+            else if (!isToday) {
+                if (p.done === true) st = 'ok';
+                else if (p.done === false) st = 'bad';
+            }
+            if (st) { done++; if (st === 'ok') correct++; }
+        }
+        return { total, done, correct };
+    }
+
+    function collectDays() {
         const hist = readJson(HISTORY_KEY, []);
         const cur = readJson(TODAY_KEY, null);
-        const todaySummary = cur && cur.date ? { date: cur.date, picks: cur.picks || {}, today: true } : null;
-        const all = todaySummary ? [todaySummary].concat(hist.filter(h => h.date !== cur.date)) : hist;
-        const body = all.length ? all.map(day => `
-            <div class="daily-hist-day">
-                <div class="daily-hist-date">${esc(day.date)}${day.today ? ' · 今天' : ''}</div>
-                <div class="daily-hist-list">
-                    ${SUBJ_ORDER.map(sub => {
-                        const p = day.picks && day.picks[sub];
-                        return p
-                            ? `<a class="daily-hist-item" href="${quizLink(sub, p.id)}" title="${esc((p.chapter || '') + (p.section ? ' · ' + p.section : ''))}">
-                                    <span class="daily-hist-sub">${esc(subName(sub))}</span>
-                                    <span class="daily-hist-q">${esc(p.content || '（题目）')}</span>
-                               </a>`
-                            : `<span class="daily-hist-item muted"><span class="daily-hist-sub">${esc(subName(sub))}</span><span class="daily-hist-q">未抽</span></span>`;
-                    }).join('')}
-                </div>
-            </div>`).join('') : '<div class="daily-hist-empty">还没有历史记录，明天再来抽题吧。</div>';
+        const days = [];
+        if (cur && cur.date && cur.picks) days.push({ date: cur.date, picks: cur.picks, today: true });
+        for (const h of hist) {
+            if (cur && h.date === cur.date) continue;
+            days.push(h);
+        }
+        days.sort((a, b) => String(b.date).localeCompare(String(a.date)));
+        return days;
+    }
+
+    function showDailyHistory() {
+        const days = collectDays();
+        let bodyHtml, headTitle;
+        if (histView) {
+            const day = days.find(d => d.date === histView);
+            if (!day) { histView = null; return showDailyHistory(); }
+            headTitle = esc(fmtDate(day.date)) + (day.today ? ' · 今天' : '');
+            // 今天的详情复用页面作答逻辑（submitDaily 写 TODAY_KEY）；历史日期走 submitHist（写回历史）
+            const ctx = day.today ? {} : { date: day.date };
+            const items = SUBJ_ORDER.map(sub => itemHtml(sub, day.picks && day.picks[sub], ctx)).join('');
+            bodyHtml = `
+                <div class="daily-hist-body">
+                    <div class="dh-detail-tip">点选项作答，判分后自动记入当天记录</div>
+                    ${items}
+                </div>`;
+        } else {
+            headTitle = '选择日期查看当天记录';
+            bodyHtml = `<div class="daily-hist-body">` + (days.length
+                ? `<div class="daily-cal">` + days.map(day => {
+                    const st = dayStat(day.picks, !!day.today);
+                    const cls = st.done === 0 ? 'cal-none'
+                        : (st.total > 0 && st.done >= st.total ? 'cal-full' : 'cal-part');
+                    const stat = st.total ? `${st.done}/${st.total} 已做 · ${st.correct} 对` : '未作答';
+                    return `<button class="daily-cal-day ${cls}${day.today ? ' today' : ''}" data-date="${esc(day.date)}"
+                            onclick="openDailyDay('${esc(day.date)}')">
+                            <span class="dc-dot"></span>
+                            <span class="dc-date">${esc(fmtDate(day.date))} <em>${weekdayOfDate(day.date)}${day.today ? ' · 今天' : ''}</em></span>
+                            <span class="dc-stat">${stat}</span>
+                            <span class="dc-arrow">›</span>
+                        </button>`;
+                }).join('') + `</div>`
+                : `<div class="daily-hist-empty">还没有记录，每天打开「每日一题」会自动生成。</div>`) + `</div>`;
+        }
 
         let ov = document.getElementById('dailyHistOverlay');
         if (!ov) {
@@ -296,10 +396,11 @@
         ov.innerHTML = `
             <div class="kb-dialog daily-hist-dialog">
                 <div class="kb-head">
-                    <span>每日一题 · 历史记录</span>
+                    <span>每日一题 · ${histView ? `<button class="daily-hist-back" onclick="backDailyHist()">‹ 日期列表</button>` : '历史记录'}</span>
+                    <span class="dh-head-date">${headTitle}</span>
                     <button class="kb-close" onclick="closeDailyHistory()" title="关闭">✕</button>
                 </div>
-                <div class="daily-hist-body">${body}</div>
+                ${bodyHtml}
                 <div class="kb-actions">
                     <button class="btn btn-primary" onclick="closeDailyHistory()">关闭</button>
                 </div>
@@ -307,7 +408,11 @@
         ov.hidden = false;
     }
 
+    function openDailyDay(date) { histView = date; showDailyHistory(); }
+    function backDailyHist() { histView = null; showDailyHistory(); }
+
     function closeDailyHistory() {
+        histView = null;
         const ov = document.getElementById('dailyHistOverlay');
         if (ov) ov.hidden = true;
     }
@@ -315,10 +420,13 @@
     window.initDaily = initDaily;
     window.showDailyHistory = showDailyHistory;
     window.closeDailyHistory = closeDailyHistory;
+    window.openDailyDay = openDailyDay;
+    window.backDailyHist = backDailyHist;
     window.submitDaily = submitDaily;
+    window.submitHist = submitHist;
     window.redoDaily = redoDaily;
     window.DailyPick = {
-        rollToday, pickOne, todayStr, renderDaily, snippet, itemHtml,
+        rollToday, pickOne, todayStr, renderDaily, snippet, itemHtml, dayStat, collectDays,
         KEYS: { TODAY_KEY, HISTORY_KEY, SEEN_KEY }, SUBJ_ORDER
     };
 })();
