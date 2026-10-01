@@ -5696,11 +5696,15 @@ a.chapter-badge-link:hover {
 .daily-title { font-size: 1.05rem; font-weight: 600; margin: 0; color: var(--text); }
 .daily-date { font-size: 0.8rem; color: var(--text-light); }
 .daily-hist-btn {
-    margin-left: auto; background: none; border: 1px solid var(--border); color: var(--text-light);
+    background: none; border: 1px solid var(--border); color: var(--text-light);
     font-size: 0.78rem; padding: 3px 10px; border-radius: 999px; cursor: pointer;
     transition: color .15s, border-color .15s, background .15s;
 }
 .daily-hist-btn:hover { border-color: var(--primary); color: var(--primary); background: #eef5fd; }
+/* 头部：标题/日期靠左，加量与历史按钮靠右 */
+.daily-head-sp { flex: 1; }
+.daily-add-btn { border-color: rgba(74, 122, 184, .45); color: var(--primary); font-weight: 600; }
+.daily-add-btn:hover { background: rgba(74, 122, 184, .12); color: var(--primary); }
 /* 一题一题排下去（单列）：实体卡片，3px 主色左导轨 + 极淡阴影 */
 .daily-grid { display: flex; flex-direction: column; gap: 16px; margin-top: 14px; }
 .daily-item {

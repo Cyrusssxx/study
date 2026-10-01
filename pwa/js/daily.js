@@ -1,13 +1,14 @@
-// ==================== 每日一题（首页内嵌作答） ====================
+// ==================== 每日一题（daily.html） ====================
 // 规则：
 //   ① 每天从四门（ds/os/cn/co）的【收藏】里各抽 1 题，共 4 题，四门互不重复；
-//   ② 抽题优先级：无已做记录（没做过）的收藏题 → 其中「从未抽过」的 → 最久未抽的；
-//   ③ 直接在首页卡片里作答（选选项→提交→判对错→看解析），不跳转刷题页；
-//   ④ 笔记：每日一题里默认【不展开】（正常刷题页 quiz.html 仍保持有笔记即展开）；
-//   ⑤ 每天首次进入生成结果并归档进历史，历史保留最近 120 天，可回看。
+//   ② 抽题优先级：排除当天已抽 → 没做过 → （全做过时）标了「不熟/不会」的 → 从未抽过 → 最久未抽；
+//   ③ 支持「➕ 再来 4 道」加量：每门再抽 1 题追加到当天列表（与当天已抽不重复，某门收藏抽完则跳过）；
+//   ④ 直接在卡片里作答（选项→提交→判对错→看解析），页面内完成不跳转；
+//   ⑤ 笔记默认【不展开】（刷题页 quiz.html 仍保持有笔记即展开）；
+//   ⑥ 每天首次进入生成结果并归档进历史，历史保留最近 120 天，可回看/页内补做。
 // 存储（localStorage）：
-//   daily_pick_v1    —— 今日 {date, picks:{ds|os|cn|co: {id,content,options,answer,explanation,note,note_images,chapter,section,answered}}}
-//   daily_history_v1 —— 历史数组 [{date, picks}]（最近在前，仅存摘要）
+//   daily_pick_v1    —— 今日 {date, picks:{ds|os|cn|co: [题目对象, ...]}}（题目对象含 options/answer/explanation/note/answered）
+//   daily_history_v1 —— 历史数组 [{date, picks}]（结构同今日，保留完整题目数据）
 //   daily_seen_v1    —— 已抽过记录 {subject: {qid: 上次抽到的日期}}
 (function () {
     const TODAY_KEY = 'daily_pick_v1';
@@ -59,19 +60,44 @@
         } catch (e) { return []; }
     }
 
-    // 抽 1 题：① 优先「无已做记录」的收藏题 ② 其中优先未抽过的 ③ 都没有则取最久未抽的
-    function pickOne(favs, seenSub) {
+    // picks 归一化：兼容旧数据（单题对象）与新数据（题目数组）
+    function normPicks(picks) {
+        const out = {};
+        const src = picks || {};
+        for (const k of Object.keys(src)) {
+            const v = src[k];
+            if (!v) continue;
+            const arr = (Array.isArray(v) ? v : [v]).filter(Boolean);
+            if (arr.length) out[k] = arr;
+        }
+        return out;
+    }
+
+    // 抽 1 题（优化后优先级）：
+    //   ① 排除当天已抽过的（题不够时由调用方决定是否放宽）；
+    //   ② 没做过的题优先；③ 全做过时优先「不熟/不会」标记题（更该复习）；
+    //   ④ 其中「从未抽过」的优先；⑤ 最后取最久未抽的（随机打破并列）。
+    function pickOne(favs, seenSub, excludeIds) {
         if (!favs || !favs.length) return null;
         const seen = seenSub || {};
-        const undone = favs.filter(f => !f.last_status);          // 没做过的题
-        const pool = undone.length ? undone : favs;               // 全做过则退回全部收藏
-        const fresh = pool.filter(f => !seen[f.id]);
-        if (fresh.length) return fresh[Math.floor(Math.random() * fresh.length)];
-        const arr = pool.slice().sort((a, b) => String(seen[a.id] || '').localeCompare(String(seen[b.id] || '')));
+        const ex = excludeIds || new Set();
+        let pool = favs.filter(f => !ex.has(f.id));
+        if (!pool.length) pool = favs.slice();          // 允许重复兜底（调用方可先自行过滤）
+
+        const undone = pool.filter(f => !f.last_status);
+        let c = undone.length ? undone : pool;
+        if (!undone.length) {
+            const weak = c.filter(f => f.is_unfamiliar || f.is_dontknow);   // 做过且标了不熟/不会 → 优先复习
+            if (weak.length) c = weak;
+        }
+        const fresh = c.filter(f => !seen[f.id]);
+        if (fresh.length) return pick(fresh);
+
+        const arr = c.slice().sort((a, b) => String(seen[a.id] || '').localeCompare(String(seen[b.id] || '')));
         const earliest = seen[arr[0].id] || '';
-        const oldest = arr.filter(f => (seen[f.id] || '') === earliest);
-        return oldest[Math.floor(Math.random() * oldest.length)];
+        return pick(arr.filter(f => (seen[f.id] || '') === earliest));
     }
+    function pick(a) { return a[Math.floor(Math.random() * a.length)]; }
 
     // 今日卡片存的题目数据：作答所需字段（历史归档也存完整数据，供页内回看/补做）
     function toPick(f) {
@@ -93,13 +119,17 @@
     async function rollToday() {
         const today = todayStr();
         const cur = readJson(TODAY_KEY, null);
-        if (cur && cur.date === today && cur.picks) return cur;
+        if (cur && cur.date === today && cur.picks) {
+            const norm = { date: cur.date, picks: normPicks(cur.picks) };
+            if (!cur.normalized) { norm.normalized = 1; writeJson(TODAY_KEY, norm); }
+            return norm;
+        }
 
         // 上一天归档进历史（存完整题目数据，供日期视图回看与页内补做）
         if (cur && cur.date && cur.picks) {
             const hist = readJson(HISTORY_KEY, []);
             if (!hist.some(h => h.date === cur.date)) {
-                hist.unshift({ date: cur.date, picks: cur.picks });
+                hist.unshift({ date: cur.date, picks: normPicks(cur.picks) });
                 writeJson(HISTORY_KEY, hist.slice(0, HISTORY_LIMIT));
             }
         }
@@ -110,14 +140,44 @@
             const favs = await loadFavs(sub);
             const f = pickOne(favs, seen[sub]);
             if (!f) continue;
-            picks[sub] = toPick(f);
+            picks[sub] = [toPick(f)];
             seen[sub] = seen[sub] || {};
             seen[sub][f.id] = today;
         }
-        const out = { date: today, picks };
+        const out = { date: today, picks, normalized: 1 };
         writeJson(TODAY_KEY, out);
         writeJson(SEEN_KEY, seen);
         return out;
+    }
+
+    // 加量：每门再抽 1 题追加到当天列表（与当天已抽的不重复；某门收藏抽完则跳过该门）
+    async function addBatch() {
+        const d = readJson(TODAY_KEY, null);
+        if (!d || d.date !== todayStr() || !d.picks) return { added: 0, subs: [] };
+        const picks = normPicks(d.picks);
+        const seen = readJson(SEEN_KEY, {});
+        const today = todayStr();
+        let added = 0;
+        const subs = [];
+        for (const sub of SUBJ_ORDER) {
+            const cur = picks[sub] || [];
+            const ex = new Set(cur.map(p => p.id));
+            const favs = await loadFavs(sub);
+            const cand = favs.filter(f => !ex.has(f.id));     // 该门收藏都抽过 → 本题无新题可加
+            if (!cand.length) continue;
+            const f = pickOne(cand, seen[sub]);
+            if (!f) continue;
+            cur.push(toPick(f));
+            picks[sub] = cur;
+            seen[sub] = seen[sub] || {};
+            seen[sub][f.id] = today;
+            added++; subs.push(sub);
+        }
+        if (added) {
+            writeJson(TODAY_KEY, { date: today, picks, normalized: 1 });
+            writeJson(SEEN_KEY, seen);
+        }
+        return { added, subs };
     }
 
     function quizLink(sub, qid) {
@@ -135,9 +195,10 @@
         return `<span class="daily-meta">${esc(meta)}</span>`;
     }
 
-    // ---------- 渲染：每题一个内嵌作答块（ctx.date 非空 = 历史日期补做） ----------
+    // ---------- 渲染：每题一个内嵌作答块（ctx.idx = 同门第几题；ctx.date 非空 = 历史日期补做） ----------
     function itemHtml(sub, p, ctx) {
         ctx = ctx || {};
+        const idx = ctx.idx || 0;
         if (!p) {
             return `<div class="daily-item daily-item-empty">
                 <div class="daily-item-head"><span class="daily-subject">${esc(subName(sub))}</span></div>
@@ -173,7 +234,7 @@
                 }
                 const txt = (typeof fmtOptionText === 'function') ? fmtOptionText(p.options[k]) : esc(p.options[k]);
                 return `<label class="daily-opt ${cls.join(' ')}">
-                    <input type="radio" name="dq-${sub}" value="${esc(k)}" ${locked ? 'disabled' : ''}
+                    <input type="radio" name="dq-${sub}-${idx}" value="${esc(k)}" ${locked ? 'disabled' : ''}
                         ${locked && a.answer === k ? 'checked' : ''}>
                     <span class="daily-opt-key">${esc(k)}.</span><span class="daily-opt-text">${txt}</span>
                 </label>`;
@@ -197,16 +258,16 @@
                </div></details>`
             : '';
 
-        const act = ctx.date ? `submitHist('${ctx.date}','${sub}')` : `submitDaily('${sub}')`;
+        const act = ctx.date ? `submitHist('${ctx.date}','${sub}',${idx})` : `submitDaily('${sub}',${idx})`;
         const btn = locked
-            ? (ctx.date ? '' : `<button class="daily-redo" onclick="redoDaily('${sub}')">重新作答 ↺</button>`)
+            ? (ctx.date ? '' : `<button class="daily-redo" onclick="redoDaily('${sub}',${idx})">重新作答 ↺</button>`)
             : (isMulti
                 ? `<a class="daily-link" href="${quizLink(sub, p.id)}">去刷题页作答 →</a>`
                 : `<button class="daily-submit" onclick="${act}">提交答案</button>`);
 
-        return `<div class="daily-item" data-sub="${sub}">
+        return `<div class="daily-item" data-sub="${sub}" data-idx="${idx}">
             <div class="daily-item-head">
-                <span class="daily-subject">${esc(subName(sub))}</span>
+                <span class="daily-subject">${esc(subName(sub))}${idx > 0 ? ' · 加量' : ''}</span>
                 ${kpMetaHtml(sub, p)}
             </div>
             <div class="daily-q">${(typeof fmtContent === 'function') ? fmtContent(p.content || '') : esc(p.content || '')}</div>
@@ -222,23 +283,40 @@
         const box = document.getElementById('dailySection');
         if (!box) return;
         const d = data || readJson(TODAY_KEY, null);
-        const picks = (d && d.picks) || {};
-        const hasAny = Object.keys(picks).length > 0;
+        const picks = normPicks(d && d.picks);
+        const totalQ = SUBJ_ORDER.reduce((n, k) => n + (picks[k] || []).length, 0);
+        const hasAny = totalQ > 0;
         const now = new Date();
-        const items = SUBJ_ORDER.map(sub => itemHtml(sub, picks[sub])).join('');
+        const items = SUBJ_ORDER.map(sub => {
+            const arr = picks[sub] || [];
+            return arr.length
+                ? arr.map((p, i) => itemHtml(sub, p, { idx: i })).join('')
+                : itemHtml(sub, null, { idx: 0 });
+        }).join('');
 
         box.innerHTML = `
             <div class="daily-card">
                 <div class="daily-head">
                     <h2 class="daily-title">📅 每日一题</h2>
                     <span class="daily-date">${d && d.date ? d.date : todayStr()} ${weekdayCn(now)}</span>
+                    <span class="daily-head-sp"></span>
+                    ${hasAny ? `<button class="daily-hist-btn daily-add-btn" onclick="addBatchDaily()" title="每门再抽 1 题，追加到今天的列表">➕ 再来 4 道</button>` : ''}
                     <button class="daily-hist-btn" onclick="showDailyHistory()" title="查看每天抽到的题">历史记录</button>
                 </div>
                 ${hasAny
                     ? `<div class="daily-grid">${items}</div>
-                       <div class="daily-foot">直接在卡片里作答（优先抽没做过的收藏题）· 每天 0 点更新</div>`
+                       <div class="daily-foot">共 ${totalQ} 题 · 优先抽没做过的收藏题 · 每天 0 点更新</div>`
                     : `<div class="daily-empty">还没有收藏题，先去刷题收藏几道，这里每天会从四门收藏里各抽 1 题。</div>`}
             </div>`;
+    }
+
+    async function addBatchDaily() {
+        const r = await addBatch();
+        if (!r.added) {
+            alert('四门收藏里能抽的题都抽过了，去刷题页再收藏几道吧～');
+            return;
+        }
+        renderDaily();
     }
 
     async function initDaily() {
@@ -249,46 +327,53 @@
     }
 
     // ---------- 作答 ----------
-    function curPick(sub) {
+    function curPick(sub, idx) {
         const d = readJson(TODAY_KEY, null);
-        return (d && d.picks && d.picks[sub]) || null;
+        const P = normPicks(d && d.picks);
+        const arr = P[sub] || [];
+        return arr[idx || 0] || null;
     }
 
-    async function submitDaily(sub) {
-        const p = curPick(sub);
+    async function submitDaily(sub, idx) {
+        idx = idx || 0;
+        const d = readJson(TODAY_KEY, null);
+        if (!d || !d.picks) return;
+        const P = normPicks(d.picks);
+        const p = (P[sub] || [])[idx];
         if (!p || p.answered) return;
-        const sel = document.querySelector(`input[name="dq-${sub}"]:checked`);
+        const sel = document.querySelector(`input[name="dq-${sub}-${idx}"]:checked`);
         if (!sel) { alert('请先选择一个答案'); return; }
         try {
             const r = await judgeAnswer(p.id, sel.value);
             p.answered = { answer: sel.value, isCorrect: r.is_correct, correctAnswer: r.correct_answer || p.answer };
             if (r.explanation) p.explanation = r.explanation;
-            const d = readJson(TODAY_KEY, null);
-            if (d && d.picks && d.picks[sub]) {
-                d.picks[sub] = p;
-                writeJson(TODAY_KEY, d);
-                renderDaily(d);
-                // 历史弹层开着今天的详情时，同步刷新弹层
-                const ov = document.getElementById('dailyHistOverlay');
-                if (histView === d.date && ov && !ov.hidden) showDailyHistory();
-            }
+            d.picks = P;
+            writeJson(TODAY_KEY, d);
+            renderDaily(d);
+            // 历史弹层开着今天的详情时，同步刷新弹层
+            const ov = document.getElementById('dailyHistOverlay');
+            if (histView === d.date && ov && !ov.hidden) showDailyHistory();
         } catch (e) {
             alert('提交失败: ' + e.message);
         }
     }
 
     // ---------- 历史日期补做：判分后把状态写回当天记录 ----------
-    async function submitHist(date, sub) {
+    async function submitHist(date, sub, idx) {
+        idx = idx || 0;
         const hist = readJson(HISTORY_KEY, []);
         const day = hist.find(h => h.date === date);
-        const p = day && day.picks && day.picks[sub];
+        if (!day) return;
+        const P = normPicks(day.picks);
+        const p = (P[sub] || [])[idx];
         if (!p || p.answered) return;
-        const sel = document.querySelector(`input[name="dq-${sub}"]:checked`);
+        const sel = document.querySelector(`input[name="dq-${sub}-${idx}"]:checked`);
         if (!sel) { alert('请先选择一个答案'); return; }
         try {
             const r = await judgeAnswer(p.id, sel.value);
             p.answered = { answer: sel.value, isCorrect: r.is_correct, correctAnswer: r.correct_answer || p.answer };
             if (r.explanation) p.explanation = r.explanation;
+            day.picks = P;
             writeJson(HISTORY_KEY, hist);
             showDailyHistory();   // 重渲染详情（状态色即时更新）
         } catch (e) {
@@ -296,15 +381,19 @@
         }
     }
 
-    function redoDaily(sub) {
+    function redoDaily(sub, idx) {
+        idx = idx || 0;
         const d = readJson(TODAY_KEY, null);
-        if (d && d.picks && d.picks[sub]) {
-            d.picks[sub].answered = null;
-            writeJson(TODAY_KEY, d);
-            renderDaily(d);
-            const ov = document.getElementById('dailyHistOverlay');
-            if (histView === d.date && ov && !ov.hidden) showDailyHistory();   // 弹层同步
-        }
+        if (!d || !d.picks) return;
+        const P = normPicks(d.picks);
+        const p = (P[sub] || [])[idx];
+        if (!p) return;
+        p.answered = null;
+        d.picks = P;
+        writeJson(TODAY_KEY, d);
+        renderDaily(d);
+        const ov = document.getElementById('dailyHistOverlay');
+        if (histView === d.date && ov && !ov.hidden) showDailyHistory();   // 弹层同步
     }
 
     async function judgeAnswer(qid, val) {
@@ -330,20 +419,21 @@
         return d.getFullYear() === now.getFullYear() ? `${md}` : `${dstr}`;
     }
 
-    // 当天完成度：今日看 answered；历史看 answered（新数据）或 done（旧摘要兼容）
+    // 当天完成度（按题统计）：今日看 answered；历史看 answered（新数据）或 done（旧摘要兼容）
     function dayStat(picks, isToday) {
+        const P = normPicks(picks);
         let total = 0, done = 0, correct = 0;
         for (const k of SUBJ_ORDER) {
-            const p = picks && picks[k];
-            if (!p) continue;
-            total++;
-            let st = null;
-            if (p.answered) st = p.answered.isCorrect === true ? 'ok' : (p.answered.isCorrect === false ? 'bad' : 'na');
-            else if (!isToday) {
-                if (p.done === true) st = 'ok';
-                else if (p.done === false) st = 'bad';
+            for (const p of (P[k] || [])) {
+                total++;
+                let st = null;
+                if (p.answered) st = p.answered.isCorrect === true ? 'ok' : (p.answered.isCorrect === false ? 'bad' : 'na');
+                else if (!isToday) {
+                    if (p.done === true) st = 'ok';
+                    else if (p.done === false) st = 'bad';
+                }
+                if (st) { done++; if (st === 'ok') correct++; }
             }
-            if (st) { done++; if (st === 'ok') correct++; }
         }
         return { total, done, correct };
     }
@@ -369,8 +459,14 @@
             if (!day) { histView = null; return showDailyHistory(); }
             headTitle = esc(fmtDate(day.date)) + (day.today ? ' · 今天' : '');
             // 今天的详情复用页面作答逻辑（submitDaily 写 TODAY_KEY）；历史日期走 submitHist（写回历史）
-            const ctx = day.today ? {} : { date: day.date };
-            const items = SUBJ_ORDER.map(sub => itemHtml(sub, day.picks && day.picks[sub], ctx)).join('');
+            const baseCtx = day.today ? {} : { date: day.date };
+            const P = normPicks(day.picks);
+            const items = SUBJ_ORDER.map(sub => {
+                const arr = P[sub] || [];
+                return arr.length
+                    ? arr.map((p, i) => itemHtml(sub, p, Object.assign({ idx: i }, baseCtx))).join('')
+                    : itemHtml(sub, null, Object.assign({ idx: 0 }, baseCtx));
+            }).join('');
             bodyHtml = `
                 <div class="daily-hist-body">
                     <div class="dh-detail-tip">点选项作答，判分后自动记入当天记录</div>
@@ -435,8 +531,9 @@
     window.submitDaily = submitDaily;
     window.submitHist = submitHist;
     window.redoDaily = redoDaily;
+    window.addBatchDaily = addBatchDaily;
     window.DailyPick = {
-        rollToday, pickOne, todayStr, renderDaily, snippet, itemHtml, dayStat, collectDays,
+        rollToday, addBatch, pickOne, todayStr, renderDaily, snippet, itemHtml, dayStat, collectDays, normPicks,
         KEYS: { TODAY_KEY, HISTORY_KEY, SEEN_KEY }, SUBJ_ORDER
     };
 })();
