@@ -386,14 +386,18 @@
         const totalQ = SUBJ_ORDER.reduce((n, k) => n + (picks[k] || []).length, 0);
         const hasAny = totalQ > 0;
         const now = new Date();
-        // 顺序：加量抽到的题（idx ≥ 1）排在最上面，其次是每天首批的题
+        // 顺序：**最后一次加量的题置顶**（idx 大的排前面），其次较早的加量题，最后每天首批的题（idx 0）
         const extra = [], base = [];
         for (const sub of SUBJ_ORDER) {
             const arr = picks[sub] || [];
-            if (!arr.length) { base.push(itemHtml(sub, null, { idx: 0 })); continue; }
-            arr.forEach((p, i) => (i > 0 ? extra : base).push(itemHtml(sub, p, { idx: i, collapse: collapseDone })));
+            if (!arr.length) { base.push({ sort: 0, sub: SUBJ_ORDER.indexOf(sub), idx: 0, p: null }); continue; }
+            arr.forEach((p, i) => (i > 0 ? extra : base).push({ sort: i, sub: SUBJ_ORDER.indexOf(sub), idx: i, p }));
         }
-        const items = extra.concat(base).join('');
+        extra.sort((a, b) => (b.sort - a.sort) || (a.sub - b.sub));   // 加量批次倒序：最后加的在最上
+        base.sort((a, b) => (a.sub - b.sub));
+        const items = extra.concat(base)
+            .map(o => itemHtml(SUBJ_ORDER[o.sub], o.p, { idx: o.idx, collapse: collapseDone }))
+            .join('');
 
         box.innerHTML = `
             <div class="daily-card">
@@ -597,11 +601,16 @@
             const P = normPicks(day.picks);
             const hExtra = [], hBase = [];
             for (const sub of SUBJ_ORDER) {
+                const si = SUBJ_ORDER.indexOf(sub);
                 const arr = P[sub] || [];
-                if (!arr.length) { hBase.push(itemHtml(sub, null, Object.assign({ idx: 0 }, baseCtx))); continue; }
-                arr.forEach((p, i) => (i > 0 ? hExtra : hBase).push(itemHtml(sub, p, Object.assign({ idx: i }, baseCtx))));
+                if (!arr.length) { hBase.push({ sort: 0, sub: si, idx: 0, p: null }); continue; }
+                arr.forEach((p, i) => (i > 0 ? hExtra : hBase).push({ sort: i, sub: si, idx: i, p }));
             }
-            const items = hExtra.concat(hBase).join('');
+            hExtra.sort((a, b) => (b.sort - a.sort) || (a.sub - b.sub));   // 最后加量的置顶
+            hBase.sort((a, b) => (a.sub - b.sub));
+            const items = hExtra.concat(hBase)
+                .map(o => itemHtml(SUBJ_ORDER[o.sub], o.p, Object.assign({ idx: o.idx }, baseCtx)))
+                .join('');
             bodyHtml = `
                 <div class="daily-hist-body">
                     <div class="dh-detail-tip">点选项作答，判分后自动记入当天记录</div>

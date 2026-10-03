@@ -412,13 +412,32 @@ w.eval('(function(){' + DAILY + '})()');
         picks: { ds: [
             { id: 'b0', content: '首批题', options: { A: '甲' }, answer: 'A' },
             { id: 'b1', content: '加量题1', options: { A: '甲' }, answer: 'A' },
-            { id: 'b2', content: '加量题2', options: { A: '甲' }, answer: 'A' }
+            { id: 'b2', content: '加量题2', options: { A: '甲' }, answer: 'A' },
+            { id: 'b3', content: '加量题3', options: { A: '甲' }, answer: 'A' }
         ] }
     };
     w.DailyPick.renderDaily(mixed);
     const order = [...w.document.querySelectorAll('.daily-item')]
         .map(e => e.dataset.idx).filter(v => v !== undefined);
-    check('加量题排在前、首批题下沉', order, ['1', '2', '0']);
+    check('加量题排在前、首批题下沉', order, ['3', '2', '1', '0']);
+
+    // 多门混合：最后一批加量的题在最上，同批内按科目顺序
+    w.DailyPick.renderDaily({
+        date: w.DailyPick.todayStr(), normalized: 1,
+        picks: {
+            ds: [{ id: 'm0', content: 'ds 首批', options: { A: '甲' }, answer: 'A' },
+                  { id: 'm1', content: 'ds 加量1', options: { A: '甲' }, answer: 'A' },
+                  { id: 'm2', content: 'ds 加量2', options: { A: '甲' }, answer: 'A' }],
+            os: [{ id: 'n0', content: 'os 首批', options: { A: '甲' }, answer: 'A' },
+                  { id: 'n1', content: 'os 加量1', options: { A: '甲' }, answer: 'A' },
+                  { id: 'n2', content: 'os 加量2', options: { A: '甲' }, answer: 'A' }]
+        }
+    });
+    const order2 = [...w.document.querySelectorAll('.daily-item')]
+        .map(e => `${e.dataset.sub || '-'}${e.dataset.idx || ''}`);
+    check('最后一批加量置顶（含跨科排序）', order2.filter(v => v.endsWith('2')), ['ds2', 'os2']);
+    check('较早加量批次居中', order2.filter(v => v.endsWith('1')), ['ds1', 'os1']);
+    check('首批题在最下', order2.filter(v => v.endsWith('0')), ['ds0', 'os0']);
 
     console.log('\n--- 错题 7 天重抽计划 ---');
     check('重抽间隔为 7 天', w.DailyPick.RETRY_DAYS, 7);
