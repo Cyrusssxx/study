@@ -346,6 +346,36 @@ w.eval('(function(){' + DAILY + '})()');
     check('跳过后 ds 门题数不再增加', (todayOf().picks.ds || []).length, 3);
     w.api = realApi3;
 
+    console.log('\n--- 加量后自动折叠今天写过的题 ---');
+    // 造一份今天数据：ds 第 0 题已作答、第 1 题未作答
+    const todayData = {
+        date: w.DailyPick.todayStr(), normalized: 1,
+        picks: { ds: [
+            { id: 'ds_done1', content: '已作答的题', options: { A: '甲', B: '乙' }, answer: 'A', chapter: '第1章', section: '1.1 节',
+              answered: { answer: 'A', isCorrect: true, correctAnswer: 'A' } },
+            { id: 'ds_new9', content: '没作答的新题', options: { A: '甲', B: '乙' }, answer: 'A' }
+        ] }
+    };
+    w.localStorage.setItem('daily_pick_v1', JSON.stringify(todayData));
+    // 首屏渲染：不折叠
+    w.DailyPick.renderDaily(todayData);
+    let dom0 = w.document.getElementById('dailySection').innerHTML;
+    check('首屏：已作答题不自动折叠', /data-idx="0"[^>]*class="daily-item"|class="daily-item"[^>]*data-idx="0"/.test(dom0) && !/daily-item folded/.test(dom0), true);
+    check('首屏：已作答题有状态标签', /✓ 已答对/.test(dom0), true);
+    check('首屏：已作答题有折叠开关（收起）', /收起 ▴/.test(dom0), true);
+    // 加量后渲染：折叠
+    w.DailyPick.renderDaily(null, { collapseDone: true });
+    const dom1 = w.document.getElementById('dailySection').innerHTML;
+    check('加量后：已作答题被折叠（folded class）', /class="daily-item folded"/.test(dom1), true);
+    check('加量后：未作答题不折叠', (dom1.match(/folded/g) || []).length, 1);
+    check('加量后：折叠按钮文案变为「展开」', /展开 ▾/.test(dom1), true);
+    // 展开交互
+    const tbtn = w.document.querySelector('.daily-item.folded .daily-fold-toggle');
+    check('折叠卡内有 toggle 按钮', !!tbtn, true);
+    w.toggleDailyItem(tbtn);
+    check('点击可展开（移除 folded）', w.document.querySelectorAll('.daily-item.folded').length, 0);
+    check('展开后按钮文案变「收起」', tbtn.textContent, '收起 ▴');
+
     console.log(`\nPASS ${pass} / FAIL ${fail}`);
     process.exit(fail ? 1 : 0);
 })().catch(e => { console.error('测试异常:', e); process.exit(1); });

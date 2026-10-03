@@ -5741,6 +5741,32 @@ a.chapter-badge-link:hover {
     flex: none; font-size: 0.72rem; font-weight: 600; padding: 1px 8px; border-radius: 999px;
     background: rgba(234, 88, 12, .12); color: #b45309; border: 1px solid rgba(234, 88, 12, .3);
 }
+/* 已作答状态标签（折叠时仍可见） */
+.daily-tag.ok { background: rgba(46, 125, 50, .13); color: #2e7d32; border-color: rgba(46, 125, 50, .3); }
+.daily-tag.bad { background: rgba(220, 38, 38, .12); color: #b3261e; border-color: rgba(220, 38, 38, .28); }
+.daily-tag.na { background: rgba(128, 128, 128, .12); color: var(--text-light); border-color: var(--border); }
+
+/* 折叠开关（加量后自动折叠今天写过的题） */
+.daily-fold-toggle {
+    flex: none; font-size: 0.72rem; padding: 1px 9px; border-radius: 999px;
+    border: 1px solid var(--border); background: none; color: var(--text-light);
+    cursor: pointer; touch-action: manipulation; transition: color .15s, border-color .15s;
+}
+.daily-fold-toggle:hover { border-color: var(--primary); color: var(--primary); }
+/* 折叠态：只留头部 + 两行题干摘要，作答区/结果/解析/笔记隐藏 */
+.daily-item.folded { padding-bottom: 12px; }
+.daily-item.folded .daily-opts,
+.daily-item.folded .daily-result,
+.daily-item.folded .daily-submit,
+.daily-item.folded .daily-redo,
+.daily-item.folded .daily-fold,
+.daily-item.folded .daily-link { display: none; }
+.daily-item.folded .daily-q {
+    display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;
+    overflow: hidden; margin-bottom: 0; opacity: .8;
+}
+.dark .daily-tag.ok { color: #81c784; border-color: rgba(129, 199, 132, .3); }
+.dark .daily-tag.bad { color: #ef9a9a; border-color: rgba(239, 154, 154, .3); }
 .dark .daily-tag { background: rgba(251, 191, 36, .14); color: #e0b45c; border-color: rgba(251, 191, 36, .3); }
 /* 知识点跳转（章节 · 小节 📖）：小节可点，新窗口直达笔记定位 */
 a.daily-meta.daily-kp { color: var(--text-light); text-decoration: none; }

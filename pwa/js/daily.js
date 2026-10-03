@@ -295,11 +295,22 @@
                 ? `<a class="daily-link" href="${quizLink(sub, p.id)}">去刷题页作答 →</a>`
                 : `<button class="daily-submit" onclick="${act}">提交答案</button>`);
 
-        return `<div class="daily-item" data-sub="${sub}" data-idx="${idx}">
+        // 已作答：头部状态标记 + 折叠开关（加量时 ctx.collapse 为 true → 默认折叠今天写过的题）
+        const doneTag = locked
+            ? `<span class="daily-tag ${a.isCorrect === true ? 'ok' : a.isCorrect === false ? 'bad' : 'na'}">${a.isCorrect === true ? '✓ 已答对' : a.isCorrect === false ? '✗ 答错' : '已作答'}</span>`
+            : '';
+        const foldToggle = locked
+            ? `<button class="daily-fold-toggle" onclick="toggleDailyItem(this)" title="收起/展开这道题">${ctx.collapse ? '展开 ▾' : '收起 ▴'}</button>`
+            : '';
+        const foldedCls = (locked && ctx.collapse) ? ' folded' : '';
+
+        return `<div class="daily-item${foldedCls}" data-sub="${sub}" data-idx="${idx}">
             <div class="daily-item-head">
                 <span class="daily-subject">${esc(subName(sub))}${idx > 0 ? ' · 加量' : ''}</span>
                 ${p.due ? '<span class="daily-tag due">🔁 待复习</span>' : ''}
+                ${doneTag}
                 ${kpMetaHtml(sub, p)}
+                ${foldToggle}
             </div>
             <div class="daily-q">${(typeof fmtContent === 'function') ? fmtContent(p.content || '') : esc(p.content || '')}</div>
             ${optsHtml}
@@ -310,9 +321,11 @@
         </div>`;
     }
 
-    function renderDaily(data) {
+    // renderDaily(data, opts)：opts.collapseDone=true 时把「今天已作答」的题折叠起来（加量后用）
+    function renderDaily(data, opts) {
         const box = document.getElementById('dailySection');
         if (!box) return;
+        const collapseDone = !!(opts && opts.collapseDone);
         const d = data || readJson(TODAY_KEY, null);
         const picks = normPicks(d && d.picks);
         const totalQ = SUBJ_ORDER.reduce((n, k) => n + (picks[k] || []).length, 0);
@@ -321,7 +334,7 @@
         const items = SUBJ_ORDER.map(sub => {
             const arr = picks[sub] || [];
             return arr.length
-                ? arr.map((p, i) => itemHtml(sub, p, { idx: i })).join('')
+                ? arr.map((p, i) => itemHtml(sub, p, { idx: i, collapse: collapseDone })).join('')
                 : itemHtml(sub, null, { idx: 0 });
         }).join('');
 
@@ -347,7 +360,15 @@
             alert('加量只抽「没做过的新题」——四门的新题都抽完了。\n去刷题页多收藏几道新题，或先做完今天的题再来加量～');
             return;
         }
-        renderDaily();
+        renderDaily(null, { collapseDone: true });   // 加量后自动折叠今天已写过的题
+    }
+
+    // 折叠/展开单张题卡（加量后自动折叠已作答的题，用户可随时展开回看）
+    function toggleDailyItem(btn) {
+        const card = btn && btn.closest ? btn.closest('.daily-item') : null;
+        if (!card) return;
+        const folded = card.classList.toggle('folded');
+        btn.textContent = folded ? '展开 ▾' : '收起 ▴';
     }
 
     async function initDaily() {
@@ -563,6 +584,7 @@
     window.submitHist = submitHist;
     window.redoDaily = redoDaily;
     window.addBatchDaily = addBatchDaily;
+    window.toggleDailyItem = toggleDailyItem;
     window.DailyPick = {
         rollToday, addBatch, pickOne, todayStr, renderDaily, snippet, itemHtml, dayStat, collectDays, normPicks,
         KEYS: { TODAY_KEY, HISTORY_KEY, SEEN_KEY }, SUBJ_ORDER
