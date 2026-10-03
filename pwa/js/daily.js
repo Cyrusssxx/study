@@ -163,7 +163,7 @@
     function pick(a) { return a[Math.floor(Math.random() * a.length)]; }
 
     // 今日卡片存的题目数据：作答所需字段（历史归档也存完整数据，供页内回看/补做）
-    function toPick(f) {
+    function toPick(f, batch) {
         return {
             id: f.id,
             content: f.content || '',
@@ -175,8 +175,9 @@
             section: f.section || '',
             note: f.note || '',
             note_images: f.note_images || [],
-            due: !!f._due,    // 抽到时是「今日到期复习」题（界面标 🔁 待复习）
-            answered: null    // {answer, isCorrect, correctAnswer}
+            due: !!f._due,     // 抽到时是「今日到期复习」题（界面标 🔁 待复习）
+            b: batch || 0,     // 全局批次号：0 = 每天首批；1、2… = 第 n 次「再来 4 道」
+            answered: null     // {answer, isCorrect, correctAnswer}
         };
     }
 
@@ -204,7 +205,7 @@
             const pool = await loadPool(sub);
             const f = pickOne(pool, seen[sub]);
             if (!f) continue;
-            picks[sub] = [toPick(f)];
+            picks[sub] = [toPick(f, 0)];
             seen[sub] = seen[sub] || {};
             seen[sub][f.id] = today;
         }
@@ -226,6 +227,10 @@
         const today = todayStr();
         let added = 0, refetched = 0;
         const subs = [], skipped = [];
+        // 本次加量的全局批次号 = 现有最大批次 + 1（排序时「最后加量的一批」整批置顶）
+        let maxB = 0;
+        for (const k of Object.keys(picks)) (picks[k] || []).forEach(p => { maxB = Math.max(maxB, p.b || 0); });
+        const batch = maxB + 1;
         for (const sub of SUBJ_ORDER) {
             const cur = picks[sub] || [];
             const ex = new Set(cur.map(p => p.id));
@@ -243,7 +248,7 @@
             }
             if (!f) { skipped.push(sub); continue; }
 
-            const p = toPick(f);
+            const p = toPick(f, batch);
             if (isRefetch) p.refetch = true;
             cur.push(p);
             picks[sub] = cur;
@@ -386,16 +391,17 @@
         const totalQ = SUBJ_ORDER.reduce((n, k) => n + (picks[k] || []).length, 0);
         const hasAny = totalQ > 0;
         const now = new Date();
-        // 顺序：**最后一次加量的题置顶**（idx 大的排前面），其次较早的加量题，最后每天首批的题（idx 0）
-        const extra = [], base = [];
+        // 顺序：**最后一次加量的那一整批（最多 4 道）置顶**，其次更早的加量批次，每天首批沉底
+        //   用全局批次号 p.b（0=首批，1/2…=第 n 次加量）排序，不受某门被跳过导致 idx 错位的影响
+        const groups = [];
         for (const sub of SUBJ_ORDER) {
+            const si = SUBJ_ORDER.indexOf(sub);
             const arr = picks[sub] || [];
-            if (!arr.length) { base.push({ sort: 0, sub: SUBJ_ORDER.indexOf(sub), idx: 0, p: null }); continue; }
-            arr.forEach((p, i) => (i > 0 ? extra : base).push({ sort: i, sub: SUBJ_ORDER.indexOf(sub), idx: i, p }));
+            if (!arr.length) { groups.push({ b: 0, sub: si, idx: 0, p: null }); continue; }
+            arr.forEach((p, i) => groups.push({ b: (typeof p.b === 'number' ? p.b : (i === 0 ? 0 : 1)), sub: si, idx: i, p }));
         }
-        extra.sort((a, b) => (b.sort - a.sort) || (a.sub - b.sub));   // 加量批次倒序：最后加的在最上
-        base.sort((a, b) => (a.sub - b.sub));
-        const items = extra.concat(base)
+        groups.sort((a, b) => (b.b - a.b) || (a.sub - b.sub));   // 批次倒序 → 最后加量的整批置顶；同批按科目序
+        const items = groups
             .map(o => itemHtml(SUBJ_ORDER[o.sub], o.p, { idx: o.idx, collapse: collapseDone }))
             .join('');
 
@@ -599,16 +605,15 @@
             // 今天的详情复用页面作答逻辑（submitDaily 写 TODAY_KEY）；历史日期走 submitHist（写回历史）
             const baseCtx = day.today ? {} : { date: day.date };
             const P = normPicks(day.picks);
-            const hExtra = [], hBase = [];
+            const hExtra = [];
             for (const sub of SUBJ_ORDER) {
                 const si = SUBJ_ORDER.indexOf(sub);
                 const arr = P[sub] || [];
-                if (!arr.length) { hBase.push({ sort: 0, sub: si, idx: 0, p: null }); continue; }
-                arr.forEach((p, i) => (i > 0 ? hExtra : hBase).push({ sort: i, sub: si, idx: i, p }));
+                if (!arr.length) { hExtra.push({ sort: 0, sub: si, idx: 0, p: null }); continue; }
+                arr.forEach((p, i) => hExtra.push({ sort: (typeof p.b === 'number' ? p.b : (i === 0 ? 0 : 1)), sub: si, idx: i, p }));
             }
-            hExtra.sort((a, b) => (b.sort - a.sort) || (a.sub - b.sub));   // 最后加量的置顶
-            hBase.sort((a, b) => (a.sub - b.sub));
-            const items = hExtra.concat(hBase)
+            hExtra.sort((a, b) => (b.sort - a.sort) || (a.sub - b.sub));   // 最后加量的整批置顶
+            const items = hExtra
                 .map(o => itemHtml(SUBJ_ORDER[o.sub], o.p, Object.assign({ idx: o.idx }, baseCtx)))
                 .join('');
             bodyHtml = `

@@ -410,10 +410,10 @@ w.eval('(function(){' + DAILY + '})()');
     const mixed = {
         date: w.DailyPick.todayStr(), normalized: 1,
         picks: { ds: [
-            { id: 'b0', content: '首批题', options: { A: '甲' }, answer: 'A' },
-            { id: 'b1', content: '加量题1', options: { A: '甲' }, answer: 'A' },
-            { id: 'b2', content: '加量题2', options: { A: '甲' }, answer: 'A' },
-            { id: 'b3', content: '加量题3', options: { A: '甲' }, answer: 'A' }
+            { id: 'b0', b: 0, content: '首批题', options: { A: '甲' }, answer: 'A' },
+            { id: 'b1', b: 1, content: '加量题1', options: { A: '甲' }, answer: 'A' },
+            { id: 'b2', b: 2, content: '加量题2', options: { A: '甲' }, answer: 'A' },
+            { id: 'b3', b: 3, content: '加量题3', options: { A: '甲' }, answer: 'A' }
         ] }
     };
     w.DailyPick.renderDaily(mixed);
@@ -425,12 +425,12 @@ w.eval('(function(){' + DAILY + '})()');
     w.DailyPick.renderDaily({
         date: w.DailyPick.todayStr(), normalized: 1,
         picks: {
-            ds: [{ id: 'm0', content: 'ds 首批', options: { A: '甲' }, answer: 'A' },
-                  { id: 'm1', content: 'ds 加量1', options: { A: '甲' }, answer: 'A' },
-                  { id: 'm2', content: 'ds 加量2', options: { A: '甲' }, answer: 'A' }],
-            os: [{ id: 'n0', content: 'os 首批', options: { A: '甲' }, answer: 'A' },
-                  { id: 'n1', content: 'os 加量1', options: { A: '甲' }, answer: 'A' },
-                  { id: 'n2', content: 'os 加量2', options: { A: '甲' }, answer: 'A' }]
+            ds: [{ id: 'm0', b: 0, content: 'ds 首批', options: { A: '甲' }, answer: 'A' },
+                  { id: 'm1', b: 1, content: 'ds 加量1', options: { A: '甲' }, answer: 'A' },
+                  { id: 'm2', b: 2, content: 'ds 加量2', options: { A: '甲' }, answer: 'A' }],
+            os: [{ id: 'n0', b: 0, content: 'os 首批', options: { A: '甲' }, answer: 'A' },
+                  { id: 'n1', b: 1, content: 'os 加量1', options: { A: '甲' }, answer: 'A' },
+                  { id: 'n2', b: 2, content: 'os 加量2', options: { A: '甲' }, answer: 'A' }]
         }
     });
     const order2 = [...w.document.querySelectorAll('.daily-item')]
@@ -438,6 +438,23 @@ w.eval('(function(){' + DAILY + '})()');
     check('最后一批加量置顶（含跨科排序）', order2.filter(v => v.endsWith('2')), ['ds2', 'os2']);
     check('较早加量批次居中', order2.filter(v => v.endsWith('1')), ['ds1', 'os1']);
     check('首批题在最下', order2.filter(v => v.endsWith('0')), ['ds0', 'os0']);
+
+    // 关键回归：某门某次加量被跳过（idx 错位）时，最后一批仍完整置顶
+    w.DailyPick.renderDaily({
+        date: w.DailyPick.todayStr(), normalized: 1,
+        picks: {
+            ds: [{ id: 'k0', b: 0, content: 'ds 首批', options: { A: '甲' }, answer: 'A' },
+                  { id: 'k1', b: 1, content: 'ds 加量1', options: { A: '甲' }, answer: 'A' },
+                  { id: 'k2', b: 3, content: 'ds 加量3', options: { A: '甲' }, answer: 'A' }],   // 第 2 批 ds 被跳过
+            os: [{ id: 'g0', b: 0, content: 'os 首批', options: { A: '甲' }, answer: 'A' },
+                  { id: 'g1', b: 1, content: 'os 加量1', options: { A: '甲' }, answer: 'A' },
+                  { id: 'g2', b: 2, content: 'os 加量2', options: { A: '甲' }, answer: 'A' },
+                  { id: 'g3', b: 3, content: 'os 加量3', options: { A: '甲' }, answer: 'A' }]    // 第 3 批 os 才补上
+        }
+    });
+    const first4 = [...w.document.querySelectorAll('.daily-item')]
+        .map(e => e.dataset.idx).filter(v => v !== undefined).slice(0, 2);
+    check('某门跳过时最后一批（b 相同）仍排最前', first4, ['2', '3']);
 
     console.log('\n--- 错题 7 天重抽计划 ---');
     check('重抽间隔为 7 天', w.DailyPick.RETRY_DAYS, 7);
