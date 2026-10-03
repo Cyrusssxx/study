@@ -5745,6 +5745,7 @@ a.chapter-badge-link:hover {
 .daily-tag.ok { background: rgba(46, 125, 50, .13); color: #2e7d32; border-color: rgba(46, 125, 50, .3); }
 .daily-tag.bad { background: rgba(220, 38, 38, .12); color: #b3261e; border-color: rgba(220, 38, 38, .28); }
 .daily-tag.na { background: rgba(128, 128, 128, .12); color: var(--text-light); border-color: var(--border); }
+.daily-tag.refetch { background: rgba(128, 128, 128, .14); color: #5b6672; border-color: rgba(128, 128, 128, .35); }
 
 /* 折叠开关（加量后自动折叠今天写过的题） */
 .daily-fold-toggle {

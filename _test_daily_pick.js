@@ -248,12 +248,20 @@ w.eval('(function(){' + DAILY + '})()');
     check('加量题可独立作答并记录', !!t2.picks.ds[1].answered, true);
     check('第 1 题状态不受影响', t2.picks.ds[0].answered, null);
 
-    // ds 门未做过的新题有限（前面若干段已作答过部分题）→ 抽到耗尽时应跳过该门而非报错
-    let guard = 0, r4 = { added: 0, skipped: [] };
-    do { r4 = await w.DailyPick.addBatch(); guard++; } while (r4.added > 0 && guard < 6);
-    check('新题抽完后加量不再增加（不报错）', r4.added, 0);
-    check('耗尽科目被记入 skipped', Array.isArray(r4.skipped) && r4.skipped.length > 0, true);
-    check('ds 门题数不超过未做过的新题总量', (todayOf().picks.ds || []).length <= 3, true);
+    // 新规则：先补新题；新题抽完后回退补「已做过的题」（带 refetch 标记），整门池空才跳过
+    let guard = 0, r4 = { added: 0, skipped: [], refetched: 0 };
+    let sawRefetch = false;
+    do {
+        r4 = await w.DailyPick.addBatch(); guard++;
+        if (r4.refetched > 0) sawRefetch = true;
+    } while (r4.added > 0 && guard < 8);
+    check('新题抽完后会回退补已做过的题', sawRefetch, true);
+    check('池子全部抽完后加量不再增加（不报错）', r4.added, 0);
+    check('整门池空时记入 skipped', Array.isArray(r4.skipped) && r4.skipped.length > 0, true);
+    check('当天不出现重复题', (() => {
+        const t = todayOf();
+        return Object.values(t.picks).every(arr => new Set(arr.map(p => p.id)).size === arr.length);
+    })(), true);
 
     console.log('\n--- 抽题池：收藏 ∪ 不熟/不会 + 四层优先 ---');
     const P = (id, o) => Object.assign({ id }, o);
@@ -339,11 +347,19 @@ w.eval('(function(){' + DAILY + '})()');
     check('加量题与当天首批不重复',
         new Set((tNew.picks.ds || []).map(p => p.id)).size, 2);
 
-    // ds 的 3 道新题抽完后 → 该门被跳过（skipped 含 ds）
-    await w.DailyPick.addBatch();
-    const rSkip = await w.DailyPick.addBatch();
-    check('新题耗尽后该门被跳过（skipped 含 ds）', rSkip.skipped.includes('ds'), true);
-    check('跳过后 ds 门题数不再增加', (todayOf().picks.ds || []).length, 3);
+    // ds 的 3 道新题抽完后 → 回退补「已做过的题」，并带 refetch 标记
+    await w.DailyPick.addBatch();                       // 抽第 3 道新题
+    const rBack = await w.DailyPick.addBatch();        // 新题耗尽 → 回退
+    check('新题耗尽后回退补题（added>0）', rBack.added > 0, true);
+    check('回退计数 refetched>0', rBack.refetched > 0, true);
+    const dsNow = todayOf().picks.ds || [];
+    check('回退题带 refetch 标记', dsNow.some(p => p.refetch === true), true);
+    check('回退题不是新题（ds_old*）', dsNow.filter(p => p.refetch).every(p => p.id.startsWith('ds_old')), true);
+    check('refetch 标签渲染', w.DailyPick.itemHtml('ds', { id: 'rf1', content: '复习题', options: { A: '甲' }, answer: 'A', refetch: true }, { idx: 0 }).includes('已做过'), true);
+    // 整门池空后才跳过
+    let g2 = 0, rEnd = rBack;
+    do { rEnd = await w.DailyPick.addBatch(); g2++; } while (rEnd.added > 0 && g2 < 6);
+    check('该门池全空后被跳过', rEnd.added, 0);
     w.api = realApi3;
 
     console.log('\n--- 加量后自动折叠今天写过的题 ---');
