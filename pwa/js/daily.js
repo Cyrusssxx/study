@@ -2,7 +2,7 @@
 // 规则：
 //   ① 每天从四门（ds/os/cn/co）的【收藏 ∪ 不熟/不会 ∪ 今日到期复习】题池里各抽 1 题，共 4 题，四门互不重复；
 //   ② 抽题优先级（五层）：到期复习 > 不会 > 不熟 > 没做过 > 其他做过；层内「从未抽过 → 最久未抽」；
-//   ③ 支持「➕ 再来 4 道」加量：每门再抽 1 题追加到当天列表（与当天已抽不重复，某门抽完则跳过）；
+//   ③ 支持「➕ 再来 4 道」加量：每门再抽 1 道**没做过的新题**（排除当天已抽 + 排除有作答记录的题）；
 //   ④ 直接在卡片里作答（选项→提交→判对错→看解析），页面内完成不跳转；
 //   ⑤ 笔记默认【不展开】（刷题页 quiz.html 仍保持有笔记即展开）；
 //   ⑥ 每天首次进入生成结果并归档进历史，历史保留最近 120 天，可回看/页内补做。
@@ -178,23 +178,25 @@
         return out;
     }
 
-    // 加量：每门再抽 1 题追加到当天列表（与当天已抽的不重复；某门收藏抽完则跳过该门）
+    // 加量：每门再抽 1 题追加到当天列表。
+    //   规则：① 与当天已抽的不重复；② **只要没做过的新题**（有作答记录的题不进入加量）；
+    //         ③ 该门没有未做过的新题时跳过该门。
     async function addBatch() {
         const d = readJson(TODAY_KEY, null);
-        if (!d || d.date !== todayStr() || !d.picks) return { added: 0, subs: [] };
+        if (!d || d.date !== todayStr() || !d.picks) return { added: 0, subs: [], skipped: [] };
         const picks = normPicks(d.picks);
         const seen = readJson(SEEN_KEY, {});
         const today = todayStr();
         let added = 0;
-        const subs = [];
+        const subs = [], skipped = [];
         for (const sub of SUBJ_ORDER) {
             const cur = picks[sub] || [];
             const ex = new Set(cur.map(p => p.id));
             const pool = await loadPool(sub);
-            const cand = pool.filter(f => !ex.has(f.id));     // 该门可抽的都抽过 → 本题无新题可加
-            if (!cand.length) continue;
+            const cand = pool.filter(f => !ex.has(f.id) && !f.last_status);   // 只要没做过的新题
+            if (!cand.length) { skipped.push(sub); continue; }
             const f = pickOne(cand, seen[sub]);
-            if (!f) continue;
+            if (!f) { skipped.push(sub); continue; }
             cur.push(toPick(f));
             picks[sub] = cur;
             seen[sub] = seen[sub] || {};
@@ -205,7 +207,7 @@
             writeJson(TODAY_KEY, { date: today, picks, normalized: 1 });
             writeJson(SEEN_KEY, seen);
         }
-        return { added, subs };
+        return { added, subs, skipped };
     }
 
     function quizLink(sub, qid) {
@@ -329,12 +331,12 @@
                     <h2 class="daily-title">📅 每日一题</h2>
                     <span class="daily-date">${d && d.date ? d.date : todayStr()} ${weekdayCn(now)}</span>
                     <span class="daily-head-sp"></span>
-                    ${hasAny ? `<button class="daily-hist-btn daily-add-btn" onclick="addBatchDaily()" title="每门再抽 1 题，追加到今天的列表">➕ 再来 4 道</button>` : ''}
+                    ${hasAny ? `<button class="daily-hist-btn daily-add-btn" onclick="addBatchDaily()" title="每门再抽 1 道没做过的新题，追加到今天的列表">➕ 再来 4 道</button>` : ''}
                     <button class="daily-hist-btn" onclick="showDailyHistory()" title="查看每天抽到的题">历史记录</button>
                 </div>
                 ${hasAny
                     ? `<div class="daily-grid">${items}</div>
-                       <div class="daily-foot">共 ${totalQ} 题 · 优先抽 到期复习/不熟/不会 → 没做过的收藏题 · 每天 0 点更新</div>`
+                       <div class="daily-foot">共 ${totalQ} 题 · 每天优先抽 到期复习/不熟/不会；「再来 4 道」只加没做过的新题</div>`
                     : `<div class="daily-empty">还没有可抽的题：去刷题收藏几道、或标记不熟/不会、答错的题会自动进入复习队列，这里每天从四门各抽 1 题。</div>`}
             </div>`;
     }
@@ -342,7 +344,7 @@
     async function addBatchDaily() {
         const r = await addBatch();
         if (!r.added) {
-            alert('四门能抽的题都抽过一遍了，去刷题页再收藏几道或标记不熟/不会吧～');
+            alert('加量只抽「没做过的新题」——四门的新题都抽完了。\n去刷题页多收藏几道新题，或先做完今天的题再来加量～');
             return;
         }
         renderDaily();

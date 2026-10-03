@@ -248,9 +248,12 @@ w.eval('(function(){' + DAILY + '})()');
     check('加量题可独立作答并记录', !!t2.picks.ds[1].answered, true);
     check('第 1 题状态不受影响', t2.picks.ds[0].answered, null);
 
-    // 某门收藏抽完 → 加量跳过该门（ds 收藏 5 题，抽 2 次后仍可加）
-    const r3 = await w.DailyPick.addBatch();
-    check('可继续加量（每门 3 题）', (todayOf().picks.ds || []).length, 3);
+    // ds 门未做过的新题有限（前面若干段已作答过部分题）→ 抽到耗尽时应跳过该门而非报错
+    let guard = 0, r4 = { added: 0, skipped: [] };
+    do { r4 = await w.DailyPick.addBatch(); guard++; } while (r4.added > 0 && guard < 6);
+    check('新题抽完后加量不再增加（不报错）', r4.added, 0);
+    check('耗尽科目被记入 skipped', Array.isArray(r4.skipped) && r4.skipped.length > 0, true);
+    check('ds 门题数不超过未做过的新题总量', (todayOf().picks.ds || []).length <= 3, true);
 
     console.log('\n--- 抽题池：收藏 ∪ 不熟/不会 + 四层优先 ---');
     const P = (id, o) => Object.assign({ id }, o);
@@ -302,6 +305,46 @@ w.eval('(function(){' + DAILY + '})()');
     check('抽题时会拉取复习列表（mode=review）', reviewCalled > 0, true);
     check('到期复习题被优先抽中（ds 门）', dr.picks.ds[0].id, 'rv_001');
     check('抽中的复习题带 due 标记', dr.picks.ds[0].due, true);
+
+    console.log('\n--- 加量只抽「没做过的新题」 ---');
+    // stub ds 门题池：2 道已作答（旧）+ 3 道未作答（新），unfamiliar/review 返回空
+    const realApi3 = w.api;
+    w.api = async (url, opts) => {
+        const s = String(url);
+        if (s.includes('/api/questions/ds')) {
+            if (s.includes('mode=favorite')) {
+                return { json: async () => ({ questions: [
+                    { id: 'ds_old1', last_status: { is_correct: true }, options: { A: '甲' }, answer: 'A', chapter: '第1章', section: '1.1 节' },
+                    { id: 'ds_old2', last_status: { is_correct: false }, options: { A: '甲' }, answer: 'A' },
+                    { id: 'ds_new1', options: { A: '甲' }, answer: 'A' },
+                    { id: 'ds_new2', options: { A: '甲' }, answer: 'A' },
+                    { id: 'ds_new3', options: { A: '甲' }, answer: 'A' }
+                ] }) };
+            }
+            return { json: async () => ({ questions: [] }) };   // 弱项/复习为空
+        }
+        return realApi3(url, opts);
+    };
+    w.localStorage.removeItem('daily_pick_v1');
+    w.localStorage.removeItem('daily_seen_v1');
+    const dNew = await w.DailyPick.rollToday();
+    check('首批：ds 抽到未做过的新题', dNew.picks.ds[0].id.startsWith('ds_new'), true);
+    check('首批：ds 未抽已作答的题', dNew.picks.ds[0].id.startsWith('ds_old'), false);
+
+    await w.DailyPick.addBatch();
+    const tNew = todayOf();
+    check('加量后 ds 门 2 题', (tNew.picks.ds || []).length, 2);
+    check('加量题全部是未做过的新题（排除已作答）',
+        (tNew.picks.ds || []).every(p => p.id.startsWith('ds_new')), true);
+    check('加量题与当天首批不重复',
+        new Set((tNew.picks.ds || []).map(p => p.id)).size, 2);
+
+    // ds 的 3 道新题抽完后 → 该门被跳过（skipped 含 ds）
+    await w.DailyPick.addBatch();
+    const rSkip = await w.DailyPick.addBatch();
+    check('新题耗尽后该门被跳过（skipped 含 ds）', rSkip.skipped.includes('ds'), true);
+    check('跳过后 ds 门题数不再增加', (todayOf().picks.ds || []).length, 3);
+    w.api = realApi3;
 
     console.log(`\nPASS ${pass} / FAIL ${fail}`);
     process.exit(fail ? 1 : 0);
