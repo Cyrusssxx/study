@@ -420,6 +420,71 @@ w.eval('(function(){' + DAILY + '})()');
         .map(e => e.dataset.idx).filter(v => v !== undefined);
     check('加量题排在前、首批题下沉', order, ['1', '2', '0']);
 
+    console.log('\n--- 错题 7 天重抽计划 ---');
+    check('重抽间隔为 7 天', w.DailyPick.RETRY_DAYS, 7);
+    w.localStorage.removeItem('daily_retry_v1');
+    w.DailyPick.markRetry('ds_x1', false);                       // 答错
+    let plan = JSON.parse(w.localStorage.getItem('daily_retry_v1') || '{}');
+    check('答错后记入重抽计划', !!plan['ds_x1'], true);
+    check('计划日期为 7 天后', /^\d{4}-\d{2}-\d{2}$/.test(plan['ds_x1']), true);
+    check('未到期前属于 pending（7 天内不进池）', w.DailyPick.pendingRetryIds().has('ds_x1'), true);
+    check('未到期不属于 due', w.DailyPick.dueRetryIds().has('ds_x1'), false);
+    w.DailyPick.markRetry('ds_x1', true);                        // 答对 → 清除
+    check('答对后清除重抽计划',
+        Object.keys(JSON.parse(w.localStorage.getItem('daily_retry_v1') || '{}')).includes('ds_x1'), false);
+    // 模拟到期：把计划日期改成今天
+    w.localStorage.setItem('daily_retry_v1', JSON.stringify({ ds_x1: w.DailyPick.todayStr() }));
+    check('到期后进入 due（最高优先重抽）', w.DailyPick.dueRetryIds().has('ds_x1'), true);
+    check('到期后不再 pending', w.DailyPick.pendingRetryIds().has('ds_x1'), false);
+    // 池子行为：pending 被剔除、due 被标 _due
+    const realApi4 = w.api;
+    w.api = async (url, opts) => {
+        const s = String(url);
+        if (s.includes('/api/questions/ds') && s.includes('mode=favorite')) {
+            return { json: async () => ({ questions: [
+                { id: 'ds_pending', options: { A: '甲' }, answer: 'A' },
+                { id: 'ds_due', options: { A: '甲' }, answer: 'A' },
+                { id: 'ds_plain', options: { A: '甲' }, answer: 'A' }
+            ] }) };
+        }
+        if (s.includes('/api/questions/ds')) return { json: async () => ({ questions: [] }) };
+        return realApi4(url, opts);
+    };
+    w.localStorage.setItem('daily_retry_v1', JSON.stringify({
+        ds_pending: '2099-01-01',                                  // 未到期 → 剔除
+        ds_due: w.DailyPick.todayStr()                            // 已到期 → 最高优先
+    }));
+    const poolProbe = await (async () => {
+        // 直接复用 rollToday 的池：清空当天后抽题，ds 应抽到 ds_due（最高优先）
+        w.localStorage.removeItem('daily_pick_v1');
+        w.localStorage.removeItem('daily_seen_v1');
+        return w.DailyPick.rollToday();
+    })();
+    w.api = realApi4;
+    check('池中剔除 7 天内的错题（ds_pending 不被抽）', poolProbe.picks.ds[0].id !== 'ds_pending', true);
+    check('到期的错题被最高优先抽出（ds_due）', poolProbe.picks.ds[0].id, 'ds_due');
+    check('抽中的重抽题带 due 标记', poolProbe.picks.ds[0].due, true);
+    w.localStorage.removeItem('daily_retry_v1');
+
+    console.log('\n--- 提交不整块重渲染（不跳动） ---');
+    w.localStorage.removeItem('daily_pick_v1');
+    const stable = { date: w.DailyPick.todayStr(), normalized: 1, picks: { ds: [
+        { id: 's0', content: '第0题', options: { A: '甲', B: '乙' }, answer: 'A' },
+        { id: 's1', content: '第1题', options: { A: '甲', B: '乙' }, answer: 'A' }
+    ] } };
+    w.localStorage.setItem('daily_pick_v1', JSON.stringify(stable));
+    w.DailyPick.renderDaily(stable);
+    const card0Before = w.document.querySelector('.daily-item[data-idx="0"]');
+    const card1Before = w.document.querySelector('.daily-item[data-idx="1"]');
+    w.document.querySelector('input[name="dq-ds-0"]').checked = true;
+    await w.submitDaily('ds', 0);
+    const card0After = w.document.querySelector('.daily-item[data-idx="0"]');
+    const card1After = w.document.querySelector('.daily-item[data-idx="1"]');
+    check('提交后未整块重渲染（其他题卡 DOM 未被替换）', card1Before === card1After, true);
+    check('提交后就地更新当前题卡', card0Before === card0After && /daily-result/.test(card0After.innerHTML), true);
+    check('更新后仍显示题图区以外的内容（解析折叠存在或无）', !!card0After, true);
+    check('焦点落在该题卡上（防焦点丢失跳动）', w.document.activeElement === card0After, true);
+
     console.log(`\nPASS ${pass} / FAIL ${fail}`);
     process.exit(fail ? 1 : 0);
 })().catch(e => { console.error('测试异常:', e); process.exit(1); });

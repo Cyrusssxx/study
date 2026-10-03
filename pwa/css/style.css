@@ -5995,3 +5995,13 @@ a.daily-meta.daily-kp:hover { color: var(--primary); text-decoration: underline;
 
 /* 折叠态提示（本题含图/表格，展开查看） */
 .daily-fold-note { font-size: 0.74rem; color: var(--text-light); margin-top: 4px; }
+
+/* 答错后的「7 天后重抽」说明 */
+.daily-retry-tip { font-size: 0.76rem; opacity: .85; }
+
+/* 提交判分后结果条淡入，降低"内容突然出现"的跳动感 */
+.daily-result { animation: dailyFade .22s ease; }
+@keyframes dailyFade {
+    from { opacity: 0; transform: translateY(-2px); }
+    to { opacity: 1; transform: none; }
+}

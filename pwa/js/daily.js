@@ -1,7 +1,8 @@
 // ==================== 每日一题（daily.html） ====================
 // 规则：
 //   ① 每天从四门（ds/os/cn/co）的【收藏 ∪ 不熟/不会 ∪ 今日到期复习】题池里各抽 1 题，共 4 题，四门互不重复；
-//   ② 抽题优先级（五层）：到期复习 > 不会 > 不熟 > 没做过 > 其他做过；层内「从未抽过 → 最久未抽」；
+//   ② 抽题优先级（五层）：到期复习/7天到期重抽 > 不会 > 不熟 > 没做过 > 其他做过；层内「从未抽过 → 最久未抽」；
+//   ②b 答错的题记入 7 天重抽计划：7 天内不进池，到期后按最高优先级重抽；答对自动清除。
 //   ③ 支持「➕ 再来 4 道」加量：每门再抽 1 道题 —— 优先没做过的新题；该门无新题时回退补已做过的题（标 refetch）；
 //   ④ 直接在卡片里作答（选项→提交→判对错→看解析），页面内完成不跳转；
 //   ⑤ 笔记默认【不展开】（刷题页 quiz.html 仍保持有笔记即展开）；
@@ -60,20 +61,55 @@
         } catch (e) { return []; }
     }
 
-    // 抽题池 = 收藏题 ∪ 不熟/不会的题 ∪ 今日到期复习题（艾宾浩斯）
-    //   - unfamiliar 模式返回「不熟+不会」并集；review 模式返回今日到期（逾期越久越前）
-    //   - 到期复习的题打 _due 标记（抽题时最高优先，界面上标「待复习」）
+    // ===== 错题 7 天重抽计划 =====
+    // 答错 → 记录 7 天后重抽（这 7 天内不进每日一题池，即使它已是艾宾浩斯到期题）；
+    // 到期后重新进入题池并按最高优先级（与到期复习同级）抽出；答对则清除计划。
+    const RETRY_KEY = 'daily_retry_v1';
+    const RETRY_DAYS = 7;
+
+    function retryPlan() { return readJson(RETRY_KEY, {}); }
+    function markRetry(qid, isCorrect) {
+        const m = retryPlan();
+        if (isCorrect) {
+            if (!(qid in m)) return;
+            delete m[qid];
+        } else {
+            const d = new Date(); d.setDate(d.getDate() + RETRY_DAYS);
+            m[qid] = todayStr(d);
+        }
+        writeJson(RETRY_KEY, m);
+    }
+    // 未到期的错题（7 天内）→ 需从池中剔除
+    function pendingRetryIds() {
+        const m = retryPlan(), today = todayStr(), s = new Set();
+        for (const k in m) { if (m[k] && m[k] > today) s.add(k); }
+        return s;
+    }
+    // 已到期的重抽题 → 与到期复习同级（_due）
+    function dueRetryIds() {
+        const m = retryPlan(), today = todayStr(), s = new Set();
+        for (const k in m) { if (m[k] && m[k] <= today) s.add(k); }
+        return s;
+    }
+
+    // 抽题池 = 收藏题 ∪ 不熟/不会的题 ∪ 今日到期复习题（艾宾浩斯）∪ 满 7 天的错题重抽
+    //   - unfamiliar 返回「不熟+不会」并集；review 返回今日到期（逾期越久越前）
+    //   - _due 标记（review 到期 / 7 天到期）→ 抽题最高优先，界面标「待复习」
+    //   - 7 天内计划中的错题从池中剔除（避免刚做错又抽到）
     async function loadPool(sub) {
         const [favs, weak, due] = await Promise.all([
             loadMode(sub, 'favorite'),
             loadMode(sub, 'unfamiliar'),
             loadMode(sub, 'review')
         ]);
+        const pending = pendingRetryIds();
+        const retryDue = dueRetryIds();
         const map = new Map();
         const add = (q, isDue) => {
+            if (pending.has(q.id)) return;               // 7 天内不抽
             let o = map.get(q.id);
             if (!o) { o = Object.assign({}, q); o._due = false; map.set(q.id, o); }
-            if (isDue) o._due = true;
+            if (isDue || retryDue.has(q.id)) o._due = true;
         };
         for (const q of favs) add(q, false);
         for (const q of weak) add(q, false);
@@ -287,7 +323,7 @@
         const resultHtml = a ? (a.isCorrect === true
             ? `<div class="daily-result ok">回答正确 ✓</div>`
             : a.isCorrect === false
-                ? `<div class="daily-result bad">回答错误 ✗　正确答案：${esc(p.multi_blank ? [...(a.correctAnswer || '')].join('、') : (a.correctAnswer || ''))}</div>`
+                ? `<div class="daily-result bad">回答错误 ✗　正确答案：${esc(p.multi_blank ? [...(a.correctAnswer || '')].join('、') : (a.correctAnswer || ''))}<br><span class="daily-retry-tip">已记入错题，${RETRY_DAYS} 天后重新抽给你</span></div>`
                 : `<div class="daily-result info">该题暂无标准答案</div>`) : '';
 
         const explHtml = p.explanation
@@ -407,7 +443,7 @@
         return arr[idx || 0] || null;
     }
 
-    async function submitDaily(sub, idx) {
+    async function submitDaily(sub, idx, collapseCtx) {
         idx = idx || 0;
         const d = readJson(TODAY_KEY, null);
         if (!d || !d.picks) return;
@@ -420,9 +456,11 @@
             const r = await judgeAnswer(p.id, sel.value);
             p.answered = { answer: sel.value, isCorrect: r.is_correct, correctAnswer: r.correct_answer || p.answer };
             if (r.explanation) p.explanation = r.explanation;
+            markRetry(p.id, r.is_correct === true);   // 答错 → 7 天后重抽；答对 → 清除计划
             d.picks = P;
             writeJson(TODAY_KEY, d);
-            renderDaily(d);
+            // 局部刷新（不整块重渲染 → 页面不跳动）
+            if (collapseCtx) refreshItem(sub, idx, collapseCtx); else refreshItem(sub, idx);
             // 历史弹层开着今天的详情时，同步刷新弹层
             const ov = document.getElementById('dailyHistOverlay');
             if (histView === d.date && ov && !ov.hidden) showDailyHistory();
@@ -446,9 +484,14 @@
             const r = await judgeAnswer(p.id, sel.value);
             p.answered = { answer: sel.value, isCorrect: r.is_correct, correctAnswer: r.correct_answer || p.answer };
             if (r.explanation) p.explanation = r.explanation;
+            markRetry(p.id, r.is_correct === true);
             day.picks = P;
             writeJson(HISTORY_KEY, hist);
+            const bodyEl = document.querySelector('#dailyHistOverlay .daily-hist-body');
+            const keepY = bodyEl ? bodyEl.scrollTop : 0;
             showDailyHistory();   // 重渲染详情（状态色即时更新）
+            const bodyEl2 = document.querySelector('#dailyHistOverlay .daily-hist-body');
+            if (bodyEl2 && bodyEl2.scrollTop !== keepY) bodyEl2.scrollTop = keepY;
         } catch (e) {
             alert('提交失败: ' + e.message);
         }
@@ -464,9 +507,27 @@
         p.answered = null;
         d.picks = P;
         writeJson(TODAY_KEY, d);
-        renderDaily(d);
+        refreshItem(sub, idx);                                            // 局部刷新，不整块重渲染
         const ov = document.getElementById('dailyHistOverlay');
         if (histView === d.date && ov && !ov.hidden) showDailyHistory();   // 弹层同步
+    }
+
+    // 局部刷新单张题卡：提交/重做后就地更新，避免整块重渲染导致的页面跳动
+    //   - 保留原折叠态；- 记录并恢复滚动位置；- 焦点回到该卡（提交按钮被移除，防焦点丢失跳动）
+    function refreshItem(sub, idx, ctx) {
+        const card = document.querySelector(`.daily-item[data-sub="${sub}"][data-idx="${idx}"]`);
+        const p = curPick(sub, idx);
+        if (!card || !p) { renderDaily(readJson(TODAY_KEY, null), ctx); return; }
+        const wasFolded = card.classList.contains('folded');
+        const tmp = document.createElement('div');
+        tmp.innerHTML = itemHtml(sub, p, { idx: idx, collapse: wasFolded });
+        const fresh = tmp.firstElementChild;
+        if (!fresh) return;
+        const y = window.scrollY || 0;
+        card.innerHTML = fresh.innerHTML;
+        if (wasFolded) card.classList.add('folded');
+        if (card.focus) { card.setAttribute('tabindex', '-1'); try { card.focus({ preventScroll: true }); } catch (e) { } }
+        if (window.scrollY !== y) window.scrollTo(0, y);
     }
 
     async function judgeAnswer(qid, val) {
@@ -609,6 +670,7 @@
     window.toggleDailyItem = toggleDailyItem;
     window.DailyPick = {
         rollToday, addBatch, pickOne, todayStr, renderDaily, snippet, itemHtml, dayStat, collectDays, normPicks,
+        markRetry, pendingRetryIds, dueRetryIds, RETRY_DAYS,
         KEYS: { TODAY_KEY, HISTORY_KEY, SEEN_KEY }, SUBJ_ORDER
     };
 })();
