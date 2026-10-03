@@ -456,6 +456,30 @@ w.eval('(function(){' + DAILY + '})()');
         .map(e => e.dataset.idx).filter(v => v !== undefined).slice(0, 2);
     check('某门跳过时最后一批（b 相同）仍排最前', first4, ['2', '3']);
 
+    // 旧数据迁移：无 b 字段的题（加量题是 append 到数组末尾）应按 idx 反推批次号
+    const legacy = { ds: [
+        { id: 'L0', content: 'ds 首批', options: { A: '甲' }, answer: 'A' },
+        { id: 'L1', content: 'ds 加量1', options: { A: '甲' }, answer: 'A' },
+        { id: 'L2', content: 'ds 加量2', options: { A: '甲' }, answer: 'A' }
+    ] };
+    const ln = w.DailyPick.normPicks(legacy);
+    check('旧数据补批次号（按 idx）', ln.ds.map(p => p.b), [0, 1, 2]);
+    w.DailyPick.renderDaily({ date: w.DailyPick.todayStr(), picks: legacy });
+    const legacyOrder = [...w.document.querySelectorAll('.daily-item')].map(e => e.dataset.idx).filter(v => v !== undefined);
+    check('旧数据也按最后加量置顶', legacyOrder, ['2', '1', '0']);
+
+    // 置顶区块：最后加量的一批独立成块 + 提示条 + 分隔线
+    check('有「最后加量」置顶提示条', !!w.document.querySelector('.daily-topbar'), true);
+    check('提示条标明道数', /最后加量 · 1 道/.test(w.document.querySelector('.daily-topbar').textContent), true);
+    check('置顶块与下方题区分隔线', !!w.document.querySelector('.daily-sep'), true);
+    check('置顶块内含 1 张题卡', w.document.querySelectorAll('.daily-grid-top .daily-item').length, 1);
+    check('置顶块在页面最前（topbar 是首个元素）',
+        w.document.getElementById('dailySection').querySelector('.daily-topbar') !== null, true);
+
+    // 没有加量时不显示置顶提示条
+    w.DailyPick.renderDaily({ date: w.DailyPick.todayStr(), picks: { ds: [{ id: 'z0', content: '仅首批', options: { A: '甲' }, answer: 'A' }] } });
+    check('仅首批时不显示置顶条', !!w.document.querySelector('.daily-topbar'), false);
+
     console.log('\n--- 错题 7 天重抽计划 ---');
     check('重抽间隔为 7 天', w.DailyPick.RETRY_DAYS, 7);
     w.localStorage.removeItem('daily_retry_v1');

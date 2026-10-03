@@ -127,6 +127,14 @@
             const arr = (Array.isArray(v) ? v : [v]).filter(Boolean);
             if (arr.length) out[k] = arr;
         }
+        // 旧数据迁移：给缺批次号的题补 b（按**全局最大 idx** 反推批次号）
+        //   旧结构里加量题是 append 到各门数组末尾的，idx 越大越晚加入 → b ≈ idx；
+        //   用全局最大 idx 做基准，避免某门被跳过时批次错位。
+        let maxIdx = 0;
+        for (const k of Object.keys(out)) maxIdx = Math.max(maxIdx, out[k].length - 1);
+        for (const k of Object.keys(out)) {
+            out[k].forEach((p, i) => { if (typeof p.b !== 'number') p.b = i; });
+        }
         return out;
     }
 
@@ -391,19 +399,24 @@
         const totalQ = SUBJ_ORDER.reduce((n, k) => n + (picks[k] || []).length, 0);
         const hasAny = totalQ > 0;
         const now = new Date();
-        // 顺序：**最后一次加量的那一整批（最多 4 道）置顶**，其次更早的加量批次，每天首批沉底
-        //   用全局批次号 p.b（0=首批，1/2…=第 n 次加量）排序，不受某门被跳过导致 idx 错位的影响
+        // 顺序：**最后一次加量的那一整批（最多 4 道）单独置顶在最上面**，其次更早的加量批次，每天首批沉底
+        //   用全局批次号 p.b 排序，不受某门被跳过导致 idx 错位的影响
         const groups = [];
         for (const sub of SUBJ_ORDER) {
             const si = SUBJ_ORDER.indexOf(sub);
             const arr = picks[sub] || [];
             if (!arr.length) { groups.push({ b: 0, sub: si, idx: 0, p: null }); continue; }
-            arr.forEach((p, i) => groups.push({ b: (typeof p.b === 'number' ? p.b : (i === 0 ? 0 : 1)), sub: si, idx: i, p }));
+            arr.forEach((p, i) => groups.push({ b: (typeof p.b === 'number' ? p.b : i), sub: si, idx: i, p }));
         }
-        groups.sort((a, b) => (b.b - a.b) || (a.sub - b.sub));   // 批次倒序 → 最后加量的整批置顶；同批按科目序
-        const items = groups
-            .map(o => itemHtml(SUBJ_ORDER[o.sub], o.p, { idx: o.idx, collapse: collapseDone }))
-            .join('');
+        groups.sort((a, b) => (b.b - a.b) || (a.sub - b.sub));   // 批次倒序 → 最后加量的整批在最上；同批按科目序
+
+        const topBatch = groups.length ? groups[0].b : 0;       // 最大批次号
+        const hasTopExtra = topBatch > 0;                      // 是否有「加量批」需要置顶
+        const itemOf = o => itemHtml(SUBJ_ORDER[o.sub], o.p, { idx: o.idx, collapse: collapseDone });
+        const topHtml = hasTopExtra
+            ? groups.filter(o => o.b === topBatch).map(itemOf).join('')
+            : '';
+        const restHtml = (hasTopExtra ? groups.filter(o => o.b !== topBatch) : groups).map(itemOf).join('');
 
         box.innerHTML = `
             <div class="daily-card">
@@ -415,7 +428,12 @@
                     <button class="daily-hist-btn" onclick="showDailyHistory()" title="查看每天抽到的题">历史记录</button>
                 </div>
                 ${hasAny
-                    ? `<div class="daily-grid">${items}</div>
+                    ? (hasTopExtra
+                        ? `<div class="daily-topbar">⬆ 最后加量 · ${groups.filter(o => o.b === topBatch).length} 道（新抽的题）</div>
+                           <div class="daily-grid daily-grid-top">${topHtml}</div>
+                           <div class="daily-sep"></div>`
+                        : '')
+                       + `<div class="daily-grid">${restHtml}</div>
                        <div class="daily-foot">共 ${totalQ} 题 · 每天优先抽 到期复习/不熟/不会；「再来 4 道」优先补新题，新题抽完时补已做过的题</div>`
                     : `<div class="daily-empty">还没有可抽的题：去刷题收藏几道、或标记不熟/不会、答错的题会自动进入复习队列，这里每天从四门各抽 1 题。</div>`}
             </div>`;
@@ -609,13 +627,21 @@
             for (const sub of SUBJ_ORDER) {
                 const si = SUBJ_ORDER.indexOf(sub);
                 const arr = P[sub] || [];
-                if (!arr.length) { hExtra.push({ sort: 0, sub: si, idx: 0, p: null }); continue; }
-                arr.forEach((p, i) => hExtra.push({ sort: (typeof p.b === 'number' ? p.b : (i === 0 ? 0 : 1)), sub: si, idx: i, p }));
+                if (!arr.length) { hExtra.push({ b: 0, sub: si, idx: 0, p: null }); continue; }
+                arr.forEach((p, i) => hExtra.push({ b: (typeof p.b === 'number' ? p.b : i), sub: si, idx: i, p }));
             }
-            hExtra.sort((a, b) => (b.sort - a.sort) || (a.sub - b.sub));   // 最后加量的整批置顶
-            const items = hExtra
-                .map(o => itemHtml(SUBJ_ORDER[o.sub], o.p, Object.assign({ idx: o.idx }, baseCtx)))
-                .join('');
+            hExtra.sort((a, b) => (b.b - a.b) || (a.sub - b.sub));   // 最后加量的整批置顶
+            const hTopB = hExtra.length ? hExtra[0].b : 0;
+            const hHasTop = hTopB > 0;
+            const hTop = hExtra.filter(o => o.b === hTopB);
+            const hRest = (hHasTop ? hExtra.filter(o => o.b !== hTopB) : hExtra);
+            const hItemOf = o => itemHtml(SUBJ_ORDER[o.sub], o.p, Object.assign({ idx: o.idx }, baseCtx));
+            const items = (hHasTop
+                ? `<div class="daily-topbar">⬆ 最后加量 · ${hTop.length} 道</div>
+                   <div class="daily-grid daily-grid-top">${hTop.map(hItemOf).join('')}</div>
+                   <div class="daily-sep"></div>`
+                : '')
+                + `<div class="daily-grid">${hRest.map(hItemOf).join('')}</div>`;
             bodyHtml = `
                 <div class="daily-hist-body">
                     <div class="dh-detail-tip">点选项作答，判分后自动记入当天记录</div>

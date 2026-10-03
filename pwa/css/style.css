@@ -6005,3 +6005,18 @@ a.daily-meta.daily-kp:hover { color: var(--primary); text-decoration: underline;
     from { opacity: 0; transform: translateY(-2px); }
     to { opacity: 1; transform: none; }
 }
+
+/* 最后加量的一批：独立置顶区块（顶部提示条 + 分隔线） */
+.daily-topbar {
+    display: flex; align-items: center; gap: 6px;
+    margin: 14px 0 8px; padding: 4px 12px;
+    font-size: 0.8rem; font-weight: 600; color: var(--primary);
+    background: rgba(74, 122, 184, .09);
+    border-left: 3px solid var(--primary);
+    border-radius: 0 6px 6px 0;
+}
+.daily-grid-top { margin-top: 0; }
+.daily-sep {
+    margin: 16px 0 4px; border-top: 1px dashed var(--border);
+}
+.dark .daily-topbar { background: rgba(143, 176, 217, .12); color: #8fb0d9; border-left-color: #8fb0d9; }
