@@ -355,7 +355,7 @@ w.eval('(function(){' + DAILY + '})()');
     const dsNow = todayOf().picks.ds || [];
     check('回退题带 refetch 标记', dsNow.some(p => p.refetch === true), true);
     check('回退题不是新题（ds_old*）', dsNow.filter(p => p.refetch).every(p => p.id.startsWith('ds_old')), true);
-    check('refetch 标签渲染', w.DailyPick.itemHtml('ds', { id: 'rf1', content: '复习题', options: { A: '甲' }, answer: 'A', refetch: true }, { idx: 0 }).includes('已做过'), true);
+    check('回退题不再显示「已做过」标签', w.DailyPick.itemHtml('ds', { id: 'rf1', content: '复习题', options: { A: '甲' }, answer: 'A', refetch: true }, { idx: 0 }).includes('已做过'), false);
     // 整门池空后才跳过
     let g2 = 0, rEnd = rBack;
     do { rEnd = await w.DailyPick.addBatch(); g2++; } while (rEnd.added > 0 && g2 < 6);
@@ -391,6 +391,34 @@ w.eval('(function(){' + DAILY + '})()');
     w.toggleDailyItem(tbtn);
     check('点击可展开（移除 folded）', w.document.querySelectorAll('.daily-item.folded').length, 0);
     check('展开后按钮文案变「收起」', tbtn.textContent, '收起 ▴');
+
+    // 含图/表的题：折叠时收起图片并给出提示（否则 line-clamp 压不住高度）
+    const imgQ = {
+        date: w.DailyPick.todayStr(), normalized: 1,
+        picks: { ds: [{ id: 'ds_fig', content: '<p>看下图所示的树</p><img src="data/ds_figs/x.png" alt="ds题图">',
+            options: { A: '甲' }, answer: 'A',
+            answered: { answer: 'A', isCorrect: true, correctAnswer: 'A' } }] }
+    };
+    w.localStorage.setItem('daily_pick_v1', JSON.stringify(imgQ));
+    w.DailyPick.renderDaily(null, { collapseDone: true });
+    const foldHtml = w.document.getElementById('dailySection').innerHTML;
+    check('含图题折叠后给出「展开查看」提示', /daily-fold-note/.test(foldHtml) && /展开查看/.test(foldHtml), true);
+    check('折叠态隐藏题干图片（CSS 规则存在）',
+        /\.daily-item\.folded \.daily-q img[\s\S]{0,80}?display:\s*none/.test(CSS), true);
+
+    // 加量题排在最上面（首批题下沉）
+    const mixed = {
+        date: w.DailyPick.todayStr(), normalized: 1,
+        picks: { ds: [
+            { id: 'b0', content: '首批题', options: { A: '甲' }, answer: 'A' },
+            { id: 'b1', content: '加量题1', options: { A: '甲' }, answer: 'A' },
+            { id: 'b2', content: '加量题2', options: { A: '甲' }, answer: 'A' }
+        ] }
+    };
+    w.DailyPick.renderDaily(mixed);
+    const order = [...w.document.querySelectorAll('.daily-item')]
+        .map(e => e.dataset.idx).filter(v => v !== undefined);
+    check('加量题排在前、首批题下沉', order, ['1', '2', '0']);
 
     console.log(`\nPASS ${pass} / FAIL ${fail}`);
     process.exit(fail ? 1 : 0);

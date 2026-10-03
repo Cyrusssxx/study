@@ -316,17 +316,22 @@
             ? `<button class="daily-fold-toggle" onclick="toggleDailyItem(this)" title="收起/展开这道题">${ctx.collapse ? '展开 ▾' : '收起 ▴'}</button>`
             : '';
         const foldedCls = (locked && ctx.collapse) ? ' folded' : '';
+        // 折叠态下图/表/代码块会收起，给一句提示（避免用户以为题目内容缺失）
+        const richStem = /<(img|table|pre)\b/i.test(String(p.content || ''));
+        const foldNote = (locked && ctx.collapse && richStem)
+            ? '<div class="daily-fold-note">（本题含图/表格，展开查看）</div>'
+            : '';
 
         return `<div class="daily-item${foldedCls}" data-sub="${sub}" data-idx="${idx}">
             <div class="daily-item-head">
                 <span class="daily-subject">${esc(subName(sub))}${idx > 0 ? ' · 加量' : ''}</span>
                 ${p.due ? '<span class="daily-tag due">🔁 待复习</span>' : ''}
-                ${p.refetch ? '<span class="daily-tag refetch">已做过 · 复习</span>' : ''}
                 ${doneTag}
                 ${kpMetaHtml(sub, p)}
                 ${foldToggle}
             </div>
             <div class="daily-q">${(typeof fmtContent === 'function') ? fmtContent(p.content || '') : esc(p.content || '')}</div>
+            ${foldNote}
             ${optsHtml}
             ${resultHtml}
             ${btn}
@@ -345,12 +350,14 @@
         const totalQ = SUBJ_ORDER.reduce((n, k) => n + (picks[k] || []).length, 0);
         const hasAny = totalQ > 0;
         const now = new Date();
-        const items = SUBJ_ORDER.map(sub => {
+        // 顺序：加量抽到的题（idx ≥ 1）排在最上面，其次是每天首批的题
+        const extra = [], base = [];
+        for (const sub of SUBJ_ORDER) {
             const arr = picks[sub] || [];
-            return arr.length
-                ? arr.map((p, i) => itemHtml(sub, p, { idx: i, collapse: collapseDone })).join('')
-                : itemHtml(sub, null, { idx: 0 });
-        }).join('');
+            if (!arr.length) { base.push(itemHtml(sub, null, { idx: 0 })); continue; }
+            arr.forEach((p, i) => (i > 0 ? extra : base).push(itemHtml(sub, p, { idx: i, collapse: collapseDone })));
+        }
+        const items = extra.concat(base).join('');
 
         box.innerHTML = `
             <div class="daily-card">
@@ -358,7 +365,7 @@
                     <h2 class="daily-title">📅 每日一题</h2>
                     <span class="daily-date">${d && d.date ? d.date : todayStr()} ${weekdayCn(now)}</span>
                     <span class="daily-head-sp"></span>
-                    ${hasAny ? `<button class="daily-hist-btn daily-add-btn" onclick="addBatchDaily()" title="每门再抽 1 道题（优先没做过的新题；新题抽完会补已做过的题）">➕ 再来 4 道</button>` : ''}
+                    ${hasAny ? `<button class="daily-hist-btn daily-add-btn" onclick="addBatchDaily()" title="每门再抽 1 道题（优先没做过的新题；新题抽完会补已做过的题作复习）">➕ 再来 4 道</button>` : ''}
                     <button class="daily-hist-btn" onclick="showDailyHistory()" title="查看每天抽到的题">历史记录</button>
                 </div>
                 ${hasAny
@@ -527,12 +534,13 @@
             // 今天的详情复用页面作答逻辑（submitDaily 写 TODAY_KEY）；历史日期走 submitHist（写回历史）
             const baseCtx = day.today ? {} : { date: day.date };
             const P = normPicks(day.picks);
-            const items = SUBJ_ORDER.map(sub => {
+            const hExtra = [], hBase = [];
+            for (const sub of SUBJ_ORDER) {
                 const arr = P[sub] || [];
-                return arr.length
-                    ? arr.map((p, i) => itemHtml(sub, p, Object.assign({ idx: i }, baseCtx))).join('')
-                    : itemHtml(sub, null, Object.assign({ idx: 0 }, baseCtx));
-            }).join('');
+                if (!arr.length) { hBase.push(itemHtml(sub, null, Object.assign({ idx: 0 }, baseCtx))); continue; }
+                arr.forEach((p, i) => (i > 0 ? hExtra : hBase).push(itemHtml(sub, p, Object.assign({ idx: i }, baseCtx))));
+            }
+            const items = hExtra.concat(hBase).join('');
             bodyHtml = `
                 <div class="daily-hist-body">
                     <div class="dh-detail-tip">点选项作答，判分后自动记入当天记录</div>

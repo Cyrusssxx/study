@@ -5745,7 +5745,6 @@ a.chapter-badge-link:hover {
 .daily-tag.ok { background: rgba(46, 125, 50, .13); color: #2e7d32; border-color: rgba(46, 125, 50, .3); }
 .daily-tag.bad { background: rgba(220, 38, 38, .12); color: #b3261e; border-color: rgba(220, 38, 38, .28); }
 .daily-tag.na { background: rgba(128, 128, 128, .12); color: var(--text-light); border-color: var(--border); }
-.daily-tag.refetch { background: rgba(128, 128, 128, .14); color: #5b6672; border-color: rgba(128, 128, 128, .35); }
 
 /* 折叠开关（加量后自动折叠今天写过的题） */
 .daily-fold-toggle {
@@ -5762,6 +5761,10 @@ a.chapter-badge-link:hover {
 .daily-item.folded .daily-redo,
 .daily-item.folded .daily-fold,
 .daily-item.folded .daily-link { display: none; }
+/* 折叠态：题干里的图/表/代码块一并收起（否则 line-clamp 压不住高度，折叠失效） */
+.daily-item.folded .daily-q img,
+.daily-item.folded .daily-q table,
+.daily-item.folded .daily-q pre { display: none; }
 .daily-item.folded .daily-q {
     display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;
     overflow: hidden; margin-bottom: 0; opacity: .8;
@@ -5989,3 +5992,6 @@ a.daily-meta.daily-kp:hover { color: var(--primary); text-decoration: underline;
 .dark .fc-btn.on-d { color: #ef9a9a; border-color: #7f1d1d; background: rgba(220, 38, 38, .18); }
 .dark .fc-badge.u { color: #f59e6b; background: rgba(234, 88, 12, .2); }
 .dark .fc-badge.d { color: #ef9a9a; background: rgba(220, 38, 38, .2); }
+
+/* 折叠态提示（本题含图/表格，展开查看） */
+.daily-fold-note { font-size: 0.74rem; color: var(--text-light); margin-top: 4px; }
