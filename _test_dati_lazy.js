@@ -4,7 +4,7 @@ const fs = require('fs');
 const { JSDOM } = require('jsdom');
 
 const dom = new JSDOM(`<!doctype html><html><body>
-  <div id="cntAll"></div><div id="cntReal"></div><div id="cntFav"></div><div id="cntTodo"></div><div id="cntDone"></div>
+  <div id="cntAll"></div><div id="cntReal"></div><div id="cntFav"></div><div id="cntTodo"></div><div id="cntDone"></div><div id="cntUnfam"></div><div id="cntDontknow"></div>
 </body></html>`, { url: 'https://x.test/dati.html' });
 const { window } = dom;
 const document = window.document;
@@ -26,6 +26,8 @@ window.ansTpl = {};
 window.noteMap = {};
 window.noteOpen = new Set();
 window.favSet = new Set();
+window.unfamSet = new Set();
+window.dontknowSet = new Set();
 window.DATI = null;
 window.filter = 'all';
 window.year = '';
@@ -56,7 +58,7 @@ function extractFn(src, name) {
 // 模板字符串：字面部分不动，${...} 插值区是 JS 代码 → 递归 windowify（避免漏掉 ${q.year}/${fn => qimg(...)}）
 function windowifyIdentifiers(code, names_) {
   const names = names_ || ['doneSet', 'lastSeenQ', 'openChapters', 'ansTpl', 'noteMap', 'noteOpen',
-    'favSet', 'DATI', 'filter', 'year', 'saveDoneSet', 'localStorage', 'qimg', 'aimg', 'activeSubject', 'renderNav'];
+    'favSet', 'unfamSet', 'dontknowSet', 'DATI', 'filter', 'year', 'saveDoneSet', 'localStorage', 'qimg', 'aimg', 'activeSubject', 'renderNav'];
 
   function matchName(at) {
     for (const nm of names) {

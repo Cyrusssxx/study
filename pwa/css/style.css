@@ -73,7 +73,8 @@ body {
     -webkit-overflow-scrolling: touch;
     flex: 1;
     min-width: 0;
-    justify-content: flex-end;
+    justify-content: flex-start;   /* 链接组紧跟品牌靠左，不再挤在右端 */
+    margin-left: 26px;
 }
 .nav-links::-webkit-scrollbar { display: none; }
 
@@ -88,6 +89,12 @@ body {
 
 .nav-link:hover {
     color: var(--primary);
+}
+
+/* 当前页高亮 */
+.nav-link.active {
+    color: var(--primary);
+    font-weight: 600;
 }
 
 /* 顶栏工具：计时器 + 答对自动跳题开关 */
@@ -130,6 +137,14 @@ body {
 @media (max-width: 768px) {
     .nav-timer {
         display: none;
+    }
+}
+
+/* 顶栏宽度不足时给右上角的折叠圆钮留出空间，避免压住工具按钮
+   （圆钮钉在视口右侧 14~44px；容器右缘只要进这个区间就会相撞） */
+@media (max-width: 1400px) {
+    .nav-container {
+        padding-right: 56px;
     }
 }
 
@@ -2400,12 +2415,16 @@ a.review-chip-all:hover {
     .nav-container {
         flex-wrap: wrap;
         height: auto;
-        padding: 8px 12px;
+        padding: 8px 48px 8px 12px;   /* 右侧给折叠圆钮留位，避免压住工具按钮 */
         gap: 4px 10px;
     }
     .nav-links {
         gap: 12px;
-        flex-wrap: wrap;
+        flex: 0 0 100%;               /* 独占一整行（flex-basis 才能压过基类的 flex:1） */
+        flex-wrap: nowrap;            /* 单行横向滑动，不再纵向堆成多行（13 项也不会撑高顶栏） */
+        overflow-x: auto;
+        order: 3;
+        margin-left: 0;
     }
     .nav-tools {
         flex-wrap: wrap;

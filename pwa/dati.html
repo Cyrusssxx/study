@@ -47,6 +47,16 @@
         .dati-done-btn.done { color: var(--primary); border-color: var(--primary); }
         .dati-note-btn.has-note { color: #8a6d1a; border-color: #e6d9a8; }
         .dati-note-btn.active { color: var(--primary); border-color: var(--primary); }
+        /* 不熟（黄）/ 不会（红）标记按钮：与刷题页同一套语义色 */
+        .dati-mark-btn.on-unfam { background: rgba(212, 175, 55, .18); border-color: #d4af37; color: #a68a1a; font-weight: 600; }
+        .dati-mark-btn.on-dk { background: rgba(220, 53, 69, .14); border-color: #dc3545; color: #c82333; font-weight: 600; }
+        /* 标记态自己的 hover：不落到 .btn-secondary:hover 的灰底（两者同优先级，避免顺序敏感） */
+        .dati-mark-btn.on-unfam:hover { background: rgba(212, 175, 55, .3); border-color: #d4af37; color: #8f7716; }
+        .dati-mark-btn.on-dk:hover { background: rgba(220, 53, 69, .24); border-color: #dc3545; color: #b21f2d; }
+        .dark .dati-mark-btn.on-unfam { background: rgba(230, 199, 79, .16); border-color: #e6c74f; color: #e6c74f; }
+        .dark .dati-mark-btn.on-dk { background: rgba(255, 107, 107, .16); border-color: #ff6b6b; color: #ff6b6b; }
+        .dark .dati-mark-btn.on-unfam:hover { background: rgba(230, 199, 79, .26); }
+        .dark .dati-mark-btn.on-dk:hover { background: rgba(255, 107, 107, .26); }
         .dati-qbody img, .dati-abody img { max-width: 100%; height: auto; display: block; margin-bottom: 6px; border-radius: 6px; }
         .dati-ans-btn { margin-top: 4px; }
         .dati-abody { margin-top: 10px; border-top: 1px dashed #ddd; padding-top: 10px; display: none; }
@@ -146,13 +156,18 @@
             <a href="index.html" class="nav-brand">408刷题</a>
             <div class="nav-links">
                 <a href="index.html" class="nav-link">首页</a>
+                <a href="quiz.html" class="nav-link">刷题</a>
+                <a href="daily.html" class="nav-link">每日一题</a>
+                <a href="cards.html" class="nav-link">记忆卡</a>
+                <a href="daka.html" class="nav-link">打卡表</a>
+                <a href="code.html" class="nav-link">代码题</a>
+                <a href="dati.html" class="nav-link active">大题专项</a>
+                <a href="algo.html" class="nav-link">算法讲义</a>
                 <a href="wrong.html" class="nav-link">错题本</a>
                 <a href="favorites.html" class="nav-link">收藏夹</a>
                 <a href="exam.html" class="nav-link">模拟考试</a>
                 <a href="stats.html" class="nav-link">学习统计</a>
                 <a href="search.html" class="nav-link">搜题</a>
-                <a href="daily.html" class="nav-link">每日一题</a>
-                <a href="algo.html" class="nav-link">算法讲义</a>
             </div>
             <div class="nav-tools">
                 <span class="nav-timer" id="navTimer" title="今日刷题时长（切换到其他窗口时暂停）">⏱ 00:00:00</span>
@@ -175,6 +190,8 @@
             <button class="dati-chip" id="fFav" onclick="setFilter('fav')">★ 我的收藏 <span class="dati-count" id="cntFav"></span></button>
             <button class="dati-chip" id="fTodo" onclick="setFilter('todo')">○ 未练 <span class="dati-count" id="cntTodo"></span></button>
             <button class="dati-chip" id="fDone" onclick="setFilter('done')">✅ 已练 <span class="dati-count" id="cntDone"></span></button>
+            <button class="dati-chip" id="fUnfam" onclick="setFilter('unfam')">🟡 不熟 <span class="dati-count" id="cntUnfam"></span></button>
+            <button class="dati-chip" id="fDontknow" onclick="setFilter('dontknow')">🔴 不会 <span class="dati-count" id="cntDontknow"></span></button>
             <button class="dati-chip" id="datiExpandAll" onclick="toggleAllChapters()">展开全部</button>
             <select class="dati-year" id="yearSel" onchange="setYear(this.value)" style="display:none"></select>
             <span class="dati-view-sep"></span>
@@ -206,6 +223,8 @@
     let ansOpen = new Set(JSON.parse(localStorage.getItem('datiAnsOpen') || '[]'));    // 展开中的答案面板 qid
     let openChapters = new Set(JSON.parse(localStorage.getItem('datiOpenCh') || '[]'));  // 已展开的章节（默认收起，按需加载图片）
     let doneSet = new Set(JSON.parse(localStorage.getItem('datiDone') || '[]'));        // 已练过的大题 qid（只看未练筛选用）
+    let unfamSet = new Set();      // 标了「不熟」的大题 qid（存后端 unfamiliar 库，与刷题页同一套）
+    let dontknowSet = new Set();   // 标了「不会」的大题 qid（存后端 dontknow 库）
     let lastSeenQ = localStorage.getItem('datiLastSeenQ') || '';                         // 上次浏览/跳转的题（刷新后自动定位）
     let viewMode = localStorage.getItem('datiView') || 'single';                         // single（默认，一题一题做）| list（整章列表）
     let singleQid = localStorage.getItem('datiSingleQ') || '';                           // 单题模式当前题 id
@@ -261,6 +280,7 @@
             DATI = (await resp.json()).subjects;
             await loadFavs();
             await loadNotes();
+            await loadMarks();
             renderTabs();
             renderYearOptions();
             // 恢复上次的筛选/年份/视图模式 UI 状态
@@ -285,6 +305,45 @@
         for (const n of rows) if ((n.question_id || '').startsWith('dati_')) {
             noteMap[n.question_id] = { content: n.content || '', images: n.images || [] };
         }
+    }
+
+    // 不熟 / 不会：复用后端 unfamiliar / dontknow 库（与刷题页同一套数据），只取大题（dati_ 前缀）
+    async function loadMarks() {
+        const [u, d] = [await dbAll('unfamiliar'), await dbAll('dontknow')];
+        unfamSet = new Set(u.filter(r => (r.question_id || '').startsWith('dati_')).map(r => r.question_id));
+        dontknowSet = new Set(d.filter(r => (r.question_id || '').startsWith('dati_')).map(r => r.question_id));
+    }
+
+    // 标记「不熟 / 不会」：互斥（标一个自动清另一个），再点已选中的即取消
+    async function toggleMark(qid, kind) {
+        const isU = kind === 'unfamiliar';
+        const store = isU ? 'unfamiliar' : 'dontknow';
+        const otherStore = isU ? 'dontknow' : 'unfamiliar';
+        const set = isU ? unfamSet : dontknowSet;
+        const otherSet = isU ? dontknowSet : unfamSet;
+        const ex = await dbGet(store, qid);
+        if (ex) {
+            await dbDelete(store, qid);
+            set.delete(qid);
+        } else {
+            await dbDelete(otherStore, qid);   // 互斥：清掉另一种标记
+            otherSet.delete(qid);
+            await dbPut(store, { question_id: qid, subject: activeSubject, added_at: now() });
+            set.add(qid);
+        }
+        syncMarkBtns(qid);
+        updateCounts();
+        // 当前就在「不熟 / 不会」筛选下 → 取消标记后该题要移出列表，整体重渲染
+        if (filter === 'unfam' || filter === 'dontknow') { render(); return; }
+        renderNav();
+    }
+
+    // 就地刷新某题的两个标记按钮（不整卡重渲染，避免列表滚动位置跳动）
+    function syncMarkBtns(qid) {
+        const u = document.querySelector(`.dati-mark-u[data-qid="${qid}"]`);
+        const d = document.querySelector(`.dati-mark-d[data-qid="${qid}"]`);
+        if (u) { u.classList.toggle('on-unfam', unfamSet.has(qid)); u.title = unfamSet.has(qid) ? '取消「不熟」标记' : '标记为不熟（黄）'; }
+        if (d) { d.classList.toggle('on-dk', dontknowSet.has(qid)); d.title = dontknowSet.has(qid) ? '取消「不会」标记' : '标记为不会（红）'; }
     }
 
     async function toggleFav(qid, subKey) {
@@ -336,6 +395,8 @@
         document.getElementById('fFav').classList.toggle('active', filter === 'fav');
         document.getElementById('fTodo').classList.toggle('active', filter === 'todo');
         document.getElementById('fDone').classList.toggle('active', filter === 'done');
+        document.getElementById('fUnfam').classList.toggle('active', filter === 'unfam');
+        document.getElementById('fDontknow').classList.toggle('active', filter === 'dontknow');
     }
 
     function setFilter(f) {
@@ -352,6 +413,8 @@
         if (filter === 'fav') return favSet.has(q.id);
         if (filter === 'todo') return !doneSet.has(q.id);
         if (filter === 'done') return doneSet.has(q.id);
+        if (filter === 'unfam') return unfamSet.has(q.id);
+        if (filter === 'dontknow') return dontknowSet.has(q.id);
         return true;
     }
 
@@ -370,6 +433,8 @@
         document.getElementById('cntFav').textContent = visibleQuestionsOf(sub, q => favSet.has(q.id)).length;
         document.getElementById('cntTodo').textContent = visibleQuestionsOf(sub, q => !doneSet.has(q.id)).length;
         document.getElementById('cntDone').textContent = visibleQuestionsOf(sub, q => doneSet.has(q.id)).length;
+        document.getElementById('cntUnfam').textContent = visibleQuestionsOf(sub, q => unfamSet.has(q.id)).length;
+        document.getElementById('cntDontknow').textContent = visibleQuestionsOf(sub, q => dontknowSet.has(q.id)).length;
     }
 
     // ==================== 已练标记（P3：只看未练） ====================
@@ -408,6 +473,12 @@
                 <button class="btn btn-secondary dati-ans-btn" data-qid="${qid}" onclick="toggleAnswer('${qid}')">查看答案</button>
                 <button class="btn btn-secondary dati-note-btn${hasNote ? ' has-note' : ''}" data-qid="${qid}" title="我的笔记"
                         onclick="toggleNotePanel('${qid}')">📝 笔记${hasNote ? ' ●' : ''}</button>
+                <button class="btn btn-secondary dati-mark-btn dati-mark-u${unfamSet.has(qid) ? ' on-unfam' : ''}" data-qid="${qid}"
+                        title="${unfamSet.has(qid) ? '取消「不熟」标记' : '标记为不熟（黄）'}"
+                        onclick="toggleMark('${qid}', 'unfamiliar')">🟡 不熟</button>
+                <button class="btn btn-secondary dati-mark-btn dati-mark-d${dontknowSet.has(qid) ? ' on-dk' : ''}" data-qid="${qid}"
+                        title="${dontknowSet.has(qid) ? '取消「不会」标记' : '标记为不会（红）'}"
+                        onclick="toggleMark('${qid}', 'dontknow')">🔴 不会</button>
             </div>
             <div class="dati-abody" data-ans="${qid}"></div>
             <div class="note-panel dati-note-panel" data-note="${qid}" style="${noteOpen.has(qid) ? '' : 'display:none'}">
