@@ -898,8 +898,8 @@
             "kind": "中序遍历",
             "name": "",
             "analysis": "",
-            "thought": "如果当前结点的数组下标为 i 则左孩子下标为 2i+1，右孩子下标为 2i+2，对该树进行递归的中序遍历，pre 保存当\n前访问结点的前驱结点的权值，如果 SqBiTree[i]<pre 则说明中序遍历得到的不是升序，即当前子树返回 false，如果\nSqBiTree[i]>=pre 且左子树和右子树都确定是二叉排序树则返回 true。",
-            "code": "int pre=0;                                      // 全局变量pre保存中序前驱的权值，初值0\nbool InOrder(SqBiTree *T, int i)\n{\n    /*指针bt指向二叉树的结构体，i是当前访问的下标*/\n    if (i>=T->ElemNum || T->SqBiTNode[i]==-1)   // 当前结点为空\n        return true;\n    if (InOrder(T, 2*i+1) != true)              // 递归调用左子树\n        return false;                           // 左子树不符合定义\n    if (pre>T->SqBiTNode[i])                    // 访问当前结点visit(p)\n        return false;                           // 前驱大于当前结点，不符合定义\n    pre=T->SqBiTNode[i];                        // 更新pre\n    if (!InOrder(T, 2*i+2) != true)             // 递归调用右子树\n        return false;                           // 右子树不符合定义\n    return true;                                // 根下标为i的子树符合定义\n}",
+            "thought": "如果当前结点的数组下标为 i 则左孩子下标为 2i+1，右孩子下标为 2i+2，对该树进行递归的中序遍历，pre 保存当\n前访问结点的前驱结点的权值，如果 SqBiTree[i]<=pre 则说明中序遍历得到的不是严格升序，即当前子树返回 false，如果\nSqBiTree[i]>pre 且左子树和右子树都确定是二叉排序树则返回 true。",
+            "code": "int pre=0;                                      // 全局变量pre保存中序前驱的权值，初值0\nbool InOrder(SqBiTree *T, int i)\n{\n    /*指针bt指向二叉树的结构体，i是当前访问的下标*/\n    if (i>=T->ElemNum || T->SqBiTNode[i]==-1)   // 当前结点为空\n        return true;\n    if (InOrder(T, 2*i+1) != true)              // 递归调用左子树\n        return false;                           // 左子树不符合定义\n    if (pre>=T->SqBiTNode[i])                    // 访问当前结点visit(p)\n        return false;                           // 前驱大于或等于当前结点，不符合定义\n    pre=T->SqBiTNode[i];                        // 更新pre\n    if (InOrder(T, 2*i+2) != true)             // 递归调用右子树\n        return false;                           // 右子树不符合定义\n    return true;                                // 根下标为i的子树符合定义\n}",
             "complexity": "时间复杂度：O(n)（一次中序遍历）   空间复杂度：O(n)（递归栈，树退化链时 O(n)）",
             "note": ""
           }
