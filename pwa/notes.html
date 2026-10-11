@@ -37,7 +37,7 @@
             </div>
         </div>
     </nav>
-    <main class="container">
+    <main class="container toc-fixed">
         <div class="notes-header" id="notesHeader">
             <h1>📖 考点笔记</h1>
             <p class="notes-source">加载中...</p>
@@ -67,10 +67,16 @@
 
         // 左侧目录可收起（状态持久化）
         const notesLayout = document.getElementById('notesLayout');
+        /* body 上的状态类：供「页头/文章让位」等跨兄弟元素的选择器使用（.notes-layout 是页头之后的兄弟，选不到） */
+        function syncTocStateClass() {
+            if (!document.body || !document.body.classList) return;   // 受限环境（测试沙箱）无 body 时静默跳过
+            document.body.classList.toggle('toc-collapsed', notesLayout.classList.contains('notes-toc-collapsed'));
+        }
         if (localStorage.getItem('notes_toc_collapsed') === '1') {
             notesLayout.classList.add('notes-toc-collapsed');
             document.getElementById('notesTocToggle').textContent = '»';
         }
+        syncTocStateClass();
         // 目录收起/展开：用 Web Animations API（transform+opacity，合成器属性）驱动动画，
         // 动画帧零布局重排（避免 width 动画导致长文档每帧 reflow 卡顿）；
         // 宽度归零/恢复在动画结束帧一次性完成（单帧布局，视觉无感）。
@@ -87,6 +93,7 @@
                     notesLayout.classList.toggle('notes-toc-collapsed');
                     localStorage.setItem('notes_toc_collapsed', notesLayout.classList.contains('notes-toc-collapsed') ? '1' : '0');
                     btn.textContent = notesLayout.classList.contains('notes-toc-collapsed') ? '»' : '«';
+                    syncTocStateClass();
                 };
                 done();
                 return;
@@ -103,6 +110,7 @@
                     notesLayout.classList.add('notes-toc-collapsed');
                     localStorage.setItem('notes_toc_collapsed', '1');
                     btn.textContent = '»';
+                    syncTocStateClass();
                     tocAnimating = false;
                 };
             } else {
@@ -111,6 +119,7 @@
                 toc.style.transform = 'translateX(-120%)';
                 toc.style.opacity = '0';
                 notesLayout.classList.remove('notes-toc-collapsed');
+                syncTocStateClass();
                 void toc.offsetHeight; // 强制应用隐藏起点
                 // ② 滑入 + 淡入
                 const a = toc.animate(

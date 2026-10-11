@@ -5712,7 +5712,6 @@ a.chapter-badge-link:hover {
 .dark .notes-body .bus-table thead th { background: #4f46e5; }
 .dark .notes-body .bus-h3 { color: #a5b4fc; background: linear-gradient(90deg, rgba(165,180,252,0.08), transparent); }
 .dark .notes-body .bus-h4 { color: #fbbf24; background: rgba(251,191,36,0.05); }
-}
 
 /* ==================== 每日一题（daily.html，js/daily.js） ==================== */
 /* 独立页：整体限宽居中，左右间距合适 */
@@ -6040,20 +6039,25 @@ a.daily-meta.daily-kp:hover { color: var(--primary); text-decoration: underline;
 }
 .dark .daily-topbar { background: rgba(143, 176, 217, .12); color: #8fb0d9; border-left-color: #8fb0d9; }
 
-/* ==================== 算法讲义：目录贴左固定 + 箭头随动（仅 ≥801px，窄屏仍走顶部横滑形态） ==================== */
+/* ==================== 侧栏/目录「贴屏固定」统一形态（全站，2026-10-11） ====================
+   用法：页面 <main class="container"> 追加类 toc-fixed。
+   宽屏（≥801px；.ol-nav 结构页 ≥901px，因为 ≤900 是右侧抽屉形态）时：
+   ① 左侧目录/侧栏贴住屏幕左边缘，右侧栏（题号/真题题号）贴右边缘；
+   ② 用 --bleed 抵消容器「居中留白 + 内边距」，把腾出的横向空间全部还给正文；
+   ③ 页头与正文用同一偏移量对齐；收起时侧栏滑出屏幕、正文回收空间；
+   ④ 窄屏保持各页原有形态（顶部横滑 / 右侧抽屉）。
+   状态类：body.toc-collapsed（笔记/讲义页头让位用）。 */
 @media (min-width: 801px) {
-    /* 整体左移：抵消容器「居中留白 + 内边距」，让目录能贴住屏幕最左边，
-       腾出的横向空间全部还给文章（比原 flex 分栏宽约 90~110px）
-       —— 页头与正文区都要用同一个偏移量，否则两者会错开 */
-    .algo-page {
-        --algo-bleed: calc(-1 * (max(0px, (100vw - 1200px) / 2) + 20px));
-    }
-    .algo-page .notes-layout {
-        margin-left: var(--algo-bleed);
+    .toc-fixed {
+        --bleed: calc(-1 * (max(0px, (100vw - 1200px) / 2) + 20px));
     }
 
+    /* ---- ① 笔记 / 算法讲义：左侧目录（.notes-layout 结构） ---- */
+    .toc-fixed .notes-layout {
+        margin-left: var(--bleed);
+    }
     /* 目录：固定在视口最左，高度撑满（自身滚动条即「滑动条」，箭头钉在它中段） */
-    .algo-page .notes-toc {
+    .toc-fixed .notes-toc {
         position: fixed;
         left: 6px;
         top: 76px;
@@ -6063,30 +6067,28 @@ a.daily-meta.daily-kp:hover { color: var(--primary); text-decoration: underline;
         z-index: 45;
     }
     /* 收起态：宽度保持（靠 JS 的 WAAPI 位移滑出），避免宽度塌陷打断动画 */
-    .algo-page .notes-layout.notes-toc-collapsed .notes-toc {
+    .toc-fixed .notes-layout.notes-toc-collapsed .notes-toc {
         width: 230px;
         padding: 12px 8px;
     }
-
     /* 文章 + 页头：紧跟目录只留小间隙（页头与正文同列，避免被固定目录压住）；收起时回收空间 */
-    .algo-page .notes-content,
-    .algo-page .notes-header {
+    .toc-fixed .notes-content,
+    .toc-fixed .notes-header {
         margin-left: 262px;
         max-width: 1040px;
         transition: margin-left .22s ease;
     }
-    .algo-page .notes-header {
-        margin-left: calc(var(--algo-bleed) + 262px);
+    .toc-fixed .notes-header {
+        margin-left: calc(var(--bleed) + 262px);
     }
-    .algo-page .notes-layout.notes-toc-collapsed .notes-content {
+    .toc-fixed .notes-layout.notes-toc-collapsed .notes-content {
         margin-left: 26px;
     }
-    body.algo-toc-collapsed .algo-page .notes-header {
-        margin-left: calc(var(--algo-bleed) + 26px);
+    body.toc-collapsed .toc-fixed .notes-header {
+        margin-left: calc(var(--bleed) + 26px);
     }
-
     /* 收起/展开箭头：固定（不随滚动跑），贴在目录右缘外侧的中点；收起时随目录移到最左边 */
-    .algo-page .notes-toc-toggle {
+    .toc-fixed .notes-toc-toggle {
         position: fixed;
         top: 50%;
         left: 238px;
@@ -6098,9 +6100,169 @@ a.daily-meta.daily-kp:hover { color: var(--primary); text-decoration: underline;
         z-index: 46;
         transition: left .22s ease, color .15s ease, border-color .15s ease;
     }
-    .algo-page .notes-layout.notes-toc-collapsed .notes-toc-toggle {
+    .toc-fixed .notes-layout.notes-toc-collapsed .notes-toc-toggle {
         left: 4px;
         border-radius: 8px;
+    }
+
+    /* ---- ② 刷题页：左侧章节栏 + 右侧题号栏 ---- */
+    /* layout 用内边距让位（而非内容 margin），内容自身 max-width:800px + margin:0 auto
+       可在让位后的区间内居中，两侧空隙更均匀 */
+    .toc-fixed .quiz-layout {
+        margin-left: var(--bleed);
+        margin-right: var(--bleed);
+        padding-left: 312px;
+        padding-right: 266px;
+        transition: padding-left .22s ease, padding-right .22s ease;
+    }
+    .toc-fixed .chapter-sidebar {
+        position: fixed;
+        left: 6px;
+        top: 76px;
+        bottom: 14px;
+        width: 280px;
+        max-height: none;
+        z-index: 45;
+        transition: transform .22s ease, opacity .22s ease;
+    }
+    /* 题号栏底留 84px：给右下角 🎨 背景按钮让位（48px 按钮 + 20 边距 + 16 间隙） */
+    .toc-fixed .number-sidebar {
+        position: fixed;
+        right: 6px;
+        top: 76px;
+        bottom: 84px;
+        width: 230px;
+        max-height: none;
+        z-index: 45;
+        transition: transform .22s ease, opacity .22s ease;
+    }
+    /* 固定高度下内部面板撑满剩余高度并自身滚动 */
+    .toc-fixed .chapter-sidebar .chapter-tree,
+    .toc-fixed .number-sidebar .number-panel {
+        flex: 1 1 auto;
+        min-height: 0;
+    }
+    /* 收起态：整体滑出屏幕（宽度保持，避免塌陷打断动画） */
+    .toc-fixed .quiz-layout.chapter-collapsed .chapter-sidebar {
+        width: 280px;
+        min-width: 0;
+        padding: 0;
+        margin: 0;
+        border: none;
+        box-shadow: none;
+        overflow: visible;
+        opacity: 0;
+        transform: translateX(-115%);
+        pointer-events: none;
+    }
+    .toc-fixed .quiz-layout.number-collapsed .number-sidebar {
+        width: 230px;
+        min-width: 0;
+        padding: 0;
+        margin: 0;
+        border: none;
+        box-shadow: none;
+        overflow: visible;
+        opacity: 0;
+        transform: translateX(115%);
+        pointer-events: none;
+    }
+    /* 收起/展开按钮：钉在侧栏内侧中点；收起后随侧栏移到屏幕边 */
+    .toc-fixed .side-toggle {
+        position: fixed;
+        top: 50%;
+        margin: 0;
+        width: 20px;
+        height: 58px;
+        transform: translateY(-50%);
+        z-index: 46;
+        transition: left .22s ease, right .22s ease, color .15s ease, border-color .15s ease;
+    }
+    .toc-fixed #chapterToggle {
+        left: 288px;
+        border-radius: 0 8px 8px 0;
+    }
+    .toc-fixed #numberToggle {
+        right: 238px;
+        border-radius: 8px 0 0 8px;
+    }
+    .toc-fixed .quiz-layout.chapter-collapsed #chapterToggle {
+        left: 4px;
+        border-radius: 8px;
+    }
+    .toc-fixed .quiz-layout.number-collapsed #numberToggle {
+        right: 4px;
+        border-radius: 8px;
+    }
+    /* 正文让位区间：跟着两侧栏收放（收起时回收空间给内容） */
+    .toc-fixed .quiz-layout.chapter-collapsed {
+        padding-left: 26px;
+    }
+    .toc-fixed .quiz-layout.number-collapsed {
+        padding-right: 26px;
+    }
+
+    /* ---- ③ 真题卷：右侧题号栏（底留 84px 给 🎨 让位） ---- */
+    .toc-fixed .exam-layout {
+        margin-right: var(--bleed);
+    }
+    .toc-fixed .exam-numbers {
+        position: fixed;
+        right: 6px;
+        top: 76px;
+        bottom: 84px;
+        width: 220px;
+        max-height: none;
+        z-index: 45;
+    }
+    .toc-fixed .exam-main {
+        margin-right: 252px;
+    }
+}
+
+/* ---- ④ 导图 / 数据结构打卡 / 数据结构代码题：左侧目录（.ol-nav 结构；≤900 是右侧抽屉，故从 901 起） ---- */
+@media (min-width: 901px) {
+    .toc-fixed .ol-layout {
+        margin-left: var(--bleed);
+    }
+    .toc-fixed .ol-nav {
+        position: fixed;
+        left: 6px;
+        top: 76px;
+        bottom: 14px;
+        width: 200px;
+        flex: 0 0 auto;
+        max-height: none;
+        z-index: 45;
+        transition: transform .22s ease, opacity .22s ease;
+    }
+    /* 收起态：整体滑出屏幕（宽度保持，收起后的窄竖条用 .ol-nav-tab 钉在屏幕边） */
+    .toc-fixed .ol-nav.collapsed {
+        width: 200px;
+        flex: 0 0 auto;
+        visibility: visible;
+        transform: translateX(-115%);
+        opacity: 0;
+        pointer-events: none;
+    }
+    /* 正文：紧跟目录只留小间隙；收起时回收空间 */
+    .toc-fixed #mapRoot,
+    .toc-fixed .question-list {
+        margin-left: 232px;
+        transition: margin-left .22s ease;
+    }
+    .toc-fixed .ol-nav.collapsed~#mapRoot,
+    .toc-fixed .ol-nav.collapsed~.question-list {
+        margin-left: 26px;
+    }
+    .toc-fixed .ol-nav-tab {
+        position: fixed;
+        left: 4px;
+        top: 50%;
+        transform: translateY(-50%);
+        margin: 0;
+        border-radius: 8px;
+        z-index: 46;
     }
 }
 

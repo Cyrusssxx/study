@@ -150,16 +150,16 @@ async function run() {
     }
   }
 
-  // 静态：目录贴左布局与正文/页头让位规则（算法讲义专属 .algo-page）
+  // 静态：目录贴左布局（2026-10-11 起泛化为全站统一 .toc-fixed，全量断言见 _test_toc_fixed.js）
   {
     const html = fs.readFileSync(path.join(ROOT, 'pwa/algo.html'), 'utf8');
     const css = fs.readFileSync(path.join(ROOT, 'pwa/css/style.css'), 'utf8');
-    check('algo.html 带 algo-page 作用域类', /<main class="container algo-page">/.test(html));
-    check('目录固定贴左（position:fixed + left:6px）', /\.algo-page \.notes-toc \{[^}]*position:\s*fixed[^}]*left:\s*6px/.test(css));
-    check('正文/页头小间隙（margin-left:262px）', /\.algo-page \.notes-content,\s*[\r\n]+\s*\.algo-page \.notes-header \{[^}]*margin-left:\s*262px/.test(css));
-    check('箭头钉在滑动条中段（fixed + top:50%）', /\.algo-page \.notes-toc-toggle \{[^}]*position:\s*fixed[^}]*top:\s*50%/.test(css));
-    check('收起时箭头随目录移到最左', /\.algo-page \.notes-layout\.notes-toc-collapsed \.notes-toc-toggle \{[^}]*left:\s*4px/.test(css));
-    check('收起状态同步到 body（供页头让位）', /document\.body\.classList\.toggle\('algo-toc-collapsed'/.test(html));
+    check('algo.html 带 toc-fixed 作用域类', /<main class="container toc-fixed">/.test(html));
+    check('目录固定贴左（position:fixed + left:6px）', /\.toc-fixed \.notes-toc \{[^}]*position:\s*fixed[^}]*left:\s*6px/.test(css));
+    check('正文/页头小间隙（margin-left:262px）', /\.toc-fixed \.notes-content,\s*[\r\n]+\s*\.toc-fixed \.notes-header \{[^}]*margin-left:\s*262px/.test(css));
+    check('箭头钉在滑动条中段（fixed + top:50%）', /\.toc-fixed \.notes-toc-toggle \{[^}]*position:\s*fixed[^}]*top:\s*50%/.test(css));
+    check('收起时箭头随目录移到最左', /\.toc-fixed \.notes-layout\.notes-toc-collapsed \.notes-toc-toggle \{[^}]*left:\s*4px/.test(css));
+    check('收起状态同步到 body（供页头让位）', /document\.body\.classList\.toggle\('toc-collapsed'/.test(html));
   }
 
   // key 路由合法性：note 接口能 GET 回这两个合成 key

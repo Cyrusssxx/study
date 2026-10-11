@@ -38,7 +38,7 @@
         </div>
     </nav>
 
-    <main class="container algo-page">
+    <main class="container toc-fixed">
         <div class="notes-header">
             <h1>📘 算法讲义 · 知识点与做题方法</h1>
             <p class="notes-source" id="algoMeta">加载中...</p>
@@ -636,7 +636,7 @@
     /* body 上的状态类：供「页头/文章让位」等跨兄弟元素的选择器使用（.notes-layout 是页头之后的兄弟，选不到） */
     function syncTocStateClass() {
         if (!document.body || !document.body.classList) return;   // 受限环境（测试沙箱）无 body 时静默跳过
-        document.body.classList.toggle('algo-toc-collapsed', algoLayout.classList.contains('notes-toc-collapsed'));
+        document.body.classList.toggle('toc-collapsed', algoLayout.classList.contains('notes-toc-collapsed'));
     }
     if (localStorage.getItem('algo_toc_collapsed') === '1') {
         algoLayout.classList.add('notes-toc-collapsed');
