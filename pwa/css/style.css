@@ -6039,3 +6039,74 @@ a.daily-meta.daily-kp:hover { color: var(--primary); text-decoration: underline;
     margin: 16px 0 4px; border-top: 1px dashed var(--border);
 }
 .dark .daily-topbar { background: rgba(143, 176, 217, .12); color: #8fb0d9; border-left-color: #8fb0d9; }
+
+/* ==================== 算法讲义：目录贴左固定 + 箭头随动（仅 ≥801px，窄屏仍走顶部横滑形态） ==================== */
+@media (min-width: 801px) {
+    /* 整体左移：抵消容器「居中留白 + 内边距」，让目录能贴住屏幕最左边，
+       腾出的横向空间全部还给文章（比原 flex 分栏宽约 90~110px）
+       —— 页头与正文区都要用同一个偏移量，否则两者会错开 */
+    .algo-page {
+        --algo-bleed: calc(-1 * (max(0px, (100vw - 1200px) / 2) + 20px));
+    }
+    .algo-page .notes-layout {
+        margin-left: var(--algo-bleed);
+    }
+
+    /* 目录：固定在视口最左，高度撑满（自身滚动条即「滑动条」，箭头钉在它中段） */
+    .algo-page .notes-toc {
+        position: fixed;
+        left: 6px;
+        top: 76px;
+        bottom: 14px;
+        width: 230px;
+        max-height: none;
+        z-index: 45;
+    }
+    /* 收起态：宽度保持（靠 JS 的 WAAPI 位移滑出），避免宽度塌陷打断动画 */
+    .algo-page .notes-layout.notes-toc-collapsed .notes-toc {
+        width: 230px;
+        padding: 12px 8px;
+    }
+
+    /* 文章 + 页头：紧跟目录只留小间隙（页头与正文同列，避免被固定目录压住）；收起时回收空间 */
+    .algo-page .notes-content,
+    .algo-page .notes-header {
+        margin-left: 262px;
+        max-width: 1040px;
+        transition: margin-left .22s ease;
+    }
+    .algo-page .notes-header {
+        margin-left: calc(var(--algo-bleed) + 262px);
+    }
+    .algo-page .notes-layout.notes-toc-collapsed .notes-content {
+        margin-left: 26px;
+    }
+    body.algo-toc-collapsed .algo-page .notes-header {
+        margin-left: calc(var(--algo-bleed) + 26px);
+    }
+
+    /* 收起/展开箭头：固定（不随滚动跑），贴在目录右缘外侧的中点；收起时随目录移到最左边 */
+    .algo-page .notes-toc-toggle {
+        position: fixed;
+        top: 50%;
+        left: 238px;
+        transform: translateY(-50%);
+        margin: 0;
+        width: 20px;
+        height: 58px;
+        border-radius: 0 8px 8px 0;
+        z-index: 46;
+        transition: left .22s ease, color .15s ease, border-color .15s ease;
+    }
+    .algo-page .notes-layout.notes-toc-collapsed .notes-toc-toggle {
+        left: 4px;
+        border-radius: 8px;
+    }
+}
+
+/* 表格单元格里的重点（数据源写 **…**）：主色加粗，表格内不出现星星 */
+.algo-tbl .algo-cell-key {
+    color: var(--primary);
+    font-weight: 700;
+}
+.dark .algo-tbl .algo-cell-key { color: #8fb0d9; }

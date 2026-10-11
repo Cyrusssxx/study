@@ -116,6 +116,52 @@ async function run() {
     check('已存批注重渲染', !!anno && /这里是批注/.test(anno.textContent), anno ? anno.textContent.slice(0, 30) : 'null');
   }
 
+  // 回归：划词时 range 起点是【文本节点】—— 旧版 blkEl 直接 .closest() 会抛错，工具栏永远不出现
+  {
+    const para = [...w.document.querySelectorAll('#algoBody .algo-para')].find(el => el.textContent.length > 30);
+    const tn = para && [...para.childNodes].find(n => n.nodeType === 3 && n.nodeValue.length > 10);
+    check('存在可划词的文本节点', !!tn, tn ? String(tn.nodeValue.length) : 'null');
+    if (tn) {
+      const range = w.document.createRange();
+      range.setStart(tn, 1);
+      range.setEnd(tn, Math.min(8, tn.nodeValue.length));
+      // jsdom 的 Range 未实现 getBoundingClientRect（真实浏览器有）→ 补桩，聚焦验证文本节点路径
+      range.getBoundingClientRect = () => ({ top: 10, left: 10, right: 60, bottom: 26, width: 50, height: 16 });
+      // jsdom 的 Selection 未实现 addRange → 用最小桩喂给 showHlToolbar（只验证文本节点路径）
+      const realSel = w.getSelection.bind(w);
+      w.getSelection = () => ({
+        isCollapsed: false, rangeCount: 1,
+        getRangeAt: () => range,
+        removeAllRanges() { },
+        toString: () => range.toString()
+      });
+      let err = null;
+      try { w.showHlToolbar(); } catch (e) { err = e.message; }
+      w.getSelection = realSel;
+      const bar = w.document.querySelector('.hl-toolbar');
+      check('文本节点划词不报错（closest 崩溃已修）', err === null, err || '');
+      check('文本节点划词弹出工具条（4 色 + 📝批注）', !!bar && (bar.querySelectorAll('.hl-dot').length === 4) && /批注/.test(bar.textContent));
+      if (bar) {
+        const blk = tn.parentElement.closest('[data-blk]');
+        w.applyHighlight(blk, range, 'green');
+        const hl2 = blk.querySelector('.note-hl-green');
+        check('点色后块内生成高亮', !!hl2 && hl2.textContent.length > 0, hl2 ? hl2.textContent : 'null');
+      }
+    }
+  }
+
+  // 静态：目录贴左布局与正文/页头让位规则（算法讲义专属 .algo-page）
+  {
+    const html = fs.readFileSync(path.join(ROOT, 'pwa/algo.html'), 'utf8');
+    const css = fs.readFileSync(path.join(ROOT, 'pwa/css/style.css'), 'utf8');
+    check('algo.html 带 algo-page 作用域类', /<main class="container algo-page">/.test(html));
+    check('目录固定贴左（position:fixed + left:6px）', /\.algo-page \.notes-toc \{[^}]*position:\s*fixed[^}]*left:\s*6px/.test(css));
+    check('正文/页头小间隙（margin-left:262px）', /\.algo-page \.notes-content,\s*[\r\n]+\s*\.algo-page \.notes-header \{[^}]*margin-left:\s*262px/.test(css));
+    check('箭头钉在滑动条中段（fixed + top:50%）', /\.algo-page \.notes-toc-toggle \{[^}]*position:\s*fixed[^}]*top:\s*50%/.test(css));
+    check('收起时箭头随目录移到最左', /\.algo-page \.notes-layout\.notes-toc-collapsed \.notes-toc-toggle \{[^}]*left:\s*4px/.test(css));
+    check('收起状态同步到 body（供页头让位）', /document\.body\.classList\.toggle\('algo-toc-collapsed'/.test(html));
+  }
+
   // key 路由合法性：note 接口能 GET 回这两个合成 key
   const hlResp = await api('/api/note/cn_algo_hl');
   const hlData = await hlResp.json();

@@ -38,7 +38,7 @@
         </div>
     </nav>
 
-    <main class="container">
+    <main class="container algo-page">
         <div class="notes-header">
             <h1>📘 算法讲义 · 知识点与做题方法</h1>
             <p class="notes-source" id="algoMeta">加载中...</p>
@@ -82,6 +82,14 @@
         return line.indexOf('|') >= 0 && line.split('|').length >= 2;
     }
 
+    /* 单元格内联标记：先整体转义（防注入），再恢复两种受控标记
+       —— `**重点**` → 主色加粗（表格里的重点标记，不用星星）；`<br>` → 换行 */
+    function fmtCell(c) {
+        return esc(c)
+            .replace(/\*\*([^*]+)\*\*/g, '<b class="algo-cell-key">$1</b>')
+            .replace(/&lt;br\s*\/?&gt;/gi, '<br>');
+    }
+
     function tableBlock(rows) {
         if (rows.length < 2) return null;   /* 单行不算表（如「data | link」） */
         let grid = rows.map(r => r.split('|').map(c => c.trim()));
@@ -95,8 +103,8 @@
         grid = grid.map(r => r.length === N - 1 ? [''].concat(r) : r);
         const head = grid[0], body = grid.slice(1);
         return '<table class="algo-tbl">' +
-            '<tr>' + head.map(c => `<th>${esc(c)}</th>`).join('') + '</tr>' +
-            body.map(r => '<tr>' + r.map(c => `<td>${esc(c)}</td>`).join('') + '</tr>').join('') +
+            '<tr>' + head.map(c => `<th>${fmtCell(c)}</th>`).join('') + '</tr>' +
+            body.map(r => '<tr>' + r.map(c => `<td>${fmtCell(c)}</td>`).join('') + '</tr>').join('') +
             '</table>';
     }
 
@@ -625,10 +633,16 @@
     /* ---------- 目录收起/展开（与考点笔记同款：WAAPI 合成器属性动画 + 本地记忆） ---------- */
 
     const algoLayout = document.getElementById('algoLayout');
+    /* body 上的状态类：供「页头/文章让位」等跨兄弟元素的选择器使用（.notes-layout 是页头之后的兄弟，选不到） */
+    function syncTocStateClass() {
+        if (!document.body || !document.body.classList) return;   // 受限环境（测试沙箱）无 body 时静默跳过
+        document.body.classList.toggle('algo-toc-collapsed', algoLayout.classList.contains('notes-toc-collapsed'));
+    }
     if (localStorage.getItem('algo_toc_collapsed') === '1') {
         algoLayout.classList.add('notes-toc-collapsed');
         document.getElementById('algoTocToggle').textContent = '»';
     }
+    syncTocStateClass();
 
     const TOC_ANIM_OPT = { duration: 180, easing: 'ease' };
     let tocAnimating = false;
@@ -641,6 +655,7 @@
             algoLayout.classList.toggle('notes-toc-collapsed');
             localStorage.setItem('algo_toc_collapsed', algoLayout.classList.contains('notes-toc-collapsed') ? '1' : '0');
             btn.textContent = algoLayout.classList.contains('notes-toc-collapsed') ? '»' : '«';
+            syncTocStateClass();
             return;
         }
         tocAnimating = true;
@@ -653,6 +668,7 @@
                 algoLayout.classList.add('notes-toc-collapsed');
                 localStorage.setItem('algo_toc_collapsed', '1');
                 btn.textContent = '»';
+                syncTocStateClass();
                 tocAnimating = false;
             };
         } else {
@@ -660,6 +676,7 @@
             toc.style.transform = 'translateX(-120%)';
             toc.style.opacity = '0';
             algoLayout.classList.remove('notes-toc-collapsed');
+            syncTocStateClass();
             void toc.offsetHeight;
             const a = toc.animate(
                 [{ transform: 'translateX(-120%)', opacity: 0 }, { transform: 'none', opacity: 1 }],
@@ -722,7 +739,10 @@
     const ANNO_KEY = 'cn_algo_anno';
     const HL_KEY = 'cn_algo_hl';
 
-        const blkEl = el => el.closest('[data-blk]');
+    /* 划词/点击拿到的可能是**文本节点**（nodeType 3），它没有 closest —— 必须先取父元素。
+       旧写法直接 el.closest() 在划词时抛 TypeError，整条批注链路静默失效（已修）。 */
+    const elOf = n => (n && n.nodeType === 1) ? n : (n && n.parentElement ? n.parentElement : null);
+    const blkEl = n => { const el = elOf(n); return el && el.closest ? el.closest('[data-blk]') : null; };
         function inAnno(n) {
             const el = n.nodeType === 1 ? n : n.parentElement;
             return !!(el && el.closest('.line-anno'));

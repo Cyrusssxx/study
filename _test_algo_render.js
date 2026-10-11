@@ -123,16 +123,23 @@ function run() {
     && /"空间复杂度为O\(1\)且时间上尽可能高效"/.test(tCmpl)
     && /严格限制空间，通常要求原地修改/.test(tCmpl)
     && /能实现即可/.test(tCmpl) && /重点考察逻辑实现/.test(tCmpl));
-  const tVisit = findTbl('核心问题');
-  check('例题遍历表: 4列 + 例题/核心问题/最佳遍历方式/核心操作', !!tVisit && cols(tVisit) === 4
-    && /<th>例题<\/th><th>核心问题<\/th><th>最佳遍历方式<\/th>/.test(tVisit));
+  /* 2026-10-11 用户重订表格：4 列改为「核心问题与依赖关系 / 最佳遍历方式（及原因）/ 信息传递方式（变量选择）」，
+     并用 **重点**（alg-cell-key）标决策点、<br> 分行；表格内不出现星星 */
+  const tVisit = findTbl('核心问题与依赖关系');
+  check('例题遍历表: 4列 + 新表头（依赖关系/及原因/变量选择）', !!tVisit && cols(tVisit) === 4
+    && /<th>例题<\/th><th>核心问题与依赖关系<\/th><th>最佳遍历方式（及原因）<\/th><th>信息传递方式（变量选择）<\/th>/.test(tVisit));
   check('例题遍历表: 4-1~4-6 六题齐全且遍历方式正确', !!tVisit
     && (tVisit.match(/<tr>/g) || []).length === 7
-    && /4-1: 求叶子数/.test(tVisit) && /4-6: 是否平衡二叉树/.test(tVisit)
-    && /先序\/中序\/后序遍历/.test(tVisit)
-    && /层次结构\/无间隙/.test(tVisit)
+    && /4-1 求叶子数/.test(tVisit) && /4-6 平衡二叉树/.test(tVisit)
+    && /任意遍历/.test(tVisit)
+    && /必须后序遍历/.test(tVisit)
+    && /层次结构 \/ 无间隙/.test(tVisit)
     && /结点值的有序性/.test(tVisit)
-    && /先根\/后根遍历/.test(tVisit));
+    && /先根\/后根，逐棵树处理/.test(tVisit));
+  check('例题遍历表: 重点标记 = 主色加粗（不用星星）', !!tVisit
+    && (tVisit.match(/class="algo-cell-key"/g) || []).length === 10
+    && !/[★☆]/.test(tVisit)
+    && (tVisit.match(/<br>/g) || []).length === 18);
   const tTpl = findTbl('模板二');
   check('模板对比表: 3列 + 对比项/模板一/模板二', !!tTpl && cols(tTpl) === 3
     && /<th>对比项<\/th><th>模板一：『等值判断』模板（优先使用）<\/th><th>模板二：『区间收敛』模板<\/th>/.test(tTpl));
