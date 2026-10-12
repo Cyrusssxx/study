@@ -23,6 +23,8 @@
         favSet: new Set(),
         noteMap: {},
         noteImages: {},          // iid -> 已有图片数组（本页不编辑图片，保存时原样透传）
+        dakaByReal: new Map(),   // "YYYY|题号" -> 打卡表卡片（DS 真题大题替换源）
+        lectureBySource: new Map(), // daka 卡 source -> ds_code/extra 讲义条目
         svgCache: {},            // name -> svg 文本
         year: 0,
         examMode: localStorage.getItem('zhentiMode') === 'exam',
@@ -63,13 +65,46 @@
         return !!(state.noteMap[iid] || (state.noteImages[iid] || []).length);
     }
 
+    /* ---------------- 打卡表替换源（DS 真题大题） ----------------
+     * 数据来源：ds_daka.json（卡片按 real「YYYY年408真题第N题」建索引）
+     *         + ds_code.json / ds_code_extra.json（讲义按 source 逐字关联）。
+     * 命中映射的 DS 大题，题目与答案在渲染时替换为打卡表版本；失败静默回落 408os 原版。 */
+    async function loadDaka() {
+        try {
+            const [daka, code, extra] = await Promise.all([
+                fetch('data/ds_daka.json').then(r => r.json()),
+                fetch('data/ds_code.json').then(r => r.json()).catch(() => null),
+                fetch('data/ds_code_extra.json').then(r => r.json()).catch(() => null),
+            ]);
+            for (const list of [code, extra]) {
+                for (const q of (list && list.questions) || []) {
+                    if (q.source) state.lectureBySource.set(q.source, q);
+                }
+            }
+            for (const c of (daka && daka.questions) || []) {
+                const m = /^(\d{4})年408真题第(\d+)题/.exec(c.real || '');
+                if (m) state.dakaByReal.set(m[1] + '|' + m[2], c);
+            }
+        } catch (e) { /* 打卡表数据拉取失败：DS 大题回落 408os 原版，不打断页面 */ }
+    }
+
     /* ---------------- 套卷结构 ---------------- */
     function buildFlat(d, year) {
-        return d.items.map(it => ({
-            ...it,
-            iid: it.qid || (it.sid + '_zt' + year + '_' + it.i),
-            group: it.t === 1 ? 'choice' : 'big',
-        }));
+        return d.items.map(it => {
+            const f = {
+                ...it,
+                iid: it.qid || (it.sid + '_zt' + year + '_' + it.i),
+                group: it.t === 1 ? 'choice' : 'big',
+            };
+            // 算法题（= 打卡表真题卡且有讲义命中：2009-2012 在 42 题、2013 起在 41 题、2016 为 43）
+            // 才替换为打卡表版本；非算法的应用题保持 408os 原版
+            if (f.group === 'big') {
+                const card = state.dakaByReal.get(year + '|' + it.i);
+                const lecture = card && (state.lectureBySource.get(card.source) || null);
+                if (card && lecture) f.daka = { card, lecture };
+            }
+            return f;
+        });
     }
 
     function doneCount(year) {
@@ -210,6 +245,7 @@
 
     /* ---------------- 卡片：大题 ---------------- */
     function bigCard(f) {
+        if (f.daka) return dakaBigCard(f);   // DS 大题命中打卡表映射 → 替换为打卡表版本
         const isFav = state.favSet.has(f.iid);
         const ansOpen = state.ansOpen.has(f.iid) || state.showAll;
         const hasNote = hasNoteOf(f.iid);
@@ -232,6 +268,88 @@
                 <div class="explanation-body">${f.an || '<div class="explanation-empty">暂无解析</div>'}</div>
             </div>` : ''}
             ${state.noteOpen.has(f.iid) ? notePanel(f.iid) : ''}
+        </div>`;
+    }
+
+    /* ---------------- 卡片：DS 大题（打卡表版本） ----------------
+     * 41/42（按 ds_daka「real」映射命中）的题目与答案替换为打卡表内容：
+     * 题图/题干（card.content）+ 讲义解法（source 关联 ds_code/extra）+ 解答原图。
+     * 容器带 .zt-daka-figs 标记 → 教材原图复用 code-figs 样式 + lightbox 点击放大。 */
+    function dakaBigCard(f) {
+        const { card, lecture } = f.daka;
+        const isFav = state.favSet.has(f.iid);
+        const ansOpen = state.ansOpen.has(f.iid) || state.showAll;
+        const hasNote = hasNoteOf(f.iid);
+        const figs = card.figs || {};
+        const figWrap = (arr, label) => (arr && arr.length)
+            ? `<div class="code-figs zt-daka-figs"><div class="code-figs-label">📷 ${esc(label)}</div>${arr.map(n =>
+                `<img src="data/daka_figs/${esc(n)}" loading="lazy" alt="教材原图">`).join('')}</div>`
+            : '';
+        const hasLecture = lecture && lecture.solutions && (lecture.solutions.list || []).length;
+        let answerHtml = '';
+        if (hasLecture) {
+            answerHtml += `<div class="daka-analysis">${esc((lecture.analysis || '').replace('易错点：', '\n易错点：'))}</div>${solHtml(lecture)}`;
+        }
+        answerHtml += figWrap(figs.answer, '解答原图');
+        if (!answerHtml) answerHtml = '<div class="explanation-empty">该题暂无解答内容</div>';
+        const contentHtml = [fmtContent(card.content || ''), figWrap(figs.content, '题目原图')].join('');
+        return `<div class="question-card zt-daka-card" id="card-${f.iid}" data-iid="${f.iid}" data-i="${f.i}">
+            <div class="question-header">
+                <div class="question-meta">
+                    <span class="question-number">第 ${f.i} 题</span>
+                    <span class="zt-subj-badge">${SUBJ_NAME[f.sid] || ''} · 大题</span>
+                    <span class="zt-score-badge">${f.s} 分</span>
+                </div>
+                <button class="btn-icon ${isFav ? 'favorited' : ''}" onclick="toggleFav('${f.iid}')" title="${isFav ? '取消收藏' : '收藏'}">${isFav ? '★' : '☆'}</button>
+            </div>
+            <div class="question-content">${contentHtml || '（题目见教材原图）'}</div>
+            <div class="question-tools">
+                <button class="btn-explanation${ansOpen ? ' active' : ''}" onclick="toggleAns('${f.iid}')">参考答案与解析 ${ansOpen ? '▴' : '▾'}</button>
+                <button class="btn-explanation${state.noteOpen.has(f.iid) ? ' active' : ''}${hasNote ? ' has-note' : ''}" onclick="toggleNotePanel('${f.iid}')">笔记${hasNote ? ' ●' : ''} ${state.noteOpen.has(f.iid) ? '▴' : '▾'}</button>
+            </div>
+            ${ansOpen ? `<div class="explanation-panel">
+                <div class="explanation-title">参考答案与解析</div>
+                <div class="explanation-body">${answerHtml}</div>
+            </div>` : ''}
+            ${state.noteOpen.has(f.iid) ? notePanel(f.iid) : ''}
+        </div>`;
+    }
+
+    /* 讲义解法渲染（与 daka.html 的 solHtml 同源：多解法 → 思路/代码/复杂度；
+     * 样式由 style.css 的 .sol-* 提供。两处若改渲染结构需同步） */
+    function solHtml(q) {
+        const s = q.solutions || {};
+        const list = s.list || [];
+        if (!list.length) {
+            const b = q.brute;
+            if (!b) return '';
+            return `<div class="code-brute">
+                <div class="code-brute-head">💪 ${esc(b.method || '暴力解')} <span class="sol-tag-fb">自生成</span></div>
+                <div class="sol-sec">基本设计思想</div>
+                <div class="sol-text">${b.idea || ''}</div>
+                <div class="sol-sec">代码</div>
+                <pre class="code-block">${esc(b.code || '')}</pre>
+            </div>`;
+        }
+        const table = (s.score_rows || []).length ? `
+            <table class="sol-score">
+                <tr><th>做题思路</th><th>方法</th><th>预计得分</th></tr>
+                ${s.score_rows.map(r => `<tr><td>${esc(r.approach)}</td><td>${esc(r.method)}</td><td class="sol-score-num">${esc(r.score)}</td></tr>`).join('')}
+            </table>` : '';
+        return `<div class="sol-wrap">
+            <div class="sol-source">📘 ${esc(s.source || '')}</div>
+            ${table}
+            ${list.map((x, i) => `
+                <details class="sol-fold"${i === 0 ? ' open' : ''}>
+                    <summary class="sol-head">${esc(x.tag || ('解法' + (i + 1)))}${x.kind ? ' · ' + esc(x.kind) : ''}${x.name ? ' · ' + esc(x.name) : ''}</summary>
+                    <div class="sol-item">
+                    ${x.analysis ? `<div class="sol-sec">解析</div><div class="sol-text">${esc(x.analysis)}</div>` : ''}
+                    ${x.thought ? `<div class="sol-sec">基本设计思想</div><div class="sol-text">${esc(x.thought)}</div>` : ''}
+                    ${x.code ? `<div class="sol-sec">代码</div><pre class="code-block">${esc(x.code)}</pre>` : ''}
+                    ${x.complexity ? `<div class="sol-cx">${esc(x.complexity)}</div>` : ''}
+                    ${x.note ? `<div class="sol-note">${esc(x.note)}</div>` : ''}
+                    </div>
+                </details>`).join('')}
         </div>`;
     }
 
@@ -550,7 +668,7 @@
     async function init() {
         try {
             $('ztMain').innerHTML = '<div class="loading">加载中…</div>';
-            await Promise.all([loadIndex(), loadStores()]);
+            await Promise.all([loadIndex(), loadStores(), loadDaka()]);
             const remembered = +(localStorage.getItem('zhentiYear') || 0);
             state.year = (remembered && state.index.years.includes(remembered))
                 ? remembered : state.index.years[state.index.years.length - 1];

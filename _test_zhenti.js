@@ -51,6 +51,17 @@ async function run() {
   check('收起箭头钉目录右缘中点（ol-nav-toggle fixed · 50vh 折算）',
     /\.toc-fixed \.ol-nav-head \.ol-nav-toggle \{[^}]*position:\s*fixed[^}]*top:\s*calc\(50vh - 76px\)/.test(css) &&
     /\.toc-fixed \.ol-nav \{[^}]*transform:\s*translateX\(0\)/.test(css));
+  // v5：DS 大题替换为打卡表版本
+  check('zhenti.js 建立打卡表映射（ds_daka real「YYYY年408真题第N题」→ 卡片）',
+    /dakaByReal: new Map/.test(js) && /年408真题第/.test(js) && /dakaByReal\.set\(/.test(js));
+  check('zhenti.js 讲义按 source 关联（ds_code / ds_code_extra）',
+    /lectureBySource/.test(js) && /ds_code_extra\.json/.test(js));
+  check('DS 大题走打卡表渲染分支（bigCard → dakaBigCard）', /if \(f\.daka\) return dakaBigCard\(f\)/.test(js));
+  check('替换范围限定「算法题」（card && lecture 双条件）', /if \(card && lecture\) f\.daka = \{ card, lecture \}/.test(js));
+  check('solHtml 含「暴力解」回退分支（💪 自生成）', /code-brute/.test(js) && /暴力解/.test(js));
+  const commonSrc = fs.readFileSync(path.join(ROOT, 'pwa/js/common.js'), 'utf8');
+  check('lightbox 委托支持 .zt-daka-figs（作用域限定不干扰 daka 页）',
+    /zt-daka-figs/.test(commonSrc) && /daka_figs/.test(commonSrc));
   check('默认白纸：无「做过自动展开」逻辑', !/\(!!st && !state\.examMode\)/.test(js));
   check('本次会话作答机制（sessionAnswered）', /sessionAnswered/.test(js));
   check('做题模式下拦截查看答案（toggleAns）', /做题模式下不显示答案/.test(js));
@@ -235,6 +246,44 @@ async function run() {
     await sleep(200);
     check('笔记：再次点击收起面板', !d.querySelector('#card-' + iid2 + ' .zt-note-panel'));
   }
+
+  // v5：DS 算法题替换为打卡表版本（= 打卡表真题卡且有讲义命中；应用题不替换）
+  console.log('\n▸ DS 算法题打卡表替换');
+  const cardByI = i => [...d.querySelectorAll('#ztMain .question-card')].find(c => c.dataset.i === String(i));
+
+  w.switchYear(2009);
+  await sleep(500);
+  const c41 = cardByI(41), c42 = cardByI(42), c43 = cardByI(43);
+  check('2009|42（算法题）替换为打卡表卡片', !!c42 && c42.classList.contains('zt-daka-card'), true);
+  check('2009|42 题图（daka_figs 教材原图）', !!c42 && !!c42.querySelector('.question-content .zt-daka-figs img[src*="daka_figs"]'), true);
+  check('2009|41（最短路径应用题）不替换（保留原版）', !!c41 && !c41.classList.contains('zt-daka-card'), true);
+  check('2009|43（计组）不替换', !!c43 && !c43.classList.contains('zt-daka-card'), true);
+  check('2009 年卷仅 42 一处替换（只动算法题）', d.querySelectorAll('#ztMain .zt-daka-card').length, 1);
+  // 展开全部答案（不经 toggleAns——当前处于做题模式会被拦截；同时覆盖 showAll 分支）
+  w.toggleShowAll();
+  await sleep(350);
+  const c42x = cardByI(42);
+  check('42 展开答案后含「暴力解」解法标签（讲义 kind 标注）',
+    !!c42x && /暴力解/.test((c42x.querySelector('.explanation-body .sol-wrap') || {}).textContent || ''), true);
+  check('42 展开答案后含解答原图', !!c42x && !!c42x.querySelector('.explanation-body .zt-daka-figs img[src*="daka_figs"]'), true);
+  w.toggleShowAll();
+  await sleep(250);
+
+  w.switchYear(2016);
+  await sleep(500);
+  const g41 = cardByI(41), g42 = cardByI(42), g43 = cardByI(43);
+  check('2016|41（计网）不替换', !!g41 && !g41.classList.contains('zt-daka-card'), true);
+  check('2016|42（正则 k 叉树推导题）不替换', !!g42 && !g42.classList.contains('zt-daka-card'), true);
+  check('2016|43（算法题特殊分布）替换', !!g43 && g43.classList.contains('zt-daka-card'), true);
+
+  w.switchYear(2024);
+  await sleep(500);
+  const x41 = cardByI(41), x42 = cardByI(42);
+  check('2024|41 讲义型替换（题干为文本、无题图）',
+    !!x41 && x41.classList.contains('zt-daka-card') &&
+    !x41.querySelector('.question-content .zt-daka-figs img'), true);
+  check('2024|41 题干含原题文字', !!x41 && /载人航天|拓扑/.test(x41.querySelector('.question-content').textContent), true);
+  check('2024|42（打卡表无讲义）不替换', !!x42 && !x42.classList.contains('zt-daka-card'), true);
 
   // SVG 注入（mock 返回假 svg）
   w.close();

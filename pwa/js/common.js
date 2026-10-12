@@ -333,8 +333,10 @@ function openImageLightbox(src) {
 // 事件委托：题干/解析里的 <img> 点击放大；排除笔记区（已有独立 viewNoteImage）
 document.addEventListener('click', e => {
     const img = e.target.closest('.question-content img, .explanation-body img, .question-card img');
-    // 只处理 data/os_figs/ 路径的题图，不拦截笔记贴图、图标等
-    if (img && img.src && /os_figs|co_figs|ds_figs|cn_figs/.test(img.src)) {
+    // 题图路径：题库配图（*_figs）；或 zhenti 页「打卡表版本」的教材原图
+    // （.zt-daka-figs 作用域限定，避免与 daka.html 元素级 openFigLightbox 双重触发叠两层弹层）
+    if (img && img.src && (/os_figs|co_figs|ds_figs|cn_figs/.test(img.src) ||
+        (img.closest('.zt-daka-figs') && /daka_figs/.test(img.src)))) {
         e.preventDefault();
         openImageLightbox(img.src);
     }
