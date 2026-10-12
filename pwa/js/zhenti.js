@@ -19,6 +19,7 @@
         papers: {},              // year -> {y,n,items}
         progress: {},            // iid -> {user_answer, is_correct, ...}
         pending: {},             // 做题模式下的临时选择 iid -> 'A'
+        sessionAnswered: new Set(), // 本次会话作答过的题（仅这些显示反馈/展开解析）
         favSet: new Set(),
         noteMap: {},
         svgCache: {},            // name -> svg 文本
@@ -26,10 +27,11 @@
         examMode: localStorage.getItem('zhentiMode') === 'exam',
         showAll: false,
         favOnly: false,
-        ansOpen: new Set(JSON.parse(localStorage.getItem('zhentiAnsOpen') || '[]')),
-        noteOpen: new Set(JSON.parse(localStorage.getItem('zhentiNoteOpen') || '[]')),
+        ansOpen: new Set(JSON.parse(localStorage.getItem('zhentiAnsOpen2') || '[]')),
+        noteOpen: new Set(JSON.parse(localStorage.getItem('zhentiNoteOpen2') || '[]')),
         navCollapsed: localStorage.getItem('zhentiNavCollapsed') === '1',
         fqOpen: true,
+        ansPopOpen: false,       // 答案速查浮层
         flat: [],                // 当前卷有序题（带 iid）
         noteTimer: {},
         rendering: false,
@@ -99,6 +101,7 @@
                 <button class="zt-btn${state.examMode ? ' on' : ''}" onclick="toggleExamMode()" title="做题模式：隐藏答案与解析，全部做完再对答案">${state.examMode ? '做题中' : '做题模式'}</button>
                 ${state.examMode ? '<button class="zt-btn zt-btn-primary" onclick="checkPending()">对答案</button>' : ''}
                 <button class="zt-btn${state.showAll ? ' on' : ''}" onclick="toggleShowAll()">${state.showAll ? '收起全部答案' : '展开全部答案'}</button>
+                <button class="zt-btn zt-btn-primary" onclick="toggleAnsPop()">答案速查</button>
                 <button class="zt-btn${state.favOnly ? ' on' : ''}" onclick="toggleFavOnly()">${state.favOnly ? '显示全部' : '只看收藏'}</button>
                 <button class="zt-btn" onclick="resetYear()" title="清空本年作答记录重新做（错题本保留）">重做本年 ↺</button>
             </div>
@@ -130,35 +133,39 @@
         renderFq();
     }
 
-    /* ---------------- 卡片：选择题 ---------------- */
+    /* ---------------- 卡片：选择题 ----------------
+     * 初始为"白纸"状态：不显示历史作答痕迹（结果条/选项色/预选/答案），解析默认收起；
+     * 仅本次会话作答过的题显示判分反馈并自动展开解析。要看答案点「答案与解析」或「答案速查」。 */
     function choiceCard(f) {
         const st = state.progress[f.iid];
-        const sel = st ? (st.user_answer || '') : (state.pending[f.iid] || '');
+        const newly = state.sessionAnswered.has(f.iid);   // 本次会话作答过
+        let sel = '';
+        if (state.examMode) sel = state.pending[f.iid] || '';
+        else if (newly && st) sel = st.user_answer || '';
         const isFav = state.favSet.has(f.iid);
-        const ansOpen = state.ansOpen.has(f.iid) || state.showAll || (!!st && !state.examMode);
+        const ansOpen = state.ansOpen.has(f.iid) || state.showAll || (newly && !state.examMode);
 
         let opts = '';
         for (let k = 0; k < LETTERS.length; k++) {
             const key = LETTERS[k];
             const text = f.o[k] != null ? f.o[k] : '';
             let cls = 'option-item';
-            if (st && !state.examMode) {
+            if (newly && !state.examMode) {
                 if (key === f.a) cls += ' correct';
-                else if (key === sel && !st.is_correct) cls += ' wrong';
+                else if (key === sel && st && !st.is_correct) cls += ' wrong';
             } else if (sel === key) {
                 cls += state.examMode ? ' picked' : '';
             }
             const checked = sel === key ? 'checked' : '';
-            const disabled = (st && !state.examMode) ? 'disabled' : '';
             opts += `<label class="${cls}">
-                <input type="radio" name="q_${f.iid}" value="${key}" ${checked} ${disabled} onchange="pickOption('${f.iid}', '${key}')">
+                <input type="radio" name="q_${f.iid}" value="${key}" ${checked} onchange="pickOption('${f.iid}', '${key}')">
                 <span class="option-letter">${key}</span>
                 <span class="option-text">${text}</span>
             </label>`;
         }
 
         let result = '';
-        if (st && !state.examMode) {
+        if (newly && !state.examMode && st) {
             result = st.is_correct
                 ? '<div class="result-correct">回答正确!</div>'
                 : `<div class="result-wrong">回答错误! 正确答案: ${f.a || '—'}</div>`;
@@ -278,6 +285,7 @@
             await window.applyAnswer(iid, f.sid, key, ok, Date.now());
         }
         state.progress[iid] = { user_answer: key, is_correct: ok ? 1 : 0 };
+        state.sessionAnswered.add(iid);
         refreshCard(iid);
         $('ztProgress').textContent = `已做 ${doneCount(state.year)}/${state.index.choice_total}`;
         renderYearList();
@@ -295,6 +303,7 @@
                 await window.applyAnswer(iid, f.sid, key, ok, Date.now());
             }
             state.progress[iid] = { user_answer: key, is_correct: ok ? 1 : 0 };
+            state.sessionAnswered.add(iid);
         }
         state.pending = {};
         state.examMode = false;
@@ -325,15 +334,19 @@
     }
 
     function toggleAns(iid) {
+        if (state.examMode) {
+            alert('做题模式下不显示答案。做完点「对答案」后即可查看。');
+            return;
+        }
         if (state.ansOpen.has(iid)) state.ansOpen.delete(iid); else state.ansOpen.add(iid);
-        localStorage.setItem('zhentiAnsOpen', JSON.stringify([...state.ansOpen]));
+        localStorage.setItem('zhentiAnsOpen2', JSON.stringify([...state.ansOpen]));
         refreshCard(iid);
     }
 
     function toggleNotePanel(iid) {
         flushNote();
         if (state.noteOpen.has(iid)) state.noteOpen.delete(iid); else state.noteOpen.add(iid);
-        localStorage.setItem('zhentiNoteOpen', JSON.stringify([...state.noteOpen]));
+        localStorage.setItem('zhentiNoteOpen2', JSON.stringify([...state.noteOpen]));
         refreshCard(iid);
     }
 
@@ -392,6 +405,7 @@
     function switchYear(y) {
         if (y === state.year) return;
         flushNote();
+        if (state.ansPopOpen) toggleAnsPop();   // 关闭答案速查
         state.year = y;
         localStorage.setItem('zhentiYear', String(y));
         state.ansOpen = new Set();
@@ -400,20 +414,40 @@
         window.scrollTo({ top: 0 });
     }
 
-    /* ---------------- 题号导航 ---------------- */
+    /* ---------------- 题号导航（竖排半透明横条，目录式） ---------------- */
     function renderFq() {
-        const choices = state.flat.filter(f => f.group === 'choice');
-        const bigs = state.flat.filter(f => f.group === 'big');
-        const cell = it => {
+        const cells = state.flat.map(it => {
             const st = state.progress[it.iid];
             let cls = 'zt-fq-i';
             if (st) cls += st.is_correct ? ' ok' : (it.group === 'choice' ? ' bad' : '');
             else if (state.pending[it.iid]) cls += ' picked';
-            return `<a class="${cls}" data-iid="${it.iid}" onclick="gotoQ('${it.iid}')" title="第 ${it.i} 题">${it.i}</a>`;
-        };
-        $('fqList').innerHTML =
-            `<div class="zt-fq-g">选择题</div><div class="zt-fq-grid">${choices.map(cell).join('')}</div>` +
-            (bigs.length ? `<div class="zt-fq-g">大题</div><div class="zt-fq-grid">${bigs.map(cell).join('')}</div>` : '');
+            if (it.i === 41) cls += ' zt-fq-sep';   // 大题起点分隔
+            return `<a class="${cls}" data-iid="${it.iid}" data-i="${it.i}" onclick="gotoQ('${it.iid}')" title="第 ${it.i} 题">${it.i}</a>`;
+        }).join('');
+        $('fqList').innerHTML = cells;
+        syncFqCur();
+    }
+
+    // 高亮滚动位置对应的题号条（随页面滑动而滑动）
+    function syncFqCur() {
+        const cards = document.querySelectorAll('#ztMain .question-card');
+        let cur = null;
+        for (const c of cards) {
+            if (c.getBoundingClientRect().top < 120) cur = c; else break;
+        }
+        $('fqNo').textContent = cur ? ('第 ' + cur.dataset.i + ' 题') : '—';
+        const box = $('fqList');
+        const prev = box.querySelector('.zt-fq-i.cur');
+        if (prev) prev.classList.remove('cur');
+        if (!cur) return;
+        const a = box.querySelector(`.zt-fq-i[data-iid="${cur.dataset.iid}"]`);
+        if (!a) return;
+        a.classList.add('cur');
+        // 容器内滚动跟随（当前条始终可见）
+        const ar = a.getBoundingClientRect();
+        const br = box.getBoundingClientRect();
+        if (ar.top < br.top + 6) box.scrollTop += ar.top - br.top - 6;
+        else if (ar.bottom > br.bottom - 6) box.scrollTop += ar.bottom - br.bottom + 6;
     }
 
     function gotoQ(iid) {
@@ -428,21 +462,38 @@
         $('fqArrow').textContent = state.fqOpen ? '▲' : '▼';
     }
 
-    // 滚动时更新当前题号
+    // 滚动时更新题号导航（当前题高亮 + 顶部题号显示）
     function bindScrollSpy() {
         let raf = 0;
         window.addEventListener('scroll', () => {
             if (raf) return;
             raf = requestAnimationFrame(() => {
                 raf = 0;
-                const cards = document.querySelectorAll('#ztMain .question-card');
-                let cur = null;
-                for (const c of cards) {
-                    if (c.getBoundingClientRect().top < 120) cur = c; else break;
-                }
-                $('fqNo').textContent = cur ? ('第 ' + cur.dataset.i + ' 题') : '—';
+                syncFqCur();
             });
         }, { passive: true });
+    }
+
+    /* ---------------- 答案速查（悬浮窗：只列选择题答案） ---------------- */
+    function toggleAnsPop() {
+        state.ansPopOpen = !state.ansPopOpen;
+        const old = $('ztAnsPop');
+        if (old) old.remove();
+        if (!state.ansPopOpen) return;
+        const cells = state.flat
+            .filter(f => f.group === 'choice')
+            .map(f => `<span class="zt-ans-i">${f.i}.&nbsp;${f.a || '—'}</span>`)
+            .join('');
+        const el = document.createElement('div');
+        el.id = 'ztAnsPop';
+        el.className = 'zt-ans-pop';
+        el.innerHTML = `<div class="zt-ans-mask" onclick="toggleAnsPop()"></div>
+            <div class="zt-ans-panel">
+                <div class="zt-ans-head">${state.year} 年选择题答案速查<span class="zt-ans-close" onclick="toggleAnsPop()">×</span></div>
+                <div class="zt-ans-grid">${cells}</div>
+            </div>`;
+        document.body.appendChild(el);
+        requestAnimationFrame(() => el.classList.add('show'));
     }
 
     /* ---------------- 左栏收起（复用 ol-nav 形态） ---------------- */
@@ -480,7 +531,7 @@
     Object.assign(window, {
         switchYear, pickOption, checkPending, toggleFav, toggleAns, toggleNotePanel,
         onNoteInput, toggleExamMode, toggleShowAll, toggleFavOnly, resetYear,
-        gotoQ, toggleFq, toggleZtNav, expandZtNav,
+        gotoQ, toggleFq, toggleZtNav, expandZtNav, toggleAnsPop,
     });
 
     if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init, { once: true });

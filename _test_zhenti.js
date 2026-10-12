@@ -27,11 +27,22 @@ async function run() {
   console.log('▸ 静态结构');
   const html = inline(fs.readFileSync(path.join(ROOT, 'pwa/zhenti.html'), 'utf8'));
   const rawHtml = fs.readFileSync(path.join(ROOT, 'pwa/zhenti.html'), 'utf8');
+  const css = fs.readFileSync(path.join(ROOT, 'pwa/css/style.css'), 'utf8');
+  const js = fs.readFileSync(path.join(ROOT, 'pwa/js/zhenti.js'), 'utf8');
   check('zhenti.html 引入 js/zhenti.js', /<script src="js\/zhenti\.js">/.test(rawHtml));
   check('页面引入 KaTeX 样式', /vendor\/katex\/katex\.min\.css/.test(rawHtml));
   check('页面含 左年份栏 / 中题目流 / 右题号导航 三容器',
     /id="ztNav"/.test(rawHtml) && /id="ztMain"/.test(rawHtml) && /id="ztFq"/.test(rawHtml));
-  check('main 带 toc-fixed（目录贴左统一机制）', /<main class="container toc-fixed">/.test(rawHtml));
+  check('main 带 toc-fixed + zt-page 作用域类', /<main class="container toc-fixed zt-page">/.test(rawHtml));
+  // v3：选项两列网格（仅 zt-page）、答案速查、白纸逻辑
+  check('选项两列网格（.zt-page 作用域）', /\.zt-page \.options-list \{[^}]*grid-template-columns:\s*repeat\(2/.test(css));
+  check('选项圆形字母徽章样式存在', /\.zt-page \.option-letter \{[^}]*border-radius:\s*50%/.test(css));
+  check('答案速查浮层样式存在', /\.zt-ans-pop\b/.test(css) && /\.zt-ans-grid\b/.test(css));
+  check('题号导航竖排横条样式（含 .cur 跟随高亮）', /\.zt-fq-i\.cur \{/.test(css) && !/\.zt-fq-grid \{/.test(css));
+  check('默认白纸：无「做过自动展开」逻辑', !/\(!!st && !state\.examMode\)/.test(js));
+  check('本次会话作答机制（sessionAnswered）', /sessionAnswered/.test(js));
+  check('做题模式下拦截查看答案（toggleAns）', /做题模式下不显示答案/.test(js));
+  check('答案速查 toggleAnsPop 已导出', /function toggleAnsPop/.test(js) && /toggleAnsPop,/.test(js));
   const navLinks = [...rawHtml.matchAll(/<a href="([\w.]+)\.html" class="nav-link[^"]*">([^<]+)<\/a>/g)].map(m => m[1]);
   check('顶栏链接 14 项且含真题套卷（active）', navLinks.length === 14 && /zhenti\.html" class="nav-link active"/.test(rawHtml), navLinks.join(','));
 
@@ -120,9 +131,31 @@ async function run() {
   check('大题区存在', /二、大题/.test(d.querySelector('#ztMain').textContent));
   check('题号导航 47 格', d.querySelectorAll('#fqList .zt-fq-i').length === 47,
     `实际 ${d.querySelectorAll('#fqList .zt-fq-i').length}`);
+  check('题号导航竖排（无网格分组容器）', !d.querySelector('.zt-fq-grid') && !d.querySelector('.zt-fq-g'));
   check('题号编排：第 1 题与第 41 题', /第 1 题/.test(d.querySelector('#ztMain').textContent) &&
     /第 41 题/.test(d.querySelector('#ztMain').textContent));
   check('年份项显示完成度', /\/40/.test(d.querySelector('#yearList').textContent));
+  // v3 白纸：初始无结果条/无预选/解析收起
+  check('初始白纸：无结果条、无预选、解析全部收起',
+    d.querySelectorAll('#ztMain .result-correct, #ztMain .result-wrong').length === 0 &&
+    d.querySelectorAll('#ztMain .option-item input:checked').length === 0 &&
+    d.querySelectorAll('#ztMain .explanation-panel').length === 0,
+    `result=${d.querySelectorAll('#ztMain .result-correct, #ztMain .result-wrong').length}, checked=${d.querySelectorAll('#ztMain .option-item input:checked').length}, panel=${d.querySelectorAll('#ztMain .explanation-panel').length}`);
+  check('选项字母徽章渲染（4 项 × 40 题）',
+    d.querySelectorAll('#ztMain .option-item .option-letter').length === 160,
+    `实际 ${d.querySelectorAll('#ztMain .option-item .option-letter').length}`);
+
+  // v3 答案速查浮层
+  w.toggleAnsPop();
+  await sleep(150);
+  check('答案速查：浮层打开，40 条答案', !!d.querySelector('#ztAnsPop') &&
+    d.querySelectorAll('#ztAnsPop .zt-ans-i').length === 40,
+    `实际 ${d.querySelectorAll('#ztAnsPop .zt-ans-i').length}`);
+  const ansFirst = d.querySelector('#ztAnsPop .zt-ans-i');
+  check('答案速查：内容形如「1. 字母」', /^1\.\xa0[A-D]$/.test(ansFirst.textContent) || /^1\..*[A-D]/.test(ansFirst.textContent), ansFirst.textContent);
+  w.toggleAnsPop();
+  await sleep(100);
+  check('答案速查：再次点击关闭', !d.querySelector('#ztAnsPop'));;
 
   // ---------- 交互：作答（新 id 客户端判分） ----------
   console.log('▸ 交互：作答与切换年份');

@@ -6343,49 +6343,55 @@ a.daily-meta.daily-kp:hover { color: var(--primary); text-decoration: underline;
 }
 .zt-note-input:focus { border-color: var(--primary); }
 
-/* 右侧悬浮题号导航（照试卷题号） */
+/* 右侧悬浮题号导航（竖排半透明横条 · 目录式，随滚动高亮跟随） */
 .zt-fq {
-    position: fixed; right: 6px; top: 76px; bottom: 84px; width: 46px;
+    position: fixed; right: 5px; top: 76px; bottom: 84px; width: 40px;
     z-index: 45; display: flex; flex-direction: column;
-    background: var(--card-bg);
-    border: 1px solid var(--border); border-radius: 10px;
-    box-shadow: 0 1px 5px rgba(0, 0, 0, .05);
-    overflow: hidden;
+    background: transparent; border: none;
+    pointer-events: none;   /* 仅头部与条条可交互 */
 }
 .zt-fq-head {
+    pointer-events: auto;
     display: flex; flex-direction: column; align-items: center; gap: 2px;
-    padding: 8px 0 6px; cursor: pointer; user-select: none;
-    border-bottom: 1px solid var(--border);
-    background: rgba(74, 122, 184, .08);
+    padding: 6px 0; margin-bottom: 4px; cursor: pointer; user-select: none;
+    border-radius: 9px;
+    background: rgba(var(--card-rgb), .55);
+    border: 1px solid var(--border);
+    transition: background .15s ease;
 }
-.zt-fq-head:hover { color: var(--primary); }
+.zt-fq-head:hover { background: rgba(74, 122, 184, .14); color: var(--primary); }
 .zt-fq-no { font-size: .62rem; color: var(--text-light); white-space: nowrap; }
-.zt-fq-arrow { font-size: .66rem; color: var(--text-light); }
-.zt-fq-body { overflow-y: auto; padding: 8px 4px 12px; }
+.zt-fq-arrow { font-size: .6rem; color: var(--text-light); }
+.zt-fq-body { pointer-events: auto; overflow-y: auto; padding: 2px 0 6px; scrollbar-width: none; }
+.zt-fq-body::-webkit-scrollbar { display: none; }
 .zt-fq.zt-fq-closed .zt-fq-body { display: none; }
-.zt-fq-g { font-size: .62rem; color: var(--text-light); text-align: center; margin: 4px 0 5px; }
-.zt-fq-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 4px; padding: 0 4px; }
 .zt-fq-i {
-    display: flex; align-items: center; justify-content: center;
-    height: 22px; font-size: .7rem; text-decoration: none;
-    border: 1px dashed #c8cdd4; border-radius: 6px;
-    background: var(--card-bg); color: var(--text-light);
+    display: block; width: 32px; height: 12px; line-height: 12px;
+    margin: 0 auto 1px; text-decoration: none;
+    font-size: 8.5px; text-align: center;
+    border-radius: 3px;
+    background: rgba(var(--card-rgb), .42);
+    color: var(--text-light);
+    transition: background .14s ease, color .14s ease;
 }
-.zt-fq-i:hover { border-color: var(--primary); color: var(--primary); }
-.zt-fq-i.ok { border-style: solid; border-color: rgba(46, 125, 50, .5); color: #2e7d32; background: rgba(46, 125, 50, .06); }
-.zt-fq-i.bad { border-style: solid; border-color: rgba(198, 40, 40, .5); color: #c62828; background: rgba(198, 40, 40, .06); }
-.zt-fq-i.picked { border-style: solid; border-color: var(--primary); color: var(--primary); background: rgba(74, 122, 184, .08); }
-.dark .zt-fq-i.ok { color: #81c784; border-color: rgba(129, 199, 132, .5); }
-.dark .zt-fq-i.bad { color: #e57373; border-color: rgba(229, 115, 115, .5); }
+.zt-fq-i:hover { background: rgba(74, 122, 184, .3); color: var(--primary); }
+.zt-fq-i.cur { background: rgba(74, 122, 184, .16); color: var(--primary); box-shadow: inset 0 0 0 1px rgba(74, 122, 184, .55); }
+.zt-fq-i.ok { background: rgba(46, 125, 50, .17); color: #2e7d32; }
+.zt-fq-i.bad { background: rgba(198, 40, 40, .15); color: #c62828; }
+.zt-fq-i.picked { background: rgba(74, 122, 184, .2); color: var(--primary); }
+.zt-fq-i.zt-fq-sep { margin-top: 6px; }
+.dark .zt-fq-i.ok { color: #81c784; }
+.dark .zt-fq-i.bad { color: #e57373; }
+.dark .zt-fq-i.cur { box-shadow: inset 0 0 0 1px rgba(143, 176, 217, .55); }
 
 /* 题卡锚点留位（避开固定顶栏） */
 #ztMain .question-card { scroll-margin-top: 84px; }
 #ztMain .question-card .question-number { font-size: .92rem; }
 
-/* 窄屏：题号导航收为右下小条 */
+/* 窄屏：题号导航收窄 */
 @media (max-width: 900px) {
-    .zt-fq { bottom: 84px; width: 40px; }
-    .zt-fq-grid { grid-template-columns: 1fr; }
+    .zt-fq { width: 32px; right: 3px; }
+    .zt-fq-i { width: 26px; }
 }
 
 /* ==================== 真题套卷 v2：外部数据渲染适配（2026-10-12） ==================== */
@@ -6422,3 +6428,94 @@ a.daily-meta.daily-kp:hover { color: var(--primary); text-decoration: underline;
 
 /* KaTeX 在题目正文中的微调（字体尺寸跟随文本） */
 .question-content .katex, .explanation-body .katex, .option-text .katex { font-size: 1.06em; }
+
+/* ==================== 真题套卷 v3：选择题两列选项 + 答案速查（2026-10-12） ==================== */
+/* 选择题选项：两列网格 + 圆形字母徽章（仅 .zt-page 生效，不影响 quiz/exam） */
+.zt-page .options-list {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
+    margin-bottom: 16px;
+}
+.zt-page .option-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 9px 14px;
+    min-height: 46px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    background: var(--card-bg);
+}
+.zt-page .option-item:hover { border-color: rgba(74, 122, 184, .55); background: rgba(74, 122, 184, .04); }
+.zt-page .option-letter {
+    flex: 0 0 26px;
+    width: 26px; height: 26px; border-radius: 50%;
+    display: inline-flex; align-items: center; justify-content: center;
+    font-size: .84rem; font-weight: 700;
+    border: 1.5px solid var(--border);
+    background: transparent; color: var(--text);
+    transition: all .15s ease;
+}
+.zt-page .option-item input[type="radio"]:checked ~ .option-letter {
+    background: var(--primary); border-color: var(--primary); color: #fff;
+}
+.zt-page .option-item input[type="radio"]:checked ~ .option-text { color: var(--primary); }
+/* 判分反馈（本次会话作答后） */
+.zt-page .option-item.correct { border-color: rgba(76, 175, 80, .6); background: rgba(76, 175, 80, .08); }
+.zt-page .option-item.correct .option-letter { background: #4caf50; border-color: #4caf50; color: #fff; }
+.zt-page .option-item.correct .option-text { color: #2e7d32; }
+.zt-page .option-item.wrong { border-color: rgba(229, 57, 53, .55); background: rgba(229, 57, 53, .06); }
+.zt-page .option-item.wrong .option-letter { background: #e53935; border-color: #e53935; color: #fff; }
+.zt-page .option-item.wrong .option-text { color: #c62828; }
+.zt-page .option-item.picked { border-color: var(--primary); background: rgba(74, 122, 184, .07); }
+.dark .zt-page .option-item.correct .option-text { color: #81c784; }
+.dark .zt-page .option-item.wrong .option-text { color: #e57373; }
+@media (max-width: 620px) {
+    .zt-page .options-list { grid-template-columns: 1fr; gap: 8px; }
+}
+
+/* 答案速查悬浮窗（半透明毛玻璃） */
+.zt-ans-pop {
+    position: fixed; inset: 0; z-index: 200;
+    opacity: 0; transition: opacity .18s ease;
+}
+.zt-ans-pop.show { opacity: 1; }
+.zt-ans-mask {
+    position: absolute; inset: 0;
+    background: rgba(20, 24, 32, .32);
+    backdrop-filter: blur(2px);
+}
+.zt-ans-panel {
+    position: absolute; left: 50%; top: 50%;
+    transform: translate(-50%, -50%) scale(.96);
+    width: min(560px, calc(100vw - 48px));
+    max-height: min(72vh, 560px);
+    display: flex; flex-direction: column;
+    background: rgba(var(--card-rgb), .92);
+    backdrop-filter: blur(10px);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    box-shadow: 0 12px 40px rgba(0, 0, 0, .18);
+    transition: transform .18s ease;
+}
+.zt-ans-pop.show .zt-ans-panel { transform: translate(-50%, -50%) scale(1); }
+.zt-ans-head {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 12px 16px;
+    font-weight: 600; font-size: .92rem; color: var(--text);
+    border-bottom: 1px solid var(--border);
+}
+.zt-ans-close { cursor: pointer; font-size: 1.05rem; color: var(--text-light); padding: 0 6px; }
+.zt-ans-close:hover { color: var(--primary); }
+.zt-ans-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(62px, 1fr));
+    gap: 7px 8px;
+    padding: 14px 16px;
+    overflow-y: auto;
+}
+.zt-ans-i {
+    font-size: .88rem; color: var(--text);
+    font-family: var(--font-q);
+}
