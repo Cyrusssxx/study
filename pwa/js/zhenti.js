@@ -1,22 +1,27 @@
 /* ================= 真题套卷（zhenti.html）=================
- * 形态参照 math-note 的 exam.html：左年份列表 + 中题目流 + 右悬浮题号导航。
- * 题目流 = 当年选择题（四科分组）+ 大题（DS 代码题 + co/os/cn 大题），
- * 题号按真实试卷编排（选择 1..N，大题接排）。作答/收藏/错题/笔记走后端 IndexedDB。 */
+ * 数据源：data/zt/zt_YYYY.json —— 2009-2026 全量真题（每年 47 题 = 40 选择 + 7 大题）。
+ *   item 字段：{i 题号, t 1单选/2大题/3综合, s 分值, a 答案字母, sid 科目,
+ *               q 题干HTML, o 选项HTML[], an 解析HTML, qid 题库映射id|null, ans?}
+ *   SVG 外置于 data/zt_svg/：题干里留 <div class="zt-svgholder" data-svg="名">，渲染后异步注入。
+ * 交互 id（收藏/作答/笔记）：有题库映射用 qid（与刷题页互通），否则用 {sid}_zt{year}_{i}。
+ * 判分：客户端用 a 字段，写库复用 backend 的 applyAnswer（进度 + 错题本）。 */
 (function () {
     'use strict';
 
     const SUBJ_NAME = { ds: '数据结构', co: '计算机组成原理', os: '操作系统', cn: '计算机网络' };
-    const SUBJ_FILES = { ds: 'data/ds.json', co: 'data/co.json', os: 'data/os.json', cn: 'data/cn.json' };
+    const SUBJ_ORDER = ['ds', 'co', 'os', 'cn'];
+    const LETTERS = ['A', 'B', 'C', 'D'];
     const $ = id => document.getElementById(id);
     const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 
     const state = {
-        papers: null,            // {years, papers:{year:{choice,code,dati,total,...}}}
-        qmap: {},                // qid -> {kind:'choice'|'dati'|'code', subj, q}
-        progress: {},            // qid -> {user_answer, is_correct}
-        pending: {},             // 做题模式下的临时选择
+        index: null,             // {years, counts, iids, choice_total, big_total}
+        papers: {},              // year -> {y,n,items}
+        progress: {},            // iid -> {user_answer, is_correct, ...}
+        pending: {},             // 做题模式下的临时选择 iid -> 'A'
         favSet: new Set(),
-        noteMap: {},             // qid -> content
+        noteMap: {},
+        svgCache: {},            // name -> svg 文本
         year: 0,
         examMode: localStorage.getItem('zhentiMode') === 'exam',
         showAll: false,
@@ -25,87 +30,72 @@
         noteOpen: new Set(JSON.parse(localStorage.getItem('zhentiNoteOpen') || '[]')),
         navCollapsed: localStorage.getItem('zhentiNavCollapsed') === '1',
         fqOpen: true,
-        flat: [],                // 当前卷有序题
+        flat: [],                // 当前卷有序题（带 iid）
         noteTimer: {},
-        ready: false,
+        rendering: false,
     };
 
     /* ---------------- 数据加载 ---------------- */
-    async function loadAll() {
-        const [papers, dsD, coD, osD, cnD, datiD, codeD] = await Promise.all([
-            fetch('data/papers.json').then(r => r.json()),
-            fetch(SUBJ_FILES.ds).then(r => r.json()),
-            fetch(SUBJ_FILES.co).then(r => r.json()),
-            fetch(SUBJ_FILES.os).then(r => r.json()),
-            fetch(SUBJ_FILES.cn).then(r => r.json()),
-            fetch('data/dati.json').then(r => r.json()),
-            fetch('data/ds_code.json').then(r => r.json()),
-        ]);
-        state.papers = papers;
-        const subData = { ds: dsD, co: coD, os: osD, cn: cnD };
-        for (const [k, d] of Object.entries(subData))
-            for (const q of d.questions) state.qmap[q.id] = { kind: 'choice', subj: k, q };
-        for (const s of datiD.subjects)
-            for (const ch of s.chapters)
-                for (const sec of (ch.sections || []))
-                    for (const q of (sec.questions || []))
-                        state.qmap[q.id] = { kind: 'dati', subj: s.key, q };
-        for (const q of codeD.questions) state.qmap[q.id] = { kind: 'code', subj: 'ds', q };
-
+    async function loadIndex() {
+        state.index = await fetch('data/zt/index.json').then(r => r.json());
+    }
+    async function loadYear(y) {
+        if (!state.papers[y]) {
+            state.papers[y] = await fetch('data/zt/zt_' + y + '.json').then(r => r.json());
+        }
+        return state.papers[y];
+    }
+    async function loadStores() {
         const [prog, favs, notes] = await Promise.all([dbAll('progress'), dbAll('favorites'), dbAll('notes')]);
         for (const p of prog) state.progress[p.question_id] = p;
         for (const f of favs) state.favSet.add(f.question_id);
         for (const n of notes) state.noteMap[n.question_id] = n.content || '';
-
-        // 默认年份：记忆 > 最新年
-        const remembered = +(localStorage.getItem('zhentiYear') || 0);
-        state.year = (remembered && papers.papers[remembered]) ? remembered : papers.years[papers.years.length - 1];
-        state.ready = true;
     }
 
     /* ---------------- 套卷结构 ---------------- */
-    function buildFlat(year) {
-        const p = state.papers.papers[year];
-        const flat = [];
-        let no = 0;
-        for (const subj of ['ds', 'co', 'os', 'cn'])
-            for (const qid of p.choice[subj]) flat.push({ qid, no: ++no, kind: 'choice', subj, group: 'choice' });
-        for (const qid of (p.code || [])) flat.push({ qid, no: ++no, kind: 'code', subj: 'ds', group: 'big' });
-        for (const subj of ['co', 'os', 'cn'])
-            for (const qid of p.dati[subj]) flat.push({ qid, no: ++no, kind: 'dati', subj, group: 'big' });
-        return flat;
+    function buildFlat(d, year) {
+        return d.items.map(it => ({
+            ...it,
+            iid: it.qid || (it.sid + '_zt' + year + '_' + it.i),
+            group: it.t === 1 ? 'choice' : 'big',
+        }));
     }
 
     function doneCount(year) {
-        const p = state.papers.papers[year];
-        const ids = [...p.choice.ds, ...p.choice.co, ...p.choice.os, ...p.choice.cn];
+        if (year === state.year && state.flat.length) {
+            return state.flat.filter(f => f.group === 'choice' && state.progress[f.iid]).length;
+        }
+        const ids = (state.index.iids || {})[String(year)] || [];
         return ids.filter(id => state.progress[id]).length;
     }
 
     /* ---------------- 渲染：年份列表 ---------------- */
     function renderYearList() {
-        const years = [...state.papers.years].reverse();
+        const years = [...state.index.years].reverse();
         $('yearList').innerHTML = years.map(y => {
-            const p = state.papers.papers[y];
             const done = doneCount(y);
             const active = y === state.year;
             return `<a class="ol-nav-item root${active ? ' zt-year-active' : ''}" data-year="${y}"
-                onclick="switchYear(${y})" title="${y} 年真题（选择 ${p.choice_total} + 大题 ${p.big_total}）">
-                ${y} 年真题<span class="zt-year-done">${done}/${p.choice_total}</span></a>`;
+                onclick="switchYear(${y})" title="${y} 年真题（选择 40 + 大题 7）">
+                ${y} 年真题<span class="zt-year-done">${done}/${state.index.choice_total}</span></a>`;
         }).join('');
     }
 
     /* ---------------- 渲染：套卷 ---------------- */
-    function renderPaper() {
+    async function renderPaper() {
         const year = state.year;
-        const p = state.papers.papers[year];
-        state.flat = buildFlat(year);
+        if (!state.papers[year]) {
+            $('ztMain').innerHTML = '<div class="loading">加载 ' + year + ' 年套卷…</div>';
+        }
+        const d = await loadYear(year);
+        if (state.year !== year) return;   // 加载期间切了年份，放弃本次渲染
+        state.flat = buildFlat(d, year);
         state.pending = {};
 
         let html = `<div class="zt-toolbar">
-            <div class="zt-title">${year} 年真题套卷<span class="zt-sub">选择题 ${p.choice_total} · 大题 ${p.big_total}</span></div>
+            <div class="zt-title">${year} 年真题套卷<span class="zt-sub">选择题 ${state.index.choice_total} · 大题 ${state.index.big_total}</span></div>
             <div class="zt-tools">
-                <span class="zt-progress" id="ztProgress">已做 ${doneCount(year)}/${p.choice_total}</span>
+                <span class="zt-progress" id="ztProgress">已做 ${doneCount(year)}/${state.index.choice_total}</span>
                 <button class="zt-btn${state.examMode ? ' on' : ''}" onclick="toggleExamMode()" title="做题模式：隐藏答案与解析，全部做完再对答案">${state.examMode ? '做题中' : '做题模式'}</button>
                 ${state.examMode ? '<button class="zt-btn zt-btn-primary" onclick="checkPending()">对答案</button>' : ''}
                 <button class="zt-btn${state.showAll ? ' on' : ''}" onclick="toggleShowAll()">${state.showAll ? '收起全部答案' : '展开全部答案'}</button>
@@ -114,17 +104,17 @@
             </div>
         </div>`;
 
-        const choices = state.flat.filter(f => f.group === 'choice' && (!state.favOnly || state.favSet.has(f.qid)));
-        const bigs = state.flat.filter(f => f.group === 'big' && (!state.favOnly || state.favSet.has(f.qid)));
+        const choices = state.flat.filter(f => f.group === 'choice' && (!state.favOnly || state.favSet.has(f.iid)));
+        const bigs = state.flat.filter(f => f.group === 'big' && (!state.favOnly || state.favSet.has(f.iid)));
 
         if (state.favOnly && !choices.length && !bigs.length) {
             html += '<div class="zt-empty">本年还没有收藏题目。点题目右上角的 ☆ 收藏后，可用「只看收藏」集中攻克。</div>';
         }
 
         if (choices.length) {
-            html += `<div class="zt-sec-title">一、选择题<span class="zt-sec-sub">共 ${choices.length} 题</span></div>`;
-            for (const subj of ['ds', 'co', 'os', 'cn']) {
-                const items = choices.filter(f => f.subj === subj);
+            html += `<div class="zt-sec-title">一、选择题<span class="zt-sec-sub">共 ${choices.length} 题（每题 2 分）</span></div>`;
+            for (const subj of SUBJ_ORDER) {
+                const items = choices.filter(f => f.sid === subj);
                 if (!items.length) continue;
                 html += `<div class="zt-group-title">${SUBJ_NAME[subj]}<span class="zt-group-count">${items.length} 题</span></div>`;
                 for (const it of items) html += choiceCard(it);
@@ -136,22 +126,24 @@
         }
 
         $('ztMain').innerHTML = html;
+        injectSvgs();
         renderFq();
     }
 
     /* ---------------- 卡片：选择题 ---------------- */
-    function choiceCard(it) {
-        const { q } = state.qmap[it.qid];
-        const st = state.progress[it.qid];
-        const sel = st ? (st.user_answer || '') : (state.pending[it.qid] || '');
-        const isFav = state.favSet.has(it.qid);
-        const ansOpen = state.ansOpen.has(it.qid) || state.showAll || (!!st && !state.examMode);
+    function choiceCard(f) {
+        const st = state.progress[f.iid];
+        const sel = st ? (st.user_answer || '') : (state.pending[f.iid] || '');
+        const isFav = state.favSet.has(f.iid);
+        const ansOpen = state.ansOpen.has(f.iid) || state.showAll || (!!st && !state.examMode);
 
         let opts = '';
-        for (const key of Object.keys(q.options || {})) {
+        for (let k = 0; k < LETTERS.length; k++) {
+            const key = LETTERS[k];
+            const text = f.o[k] != null ? f.o[k] : '';
             let cls = 'option-item';
             if (st && !state.examMode) {
-                if (key === q.answer) cls += ' correct';
+                if (key === f.a) cls += ' correct';
                 else if (key === sel && !st.is_correct) cls += ' wrong';
             } else if (sel === key) {
                 cls += state.examMode ? ' picked' : '';
@@ -159,9 +151,9 @@
             const checked = sel === key ? 'checked' : '';
             const disabled = (st && !state.examMode) ? 'disabled' : '';
             opts += `<label class="${cls}">
-                <input type="radio" name="q_${it.qid}" value="${key}" ${checked} ${disabled} onchange="pickOption('${it.qid}', this.value)">
+                <input type="radio" name="q_${f.iid}" value="${key}" ${checked} ${disabled} onchange="pickOption('${f.iid}', '${key}')">
                 <span class="option-letter">${key}</span>
-                <span class="option-text">${fmtOptionText(q.options[key])}</span>
+                <span class="option-text">${text}</span>
             </label>`;
         }
 
@@ -169,84 +161,64 @@
         if (st && !state.examMode) {
             result = st.is_correct
                 ? '<div class="result-correct">回答正确!</div>'
-                : `<div class="result-wrong">回答错误! 正确答案: ${q.answer}</div>`;
+                : `<div class="result-wrong">回答错误! 正确答案: ${f.a || '—'}</div>`;
         }
 
-        const hasNote = !!state.noteMap[it.qid];
-        return `<div class="question-card" id="card-${it.qid}" data-qid="${it.qid}">
+        const hasNote = !!state.noteMap[f.iid];
+        return `<div class="question-card" id="card-${f.iid}" data-iid="${f.iid}" data-i="${f.i}">
             <div class="question-header">
                 <div class="question-meta">
-                    <span class="question-number">第 ${it.no} 题</span>
-                    <span class="zt-subj-badge">${SUBJ_NAME[it.subj]}</span>
+                    <span class="question-number">第 ${f.i} 题</span>
+                    <span class="zt-subj-badge">${SUBJ_NAME[f.sid] || ''}</span>
                 </div>
-                <button class="btn-icon ${isFav ? 'favorited' : ''}" onclick="toggleFav('${it.qid}')" title="${isFav ? '取消收藏' : '收藏'}">${isFav ? '★' : '☆'}</button>
+                <button class="btn-icon ${isFav ? 'favorited' : ''}" onclick="toggleFav('${f.iid}')" title="${isFav ? '取消收藏' : '收藏'}">${isFav ? '★' : '☆'}</button>
             </div>
-            <div class="question-content">${fmtContent(q.content)}</div>
+            <div class="question-content">${f.q}</div>
             <div class="options-list">${opts}</div>
             ${result}
             <div class="question-tools">
-                <button class="btn-explanation${ansOpen ? ' active' : ''}" onclick="toggleAns('${it.qid}')">答案与解析 ${ansOpen ? '▴' : '▾'}</button>
-                <button class="btn-explanation${state.noteOpen.has(it.qid) ? ' active' : ''}${hasNote ? ' has-note' : ''}" onclick="toggleNotePanel('${it.qid}')">笔记${hasNote ? ' ●' : ''} ${state.noteOpen.has(it.qid) ? '▴' : '▾'}</button>
+                <button class="btn-explanation${ansOpen ? ' active' : ''}" onclick="toggleAns('${f.iid}')">答案与解析 ${ansOpen ? '▴' : '▾'}</button>
+                <button class="btn-explanation${state.noteOpen.has(f.iid) ? ' active' : ''}${hasNote ? ' has-note' : ''}" onclick="toggleNotePanel('${f.iid}')">笔记${hasNote ? ' ●' : ''} ${state.noteOpen.has(f.iid) ? '▴' : '▾'}</button>
             </div>
             ${ansOpen ? `<div class="explanation-panel">
                 <div class="explanation-title">答案解析</div>
                 <div class="explanation-meta">
-                    <span class="expl-answer">正确答案：${q.answer || '暂无标准答案'}</span>
-                    ${q.chapter ? `<span class="expl-kp">知识点：${esc(q.chapter)}${q.section ? ' · ' + esc(q.section) : ''}</span>` : ''}
+                    <span class="expl-answer">正确答案：${f.a || '暂无标准答案'}</span>
                 </div>
-                <div class="explanation-body">${q.explanation || '<div class="explanation-empty">该题暂无详细解析</div>'}</div>
+                <div class="explanation-body">${f.an || '<div class="explanation-empty">该题暂无详细解析</div>'}</div>
             </div>` : ''}
-            ${state.noteOpen.has(it.qid) ? notePanel(it.qid) : ''}
+            ${state.noteOpen.has(f.iid) ? notePanel(f.iid) : ''}
         </div>`;
     }
 
     /* ---------------- 卡片：大题 ---------------- */
-    function bigCard(it) {
-        const entry = state.qmap[it.qid];
-        const q = entry.q;
-        const isCode = entry.kind === 'code';
-        const isFav = state.favSet.has(it.qid);
-        const ansOpen = state.ansOpen.has(it.qid) || state.showAll;
-        const hasNote = !!state.noteMap[it.qid];
-        const body = isCode ? (q.content_text || '') : (q.q || '');
-        const ans = isCode ? (q.answer_full || '') : (q.a || '');
-        const sols = isCode && q.solutions && q.solutions.list ? q.solutions.list : [];
-
-        let solHtml = '';
-        if (ansOpen && sols.length) {
-            for (const s of sols) {
-                solHtml += `<div class="zt-sol">
-                    <div class="zt-sol-tag">${esc(s.tag || '')}${s.kind ? ' · ' + esc(s.kind) : ''}</div>
-                    ${s.thought ? `<div class="zt-sol-thought">${esc(s.thought).replace(/\n/g, '<br>')}</div>` : ''}
-                    ${s.code ? `<pre class="code-block">${esc(s.code)}</pre>` : ''}
-                </div>`;
-            }
-        }
-
-        return `<div class="question-card" id="card-${it.qid}" data-qid="${it.qid}">
+    function bigCard(f) {
+        const isFav = state.favSet.has(f.iid);
+        const ansOpen = state.ansOpen.has(f.iid) || state.showAll;
+        const hasNote = !!state.noteMap[f.iid];
+        return `<div class="question-card" id="card-${f.iid}" data-iid="${f.iid}" data-i="${f.i}">
             <div class="question-header">
                 <div class="question-meta">
-                    <span class="question-number">第 ${it.no} 题</span>
-                    <span class="zt-subj-badge">${SUBJ_NAME[it.subj]} · 大题</span>
-                    ${q.real ? `<span class="badge-real">${esc(q.real)}</span>` : ''}
+                    <span class="question-number">第 ${f.i} 题</span>
+                    <span class="zt-subj-badge">${SUBJ_NAME[f.sid] || ''} · 大题</span>
+                    <span class="zt-score-badge">${f.s} 分</span>
                 </div>
-                <button class="btn-icon ${isFav ? 'favorited' : ''}" onclick="toggleFav('${it.qid}')" title="${isFav ? '取消收藏' : '收藏'}">${isFav ? '★' : '☆'}</button>
+                <button class="btn-icon ${isFav ? 'favorited' : ''}" onclick="toggleFav('${f.iid}')" title="${isFav ? '取消收藏' : '收藏'}">${isFav ? '★' : '☆'}</button>
             </div>
-            <div class="question-content">${body}</div>
+            <div class="question-content">${f.q}</div>
             <div class="question-tools">
-                <button class="btn-explanation${ansOpen ? ' active' : ''}" onclick="toggleAns('${it.qid}')">参考答案 ${ansOpen ? '▴' : '▾'}</button>
-                <button class="btn-explanation${state.noteOpen.has(it.qid) ? ' active' : ''}${hasNote ? ' has-note' : ''}" onclick="toggleNotePanel('${it.qid}')">笔记${hasNote ? ' ●' : ''} ${state.noteOpen.has(it.qid) ? '▴' : '▾'}</button>
+                <button class="btn-explanation${ansOpen ? ' active' : ''}" onclick="toggleAns('${f.iid}')">参考答案与解析 ${ansOpen ? '▴' : '▾'}</button>
+                <button class="btn-explanation${state.noteOpen.has(f.iid) ? ' active' : ''}${hasNote ? ' has-note' : ''}" onclick="toggleNotePanel('${f.iid}')">笔记${hasNote ? ' ●' : ''} ${state.noteOpen.has(f.iid) ? '▴' : '▾'}</button>
             </div>
             ${ansOpen ? `<div class="explanation-panel">
-                <div class="explanation-title">参考答案</div>
-                <div class="explanation-body">${ans || '<div class="explanation-empty">暂无答案</div>'}</div>
-                ${solHtml}
+                <div class="explanation-title">参考答案与解析</div>
+                <div class="explanation-body">${f.an || '<div class="explanation-empty">暂无解析</div>'}</div>
             </div>` : ''}
-            ${state.noteOpen.has(it.qid) ? notePanel(it.qid) : ''}
+            ${state.noteOpen.has(f.iid) ? notePanel(f.iid) : ''}
         </div>`;
     }
 
-    /* ---------------- 笔记面板（纯文本，debounce 自动保存） ---------------- */
+    /* ---------------- 笔记面板（debounce 自动保存） ---------------- */
     function notePanel(qid) {
         const content = state.noteMap[qid] || '';
         return `<div class="zt-note-panel" data-note="${qid}">
@@ -256,34 +228,73 @@
         </div>`;
     }
 
+    /* ---------------- SVG 注入 ---------------- */
+    async function fetchSvg(name) {
+        if (state.svgCache[name] != null) return state.svgCache[name];
+        try {
+            const r = await fetch('data/zt_svg/' + name + '.svg');
+            const t = r.ok ? await r.text() : '';
+            state.svgCache[name] = t;
+            return t;
+        } catch (e) {
+            state.svgCache[name] = '';
+            return '';
+        }
+    }
+
+    function injectSvgs(root) {
+        const host = root || document;
+        const holders = [...host.querySelectorAll('.zt-svgholder[data-svg]')];
+        for (const h of holders) {
+            if (h.dataset.done) continue;
+            h.dataset.done = '1';
+            fetchSvg(h.dataset.svg).then(t => {
+                if (t) {
+                    const wrap = document.createElement('div');
+                    wrap.className = 'zt-svg-wrap';
+                    wrap.innerHTML = t;
+                    h.replaceWith(wrap);
+                } else {
+                    h.innerHTML = '<span class="zt-svg-fail">[图加载失败，可刷新重试]</span>';
+                }
+            });
+        }
+    }
+
     /* ---------------- 交互 ---------------- */
-    async function pickOption(qid, key) {
+    async function pickOption(iid, key) {
         if (state.examMode) {
-            state.pending[qid] = key;
-            refreshCard(qid);
+            state.pending[iid] = key;
+            refreshCard(iid);
             const n = Object.keys(state.pending).length;
-            const total = state.flat.filter(f => f.group === 'choice').length;
-            $('ztProgress').textContent = `已选 ${n}/${total}`;
+            $('ztProgress').textContent = `已选 ${n}/${state.flat.filter(f => f.group === 'choice').length}`;
             return;
         }
         flushNote();
-        const r = await api('/api/submit', { method: 'POST', body: JSON.stringify({ question_id: qid, answer: key }) });
-        const j = await r.json();
-        state.progress[qid] = { user_answer: j.user_answer, is_correct: j.is_correct };
-        refreshCard(qid);
-        const year = state.year;
-        $('ztProgress').textContent = `已做 ${doneCount(year)}/${state.papers.papers[year].choice_total}`;
+        const f = state.flat.find(x => x.iid === iid);
+        if (!f) return;
+        const ok = !!f.a && key === f.a;
+        if (typeof window.applyAnswer === 'function') {
+            await window.applyAnswer(iid, f.sid, key, ok, Date.now());
+        }
+        state.progress[iid] = { user_answer: key, is_correct: ok ? 1 : 0 };
+        refreshCard(iid);
+        $('ztProgress').textContent = `已做 ${doneCount(state.year)}/${state.index.choice_total}`;
         renderYearList();
     }
 
     async function checkPending() {
         const ids = Object.keys(state.pending);
         if (!ids.length) { alert('还没有选择任何答案'); return; }
-        for (const qid of ids) {
-            const key = state.pending[qid];
-            const r = await api('/api/submit', { method: 'POST', body: JSON.stringify({ question_id: qid, answer: key }) });
-            const j = await r.json();
-            state.progress[qid] = { user_answer: j.user_answer, is_correct: j.is_correct };
+        for (const iid of ids) {
+            const f = state.flat.find(x => x.iid === iid);
+            if (!f) continue;
+            const key = state.pending[iid];
+            const ok = !!f.a && key === f.a;
+            if (typeof window.applyAnswer === 'function') {
+                await window.applyAnswer(iid, f.sid, key, ok, Date.now());
+            }
+            state.progress[iid] = { user_answer: key, is_correct: ok ? 1 : 0 };
         }
         state.pending = {};
         state.examMode = false;
@@ -292,34 +303,38 @@
         renderYearList();
     }
 
-    async function toggleFav(qid) {
-        const r = await api('/api/favorite/' + qid);
+    async function toggleFav(iid) {
+        // 经后端接口写收藏（前缀即科目，新题 id 前缀合法）
+        const r = await api('/api/favorite/' + iid);
         const j = await r.json();
-        if (j.is_favorited) state.favSet.add(qid); else state.favSet.delete(qid);
-        refreshCard(qid);
+        if (j.is_favorited) state.favSet.add(iid); else state.favSet.delete(iid);
+        refreshCard(iid);
     }
 
-    function refreshCard(qid) {
-        const it = state.flat.find(f => f.qid === qid);
-        const el = document.querySelector(`#card-${qid}`);
-        if (!it || !el) return;
-        const html = it.group === 'choice' ? choiceCard(it) : bigCard(it);
+    function refreshCard(iid) {
+        flushNote();
+        const f = state.flat.find(x => x.iid === iid);
+        const el = document.getElementById('card-' + iid);
+        if (!f || !el) return;
+        const html = f.group === 'choice' ? choiceCard(f) : bigCard(f);
         el.insertAdjacentHTML('afterend', html);
+        const fresh = el.nextElementSibling;
         el.remove();
+        if (fresh) injectSvgs(fresh);
         renderFq();
     }
 
-    function toggleAns(qid) {
-        if (state.ansOpen.has(qid)) state.ansOpen.delete(qid); else state.ansOpen.add(qid);
+    function toggleAns(iid) {
+        if (state.ansOpen.has(iid)) state.ansOpen.delete(iid); else state.ansOpen.add(iid);
         localStorage.setItem('zhentiAnsOpen', JSON.stringify([...state.ansOpen]));
-        refreshCard(qid);
+        refreshCard(iid);
     }
 
-    function toggleNotePanel(qid) {
+    function toggleNotePanel(iid) {
         flushNote();
-        if (state.noteOpen.has(qid)) state.noteOpen.delete(qid); else state.noteOpen.add(qid);
+        if (state.noteOpen.has(iid)) state.noteOpen.delete(iid); else state.noteOpen.add(iid);
         localStorage.setItem('zhentiNoteOpen', JSON.stringify([...state.noteOpen]));
-        refreshCard(qid);
+        refreshCard(iid);
     }
 
     function onNoteInput(ta) {
@@ -329,7 +344,6 @@
     }
 
     async function saveNote(qid, content) {
-        const subj = qid.split('_')[0];
         state.noteMap[qid] = content;
         await api('/api/note/' + qid, { method: 'POST', body: JSON.stringify({ content: content, images: [] }) });
     }
@@ -343,6 +357,7 @@
     }
 
     function toggleExamMode() {
+        flushNote();
         state.examMode = !state.examMode;
         state.pending = {};
         localStorage.setItem('zhentiMode', state.examMode ? 'exam' : 'practice');
@@ -350,23 +365,25 @@
     }
 
     function toggleShowAll() {
+        flushNote();
         state.showAll = !state.showAll;
         renderPaper();
     }
 
     function toggleFavOnly() {
+        flushNote();
         state.favOnly = !state.favOnly;
         renderPaper();
     }
 
     async function resetYear() {
         if (!confirm('确定清空本年所有作答记录重新做吗？（错题本与收藏保留）')) return;
-        for (const it of state.flat) {
-            if (state.progress[it.qid]) {
-                await dbDelete('progress', it.qid);
-                delete state.progress[it.qid];
-            }
+        const ids = new Set(state.flat.filter(f => f.group === 'choice').map(f => f.iid));
+        const rows = await dbAll('progress');
+        for (const r of rows) {
+            if (ids.has(r.question_id)) await dbDelete('progress', r.pk);
         }
+        for (const id of ids) delete state.progress[id];
         state.pending = {};
         renderPaper();
         renderYearList();
@@ -388,20 +405,20 @@
         const choices = state.flat.filter(f => f.group === 'choice');
         const bigs = state.flat.filter(f => f.group === 'big');
         const cell = it => {
-            const st = state.progress[it.qid];
+            const st = state.progress[it.iid];
             let cls = 'zt-fq-i';
-            if (st) cls += st.is_correct ? ' ok' : ' bad';
-            else if (state.pending[it.qid]) cls += ' picked';
-            return `<a class="${cls}" data-qid="${it.qid}" onclick="gotoQ('${it.qid}')" title="第 ${it.no} 题">${it.no}</a>`;
+            if (st) cls += st.is_correct ? ' ok' : (it.group === 'choice' ? ' bad' : '');
+            else if (state.pending[it.iid]) cls += ' picked';
+            return `<a class="${cls}" data-iid="${it.iid}" onclick="gotoQ('${it.iid}')" title="第 ${it.i} 题">${it.i}</a>`;
         };
         $('fqList').innerHTML =
             `<div class="zt-fq-g">选择题</div><div class="zt-fq-grid">${choices.map(cell).join('')}</div>` +
             (bigs.length ? `<div class="zt-fq-g">大题</div><div class="zt-fq-grid">${bigs.map(cell).join('')}</div>` : '');
     }
 
-    function gotoQ(qid) {
+    function gotoQ(iid) {
         flushNote();
-        const el = document.querySelector(`#card-${qid}`);
+        const el = document.getElementById('card-' + iid);
         if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
     }
 
@@ -423,7 +440,7 @@
                 for (const c of cards) {
                     if (c.getBoundingClientRect().top < 120) cur = c; else break;
                 }
-                $('fqNo').textContent = cur ? ('第 ' + cur.dataset.qid.replace(/^.*_/, '') + ' 题') : '—';
+                $('fqNo').textContent = cur ? ('第 ' + cur.dataset.i + ' 题') : '—';
             });
         }, { passive: true });
     }
@@ -444,9 +461,14 @@
     /* ---------------- 启动 ---------------- */
     async function init() {
         try {
-            await loadAll();
+            $('ztMain').innerHTML = '<div class="loading">加载中…</div>';
+            await Promise.all([loadIndex(), loadStores()]);
+            const remembered = +(localStorage.getItem('zhentiYear') || 0);
+            state.year = (remembered && state.index.years.includes(remembered))
+                ? remembered : state.index.years[state.index.years.length - 1];
+            if (state.navCollapsed) $('ztNav').classList.add('collapsed');
             renderYearList();
-            renderPaper();
+            await renderPaper();
             bindScrollSpy();
             if (typeof renderDarkSwitch === 'function') renderDarkSwitch();
         } catch (e) {

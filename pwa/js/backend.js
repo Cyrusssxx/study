@@ -1268,3 +1268,7 @@ function showUpdateToast() {
     setTimeout(() => t.classList.add('show'), 50);
     setTimeout(() => { t.classList.remove('show'); setTimeout(() => t.remove(), 300); }, 8000);
 }
+
+// 供 zhenti 等页面直接调用：真题数据（外部 id）客户端判分后写进度/错题本。
+// 显式挂 window，避免未来 backend 被包进 IIFE 时静默失效。
+window.applyAnswer = applyAnswer;

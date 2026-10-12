@@ -17,9 +17,9 @@
  *          ② 只改数据不改外壳时，APP_VER 不变 → 外壳零重下；反之亦然；
  *          ③ 懒加载数据既不占首屏，改完也能凭 LAZY_VER 正确失效。
  */
-const APP_VER = 'quiz408-app-2426fb0ac9';
+const APP_VER = 'quiz408-app-2572281216';
 const DATA_VER = 'quiz408-data-1a277ca33b';
-const LAZY_VER = 'quiz408-lazy-4474421191';
+const LAZY_VER = 'quiz408-lazy-471d389d0c';
 
 // 应用外壳：保证离线骨架与最新脚本。meta.json 仅几百字节，随外壳一起预缓存。
 const APP_PRECACHE = [
@@ -55,7 +55,28 @@ const APP_PRECACHE = [
     'icons/icon-512.png',
     'vendor/highlight/highlight.min.js',
     'vendor/highlight/github.min.css',
-    'vendor/highlight/github-dark.min.css'
+    'vendor/highlight/github-dark.min.css',
+    'vendor/katex/katex.min.css',
+    'vendor/katex/fonts/KaTeX_AMS-Regular.woff2',
+    'vendor/katex/fonts/KaTeX_Caligraphic-Bold.woff2',
+    'vendor/katex/fonts/KaTeX_Caligraphic-Regular.woff2',
+    'vendor/katex/fonts/KaTeX_Fraktur-Bold.woff2',
+    'vendor/katex/fonts/KaTeX_Fraktur-Regular.woff2',
+    'vendor/katex/fonts/KaTeX_Main-Bold.woff2',
+    'vendor/katex/fonts/KaTeX_Main-BoldItalic.woff2',
+    'vendor/katex/fonts/KaTeX_Main-Italic.woff2',
+    'vendor/katex/fonts/KaTeX_Main-Regular.woff2',
+    'vendor/katex/fonts/KaTeX_Math-BoldItalic.woff2',
+    'vendor/katex/fonts/KaTeX_Math-Italic.woff2',
+    'vendor/katex/fonts/KaTeX_SansSerif-Bold.woff2',
+    'vendor/katex/fonts/KaTeX_SansSerif-Italic.woff2',
+    'vendor/katex/fonts/KaTeX_SansSerif-Regular.woff2',
+    'vendor/katex/fonts/KaTeX_Script-Regular.woff2',
+    'vendor/katex/fonts/KaTeX_Size1-Regular.woff2',
+    'vendor/katex/fonts/KaTeX_Size2-Regular.woff2',
+    'vendor/katex/fonts/KaTeX_Size3-Regular.woff2',
+    'vendor/katex/fonts/KaTeX_Size4-Regular.woff2',
+    'vendor/katex/fonts/KaTeX_Typewriter-Regular.woff2'
 ];
 
 // 数据文件：体积大，按需/预取缓存，与外壳版本解耦。
@@ -115,7 +136,9 @@ const LAZY_PREFIXES = [
     'data/os_figs/',
     'data/cn_figs/',
     'data/co_figs/',
-    'data/dati_figs/'
+    'data/dati_figs/',
+    'data/zt/',
+    'data/zt_svg/'
 ];
 
 self.addEventListener('install', (e) => {

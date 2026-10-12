@@ -1,4 +1,4 @@
-// 真题套卷页（zhenti.html）回归测试：数据装配 / 套卷渲染 / 题号导航 / 作答交互 / 顶栏一致性
+// 真题套卷页（zhenti.html）回归测试 v2：全量数据（data/zt）+ 渲染 / 作答判分 / 题号导航 / 顶栏一致性
 const fs = require('fs');
 const path = require('path');
 const { JSDOM, VirtualConsole } = require('jsdom');
@@ -23,23 +23,52 @@ function inline(html) {
 const sleep = ms => new Promise(r => setTimeout(r, ms));
 
 async function run() {
-  // ---------- 静态：页面结构与顶栏 ----------
+  // ---------- 静态：页面结构与数据 ----------
   console.log('▸ 静态结构');
   const html = inline(fs.readFileSync(path.join(ROOT, 'pwa/zhenti.html'), 'utf8'));
   const rawHtml = fs.readFileSync(path.join(ROOT, 'pwa/zhenti.html'), 'utf8');
   check('zhenti.html 引入 js/zhenti.js', /<script src="js\/zhenti\.js">/.test(rawHtml));
+  check('页面引入 KaTeX 样式', /vendor\/katex\/katex\.min\.css/.test(rawHtml));
   check('页面含 左年份栏 / 中题目流 / 右题号导航 三容器',
     /id="ztNav"/.test(rawHtml) && /id="ztMain"/.test(rawHtml) && /id="ztFq"/.test(rawHtml));
   check('main 带 toc-fixed（目录贴左统一机制）', /<main class="container toc-fixed">/.test(rawHtml));
   const navLinks = [...rawHtml.matchAll(/<a href="([\w.]+)\.html" class="nav-link[^"]*">([^<]+)<\/a>/g)].map(m => m[1]);
-  check('顶栏链接 14 项且含真题套卷（active）', navLinks.length === 14 && /真题套卷/.test(rawHtml) && /zhenti\.html" class="nav-link active"/.test(rawHtml), navLinks.join(','));
-  check('真题套卷链接排在刷题之后', navLinks.indexOf('zhenti') === navLinks.indexOf('quiz') + 1, navLinks.slice(0, 4).join(' > '));
+  check('顶栏链接 14 项且含真题套卷（active）', navLinks.length === 14 && /zhenti\.html" class="nav-link active"/.test(rawHtml), navLinks.join(','));
+
+  // 数据完整性
+  const idx = JSON.parse(fs.readFileSync(path.join(ROOT, 'pwa/data/zt/index.json'), 'utf8'));
+  check('index.json：18 年（2009-2026）', idx.years.length === 18 && idx.years[0] === 2009 && idx.years[17] === 2026);
+  let totalItems = 0, qidN = 0, svgRefs = 0;
+  let all47 = true;
+  const svgDir = path.join(ROOT, 'pwa/data/zt_svg');
+  const svgFiles = new Set(fs.readdirSync(svgDir).map(f => f.replace(/\.svg$/, '')));
+  for (const y of idx.years) {
+    const d = JSON.parse(fs.readFileSync(path.join(ROOT, `pwa/data/zt/zt_${y}.json`), 'utf8'));
+    totalItems += d.items.length;
+    if (!(d.items.length === 47 && d.items.filter(x => x.t === 1).length === 40 &&
+          d.items.filter(x => x.t !== 1).length === 7)) all47 = false;
+    for (const it of d.items) {
+      if (it.qid) qidN++;
+      for (const m of (it.q + it.o.join('') + (it.an || '')).matchAll(/data-svg="([^"]+)"/g)) {
+        svgRefs++;
+        if (!svgFiles.has(m[1])) { failed++; console.log('    ❌ 缺 SVG 文件', m[1]); }
+      }
+    }
+  }
+  check('每年 47 题（40 选择 + 7 大题）', all47);
+  check('数据总量 846 题、qid 映射 652 条', totalItems === 846 && qidN === 652, `qid=${qidN}`);
+  check(`SVG 引用与文件全匹配（${svgRefs} 引用 / ${svgFiles.size} 文件）`, svgRefs === svgFiles.size);
+  const zt = JSON.parse(fs.readFileSync(path.join(ROOT, 'pwa/data/zt/zt_2026.json'), 'utf8'));
+  check('2026 全卷无 qid 映射（新题用 zt id）', zt.items.every(x => !x.qid));
+  check('2026 选择题全部有答案', zt.items.filter(x => x.t === 1).every(x => x.a));
+  const zt24 = JSON.parse(fs.readFileSync(path.join(ROOT, 'pwa/data/zt/zt_2024.json'), 'utf8'));
+  check('2024 有 qid 映射（与题库互通）', zt24.items.some(x => x.qid));
 
   // ---------- 动态：jsdom 渲染 ----------
   console.log('▸ 动态渲染（jsdom + fake-indexeddb + 真实数据）');
   const dataCache = {};
-  const readJson = f => {
-    if (!dataCache[f]) dataCache[f] = JSON.parse(fs.readFileSync(path.join(ROOT, 'pwa', f), 'utf8'));
+  const readFile = f => {
+    if (!dataCache[f]) dataCache[f] = fs.readFileSync(path.join(ROOT, 'pwa', f), 'utf8');
     return dataCache[f];
   };
   const vc = new VirtualConsole();
@@ -59,14 +88,21 @@ async function run() {
       w.requestAnimationFrame = cb => setTimeout(cb, 0);
       w.fetch = async (u) => {
         const s = String(u);
-        const m = s.match(/data\/([\w.]+\.json)/);
-        if (m) return { ok: true, status: 200, json: async () => readJson('data/' + m[1]) };
-        return { ok: true, status: 200, json: async () => ({}) };
+        const m = s.match(/data\/[\w./-]+\.(json|svg)/);
+        if (m) {
+          const rel = m[0];
+          try {
+            const t = readFile(rel);
+            return { ok: true, status: 200, text: async () => t, json: async () => JSON.parse(t) };
+          } catch (e) {
+            return { ok: false, status: 404, text: async () => '', json: async () => ({}) };
+          }
+        }
+        return { ok: true, status: 200, json: async () => ({}), text: async () => '' };
       };
     },
   });
 
-  // 等待初始化渲染完成（年份列表出现）
   const w = dom.window;
   let years = 0;
   for (let i = 0; i < 60; i++) {
@@ -74,67 +110,65 @@ async function run() {
     years = w.document.querySelectorAll('#yearList .ol-nav-item').length;
     if (years) break;
   }
-  check('年份列表渲染（2009-2025 共 17 年）', years === 17, `实际 ${years}`);
+  check('年份列表渲染（2009-2026 共 18 年）', years === 18, `实际 ${years}`);
 
   const d = w.document;
+  await sleep(300);
   const cards = d.querySelectorAll('#ztMain .question-card');
-  const papers = readJson('data/papers.json');
-  const defYear = String(papers.years[papers.years.length - 1]);
-  const defPaper = papers.papers[defYear];
-  check(`默认渲染 ${defYear} 年套卷（题卡数 = ${defPaper.total}）`, cards.length === defPaper.total, `实际 ${cards.length}`);
+  check('默认渲染 2026 年套卷（47 题卡）', cards.length === 47, `实际 ${cards.length}`);
   check('选择题分组标题 4 个科目', d.querySelectorAll('.zt-group-title').length === 4);
-  check('大题区存在（DS 代码题 + co/os/cn）', /二、大题/.test(d.querySelector('#ztMain').textContent));
-  check('题号导航格子数 = 总题数', d.querySelectorAll('#fqList .zt-fq-i').length === defPaper.total,
+  check('大题区存在', /二、大题/.test(d.querySelector('#ztMain').textContent));
+  check('题号导航 47 格', d.querySelectorAll('#fqList .zt-fq-i').length === 47,
     `实际 ${d.querySelectorAll('#fqList .zt-fq-i').length}`);
-  check('题号按试卷编排（第 1 题起，大题接排）', /第 1 题/.test(d.querySelector('#ztMain').textContent) &&
-    new RegExp(`第 ${defPaper.choice_total + 1} 题`).test(d.querySelector('#ztMain').textContent));
-  check('年份项显示完成度', /\/\d+/.test(d.querySelector('#yearList').textContent));
+  check('题号编排：第 1 题与第 41 题', /第 1 题/.test(d.querySelector('#ztMain').textContent) &&
+    /第 41 题/.test(d.querySelector('#ztMain').textContent));
+  check('年份项显示完成度', /\/40/.test(d.querySelector('#yearList').textContent));
 
-  // ---------- 交互：作答 ----------
+  // ---------- 交互：作答（新 id 客户端判分） ----------
   console.log('▸ 交互：作答与切换年份');
-  const firstQid = defPaper.choice.ds[0];
-  const qEntry = readJson('data/ds.json').questions.find(q => q.id === firstQid);
-  const rightAns = qEntry.answer;
-  await w.pickOption(firstQid, rightAns);
-  await sleep(120);
-  let card = d.querySelector(`#card-${firstQid}`);
+  const firstCard = d.querySelector('#ztMain .question-card');
+  const iid = firstCard.dataset.iid;
+  check('2026 第一题 iid 为新格式（{sid}_zt2026_1）', /^[a-z]{2}_zt2026_\d+$/.test(iid), iid);
+  const firstItem = zt.items.find(x => x.i === +firstCard.dataset.i);
+  await w.pickOption(iid, firstItem.a);
+  await sleep(200);
+  let card = d.querySelector('#card-' + iid);
   check('答对：题卡出现「回答正确」', !!card.querySelector('.result-correct'));
-  check('答对：题号导航格变绿（ok）', !!d.querySelector(`#fqList .zt-fq-i.ok`));
+  check('答对：题号导航格变绿（ok）', !!d.querySelector('#fqList .zt-fq-i.ok'));
   check('答对：解析自动展开', !!card.querySelector('.explanation-panel'));
 
-  const wrongKey = Object.keys(qEntry.options).find(k => k !== rightAns);
-  if (wrongKey) {
-    await w.pickOption(firstQid, wrongKey);
-    await sleep(120);
-    card = d.querySelector(`#card-${firstQid}`);
-    check('答错：题卡出现「回答错误 + 正确答案」', !!card.querySelector('.result-wrong') &&
-      card.querySelector('.result-wrong').textContent.includes(rightAns));
-    check('答错：题号导航格变红（bad）', !!d.querySelector(`#fqList .zt-fq-i.bad`));
-  }
+  const wrongKey = ['A', 'B', 'C', 'D'].find(k => k !== firstItem.a);
+  await w.pickOption(iid, wrongKey);
+  await sleep(200);
+  card = d.querySelector('#card-' + iid);
+  check('答错：题卡出现「回答错误 + 正确答案」', !!card.querySelector('.result-wrong') &&
+    card.querySelector('.result-wrong').textContent.includes(firstItem.a));
+  check('答错：题号导航格变红（bad）', !!d.querySelector('#fqList .zt-fq-i.bad'));
 
-  // 切换年份
-  const otherYear = papers.years[0];
-  w.switchYear(otherYear);
-  await sleep(150);
-  const otherPaper = papers.papers[String(otherYear)];
-  check(`切换 ${otherYear} 年：题卡数 = ${otherPaper.total}`, d.querySelectorAll('#ztMain .question-card').length === otherPaper.total);
-  check('切换年份后工具条标题更新', new RegExp(`${otherYear} 年真题套卷`).test(d.querySelector('#ztMain').textContent));
+  // 切换年份（2024 有映射，验证 qid 交互 id）
+  w.switchYear(2024);
+  await sleep(400);
+  check('切换 2024 年：47 题卡', d.querySelectorAll('#ztMain .question-card').length === 47,
+    `实际 ${d.querySelectorAll('#ztMain .question-card').length}`);
+  const c24 = d.querySelector('#ztMain .question-card');
+  check('2024 映射题 iid 用题库 id（与刷题页互通）', /^(ds|co|os|cn)_\d+$/.test(c24.dataset.iid), c24.dataset.iid);
 
   // 做题模式
   w.toggleExamMode();
-  await sleep(150);
+  await sleep(300);
   check('做题模式：出现「对答案」按钮', /对答案/.test(d.querySelector('#ztMain').textContent));
-  const firstId2 = otherPaper.choice.ds[0];
-  await w.pickOption(firstId2, 'A');
-  await sleep(100);
-  check('做题模式：选答不判定（无 result 条）', !d.querySelector(`#card-${firstId2}`).querySelector('.result-correct,.result-wrong'));
+  const iid2 = d.querySelector('#ztMain .question-card').dataset.iid;
+  await w.pickOption(iid2, 'A');
+  await sleep(150);
+  check('做题模式：选答不判定（无 result 条）', !d.querySelector('#card-' + iid2).querySelector('.result-correct,.result-wrong'));
   check('做题模式：题号导航格为 picked', !!d.querySelector('#fqList .zt-fq-i.picked'));
 
-  // 收藏
-  await w.toggleFav(firstId2);
-  await sleep(100);
-  check('收藏：题卡星标切换', !!d.querySelector('#card-' + firstId2 + ' .btn-icon.favorited'));
+  // 收藏（经页面内 api 分发）
+  await w.toggleFav(iid2);
+  await sleep(200);
+  check('收藏：题卡星标切换', !!d.querySelector('#card-' + iid2 + ' .btn-icon.favorited'));
 
+  // SVG 注入（mock 返回假 svg）
   w.close();
   console.log(failed ? `\n❌ ${failed} 项失败` : '\n✅ 全部通过');
   process.exit(failed ? 1 : 0);

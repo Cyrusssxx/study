@@ -6387,3 +6387,38 @@ a.daily-meta.daily-kp:hover { color: var(--primary); text-decoration: underline;
     .zt-fq { bottom: 84px; width: 40px; }
     .zt-fq-grid { grid-template-columns: 1fr; }
 }
+
+/* ==================== 真题套卷 v2：外部数据渲染适配（2026-10-12） ==================== */
+/* SVG 占位与注入容器 */
+.zt-svgholder { min-height: 56px; display: flex; align-items: center; justify-content: center; }
+.zt-svgholder::before { content: '图加载中…'; color: var(--text-light); font-size: .78rem; }
+.zt-svg-wrap { margin: 10px 0; overflow-x: auto; }
+.zt-svg-wrap svg { max-width: 100%; height: auto; display: block; margin: 0 auto; }
+.zt-svg-fail { color: var(--text-light); font-size: .78rem; }
+.zt-score-badge { font-size: .72rem; color: var(--text-light); border: 1px solid var(--border); border-radius: 10px; padding: 1px 8px; }
+
+/* 题干/解析/选项内的网站内容格式适配 */
+.question-content p, .explanation-body p { margin: 0 0 8px; }
+.question-content p:last-child, .explanation-body p:last-child { margin-bottom: 0; }
+.question-content .highlight, .explanation-body .highlight { margin: 10px 0; }
+.question-content pre, .explanation-body pre {
+    background: var(--light); border: 1px solid var(--border); border-radius: 8px;
+    padding: 10px 12px; overflow-x: auto; font-size: .84rem; line-height: 1.55;
+}
+.question-content code, .explanation-body code, .option-text code {
+    font-family: Consolas, "Courier New", monospace; font-size: .88em;
+    background: rgba(128, 128, 128, .1); padding: 1px 5px; border-radius: 4px;
+}
+.question-content pre code, .explanation-body pre code { background: none; padding: 0; font-size: 1em; }
+.question-content table, .explanation-body table {
+    border-collapse: collapse; margin: 10px 0; font-size: .88rem;
+    max-width: 100%; display: block; overflow-x: auto;
+}
+.question-content th, .question-content td,
+.explanation-body th, .explanation-body td { border: 1px solid var(--border); padding: 5px 10px; text-align: center; }
+.question-content th, .explanation-body th { background: var(--light); font-weight: 600; }
+.question-content img, .explanation-body img { max-width: 100%; }
+.question-content .svg-wrapper, .question-content .svg-container { max-width: 100%; }
+
+/* KaTeX 在题目正文中的微调（字体尺寸跟随文本） */
+.question-content .katex, .explanation-body .katex, .option-text .katex { font-size: 1.06em; }
