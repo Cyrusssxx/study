@@ -57,7 +57,9 @@
 
     window.isHtmlNote = function (s) {
         // 含白名单标签或高亮类才视为富文本；否则走纯文本路径
-        return /<(b|i|u|strong|em|h[1-3]|p|br|div|span|ul|ol|li|blockquote)\b/i.test(s);
+        // 含 <img 也按 HTML 处理：img 虽会被 sanitize 剥掉（图片走各页图片区），
+        // 但绝不能落入纯文本路径把 <img 转义成源码文本显示
+        return /<(b|i|u|strong|em|h[1-3]|p|br|div|span|ul|ol|li|blockquote|img)\b/i.test(s);
     };
 
     window.loadNoteIntoEditor = function (el, raw) {

@@ -90,6 +90,15 @@ async function run() {
   const commonSrc2 = fs.readFileSync(path.join(ROOT, 'pwa/js/common.js'), 'utf8');
   check('教材原图：点击放大走带缩放的 figLightbox',
     /typeof window\.openFigLightbox === 'function'/.test(commonSrc2) && /window\.openFigLightbox\(src\)/.test(commonSrc2));
+  // v9：笔记图片（粘贴/选图 → 图片区 → 随笔记入库）+ 保存按钮 + 源码转义阻断
+  check('笔记面板：paste 拦截 + 图片区 + 保存按钮 + 选图入口',
+    /onpaste="pasteZtNoteImage\(event\)"/.test(js) && /data-zt-note-imgs=/.test(js) &&
+    /onclick="saveZtNoteNow\('/.test(js) && /onZtNoteFilePick/.test(js));
+  check('笔记图片：压缩入库 + 查看走带缩放 lightbox',
+    /function compressImage/.test(js) && /1200 \/ Math\.max\(img\.width, img\.height\)/.test(js) &&
+    /function viewZtNoteImage/.test(js) && /window\.openImageLightbox\(src\)/.test(js));
+  check('isHtmlNote 识别 img（阻断 base64 源码转义显示）', /blockquote\|img\)\\b\/i/.test(
+    fs.readFileSync(path.join(ROOT, 'pwa/js/note_richtext.js'), 'utf8')));
   check('答案速查 toggleAnsPop 已导出', /function toggleAnsPop/.test(js) && /toggleAnsPop,/.test(js));
   const navLinks = [...rawHtml.matchAll(/<a href="([\w.]+)\.html" class="nav-link[^"]*">([^<]+)<\/a>/g)].map(m => m[1]);
   check('顶栏链接 13 项且含真题套卷（active）', navLinks.length === 13 && /zhenti\.html" class="nav-link active"/.test(rawHtml), navLinks.join(','));
@@ -384,6 +393,15 @@ async function run() {
     await sleep(200);
     check('笔记：再次点击收起面板', !d.querySelector('#card-' + iid2 + ' .zt-note-panel'));
   }
+
+  // v9：含 base64 img 的笔记不再走纯文本路径转义成源码显示（img 被 sanitize 剥掉，图片走图片区）
+  const nlTest = d.createElement('div');
+  w.loadNoteIntoEditor(nlTest, '11<img src="data:image/png;base64,AAA" alt="">');
+  check('含 img 的笔记装载：不再显示 &lt;img 源码（img 剥掉、正文只剩文字）',
+    nlTest.textContent.includes('11') && !nlTest.innerHTML.includes('&lt;img') && !nlTest.querySelector('img'),
+    nlTest.innerHTML.slice(0, 60));
+  check('isHtmlNote：含 img 判为 HTML（不走纯文本转义路径）',
+    w.isHtmlNote('11<img src="data:image/png;base64,AAA">') === true);
 
   // v5：DS 算法题替换为打卡表版本（= 打卡表真题卡且有讲义命中；应用题不替换）
   console.log('\n▸ DS 算法题打卡表替换');

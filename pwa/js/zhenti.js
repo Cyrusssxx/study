@@ -375,17 +375,25 @@
             <div class="zt-note-title">我的笔记</div>
             ${noteToolbarHtml()}
             <div class="note-input zt-note-input" contenteditable="true" spellcheck="false"
-                data-qid="${qid}" data-placeholder="记下解题思路、易错点…（停顿即自动保存）"
-                oninput="onNoteInput(this)"></div>
+                data-qid="${qid}" data-placeholder="记下解题思路、易错点…（Ctrl+V 粘贴截图；停顿即自动保存）"
+                oninput="onNoteInput(this)" onpaste="pasteZtNoteImage(event)"></div>
+            <div class="note-images" data-zt-note-imgs="${qid}"></div>
+            <div class="note-actions">
+                <button class="btn btn-primary btn-sm note-save-btn" data-zt-save="${qid}" onclick="saveZtNoteNow('${qid}')">保存笔记</button>
+                <button class="btn btn-sm btn-note-addimg" onclick="document.getElementById('ztNoteFile-${qid}').click()" title="从本地选择图片（支持多选），比剪贴板更可靠">+ 图片</button>
+                <input type="file" id="ztNoteFile-${qid}" accept="image/*" multiple hidden onchange="onZtNoteFilePick('${qid}', this)">
+                <span class="note-hint" data-zt-hint="${qid}"></span>
+            </div>
         </div>`;
     }
 
-    // 新渲染/刷新出来的卡片：初始化富文本编辑器（装载内容 + 绑定工具条）
+    // 新渲染/刷新出来的卡片：初始化富文本编辑器（装载内容 + 绑定工具条 + 回填图片区）
     function initNoteEditors(root) {
         (root || document).querySelectorAll('.note-editor .note-input[data-qid]').forEach(el => {
             if (el.dataset.noteReady) return;
             el.dataset.noteReady = '1';
             loadNoteIntoEditor(el, state.noteMap[el.dataset.qid] || '');
+            renderZtNoteImages(el.dataset.qid);
             bindNoteToolbar(el);
         });
     }
@@ -517,6 +525,175 @@
         const card = document.getElementById('card-' + qid);
         const btn = card && card.querySelector('.btn-explanation[onclick*="toggleNotePanel"]');
         if (btn) btn.classList.toggle('has-note', hasNoteOf(qid));
+    }
+
+    /* ---------------- 笔记图片（与 quiz/dati 同款：粘贴/选图 → 压缩 → 图片区 → 随笔记入库） ----------------
+     * 截图直接进正文会因 sanitize 白名单在重开时被剥掉/转义（表现为 base64 源码显示），
+     * 因此与 quiz 一致：图片统一走 noteImages 数组 + 独立图片区，正文仅富文本。 */
+    function ztNoteEditor(qid) {
+        const card = document.getElementById('card-' + qid);
+        return card ? card.querySelector('.note-editor .note-input[data-qid="' + qid + '"]') : null;
+    }
+
+    function setZtNoteHint(qid, text, ms) {
+        const hint = document.querySelector('[data-zt-hint="' + qid + '"]');
+        if (!hint) return;
+        hint.textContent = text || '';
+        if (hint._t) clearTimeout(hint._t);
+        if (ms) hint._t = setTimeout(() => { hint.textContent = ''; }, ms);
+    }
+
+    // 压缩成最长边 1200px 的 JPEG，控制入库体积（透明底先铺白）
+    function compressImage(file) {
+        return new Promise((resolve, reject) => {
+            const img = new Image();
+            img.onload = () => {
+                const scale = Math.min(1, 1200 / Math.max(img.width, img.height));
+                const canvas = document.createElement('canvas');
+                canvas.width = Math.round(img.width * scale);
+                canvas.height = Math.round(img.height * scale);
+                const ctx = canvas.getContext('2d');
+                ctx.fillStyle = '#fff';
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+                ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+                URL.revokeObjectURL(img.src);
+                resolve(canvas.toDataURL('image/jpeg', 0.85));
+            };
+            img.onerror = () => reject(new Error('图片读取失败'));
+            img.src = URL.createObjectURL(file);
+        });
+    }
+
+    // 从剪贴板 HTML 片段提取内嵌 base64 图片（从网页/Word 复制图文时，图片常只出现在 HTML 里）
+    function extractHtmlClipboardImages(html) {
+        if (!html) return [];
+        const out = [];
+        const re = /<img[^>]+src=["'](data:image\/[a-z0-9.+-]+;base64,[^"']+)["']/gi;
+        let m;
+        while ((m = re.exec(html))) out.push(m[1]);
+        return out;
+    }
+
+    // 把一批「图片文件 / dataURL」统一压缩后追加到该题图片区，并立即随笔记入库。
+    // 逐张独立 try/catch：单张失败不中断整批。
+    async function appendZtNoteImages(qid, sources) {
+        if (!qid || !sources || !sources.length) return 0;
+        const added = [];
+        let failed = 0;
+        for (const src of sources) {
+            try {
+                let file = src;
+                if (typeof src === 'string') {
+                    const blob = await (await fetch(src)).blob();
+                    file = new File([blob], 'clipboard.png', { type: blob.type || 'image/png' });
+                }
+                added.push(await compressImage(file));
+            } catch (e) {
+                failed++;
+            }
+        }
+        if (added.length) {
+            state.noteImages[qid] = (state.noteImages[qid] || []).concat(added);
+            renderZtNoteImages(qid);
+            const ed = ztNoteEditor(qid);
+            await saveNote(qid, ed ? serializeNote(ed) : (state.noteMap[qid] || ''));
+        }
+        setZtNoteHint(qid, failed ? `${failed} 张图片读取失败${added.length ? `，已保存其余 ${added.length} 张` : ''}` : '', 4000);
+        return added.length;
+    }
+
+    function renderZtNoteImages(qid) {
+        const box = document.querySelector('[data-zt-note-imgs="' + qid + '"]');
+        if (!box) return;
+        const imgs = state.noteImages[qid] || [];
+        box.innerHTML = imgs.map((src, i) => `
+            <div class="note-img-item">
+                <img src="${src}" alt="笔记图片" onclick="viewZtNoteImage('${qid}', ${i})">
+                <span class="note-img-del" onclick="delZtNoteImage('${qid}', ${i})" title="删除图片">×</span>
+            </div>`).join('');
+    }
+
+    function delZtNoteImage(qid, i) {
+        const imgs = state.noteImages[qid] || [];
+        if (i < 0 || i >= imgs.length) return;
+        imgs.splice(i, 1);
+        renderZtNoteImages(qid);
+        const ed = ztNoteEditor(qid);
+        saveNote(qid, ed ? serializeNote(ed) : (state.noteMap[qid] || ''));
+    }
+
+    function viewZtNoteImage(qid, i) {
+        const src = (state.noteImages[qid] || [])[i];
+        if (!src) return;
+        if (typeof window.openImageLightbox === 'function') { window.openImageLightbox(src); return; }
+        const ov = document.createElement('div');
+        ov.className = 'img-lightbox';
+        ov.innerHTML = `<img src="${src}" alt="笔记图片">`;
+        ov.onclick = () => ov.remove();
+        document.body.appendChild(ov);
+    }
+
+    async function onZtNoteFilePick(qid, input) {
+        const files = [...(input && input.files ? input.files : [])];
+        if (input) input.value = '';   // 清空，允许重复选择同一文件
+        if (files.length) await appendZtNoteImages(qid, files);
+    }
+
+    /* 接管笔记框 paste 事件（与 quiz 同逻辑）：
+       1) 含图片 → 逐张收集（file 项 + HTML 内嵌 base64 兜底）后入图片区
+       2) 无图片 → 拦截默认粘贴，富文本转纯文本插入（防外部样式错位与 XSS） */
+    async function pasteZtNoteImage(event) {
+        const panel = event.target && event.target.closest ? event.target.closest('.note-editor') : null;
+        const qid = panel ? (panel.dataset.note || '') : '';
+        const cd = event.clipboardData;
+        if (!qid || !cd) return;
+        const files = [];
+        for (const it of [...cd.items]) {
+            if (it.kind === 'file' && String(it.type || '').startsWith('image/')) {
+                const f = it.getAsFile();
+                if (f) files.push(f);
+            }
+        }
+        const htmlImgs = extractHtmlClipboardImages(cd.getData('text/html') || '');
+        const sources = htmlImgs.length > files.length ? htmlImgs : files;
+        if (sources.length) {
+            event.preventDefault();
+            await appendZtNoteImages(qid, sources);
+            return;
+        }
+        event.preventDefault();
+        const text = cd.getData('text/plain') || '';
+        if (text) {
+            const ok = document.execCommand('insertText', false, text);
+            if (!ok) {
+                const sel = window.getSelection();
+                if (sel && sel.rangeCount) {
+                    const r = sel.getRangeAt(0);
+                    r.deleteContents();
+                    r.insertNode(document.createTextNode(text));
+                }
+            }
+            onNoteInput(ztNoteEditor(qid));   // 触发自动保存
+        }
+    }
+
+    // 「保存笔记」按钮：立即落库（不等 700ms 自动保存），并给出结果反馈
+    async function saveZtNoteNow(qid) {
+        const ed = ztNoteEditor(qid);
+        const content = ed ? serializeNote(ed) : (state.noteMap[qid] || '');
+        const hadNote = !!(state.noteMap[qid] || (state.noteImages[qid] || []).length);
+        try {
+            await saveNote(qid, content);
+            const hasNote = !!(state.noteMap[qid] || (state.noteImages[qid] || []).length);
+            setZtNoteHint(qid, hasNote ? '已保存 ✓' : (hadNote ? '已删除笔记' : '笔记是空的，没有保存'), 3000);
+            const btn = document.querySelector('[data-zt-save="' + qid + '"]');
+            if (btn && hasNote) {
+                btn.classList.add('saved');
+                setTimeout(() => btn.classList.remove('saved'), 1500);
+            }
+        } catch (e) {
+            setZtNoteHint(qid, '保存失败: ' + e.message, 4000);
+        }
     }
 
     function flushNote() {
@@ -749,6 +926,8 @@
         switchYear, pickOption, checkPending, toggleFav, toggleAns, toggleNotePanel,
         onNoteInput, toggleExamMode, toggleShowAll, toggleFavOnly, resetYear,
         gotoQ, toggleFq, toggleZtNav, expandZtNav, toggleAnsPop,
+        pasteZtNoteImage, saveZtNoteNow, renderZtNoteImages, delZtNoteImage,
+        viewZtNoteImage, onZtNoteFilePick,
     });
 
     if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init, { once: true });

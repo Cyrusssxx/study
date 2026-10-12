@@ -1149,6 +1149,8 @@
     function viewNoteImage(i) {
         const src = (questions[currentIndex].note_images || [])[i];
         if (!src) return;
+        // 与全站统一：优先走带缩放的 figLightbox（滚轮/工具栏/双击/Esc）
+        if (typeof window.openImageLightbox === 'function') { window.openImageLightbox(src); return; }
         const ov = document.createElement('div');
         ov.className = 'img-lightbox';
         ov.innerHTML = `<img src="${src}" alt="笔记图片">`;
