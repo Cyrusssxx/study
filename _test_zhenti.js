@@ -75,6 +75,15 @@ async function run() {
     /做题模式下不显示笔记/.test(js));
   check('做题模式年份完成度隐藏（取消后恢复）', /state\.examMode \? '' : `<span class="zt-year-done">/.test(js));
   check('题号导航做题模式隐藏历史色点', /if \(!state\.examMode && st\) cls \+= st\.is_correct/.test(js));
+  // v7：题号点击修复（触屏容错 + 同题去重 + 只看收藏过滤）
+  check('题号点击：gotoQ 同题 700ms 去重', /lastGoto/.test(js) && /now - lastGoto\.t < 700/.test(js));
+  check('题号点击：触屏 pointerdown/pointerup 容错（12px/1s 阈值）',
+    /bindFqTouch/.test(js) && /pointerdown/.test(js) && /pointerup/.test(js) &&
+    /> 12\) return/.test(js) && /fqDown/.test(js));
+  check('题号点击：flushNote 抛错不拖垮跳转（try-catch）', /try \{ flushNote\(\); \} catch/.test(js));
+  check('只看收藏：题号条与卡片流同过滤', /!state\.favOnly \|\| state\.favSet\.has\(it\.iid\)/.test(js));
+  check('题号触摸目标：touch-action manipulation + user-select none',
+    /\.zt-fq-i \{[^}]*touch-action:\s*manipulation/.test(css) && /\.zt-fq-i \{[^}]*user-select:\s*none/.test(css));
   check('答案速查 toggleAnsPop 已导出', /function toggleAnsPop/.test(js) && /toggleAnsPop,/.test(js));
   const navLinks = [...rawHtml.matchAll(/<a href="([\w.]+)\.html" class="nav-link[^"]*">([^<]+)<\/a>/g)].map(m => m[1]);
   check('顶栏链接 14 项且含真题套卷（active）', navLinks.length === 14 && /zhenti\.html" class="nav-link active"/.test(rawHtml), navLinks.join(','));
@@ -283,6 +292,52 @@ async function run() {
   await w.toggleFav(iid2);
   await sleep(200);
   check('收藏：题卡星标切换', !!d.querySelector('#card-' + iid2 + ' .btn-icon.favorited'));
+
+  // ---------- v7：题号点击（触屏容错 + 去重 + 只看收藏过滤） ----------
+  console.log('▸ 题号点击修复');
+  const scrolled = [];
+  w.Element.prototype.scrollIntoView = function () { scrolled.push(this.id || ''); };
+  const mkPtr = (type, x, y, pt) => {
+    const ev = new w.Event(type, { bubbles: true, cancelable: true });
+    ev.clientX = x; ev.clientY = y; ev.pointerType = pt;
+    return ev;
+  };
+  const fq10 = d.querySelector('#fqList .zt-fq-i[data-i="10"]');
+  const iid10 = fq10.dataset.iid;
+  fq10.dispatchEvent(mkPtr('pointerdown', 200, 300, 'touch'));
+  fq10.dispatchEvent(mkPtr('pointerup', 205, 303, 'touch'));   // 位移 8px ≤ 12 → 补偿触发
+  await sleep(80);
+  check('触屏轻点（轻微位移）：pointerup 补偿触发跳转', scrolled.includes('card-' + iid10), scrolled.join(','));
+  const n1 = scrolled.length;
+  fq10.dispatchEvent(mkPtr('pointerdown', 200, 300, 'touch'));
+  fq10.dispatchEvent(mkPtr('pointerup', 205, 303, 'touch'));   // 同题 700ms 内 → 去重
+  await sleep(60);
+  check('触屏轻点：700ms 内同题二次触发被去重', scrolled.length === n1, `再滚 ${scrolled.length - n1} 次`);
+  const n2 = scrolled.length;
+  fq10.dispatchEvent(mkPtr('pointerdown', 200, 300, 'touch'));
+  fq10.dispatchEvent(mkPtr('pointerup', 230, 305, 'touch'));   // 35px → 明确滑动
+  await sleep(60);
+  check('触屏滑动（>12px）：不触发跳转', scrolled.length === n2);
+  const n3 = scrolled.length;
+  fq10.dispatchEvent(mkPtr('pointerdown', 200, 300, 'mouse'));
+  fq10.dispatchEvent(mkPtr('pointerup', 201, 301, 'mouse'));
+  await sleep(60);
+  check('鼠标：pointerup 不补偿（原生 click 路径）', scrolled.length === n3);
+  await sleep(750);
+  const n4 = scrolled.length;
+  w.gotoQ(iid10);
+  check('去重窗口外：gotoQ 正常触发滚动', scrolled.length === n4 + 1);
+
+  // 只看收藏：条列表与卡片流同过滤（避免点条无对应卡片 → 静默不跳）
+  await w.toggleFavOnly();
+  await sleep(400);
+  const favCards = d.querySelectorAll('#ztMain .question-card').length;
+  const favFq = d.querySelectorAll('#fqList .zt-fq-i').length;
+  check('只看收藏：条列表数 = 卡片数（一致过滤）', favFq === favCards, `条 ${favFq} / 卡 ${favCards}`);
+  check('只看收藏：条列表含已收藏的 iid2', !!d.querySelector('#fqList .zt-fq-i[data-iid="' + iid2 + '"]'));
+  await w.toggleFavOnly();
+  await sleep(400);
+  check('退出只看收藏：条列表恢复全量 47', d.querySelectorAll('#fqList .zt-fq-i').length === 47);
 
   // v4：笔记富文本（与刷题页同源：contenteditable + 工具条 + HTML 落库）
   w.toggleNotePanel(iid2);

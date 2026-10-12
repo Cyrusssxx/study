@@ -6398,6 +6398,8 @@ a.daily-meta.daily-kp:hover { color: var(--primary); text-decoration: underline;
     background: rgba(var(--card-rgb), .42);
     color: var(--text-light);
     transition: background .14s ease, color .14s ease;
+    touch-action: manipulation;          /* 触屏：去掉双击缩放延迟，点击更跟手 */
+    user-select: none; -webkit-user-select: none;   /* 防止长按选中数字干扰点击 */
 }
 .zt-fq-i:hover { background: rgba(74, 122, 184, .3); color: var(--primary); }
 .zt-fq-i.cur { background: rgba(74, 122, 184, .16); color: var(--primary); box-shadow: inset 0 0 0 1px rgba(74, 122, 184, .55); }

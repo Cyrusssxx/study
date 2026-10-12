@@ -601,15 +601,18 @@
 
     /* ---------------- 题号导航（竖排半透明横条，目录式） ---------------- */
     function renderFq() {
-        const cells = state.flat.map(it => {
-            const st = state.progress[it.iid];
-            let cls = 'zt-fq-i';
-            // 做题模式不显示历史对错色点，仅本次暂选的 picked
-            if (!state.examMode && st) cls += st.is_correct ? ' ok' : (it.group === 'choice' ? ' bad' : '');
-            else if (state.examMode && state.pending[it.iid]) cls += ' picked';
-            if (it.i === 41) cls += ' zt-fq-sep';   // 大题起点分隔
-            return `<a class="${cls}" data-iid="${it.iid}" data-i="${it.i}" onclick="gotoQ('${it.iid}')" title="第 ${it.i} 题">${it.i}</a>`;
-        }).join('');
+        // 条列表与卡片流过滤保持一致（只看收藏时只列收藏题，避免点击无对应卡片）
+        const cells = state.flat
+            .filter(it => !state.favOnly || state.favSet.has(it.iid))
+            .map(it => {
+                const st = state.progress[it.iid];
+                let cls = 'zt-fq-i';
+                // 做题模式不显示历史对错色点，仅本次暂选的 picked
+                if (!state.examMode && st) cls += st.is_correct ? ' ok' : (it.group === 'choice' ? ' bad' : '');
+                else if (state.examMode && state.pending[it.iid]) cls += ' picked';
+                if (it.i === 41) cls += ' zt-fq-sep';   // 大题起点分隔
+                return `<a class="${cls}" data-iid="${it.iid}" data-i="${it.i}" onclick="gotoQ('${it.iid}')" title="第 ${it.i} 题">${it.i}</a>`;
+            }).join('');
         $('fqList').innerHTML = cells;
         syncFqCur();
     }
@@ -636,10 +639,37 @@
         else if (ar.bottom > br.bottom - 6) box.scrollTop += ar.bottom - br.bottom + 6;
     }
 
+    // 跳转到指定题（同题 700ms 去重：触屏 pointerup 补偿与随后补发的 click 只生效一次）
+    let lastGoto = { iid: '', t: 0 };
     function gotoQ(iid) {
-        flushNote();
+        const now = Date.now();
+        if (iid === lastGoto.iid && now - lastGoto.t < 700) return;
+        lastGoto = { iid: iid, t: now };
+        try { flushNote(); } catch (e) { console.error(e); }   // 笔记落库失败不拖垮跳转
         const el = document.getElementById('card-' + iid);
         if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+
+    // 触屏点击容错：手指轻点条时若有轻微位移（被判为滑动 → click 事件丢失、只剩列表动了一下），
+    // 按位移/时长阈值在 pointerup 时补触发跳转；桌面鼠标不走此路径（仍用原生 click）。
+    let fqDown = null;
+    function bindFqTouch() {
+        const box = $('fqList');
+        box.addEventListener('pointerdown', e => {
+            const a = e.target && e.target.closest ? e.target.closest('.zt-fq-i') : null;
+            fqDown = (a && e.pointerType !== 'mouse')
+                ? { iid: a.dataset.iid, x: e.clientX, y: e.clientY, t: Date.now() }
+                : null;
+        });
+        box.addEventListener('pointerup', e => {
+            const d = fqDown;
+            fqDown = null;
+            if (!d) return;
+            if (Math.abs(e.clientX - d.x) + Math.abs(e.clientY - d.y) > 12) return;  // 明确滑动
+            if (Date.now() - d.t > 1000) return;                                     // 长按
+            gotoQ(d.iid);   // 浏览器若补发 click，会被 gotoQ 去重
+        });
+        box.addEventListener('pointercancel', () => { fqDown = null; });
     }
 
     function toggleFq() {
@@ -707,6 +737,7 @@
             renderYearList();
             await renderPaper();
             bindScrollSpy();
+            bindFqTouch();
             if (typeof renderDarkSwitch === 'function') renderDarkSwitch();
         } catch (e) {
             console.error(e);
