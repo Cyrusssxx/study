@@ -27,7 +27,7 @@
         lectureBySource: new Map(), // daka 卡 source -> ds_code/extra 讲义条目
         svgCache: {},            // name -> svg 文本
         year: 0,
-        examMode: localStorage.getItem('zhentiMode') === 'exam',
+        examMode: true,          // 默认进入做题模式：白纸状态，不显示历史作答记录与笔记
         showAll: false,
         favOnly: false,
         ansOpen: new Set(JSON.parse(localStorage.getItem('zhentiAnsOpen2') || '[]')),
@@ -121,9 +121,11 @@
         $('yearList').innerHTML = years.map(y => {
             const done = doneCount(y);
             const active = y === state.year;
+            // 做题模式（默认）不显示各年完成度（属历史记录，取消后恢复）
+            const doneHtml = state.examMode ? '' : `<span class="zt-year-done">${done}/${state.index.choice_total}</span>`;
             return `<a class="ol-nav-item root${active ? ' zt-year-active' : ''}" data-year="${y}"
                 onclick="switchYear(${y})" title="${y} 年真题（选择 40 + 大题 7）">
-                ${y} 年真题<span class="zt-year-done">${done}/${state.index.choice_total}</span></a>`;
+                ${y} 年真题${doneHtml}</a>`;
         }).join('');
     }
 
@@ -136,13 +138,16 @@
         const d = await loadYear(year);
         if (state.year !== year) return;   // 加载期间切了年份，放弃本次渲染
         state.flat = buildFlat(d, year);
-        state.pending = {};
 
+        // 做题模式：进度按本次暂选数；非做题模式：按历史已做数
+        const progTxt = state.examMode
+            ? `已选 ${Object.keys(state.pending).length}/${state.index.choice_total}`
+            : `已做 ${doneCount(year)}/${state.index.choice_total}`;
         let html = `<div class="zt-toolbar">
             <div class="zt-title">${year} 年真题套卷<span class="zt-sub">选择题 ${state.index.choice_total} · 大题 ${state.index.big_total}</span></div>
             <div class="zt-tools">
-                <span class="zt-progress" id="ztProgress">已做 ${doneCount(year)}/${state.index.choice_total}</span>
-                <button class="zt-btn${state.examMode ? ' on' : ''}" onclick="toggleExamMode()" title="做题模式：隐藏答案与解析，全部做完再对答案">${state.examMode ? '做题中' : '做题模式'}</button>
+                <span class="zt-progress" id="ztProgress">${progTxt}</span>
+                <button class="zt-btn${state.examMode ? ' on' : ''}" onclick="toggleExamMode()" title="${state.examMode ? '取消做题模式：显示历史作答记录与笔记' : '做题模式：隐藏答案、历史记录与笔记'}">${state.examMode ? '做题中' : '做题模式'}</button>
                 ${state.examMode ? '<button class="zt-btn zt-btn-primary" onclick="checkPending()">对答案</button>' : ''}
                 <button class="zt-btn${state.showAll ? ' on' : ''}" onclick="toggleShowAll()">${state.showAll ? '收起全部答案' : '展开全部答案'}</button>
                 <button class="zt-btn zt-btn-primary" onclick="toggleAnsPop()">答案速查</button>
@@ -179,27 +184,29 @@
     }
 
     /* ---------------- 卡片：选择题 ----------------
-     * 初始为"白纸"状态：不显示历史作答痕迹（结果条/选项色/预选/答案），解析默认收起；
-     * 仅本次会话作答过的题显示判分反馈并自动展开解析。要看答案点「答案与解析」或「答案速查」。 */
+     * 做题模式（默认）：白纸状态——不显示历史作答痕迹（结果条/选项色/预选）与笔记，
+     *   本次选答仅暂存（picked），退出做题模式时统一判分。
+     * 取消做题模式：显示历史作答记录（预选/对错色/结果条）与笔记，解析默认仍收起。 */
     function choiceCard(f) {
         const st = state.progress[f.iid];
         const newly = state.sessionAnswered.has(f.iid);   // 本次会话作答过
+        const showHist = !state.examMode;                 // 非做题模式：显示历史作答记录
         let sel = '';
         if (state.examMode) sel = state.pending[f.iid] || '';
-        else if (newly && st) sel = st.user_answer || '';
+        else if (st) sel = st.user_answer || '';
         const isFav = state.favSet.has(f.iid);
-        const ansOpen = state.ansOpen.has(f.iid) || state.showAll || (newly && !state.examMode);
+        const ansOpen = state.showAll || (showHist && (state.ansOpen.has(f.iid) || newly));
 
         let opts = '';
         for (let k = 0; k < LETTERS.length; k++) {
             const key = LETTERS[k];
             const text = f.o[k] != null ? f.o[k] : '';
             let cls = 'option-item';
-            if (newly && !state.examMode) {
+            if (showHist && st) {
                 if (key === f.a) cls += ' correct';
-                else if (key === sel && st && !st.is_correct) cls += ' wrong';
-            } else if (sel === key) {
-                cls += state.examMode ? ' picked' : '';
+                else if (key === sel && !st.is_correct) cls += ' wrong';
+            } else if (state.examMode && sel === key) {
+                cls += ' picked';
             }
             const checked = sel === key ? 'checked' : '';
             opts += `<label class="${cls}">
@@ -210,13 +217,16 @@
         }
 
         let result = '';
-        if (newly && !state.examMode && st) {
+        if (showHist && st) {
             result = st.is_correct
                 ? '<div class="result-correct">回答正确!</div>'
                 : `<div class="result-wrong">回答错误! 正确答案: ${f.a || '—'}</div>`;
         }
 
-        const hasNote = hasNoteOf(f.iid);
+        // 笔记：做题模式一律不显示（含「●」提示），取消做题模式后恢复
+        const showNote = !state.examMode;
+        const hasNote = showNote && hasNoteOf(f.iid);
+        const noteOpen = showNote && state.noteOpen.has(f.iid);
         return `<div class="question-card" id="card-${f.iid}" data-iid="${f.iid}" data-i="${f.i}">
             <div class="question-header">
                 <div class="question-meta">
@@ -230,7 +240,7 @@
             ${result}
             <div class="question-tools">
                 <button class="btn-explanation${ansOpen ? ' active' : ''}" onclick="toggleAns('${f.iid}')">答案与解析 ${ansOpen ? '▴' : '▾'}</button>
-                <button class="btn-explanation${state.noteOpen.has(f.iid) ? ' active' : ''}${hasNote ? ' has-note' : ''}" onclick="toggleNotePanel('${f.iid}')">笔记${hasNote ? ' ●' : ''} ${state.noteOpen.has(f.iid) ? '▴' : '▾'}</button>
+                <button class="btn-explanation${noteOpen ? ' active' : ''}${hasNote ? ' has-note' : ''}" onclick="toggleNotePanel('${f.iid}')">笔记${hasNote ? ' ●' : ''} ${noteOpen ? '▴' : '▾'}</button>
             </div>
             ${ansOpen ? `<div class="explanation-panel">
                 <div class="explanation-title">答案解析</div>
@@ -239,7 +249,7 @@
                 </div>
                 <div class="explanation-body">${f.an || '<div class="explanation-empty">该题暂无详细解析</div>'}</div>
             </div>` : ''}
-            ${state.noteOpen.has(f.iid) ? notePanel(f.iid) : ''}
+            ${noteOpen ? notePanel(f.iid) : ''}
         </div>`;
     }
 
@@ -247,8 +257,10 @@
     function bigCard(f) {
         if (f.daka) return dakaBigCard(f);   // DS 大题命中打卡表映射 → 替换为打卡表版本
         const isFav = state.favSet.has(f.iid);
-        const ansOpen = state.ansOpen.has(f.iid) || state.showAll;
-        const hasNote = hasNoteOf(f.iid);
+        const ansOpen = state.showAll || (!state.examMode && state.ansOpen.has(f.iid));
+        const showNote = !state.examMode;   // 做题模式不显示笔记（含「●」提示）
+        const hasNote = showNote && hasNoteOf(f.iid);
+        const noteOpen = showNote && state.noteOpen.has(f.iid);
         return `<div class="question-card" id="card-${f.iid}" data-iid="${f.iid}" data-i="${f.i}">
             <div class="question-header">
                 <div class="question-meta">
@@ -261,13 +273,13 @@
             <div class="question-content">${f.q}</div>
             <div class="question-tools">
                 <button class="btn-explanation${ansOpen ? ' active' : ''}" onclick="toggleAns('${f.iid}')">参考答案与解析 ${ansOpen ? '▴' : '▾'}</button>
-                <button class="btn-explanation${state.noteOpen.has(f.iid) ? ' active' : ''}${hasNote ? ' has-note' : ''}" onclick="toggleNotePanel('${f.iid}')">笔记${hasNote ? ' ●' : ''} ${state.noteOpen.has(f.iid) ? '▴' : '▾'}</button>
+                <button class="btn-explanation${noteOpen ? ' active' : ''}${hasNote ? ' has-note' : ''}" onclick="toggleNotePanel('${f.iid}')">笔记${hasNote ? ' ●' : ''} ${noteOpen ? '▴' : '▾'}</button>
             </div>
             ${ansOpen ? `<div class="explanation-panel">
                 <div class="explanation-title">参考答案与解析</div>
                 <div class="explanation-body">${f.an || '<div class="explanation-empty">暂无解析</div>'}</div>
             </div>` : ''}
-            ${state.noteOpen.has(f.iid) ? notePanel(f.iid) : ''}
+            ${noteOpen ? notePanel(f.iid) : ''}
         </div>`;
     }
 
@@ -278,8 +290,10 @@
     function dakaBigCard(f) {
         const { card, lecture } = f.daka;
         const isFav = state.favSet.has(f.iid);
-        const ansOpen = state.ansOpen.has(f.iid) || state.showAll;
-        const hasNote = hasNoteOf(f.iid);
+        const ansOpen = state.showAll || (!state.examMode && state.ansOpen.has(f.iid));
+        const showNote = !state.examMode;   // 做题模式不显示笔记（含「●」提示）
+        const hasNote = showNote && hasNoteOf(f.iid);
+        const noteOpen = showNote && state.noteOpen.has(f.iid);
         const figs = card.figs || {};
         const figWrap = (arr, label) => (arr && arr.length)
             ? `<div class="code-figs zt-daka-figs"><div class="code-figs-label">📷 ${esc(label)}</div>${arr.map(n =>
@@ -305,13 +319,13 @@
             <div class="question-content">${contentHtml || '（题目见教材原图）'}</div>
             <div class="question-tools">
                 <button class="btn-explanation${ansOpen ? ' active' : ''}" onclick="toggleAns('${f.iid}')">参考答案与解析 ${ansOpen ? '▴' : '▾'}</button>
-                <button class="btn-explanation${state.noteOpen.has(f.iid) ? ' active' : ''}${hasNote ? ' has-note' : ''}" onclick="toggleNotePanel('${f.iid}')">笔记${hasNote ? ' ●' : ''} ${state.noteOpen.has(f.iid) ? '▴' : '▾'}</button>
+                <button class="btn-explanation${noteOpen ? ' active' : ''}${hasNote ? ' has-note' : ''}" onclick="toggleNotePanel('${f.iid}')">笔记${hasNote ? ' ●' : ''} ${noteOpen ? '▴' : '▾'}</button>
             </div>
             ${ansOpen ? `<div class="explanation-panel">
                 <div class="explanation-title">参考答案与解析</div>
                 <div class="explanation-body">${answerHtml}</div>
             </div>` : ''}
-            ${state.noteOpen.has(f.iid) ? notePanel(f.iid) : ''}
+            ${noteOpen ? notePanel(f.iid) : ''}
         </div>`;
     }
 
@@ -415,7 +429,7 @@
             state.pending[iid] = key;
             refreshCard(iid);
             const n = Object.keys(state.pending).length;
-            $('ztProgress').textContent = `已选 ${n}/${state.flat.filter(f => f.group === 'choice').length}`;
+            $('ztProgress').textContent = `已选 ${n}/${state.index.choice_total}`;
             return;
         }
         flushNote();
@@ -433,22 +447,9 @@
     }
 
     async function checkPending() {
-        const ids = Object.keys(state.pending);
-        if (!ids.length) { alert('还没有选择任何答案'); return; }
-        for (const iid of ids) {
-            const f = state.flat.find(x => x.iid === iid);
-            if (!f) continue;
-            const key = state.pending[iid];
-            const ok = !!f.a && key === f.a;
-            if (typeof window.applyAnswer === 'function') {
-                await window.applyAnswer(iid, f.sid, key, ok, Date.now());
-            }
-            state.progress[iid] = { user_answer: key, is_correct: ok ? 1 : 0 };
-            state.sessionAnswered.add(iid);
-        }
-        state.pending = {};
-        state.examMode = false;
-        localStorage.setItem('zhentiMode', 'practice');
+        if (!Object.keys(state.pending).length) { alert('还没有选择任何答案'); return; }
+        await gradePending();
+        state.examMode = false;   // 对答案 = 判分 + 退出做题模式（显示记录与笔记）
         renderPaper();
         renderYearList();
     }
@@ -485,6 +486,10 @@
     }
 
     function toggleNotePanel(iid) {
+        if (state.examMode) {
+            alert('做题模式下不显示笔记（避免看到此前记录的内容）。点「对答案」或取消做题模式后即可查看与编辑。');
+            return;
+        }
         flushNote();
         if (state.noteOpen.has(iid)) state.noteOpen.delete(iid); else state.noteOpen.add(iid);
         localStorage.setItem('zhentiNoteOpen2', JSON.stringify([...state.noteOpen]));
@@ -524,12 +529,36 @@
         });
     }
 
-    function toggleExamMode() {
-        flushNote();
-        state.examMode = !state.examMode;
+    // 把做题模式下暂选的答案统一判分入库（进度 + 错题本）
+    async function gradePending() {
+        const ids = Object.keys(state.pending);
+        if (!ids.length) return false;
+        for (const iid of ids) {
+            const f = state.flat.find(x => x.iid === iid);
+            if (!f) continue;
+            const key = state.pending[iid];
+            const ok = !!f.a && key === f.a;
+            if (typeof window.applyAnswer === 'function') {
+                await window.applyAnswer(iid, f.sid, key, ok, Date.now());
+            }
+            state.progress[iid] = { user_answer: key, is_correct: ok ? 1 : 0 };
+            state.sessionAnswered.add(iid);
+        }
         state.pending = {};
-        localStorage.setItem('zhentiMode', state.examMode ? 'exam' : 'practice');
+        return true;
+    }
+
+    // 切换做题模式：默认进入（白纸）；取消时先把本次暂选的答案判分，再显示历史记录与笔记
+    async function toggleExamMode() {
+        flushNote();
+        if (state.examMode) {
+            await gradePending();
+            state.examMode = false;
+        } else {
+            state.examMode = true;
+        }
         renderPaper();
+        renderYearList();
     }
 
     function toggleShowAll() {
@@ -562,6 +591,7 @@
         flushNote();
         if (state.ansPopOpen) toggleAnsPop();   // 关闭答案速查
         state.year = y;
+        state.pending = {};                     // 未判分的本次暂选不跨年
         localStorage.setItem('zhentiYear', String(y));
         state.ansOpen = new Set();
         renderYearList();
@@ -574,8 +604,9 @@
         const cells = state.flat.map(it => {
             const st = state.progress[it.iid];
             let cls = 'zt-fq-i';
-            if (st) cls += st.is_correct ? ' ok' : (it.group === 'choice' ? ' bad' : '');
-            else if (state.pending[it.iid]) cls += ' picked';
+            // 做题模式不显示历史对错色点，仅本次暂选的 picked
+            if (!state.examMode && st) cls += st.is_correct ? ' ok' : (it.group === 'choice' ? ' bad' : '');
+            else if (state.examMode && state.pending[it.iid]) cls += ' picked';
             if (it.i === 41) cls += ' zt-fq-sep';   // 大题起点分隔
             return `<a class="${cls}" data-iid="${it.iid}" data-i="${it.i}" onclick="gotoQ('${it.iid}')" title="第 ${it.i} 题">${it.i}</a>`;
         }).join('');
