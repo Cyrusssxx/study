@@ -28,18 +28,13 @@
         "score_rows": [
           {
             "approach": "暴力解",
-            "method": "枚举",
-            "score": "11"
+            "method": "遍历链表两次",
+            "score": "15"
           },
           {
             "approach": "暴力解",
             "method": "链表转数组",
             "score": "13"
-          },
-          {
-            "approach": "优化解",
-            "method": "遍历链表两次",
-            "score": "15"
           },
           {
             "approach": "优化解",
@@ -51,11 +46,11 @@
           {
             "tag": "解法1",
             "kind": "暴力解",
-            "name": "枚举",
+            "name": "遍历链表两次",
             "analysis": "",
-            "thought": "两层循环，外层是遍历i，内层是找到倒数第i个元素，比如上一轮查找到倒数第i-1个结点是q，那下一轮当p->link\n== q时p就是倒数第i个结点。",
-            "code": "int ans(node* list, int k)\n{\n    node* p;\n    node* q=NULL;                               // q=NULL是倒数第0个结点\n    for (int i=1; i<=k; i++)\n    {\n        p=list->link;\n        if (q==p) return 0;                     // 找不到倒数第k个结点\n        while (p->link!=q)\n            p=p->link;                          // p最终是倒数第i个结点\n        q=p;\n    }\n    printf(\"%d\\n\", p->data);                    // 输出倒数第k个结点的值\n    return 1;\n}",
-            "complexity": "时间复杂度：O(k·n)，最坏 O(n²)（k 趟扫描，每趟 O(n)）   空间复杂度：O(1)",
+            "thought": "要找到倒数第k个结点，但链表不能回退，所以需要知道他是从前往后数第t个结点（不算头结点），t=n-k+1，n是\n总结点数，那我们只需要先遍历一次链表求出n，然后再遍历一次链表找到第t个结点。",
+            "code": "int ans(node* list, int k)\n{\n    node* p=list->link;\n    int t, n=0;\n    while (p!=NULL)\n    {\n        n++;\n        p=p->link;\n    }\n    t=n-k+1;\n    if (t<=0) return 0;\n    p=list;                                     // 从头结点开始往后移t次\n    for (int i=0; i<t; i++)\n        p=p->link;\n    printf(\"%d\\n\", p->data);                    // 输出倒数第k个元素的值\n    return 1;\n}",
+            "complexity": "时间复杂度：O(n)（完整遍历两趟）   空间复杂度：O(1)",
             "note": ""
           },
           {
@@ -70,16 +65,6 @@
           },
           {
             "tag": "解法3",
-            "kind": "优化解",
-            "name": "遍历链表两次",
-            "analysis": "",
-            "thought": "要找到倒数第k个结点，但链表不能回退，所以需要知道他是从前往后数第t个结点（不算头结点），t=n-k+1，n是\n总结点数，那我们只需要先遍历一次链表求出n，然后再遍历一次链表找到第t个结点。",
-            "code": "int ans(node* list, int k)\n{\n    node* p=list->link;\n    int t, n=0;\n    while (p!=NULL)\n    {\n        n++;\n        p=p->link;\n    }\n    t=n-k+1;\n    if (t<=0) return 0;\n    p=list;                                     // 从头结点开始往后移t次\n    for (int i=0; i<t; i++)\n        p=p->link;\n    printf(\"%d\\n\", p->data);                    // 输出倒数第k个元素的值\n    return 1;\n}",
-            "complexity": "时间复杂度：O(n)（完整遍历两趟）   空间复杂度：O(1)",
-            "note": ""
-          },
-          {
-            "tag": "解法4",
             "kind": "链表操作，前后指针",
             "name": "",
             "analysis": "",

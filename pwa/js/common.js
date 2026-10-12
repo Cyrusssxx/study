@@ -320,9 +320,11 @@ window.addEventListener('pagehide', () => {
 });
 // 普通同步页面：load 后自动恢复；异步渲染页随后续逐页调 PS.restoreScroll() 更精准
 // ============ 题目嵌入图点击放大（全站复用 lightbox） ============
-// 复用 .img-lightbox 样式（与笔记图 viewNoteImage 共用同一套弹层）
+// 优先用带缩放能力的 figLightbox（js/lightbox.js：滚轮/工具栏/双击/键盘）——全站 15 页均已引入；
+// 个别未引入的页面回退到简单预览层（.img-lightbox，与笔记图 viewNoteImage 共用同一套弹层样式）。
 function openImageLightbox(src) {
     if (!src) return;
+    if (typeof window.openFigLightbox === 'function') { window.openFigLightbox(src); return; }
     const ov = document.createElement('div');
     ov.className = 'img-lightbox';
     ov.innerHTML = `<img src="${src}" alt="放大查看">`;

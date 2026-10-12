@@ -84,6 +84,12 @@ async function run() {
   check('只看收藏：题号条与卡片流同过滤', /!state\.favOnly \|\| state\.favSet\.has\(it\.iid\)/.test(js));
   check('题号触摸目标：touch-action manipulation + user-select none',
     /\.zt-fq-i \{[^}]*touch-action:\s*manipulation/.test(css) && /\.zt-fq-i \{[^}]*user-select:\s*none/.test(css));
+  // v8：代码块浅字浅底修复 + 教材原图缩放
+  check('代码块修复：pre 规则显式 color: var(--text)（修浅字叠浅底）',
+    /\.question-content pre, \.explanation-body pre \{[^}]*color:\s*var\(--text\)/.test(css));
+  const commonSrc2 = fs.readFileSync(path.join(ROOT, 'pwa/js/common.js'), 'utf8');
+  check('教材原图：点击放大走带缩放的 figLightbox',
+    /typeof window\.openFigLightbox === 'function'/.test(commonSrc2) && /window\.openFigLightbox\(src\)/.test(commonSrc2));
   check('答案速查 toggleAnsPop 已导出', /function toggleAnsPop/.test(js) && /toggleAnsPop,/.test(js));
   const navLinks = [...rawHtml.matchAll(/<a href="([\w.]+)\.html" class="nav-link[^"]*">([^<]+)<\/a>/g)].map(m => m[1]);
   check('顶栏链接 14 项且含真题套卷（active）', navLinks.length === 14 && /zhenti\.html" class="nav-link active"/.test(rawHtml), navLinks.join(','));

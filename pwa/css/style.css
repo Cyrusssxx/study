@@ -6437,6 +6437,7 @@ a.daily-meta.daily-kp:hover { color: var(--primary); text-decoration: underline;
 .question-content pre, .explanation-body pre {
     background: var(--light); border: 1px solid var(--border); border-radius: 8px;
     padding: 10px 12px; overflow-x: auto; font-size: .84rem; line-height: 1.55;
+    color: var(--text);   /* 覆盖 1327 行深色主题的 #f0f0f0（浅底下会看不见） */
 }
 .question-content code, .explanation-body code, .option-text code {
     font-family: Consolas, "Courier New", monospace; font-size: .88em;
