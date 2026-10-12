@@ -6,7 +6,7 @@
 //   3) 点「不会」→ 与「不熟」互斥（旧标记被清）；再点一次取消
 //   4) 筛选 chip 计数（cntUnfam / cntDontknow）与筛选生效（unfam / dontknow）
 //   5) 在「不熟」筛选下取消标记 → 该题移出列表（重渲染）；筛选状态持久化
-//   6) 全站 17 页顶栏链接集合与顺序完全一致（14 项），当前页带 active
+//   6) 全站 17 页顶栏链接集合与顺序完全一致（13 项），当前页带 active
 //
 // 用法：NODE_PATH=<workspace>/node_modules node _test_dati_marks.js
 const fs = require('fs');
@@ -172,9 +172,9 @@ function flat(subKey) {
   w.setView('single');
   await sleep(80);
 
-  console.log('\n--- 8) 全站顶栏统一（17 页 14 项、顺序一致） ---');
+  console.log('\n--- 8) 全站顶栏统一（17 页 13 项、顺序一致） ---');
   const EXPECT = ['首页|index.html', '刷题|quiz.html', '真题套卷|zhenti.html', '每日一题|daily.html', '记忆卡|cards.html',
-    '打卡表|daka.html', '代码题|code.html', '大题专项|dati.html', '算法讲义|algo.html',
+    '打卡表|daka.html', '大题专项|dati.html', '算法讲义|algo.html',
     '错题本|wrong.html', '收藏夹|favorites.html', '模拟考试|exam.html', '学习统计|stats.html', '搜题|search.html'];
   const pages = fs.readdirSync(path.join(ROOT, 'pwa')).filter(f => f.endsWith('.html'));
   const bad = [];
