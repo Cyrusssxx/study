@@ -199,13 +199,16 @@ function flat(subKey) {
   w.toggleNotePanel(L[0].q.id);
   await sleep(30);
   const ta = root().querySelector(`[data-note-input="${L[0].q.id}"]`);
+  check('笔记编辑器为富文本 contenteditable（非 textarea）', ta.tagName + ':' + ta.getAttribute('contenteditable'), 'DIV:true');
+  check('笔记面板含富文本工具条（加粗按钮）',
+    !!ta.closest('.dati-note-panel').querySelector('.note-toolbar [data-cmd="bold"]'), true);
   ta.focus();
   ta.dispatchEvent(new w.KeyboardEvent('keydown', { key: 'ArrowRight', bubbles: true }));
   await sleep(50);
   check('输入框内的方向键不切题', curId(), L[0].q.id);
 
   console.log('\n--- 场景 5：切题前自动落库笔记（flushDatiNote） ---');
-  ta.value = '单题模式下的笔记内容';
+  ta.innerHTML = '单题模式下的笔记内容';
   w.singleStep(1);
   await sleep(200);
   const notesRows = await w.dbAll('notes');

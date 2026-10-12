@@ -212,6 +212,7 @@
     <script src="js/background.js"></script>
     <script src="js/lightbox.js"></script>
     <script src="js/backend.js"></script>
+    <script src="js/note_richtext.js"></script>
     <script>
     let DATI = null;
     let activeSubject = localStorage.getItem('datiSubject') || 'os';
@@ -249,10 +250,10 @@
             .find(p => p.style.display !== 'none');
         if (!openPanel) return;
         const qid = openPanel.dataset.note;
-        const ta = openPanel.querySelector('.dati-note-input');
-        if (!ta) return;
+        const el = openPanel.querySelector('.dati-note-input');
+        if (!el) return;
         const cur = noteMap[qid] || { content: '', images: [] };
-        if (ta.value !== (cur.content || '')) saveNote(qid);   // 内容有变动才写库
+        if (serializeNote(el) !== (cur.content || '')) saveNote(qid);   // 内容有变动才写库
     }
 
     function saveDoneSet() {
@@ -484,10 +485,11 @@
             <div class="dati-abody" data-ans="${qid}"></div>
             <div class="note-panel dati-note-panel" data-note="${qid}" style="${noteOpen.has(qid) ? '' : 'display:none'}">
                 <div class="note-title">我的笔记</div>
-                <textarea class="note-input dati-note-input" data-note-input="${qid}" rows="4"
-                    placeholder="记下你的解题思路、易错点...（Ctrl+V 可直接粘贴截图；清空内容保存即删除笔记）"
-                    onfocus="onNoteEdit('${qid}')" oninput="autoResizeNote(this)"
-                    onpaste="pasteNoteImage(event, '${qid}')"></textarea>
+                ${noteToolbarHtml()}
+                <div class="note-input dati-note-input" contenteditable="true" spellcheck="false"
+                    data-note-input="${qid}" data-placeholder="记下你的解题思路、易错点...（Ctrl+V 可直接粘贴截图；清空内容保存即删除笔记）"
+                    onfocus="onNoteEdit('${qid}')"
+                    onpaste="pasteNoteImage(event, '${qid}')"></div>
                 <div class="note-images" data-note-imgs="${qid}"></div>
                 <div class="note-actions">
                     <button class="btn btn-primary btn-sm note-save-btn${hasNote ? ' saved' : ''}" data-note-save="${qid}"
@@ -807,9 +809,7 @@
         const root = document.getElementById('datiRoot');
         root.querySelectorAll('.dati-note-panel').forEach(p => {
             const qid = p.dataset.note;
-            const note = noteMap[qid] || {};
-            const ta = p.querySelector('.dati-note-input');
-            if (ta) { ta.value = note.content || ''; autoResizeNote(ta); }
+            initDatiNoteEditor(p);
             renderNoteImages(qid, p.querySelector('[data-note-imgs]'));
         });
         // 恢复刷新前已展开的答案面板（填充答案图 + 按钮文案）
@@ -881,8 +881,8 @@
             noteOpen.add(qid);
             saveNoteOpen();
             if (btn) btn.classList.add('active');
-            const ta = p.querySelector('.dati-note-input');
-            if (ta) { ta.focus(); autoResizeNote(ta); }
+            const el = initDatiNoteEditor(p);
+            if (el) el.focus();
         } else {
             p.style.display = 'none';
             noteOpen.delete(qid);
@@ -897,31 +897,34 @@
         if (btn) btn.classList.remove('saved');
     }
 
-    // 笔记输入框高度自适应：随内容自动增高，超过 60% 视口高时出现滚动条
-    function autoResizeNote(el) {
-        if (!el) return;
-        el.style.height = 'auto';
-        const maxH = Math.round(window.innerHeight * 0.6);
-        el.style.height = Math.min(el.scrollHeight, maxH) + 'px';
-        el.style.overflowY = el.scrollHeight > maxH ? 'auto' : 'hidden';
+    // 富文本笔记编辑器装载（与刷题页同源）：装载内容 + 绑工具条，防双绑
+    function initDatiNoteEditor(panel) {
+        const el = panel.querySelector('.dati-note-input');
+        if (!el) return null;
+        if (!el.dataset.noteReady) {
+            el.dataset.noteReady = '1';
+            loadNoteIntoEditor(el, (noteMap[panel.dataset.note] || {}).content || '');
+            bindNoteToolbar(el);
+        }
+        return el;
     }
 
     async function saveNote(qid) {
-        const ta = document.querySelector(`[data-note-input="${qid}"]`);
-        if (!ta) return;
-        const content = ta.value;
+        const el = document.querySelector(`[data-note-input="${qid}"]`);
+        if (!el) return;
+        const content = serializeNote(el);
         const cur = noteMap[qid] || { content: '', images: [] };
         const images = cur.images || [];
         const hadNote = !!(cur.content || images.length);
         try {
-            if (content.trim() || images.length) {
+            if (content || images.length) {
                 await dbPut('notes', { question_id: qid, subject: 'dati', content, images, updated_at: now() });
                 noteMap[qid] = { content, images };
             } else {
                 await dbDelete('notes', qid);
                 delete noteMap[qid];
             }
-            const hasNote = !!(content.trim() || images.length);
+            const hasNote = !!(content || images.length);
             const hint = document.querySelector(`[data-note-hint="${qid}"]`);
             if (hint) {
                 hint.textContent = hasNote ? '已保存 ✓' : (hadNote ? '已删除笔记' : '笔记是空的，没有保存');
@@ -1018,7 +1021,10 @@
     document.addEventListener('keydown', e => {
         if (viewMode !== 'single') return;
         const t = e.target;
-        if (t && (t.tagName === 'TEXTAREA' || t.tagName === 'INPUT' || t.isContentEditable)) return;
+        // 编辑器（含富文本 contenteditable，jsdom 下 isContentEditable 不可靠时用 closest 兜底）
+        const inEditor = t && (t.tagName === 'TEXTAREA' || t.tagName === 'INPUT' || t.isContentEditable ||
+            (t.closest && t.closest('[contenteditable="true"]')));
+        if (inEditor) return;
         if (e.key === 'ArrowLeft') { e.preventDefault(); singleStep(-1); }
         else if (e.key === 'ArrowRight') { e.preventDefault(); singleStep(1); }
     });

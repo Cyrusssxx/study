@@ -40,6 +40,7 @@ window.updateCounts = function(){};
 window.render = function(){};
 window.qimg = (key, fn) => \`<img data-src="data/dati_figs/\${key}/\${fn}" loading="lazy" alt="大题截图">\`;
 window.aimg = (key, fn) => \`<img src="data/dati_figs/\${key}/\${fn}" loading="lazy" alt="大题答案">\`;
+window.noteToolbarHtml = function(){ return '<div class="note-toolbar"><button data-cmd="bold">B</button></div>'; };
 `;
 
 // ---- 从 dati.html 提取真实函数 ----
@@ -58,7 +59,7 @@ function extractFn(src, name) {
 // 模板字符串：字面部分不动，${...} 插值区是 JS 代码 → 递归 windowify（避免漏掉 ${q.year}/${fn => qimg(...)}）
 function windowifyIdentifiers(code, names_) {
   const names = names_ || ['doneSet', 'lastSeenQ', 'openChapters', 'ansTpl', 'noteMap', 'noteOpen',
-    'favSet', 'unfamSet', 'dontknowSet', 'DATI', 'filter', 'year', 'saveDoneSet', 'localStorage', 'qimg', 'aimg', 'activeSubject', 'renderNav'];
+    'favSet', 'unfamSet', 'dontknowSet', 'DATI', 'filter', 'year', 'saveDoneSet', 'localStorage', 'qimg', 'aimg', 'activeSubject', 'renderNav', 'noteToolbarHtml'];
 
   function matchName(at) {
     for (const nm of names) {
