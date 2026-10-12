@@ -49,7 +49,7 @@ async function run() {
   check('题号导航放大（42×14px、10px 字）',
     /\.zt-fq-i \{[^}]*width:\s*42px[^}]*height:\s*14px[^}]*font-size:\s*10px/.test(css));
   check('收起箭头钉目录右缘中点（ol-nav-toggle fixed · 50vh 折算）',
-    /\.toc-fixed \.ol-nav-head \.ol-nav-toggle \{[^}]*position:\s*fixed[^}]*top:\s*calc\(50vh - 76px\)/.test(css) &&
+    /\.toc-fixed \.ol-nav-head \.ol-nav-toggle \{[^}]*position:\s*fixed[^}]*top:\s*calc\(50vh - var\(--toc-top\)\)/.test(css) &&
     /\.toc-fixed \.ol-nav \{[^}]*transform:\s*translateX\(0\)/.test(css));
   // v5：DS 大题替换为打卡表版本
   check('zhenti.js 建立打卡表映射（ds_daka real「YYYY年408真题第N题」→ 卡片）',

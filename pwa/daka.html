@@ -224,6 +224,7 @@
         navEl.innerHTML = `<div class="ol-nav-head" onclick="toggleDakaNav()">定位<span class="ol-nav-toggle">«</span></div>
             <div class="ol-nav-body">${nav}</div>`;
         navEl.classList.toggle('collapsed', dakaNavCollapsed);
+        syncTocBodyClass(dakaNavCollapsed);   // 页头随目录让位（防首行被目录压住）
         navEl.querySelectorAll('.ol-nav-item.sub').forEach(a => {
             a.addEventListener('click', () => gotoDaka(a.dataset.target));
         });
@@ -265,12 +266,14 @@
         dakaNavCollapsed = !dakaNavCollapsed;
         localStorage.setItem('daka_nav_collapsed', dakaNavCollapsed ? '1' : '0');
         document.getElementById('dakaNav').classList.toggle('collapsed', dakaNavCollapsed);
+        syncTocBodyClass(dakaNavCollapsed);
     }
 
     function expandDakaNav() {
         dakaNavCollapsed = false;
         localStorage.setItem('daka_nav_collapsed', '0');
         document.getElementById('dakaNav').classList.remove('collapsed');
+        syncTocBodyClass(false);
     }
 
     function openDakaNav() {

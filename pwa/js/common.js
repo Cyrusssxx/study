@@ -77,6 +77,14 @@ function fmtOptionText(raw) {
     return s;
 }
 
+// ============ 侧栏/目录收起状态 → body 标记 ============
+// .toc-fixed 规范下，目录是 fixed 贴屏元素；ol-layout 之外的全宽页头（page-header /
+// daka-filters 等）无法用兄弟选择器跟随，改用 body.toc-collapsed 统一让位/回收。
+// 各页在「初始化 / toggle / expand」三处调用即可。
+function syncTocBodyClass(collapsed) {
+    try { document.body.classList.toggle('toc-collapsed', !!collapsed); } catch (e) { /* noop */ }
+}
+
 // ============ 离线图片预热：daka/dati 等图片密集型页面调用 ============
 // 通过触发 fetch 让 SW 的 fetch 处理程序把图片拉入缓存（首次在线查看后离线即可用），
 // 避免 daka/dati 在离线时图片裂开。预热失败不影响页面显示（用户查看时 SW 仍会缓存）。

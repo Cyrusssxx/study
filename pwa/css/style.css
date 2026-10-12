@@ -6050,7 +6050,43 @@ a.daily-meta.daily-kp:hover { color: var(--primary); text-decoration: underline;
 @media (min-width: 801px) {
     .toc-fixed {
         --bleed: calc(-1 * (max(0px, (100vw - 1200px) / 2) + 20px));
+        /* 贴屏面板的垂直留白：顶部与正文顶线齐平（顶栏 60 + 容器上内边距 24），
+           底部取同一数值 —— 上下对称，不再「上紧下松」；--toc-fab 是栏内给右下角 🎨 的留白 */
+        --toc-top: 84px;
+        --toc-gap: 24px;
+        --toc-fab: 64px;
+        /* 贴屏面板的细边框：恒定可见的极淡灰线（不用 (1 - --ui-alpha) 那套——那套是给
+           半透明盒子在「不透明时隐去边框」用的；这里是实色卡，恒显细线才对齐层级） */
+        --toc-line: rgba(128,128,128, .16);
     }
+    .dark .toc-fixed { --toc-line: rgba(255,255,255, .14); }
+
+    /* 贴屏面板统一外观：细边框 + 极淡阴影 + 细滚动条
+       （原生粗滚动条 + 无边框白板是「突兀」的主要来源，四类侧栏同一观感） */
+    .toc-fixed .notes-toc,
+    .toc-fixed .chapter-sidebar,
+    .toc-fixed .number-sidebar,
+    .toc-fixed .exam-numbers {
+        border: 1px solid var(--toc-line);
+        box-shadow: 0 2px 12px rgba(0, 0, 0, .06);
+        scrollbar-width: thin;
+        scrollbar-color: rgba(128,128,128, .3) transparent;
+    }
+    .toc-fixed .notes-toc::-webkit-scrollbar,
+    .toc-fixed .chapter-tree::-webkit-scrollbar,
+    .toc-fixed .number-panel::-webkit-scrollbar,
+    .toc-fixed .exam-numbers::-webkit-scrollbar { width: 8px; height: 8px; }
+    .toc-fixed .notes-toc::-webkit-scrollbar-thumb,
+    .toc-fixed .chapter-tree::-webkit-scrollbar-thumb,
+    .toc-fixed .number-panel::-webkit-scrollbar-thumb,
+    .toc-fixed .exam-numbers::-webkit-scrollbar-thumb {
+        background: rgba(128,128,128, .3);
+        border-radius: 8px;
+    }
+    .toc-fixed .notes-toc::-webkit-scrollbar-track,
+    .toc-fixed .chapter-tree::-webkit-scrollbar-track,
+    .toc-fixed .number-panel::-webkit-scrollbar-track,
+    .toc-fixed .exam-numbers::-webkit-scrollbar-track { background: transparent; }
 
     /* ---- ① 笔记 / 算法讲义：左侧目录（.notes-layout 结构） ---- */
     .toc-fixed .notes-layout {
@@ -6060,8 +6096,8 @@ a.daily-meta.daily-kp:hover { color: var(--primary); text-decoration: underline;
     .toc-fixed .notes-toc {
         position: fixed;
         left: 6px;
-        top: 76px;
-        bottom: 14px;
+        top: var(--toc-top);
+        bottom: var(--toc-gap);
         width: 230px;
         max-height: none;
         z-index: 45;
@@ -6118,23 +6154,27 @@ a.daily-meta.daily-kp:hover { color: var(--primary); text-decoration: underline;
     .toc-fixed .chapter-sidebar {
         position: fixed;
         left: 6px;
-        top: 76px;
-        bottom: 14px;
+        top: var(--toc-top);
+        bottom: var(--toc-gap);
         width: 280px;
         max-height: none;
         z-index: 45;
         transition: transform .22s ease, opacity .22s ease;
     }
-    /* 题号栏底留 84px：给右下角 🎨 背景按钮让位（48px 按钮 + 20 边距 + 16 间隙） */
+    /* 外框上下对称（与左栏同 --toc-gap）；右下角 🎨 的避让改由栏内底部留白承担，
+       这样栏体高度不再为躲按钮而「下短上长」（48px 按钮 + 20 边距 + 16 间隙 ≈ 64px） */
     .toc-fixed .number-sidebar {
         position: fixed;
         right: 6px;
-        top: 76px;
-        bottom: 84px;
+        top: var(--toc-top);
+        bottom: var(--toc-gap);
         width: 230px;
         max-height: none;
         z-index: 45;
         transition: transform .22s ease, opacity .22s ease;
+    }
+    .toc-fixed .number-sidebar .number-panel {
+        padding-bottom: var(--toc-fab);
     }
     /* 固定高度下内部面板撑满剩余高度并自身滚动 */
     .toc-fixed .chapter-sidebar .chapter-tree,
@@ -6209,11 +6249,12 @@ a.daily-meta.daily-kp:hover { color: var(--primary); text-decoration: underline;
     .toc-fixed .exam-numbers {
         position: fixed;
         right: 6px;
-        top: 76px;
-        bottom: 84px;
+        top: var(--toc-top);
+        bottom: var(--toc-gap);
         width: 220px;
         max-height: none;
         z-index: 45;
+        padding-bottom: calc(12px + var(--toc-fab));   /* 同左：栏内避让 🎨 */
     }
     .toc-fixed .exam-main {
         margin-right: 252px;
@@ -6228,8 +6269,8 @@ a.daily-meta.daily-kp:hover { color: var(--primary); text-decoration: underline;
     .toc-fixed .ol-nav {
         position: fixed;
         left: 6px;
-        top: 76px;
-        bottom: 14px;
+        top: var(--toc-top);
+        bottom: var(--toc-gap);
         width: 200px;
         flex: 0 0 auto;
         max-height: none;
@@ -6242,8 +6283,22 @@ a.daily-meta.daily-kp:hover { color: var(--primary); text-decoration: underline;
         display: flex;
         flex-direction: column;
     }
+    /* 与其它贴屏面板同一观感：细边框 + 极淡阴影 */
+    .toc-fixed .ol-nav {
+        border: 1px solid var(--toc-line);
+        box-shadow: 0 2px 12px rgba(0, 0, 0, .06);
+    }
     .toc-fixed .ol-nav-head { flex: 0 0 auto; }
-    .toc-fixed .ol-nav-body { flex: 1 1 auto; min-height: 0; overflow-y: auto; }
+    .toc-fixed .ol-nav-body {
+        flex: 1 1 auto;
+        min-height: 0;
+        overflow-y: auto;
+        scrollbar-width: thin;
+        scrollbar-color: rgba(128,128,128, .3) transparent;
+    }
+    .toc-fixed .ol-nav-body::-webkit-scrollbar { width: 8px; }
+    .toc-fixed .ol-nav-body::-webkit-scrollbar-thumb { background: rgba(128,128,128, .3); border-radius: 8px; }
+    .toc-fixed .ol-nav-body::-webkit-scrollbar-track { background: transparent; }
     /* 收起态：整体滑出屏幕（宽度保持，收起后的窄竖条用 .ol-nav-tab 钉在屏幕边） */
     .toc-fixed .ol-nav.collapsed {
         width: 200px;
@@ -6263,6 +6318,31 @@ a.daily-meta.daily-kp:hover { color: var(--primary); text-decoration: underline;
     .toc-fixed .ol-nav.collapsed~.question-list {
         margin-left: 26px;
     }
+    /* 页头 / 筛选条等「ol-layout 之外的全宽区块」与正文同一左让位：
+       中宽屏（约 1200~1600）时它们的左缘还在目录覆盖范围内 → 首行被目录压住（打卡表即此例） */
+    .toc-fixed > .page-header,
+    .toc-fixed > .map-header,
+    .toc-fixed > .map-toolbar,
+    .toc-fixed > .map-search-hint,
+    .toc-fixed > .daka-summary,
+    .toc-fixed > .daka-filters {
+        margin-left: calc(var(--bleed) + 232px);
+        transition: margin-left .22s ease;
+    }
+    body.toc-collapsed .toc-fixed > .page-header,
+    body.toc-collapsed .toc-fixed > .map-header,
+    body.toc-collapsed .toc-fixed > .map-toolbar,
+    body.toc-collapsed .toc-fixed > .map-search-hint,
+    body.toc-collapsed .toc-fixed > .daka-summary,
+    body.toc-collapsed .toc-fixed > .daka-filters,
+    .toc-fixed:has(.ol-nav.collapsed) > .page-header,
+    .toc-fixed:has(.ol-nav.collapsed) > .map-header,
+    .toc-fixed:has(.ol-nav.collapsed) > .map-toolbar,
+    .toc-fixed:has(.ol-nav.collapsed) > .map-search-hint,
+    .toc-fixed:has(.ol-nav.collapsed) > .daka-summary,
+    .toc-fixed:has(.ol-nav.collapsed) > .daka-filters {
+        margin-left: calc(var(--bleed) + 26px);
+    }
     .toc-fixed .ol-nav-tab {
         position: fixed;
         left: 4px;
@@ -6277,7 +6357,7 @@ a.daily-meta.daily-kp:hover { color: var(--primary); text-decoration: underline;
        收起时随目录一起滑出屏幕，由 .ol-nav-tab 接管展开 */
     .toc-fixed .ol-nav-head .ol-nav-toggle {
         position: fixed;
-        top: calc(50vh - 76px);   /* 包含块是目录（top:76px），折算后视觉位置 = 视口中线 */
+        top: calc(50vh - var(--toc-top));   /* 包含块是目录（top:--toc-top），折算后视觉位置 = 视口中线 */
         left: 199px;              /* 目录宽 200，贴右缘外侧 20px 宽 */
         transform: translateY(-50%);
         width: 20px;

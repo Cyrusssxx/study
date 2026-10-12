@@ -27,6 +27,7 @@ const EXTRA = fs.readFileSync(path.resolve(__dirname, 'pwa/data/ds_code_extra.js
       w.localStorage = { getItem: () => null, setItem: () => {} };
       // common.js（外部脚本 jsdom 不加载）提供的全局：PS 持久化工具 + 富文本格式化
       w.PS = { get: d => ({ ...d }), set: () => {}, restoreScroll: () => {} };
+      w.syncTocBodyClass = () => {};   // 目录收起 → body 状态类（.toc-fixed 页头让位用）
       w.fmtContent = w.fmtAnswer = s => String(s == null ? '' : s);
     }
   });

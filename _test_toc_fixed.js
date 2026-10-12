@@ -55,6 +55,15 @@ check('旧 algo-page 作用域无残留', !/\.algo-page/.test(css) && !PAGES.som
 // ============ 2. CSS · 801+ 笔记/讲义左目录 ============
 console.log('▸ CSS · 笔记/讲义左目录（801+）');
 check('--bleed 变量定义', /\.toc-fixed \{[^}]*--bleed:\s*calc\(/.test(m801));
+check('垂直留白变量（--toc-top / --toc-gap / --toc-fab）',
+  /\.toc-fixed \{[^}]*--toc-top:\s*\d+px[^}]*--toc-gap:\s*\d+px[^}]*--toc-fab:\s*\d+px/.test(m801));
+{
+  const top = +(m801.match(/--toc-top:\s*(\d+)px/)?.[1] ?? -1);
+  const gap = +(m801.match(/--toc-gap:\s*(\d+)px/)?.[1] ?? -2);
+  // 对称口径：目录顶边「距顶栏下沿」= 底边「距视口底」（顶栏 60px）
+  check('上下留白对称（距顶栏 = 距视口底）', top - 60 === gap, `距顶栏 ${top - 60} / 距底 ${gap}`);
+  check('顶部与正文顶线齐平（顶栏 60 + 容器内边距 24）', top === 84, `--toc-top=${top}`);
+}
 check('目录贴左（fixed + left:6px）', /\.toc-fixed \.notes-toc \{[^}]*position:\s*fixed[^}]*left:\s*6px/.test(m801));
 check('页头+正文 262px 让位', /\.toc-fixed \.notes-content,\s*[\r\n]+\s*\.toc-fixed \.notes-header \{[^}]*margin-left:\s*262px/.test(m801));
 check('收起时正文回收（26px）', /\.toc-fixed \.notes-layout\.notes-toc-collapsed \.notes-content \{[^}]*margin-left:\s*26px/.test(m801));
@@ -66,7 +75,8 @@ check('收起时箭头移到最左（left:4px）', /\.toc-fixed \.notes-layout\.
 console.log('▸ CSS · 刷题页（801+）');
 check('章节栏贴左（fixed + left:6px）', /\.toc-fixed \.chapter-sidebar \{[^}]*position:\s*fixed[^}]*left:\s*6px/.test(m801));
 check('题号栏贴右（fixed + right:6px）', /\.toc-fixed \.number-sidebar \{[^}]*position:\s*fixed[^}]*right:\s*6px/.test(m801));
-check('题号栏底部留 84px 给 🎨 让位', /\.toc-fixed \.number-sidebar \{[^}]*bottom:\s*84px/.test(m801));
+check('题号栏底部用 --toc-gap（与左栏对称）', /\.toc-fixed \.number-sidebar \{[^}]*bottom:\s*var\(--toc-gap\)/.test(m801));
+check('题号栏内部底部留白避让 🎨', /\.toc-fixed \.number-sidebar \.number-panel \{[^}]*padding-bottom:\s*var\(--toc-fab\)/.test(m801));
 check('章节栏收起=滑出（translateX(-115%)）', /\.toc-fixed \.quiz-layout\.chapter-collapsed \.chapter-sidebar \{[^}]*translateX\(-115%\)/.test(m801));
 check('题号栏收起=滑出（translateX(115%)）', /\.toc-fixed \.quiz-layout\.number-collapsed \.number-sidebar \{[^}]*translateX\(115%\)/.test(m801));
 check('章节按钮 left:288px（贴栏右缘）', /\.toc-fixed #chapterToggle \{[^}]*left:\s*288px/.test(m801));
@@ -79,7 +89,8 @@ check('栏内面板撑满+自滚（flex:1 1 auto / min-height:0）', /\.toc-fixe
 // ============ 4. CSS · 801+ 真题卷右题号 ============
 console.log('▸ CSS · 真题卷（801+）');
 check('题号栏贴右（fixed + right:6px）', /\.toc-fixed \.exam-numbers \{[^}]*position:\s*fixed[^}]*right:\s*6px/.test(m801));
-check('题号栏底部留 84px 给 🎨 让位', /\.toc-fixed \.exam-numbers \{[^}]*bottom:\s*84px/.test(m801));
+check('题号栏底部用 --toc-gap（与左栏对称）', /\.toc-fixed \.exam-numbers \{[^}]*bottom:\s*var\(--toc-gap\)/.test(m801));
+check('题号栏内部底部留白避让 🎨', /\.toc-fixed \.exam-numbers \{[^}]*padding-bottom:\s*calc\(12px \+ var\(--toc-fab\)\)/.test(m801));
 check('试卷主体右让位（252px）', /\.toc-fixed \.exam-main \{[^}]*margin-right:\s*252px/.test(m801));
 
 // ============ 5. CSS · 901+ 导图/打卡/代码题 ============
@@ -90,8 +101,8 @@ check('正文 232px 让位', /\.toc-fixed #mapRoot,\s*[\r\n]+\s*\.toc-fixed \.qu
 check('收起后正文回收（26px）', /\.toc-fixed \.ol-nav\.collapsed~\.question-list \{[^}]*margin-left:\s*26px/.test(m901));
 check('收起竖条 fixed 贴边（left:4px）', /\.toc-fixed \.ol-nav-tab \{[^}]*position:\s*fixed[^}]*left:\s*4px/.test(m901));
 // 收起箭头：从头部「标题 + «」里钉到目录右缘中点（fixed），与收起竖条同一条视口中线
-check('收起箭头钉右缘中点（ol-nav-toggle fixed · calc(50vh - 76px) · left:199px）',
-  /\.toc-fixed \.ol-nav-head \.ol-nav-toggle \{[^}]*position:\s*fixed[^}]*top:\s*calc\(50vh - 76px\)[^}]*left:\s*199px/.test(m901));
+check('收起箭头钉右缘中点（ol-nav-toggle fixed · calc(50vh - var(--toc-top)) · left:199px）',
+  /\.toc-fixed \.ol-nav-head \.ol-nav-toggle \{[^}]*position:\s*fixed[^}]*top:\s*calc\(50vh - var\(--toc-top\)\)[^}]*left:\s*199px/.test(m901));
 check('ol-nav 恒等 transform（内部 fixed 包含块稳定，展开/收起坐标一致）',
   /\.toc-fixed \.ol-nav \{[^}]*transform:\s*translateX\(0\)/.test(m901));
 
@@ -137,6 +148,51 @@ console.log('▸ DOM 结构');
   check('code ol-nav 后邻 question-list', /<aside class="ol-nav" id="codeNav"><\/aside>[\s\S]{0,200}?<div class="question-list" id="codeList">/.test(code));
   const daka = readPage('daka.html');
   check('daka ol-nav 后邻 question-list', /<aside class="ol-nav" id="dakaNav"><\/aside>[\s\S]{0,200}?<div class="question-list" id="dakaList">/.test(daka));
+}
+
+// ============ 9. 页头让位（ol-layout 之外的全宽区块，防被贴屏目录压住） ============
+console.log('▸ 页头让位（打卡表首行不再被目录压住）');
+{
+  check('901+ 页头/筛选条 232px 让位',
+    /\.toc-fixed > \.page-header,[\s\S]{0,500}?margin-left:\s*calc\(var\(--bleed\) \+ 232px\)/.test(m901));
+  check('收起后回收 26px（body 类 + :has 兜底）',
+    /body\.toc-collapsed \.toc-fixed > \.page-header/.test(m901) &&
+    /\.toc-fixed:has\(\.ol-nav\.collapsed\) > \.page-header/.test(m901));
+  check('daka 命中（daka-summary / daka-filters）',
+    /\.toc-fixed > \.daka-summary/.test(m901) && /\.toc-fixed > \.daka-filters/.test(m901));
+  check('map 命中（map-header / map-toolbar / map-search-hint）',
+    /\.toc-fixed > \.map-header/.test(m901) && /\.toc-fixed > \.map-toolbar/.test(m901) &&
+    /\.toc-fixed > \.map-search-hint/.test(m901));
+  // 结构侧：这些页头必须是 main 的直接子级且位于 ol-layout 之前，否则 CSS 不命中
+  for (const f of ['daka.html', 'code.html', 'map.html']) {
+    const html = readPage(f);
+    const seg = html.slice(html.indexOf('<main'));
+    const head = seg.slice(0, seg.indexOf('class="ol-layout"'));
+    check(`${f} 页头在 ol-layout 之前（需让位）`,
+      /class="(page-header|map-header|daka-summary|daka-filters|map-toolbar|map-search-hint)"/.test(head));
+  }
+}
+
+// ============ 10. body.toc-collapsed 同步（ol-nav 结构页 + 真题页） ============
+console.log('▸ body 状态同步（ol-nav 结构页）');
+{
+  const targets = { 'daka.html': 3, 'code.html': 2, 'map.html': 3, 'js/zhenti.js': 3 };
+  for (const [f, min] of Object.entries(targets)) {
+    const src = f.endsWith('.js') ? fs.readFileSync(path.join(ROOT, 'pwa', f), 'utf8') : readPage(f);
+    const n = (src.match(/syncTocBodyClass\(/g) || []).length;
+    check(`${f} 同步调用 ≥${min} 处`, n >= min, `实际 ${n}`);
+  }
+  const common = fs.readFileSync(path.join(ROOT, 'pwa/js/common.js'), 'utf8');
+  check('common.js 定义 syncTocBodyClass', /function syncTocBodyClass\(collapsed\)/.test(common));
+}
+
+// ============ 11. 贴屏面板统一外观（细边框 + 细滚动条） ============
+console.log('▸ 统一外观（去掉突兀的粗滚动条 / 无框白板）');
+{
+  check('801+ 四类面板细边框', /\.toc-fixed \.notes-toc,[\s\S]{0,220}?border:\s*1px solid var\(--toc-line\)/.test(m801));
+  check('901+ ol-nav 细边框', /\.toc-fixed \.ol-nav \{[^}]*border:\s*1px solid var\(--toc-line\)/.test(m901));
+  check('细滚动条（scrollbar-width: thin）', /\.toc-fixed \.ol-nav-body \{[^}]*scrollbar-width:\s*thin/.test(m901));
+  check('--toc-line 变量定义', /--toc-line:\s*rgba\(/.test(m801));
 }
 
 console.log(failed ? `\n❌ ${failed} 项失败` : '\n✅ 全部通过');

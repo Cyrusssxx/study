@@ -894,12 +894,14 @@
         state.navCollapsed = !state.navCollapsed;
         localStorage.setItem('zhentiNavCollapsed', state.navCollapsed ? '1' : '0');
         $('ztNav').classList.toggle('collapsed', state.navCollapsed);
+        if (typeof syncTocBodyClass === 'function') syncTocBodyClass(state.navCollapsed);
     }
     function expandZtNav() {
         if (!state.navCollapsed) return;
         state.navCollapsed = false;
         localStorage.setItem('zhentiNavCollapsed', '0');
         $('ztNav').classList.remove('collapsed');
+        if (typeof syncTocBodyClass === 'function') syncTocBodyClass(false);
     }
 
     /* ---------------- 启动 ---------------- */
@@ -911,6 +913,7 @@
             state.year = (remembered && state.index.years.includes(remembered))
                 ? remembered : state.index.years[state.index.years.length - 1];
             if (state.navCollapsed) $('ztNav').classList.add('collapsed');
+            if (typeof syncTocBodyClass === 'function') syncTocBodyClass(state.navCollapsed);
             renderYearList();
             await renderPaper();
             bindScrollSpy();

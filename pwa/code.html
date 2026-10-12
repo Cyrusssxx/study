@@ -115,6 +115,7 @@
         navEl.innerHTML = `<div class="ol-nav-head" onclick="toggleCodeNav()">定位<span class="ol-nav-toggle">«</span></div>
             <div class="ol-nav-body">${nav}</div>`;
         navEl.classList.toggle('collapsed', codeNavCollapsed);
+        syncTocBodyClass(codeNavCollapsed);   // 页头随目录让位
         navEl.querySelectorAll('.ol-nav-item.sub').forEach(a => a.addEventListener('click', () => gotoCard(a.dataset.target)));
         navEl.querySelectorAll('.ol-nav-item.root').forEach(a => a.addEventListener('click', () => {
             const det = document.getElementById('group-' + a.dataset.group);
@@ -235,6 +236,7 @@
         codeNavCollapsed = !codeNavCollapsed;
         localStorage.setItem('code_nav_collapsed', codeNavCollapsed ? '1' : '0');
         document.getElementById('codeNav').classList.toggle('collapsed', codeNavCollapsed);
+        syncTocBodyClass(codeNavCollapsed);
     }
     function openCodeNav() {
         document.getElementById('codeNav').classList.add('open');

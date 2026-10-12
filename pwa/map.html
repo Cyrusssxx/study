@@ -506,6 +506,7 @@
             nav.innerHTML = `<div class="ol-nav-head" onclick="toggleOlNav()">目录<span class="ol-nav-toggle">«</span></div>
                 <div class="ol-nav-body">${body}</div>`;
             nav.classList.toggle('collapsed', olNavCollapsed);
+            syncTocBodyClass(olNavCollapsed);   // 页头随目录让位
             nav.querySelectorAll('.ol-nav-item').forEach(a => {
                 a.addEventListener('click', () => gotoNode(a.dataset.target));
             });
@@ -529,6 +530,7 @@
             localStorage.setItem('comap_nav_collapsed', olNavCollapsed ? '1' : '0');
             const nav = document.getElementById('olNav');
             if (nav) nav.classList.toggle('collapsed', olNavCollapsed);
+            syncTocBodyClass(olNavCollapsed);
         }
 
         function expandOlNav() {
@@ -536,6 +538,7 @@
             localStorage.setItem('comap_nav_collapsed', '0');
             const nav = document.getElementById('olNav');
             if (nav) nav.classList.remove('collapsed');
+            syncTocBodyClass(false);
         }
 
         function openOlNav() {
