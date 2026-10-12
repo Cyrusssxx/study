@@ -515,7 +515,10 @@
                 if (nav.classList.contains('collapsed')) expandOlNav();
                 const first = nav.querySelector('.ol-nav-item.card.hit');
                 if (first) {
-                    nav.scrollTop = Math.max(0, first.offsetTop - (nav.clientHeight / 2) + (first.clientHeight / 2));
+                    // 滚动容器已下沉到 .ol-nav-body（901+ 目录本体 overflow 可见），用 rect 差值定位
+                    const navBody = nav.querySelector('.ol-nav-body') || nav;
+                    const nb = navBody.getBoundingClientRect(), fb = first.getBoundingClientRect();
+                    navBody.scrollTop += (fb.top - nb.top) - (nb.height / 2) + (fb.height / 2);
                     first.classList.add('nav-flash');
                     setTimeout(() => first.classList.remove('nav-flash'), 1800);
                 }

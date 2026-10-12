@@ -89,6 +89,11 @@ check('收起=滑出（translateX(-115%)）', /\.toc-fixed \.ol-nav\.collapsed \
 check('正文 232px 让位', /\.toc-fixed #mapRoot,\s*[\r\n]+\s*\.toc-fixed \.question-list \{[^}]*margin-left:\s*232px/.test(m901));
 check('收起后正文回收（26px）', /\.toc-fixed \.ol-nav\.collapsed~\.question-list \{[^}]*margin-left:\s*26px/.test(m901));
 check('收起竖条 fixed 贴边（left:4px）', /\.toc-fixed \.ol-nav-tab \{[^}]*position:\s*fixed[^}]*left:\s*4px/.test(m901));
+// 收起箭头：从头部「标题 + «」里钉到目录右缘中点（fixed），与收起竖条同一条视口中线
+check('收起箭头钉右缘中点（ol-nav-toggle fixed · calc(50vh - 76px) · left:199px）',
+  /\.toc-fixed \.ol-nav-head \.ol-nav-toggle \{[^}]*position:\s*fixed[^}]*top:\s*calc\(50vh - 76px\)[^}]*left:\s*199px/.test(m901));
+check('ol-nav 恒等 transform（内部 fixed 包含块稳定，展开/收起坐标一致）',
+  /\.toc-fixed \.ol-nav \{[^}]*transform:\s*translateX\(0\)/.test(m901));
 
 // ============ 6. 窄屏不泄漏：所有 .toc-fixed 布局规则必须在两个媒体查询内 ============
 console.log('▸ 窄屏安全（规则不泄漏到窄屏）');
@@ -99,6 +104,7 @@ console.log('▸ 窄屏安全（规则不泄漏到窄屏）');
     '.toc-fixed .chapter-sidebar {',
     '.toc-fixed .number-sidebar {',
     '.toc-fixed .ol-nav {',
+    '.toc-fixed .ol-nav-head .ol-nav-toggle {',
     '.toc-fixed .exam-numbers {',
     '.toc-fixed .quiz-layout {',
   ].filter(sel => outside.includes(sel));

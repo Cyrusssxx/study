@@ -22,6 +22,7 @@
         sessionAnswered: new Set(), // 本次会话作答过的题（仅这些显示反馈/展开解析）
         favSet: new Set(),
         noteMap: {},
+        noteImages: {},          // iid -> 已有图片数组（本页不编辑图片，保存时原样透传）
         svgCache: {},            // name -> svg 文本
         year: 0,
         examMode: localStorage.getItem('zhentiMode') === 'exam',
@@ -51,7 +52,15 @@
         const [prog, favs, notes] = await Promise.all([dbAll('progress'), dbAll('favorites'), dbAll('notes')]);
         for (const p of prog) state.progress[p.question_id] = p;
         for (const f of favs) state.favSet.add(f.question_id);
-        for (const n of notes) state.noteMap[n.question_id] = n.content || '';
+        for (const n of notes) {
+            state.noteMap[n.question_id] = n.content || '';
+            state.noteImages[n.question_id] = n.images || [];
+        }
+    }
+
+    // 是否有笔记（文字或图片，与刷题页口径一致）
+    function hasNoteOf(iid) {
+        return !!(state.noteMap[iid] || (state.noteImages[iid] || []).length);
     }
 
     /* ---------------- 套卷结构 ---------------- */
@@ -130,6 +139,7 @@
 
         $('ztMain').innerHTML = html;
         injectSvgs();
+        initNoteEditors($('ztMain'));
         renderFq();
     }
 
@@ -171,7 +181,7 @@
                 : `<div class="result-wrong">回答错误! 正确答案: ${f.a || '—'}</div>`;
         }
 
-        const hasNote = !!state.noteMap[f.iid];
+        const hasNote = hasNoteOf(f.iid);
         return `<div class="question-card" id="card-${f.iid}" data-iid="${f.iid}" data-i="${f.i}">
             <div class="question-header">
                 <div class="question-meta">
@@ -202,7 +212,7 @@
     function bigCard(f) {
         const isFav = state.favSet.has(f.iid);
         const ansOpen = state.ansOpen.has(f.iid) || state.showAll;
-        const hasNote = !!state.noteMap[f.iid];
+        const hasNote = hasNoteOf(f.iid);
         return `<div class="question-card" id="card-${f.iid}" data-iid="${f.iid}" data-i="${f.i}">
             <div class="question-header">
                 <div class="question-meta">
@@ -225,14 +235,27 @@
         </div>`;
     }
 
-    /* ---------------- 笔记面板（debounce 自动保存） ---------------- */
+    /* ---------------- 笔记面板（富文本，停顿时自动保存） ----------------
+     * 与刷题页同源：note_richtext.js 的富文本编辑器（工具条/高亮/染色/格式刷），
+     * "原来的笔记形态"（加粗、颜色、段落）原样渲染；内容以 HTML 存 IndexedDB，与 quiz 互通。 */
     function notePanel(qid) {
-        const content = state.noteMap[qid] || '';
-        return `<div class="zt-note-panel" data-note="${qid}">
+        return `<div class="zt-note-panel note-editor" data-note="${qid}">
             <div class="zt-note-title">我的笔记</div>
-            <textarea class="zt-note-input" data-qid="${qid}" placeholder="记下解题思路、易错点…（停顿即自动保存）"
-                oninput="onNoteInput(this)">${esc(content)}</textarea>
+            ${noteToolbarHtml()}
+            <div class="note-input zt-note-input" contenteditable="true" spellcheck="false"
+                data-qid="${qid}" data-placeholder="记下解题思路、易错点…（停顿即自动保存）"
+                oninput="onNoteInput(this)"></div>
         </div>`;
+    }
+
+    // 新渲染/刷新出来的卡片：初始化富文本编辑器（装载内容 + 绑定工具条）
+    function initNoteEditors(root) {
+        (root || document).querySelectorAll('.note-editor .note-input[data-qid]').forEach(el => {
+            if (el.dataset.noteReady) return;
+            el.dataset.noteReady = '1';
+            loadNoteIntoEditor(el, state.noteMap[el.dataset.qid] || '');
+            bindNoteToolbar(el);
+        });
     }
 
     /* ---------------- SVG 注入 ---------------- */
@@ -329,7 +352,7 @@
         el.insertAdjacentHTML('afterend', html);
         const fresh = el.nextElementSibling;
         el.remove();
-        if (fresh) injectSvgs(fresh);
+        if (fresh) { injectSvgs(fresh); initNoteEditors(fresh); }
         renderFq();
     }
 
@@ -350,22 +373,36 @@
         refreshCard(iid);
     }
 
-    function onNoteInput(ta) {
-        const qid = ta.dataset.qid;
+    // 输入（含工具条/快捷键改动）：刷新占位符 + 停顿自动保存
+    function onNoteInput(el) {
+        // 工具条点击经 note_richtext 全局回调 onNoteInput() 无参调用 → 从当前焦点取编辑器
+        if (!el || !el.dataset || !el.dataset.qid) el = document.activeElement;
+        if (!el || !el.dataset || !el.dataset.qid) return;
+        updateNotePlaceholder(el);
+        const qid = el.dataset.qid;
         clearTimeout(state.noteTimer[qid]);
-        state.noteTimer[qid] = setTimeout(() => saveNote(qid, ta.value), 700);
+        state.noteTimer[qid] = setTimeout(() => saveNote(qid, serializeNote(el)), 700);
     }
 
     async function saveNote(qid, content) {
         state.noteMap[qid] = content;
-        await api('/api/note/' + qid, { method: 'POST', body: JSON.stringify({ content: content, images: [] }) });
+        await api('/api/note/' + qid, {
+            method: 'POST',
+            body: JSON.stringify({ content: content, images: state.noteImages[qid] || [] }),
+        });
+        // 保存后同步该题的「笔记 ●」状态（删除笔记时圆点消失）
+        const card = document.getElementById('card-' + qid);
+        const btn = card && card.querySelector('.btn-explanation[onclick*="toggleNotePanel"]');
+        if (btn) btn.classList.toggle('has-note', hasNoteOf(qid));
     }
 
     function flushNote() {
-        document.querySelectorAll('.zt-note-input').forEach(ta => {
-            const qid = ta.dataset.qid;
+        document.querySelectorAll('.zt-note-input').forEach(el => {
+            const qid = el.dataset.qid;
+            if (!qid) return;
             clearTimeout(state.noteTimer[qid]);
-            if (ta.value !== (state.noteMap[qid] || '')) saveNote(qid, ta.value);
+            const cur = serializeNote(el);
+            if (cur !== (state.noteMap[qid] || '')) saveNote(qid, cur);
         });
     }
 

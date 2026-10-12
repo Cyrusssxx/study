@@ -6234,8 +6234,16 @@ a.daily-meta.daily-kp:hover { color: var(--primary); text-decoration: underline;
         flex: 0 0 auto;
         max-height: none;
         z-index: 45;
+        transform: translateX(0);   /* 恒等：让内部 fixed 的收起箭头以目录为包含块，展开/收起坐标一致不跳位 */
         transition: transform .22s ease, opacity .22s ease;
+        /* 滚动下沉到内部 .ol-nav-body：目录本体 overflow 可见，
+           否则右缘外的固定收起箭头会被滚动容器裁剪 */
+        overflow: visible;
+        display: flex;
+        flex-direction: column;
     }
+    .toc-fixed .ol-nav-head { flex: 0 0 auto; }
+    .toc-fixed .ol-nav-body { flex: 1 1 auto; min-height: 0; overflow-y: auto; }
     /* 收起态：整体滑出屏幕（宽度保持，收起后的窄竖条用 .ol-nav-tab 钉在屏幕边） */
     .toc-fixed .ol-nav.collapsed {
         width: 200px;
@@ -6264,6 +6272,30 @@ a.daily-meta.daily-kp:hover { color: var(--primary); text-decoration: underline;
         border-radius: 8px;
         z-index: 46;
     }
+    /* 收起箭头：从头部「» 目录」里钉到目录右缘外侧的中点（fixed，随目录滚动不动）；
+       垂直位置折算到视口中线（与收起竖条 .ol-nav-tab 同一条线）；
+       收起时随目录一起滑出屏幕，由 .ol-nav-tab 接管展开 */
+    .toc-fixed .ol-nav-head .ol-nav-toggle {
+        position: fixed;
+        top: calc(50vh - 76px);   /* 包含块是目录（top:76px），折算后视觉位置 = 视口中线 */
+        left: 199px;              /* 目录宽 200，贴右缘外侧 20px 宽 */
+        transform: translateY(-50%);
+        width: 20px;
+        height: 58px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0;
+        border: 1px solid var(--border);
+        border-left: none;
+        border-radius: 0 8px 8px 0;
+        background: rgba(var(--card-rgb), .78);
+        backdrop-filter: blur(6px);
+        cursor: pointer;
+        z-index: 46;
+        transition: color .15s ease, border-color .15s ease;
+    }
+    .toc-fixed .ol-nav-head .ol-nav-toggle:hover { color: var(--primary); border-color: var(--primary); }
 }
 
 /* 表格单元格里的重点（数据源写 **…**）：主色加粗，表格内不出现星星 */
@@ -6331,21 +6363,14 @@ a.daily-meta.daily-kp:hover { color: var(--primary); text-decoration: underline;
 .zt-sol-tag { font-size: .8rem; font-weight: 700; color: var(--primary); margin-bottom: 6px; }
 .zt-sol-thought { font-size: .84rem; line-height: 1.7; color: var(--text); margin-bottom: 8px; }
 
-/* 笔记面板（纯文本，自动保存） */
+/* 笔记面板（富文本，自动保存；编辑器复用全局 .note-input 的富文本样式与占位符机制） */
 .zt-note-panel { margin-top: 10px; padding: 10px 12px; background: rgba(234, 138, 12, .05); border-left: 3px solid rgba(234, 138, 12, .35); border-radius: 0 8px 8px 0; }
 .zt-note-title { font-size: .8rem; font-weight: 600; color: #b45309; margin-bottom: 6px; }
-.zt-note-input {
-    width: 100%; min-height: 72px; resize: vertical;
-    border: 1px solid var(--border); border-radius: 8px;
-    background: var(--card-bg); color: var(--text);
-    font-size: .86rem; line-height: 1.6; padding: 8px 10px;
-    font-family: inherit; outline: none;
-}
-.zt-note-input:focus { border-color: var(--primary); }
+.zt-note-input { min-height: 76px; }
 
 /* 右侧悬浮题号导航（竖排半透明横条 · 目录式，随滚动高亮跟随） */
 .zt-fq {
-    position: fixed; right: 5px; top: 76px; bottom: 84px; width: 40px;
+    position: fixed; right: 4px; top: 74px; bottom: 80px; width: 48px;
     z-index: 45; display: flex; flex-direction: column;
     background: transparent; border: none;
     pointer-events: none;   /* 仅头部与条条可交互 */
@@ -6353,23 +6378,23 @@ a.daily-meta.daily-kp:hover { color: var(--primary); text-decoration: underline;
 .zt-fq-head {
     pointer-events: auto;
     display: flex; flex-direction: column; align-items: center; gap: 2px;
-    padding: 6px 0; margin-bottom: 4px; cursor: pointer; user-select: none;
+    padding: 7px 0; margin-bottom: 4px; cursor: pointer; user-select: none;
     border-radius: 9px;
     background: rgba(var(--card-rgb), .55);
     border: 1px solid var(--border);
     transition: background .15s ease;
 }
 .zt-fq-head:hover { background: rgba(74, 122, 184, .14); color: var(--primary); }
-.zt-fq-no { font-size: .62rem; color: var(--text-light); white-space: nowrap; }
-.zt-fq-arrow { font-size: .6rem; color: var(--text-light); }
+.zt-fq-no { font-size: .68rem; color: var(--text-light); white-space: nowrap; }
+.zt-fq-arrow { font-size: .64rem; color: var(--text-light); }
 .zt-fq-body { pointer-events: auto; overflow-y: auto; padding: 2px 0 6px; scrollbar-width: none; }
 .zt-fq-body::-webkit-scrollbar { display: none; }
 .zt-fq.zt-fq-closed .zt-fq-body { display: none; }
 .zt-fq-i {
-    display: block; width: 32px; height: 12px; line-height: 12px;
+    display: block; width: 42px; height: 14px; line-height: 14px;
     margin: 0 auto 1px; text-decoration: none;
-    font-size: 8.5px; text-align: center;
-    border-radius: 3px;
+    font-size: 10px; text-align: center;
+    border-radius: 4px;
     background: rgba(var(--card-rgb), .42);
     color: var(--text-light);
     transition: background .14s ease, color .14s ease;
@@ -6388,10 +6413,10 @@ a.daily-meta.daily-kp:hover { color: var(--primary); text-decoration: underline;
 #ztMain .question-card { scroll-margin-top: 84px; }
 #ztMain .question-card .question-number { font-size: .92rem; }
 
-/* 窄屏：题号导航收窄 */
+/* 窄屏：题号导航收窄（仍比旧版略大） */
 @media (max-width: 900px) {
-    .zt-fq { width: 32px; right: 3px; }
-    .zt-fq-i { width: 26px; }
+    .zt-fq { width: 36px; right: 3px; }
+    .zt-fq-i { width: 30px; height: 13px; line-height: 13px; font-size: 9px; }
 }
 
 /* ==================== 真题套卷 v2：外部数据渲染适配（2026-10-12） ==================== */

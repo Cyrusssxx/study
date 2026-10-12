@@ -39,6 +39,18 @@ async function run() {
   check('选项圆形字母徽章样式存在', /\.zt-page \.option-letter \{[^}]*border-radius:\s*50%/.test(css));
   check('答案速查浮层样式存在', /\.zt-ans-pop\b/.test(css) && /\.zt-ans-grid\b/.test(css));
   check('题号导航竖排横条样式（含 .cur 跟随高亮）', /\.zt-fq-i\.cur \{/.test(css) && !/\.zt-fq-grid \{/.test(css));
+  // v4：笔记富文本形态 + 题号放大 + 年份收起箭头钉中线
+  check('zhenti.html 引入 note_richtext.js（富文本笔记）', /<script src="js\/note_richtext\.js">/.test(rawHtml));
+  check('笔记面板：contenteditable + 工具条（与刷题页同源）',
+    /noteToolbarHtml\(\)/.test(js) && /contenteditable="true"/.test(js) && /bindNoteToolbar\(el\)/.test(js) && !/textarea/.test(js));
+  check('笔记：装载/序列化走 note_richtext（保留加粗/颜色形态）',
+    /loadNoteIntoEditor\(el,/.test(js) && /serializeNote\(el\)/.test(js));
+  check('笔记：保存时原图片数组透传（不误清 quiz 页图片）', /images:\s*state\.noteImages\[qid\] \|\| \[\]/.test(js));
+  check('题号导航放大（42×14px、10px 字）',
+    /\.zt-fq-i \{[^}]*width:\s*42px[^}]*height:\s*14px[^}]*font-size:\s*10px/.test(css));
+  check('收起箭头钉目录右缘中点（ol-nav-toggle fixed · 50vh 折算）',
+    /\.toc-fixed \.ol-nav-head \.ol-nav-toggle \{[^}]*position:\s*fixed[^}]*top:\s*calc\(50vh - 76px\)/.test(css) &&
+    /\.toc-fixed \.ol-nav \{[^}]*transform:\s*translateX\(0\)/.test(css));
   check('默认白纸：无「做过自动展开」逻辑', !/\(!!st && !state\.examMode\)/.test(js));
   check('本次会话作答机制（sessionAnswered）', /sessionAnswered/.test(js));
   check('做题模式下拦截查看答案（toggleAns）', /做题模式下不显示答案/.test(js));
@@ -200,6 +212,29 @@ async function run() {
   await w.toggleFav(iid2);
   await sleep(200);
   check('收藏：题卡星标切换', !!d.querySelector('#card-' + iid2 + ' .btn-icon.favorited'));
+
+  // v4：笔记富文本（与刷题页同源：contenteditable + 工具条 + HTML 落库）
+  w.toggleNotePanel(iid2);
+  await sleep(250);
+  const np = d.querySelector('#card-' + iid2 + ' .zt-note-panel');
+  check('笔记面板：富文本编辑器（contenteditable，非 textarea）',
+    !!np && !!np.querySelector('.note-input[contenteditable="true"]') && !np.querySelector('textarea'));
+  check('笔记面板：工具条就位（加粗按钮）', !!np && !!np.querySelector('.note-toolbar [data-cmd="bold"]'));
+  const ed = np && np.querySelector('.note-input');
+  if (ed) {
+    w.loadNoteIntoEditor(ed, '<p>帧长<b>减小</b></p>');
+    check('笔记：富文本装载渲染（保留 <b> 形态）', ed.innerHTML.includes('<b>减小</b>'), ed.innerHTML.slice(0, 60));
+    ed.innerHTML = '<p>保存<b>测试</b></p>';
+    w.onNoteInput(ed);
+    await sleep(1100);
+    const row = (typeof w.dbGet === 'function') ? await w.dbGet('notes', iid2) : null;
+    check('笔记：停顿自动保存（HTML 落库）', !!row && /<b>测试<\/b>/.test(row.content || ''),
+      row ? String(row.content).slice(0, 60) : '无记录');
+    check('笔记：空图数组正常透传', !!row && Array.isArray(row.images));
+    w.toggleNotePanel(iid2);
+    await sleep(200);
+    check('笔记：再次点击收起面板', !d.querySelector('#card-' + iid2 + ' .zt-note-panel'));
+  }
 
   // SVG 注入（mock 返回假 svg）
   w.close();
