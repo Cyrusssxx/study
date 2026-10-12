@@ -622,8 +622,8 @@
             let toc = `<div class="notes-search" id="notesSearchBox" hidden>
                 <input type="search" id="notesSearchInput" placeholder="🔍 搜索考点、章节、批注…" autocomplete="off"
                     oninput="doNoteSearch(this.value)"
-                    onmousedown="this.dataset.userFocus=1"
-                    onfocus="if(this.dataset.userFocus)showNoteHistory();this.removeAttribute('data-user-focus')">
+                    onclick="onSearchClick()"
+                    onkeydown="onSearchKey(event)">
                 <div class="notes-search-results" id="notesSearchResults" hidden></div>
             </div>`;
             let body = '';
@@ -720,13 +720,9 @@
             });
             initAnnoAndHl();
 
-            // 状态持久化：恢复上次搜索词（自动重放搜索）与滚动位置
-            // 带 GOTO 进入（刷题📖跳转）时：不重放搜索、不恢复旧滚动位置（否则追滚会打断锚点跳转）
-            const ps = PS.get({ q: '' });
-            if (ps.q && !GOTO) {
-                const si = document.getElementById('notesSearchInput');
-                if (si) { si.value = ps.q; doNoteSearch(ps.q); }
-            }
+            // 滚动位置恢复（带 GOTO/LINE 跳转进入时不恢复，避免追滚打断锚点跳转）。
+            // v2 起不再恢复/重放上次搜索词：进入页面一律搜索框为空、下拉收起，
+            // 杜绝"一进来自动弹出搜索记录/结果"（旧行为：PS.q 存在就 doNoteSearch 重放）
             if (!GOTO && !LINE) PS.restoreScroll();
         }
 
@@ -762,7 +758,12 @@
             return t;
         }
 
-        // ==================== 本科考点搜索：标题/章节/正文行 + 我的批注，命中精确定位 ====================
+        // ==================== 本科考点搜索 v2：标题/章节/正文行 + 我的批注，命中精确定位 ====================
+        // 交互约定（2026-10-12 重写）：
+        // ① 进入页面一律不弹下拉（不再恢复/重放上次搜索词）
+        // ② 点击输入框必有反应：空 → 历史；非空 → 重放当前词结果（click 驱动，不依赖 focus）
+        // ③ 输入即时搜；Enter 跳第一条结果；Esc / 点外部收起
+        // ④ 点结果定位失败自动回退命中所在节，绝不静默
         let noteIndex = [], invertedIndex = new Map(), lastNoteHits = [];
         const NOTE_HIST_KEY = 'notesSearchHistory';
 
@@ -818,10 +819,9 @@
         }
 
         function doNoteSearch(q) {
-            PS.set({ q: q || '' });
             const box = document.getElementById('notesSearchResults');
             if (!box) return;
-            q = q.trim().toLowerCase();
+            q = (q || '').trim().toLowerCase();
             if (!q) { showNoteHistory(); return; }
             const hits = [];
             const seen = new Set();
@@ -854,41 +854,78 @@
             hits.sort((a, b) => a.r - b.r || a.w - b.w || a.order - b.order);
             const top = hits.slice(0, 40);
             lastNoteHits = top;
-            box.hidden = false;
+            showSearchBox();
             box.innerHTML = top.length === 0 ? '<div class="notes-sr-empty">无结果</div>' :
+                `<div class="notes-sh-head">搜索结果 · ${top.length} 条</div>` +
                 top.map((h, i) => `<div class="notes-sr-item" onclick="locateNoteHit(${i})">
                     <span class="notes-sr-path">${nsEsc(h.path || '')}</span>
                     <span class="notes-sr-text">${hlKeyword(h.text.slice(0, 80), q)}</span></div>`).join('');
         }
 
-        // 点结果：记历史 + 收起下拉 + 定位到命中块
+        // 点结果：记历史 + 收起下拉 + 定位到命中块；块级找不到时回退到命中所在节，
+        // 保证点击"必有着落"（旧实现找不到块就静默 return → 点了没反应）
         function locateNoteHit(i) {
             const h = lastNoteHits[i];
             if (!h) return;
             saveNoteHist(document.getElementById('notesSearchInput').value);
             clearNoteSearch();
-            locateNoteBlock(h.text);
+            if (!locateNoteBlock(h.text) && h.sec) {
+                jumpTo(h.sec, true, true);   // 兜底：跳到该节顶部（高亮 + 瞬时）
+            }
         }
 
-        // 找文本最短的命中块(=最精确)，瞬时滚到屏幕中央并闪烁 1.8s
+        // 找文本最短的命中块(=最精确)，瞬时滚到屏幕中央并闪烁 1.8s；返回是否定位成功
+        // （两侧空白归一后比较：索引文本压缩过空白，DOM 里仍有换行/缩进，直接 includes 会漏配）
         function locateNoteBlock(text) {
-            const plain = text.replace(/^📝 /, '').trim();
-            if (plain.length < 2) return;
-            let best = null;
+            const plain = text.replace(/^📝 /, '').replace(/\s+/g, ' ').trim();
+            if (plain.length < 2) return false;
+            let best = null, bestLen = Infinity;
             document.querySelectorAll('.notes-content h2, .notes-content .notes-sec-title, .notes-content .notes-body li, .notes-content .notes-body p, .notes-content .notes-body td, .line-anno-text').forEach(b => {
-                if (b.textContent.includes(plain) && (!best || b.textContent.length < best.textContent.length)) best = b;
+                const t = b.textContent.replace(/\s+/g, ' ');
+                if (t.includes(plain) && t.length < bestLen) { best = b; bestLen = t.length; }
             });
-            if (!best) return;
+            if (!best) return false;
             best.scrollIntoView({ block: 'center', behavior: 'instant' });
             best.classList.add('locate-flash');
             setTimeout(() => best.classList.remove('locate-flash'), 1800);
+            return true;
+        }
+
+        // 点击输入框（含已聚焦时重复点击）：空值 → 历史列表；有值 → 重放当前词的搜索结果。
+        // 不用 focus 事件驱动（输入框已聚焦时再次点击不会再派发 focus → 旧实现"点了没反应"）
+        function onSearchClick() {
+            const input = document.getElementById('notesSearchInput');
+            doNoteSearch(input ? input.value : '');
+        }
+
+        // 键盘：Enter = 跳到第一条结果（无结果则只记搜索历史）；Esc = 收起下拉（下拉已收起时不拦截，交还浏览器清空行为）
+        function onSearchKey(e) {
+            if (e.key === 'Escape') {
+                const box = document.getElementById('notesSearchResults');
+                if (box && !box.hidden) { e.preventDefault(); hideSearchBox(); }
+                return;
+            }
+            if (e.key === 'Enter' && !e.isComposing) {
+                e.preventDefault();
+                if (lastNoteHits.length) locateNoteHit(0);
+                else saveNoteHist(e.target.value || '');
+            }
+        }
+
+        function showSearchBox() {
+            const box = document.getElementById('notesSearchResults');
+            if (box) box.hidden = false;
+        }
+
+        function hideSearchBox() {
+            const box = document.getElementById('notesSearchResults');
+            if (box) { box.hidden = true; box.innerHTML = ''; }
         }
 
         function clearNoteSearch() {
             const input = document.getElementById('notesSearchInput');
             if (input) input.value = '';
-            const box = document.getElementById('notesSearchResults');
-            if (box) { box.hidden = true; box.innerHTML = ''; }
+            hideSearchBox();
         }
 
         // ---------- 搜索历史（localStorage 最多 5 条，可单删/清空） ----------
@@ -902,13 +939,13 @@
             localStorage.setItem(NOTE_HIST_KEY, JSON.stringify(h.slice(0, 5)));
         }
 
-        // 输入框为空时展示历史列表（聚焦/清空输入时触发）
+        // 输入框为空时展示历史列表（聚焦/清空输入/点击输入框时触发）
         function showNoteHistory() {
             const box = document.getElementById('notesSearchResults');
             if (!box) return;
             const h = getNoteHist();
-            if (!h.length) { box.hidden = true; box.innerHTML = ''; return; }
-            box.hidden = false;
+            if (!h.length) { hideSearchBox(); return; }
+            showSearchBox();
             box.innerHTML = `<div class="notes-sh-head">搜索历史<button class="notes-sh-clear" onclick="clearNoteHist()">清空</button></div>` +
                 h.slice(0, 5).map((t, i) => `<div class="notes-sh-item" onclick="useNoteHist(${i})">
                     <span class="notes-sh-term">${nsEsc(t)}</span>
@@ -932,16 +969,12 @@
 
         function clearNoteHist() {
             localStorage.removeItem(NOTE_HIST_KEY);
-            const box = document.getElementById('notesSearchResults');
-            if (box) { box.hidden = true; box.innerHTML = ''; }
+            hideSearchBox();
         }
 
         // 点搜索区外部 → 收起下拉
         document.addEventListener('click', e => {
-            if (!e.target.closest('.notes-search')) {
-                const box = document.getElementById('notesSearchResults');
-                if (box) box.hidden = true;
-            }
+            if (!e.target.closest('.notes-search')) hideSearchBox();
         });
 
         // ---------- 行级批注：划词后工具条点 📝批注，批注挂在该行正下方 ----------
