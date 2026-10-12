@@ -27,3 +27,6 @@ data/questions/backup_*/
 
 # 个人助手工具的本地记忆
 .workbuddy/
+
+# 外部真题源缓存（408os.cn 同步的原始 html；由 tools/sync_zt_source.py 生成，不入库）
+_zt_source/

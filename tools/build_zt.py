@@ -1,11 +1,14 @@
 # -*- coding: utf-8 -*-
-"""把 408os.cn 抓取的 846 道真题构建为项目数据 pwa/data/zt/zt_YYYY.json。
+"""把 408os.cn 同步的 846 道真题构建为项目数据 pwa/data/zt/zt_YYYY.json。
 
 用法：python tools/build_zt.py
-输入：_tmp_408os/{meta,questions,answers,analysis}/
-输出：pwa/data/zt/zt_YYYY.json（每年一个文件，indent=1、LF、无尾换行）
+输入：_zt_source/{meta,questions,answers,analysis}/（由 tools/sync_zt_source.py 同步）
+      tools/zt_qid_map.json（交互 id 的题库映射表：与刷题页收藏/错题互通）
+输出：pwa/data/zt/zt_YYYY.json（每年一个，indent=1、LF、无尾换行）
+      pwa/data/zt/index.json（年份 + 题数 + 交互 id 列表）
+      pwa/data/zt_svg/*.svg（题图外置，题干留 .zt-svgholder 占位）
 
-字段：i=题号 t=类型(1单选/2大题/3综合) s=分值 a=答案字母
+字段：i=题号 t=类型(1单选/2大题/3综合) s=分值 a=答案字母 sid=科目
       q=题干HTML（清洗） o=选项HTML数组 an=解析HTML qid=题库映射id或null
 """
 import io
@@ -14,9 +17,10 @@ import os
 import re
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-SRC = os.path.join(ROOT, '_tmp_408os')
+SRC = os.path.join(ROOT, '_zt_source')
 DST = os.path.join(ROOT, 'pwa', 'data', 'zt')
 SVGDIR = os.path.join(ROOT, 'pwa', 'data', 'zt_svg')
+QID_MAP = os.path.join(ROOT, 'tools', 'zt_qid_map.json')
 YEARS = list(range(2009, 2027))
 
 WATERMARK = re.compile(r'<pattern[^>]*watermark-pattern.*?</pattern>', re.S)
@@ -203,9 +207,9 @@ def strip_answer_page(html):
 
 
 def load_qid_map():
-    """从匹配结果加载 {year: {idx: qid}}（高置信映射）。"""
+    """从 tools/zt_qid_map.json 加载 {year: {idx: qid}}（交互 id 映射）。"""
     m = {}
-    p = os.path.join(SRC, 'qid_map.json')
+    p = QID_MAP
     if os.path.exists(p):
         raw = json.load(io.open(p, encoding='utf-8'))
         for k, v in raw.items():
