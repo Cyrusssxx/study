@@ -90,6 +90,8 @@
             // 必须明示是哪一种——静默显示 0 会让人误以为记录被清空。
             const warnings = (data && data.warnings) || [];
             const stores = (data && data.stores) || null;
+            // 关键三项（progress/wrong/favorites）全为 -1 → 本地存储整体打不开（无痕/被占用/被禁）
+            const storesDown = !!(stores && stores.progress === -1 && stores.wrong === -1 && stores.favorites === -1);
             const looksEmpty = !apiErr && !warnings.length && num(s.total_answered) === 0
                 && num(s.favorite_count) === 0 && num(s.wrong_count) === 0
                 && (!stores || (stores.progress === 0 && stores.wrong === 0 && stores.favorites === 0));
@@ -103,9 +105,11 @@
                 ${apiErr ? `<div class="stat-warn">⚠ 统计接口异常：${apiErr}
                     <button class="stat-retry" onclick="loadHome()">重试</button>
                     <span class="stat-warn-hint">其余入口照常可用；多次重试仍失败，请按 F12 看 Console 里 api error 的详情</span></div>` : ''}
-                ${(!apiErr && warnings.length) ? `<div class="stat-warn">⚠ 部分统计读取失败（显示可能不完整）：${warnings.join('；')}
+                ${(!apiErr && warnings.length) ? `<div class="stat-warn">⚠ ${storesDown
+                    ? '本地存储打不开（无痕模式 / 被其它标签页占用 / 被浏览器禁用）——数字暂显示 0，数据通常还在'
+                    : '部分统计读取失败（显示可能不完整）：' + warnings.slice(0, 3).join('；') + (warnings.length > 3 ? ` 等 ${warnings.length} 项` : '')}
                     <button class="stat-retry" onclick="loadHome()">重试</button>
-                    <span class="stat-warn-hint">若是「其他标签页占用」，关闭本站其它标签页后刷新即可</span></div>` : ''}
+                    <span class="stat-warn-hint">若是「其它标签页占用」：关闭本站其它标签页后刷新即可。${storesDown ? '数据通常还在，<b>先别导入备份</b>（以免覆盖）' : ''}</span></div>` : ''}
                 ${looksEmpty ? `<div class="stat-empty">📭 没读到答题记录（已做 / 收藏 / 错题全为 0）
                     <button class="stat-retry" onclick="document.getElementById('homeImportFile').click()">导入备份恢复</button>
                     <span class="stat-warn-hint">当前地址 <code>${location.origin}</code>：数据按访问地址隔离存储，换了域名 / 端口 / IP 就看不到旧的。若有 <code>408quiz-backup-*.json</code> 可直接还原</span>

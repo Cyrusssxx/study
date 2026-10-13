@@ -50,12 +50,17 @@ const CSS = fs.readFileSync(path.join(ROOT, 'pwa/css/style.css'), 'utf8');
     /req\.onblocked = \(\) =>/.test(BE) && /_dbPromise = null;   \/\/ 失败不缓存/.test(BE), true);
   // 容错不能静默：2026-10-14 用户见统计全 0 以为数据被清空，实为读取失败被 EMPTY 吞掉
   check('后端：/api/stats 返回 stores 探针（区分「空库」与「读不出来」）',
-    /stores = \{ progress: pr\.length, wrong: wr\.length, favorites: fv\.length, daka: dk\.length \}/.test(BE)
+    /const stores = \{\};/.test(BE) && /stores\[k\] = \(await dbAll\(st\)\)\.length;/.test(BE)
     && /jsonResp\(\{ overall, subjects, stores, warnings \}\)/.test(BE), true);
+  check('后端：探针逐项容错（老库缺 daka_progress 不误报整体失败）',
+    /stores\[k\] = -1; if \(!firstStoreErr\)/.test(BE)
+    && /stores\.progress === -1 && stores\.wrong === -1 && stores\.favorites === -1/.test(BE), true);
   check('后端：失败原因进 warnings（不静默）',
-    /warnings\.push\('本地存储读取失败：'/.test(BE) && /warnings\.push\('总统计失败：'/.test(BE), true);
-  check('前端：读取失败黄条（warnings 明示，可被看见）',
-    /部分统计读取失败（显示可能不完整）/.test(IDX) && /warnings\.join\('；'\)/.test(IDX), true);
+    /warnings\.push\('本地存储不可用：'/.test(BE) && /warnings\.push\('总统计失败：'/.test(BE), true);
+  check('前端：读取失败黄条（warnings 明示 + 限长 3 条）',
+    /部分统计读取失败（显示可能不完整）/.test(IDX) && /warnings\.slice\(0, 3\)\.join\('；'\)/.test(IDX), true);
+  check('前端：本地存储打不开时明确提示「数据通常还在，先别导入备份」',
+    /本地存储打不开（无痕模式/.test(IDX) && /先别导入备份/.test(IDX), true);
   check('前端：空库提示 + 一键导入备份（stat-empty / homeImportFile）',
     /class="stat-empty"/.test(IDX) && /id="homeImportFile"/.test(IDX)
     && /async function homeImportBackup/.test(IDX) && /\/api\/backup\/import/.test(IDX), true);
@@ -150,10 +155,11 @@ const CSS = fs.readFileSync(path.join(ROOT, 'pwa/css/style.css'), 'utf8');
     /1200/.test(cards2[0] ? cards2[0].textContent : ''), true);
   check('统计条正常显示（无「加载失败」）',
     /已做题目/.test(d2.getElementById('statsBar').textContent) && !/加载失败/.test(d2.getElementById('statsBar').textContent), true);
-  check('读取失败不再静默显示 0（黄条明示 warnings）',
-    /部分统计读取失败/.test(d2.getElementById('statsBar').textContent), true);
-  check('读取失败不误报「记录为空」（两者互斥）',
-    !/没读到答题记录/.test(d2.getElementById('statsBar').textContent), true);
+  check('读取失败不再静默显示 0（红/黄条明示）',
+    /本地存储打不开|部分统计读取失败/.test(d2.getElementById('statsBar').textContent), true);
+  check('读取失败不误报「记录为空」且提示先别导入（防覆盖）',
+    !/没读到答题记录/.test(d2.getElementById('statsBar').textContent)
+    && /先别导入备份/.test(d2.getElementById('statsBar').textContent), true);
   dom2.window.close();
 
   // 场景三：真实空库（stores 全 0 且无 warnings）→ 提示「没读到记录」并给一键导入备份

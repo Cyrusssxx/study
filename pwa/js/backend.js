@@ -693,15 +693,18 @@ async function api(url, opts = {}) {
             const errMsg = e => ((e && e.message) ? e.message : String(e));
             const warnings = [];
 
-            // 底层存储可读性探针
-            let stores = null;
-            try {
-                const [pr, wr, fv, dk] = await Promise.all([
-                    dbAll('progress'), dbAll('wrong'), dbAll('favorites'), dbAll('daka_progress')
-                ]);
-                stores = { progress: pr.length, wrong: wr.length, favorites: fv.length, daka: dk.length };
-            } catch (e) {
-                warnings.push('本地存储读取失败：' + errMsg(e));
+            // 底层存储可读性探针：逐项容错（老库可能缺少后加的 daka_progress store，
+            // 单个 store 读不到 ≠ 整体不可用，不能误报）。-1 = 该项读不到
+            const stores = {};
+            let firstStoreErr = null;
+            for (const [k, st] of [['progress', 'progress'], ['wrong', 'wrong'],
+                                   ['favorites', 'favorites'], ['daka', 'daka_progress']]) {
+                try { stores[k] = (await dbAll(st)).length; }
+                catch (e) { stores[k] = -1; if (!firstStoreErr) firstStoreErr = errMsg(e); }
+            }
+            // 关键三项全读不到才判定「本地存储不可用」，且只报一条（避免与下面的统计失败刷屏）
+            if (stores.progress === -1 && stores.wrong === -1 && stores.favorites === -1) {
+                warnings.push('本地存储不可用：' + (firstStoreErr || '未知原因'));
             }
 
             let overall;
