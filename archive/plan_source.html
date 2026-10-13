@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>考研冲刺计划 · 10/12 – 12/18</title>
+<style>
+  :root {
+    --primary: #4a7ab8; --primary-soft: rgba(74,122,184,.10);
+    --text: #2a3549; --muted: #66768c; --line: #dfe6ef;
+    --bg: #f6f8fb; --card: #ffffff;
+    --phA: #4a7ab8; --phB: #2f9e8f; --phC: #c07a2c;
+    --ms-bg: rgba(192,122,44,.10);
+    --it-bg: rgba(100,116,139,.09);
+    --fx-bg: rgba(47,158,143,.09);
+    --font: "Times New Roman", "Microsoft YaHei", "PingFang SC", sans-serif;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --primary: #8fb0d9; --primary-soft: rgba(143,176,217,.12);
+      --text: #dde5ee; --muted: #93a2b5; --line: #33404f;
+      --bg: #1d232b; --card: #242c36;
+      --phA: #8fb0d9; --phB: #57bfb0; --phC: #d9a45e;
+      --ms-bg: rgba(217,164,94,.13);
+      --it-bg: rgba(148,163,184,.13);
+      --fx-bg: rgba(87,191,176,.13);
+    }
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: var(--bg); color: var(--text); font-family: var(--font);
+         line-height: 1.6; padding: 28px 20px 60px; }
+  .wrap { max-width: 1120px; margin: 0 auto; }
+  header { margin-bottom: 22px; }
+  h1 { font-size: 26px; font-weight: 700; letter-spacing: .5px; }
+  .sub { color: var(--muted); font-size: 14px; margin-top: 6px; }
+  .legend { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 12px; font-size: 13px; }
+  .legend span { padding: 3px 10px; border-radius: 6px; background: var(--primary-soft);
+                  border-left: 3px solid var(--primary); }
+  .legend .b { border-left-color: var(--phB); }
+  .legend .c { border-left-color: var(--phC); }
+  .legend .m { background: var(--ms-bg); border-left-color: var(--phC); font-weight: 700; color: var(--phC); }
+  .legend .it { background: var(--it-bg); border-left-color: #64748b; }
+  .legend .fx { background: var(--fx-bg); border-left-color: var(--phB); }
+
+  .guide { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 14px; margin: 20px 0 26px; }
+  .gcard { background: var(--card); border: 1px solid var(--line); border-radius: 12px;
+            padding: 14px 18px; }
+  .gcard h4 { font-size: 15px; margin-bottom: 8px; color: var(--primary); }
+  .gcard li { font-size: 13.5px; margin: 4px 0 4px 18px; }
+  .gcard b { color: var(--text); }
+
+  .week { background: var(--card); border: 1px solid var(--line); border-radius: 12px;
+           margin-bottom: 16px; overflow: hidden; }
+  .week h3 { font-size: 15px; font-weight: 600; padding: 10px 16px;
+              border-bottom: 1px solid var(--line); display: flex; align-items: center; gap: 10px; }
+  .week.ph-A h3 { border-left: 4px solid var(--phA); }
+  .week.ph-B h3 { border-left: 4px solid var(--phB); }
+  .week.ph-C h3 { border-left: 4px solid var(--phC); }
+  .week.ph-K h3 { border-left: 4px solid #94a3b8; }
+  .tag { font-size: 12px; color: var(--muted); font-weight: 400; }
+  table { width: 100%; border-collapse: collapse; }
+  th { font-size: 12.5px; color: var(--muted); font-weight: 600; text-align: left;
+        padding: 7px 12px; border-bottom: 1px solid var(--line); background: var(--primary-soft); }
+  td { font-size: 13.5px; padding: 7px 12px; border-bottom: 1px solid var(--line);
+        vertical-align: top; }
+  tr:last-child td { border-bottom: none; }
+  tr.wk td { background: rgba(128,128,128,.045); }
+  .dt { white-space: nowrap; width: 75px; border-left: 3px solid transparent; }
+  .dt b { font-size: 14.5px; }
+  .dt span { display: block; font-size: 12px; color: var(--muted); }
+  .c408 { width: 235px; }
+  .cma { width: 155px; }
+  .cen { width: 250px; }
+  .nt { color: var(--muted); font-size: 12.5px; }
+
+  tr.ms td { background: var(--ms-bg); }
+  tr.ms .dt { border-left-color: var(--phC); }
+  tr.ms .nt { font-weight: 700; color: var(--phC); font-size: 13px;
+               text-decoration: underline; text-underline-offset: 3px; }
+  tr.it td { background: var(--it-bg); }
+  tr.it .dt { border-left-color: #64748b; }
+  tr.it .c408, tr.it .cma { color: var(--muted); }
+  tr.fx td { background: var(--fx-bg); }
+  tr.fx .dt { border-left-color: var(--phB); }
+
+  footer { margin-top: 26px; font-size: 13px; color: var(--muted); text-align: center; }
+  @media print {
+    body { background: #fff; padding: 0; }
+    .week { break-inside: avoid; box-shadow: none; }
+  }
+  @media (max-width: 760px) {
+    table, thead, tbody, tr, td, th { display: block; }
+    thead { display: none; }
+    tr { padding: 10px 14px; border-bottom: 1px solid var(--line); }
+    td { border: none; padding: 2px 0; width: auto !important; }
+    td.c408::before { content: "408："; color: var(--muted); }
+    td.cma::before { content: "数学："; color: var(--muted); }
+    td.cen::before { content: "英语："; color: var(--muted); }
+    td.nt::before { content: "备注："; color: var(--muted); }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>考研冲刺计划</h1>
+    <p class="sub">2026-10-12 → 2026-12-18（68 天）· 初试 12/19–20 · 每天净学习 8h · 408 不留模考 · 实习日志期 10/12–15 · 机动日 ×5</p>
+    <div class="legend">
+      <span>阶段 A · 一刷 18 套（10/16–11/23）</span>
+      <span class="b">阶段 B · 二刷 18 套（11/24–12/12）</span>
+      <span class="c">阶段 C · 收口 5 天（12/13–12/18）</span>
+      <span class="m">◆ 里程碑日：任务切换 / 收尾节点</span>
+      <span class="it">实习日志 10/12–15（只保单词）</span>
+      <span class="fx">机动日 ×5：10/28 · 11/9 · 11/21 · 12/3 · 12/15</span>
+    </div>
+  </header>
+
+  <section class="guide">
+    <div class="gcard">
+      <h4>每日时间模板（8h，10/16 起生效）</h4>
+      <ul>
+        <li>上午 <b>8:00–10:30 数学</b>（对齐考场 8:30–11:30 的脑力段）</li>
+        <li>下午 <b>14:00–17:00 408</b>（做卷日严格掐表 3h）</li>
+        <li>晚上 <b>19:00–20:30 英语</b>；20:30 起复盘 + 机动</li>
+        <li>单词 30′ 拆进碎片时间（早/午/晚各 10′）</li>
+      </ul>
+    </div>
+    <div class="gcard">
+      <h4>数学 747 题：怎么控制量</h4>
+      <ul>
+        <li>每日题号已排好（20–21 题 / 约 2.5h），做完打勾，<b>11/23 收官</b></li>
+        <li>单题超 12 分钟没思路 → 标记看解析，当晚重做（看懂也算进度）</li>
+        <li>难题章当天下调，缺口用简单章的日子补；<b>每周日结算</b>动态校准</li>
+      </ul>
+    </div>
+    <div class="gcard">
+      <h4>英语节奏（顶多一天一篇）</h4>
+      <ul>
+        <li>阅读只重做正确率偏低的 20 篇（10/16 起一天 1 篇，<b>11/5 收官</b>）</li>
+        <li>完型 17 篇（10/16–11/1）→ 翻译 17 段（11/2–11/20）各一天一篇</li>
+        <li>作文：10/20 起每周二、五背模板→仿写；12/6 起每周二、四、六限时默写</li>
+        <li>目标：不看资料 <b>20 分钟成文</b></li>
+      </ul>
+    </div>
+  </section>
+
+  <main>
+    <section class="week ph-A"><h3>第 1 周 · 10/12 – 10/18<span class="tag">阶段A · 一刷</span></h3><table><thead><tr><th>日期</th><th>408（套卷）</th><th>数学</th><th>英语</th><th>备注</th></tr></thead><tbody><tr class="it"><td class="dt"><b>10/12</b><span>周一</span></td><td class="c408">实习日志</td><td class="cma">实习日志</td><td class="cen">单词 30′（必保）</td><td class="nt">实习日志（10/11–15，不排 408/数学）</td></tr><tr class="it"><td class="dt"><b>10/13</b><span>周二</span></td><td class="c408">实习日志</td><td class="cma">实习日志</td><td class="cen">单词 30′（必保）</td><td class="nt">实习日志（10/11–15，不排 408/数学）</td></tr><tr class="it"><td class="dt"><b>10/14</b><span>周三</span></td><td class="c408">实习日志</td><td class="cma">实习日志</td><td class="cen">单词 30′（必保）</td><td class="nt">实习日志（10/11–15，不排 408/数学）</td></tr><tr class="it"><td class="dt"><b>10/15</b><span>周四</span></td><td class="c408">实习日志</td><td class="cma">实习日志</td><td class="cen">单词 30′（必保）</td><td class="nt">实习日志（10/11–15，不排 408/数学）</td></tr><tr><td class="dt"><b>10/16</b><span>周五</span></td><td class="c408">套卷 1/18（2009）限时 3h 掐表</td><td class="cma">第 1–20 题（约 2.5h）</td><td class="cen">单词 30′ + 阅读重做：2011·T4 + 完型 1 篇</td><td class="nt"></td></tr><tr class="wk"><td class="dt"><b>10/17</b><span>周六</span></td><td class="c408">卷 1（2009）精析：错题回笔记 + 标记</td><td class="cma">第 21–41 题（约 2.5h）</td><td class="cen">单词 30′ + 阅读重做：2012·T4 + 完型 1 篇</td><td class="nt">下午留 1h 机动（补欠账/休息）</td></tr><tr class="wk"><td class="dt"><b>10/18</b><span>周日</span></td><td class="c408">套卷 2/18（2010）限时 3h 掐表</td><td class="cma">第 42–62 题（约 2.5h）</td><td class="cen">单词 30′ + 阅读重做：2014·T2 + 完型 1 篇</td><td class="nt">周结算：统计完成度，调下周数学日均；晚上半休</td></tr></tbody></table></section><section class="week ph-A"><h3>第 2 周 · 10/19 – 10/25<span class="tag">阶段A · 一刷</span></h3><table><thead><tr><th>日期</th><th>408（套卷）</th><th>数学</th><th>英语</th><th>备注</th></tr></thead><tbody><tr><td class="dt"><b>10/19</b><span>周一</span></td><td class="c408">卷 2（2010）精析：错题回笔记 + 标记</td><td class="cma">第 63–83 题（约 2.5h）</td><td class="cen">单词 30′ + 阅读重做：2015·T1 + 完型 1 篇</td><td class="nt"></td></tr><tr class="ms"><td class="dt"><b>10/20</b><span>周二</span></td><td class="c408">套卷 3/18（2011）限时 3h 掐表</td><td class="cma">第 84–103 题（约 2.5h）</td><td class="cen">单词 30′ + 阅读重做：2015·T3 + 完型 1 篇 + 作文：背模板 30′</td><td class="nt">◆ 作文启动：背模板期</td></tr><tr><td class="dt"><b>10/21</b><span>周三</span></td><td class="c408">卷 3（2011）精析：错题回笔记 + 标记</td><td class="cma">第 104–124 题（约 2.5h）</td><td class="cen">单词 30′ + 阅读重做：2017·T3 + 完型 1 篇</td><td class="nt"></td></tr><tr><td class="dt"><b>10/22</b><span>周四</span></td><td class="c408">套卷 4/18（2012）限时 3h 掐表</td><td class="cma">第 125–145 题（约 2.5h）</td><td class="cen">单词 30′ + 阅读重做：2019·T1 + 完型 1 篇</td><td class="nt"></td></tr><tr><td class="dt"><b>10/23</b><span>周五</span></td><td class="c408">卷 4（2012）精析：错题回笔记 + 标记</td><td class="cma">第 146–166 题（约 2.5h）</td><td class="cen">单词 30′ + 阅读重做：2019·T3 + 完型 1 篇 + 作文：背模板 30′</td><td class="nt"></td></tr><tr class="wk"><td class="dt"><b>10/24</b><span>周六</span></td><td class="c408">套卷 5/18（2013）限时 3h 掐表</td><td class="cma">第 167–186 题（约 2.5h）</td><td class="cen">单词 30′ + 阅读重做：2021·新题型 + 完型 1 篇</td><td class="nt">下午留 1h 机动（补欠账/休息）</td></tr><tr class="wk"><td class="dt"><b>10/25</b><span>周日</span></td><td class="c408">卷 5（2013）精析：错题回笔记 + 标记</td><td class="cma">第 187–207 题（约 2.5h）</td><td class="cen">单词 30′ + 阅读重做：2021·T3 + 完型 1 篇</td><td class="nt">周结算：统计完成度，调下周数学日均；晚上半休</td></tr></tbody></table></section><section class="week ph-A"><h3>第 3 周 · 10/26 – 11/1<span class="tag">阶段A · 一刷</span></h3><table><thead><tr><th>日期</th><th>408（套卷）</th><th>数学</th><th>英语</th><th>备注</th></tr></thead><tbody><tr><td class="dt"><b>10/26</b><span>周一</span></td><td class="c408">套卷 6/18（2014）限时 3h 掐表</td><td class="cma">第 208–228 题（约 2.5h）</td><td class="cen">单词 30′ + 阅读重做：2014·T4 + 完型 1 篇</td><td class="nt"></td></tr><tr><td class="dt"><b>10/27</b><span>周二</span></td><td class="c408">卷 6（2014）精析：错题回笔记 + 标记</td><td class="cma">第 229–249 题（约 2.5h）</td><td class="cen">单词 30′ + 阅读重做：2015·T2 + 完型 1 篇 + 作文：背模板 30′</td><td class="nt"></td></tr><tr class="fx"><td class="dt"><b>10/28</b><span>周三</span></td><td class="c408">机动</td><td class="cma">机动</td><td class="cen">机动（建议只保单词）</td><td class="nt">机动日：应对突发 / 补欠账（没欠账就休息）</td></tr><tr><td class="dt"><b>10/29</b><span>周四</span></td><td class="c408">套卷 7/18（2015）限时 3h 掐表</td><td class="cma">第 250–269 题（约 2.5h）</td><td class="cen">单词 30′ + 阅读重做：2016·新题型 + 完型 1 篇</td><td class="nt"></td></tr><tr><td class="dt"><b>10/30</b><span>周五</span></td><td class="c408">卷 7（2015）精析：错题回笔记 + 标记</td><td class="cma">第 270–290 题（约 2.5h）</td><td class="cen">单词 30′ + 阅读重做：2016·T3 + 完型 1 篇 + 作文：背模板 30′</td><td class="nt"></td></tr><tr class="wk"><td class="dt"><b>10/31</b><span>周六</span></td><td class="c408">套卷 8/18（2016）限时 3h 掐表</td><td class="cma">第 291–311 题（约 2.5h）</td><td class="cen">单词 30′ + 阅读重做：2017·T4 + 完型 1 篇</td><td class="nt">下午留 1h 机动（补欠账/休息）</td></tr><tr class="ms"><td class="dt"><b>11/1</b><span>周日</span></td><td class="c408">卷 8（2016）精析：错题回笔记 + 标记</td><td class="cma">第 312–332 题（约 2.5h）</td><td class="cen">单词 30′ + 阅读重做：2018·新题型 + 完型 1 篇</td><td class="nt">◆ 完型 17 篇收官</td></tr></tbody></table></section><section class="week ph-A"><h3>第 4 周 · 11/2 – 11/8<span class="tag">阶段A · 一刷</span></h3><table><thead><tr><th>日期</th><th>408（套卷）</th><th>数学</th><th>英语</th><th>备注</th></tr></thead><tbody><tr><td class="dt"><b>11/2</b><span>周一</span></td><td class="c408">套卷 9/18（2017）限时 3h 掐表</td><td class="cma">第 333–352 题（约 2.5h）</td><td class="cen">单词 30′ + 阅读重做：2018·T3 + 完型 1 篇</td><td class="nt"></td></tr><tr><td class="dt"><b>11/3</b><span>周二</span></td><td class="c408">卷 9（2017）精析：错题回笔记 + 标记</td><td class="cma">第 353–373 题（约 2.5h）</td><td class="cen">单词 30′ + 阅读重做：2020·新题型 + 翻译 1 段 + 作文：仿写 1 篇（限时 40′）</td><td class="nt"></td></tr><tr><td class="dt"><b>11/4</b><span>周三</span></td><td class="c408">套卷 10/18（2018）限时 3h 掐表</td><td class="cma">第 374–394 题（约 2.5h）</td><td class="cen">单词 30′ + 阅读重做：2020·T1 + 翻译 1 段</td><td class="nt"></td></tr><tr class="ms"><td class="dt"><b>11/5</b><span>周四</span></td><td class="c408">卷 10（2018）精析：错题回笔记 + 标记</td><td class="cma">第 395–415 题（约 2.5h）</td><td class="cen">单词 30′ + 阅读重做：2020·T3 + 翻译 1 段</td><td class="nt">◆ 阅读重做 20 篇收官</td></tr><tr><td class="dt"><b>11/6</b><span>周五</span></td><td class="c408">套卷 11/18（2019）限时 3h 掐表</td><td class="cma">第 416–435 题（约 2.5h）</td><td class="cen">单词 30′ + 翻译 1 段 + 作文：仿写 1 篇（限时 40′）</td><td class="nt"></td></tr><tr class="wk"><td class="dt"><b>11/7</b><span>周六</span></td><td class="c408">卷 11（2019）精析：错题回笔记 + 标记</td><td class="cma">第 436–456 题（约 2.5h）</td><td class="cen">单词 30′ + 翻译 1 段</td><td class="nt">下午留 1h 机动（补欠账/休息）</td></tr><tr class="wk"><td class="dt"><b>11/8</b><span>周日</span></td><td class="c408">套卷 12/18（2020）限时 3h 掐表</td><td class="cma">第 457–477 题（约 2.5h）</td><td class="cen">单词 30′ + 翻译 1 段</td><td class="nt">周结算：统计完成度，调下周数学日均；晚上半休</td></tr></tbody></table></section><section class="week ph-A"><h3>第 5 周 · 11/9 – 11/15<span class="tag">阶段A · 一刷</span></h3><table><thead><tr><th>日期</th><th>408（套卷）</th><th>数学</th><th>英语</th><th>备注</th></tr></thead><tbody><tr class="fx"><td class="dt"><b>11/9</b><span>周一</span></td><td class="c408">机动</td><td class="cma">机动</td><td class="cen">机动（建议只保单词）</td><td class="nt">机动日：应对突发 / 补欠账（没欠账就休息）</td></tr><tr><td class="dt"><b>11/10</b><span>周二</span></td><td class="c408">卷 12（2020）精析：错题回笔记 + 标记</td><td class="cma">第 478–498 题（约 2.5h）</td><td class="cen">单词 30′ + 翻译 1 段 + 作文：仿写 1 篇（限时 40′）</td><td class="nt"></td></tr><tr><td class="dt"><b>11/11</b><span>周三</span></td><td class="c408">套卷 13/18（2021）限时 3h 掐表</td><td class="cma">第 499–518 题（约 2.5h）</td><td class="cen">单词 30′ + 翻译 1 段</td><td class="nt"></td></tr><tr><td class="dt"><b>11/12</b><span>周四</span></td><td class="c408">卷 13（2021）精析：错题回笔记 + 标记</td><td class="cma">第 519–539 题（约 2.5h）</td><td class="cen">单词 30′ + 翻译 1 段</td><td class="nt"></td></tr><tr><td class="dt"><b>11/13</b><span>周五</span></td><td class="c408">套卷 14/18（2022）限时 3h 掐表</td><td class="cma">第 540–560 题（约 2.5h）</td><td class="cen">单词 30′ + 翻译 1 段 + 作文：仿写 1 篇（限时 40′）</td><td class="nt"></td></tr><tr class="wk"><td class="dt"><b>11/14</b><span>周六</span></td><td class="c408">卷 14（2022）精析：错题回笔记 + 标记</td><td class="cma">第 561–581 题（约 2.5h）</td><td class="cen">单词 30′ + 翻译 1 段</td><td class="nt">下午留 1h 机动（补欠账/休息）</td></tr><tr class="wk"><td class="dt"><b>11/15</b><span>周日</span></td><td class="c408">套卷 15/18（2023）限时 3h 掐表</td><td class="cma">第 582–601 题（约 2.5h）</td><td class="cen">单词 30′ + 翻译 1 段</td><td class="nt">周结算：统计完成度，调下周数学日均；晚上半休</td></tr></tbody></table></section><section class="week ph-A"><h3>第 6 周 · 11/16 – 11/22<span class="tag">阶段A · 一刷</span></h3><table><thead><tr><th>日期</th><th>408（套卷）</th><th>数学</th><th>英语</th><th>备注</th></tr></thead><tbody><tr><td class="dt"><b>11/16</b><span>周一</span></td><td class="c408">卷 15（2023）精析：错题回笔记 + 标记</td><td class="cma">第 602–622 题（约 2.5h）</td><td class="cen">单词 30′ + 翻译 1 段</td><td class="nt"></td></tr><tr><td class="dt"><b>11/17</b><span>周二</span></td><td class="c408">套卷 16/18（2024）限时 3h 掐表</td><td class="cma">第 623–643 题（约 2.5h）</td><td class="cen">单词 30′ + 翻译 1 段 + 作文：仿写 1 篇（限时 40′）</td><td class="nt"></td></tr><tr><td class="dt"><b>11/18</b><span>周三</span></td><td class="c408">卷 16（2024）精析：错题回笔记 + 标记</td><td class="cma">第 644–664 题（约 2.5h）</td><td class="cen">单词 30′ + 翻译 1 段</td><td class="nt"></td></tr><tr><td class="dt"><b>11/19</b><span>周四</span></td><td class="c408">套卷 17/18（2025）限时 3h 掐表</td><td class="cma">第 665–684 题（约 2.5h）</td><td class="cen">单词 30′ + 翻译 1 段</td><td class="nt"></td></tr><tr class="ms"><td class="dt"><b>11/20</b><span>周五</span></td><td class="c408">卷 17（2025）精析：错题回笔记 + 标记</td><td class="cma">第 685–705 题（约 2.5h）</td><td class="cen">单词 30′ + 翻译 1 段 + 作文：仿写 1 篇（限时 40′）</td><td class="nt">◆ 翻译收官</td></tr><tr class="fx"><td class="dt"><b>11/21</b><span>周六</span></td><td class="c408">机动</td><td class="cma">机动</td><td class="cen">机动（建议只保单词）</td><td class="nt">机动日：应对突发 / 补欠账（没欠账就休息）</td></tr><tr class="wk"><td class="dt"><b>11/22</b><span>周日</span></td><td class="c408">套卷 18/18（2026）限时 3h 掐表</td><td class="cma">第 706–726 题（约 2.5h）</td><td class="cen">单词 30′</td><td class="nt">周结算：统计完成度，调下周数学日均；晚上半休</td></tr></tbody></table></section><section class="week ph-A"><h3>第 7 周 · 11/23 – 11/29<span class="tag">阶段A · 一刷</span></h3><table><thead><tr><th>日期</th><th>408（套卷）</th><th>数学</th><th>英语</th><th>备注</th></tr></thead><tbody><tr class="ms"><td class="dt"><b>11/23</b><span>周一</span></td><td class="c408">卷 18（2026）精析：错题回笔记 + 标记</td><td class="cma">第 727–747 题（约 2.5h）</td><td class="cen">单词 30′</td><td class="nt">◆ 一刷 18 套 + 数学 747 双收官：按错题数排序，定二刷 ①-⑱</td></tr><tr class="ms"><td class="dt"><b>11/24</b><span>周二</span></td><td class="c408">二刷 ①：错题重做 + 薄弱点回补 + 专项限时</td><td class="cma">模拟卷 / 真题卷限时（1 套）</td><td class="cen">单词 30′ + 作文：仿写 1 篇（限时 40′）</td><td class="nt">◆ 二刷启动</td></tr><tr><td class="dt"><b>11/25</b><span>周三</span></td><td class="c408">二刷 ②：错题重做 + 薄弱点回补 + 专项限时</td><td class="cma">错题回炉 + 薄弱章专练（≥ 2h）</td><td class="cen">单词 30′</td><td class="nt"></td></tr><tr><td class="dt"><b>11/26</b><span>周四</span></td><td class="c408">二刷 ③：错题重做 + 薄弱点回补 + 专项限时</td><td class="cma">模拟卷 / 真题卷限时（1 套）</td><td class="cen">单词 30′</td><td class="nt"></td></tr><tr><td class="dt"><b>11/27</b><span>周五</span></td><td class="c408">二刷 ④：错题重做 + 薄弱点回补 + 专项限时</td><td class="cma">错题回炉 + 薄弱章专练（≥ 2h）</td><td class="cen">单词 30′ + 作文：仿写 1 篇（限时 40′）</td><td class="nt"></td></tr><tr class="wk"><td class="dt"><b>11/28</b><span>周六</span></td><td class="c408">二刷 ⑤：错题重做 + 薄弱点回补 + 专项限时</td><td class="cma">模拟卷 / 真题卷限时（1 套）</td><td class="cen">单词 30′</td><td class="nt">下午留 1h 机动（补欠账/休息）</td></tr><tr class="wk"><td class="dt"><b>11/29</b><span>周日</span></td><td class="c408">二刷 ⑥：错题重做 + 薄弱点回补 + 专项限时</td><td class="cma">错题回炉 + 薄弱章专练（≥ 2h）</td><td class="cen">单词 30′</td><td class="nt">周结算：统计完成度，调下周数学日均；晚上半休</td></tr></tbody></table></section><section class="week ph-B"><h3>第 8 周 · 11/30 – 12/6<span class="tag">阶段B · 二刷</span></h3><table><thead><tr><th>日期</th><th>408（套卷）</th><th>数学</th><th>英语</th><th>备注</th></tr></thead><tbody><tr><td class="dt"><b>11/30</b><span>周一</span></td><td class="c408">二刷 ⑦：错题重做 + 薄弱点回补 + 专项限时</td><td class="cma">模拟卷 / 真题卷限时（1 套）</td><td class="cen">单词 30′</td><td class="nt"></td></tr><tr><td class="dt"><b>12/1</b><span>周二</span></td><td class="c408">二刷 ⑧：错题重做 + 薄弱点回补 + 专项限时</td><td class="cma">错题回炉 + 薄弱章专练（≥ 2h）</td><td class="cen">单词 30′ + 作文：仿写 1 篇（限时 40′）</td><td class="nt"></td></tr><tr><td class="dt"><b>12/2</b><span>周三</span></td><td class="c408">二刷 ⑨：错题重做 + 薄弱点回补 + 专项限时</td><td class="cma">模拟卷 / 真题卷限时（1 套）</td><td class="cen">单词 30′</td><td class="nt"></td></tr><tr class="fx"><td class="dt"><b>12/3</b><span>周四</span></td><td class="c408">机动</td><td class="cma">机动</td><td class="cen">机动（建议只保单词）</td><td class="nt">机动日：应对突发 / 补欠账（没欠账就休息）</td></tr><tr><td class="dt"><b>12/4</b><span>周五</span></td><td class="c408">二刷 ⑩：错题重做 + 薄弱点回补 + 专项限时</td><td class="cma">错题回炉 + 薄弱章专练（≥ 2h）</td><td class="cen">单词 30′ + 作文：仿写 1 篇（限时 40′）</td><td class="nt"></td></tr><tr class="wk"><td class="dt"><b>12/5</b><span>周六</span></td><td class="c408">二刷 ⑪：错题重做 + 薄弱点回补 + 专项限时</td><td class="cma">模拟卷 / 真题卷限时（1 套）</td><td class="cen">单词 30′</td><td class="nt">下午留 1h 机动（补欠账/休息）</td></tr><tr class="wk"><td class="dt"><b>12/6</b><span>周日</span></td><td class="c408">二刷 ⑫：错题重做 + 薄弱点回补 + 专项限时</td><td class="cma">错题回炉 + 薄弱章专练（≥ 2h）</td><td class="cen">单词 30′</td><td class="nt">周结算：统计完成度，调下周数学日均；晚上半休</td></tr></tbody></table></section><section class="week ph-B"><h3>第 9 周 · 12/7 – 12/13<span class="tag">阶段B · 二刷</span></h3><table><thead><tr><th>日期</th><th>408（套卷）</th><th>数学</th><th>英语</th><th>备注</th></tr></thead><tbody><tr><td class="dt"><b>12/7</b><span>周一</span></td><td class="c408">二刷 ⑬：错题重做 + 薄弱点回补 + 专项限时</td><td class="cma">模拟卷 / 真题卷限时（1 套）</td><td class="cen">单词 30′</td><td class="nt"></td></tr><tr class="ms"><td class="dt"><b>12/8</b><span>周二</span></td><td class="c408">二刷 ⑭：错题重做 + 薄弱点回补 + 专项限时</td><td class="cma">错题回炉 + 薄弱章专练（≥ 2h）</td><td class="cen">单词 30′ + 作文：限时默写 1 篇</td><td class="nt">◆ 作文进入限时默写期</td></tr><tr><td class="dt"><b>12/9</b><span>周三</span></td><td class="c408">二刷 ⑮：错题重做 + 薄弱点回补 + 专项限时</td><td class="cma">模拟卷 / 真题卷限时（1 套）</td><td class="cen">单词 30′</td><td class="nt"></td></tr><tr><td class="dt"><b>12/10</b><span>周四</span></td><td class="c408">二刷 ⑯：错题重做 + 薄弱点回补 + 专项限时</td><td class="cma">错题回炉 + 薄弱章专练（≥ 2h）</td><td class="cen">单词 30′ + 作文：限时默写 1 篇</td><td class="nt"></td></tr><tr><td class="dt"><b>12/11</b><span>周五</span></td><td class="c408">二刷 ⑰：错题重做 + 薄弱点回补 + 专项限时</td><td class="cma">模拟卷 / 真题卷限时（1 套）</td><td class="cen">单词 30′</td><td class="nt"></td></tr><tr class="ms"><td class="dt"><b>12/12</b><span>周六</span></td><td class="c408">二刷 ⑱：错题重做 + 薄弱点回补 + 专项限时</td><td class="cma">错题回炉 + 薄弱章专练（≥ 2h）</td><td class="cen">单词 30′ + 作文：限时默写 1 篇</td><td class="nt">◆ 二刷完成</td></tr><tr class="ms"><td class="dt"><b>12/13</b><span>周日</span></td><td class="c408">错题总扫：一刷 + 二刷的错题过一遍</td><td class="cma">错题重做（一刷遗留）</td><td class="cen">单词 30′</td><td class="nt">◆ 收口期启动：只看错题与框架</td></tr></tbody></table></section><section class="week ph-C"><h3>第 10 周 · 12/14 – 12/20<span class="tag">阶段C · 收口</span></h3><table><thead><tr><th>日期</th><th>408（套卷）</th><th>数学</th><th>英语</th><th>备注</th></tr></thead><tbody><tr><td class="dt"><b>12/14</b><span>周一</span></td><td class="c408">四科框架速览（每科 1.5h，用笔记/导图）</td><td class="cma">错题重做（二刷遗留）</td><td class="cen">单词 30′</td><td class="nt"></td></tr><tr class="fx"><td class="dt"><b>12/15</b><span>周二</span></td><td class="c408">机动</td><td class="cma">机动</td><td class="cen">机动（建议只保单词）</td><td class="nt">机动日：应对突发 / 补欠账（没欠账就休息）</td></tr><tr><td class="dt"><b>12/16</b><span>周三</span></td><td class="c408">弱项再扫 + 易错点清单</td><td class="cma">公式与结论速览</td><td class="cen">单词 30′</td><td class="nt"></td></tr><tr><td class="dt"><b>12/17</b><span>周四</span></td><td class="c408">错题本过一遍（上午）+ 考试用品检查</td><td class="cma">错题本过一遍</td><td class="cen">单词 30′ + 作文：限时默写 1 篇</td><td class="nt"></td></tr><tr><td class="dt"><b>12/18</b><span>周五</span></td><td class="c408">考前 Day：易错点清单 + 早睡（不做新题）</td><td class="cma">考前 Day：只看错题，不动笔</td><td class="cen">单词 30′</td><td class="nt"></td></tr></tbody></table></section>
+  </main>
+
+  <footer>按周结算、按天执行；欠账先吃机动日（10/28 · 11/9 · 11/21 · 12/3 · 12/15），不够再动周六下午。橙色行 = 里程碑，灰蓝行 = 实习日志期（10/12–15），青色行 = 机动日。考前一周只看错题与框架，不动新题。</footer>
+</div>
+</body>
+</html>

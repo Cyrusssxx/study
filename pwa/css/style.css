@@ -3305,6 +3305,35 @@ h3.algo-h:first-child, h4.algo-h:first-child, h5.algo-h:first-child { margin-top
     color: var(--primary);
 }
 
+/* 首页「大题专项」卡内的打卡子区块（打卡并入大题专项：内容在大题专项板块下方，
+   总板块数保持不变；淡蓝底 + 细边框 = 卡内子区块的统一「边界感」） */
+.card-sub-block {
+    margin-top: 14px;
+    padding: 12px 14px;
+    border-radius: 10px;
+    background: rgba(74, 122, 184, .06);
+    border: 1px solid rgba(74, 122, 184, .18);
+}
+.card-sub-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 8px;
+}
+.card-sub-head h3 {
+    font-size: 1.02rem;
+    font-weight: 600;
+    color: var(--text);
+}
+.card-sub-block .card-actions {
+    margin-top: 10px;
+}
+.dark .card-sub-block {
+    background: rgba(143, 176, 217, .08);
+    border-color: rgba(143, 176, 217, .22);
+}
+
 /* 打卡页：总进度 + 优先级分组 */
 .daka-summary {
     background: var(--card-bg);
