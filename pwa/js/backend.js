@@ -218,7 +218,16 @@ function openDB() {
             }
         };
         req.onsuccess = () => resolve(req.result);
-        req.onerror = () => reject(req.error);
+        req.onerror = () => reject(req.error || new Error('indexedDB 打开失败'));
+        // 其他标签页持有旧的数据库连接时，升级会被 blocked（open 永远 pending，
+        // 表现为首页一直"加载中"）——超时后以明确错误 reject，交由上层降级展示
+        req.onblocked = () => {
+            console.warn('IndexedDB 升级被其他标签页阻塞：请关闭本站其它标签页后刷新');
+            setTimeout(() => reject(new Error('数据库被其他标签页占用（请关闭本站其它标签页后重试）')), 1200);
+        };
+    }).catch(e => {
+        _dbPromise = null;   // 失败不缓存：允许用户关闭占用标签页后自动重试
+        throw e;
     });
     return _dbPromise;
 }
@@ -673,16 +682,28 @@ async function api(url, opts = {}) {
 
         // ---------- 统计 ----------
         if (seg[1] === 'stats' && !seg[2]) {
-            const overall = await subjectStats(null);
-            const totals = await getTotals();
+            // 局部容错：单个统计/存储异常不拖垮整个首页（IndexedDB 被禁/损坏/被其他
+            // 标签页占用时，仍返回结构完整的数据，由前端降级展示而不是整体报错）
+            const EMPTY = () => ({
+                total_answered: 0, correct_count: 0, wrong_count: 0, favorite_count: 0,
+                unfamiliar_count: 0, dontknow_count: 0, accuracy: 0, due_review_count: 0
+            });
+            let overall;
+            try { overall = await subjectStats(null); }
+            catch (e) { console.error('stats overall 失败', e); overall = EMPTY(); }
+            const totals = await getTotals().catch(() => ({ subjects: {} }));
             const subjects = {};
             for (const key of Object.keys(SUBJECTS)) {
                 const total = (totals.subjects && totals.subjects[key] && totals.subjects[key].total) || 0;
-                // 复习阶段明细：{1:[qid...],2:...,4:...,7:...,15:...}，首页阶段 chips 用
-                const detail = await getDueReviewDetailed(key);
+                let st;
+                try { st = await subjectStats(key); }
+                catch (e) { console.error('stats ' + key + ' 失败', e); st = EMPTY(); }
+                const detail = await getDueReviewDetailed(key)
+                    .catch(e => { console.error('dueReview ' + key + ' 失败', e); return { stages: {}, stageDue: {}, upcoming: [] }; });
                 subjects[key] = {
-                    ...(await subjectStats(key)), total_questions: total, name: SUBJECTS[key].name,
-                    review_stages: detail.stages, review_stage_due: detail.stageDue, review_upcoming: detail.upcoming.length
+                    ...st, total_questions: total, name: SUBJECTS[key].name,
+                    review_stages: detail.stages, review_stage_due: detail.stageDue,
+                    review_upcoming: (detail.upcoming || []).length
                 };
             }
             return jsonResp({ overall, subjects });

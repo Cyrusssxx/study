@@ -59,39 +59,52 @@
     <script>
         // 首页原为服务端渲染，PWA 版改为客户端调 /api/stats 渲染
         const SUBJECT_ORDER = ['os', 'co', 'ds', 'cn'];
+        const SUBJECT_NAMES = { os: '操作系统', co: '计算机组成原理', ds: '数据结构', cn: '计算机网络' };
+        const num = v => (typeof v === 'number' && isFinite(v) ? v : 0);
 
+        // 统计接口异常时降级：用 data/meta.json 的总题数兜底，首页入口全部保持可用
+        // （旧实现不检查 resp.ok / data.error，接口 500 时读 data.overall 直接抛
+        //  "Cannot read properties of undefined (reading 'total_answered')"，整个首页空白）
         async function loadHome() {
+            let data = null, apiErr = '';
             try {
                 const resp = await api('/api/stats');
-                const data = await resp.json();
-                const s = data.overall;
-                document.getElementById('statsBar').innerHTML = `
-                    <div class="stat-item">
-                        <span class="stat-number">${s.total_answered}</span>
-                        <span class="stat-label">已做题目</span>
-                    </div>
-                    <div class="stat-item">
-                        <span class="stat-number">${s.accuracy}%</span>
-                        <span class="stat-label">正确率</span>
-                    </div>
-                    <div class="stat-item">
-                        <span class="stat-number">${s.wrong_count}</span>
-                        <span class="stat-label">错题数</span>
-                    </div>
-                    <div class="stat-item">
-                        <span class="stat-number">${s.due_review_count}</span>
-                        <span class="stat-label">今日待复习</span>
-                    </div>
-                    <div class="stat-item">
-                        <span class="stat-number">${s.favorite_count}</span>
-                        <span class="stat-label">收藏数</span>
-                    </div>`;
+                const j = await resp.json().catch(() => null);
+                if (j && j.error) apiErr = j.error;
+                else if (j && j.overall && j.subjects) data = j;
+                else apiErr = '返回数据不完整';
+            } catch (e) {
+                apiErr = (e && e.message) ? e.message : String(e);
+            }
+            let fallbackTotals = {};
+            if (!data) {
+                try { fallbackTotals = await (await fetch('data/meta.json')).json(); } catch (e) { fallbackTotals = {}; }
+            }
+            const s = (data && data.overall) || {};
+            const subjects = (data && data.subjects) || {};
+            // meta.json 结构：{ subjects: { os: {total}, ... }, ds_daka }
+            const fbTotal = k => num(fallbackTotals[k])
+                || num(fallbackTotals.subjects && fallbackTotals.subjects[k] && fallbackTotals.subjects[k].total);
 
-                let cards = '';
-                for (const key of SUBJECT_ORDER) {
-                    const sub = data.subjects[key];
-                    if (!sub) continue;
-                    const pct = sub.total_questions > 0 ? sub.total_answered / sub.total_questions * 100 : 0;
+            document.getElementById('statsBar').innerHTML = `
+                <div class="stat-item"><span class="stat-number">${num(s.total_answered)}</span><span class="stat-label">已做题目</span></div>
+                <div class="stat-item"><span class="stat-number">${num(s.accuracy)}%</span><span class="stat-label">正确率</span></div>
+                <div class="stat-item"><span class="stat-number">${num(s.wrong_count)}</span><span class="stat-label">错题数</span></div>
+                <div class="stat-item"><span class="stat-number">${num(s.due_review_count)}</span><span class="stat-label">今日待复习</span></div>
+                <div class="stat-item"><span class="stat-number">${num(s.favorite_count)}</span><span class="stat-label">收藏数</span></div>
+                ${apiErr ? `<div class="stat-warn">⚠ 统计接口异常：${apiErr}
+                    <button class="stat-retry" onclick="loadHome()">重试</button>
+                    <span class="stat-warn-hint">其余入口照常可用；多次重试仍失败，请按 F12 看 Console 里 api error 的详情</span></div>` : ''}`;
+
+            let cards = '';
+            for (const key of SUBJECT_ORDER) {
+                const sub = subjects[key] || {
+                    name: SUBJECT_NAMES[key],
+                    total_questions: fbTotal(key),
+                    total_answered: 0, accuracy: 0, wrong_count: 0,
+                    due_review_count: 0, review_upcoming: 0
+                };
+                const pct = sub.total_questions > 0 ? sub.total_answered / sub.total_questions * 100 : 0;
                     cards += `
                     <div class="subject-card">
                         <div class="card-header">
@@ -167,9 +180,6 @@
                 </div>`;
                 document.getElementById('subjectsGrid').innerHTML = cards;
                 fillResumeLinks();
-            } catch (e) {
-                document.getElementById('statsBar').innerHTML = `<div class="error">加载失败: ${e.message}</div>`;
-            }
             loadDakaHome();
         }
 

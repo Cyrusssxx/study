@@ -174,6 +174,7 @@ body {
 /* 统计栏 */
 .stats-bar {
     display: flex;
+    flex-wrap: wrap;      /* 接口异常提示条独占一行（降级时统计项仍居中） */
     justify-content: center;
     gap: 40px;
     padding: 24px;
@@ -182,6 +183,41 @@ body {
     box-shadow: var(--shadow);
     margin-bottom: 30px;
 }
+
+/* 统计接口异常横幅（首页降级渲染：入口照常可用 + 重试） */
+.stat-warn {
+    flex: 0 0 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 4px;
+    padding: 8px 12px;
+    font-size: 0.85rem;
+    color: #b3261e;
+    background: rgba(220, 38, 38, .07);
+    border: 1px solid rgba(220, 38, 38, .22);
+    border-left: 3px solid #b3261e;
+    border-radius: 8px;
+}
+.dark .stat-warn {
+    color: #f09595;
+    background: rgba(220, 38, 38, .12);
+    border-color: rgba(240, 149, 149, .28);
+}
+.stat-retry {
+    padding: 3px 10px;
+    font-size: 0.82rem;
+    font-family: inherit;
+    cursor: pointer;
+    color: var(--primary);
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+}
+.stat-retry:hover { border-color: var(--primary); }
+.stat-warn-hint { color: var(--text-light); font-size: 0.78rem; }
 
 .stat-item {
     text-align: center;

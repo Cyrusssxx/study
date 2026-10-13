@@ -38,6 +38,18 @@ const CSS = fs.readFileSync(path.join(ROOT, 'pwa/css/style.css'), 'utf8');
   check('冲刺计划入口指向 plan.html', /href="plan\.html"/.test(IDX), true);
   check('共用样式：卡内子区块（淡蓝底 + 细边框）',
     /\.card-sub-block\s*\{[^}]*background:\s*rgba\(74, 122, 184, \.06\)[^}]*border:\s*1px solid/.test(CSS), true);
+  // 接口异常防护（2026-10-13：用户报 "Cannot read properties of undefined (reading 'total_answered')"）
+  check('前端防御：overall/subjects 缺失时兜底为 {}',
+    /const s = \(data && data\.overall\) \|\| \{\};/.test(IDX) && /const subjects = \(data && data\.subjects\) \|\| \{\};/.test(IDX), true);
+  check('前端：接口异常横幅 + 重试按钮（stat-warn / stat-retry / apiErr）',
+    /stat-warn/.test(IDX) && /stat-retry/.test(IDX) && /onclick="loadHome\(\)"/.test(IDX) && /apiErr/.test(IDX), true);
+  const BE = fs.readFileSync(path.join(ROOT, 'pwa/js/backend.js'), 'utf8');
+  check('后端：/api/stats 局部容错（单科失败返回 EMPTY，不整体 500）',
+    /if \(seg\[1\] === 'stats' && !seg\[2\]\)[\s\S]{0,1200}?catch \(e\) \{ console\.error\('stats ' \+ key/.test(BE), true);
+  check('后端：openDB blocked 超时 reject + 失败不缓存（可重试）',
+    /req\.onblocked = \(\) =>/.test(BE) && /_dbPromise = null;   \/\/ 失败不缓存/.test(BE), true);
+  check('横幅样式（stat-warn 独占一行 + 深色适配）',
+    /\.stats-bar\s*\{[^}]*flex-wrap:\s*wrap/.test(CSS) && /\.dark \.stat-warn/.test(CSS), true);
 
   console.log('\n▸ 动态渲染（jsdom：板块数与顺序）');
   const STATS = {
@@ -91,6 +103,38 @@ const CSS = fs.readFileSync(path.join(ROOT, 'pwa/css/style.css'), 'utf8');
   // 进度来自 IndexedDB（jsdom 空库 → 0 条打卡）；此处验证「总数来自 meta.json + 格式正确」
   check('打卡进度已注入（总数 62 来自 meta.json）',
     /^已打卡 \d+ \/ 62 题$/.test((cards[4] && cards[4].querySelector('#dakaHomeProgress').textContent.trim()) || ''), true);
+
+  // 降级路径：IndexedDB 不可用（隐私模式/被占用/损坏）→ /api/stats 局部容错，首页不崩
+  console.log('\n▸ 降级路径（IndexedDB 不可用）');
+  const vc2 = new VirtualConsole();
+  vc2.on('jsdomError', () => { });
+  const dom2 = new JSDOM(html, {
+    runScripts: 'dangerously',
+    pretendToBeVisual: true,
+    url: 'http://localhost/index.html',
+    virtualConsole: vc2,
+    beforeParse(w) {
+      w.alert = () => { };
+      w.scrollTo = () => { };
+      // 故意不注入 indexedDB：backend 的 dbAll/openDB 会失败，走 /api/stats 局部容错
+      w.fetch = async (url) => {
+        const u = String(url);
+        if (u.includes('data/meta.json')) {
+          return { ok: true, status: 200, json: async () => ({ ds_daka: 62, subjects: { os: { total: 1200 }, co: { total: 1100 }, ds: { total: 1000 }, cn: { total: 900 } } }) };
+        }
+        return { ok: true, status: 200, json: async () => ({ questions: [] }) };
+      };
+    }
+  });
+  const w2 = dom2.window, d2 = w2.document;
+  for (let i = 0; i < 100 && d2.querySelectorAll('.subject-card').length === 0; i++) await sleep(50);
+  const cards2 = [...d2.querySelectorAll('#subjectsGrid .subject-card')];
+  check('IndexedDB 不可用时首页仍渲染 6 张卡（不再整体崩）', cards2.length, 6);
+  check('总题数回退到 meta.json（os=1200 出现在卡上）',
+    /1200/.test(cards2[0] ? cards2[0].textContent : ''), true);
+  check('统计条正常显示（无「加载失败」）',
+    /已做题目/.test(d2.getElementById('statsBar').textContent) && !/加载失败/.test(d2.getElementById('statsBar').textContent), true);
+  dom2.window.close();
 
   console.log(`\n${failed ? '❌' : '✅'} ${passed} 通过 / ${failed} 失败`);
   dom.window.close();
