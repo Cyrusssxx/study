@@ -25,9 +25,9 @@ const CSS = fs.readFileSync(path.join(ROOT, 'pwa/css/style.css'), 'utf8');
   const plan = fs.readFileSync(path.join(ROOT, 'pwa/plan.html'), 'utf8');
   check('计划页已去掉单词环节', /单词/.test(plan), false);
   check('计划页数学列统一「30题」', /<td class="cma">30题<\/td>/.test(plan), true);
-  check('计划页阅读重做按年份分组（含括注篇目）', /阅读重做：2020（T1、T3、新题型）/.test(plan), true);
-  check('阅读重做落位为隔天（10 个年份组、20 篇）',
-    (plan.match(/阅读重做：/g) || []).length, 10);
+  check('计划页阅读按年份连排、一天一篇', /阅读 2015·T1/.test(plan) && /阅读 英一2024·T4/.test(plan), true);
+  check('计划页阅读 48 篇（英二低正确率 16 + 英一 8 年 32）',
+    (plan.match(/阅读 (英一)?\d{4}·T\d/g) || []).length, 48);
   check('plan.html 进 APP_PRECACHE（SW 外壳）', /APP_PRECACHE = \[[\s\S]*?'plan\.html'/.test(SW), true);
   check('首页卡片在「大题专项」块内含打卡子区块（card-sub-block）',
     /📝 大题专项[\s\S]*?card-sub-block[\s\S]*?📌 数据结构强化打卡/.test(IDX), true);

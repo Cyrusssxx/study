@@ -1,6 +1,6 @@
-// _test_plan_page.js —— 考研冲刺计划页（打卡勾选 + 我的备注）回归（2026-10-13）
-// 覆盖：单词已去 / 数学 30题 / 阅读重做按年份隔天；68 行打卡列 + 10 周表头；
-//       勾选持久化（sprint_done）、备注持久化（sprint_notes）、重开恢复、清空按钮。
+// _test_plan_page.js —— 考研冲刺计划页（v2 重排：打卡表大题 → 错题 + 三科大题）回归（2026-10-13）
+// 覆盖：不再有真题套卷 / 单词已去 / 数学 30题 / 阅读按年份连排一天一篇；
+//       67 行打卡列 + 10 周表头；勾选持久化（sprint_done）、备注（sprint_notes）、重开恢复、清空。
 const fs = require('fs');
 const path = require('path');
 const { JSDOM, VirtualConsole } = require('jsdom');
@@ -35,19 +35,25 @@ function boot(preload) {
 
 (async () => {
   console.log('▸ 静态结构（pwa/plan.html）');
+  check('不再排真题套卷（无「掐表 3h」/「卷 N/18」）',
+    /限时 3h 掐表/.test(PLAN) || /卷 \d+\/18/.test(PLAN), false);
   check('去单词（无「单词」字样）', /单词/.test(PLAN), false);
-  check('实习日志期英语列归为「—」', /<td class="cen">—<\/td>/.test(PLAN), true);
-  check('数学一刷期统一 30题', (PLAN.match(/<td class="cma">30题<\/td>/g) || []).length, 36);
-  check('阅读重做为 10 个年份组（隔天一年份）', (PLAN.match(/阅读重做：/g) || []).length, 10);
-  check('阅读重做含年份括注篇目（分组）', /阅读重做：2015（T1、T2、T3）/.test(PLAN), true);
-  check('打卡复选框 68 个（=68 天）', (PLAN.match(/class="sprint-ck"/g) || []).length, 68);
-  check('数据行均带 data-key', (PLAN.match(/data-key="/g) || []).length, 68);
+  check('实习日志 3 天（10/13–10/15）', (PLAN.match(/<tr class="it"/g) || []).length, 3);
+  check('阶段A 打卡表行 = 14', (PLAN.match(/<td class="cb">打卡表 \d+ 题/g) || []).length, 14);
+  check('阶段B 错题一刷行 = 22', (PLAN.match(/<td class="cw">错题 \d+ 题/g) || []).length, 22);
+  check('阶段B 三科大题行 = 44', (PLAN.match(/<td class="cb">大题 \d+ 题/g) || []).length, 44);
+  check('数学统一 30题（25 天）', (PLAN.match(/<td class="cma">30题<\/td>/g) || []).length, 25);
+  check('英语阅读一天一篇（48 篇）', (PLAN.match(/阅读 (英一)?\d{4}·T\d/g) || []).length, 48);
+  check('打卡复选框 67 个（=67 天）', (PLAN.match(/class="sprint-ck"/g) || []).length, 67);
+  check('数据行均带 data-key', (PLAN.match(/data-key="/g) || []).length, 67);
   check('10 个周表头各加打卡列', (PLAN.match(/<th class="ck">/g) || []).length, 10);
+  check('两列表头（选择题错题 / 大题）',
+    /<th>408 · 选择题错题<\/th><th>408 · 大题<\/th>/.test(PLAN), true);
   check('备注框为 contenteditable + 占位符', /class="mynote" contenteditable="true" data-ph="备注…"/.test(PLAN), true);
   check('进度行元素存在', /id="sprintProgress"/.test(PLAN), true);
   check('样式齐备（完成态淡化 + 占位符 + 移动端标签 + 打印）',
     /tr\.done td:not\(\.ck\)\s*\{\s*opacity/.test(PLAN) && /\.mynote:empty::before/.test(PLAN)
-    && /@media \(max-width: 760px\)[\s\S]{0,120}td\.ck::before/.test(PLAN)
+    && /@media \(max-width: 760px\)[\s\S]{0,160}td\.ck::before/.test(PLAN)
     && /@media print[\s\S]{0,120}\.mynote/.test(PLAN), true);
   // 桌面版与站内版：去掉「返回首页」差异与全部空白后应完全一致（同源生成）
   const norm = s => s
@@ -62,7 +68,7 @@ function boot(preload) {
   const w = dom.window, d = w.document;
   await sleep(120);
   const rows = [...d.querySelectorAll('tr[data-key]')];
-  check('页面加载后行数 = 68', rows.length, 68);
+  check('页面加载后行数 = 67', rows.length, 67);
   const r0 = d.querySelector('tr[data-key="10/16"]');
   check('定位到 10/16 行', !!r0, true);
 
@@ -72,15 +78,15 @@ function boot(preload) {
   cb.dispatchEvent(new w.Event('change'));
   check('勾选后行加 done 类', r0.classList.contains('done'), true);
   check('勾选写入 localStorage(sprint_done)', JSON.parse(w.localStorage.getItem('sprint_done')), { '10/16': 1 });
-  check('进度更新为 1/68', /已完成 <b>1<\/b> \/ 68 天/.test(d.getElementById('sprintProgress').innerHTML), true);
+  check('进度更新为 1/67', /已完成 <b>1<\/b> \/ 67 天/.test(d.getElementById('sprintProgress').innerHTML), true);
 
   // ② 备注
   const nt = r0.querySelector('.mynote');
-  nt.textContent = '套卷错题多，重做 2014 卷二';
+  nt.textContent = '打卡表第 1–4 张，顺序表基本功';
   nt.dispatchEvent(new w.Event('input'));
   await sleep(420);
   check('备注写入 localStorage(sprint_notes)',
-    JSON.parse(w.localStorage.getItem('sprint_notes')), { '10/16': '套卷错题多，重做 2014 卷二' });
+    JSON.parse(w.localStorage.getItem('sprint_notes')), { '10/16': '打卡表第 1–4 张，顺序表基本功' });
 
   // ③ 取消勾选
   cb.checked = false;
@@ -108,7 +114,7 @@ function boot(preload) {
   const r2 = d2.querySelector('tr[data-key="10/18"]');
   check('重开后恢复勾选状态', [r2.querySelector('.sprint-ck').checked, r2.classList.contains('done')], [true, true]);
   check('重开后恢复备注文本', r2.querySelector('.mynote').textContent, '补 2012 阅读');
-  check('重开后进度 = 2/68', /已完成 <b>2<\/b> \/ 68 天/.test(d2.getElementById('sprintProgress').innerHTML), true);
+  check('重开后进度 = 2/67', /已完成 <b>2<\/b> \/ 67 天/.test(d2.getElementById('sprintProgress').innerHTML), true);
   check('未勾选行保持未完成', d2.querySelector('tr[data-key="10/16"]').classList.contains('done'), false);
   dom2.window.close();
 
