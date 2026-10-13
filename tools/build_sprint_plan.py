@@ -5,7 +5,11 @@
   阶段A：先把数据结构打卡表的大题写完（剩 53 张，一天 3-4 张）
   阶段B：一天一章一个科目的「选择题错题」复习（一科推完换下一科）+ 三科（OS/CO/CN）大题复习
   阶段C：考前收口
-英语阅读改为「同一年份连排、一天一篇」，每天加一篇完型/新题型（英一小标题通用）。
+英语阅读改为「同一年份连排、一天一篇」，第二篇按下面的队列推进：
+  ① 完型（英二 14 年 + 英一 4 年）优先；
+  ② 英一「小标题」三年（2007 / 2016 / 2020，据历年题型统计；2017–2019 排序、2021–2023 七选五不计入）；
+  ③ 英二新题型一刷已完成（除 22–24 封存年）→ 11/1 起安排二刷（低分年份优先）。
+机动日：12 月前每周日，但**第一周（10/13–10/18）不排机动日**。
 
 数据来源（全部只读，不改数据）：
   - 错题分布：用户备份 D:/cjx/下载/download/408quiz-backup-20261013.json
@@ -44,9 +48,10 @@ SIM_DAYS = [(datetime.date(2026, 12, 6), '2022'),
 SIM_MAP = {d: y for d, y in SIM_DAYS}
 EN_SIM_YEARS = [y for _, y in SIM_DAYS]      # ['2022','2023','2024'] 封存年份
 
-# —— 机动日：12 月之前的每周日（每周一次，12 月前有几周就几次）——
+# —— 机动日：12 月之前的每周日（每周一次）——
+# 第一周（10/13–10/18）不安排机动日 → 从 10/19 起取周日
 FX_DAYS = set()
-_d = datetime.date(2026, 10, 16)
+_d = datetime.date(2026, 10, 19)
 while _d < datetime.date(2026, 12, 1):
     if _d.weekday() == 6:
         FX_DAYS.add(_d)
@@ -178,7 +183,19 @@ def keep(y):
 
 cloze_queue = [('', str(y)) for y in range(2010, 2027) if keep(y)] + \
               [('英一', y) for y in ['2007', '2016', '2020', '2021']]
-newt_queue = [('', str(y)) for y in range(2010, 2027) if keep(y)]
+
+# 英语一「小标题」年份（据历年题型统计：小标题只考过 2007 / 2016 / 2020；
+#   2017–2019 = 排序、2021–2023 = 七选五、2024 = 信息匹配、2025 = 排序，均不计入）
+Y1_HEADING = ['2007', '2016', '2020']
+
+# 英语二新题型：2010–2021 + 2025 / 2026 均已一刷（22–24 封存留作模拟）
+#   → 按用户要求「下个月再安排复习」：11/1 起二刷，低分年份优先（2021 2/5 → 2020 → 2018 → 2016 → 2025）
+NEWT_REVIEW_FROM = datetime.date(2026, 11, 1)
+NEWT_ER_REVIEW = ['2021', '2020', '2018', '2016', '2025',
+                  '2010', '2011', '2012', '2013', '2014', '2015', '2017', '2019', '2026']
+# (显示名, 年份, 起始日闸门)  —— 闸门未到则该项不消费
+newt_queue = [('英一小标题', y, None) for y in Y1_HEADING] + \
+             [('英二新题型二刷', y, NEWT_REVIEW_FROM) for y in NEWT_ER_REVIEW]
 trans_queue = []
 for y in list(range(2015, 2027)) + list(range(2010, 2015)):
     if not keep(y):
@@ -188,11 +205,12 @@ for y in list(range(2015, 2027)) + list(range(2010, 2015)):
 SMALL_YEARS = [str(y) for y in range(2010, 2027) if keep(y)]            # 小作文
 BIG_YEARS = [str(y) for y in range(2010, 2027) if y != 2012 and keep(y)]  # 大作文（2012 放弃）
 
-# 英语收口队列：常规队列全部跑完后的最后 6 个推进日（12/11、12/12、12/14、12/15、12/17、12/18）
+# 英语收口队列：常规队列全部跑完后的最后几个推进日（阅读 48 篇用完后接上）
 # 顺序即使用顺序，末项刻意是"考前速背"（落在 12/18）
 EN_FINISH = [
     '作文成篇默写（纸质答题卡：小作文 1 篇 + 大作文 1 篇，限时）',
     '作文成篇默写（再练 1 组真题，写工整不涂改）',
+    '翻译错题回看 + 长难句再译（挑错得最多的 2 句）',
     '阅读错题回看 + 生词 / 长难句本过一遍',
     '作文模板默写（小作文 5 类框架 + 大作文图表描述句）',
     '英语错题 / 生词本总扫（只看标记项）',
@@ -284,8 +302,10 @@ def a_ch_label(items):
             segs[-1][3] = ''
         else:
             segs.append([(s, c), short, sz, lab])
-    return ' ＋ '.join('%s %s%s %d 题' % (SUBJ_SHORT[t[0][0]], t[1], ('·' + t[3]) if t[3] else '', t[2])
-                       for t in segs)
+    # 一行一个科目（用户要求：多科目分行，不挤在一行用「＋」连）
+    return ''.join('<span class="s2">%s %s%s %d 题</span>'
+                   % (SUBJ_SHORT[t[0][0]], t[1], ('·' + t[3]) if t[3] else '', t[2])
+                   for t in segs)
 
 
 # ============================ 4. 日期骨架与三科大题 ============================
@@ -401,15 +421,15 @@ for d in DAYS:
         pre, y, t = read_queue[read_i]
         read_i += 1
         en.append('阅读 %s%s·%s' % (pre, y, t))
-    # 完型 / 新题型 交替（一侧用完则另一侧顶上）
+    # 第二篇：完型 与 「英一小标题 → 11 月起英二新题型二刷」交替（一侧用完另一侧顶上）
     if en_day % 2 == 1 and cloze_i < len(cloze_queue):
         pre, y = cloze_queue[cloze_i]
         cloze_i += 1
         en.append('完型 %s%s' % (pre, y))
-    elif newt_i < len(newt_queue):
-        pre, y = newt_queue[newt_i]
+    elif newt_i < len(newt_queue) and (newt_queue[newt_i][2] is None or d >= newt_queue[newt_i][2]):
+        kind, y, _gate = newt_queue[newt_i]
         newt_i += 1
-        en.append('新题型 %s%s' % (pre, y))
+        en.append('%s %s' % (kind, y))
     elif cloze_i < len(cloze_queue):
         pre, y = cloze_queue[cloze_i]
         cloze_i += 1
@@ -442,9 +462,10 @@ for d in DAYS:
         if n_ch < len(A_CH_DAYS):
             cnt, items = A_CH_DAYS[n_ch]
             n_ch += 1
-            row['cw'] = '收藏 / 错题 %d 题｜%s' % (cnt, a_ch_label(items))
+            row['cw'] = '收藏 / 错题 %d 题<br>%s' % (cnt, a_ch_label(items))
         else:
-            row['cw'] = '收藏 / 错题（池剩余 %d 题）｜按章快刷，优先薄弱章' % (N_CHOICE - N_CH_A)
+            row['cw'] = ('收藏 / 错题（池剩余 %d 题）<br><span class="s2">按章快刷，优先薄弱章</span>'
+                         % (N_CHOICE - N_CH_A))
         if n_daka < len(daka_days):
             n, a, b, grp = daka_days[n_daka]
             n_daka += 1
@@ -567,13 +588,24 @@ def week_phase(rws):
     return phs[0], tag
 
 
+# —— 悬浮周目录：默认只露出左侧 8px 半透明细条（不占正文空间），悬停 / 点击展开 ——
+PTOC = ['<nav class="plan-toc" id="planToc" aria-label="周目录">',
+        '<button class="ptoc-tab" id="ptocTab" type="button" aria-label="展开 / 收起周目录"></button>',
+        '<div class="ptoc-body"><div class="ptoc-head">周目录</div>']
+for wi, (_ws, rws) in enumerate(weeks, 1):
+    k0, k1 = rws[0]['key'], rws[-1]['key']
+    PTOC.append('<a class="ptoc-item" href="#w%d" data-w="%d"><b>第 %d 周</b>'
+                '<span>%s – %s</span></a>' % (wi, wi, wi, k0, k1))
+PTOC.append('</div></nav>')
+PTOC_HTML = ''.join(PTOC)
+
 main = ['<main>']
 for wi, (wstart, rws) in enumerate(weeks, 1):
     ph, tag = week_phase(rws)
     k0, k1 = rws[0]['key'], rws[-1]['key']
     rng = '第 %d 周 · %s – %s' % (wi, k0, k1)
-    main.append('<section class="week ph-%s"><h3>%s<span class="tag">%s</span></h3><table>%s<tbody>'
-                % (ph, rng, tag, HEAD))
+    main.append('<section class="week ph-%s" id="w%d"><h3>%s<span class="tag">%s</span></h3><table>%s<tbody>'
+                % (ph, wi, rng, tag, HEAD))
     for r in rws:
         dt = datetime.date(2026, int(r['key'].split('/')[0]), int(r['key'].split('/')[1]))
         cls = (' class="%s"' % r['cls']) if r['cls'] else ''
@@ -585,7 +617,7 @@ for wi, (wstart, rws) in enumerate(weeks, 1):
                r['math'], r['en'], r['nt'], CK_TD))
     main.append('</tbody></table></section>')
 main.append('</main>')
-MAIN = ''.join(main)
+MAIN = PTOC_HTML + ''.join(main)
 
 # ============================ 7. 外壳替换 ============================
 src = io.open(SRC, encoding='utf-8').read()
@@ -596,7 +628,7 @@ src = re.sub(
     '<p class="sub">2026-10-13 → 2026-12-18（67 天）· 初试 12/19–20 · 不出真题套卷：'
     '阶段A 打卡表大题 + 选择题收藏/错题并行 → 阶段B 错题 + 三科大题 → 阶段C 收口；'
     '<b style="color:#b3261e">最后三周每周一天全真模拟（数学 + 408 + 英语 三套）</b>；'
-    '实习日志 10/13–15；机动日 = 12 月前每周日</p>', src, flags=re.S)
+    '实习日志 10/13–15；机动日 = 12 月前每周日（第一周 10/13–10/18 不排）</p>', src, flags=re.S)
 src = re.sub(
     r'<div class="legend">[\s\S]*?</div>',
     '''<div class="legend">
@@ -642,7 +674,7 @@ src = re.sub(
       </ul>
     </div>
     <div class="gcard fx">
-      <h4>机动日（12 月前每周日，共 %d 天）</h4>
+      <h4>机动日（12 月前每周日，共 %d 天；第一周不排）</h4>
       <ul>
         <li>英语：作文背诵（模板 + 通用理由）+ 本周生词 / 长难句复盘</li>
         <li>数学：讲义 + 错题复习（不做新题）</li>
@@ -651,17 +683,22 @@ src = re.sub(
       </ul>
     </div>
     <div class="gcard">
-      <h4>英语节奏（一天：阅读 1 篇 + 完型/新题型 1 篇）</h4>
+      <h4>英语节奏（一天：阅读 1 篇 + 完型 / 新题型 1 篇）</h4>
       <ul>
         <li>阅读<b>同一年份连排</b>、一天一篇：英二低正确率 %d 篇 + 英一指定 8 年 %d 篇</li>
-        <li>完型 / 新题型交替（<b style="color:#b3261e">2022–2024 全部封存</b>，只在模拟日拆封）</li>
+        <li><b>完型</b>优先排：英二 14 年 + 英一 4 年（2007 / 2016 / 2020 / 2021）</li>
+        <li><b>英一小标题</b> = %s 三年（历年统计只考过这三年；2017–2019 排序、2021–2023 七选五、
+            2024 信息匹配、2025 排序，均不计入）</li>
+        <li><b>英二新题型</b>已一刷完（除 22–24）→ <b>11/1 起二刷</b>，低分年份优先：%s，其余年份快过</li>
         <li>翻译细水长流：2015–2026 + 补 2010–2014，每年 5 句拆两天（3 句 + 2 句）</li>
         <li>作文：小作文 11/2 起（一/三/五）；大作文 11/10 起（二/四/六，2012 放弃）</li>
-        <li>最后 6 天（12/11 起）转收口：作文成篇默写 → 错题 / 生词总扫 → 考前速背</li>
+        <li><b style="color:#b3261e">2022–2024 整套封存</b>，只在全真模拟日拆封</li>
+        <li>末段（12/10 起）转收口：作文成篇默写 → 错题 / 生词总扫 → 考前速背</li>
       </ul>
     </div>
   </section>''' % (N_DAKA, N_CHOICE, N_FAV, N_WRONG, N_CH_A, N_WRONG, N_BIG, -(-N_BIG // max(1, DAO_B_DAYS)),
-                   len(FX_LIST), N_READ_ER, N_READ_Y1), src, flags=re.S)
+                   len(FX_LIST), N_READ_ER, N_READ_Y1,
+                   ' / '.join(Y1_HEADING), '、'.join(NEWT_ER_REVIEW[:5])), src, flags=re.S)
 src = re.sub(r'<main>[\s\S]*?</main>', lambda m: MAIN, src, flags=re.S)
 
 assert '<main>' in src and 'data-key="10/16"' in src
@@ -673,6 +710,42 @@ EXTRA_CSS = """  /* v2 版式：408 拆「选择题错题 / 大题」两列 */
   .cma { width: 96px; }
   .cen { width: 236px; }
   td.cb .s { color: var(--muted); font-size: 12px; }
+  /* 阶段A 选择题：题数与科目列表分行，科目一行一个（细左导轨，不挤成一行用「＋」连） */
+  .cw .s2 { display: block; margin-top: 3px; padding-left: 7px; font-size: 12.5px;
+            border-left: 2px solid var(--line); }
+  /* 悬浮周目录：默认只露出左侧 8px 半透明细条，不占正文空间；悬停 / 点击展开为毛玻璃面板 */
+  .plan-toc { position: fixed; left: 0; top: 50%; transform: translateY(-50%);
+              z-index: 60; display: flex; align-items: stretch; height: min(58vh, 520px); }
+  .plan-toc .ptoc-tab { width: 8px; flex: 0 0 8px; border: none; padding: 0; cursor: pointer;
+                        background: linear-gradient(180deg, var(--primary), var(--phB));
+                        opacity: .26; border-radius: 0 6px 6px 0;
+                        transition: opacity .18s ease; }
+  .plan-toc:hover .ptoc-tab, .plan-toc.pinned .ptoc-tab { opacity: .72; }
+  .plan-toc .ptoc-body { width: 0; opacity: 0; pointer-events: none; padding: 0;
+                         max-height: 100%; overflow-x: hidden; overflow-y: auto;
+                         border-radius: 0 10px 10px 0; background: rgba(255,255,255,.88);
+                         backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
+                         border: 1px solid var(--line); border-left: none;
+                         box-shadow: 0 8px 22px rgba(0,0,0,.10);
+                         transition: width .18s ease, opacity .18s ease, padding .18s ease;
+                         scrollbar-width: thin; }
+  .plan-toc .ptoc-body::-webkit-scrollbar { width: 6px; }
+  .plan-toc .ptoc-body::-webkit-scrollbar-thumb { background: var(--line); border-radius: 3px; }
+  .plan-toc:hover .ptoc-body, .plan-toc.pinned .ptoc-body { width: 176px; opacity: 1;
+                         pointer-events: auto; padding: 8px 6px; }
+  .plan-toc .ptoc-head { font-size: 11.5px; color: var(--muted); letter-spacing: .5px;
+                         padding: 2px 8px 6px; border-bottom: 1px solid var(--line); margin-bottom: 4px; }
+  .plan-toc .ptoc-item { display: block; padding: 4px 8px; border-radius: 6px; font-size: 12.5px;
+                         line-height: 1.35; color: var(--muted); text-decoration: none; }
+  .plan-toc .ptoc-item b { font-weight: 600; }
+  .plan-toc .ptoc-item span { display: block; font-size: 11px; }
+  .plan-toc .ptoc-item:hover { background: var(--primary-soft); color: var(--text); }
+  .plan-toc .ptoc-item.active { color: var(--primary); font-weight: 600; background: var(--primary-soft); }
+  @media (prefers-color-scheme: dark) {
+    .plan-toc .ptoc-body { background: rgba(36,44,54,.90); }
+  }
+  @media (max-width: 760px) { .plan-toc { display: none; } }
+  @media print { .plan-toc { display: none; } }
   /* 打卡列：勾选 + 我的备注（localStorage 持久化；桌面版与站内版各自独立存储） */
   th.ck, td.ck { width: 148px; }
   td.ck { white-space: normal; }
@@ -780,6 +853,36 @@ CK_JS = """<script>
   });
   prog();
 })();
+/* 悬浮周目录：细条悬停展开（点击细条可钉住），点击条目平滑跳转并高亮当前周 */
+(function () {
+  var toc = document.getElementById('planToc');
+  if (!toc) return;
+  var tab = document.getElementById('ptocTab');
+  tab.addEventListener('click', function () { toc.classList.toggle('pinned'); });
+  document.addEventListener('click', function (e) {
+    if (!toc.contains(e.target)) toc.classList.remove('pinned');
+  });
+  Array.prototype.forEach.call(toc.querySelectorAll('.ptoc-item'), function (a) {
+    a.addEventListener('click', function (e) {
+      e.preventDefault();
+      var el = document.getElementById((a.getAttribute('href') || '').slice(1));
+      if (!el) return;
+      var y = el.getBoundingClientRect().top + window.scrollY - 76;
+      window.scrollTo({ top: Math.max(0, y), behavior: 'smooth' });
+      if (window.innerWidth <= 900) toc.classList.remove('pinned');
+    });
+  });
+  var secs = Array.prototype.slice.call(document.querySelectorAll('section.week'));
+  var items = Array.prototype.slice.call(toc.querySelectorAll('.ptoc-item'));
+  function sync() {
+    var best = 0, line = window.scrollY + 140;
+    secs.forEach(function (s, i) { if (s.offsetTop <= line) best = i; });
+    items.forEach(function (a, i) { a.classList.toggle('active', i === best); });
+  }
+  window.addEventListener('scroll', sync, { passive: true });
+  window.addEventListener('resize', sync);
+  sync();
+})();
 </script>
 """
 
@@ -798,6 +901,10 @@ io.open(PWA_OUT, 'w', encoding='utf-8', newline='').write(pwa)
 
 print('rows=%d  weeks=%d' % (n_rows, len(weeks)))
 print('打卡表剩余 %d 张 / 错题 %d 题 / 三科大题 %d 题' % (N_DAKA, N_WRONG, N_BIG))
-print('英语队列：阅读 %d 篇（英二 %d + 英一 %d）｜完型 %d｜新题型 %d｜翻译 %d 天｜作文 小 %d + 大 %d'
+print('英语队列：阅读 %d 篇（英二 %d + 英一 %d）｜完型 %d｜英一小标题 %d 年｜英二新题型二刷 %d 年'
+      '｜翻译 %d 天｜作文 小 %d + 大 %d｜收口 %d'
       % (len(read_queue), sum(len(ts) for _, ts in READ_ER), len(READ_Y1) * 4,
-         len(cloze_queue), len(newt_queue), len(trans_queue), len(SMALL_YEARS), len(BIG_YEARS)))
+         len(cloze_queue), len(Y1_HEADING), len(NEWT_ER_REVIEW),
+         len(trans_queue), len(SMALL_YEARS), len(BIG_YEARS), len(EN_FINISH)))
+print('机动日 %d 天：%s（第一周不排）'
+      % (len(FX_LIST), '、'.join('%d/%d' % (x.month, x.day) for x in FX_LIST)))

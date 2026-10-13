@@ -39,9 +39,9 @@ function boot(preload) {
     /限时 3h 掐表/.test(PLAN) || /卷 \d+\/18/.test(PLAN), false);
   check('去单词（无「单词」字样）', /单词/.test(PLAN), false);
   check('实习日志 3 天（10/13–10/15）', (PLAN.match(/<tr class="it"/g) || []).length, 3);
-  check('阶段A 打卡表行 = 12（扣除 2 个机动日）', (PLAN.match(/<td class="cb">打卡表 \d+ 题/g) || []).length, 12);
-  check('阶段A 选择题收藏/错题并行 = 12 行',
-    (PLAN.match(/<td class="cw">收藏 \/ 错题 \d+ 题/g) || []).length, 12);
+  check('阶段A 打卡表行 = 13（第一周不排机动日）', (PLAN.match(/<td class="cb">打卡表 \d+ 题/g) || []).length, 13);
+  check('阶段A 选择题收藏/错题并行 = 13 行',
+    (PLAN.match(/<td class="cw">收藏 \/ 错题 \d+ 题/g) || []).length, 13);
   check('阶段B 错题一刷行 = 22', (PLAN.match(/<td class="cw">错题 \d+ 题/g) || []).length, 22);
   check('阶段B 三科大题行 = 38（扣除机动日与模拟日）',
     (PLAN.match(/<td class="cb">大题 \d+ 题/g) || []).length, 38);
@@ -54,12 +54,28 @@ function boot(preload) {
     /tr\.sim td \{ background: rgba\(220,38,38/.test(PLAN)
     && /tr\.sim \.cw, tr\.sim \.cb, tr\.sim \.cma, tr\.sim \.cen \{ color: #b3261e/.test(PLAN)
     && /class="sim">全真模拟日：12\/6 · 12\/13 · 12\/16/.test(PLAN), true);
-  check('机动日 = 7 天（12 月前每周日）', (PLAN.match(/<tr class="fx"/g) || []).length, 7);
+  check('机动日 = 6 天（12 月前每周日，第一周不排）', (PLAN.match(/<tr class="fx"/g) || []).length, 6);
+  check('第一周无机动日（机动日 = 10/25 起每周日共 6 天）',
+    [...PLAN.matchAll(/<tr class="fx" data-key="([\d/]+)"/g)].map(m => m[1]),
+    ['10/25', '11/1', '11/8', '11/15', '11/22', '11/29']);
   check('机动日派活（英语作文背诵 + 数学讲义/错题 + 408 知识点）',
     /作文背诵（模板 \+ 通用理由）/.test(PLAN) && /讲义 \+ 错题复习（不做新题）/.test(PLAN)
     && /知识点复习｜本周错题章节回看/.test(PLAN), true);
   check('英二 2022–2024 封存（常态队列不出现）',
-    /完型 2022|新题型 2022|译 2022|作文·小 2023|作文·大 2024/.test(PLAN), false);
+    /完型 2022|完型 2023|完型 2024|英二新题型二刷 2022|英二新题型二刷 2023|英二新题型二刷 2024/
+    .test(PLAN) || /译 2022|作文·小 2023|作文·大 2024/.test(PLAN), false);
+  // —— 2026-10-14 英语二轮调整：英二新题型一刷已完成 → 先排完型 + 英一小标题，11 月起二刷 ——
+  check('英一小标题只排 2007 / 2016 / 2020 三年（其他年份为排序或七选五，不计入）',
+    /英一小标题 2007/.test(PLAN) && /英一小标题 2016/.test(PLAN) && /英一小标题 2020/.test(PLAN)
+    && !/英一小标题 2017|英一小标题 2021/.test(PLAN), true);
+  check('英一小标题排在 10 月内（先安排）',
+    /data-key="10\/17"[\s\S]{0,400}?英一小标题 2007/.test(PLAN)
+    && /data-key="10\/21"[\s\S]{0,400}?英一小标题 2020/.test(PLAN), true);
+  check('英二新题型二刷从 11/1 起（下个月再安排复习）',
+    /data-key="11\/2"[\s\S]{0,400}?英二新题型二刷 2021/.test(PLAN)
+    && !/data-key="10\/\d+"[\s\S]{0,400}?英二新题型二刷/.test(PLAN), true);
+  check('完型优先排（10/16 起，英二 14 年 + 英一 4 年 = 18 篇）',
+    (PLAN.match(/完型 (?:英一)?\d{4}/g) || []).length, 18);
   check('数学统一 30题（25 天）', (PLAN.match(/<td class="cma">30题<\/td>/g) || []).length, 25);
   check('英语阅读一天一篇（48 篇）', (PLAN.match(/阅读 (英一)?\d{4}·T\d/g) || []).length, 48);
   check('打卡复选框 67 个（=67 天）', (PLAN.match(/class="sprint-ck"/g) || []).length, 67);
@@ -78,8 +94,32 @@ function boot(preload) {
     (PLAN.match(/<td class="cen">—<\/td>/g) || []).length, 3);
   check('收口队列以「考前速背」收尾（落在 12/18）',
     /考前：作文模板 \+ 通用理由速背（不动笔，22:30 前睡）/.test(PLAN), true);
-  check('英语节奏卡说明收口期（12/11 起转收口）',
-    /最后 6 天（12\/11 起）转收口/.test(PLAN), true);
+  check('英语节奏卡说明收口期（12/10 起转收口）',
+    /末段（12\/10 起）转收口/.test(PLAN), true);
+  check('收口队列 7 项且末项落在 12/18（推进日由 54 增为 55）',
+    /考前：作文模板 \+ 通用理由速背（不动笔，22:30 前睡）/.test(PLAN)
+    && /data-key="12\/18"[\s\S]{0,400}?考前：作文模板/.test(PLAN), true);
+  // —— 排版：阶段A 多科目分行 + 题数单独一行 ——
+  check('阶段A 选择题：题数与科目分行（<br>），科目一行一个（span.s2）',
+    /<td class="cw">收藏 \/ 错题 \d+ 题<br><span class="s2">/.test(PLAN)
+    && /<span class="s2">CO 计算机系统概述 19 题<\/span><span class="s2">DS 绪论 14 题<\/span>/.test(PLAN), true);
+  check('span.s2 为块级带细左导轨（CSS）', /\.cw \.s2 \{ display: block;/.test(PLAN)
+    && /\.cw \.s2 \{[^}]*border-left: 2px solid var\(--line\)/.test(PLAN), true);
+  // —— 悬浮半透明条状目录 ——
+  check('悬浮周目录存在（细条 + 面板 + 10 周条目）',
+    /<nav class="plan-toc" id="planToc"/.test(PLAN) && /class="ptoc-tab" id="ptocTab"/.test(PLAN)
+    && (PLAN.match(/class="ptoc-item"/g) || []).length === 10, true);
+  check('周 section 带 id（w1–w10）供目录跳转',
+    (PLAN.match(/<section class="week ph-\w+" id="w\d+"/g) || []).length, 10);
+  check('目录默认只占 8px 细条且不挤压正文（fixed + 宽 0 面板，hover 才展开）',
+    /\.plan-toc \{ position: fixed; left: 0;/.test(PLAN)
+    && /\.plan-toc \.ptoc-tab \{ width: 8px;/.test(PLAN)
+    && /\.plan-toc \.ptoc-body \{ width: 0; opacity: 0; pointer-events: none;/.test(PLAN)
+    && /\.plan-toc:hover \.ptoc-body, \.plan-toc\.pinned \.ptoc-body \{ width: 176px;/.test(PLAN), true);
+  check('目录半透明毛玻璃 + 深色适配 + 窄屏隐藏',
+    /\.plan-toc \.ptoc-body \{[^}]*backdrop-filter: blur\(8px\)/.test(PLAN)
+    && /@media \(prefers-color-scheme: dark\) \{\s*\.plan-toc \.ptoc-body/.test(PLAN)
+    && /@media \(max-width: 760px\) \{ \.plan-toc \{ display: none; \}/.test(PLAN), true);
   check('周标签：混合周明确标注（实习→A / A→B / B→C）',
     /实习期 → 阶段A/.test(PLAN) && /阶段A → 阶段B/.test(PLAN) && /阶段B → 阶段C/.test(PLAN), true);
   check('周标签：含模拟日的周加「＋ 全真模拟」（3 周）',
@@ -91,9 +131,14 @@ function boot(preload) {
   check('打卡 / 备注列宽 148px（加宽后）', /th\.ck, td\.ck \{ width: 148px; \}/.test(PLAN), true);
   check('模拟卷来源建议（408 用 zhenti 2024–2026 三套）',
     /408 用 zhenti\.html 的/.test(PLAN) && /2024 \/ 2025 \/ 2026/.test(PLAN), true);
-  check('阶段A 文案口径（池去重 1282 / 覆盖 431 / 30–46 题每天）',
-    /池共 1282 题 ＝ 收藏 1130 ∪ 错题 662 去重/.test(PLAN) && /阶段 A 覆盖 431 题/.test(PLAN)
+  check('阶段A 文案口径（池去重 1282 / 覆盖 461 / 30–46 题每天）',
+    /池共 1282 题 ＝ 收藏 1130 ∪ 错题 662 去重/.test(PLAN) && /阶段 A 覆盖 461 题/.test(PLAN)
     && /约 30–46 题\/天/.test(PLAN), true);
+  check('阶段A 每天题量落在 30–46 区间（13 天共 461 题）',
+    (() => {
+      const qs = [...PLAN.matchAll(/<td class="cw">收藏 \/ 错题 (\d+) 题/g)].map(m => +m[1]);
+      return [qs.length, Math.min(...qs) >= 30, Math.max(...qs) <= 46, qs.reduce((a, b) => a + b, 0)];
+    })(), [13, true, true, 461]);
   // 桌面版与站内版：去掉「返回首页」差异与全部空白后应完全一致（同源生成）
   const norm = s => s
     .replace(/[\s\S]*?<body>/, '')
@@ -156,6 +201,30 @@ function boot(preload) {
   check('重开后进度 = 2/67', /已完成 <b>2<\/b> \/ 67 天/.test(d2.getElementById('sprintProgress').innerHTML), true);
   check('未勾选行保持未完成', d2.querySelector('tr[data-key="10/16"]').classList.contains('done'), false);
   dom2.window.close();
+
+  console.log('\n▸ 悬浮周目录（细条 / 展开 / 跳转）');
+  const dom3 = boot();
+  const w3 = dom3.window, d3 = w3.document;
+  await sleep(150);
+  const toc = d3.getElementById('planToc');
+  const items3 = [...d3.querySelectorAll('.ptoc-item')];
+  // jsdom 里 offsetTop 恒为 0，只能断言「有且仅有一项高亮」（真实浏览器按滚动位置高亮）
+  check('目录 10 项且当前周唯一高亮',
+    [items3.length, items3.filter(a => a.classList.contains('active')).length], [10, 1]);
+  check('周 section 与目录条目一一对应（href → #wN）',
+    items3.every(a => !!d3.getElementById(a.getAttribute('href').slice(1))), true);
+  const tab = d3.getElementById('ptocTab');
+  tab.click();
+  check('点细条钉住目录（pinned）', toc.classList.contains('pinned'), true);
+  tab.click();
+  check('再点一次取消钉住', toc.classList.contains('pinned'), false);
+  let scrolled = 0;
+  w3.scrollTo = () => { scrolled++; };
+  items3[4].dispatchEvent(new w3.MouseEvent('click', { bubbles: true, cancelable: true }));
+  check('点击第 5 周条目触发平滑滚动', scrolled, 1);
+  check('目录展开态不影响正文（面板默认 width:0 / pointer-events:none）',
+    /\.plan-toc \.ptoc-body \{ width: 0; opacity: 0; pointer-events: none;/.test(PLAN), true);
+  dom3.window.close();
 
   console.log(`\n${failed ? '❌' : '✅'} ${passed} 通过 / ${failed} 失败`);
   process.exit(failed ? 1 : 0);
