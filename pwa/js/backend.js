@@ -683,21 +683,37 @@ async function api(url, opts = {}) {
         // ---------- 统计 ----------
         if (seg[1] === 'stats' && !seg[2]) {
             // 局部容错：单个统计/存储异常不拖垮整个首页（IndexedDB 被禁/损坏/被其他
-            // 标签页占用时，仍返回结构完整的数据，由前端降级展示而不是整体报错）
+            // 标签页占用时，仍返回结构完整的数据，由前端降级展示而不是整体报错）。
+            // 但容错≠静默：失败原因放进 warnings 由前端明示，stores 给出底层行数，
+            // 让「真没数据」和「读不出来」可区分（否则一律显示 0，用户会以为数据被清空）。
             const EMPTY = () => ({
                 total_answered: 0, correct_count: 0, wrong_count: 0, favorite_count: 0,
                 unfamiliar_count: 0, dontknow_count: 0, accuracy: 0, due_review_count: 0
             });
+            const errMsg = e => ((e && e.message) ? e.message : String(e));
+            const warnings = [];
+
+            // 底层存储可读性探针
+            let stores = null;
+            try {
+                const [pr, wr, fv, dk] = await Promise.all([
+                    dbAll('progress'), dbAll('wrong'), dbAll('favorites'), dbAll('daka_progress')
+                ]);
+                stores = { progress: pr.length, wrong: wr.length, favorites: fv.length, daka: dk.length };
+            } catch (e) {
+                warnings.push('本地存储读取失败：' + errMsg(e));
+            }
+
             let overall;
             try { overall = await subjectStats(null); }
-            catch (e) { console.error('stats overall 失败', e); overall = EMPTY(); }
+            catch (e) { console.error('stats overall 失败', e); warnings.push('总统计失败：' + errMsg(e)); overall = EMPTY(); }
             const totals = await getTotals().catch(() => ({ subjects: {} }));
             const subjects = {};
             for (const key of Object.keys(SUBJECTS)) {
                 const total = (totals.subjects && totals.subjects[key] && totals.subjects[key].total) || 0;
                 let st;
                 try { st = await subjectStats(key); }
-                catch (e) { console.error('stats ' + key + ' 失败', e); st = EMPTY(); }
+                catch (e) { console.error('stats ' + key + ' 失败', e); warnings.push(key + ' 统计失败：' + errMsg(e)); st = EMPTY(); }
                 const detail = await getDueReviewDetailed(key)
                     .catch(e => { console.error('dueReview ' + key + ' 失败', e); return { stages: {}, stageDue: {}, upcoming: [] }; });
                 subjects[key] = {
@@ -706,7 +722,7 @@ async function api(url, opts = {}) {
                     review_upcoming: (detail.upcoming || []).length
                 };
             }
-            return jsonResp({ overall, subjects });
+            return jsonResp({ overall, subjects, stores, warnings });
         }
 
         if (seg[1] === 'stats' && seg[2] === 'daily') {

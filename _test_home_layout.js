@@ -45,11 +45,27 @@ const CSS = fs.readFileSync(path.join(ROOT, 'pwa/css/style.css'), 'utf8');
     /stat-warn/.test(IDX) && /stat-retry/.test(IDX) && /onclick="loadHome\(\)"/.test(IDX) && /apiErr/.test(IDX), true);
   const BE = fs.readFileSync(path.join(ROOT, 'pwa/js/backend.js'), 'utf8');
   check('后端：/api/stats 局部容错（单科失败返回 EMPTY，不整体 500）',
-    /if \(seg\[1\] === 'stats' && !seg\[2\]\)[\s\S]{0,1200}?catch \(e\) \{ console\.error\('stats ' \+ key/.test(BE), true);
+    /if \(seg\[1\] === 'stats' && !seg\[2\]\)[\s\S]{0,2600}?catch \(e\) \{ console\.error\('stats ' \+ key/.test(BE), true);
   check('后端：openDB blocked 超时 reject + 失败不缓存（可重试）',
     /req\.onblocked = \(\) =>/.test(BE) && /_dbPromise = null;   \/\/ 失败不缓存/.test(BE), true);
+  // 容错不能静默：2026-10-14 用户见统计全 0 以为数据被清空，实为读取失败被 EMPTY 吞掉
+  check('后端：/api/stats 返回 stores 探针（区分「空库」与「读不出来」）',
+    /stores = \{ progress: pr\.length, wrong: wr\.length, favorites: fv\.length, daka: dk\.length \}/.test(BE)
+    && /jsonResp\(\{ overall, subjects, stores, warnings \}\)/.test(BE), true);
+  check('后端：失败原因进 warnings（不静默）',
+    /warnings\.push\('本地存储读取失败：'/.test(BE) && /warnings\.push\('总统计失败：'/.test(BE), true);
+  check('前端：读取失败黄条（warnings 明示，可被看见）',
+    /部分统计读取失败（显示可能不完整）/.test(IDX) && /warnings\.join\('；'\)/.test(IDX), true);
+  check('前端：空库提示 + 一键导入备份（stat-empty / homeImportFile）',
+    /class="stat-empty"/.test(IDX) && /id="homeImportFile"/.test(IDX)
+    && /async function homeImportBackup/.test(IDX) && /\/api\/backup\/import/.test(IDX), true);
+  check('前端：空库判定（统计全 0 且 stores 也为空才提示）',
+    /const looksEmpty = !apiErr && !warnings\.length/.test(IDX)
+    && /stores\.progress === 0 && stores\.wrong === 0 && stores\.favorites === 0/.test(IDX), true);
   check('横幅样式（stat-warn 独占一行 + 深色适配）',
     /\.stats-bar\s*\{[^}]*flex-wrap:\s*wrap/.test(CSS) && /\.dark \.stat-warn/.test(CSS), true);
+  check('空库提示样式（橙色，与红色接口异常区分）',
+    /\.stat-empty\s*\{[^}]*border-left:\s*3px solid #b45309/.test(CSS) && /\.dark \.stat-empty/.test(CSS), true);
 
   console.log('\n▸ 动态渲染（jsdom：板块数与顺序）');
   const STATS = {
@@ -134,7 +150,46 @@ const CSS = fs.readFileSync(path.join(ROOT, 'pwa/css/style.css'), 'utf8');
     /1200/.test(cards2[0] ? cards2[0].textContent : ''), true);
   check('统计条正常显示（无「加载失败」）',
     /已做题目/.test(d2.getElementById('statsBar').textContent) && !/加载失败/.test(d2.getElementById('statsBar').textContent), true);
+  check('读取失败不再静默显示 0（黄条明示 warnings）',
+    /部分统计读取失败/.test(d2.getElementById('statsBar').textContent), true);
+  check('读取失败不误报「记录为空」（两者互斥）',
+    !/没读到答题记录/.test(d2.getElementById('statsBar').textContent), true);
   dom2.window.close();
+
+  // 场景三：真实空库（stores 全 0 且无 warnings）→ 提示「没读到记录」并给一键导入备份
+  console.log('\n▸ 空库提示（数据真丢了 / 新设备）');
+  const EMPTY_STATS = {
+    overall: { total_answered: 0, accuracy: 0, wrong_count: 0, due_review_count: 0, favorite_count: 0 },
+    subjects: {},
+    stores: { progress: 0, wrong: 0, favorites: 0, daka: 0 },
+    warnings: []
+  };
+  const vc3 = new VirtualConsole();
+  vc3.on('jsdomError', () => { });
+  const dom3 = new JSDOM(html, {
+    runScripts: 'dangerously',
+    pretendToBeVisual: true,
+    url: 'http://localhost/index.html',
+    virtualConsole: vc3,
+    beforeParse(w) {
+      w.indexedDB = new IDBFactory();
+      w.IDBKeyRange = IDBKeyRange;
+      w.alert = () => { };
+      w.scrollTo = () => { };
+      w.api = async (p) => (String(p).includes('/api/daka/progress')
+        ? { json: async () => ({ progress: {} }) }
+        : { json: async () => EMPTY_STATS });
+      w.fetch = async () => ({ ok: true, status: 200, json: async () => ({ ds_daka: 62 }) });
+    }
+  });
+  const w3 = dom3.window, d3 = w3.document;
+  for (let i = 0; i < 60 && d3.querySelectorAll('.subject-card').length === 0; i++) await sleep(50);
+  const bar3 = d3.getElementById('statsBar');
+  check('空库时提示「没读到答题记录」+ 给一键导入备份入口',
+    /没读到答题记录/.test(bar3.textContent) && !!d3.getElementById('homeImportFile'), true);
+  check('空库提示不误报为接口异常 / 读取失败',
+    !/统计接口异常/.test(bar3.textContent) && !/部分统计读取失败/.test(bar3.textContent), true);
+  dom3.window.close();
 
   console.log(`\n${failed ? '❌' : '✅'} ${passed} 通过 / ${failed} 失败`);
   dom.window.close();

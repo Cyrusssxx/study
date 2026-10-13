@@ -219,6 +219,35 @@ body {
 .stat-retry:hover { border-color: var(--primary); }
 .stat-warn-hint { color: var(--text-light); font-size: 0.78rem; }
 
+/* 本地记录为空提示（橙）：与红色「接口异常」区分——这不是报错，是可恢复的空库 */
+.stat-empty {
+    flex: 0 0 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 4px;
+    padding: 8px 12px;
+    font-size: 0.85rem;
+    color: #b45309;
+    background: rgba(234, 88, 12, .08);
+    border: 1px solid rgba(234, 88, 12, .22);
+    border-left: 3px solid #b45309;
+    border-radius: 8px;
+}
+.dark .stat-empty {
+    color: #f0b27a;
+    background: rgba(234, 88, 12, .14);
+    border-color: rgba(240, 178, 122, .3);
+}
+.stat-empty code {
+    padding: 1px 5px;
+    font-size: 0.82rem;
+    background: rgba(128, 128, 128, .12);
+    border-radius: 4px;
+}
+
 .stat-item {
     text-align: center;
 }

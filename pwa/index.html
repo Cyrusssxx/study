@@ -86,6 +86,14 @@
             const fbTotal = k => num(fallbackTotals[k])
                 || num(fallbackTotals.subjects && fallbackTotals.subjects[k] && fallbackTotals.subjects[k].total);
 
+            // 统计为 0 有两种可能：真没数据（浏览器清了站点数据 / 换了设备）或读不出来（库被占用/损坏）。
+            // 必须明示是哪一种——静默显示 0 会让人误以为记录被清空。
+            const warnings = (data && data.warnings) || [];
+            const stores = (data && data.stores) || null;
+            const looksEmpty = !apiErr && !warnings.length && num(s.total_answered) === 0
+                && num(s.favorite_count) === 0 && num(s.wrong_count) === 0
+                && (!stores || (stores.progress === 0 && stores.wrong === 0 && stores.favorites === 0));
+
             document.getElementById('statsBar').innerHTML = `
                 <div class="stat-item"><span class="stat-number">${num(s.total_answered)}</span><span class="stat-label">已做题目</span></div>
                 <div class="stat-item"><span class="stat-number">${num(s.accuracy)}%</span><span class="stat-label">正确率</span></div>
@@ -94,7 +102,14 @@
                 <div class="stat-item"><span class="stat-number">${num(s.favorite_count)}</span><span class="stat-label">收藏数</span></div>
                 ${apiErr ? `<div class="stat-warn">⚠ 统计接口异常：${apiErr}
                     <button class="stat-retry" onclick="loadHome()">重试</button>
-                    <span class="stat-warn-hint">其余入口照常可用；多次重试仍失败，请按 F12 看 Console 里 api error 的详情</span></div>` : ''}`;
+                    <span class="stat-warn-hint">其余入口照常可用；多次重试仍失败，请按 F12 看 Console 里 api error 的详情</span></div>` : ''}
+                ${(!apiErr && warnings.length) ? `<div class="stat-warn">⚠ 部分统计读取失败（显示可能不完整）：${warnings.join('；')}
+                    <button class="stat-retry" onclick="loadHome()">重试</button>
+                    <span class="stat-warn-hint">若是「其他标签页占用」，关闭本站其它标签页后刷新即可</span></div>` : ''}
+                ${looksEmpty ? `<div class="stat-empty">📭 没读到答题记录（已做 / 收藏 / 错题全为 0）
+                    <button class="stat-retry" onclick="document.getElementById('homeImportFile').click()">导入备份恢复</button>
+                    <span class="stat-warn-hint">当前地址 <code>${location.origin}</code>：数据按访问地址隔离存储，换了域名 / 端口 / IP 就看不到旧的。若有 <code>408quiz-backup-*.json</code> 可直接还原</span>
+                    <input type="file" id="homeImportFile" accept=".json,application/json" style="display:none"></div>` : ''}`;
 
             let cards = '';
             for (const key of SUBJECT_ORDER) {
@@ -217,6 +232,37 @@
                 if (e) btn.href = link(e);
             });
         }
+
+        // 首页一键恢复：与统计页「导入备份文件」同源，全量覆盖当前本地数据
+        async function homeImportBackup(file) {
+            if (!file) return;
+            let data;
+            try { data = JSON.parse(await file.text()); }
+            catch (e) { alert('文件不是有效的 JSON'); return; }
+            if (!Array.isArray(data.progress)) { alert('备份文件格式不正确（缺少 progress 数组）'); return; }
+            const msg = `将全量覆盖当前数据：答题 ${data.progress.length} 条、错题 ${(data.wrong || []).length} 条、`
+                + `收藏 ${(data.favorites || []).length} 条、笔记 ${(data.notes || []).length} 条、打卡 ${(data.daka || []).length} 条。确定导入？`;
+            if (!confirm(msg)) return;
+            try {
+                const resp = await api('/api/backup/import', {
+                    method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data)
+                });
+                const r = await resp.json();
+                if (resp.ok && r.success) {
+                    alert('导入成功，页面即将刷新');
+                    setTimeout(() => location.reload(), 600);
+                } else {
+                    alert('导入失败：' + (r.error || '未知错误'));
+                }
+            } catch (e) { alert('导入失败：' + ((e && e.message) || e)); }
+        }
+        // 文件选择框是动态插入的，用事件委托绑定
+        document.addEventListener('change', e => {
+            if (e.target && e.target.id === 'homeImportFile') {
+                homeImportBackup(e.target.files && e.target.files[0]);
+                e.target.value = '';
+            }
+        });
 
         loadHome();
     </script>
