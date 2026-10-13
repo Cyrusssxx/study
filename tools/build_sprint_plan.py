@@ -188,16 +188,28 @@ for y in list(range(2015, 2027)) + list(range(2010, 2015)):
 SMALL_YEARS = [str(y) for y in range(2010, 2027) if keep(y)]            # 小作文
 BIG_YEARS = [str(y) for y in range(2010, 2027) if y != 2012 and keep(y)]  # 大作文（2012 放弃）
 
+# 英语收口队列：常规队列全部跑完后的最后 6 个推进日（12/11、12/12、12/14、12/15、12/17、12/18）
+# 顺序即使用顺序，末项刻意是"考前速背"（落在 12/18）
+EN_FINISH = [
+    '作文成篇默写（纸质答题卡：小作文 1 篇 + 大作文 1 篇，限时）',
+    '作文成篇默写（再练 1 组真题，写工整不涂改）',
+    '阅读错题回看 + 生词 / 长难句本过一遍',
+    '作文模板默写（小作文 5 类框架 + 大作文图表描述句）',
+    '英语错题 / 生词本总扫（只看标记项）',
+    '考前：作文模板 + 通用理由速背（不动笔，22:30 前睡）',
+]
+
 # ============================ 3. 408 选择题错题：按章分组 ============================
 # (科目, [章序号...], 备注)  —— 顺序即推进顺序；同组多章＝当天连做
+# extra: '' = 整章一天；'前'/'后' = 大章拆两天（题数按当天实际数据对半算，不硬编码）
 T1_GROUPS = [
-    ('os', [0], ''), ('os', [1], '前 34 题'), ('os', [1], '后 34 题'),
+    ('os', [0], ''), ('os', [1], '前'), ('os', [1], '后'),
     ('os', [2], ''), ('os', [3], ''), ('os', [4], ''),
     ('co', [0], ''), ('co', [1], ''), ('co', [2], ''),
     ('co', [3], ''), ('co', [4], ''), ('co', [5, 6], ''),
     ('ds', [0, 1, 2], ''), ('ds', [3, 4, 5], ''), ('ds', [6, 7], ''),
-    ('cn', [0, 1], ''), ('cn', [2], '前 30 题'), ('cn', [2], '后 30 题'),
-    ('cn', [3], '前 28 题'), ('cn', [3], '后 27 题'), ('cn', [4], ''), ('cn', [5], ''),
+    ('cn', [0, 1], ''), ('cn', [2], '前'), ('cn', [2], '后'),
+    ('cn', [3], '前'), ('cn', [3], '后'), ('cn', [4], ''), ('cn', [5], ''),
 ]
 
 
@@ -206,14 +218,16 @@ def t1_day_label(sub, idxs, extra):
     for i in idxs:
         ch = chapters[sub][i]
         names.append(re.sub(r'^第\d+章\s*', '', ch))
-    m = re.search(r'(\d+)\s*题', extra or '')
-    if m:                       # 拆天：以 extra 里的题数为准
-        cnt = int(m.group(1))
-    else:
-        cnt = sum(chap_q[sub][chapters[sub][i]] for i in idxs)
+    total = sum(chap_q[sub][chapters[sub][i]] for i in idxs)
     lab = '＋'.join(names)
-    if extra:
-        lab += '（%s）' % extra
+    if extra == '前':
+        cnt = (total + 1) // 2          # 前半天多担 1 题（55 → 28 + 27）
+        lab += '（前 %d 题）' % cnt
+    elif extra == '后':
+        cnt = total // 2
+        lab += '（后 %d 题）' % cnt
+    else:
+        cnt = total
     return cnt, '%s %s' % (SUBJ_SHORT[sub], lab)
 
 
@@ -333,7 +347,7 @@ R2_TOTAL = max(0, len(B_NORMAL) - len(T1_GROUPS))
 R2_ALLOC = alloc_days(R2_TOTAL, {s: sum(chap_q[s].values()) for s in ['os', 'co', 'ds', 'cn']})
 
 rows = []
-read_i = cloze_i = newt_i = trans_i = small_i = big_i = en_day = 0
+read_i = cloze_i = newt_i = trans_i = small_i = big_i = en_day = en_fin_i = 0
 n_math = 0      # 数学「30 题」推进计数（只在正常推进日累加）
 n_daka = 0      # 阶段 A 打卡表天索引
 n_ch = 0        # 阶段 A 选择题（收藏/错题）天索引
@@ -410,6 +424,10 @@ for d in DAYS:
     if d >= datetime.date(2026, 11, 10) and d.weekday() in (1, 3, 5) and big_i < len(BIG_YEARS):
         en.append('作文·大 %s' % BIG_YEARS[big_i])
         big_i += 1
+    # 常规队列全跑完后，用收口队列兜底（避免最后几天英语列空白）
+    if not en and en_fin_i < len(EN_FINISH):
+        en.append(EN_FINISH[en_fin_i])
+        en_fin_i += 1
     row['en'] = ' ＋ '.join(en) if en else '—'
 
     # ---- 数学 ----
@@ -426,7 +444,7 @@ for d in DAYS:
             n_ch += 1
             row['cw'] = '收藏 / 错题 %d 题｜%s' % (cnt, a_ch_label(items))
         else:
-            row['cw'] = '收藏 / 错题：按章快刷（自选薄弱章）'
+            row['cw'] = '收藏 / 错题（池剩余 %d 题）｜按章快刷，优先薄弱章' % (N_CHOICE - N_CH_A)
         if n_daka < len(daka_days):
             n, a, b, grp = daka_days[n_daka]
             n_daka += 1
@@ -518,19 +536,35 @@ for r in rows:
     cur[1].append(r)
 
 
+PH_TAG = {'K': '实习期', 'A': '阶段A · 打卡表大题', 'B': '阶段B · 错题 + 三科大题', 'C': '阶段C · 收口'}
+PH_SHORT = {'K': '实习期', 'A': '阶段A', 'B': '阶段B', 'C': '阶段C'}
+
+
 def week_phase(rws):
-    """按本周第一天定阶段色。"""
-    k0 = rws[0]['key']
-    d0 = datetime.date(2026, int(k0.split('/')[0]), int(k0.split('/')[1]))
-    if d0 <= datetime.date(2026, 10, 15):
-        return 'K', '实习期'
-    if d0 <= datetime.date(2026, 10, 16):
-        return 'A', '阶段A · 打卡表大题'
-    if d0 <= D_PHASE_A_END:
-        return 'A', '阶段A · 打卡表大题'
-    if d0 <= D_PHASE_B_END:
-        return 'B', '阶段B · 错题 + 三科大题'
-    return 'C', '阶段C · 收口'
+    """按本周实际覆盖的阶段出标签：跨阶段 / 含模拟日的周明确标注（避免标题与内容不符）。"""
+    ds = [datetime.date(2026, int(r['key'].split('/')[0]), int(r['key'].split('/')[1])) for r in rws]
+
+    def ph_of(d):
+        if d <= datetime.date(2026, 10, 15):
+            return 'K'
+        if d <= D_PHASE_A_END:
+            return 'A'
+        if d <= D_PHASE_B_END:
+            return 'B'
+        return 'C'
+
+    phs = []
+    for d in ds:
+        p = ph_of(d)
+        if p not in phs:
+            phs.append(p)
+    if len(phs) == 1:
+        tag = PH_TAG[phs[0]]
+    else:
+        tag = ' → '.join(PH_SHORT[p] for p in phs)
+    if any(r['cls'] == 'sim' for r in rws):
+        tag += ' ＋ 全真模拟'
+    return phs[0], tag
 
 
 main = ['<main>']
@@ -568,7 +602,7 @@ src = re.sub(
     '''<div class="legend">
       <span>阶段 A · 打卡表大题（10/16–10/29）</span>
       <span class="b">阶段 B · 选择题错题 + 三科大题（10/30–12/12）</span>
-      <span class="c">阶段 C · 收口（12/13–12/18）</span>
+      <span class="c">阶段 C · 收口（12/14–12/18；12/13 为全真模拟）</span>
       <span class="m">◆ 里程碑日：任务切换 / 收尾节点</span>
       <span class="it">实习日志 10/13–15</span>
       <span class="fx">机动日：12 月前每周日（%s，共 %d 天）</span>
@@ -591,10 +625,11 @@ src = re.sub(
       <h4>408 三步走</h4>
       <ul>
         <li><b>阶段 A（10/16–10/29）</b>：打卡表大题 %d 张（一天 4–5 张）
-            ＋ <b>选择题收藏 / 错题并行</b>（收藏 %d + 错题 %d，池共 %d 题；四科轮转按章，约 30–45 题/天）</li>
+            ＋ <b>选择题收藏 / 错题并行</b>（池共 %d 题 ＝ 收藏 %d ∪ 错题 %d 去重；四科轮转按章，
+            约 30–46 题/天，阶段 A 覆盖 %d 题；其余收藏题在错题清完后自选）</li>
         <li><b>阶段 B（10/30–12/12）</b>：错题一刷一天一章（一科推完换下一科，按 OS→CO→DS→CN，共 %d 题）→ 二刷；
             同时三科大题（OS/CO/CN 共 %d 题）一天约 %d 题</li>
-        <li><b>阶段 C（12/13–12/18）</b>：只过错题与框架，不做新题</li>
+        <li><b>阶段 C（12/14–12/18）</b>：只过错题与框架，不做新题</li>
       </ul>
     </div>
     <div class="gcard sim">
@@ -602,7 +637,8 @@ src = re.sub(
       <ul>
         <li><b>12/6 · 12/13 · 12/16</b> 三天：上午数学、下午 408、晚上英语，各一整套，严格限时</li>
         <li>英语用<b>封存的 2022 / 2023 / 2024</b> 三年整套 —— 这三年此前一律不碰</li>
-        <li>当晚只批阅不复盘，复盘挪到次日</li>
+        <li>卷子提前备好：数学二自选 3 套没做过的预测卷；408 用 zhenti.html 的 <b>2024 / 2025 / 2026</b> 三套；英语已定为 2022 / 2023 / 2024</li>
+        <li>当晚只批阅不复盘，复盘挪到次日；<b>12/16 是最后一次，其后 12/17–18 只做复盘</b></li>
       </ul>
     </div>
     <div class="gcard fx">
@@ -621,9 +657,10 @@ src = re.sub(
         <li>完型 / 新题型交替（<b style="color:#b3261e">2022–2024 全部封存</b>，只在模拟日拆封）</li>
         <li>翻译细水长流：2015–2026 + 补 2010–2014，每年 5 句拆两天（3 句 + 2 句）</li>
         <li>作文：小作文 11/2 起（一/三/五）；大作文 11/10 起（二/四/六，2012 放弃）</li>
+        <li>最后 6 天（12/11 起）转收口：作文成篇默写 → 错题 / 生词总扫 → 考前速背</li>
       </ul>
     </div>
-  </section>''' % (N_DAKA, N_FAV, N_WRONG, N_CHOICE, N_WRONG, N_BIG, -(-N_BIG // max(1, DAO_B_DAYS)),
+  </section>''' % (N_DAKA, N_CHOICE, N_FAV, N_WRONG, N_CH_A, N_WRONG, N_BIG, -(-N_BIG // max(1, DAO_B_DAYS)),
                    len(FX_LIST), N_READ_ER, N_READ_Y1), src, flags=re.S)
 src = re.sub(r'<main>[\s\S]*?</main>', lambda m: MAIN, src, flags=re.S)
 
@@ -637,10 +674,10 @@ EXTRA_CSS = """  /* v2 版式：408 拆「选择题错题 / 大题」两列 */
   .cen { width: 236px; }
   td.cb .s { color: var(--muted); font-size: 12px; }
   /* 打卡列：勾选 + 我的备注（localStorage 持久化；桌面版与站内版各自独立存储） */
-  th.ck, td.ck { width: 132px; }
+  th.ck, td.ck { width: 148px; }
   td.ck { white-space: normal; }
   .sprint-ck { width: 15px; height: 15px; cursor: pointer; accent-color: var(--phB); vertical-align: middle; }
-  .mynote { margin-top: 6px; min-height: 20px; font-size: 12.5px; line-height: 1.5;
+  .mynote { margin-top: 6px; min-height: 26px; font-size: 12.5px; line-height: 1.5;
             color: var(--muted); border-bottom: 1px dashed var(--line); outline: none;
             word-break: break-word; transition: color .15s ease, border-color .15s ease; }
   .mynote:hover, .mynote:focus { color: var(--text); border-bottom-color: var(--primary); }

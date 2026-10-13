@@ -73,6 +73,27 @@ function boot(preload) {
     /tr\.done td:not\(\.ck\)\s*\{\s*opacity/.test(PLAN) && /\.mynote:empty::before/.test(PLAN)
     && /@media \(max-width: 760px\)[\s\S]{0,160}td\.ck::before/.test(PLAN)
     && /@media print[\s\S]{0,120}\.mynote/.test(PLAN), true);
+  // —— 2026-10-14 体检修订 ——
+  check('英语列仅实习期留空（3 天），其余 64 天全有任务（收口队列兜底）',
+    (PLAN.match(/<td class="cen">—<\/td>/g) || []).length, 3);
+  check('收口队列以「考前速背」收尾（落在 12/18）',
+    /考前：作文模板 \+ 通用理由速背（不动笔，22:30 前睡）/.test(PLAN), true);
+  check('英语节奏卡说明收口期（12/11 起转收口）',
+    /最后 6 天（12\/11 起）转收口/.test(PLAN), true);
+  check('周标签：混合周明确标注（实习→A / A→B / B→C）',
+    /实习期 → 阶段A/.test(PLAN) && /阶段A → 阶段B/.test(PLAN) && /阶段B → 阶段C/.test(PLAN), true);
+  check('周标签：含模拟日的周加「＋ 全真模拟」（3 周）',
+    (PLAN.match(/＋ 全真模拟<\/span>/g) || []).length, 3);
+  check('错题大章拆天题数动态计算（34/34、30/30、28/27）',
+    /OS 进程与线程（前 34 题）/.test(PLAN) && /OS 进程与线程（后 34 题）/.test(PLAN)
+    && /CN 数据链路层（前 30 题）/.test(PLAN) && /CN 数据链路层（后 30 题）/.test(PLAN)
+    && /CN 网络层（前 28 题）/.test(PLAN) && /CN 网络层（后 27 题）/.test(PLAN), true);
+  check('打卡 / 备注列宽 148px（加宽后）', /th\.ck, td\.ck \{ width: 148px; \}/.test(PLAN), true);
+  check('模拟卷来源建议（408 用 zhenti 2024–2026 三套）',
+    /408 用 zhenti\.html 的/.test(PLAN) && /2024 \/ 2025 \/ 2026/.test(PLAN), true);
+  check('阶段A 文案口径（池去重 1282 / 覆盖 431 / 30–46 题每天）',
+    /池共 1282 题 ＝ 收藏 1130 ∪ 错题 662 去重/.test(PLAN) && /阶段 A 覆盖 431 题/.test(PLAN)
+    && /约 30–46 题\/天/.test(PLAN), true);
   // 桌面版与站内版：去掉「返回首页」差异与全部空白后应完全一致（同源生成）
   const norm = s => s
     .replace(/[\s\S]*?<body>/, '')
