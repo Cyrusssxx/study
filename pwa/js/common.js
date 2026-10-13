@@ -302,19 +302,25 @@ const PS = (() => {
         },
         // 恢复滚动位置：内容异步渲染的页面在数据加载渲染完成后调用一次；
         // 内置多帧补偿（最长约 1.2s），页面高度后移时自动追滚。
+        // 防"抢跑"：补偿期间若检测到滚动位置被用户改动（点了目录/手动滚），
+        // 立即停止追滚——否则会把用户刚跳过去的位置拽回旧存档（表现为"点了没反应"）。
         restoreScroll(offsetTop) {
             let y = null;
             try { y = parseInt(sessionStorage.getItem(scrollKey()) || '', 10); } catch (e) {}
             if (y === null || !isFinite(y) || y < 0) return;
             const target = () => Math.max(0, y - (offsetTop || 0));
+            let cancelled = false;
+            window.__psCancelRestore = () => { cancelled = true; };
             window.scrollTo(0, target());
-            let tries = 0;
+            let lastSet = window.scrollY, tries = 0;
             const retry = () => {
-                if (++tries > 6) return;
+                if (cancelled || ++tries > 6) return;
                 const t = target();
                 const doc = document.documentElement;
                 if (Math.abs(window.scrollY - t) < 4 && (doc.scrollHeight - window.innerHeight) >= t - 2) return;
+                if (Math.abs(window.scrollY - lastSet) > 4) return;   // 用户已把滚动挪走 → 别追了
                 window.scrollTo(0, t);
+                lastSet = t;
                 setTimeout(retry, 200);
             };
             setTimeout(retry, 200);

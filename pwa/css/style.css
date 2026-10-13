@@ -3691,7 +3691,10 @@ h3.algo-h:first-child, h4.algo-h:first-child, h5.algo-h:first-child { margin-top
     font-size: 0.88rem;
     padding: 8px 10px 4px;
     color: var(--text);
+    cursor: pointer;          /* 可点：跳到该章第一个节 */
+    border-radius: 6px;
 }
+.notes-toc-ch:hover { color: var(--primary); }
 
 .notes-toc-sec {
     display: block;

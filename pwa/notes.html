@@ -178,7 +178,23 @@
         // 章节名含 / 等字符，锚点定位统一走 data-sec 属性匹配，不用 id 选择器
         // 支持：1) 精确匹配 2) 别名映射（旧section→新section）3) 编号前缀模糊匹配 4) 关键词兜底
         // 匹配范围含小节(.notes-sub)，节名跳节容器、小节名跳小节容器
+        // 用户主动跳转前先取消「滚动位置恢复」的追滚补偿，否则恢复循环会在随后 ~1s 内
+        // 反复把页面拽回旧存档，看起来就是"点了目录原地不动"（common.js PS.restoreScroll）
+        function cancelScrollRestore() {
+            if (typeof window.__psCancelRestore === 'function') window.__psCancelRestore();
+        }
+        // 目标行与视口顶之间留出的距离：与 .toc-fixed 的 --toc-top 对齐（顶栏 60 + 24），
+        // 保证跳转后标题不被吸顶导航盖住（scrollIntoView 默认贴视口顶 → 会被顶栏压住）
+        const SCROLL_TOP_OFFSET = 84;
+        function smoothScrollToEl(el, block, instant) {
+            const r = el.getBoundingClientRect();
+            const y = block === 'center'
+                ? r.top + window.scrollY - (window.innerHeight / 2) + (r.height / 2)
+                : r.top + window.scrollY - SCROLL_TOP_OFFSET;
+            window.scrollTo({ top: Math.max(0, y), behavior: instant ? 'instant' : 'smooth' });
+        }
         function jumpTo(name, highlight, instant) {
+            cancelScrollRestore();
             const sections = Array.from(document.querySelectorAll('.notes-section, .notes-sub'));
             const tocLinks = Array.from(document.querySelectorAll('.notes-toc-sec, .notes-toc-sub'));
 
@@ -233,7 +249,7 @@
                 scrollToTarget();
                 [150, 350, 700].forEach(t => setTimeout(scrollToTarget, t));
             } else {
-                target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                smoothScrollToEl(target, 'start');   // 带顶栏偏移的平滑滚动
             }
             tocLinks.forEach(l => l.classList.toggle('active', l.dataset.sec === target.dataset.sec));
             // 目录侧栏跟随：收起则展开；高亮项滚动到目录可视区中部
@@ -336,11 +352,12 @@
 
         // 跳到该节内的具体某一行（data-line），并闪烁高亮
         function jumpToLine(secName, lineNo) {
+            cancelScrollRestore();
             const sec = resolveSectionEl(secName);
             if (!sec) return false;
             const el = sec.querySelector('.anno-line[data-line="' + lineNo + '"]');
             if (!el) return false;
-            el.scrollIntoView({ block: 'center', behavior: 'smooth' });
+            smoothScrollToEl(el, 'center');
             const tsec = sec.dataset.sec;
             el.classList.add('locate-flash');
             setTimeout(() => el.classList.remove('locate-flash'), 1800);
@@ -395,6 +412,7 @@
             return { score, hits };
         }
         function gotoSpecific(q, preferSecEl, strict) {
+            cancelScrollRestore();
             const idx = bgIndex();
             const N = idx.N, df = idx.df;
             let bestIn = null, bestInScore = -1, bestInLen = 1e9;
@@ -419,7 +437,7 @@
             const tsub = target.closest('.notes-sub');             // 命中行所属小节（题目跳转精准到小章节）
             if (tsub) expandTocSec(tsub.dataset.sec);
             else if (tsec) expandTocSec(tsec.dataset.sec);
-            target.scrollIntoView({ block: 'center', behavior: 'smooth' });
+            smoothScrollToEl(target, 'center');
             target.classList.add('locate-flash');
             setTimeout(() => target.classList.remove('locate-flash'), 1800);
             const hlName = tsub ? tsub.dataset.sec : (tsec ? tsec.dataset.sec : '');
@@ -627,7 +645,9 @@
             </div>`;
             let body = '';
             for (const ch of notes.chapters) {
-                toc += `<div class="notes-toc-ch">${ch.chapter}</div>`;
+                // 章标题也可点：跳到该章第一个节（data-sec 由下方循环填充，这里先记首节名）
+                const chFirst = (ch.sections[0] && ch.sections[0].section) || '';
+                toc += `<div class="notes-toc-ch" data-sec="${chFirst}" title="跳到「${ch.chapter}」">${ch.chapter}</div>`;
                 body += `<h2 class="notes-ch-title">${ch.chapter}</h2>`;
                 for (const sec of ch.sections) {
                     const subs = sec.subsections || [];
@@ -662,15 +682,26 @@
             document.getElementById('notesToc').innerHTML = toc;
             document.getElementById('notesContent').innerHTML = body;
 
-            // 目录点击事件委托：有子节的节=展开/收起，节/小节=跳转
+            // 目录点击事件委托：
+            // ① 章标题 → 跳到该章第一个节；
+            // ② 箭头（▸）→ 只展开/收起小节列表；
+            // ③ 节名（含"有子节"的节）→ 一律跳转（jumpTo 内 expandTocSec 会自动展开其小节）——
+            //    旧行为点"有子节的节"只折叠不跳转，用户视角就是"点了没反应"；
+            // ④ 小节 → 跳转。
             const tocBox = document.getElementById('notesToc');
             tocBox.onclick = e => {
+                const chLink = e.target.closest('.notes-toc-ch');
+                if (chLink) { if (chLink.dataset.sec) jumpTo(chLink.dataset.sec, false); return; }
+                if (e.target.closest('.toc-sec-arrow')) {
+                    const arrowSec = e.target.closest('.notes-toc-sec');
+                    if (arrowSec && arrowSec.dataset.hassub) toggleTocSec(arrowSec);
+                    return;
+                }
                 const subLink = e.target.closest('.notes-toc-sub');
                 if (subLink) { jumpTo(subLink.dataset.sec, false); return; }
                 const secLink = e.target.closest('.notes-toc-sec');
                 if (!secLink) return;
-                if (secLink.dataset.hassub) toggleTocSec(secLink);
-                else jumpTo(secLink.dataset.sec, false);
+                jumpTo(secLink.dataset.sec, false);
             };
 
             initTocSecStates();
@@ -864,6 +895,7 @@
         // 点结果：记历史 + 收起下拉 + 定位到命中块；块级找不到时回退到命中所在节，
         // 保证点击"必有着落"（旧实现找不到块就静默 return → 点了没反应）
         function locateNoteHit(i) {
+            cancelScrollRestore();
             const h = lastNoteHits[i];
             if (!h) return;
             saveNoteHist(document.getElementById('notesSearchInput').value);
@@ -876,6 +908,7 @@
         // 找文本最短的命中块(=最精确)，瞬时滚到屏幕中央并闪烁 1.8s；返回是否定位成功
         // （两侧空白归一后比较：索引文本压缩过空白，DOM 里仍有换行/缩进，直接 includes 会漏配）
         function locateNoteBlock(text) {
+            cancelScrollRestore();
             const plain = text.replace(/^📝 /, '').replace(/\s+/g, ' ').trim();
             if (plain.length < 2) return false;
             let best = null, bestLen = Infinity;
@@ -884,7 +917,7 @@
                 if (t.includes(plain) && t.length < bestLen) { best = b; bestLen = t.length; }
             });
             if (!best) return false;
-            best.scrollIntoView({ block: 'center', behavior: 'instant' });
+            smoothScrollToEl(best, 'center', true);   // 瞬时（搜索结果点击，不抢平滑滚动）
             best.classList.add('locate-flash');
             setTimeout(() => best.classList.remove('locate-flash'), 1800);
             return true;
