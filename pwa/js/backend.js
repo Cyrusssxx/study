@@ -276,8 +276,48 @@ function now() {
     return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())} ${p(d.getHours())}:${p(d.getMinutes())}:${p(d.getSeconds())}`;
 }
 
+// 时间戳归一化：数字毫秒时间戳 → 标准 'YYYY-MM-DD HH:MM:SS' 字符串。
+// 背景（2026-10-14）：早期 zhenti 提交把 Date.now() 数字写进了 progress.answered_at /
+// wrong.last_wrong_at，导致 _reviewStageOf 的 .slice 抛错 → 该科统计整科失败（首页显示 0）。
+function tsToStr(v) {
+    if (typeof v === 'string') return v;
+    if (typeof v === 'number' && isFinite(v) && v > 0) {
+        const d = new Date(v), p = n => String(n).padStart(2, '0');
+        if (isNaN(d.getTime())) return '';
+        return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())} ${p(d.getHours())}:${p(d.getMinutes())}:${p(d.getSeconds())}`;
+    }
+    return '';
+}
+
+// 历史脏数据一次性修复（进程内只跑一次，幂等）：把库里已存在的数字时间戳改回字符串，
+// 否则旧记录会永远「最新」（number >= string 比较恒为 false）持续污染统计与复习计算。
+let _tsMigrated = false;
+async function migrateDirtyTimestamps() {
+    if (_tsMigrated) return;
+    _tsMigrated = true;
+    try {
+        let n = 0;
+        for (const r of await dbAll('progress')) {
+            if (typeof r.answered_at !== 'string') {
+                const s = tsToStr(r.answered_at);
+                if (s) { r.answered_at = s; await dbPut('progress', r); n++; }
+            }
+        }
+        for (const w of await dbAll('wrong')) {
+            if (typeof w.last_wrong_at !== 'string') {
+                const s = tsToStr(w.last_wrong_at);
+                if (s) { w.last_wrong_at = s; await dbPut('wrong', w); n++; }
+            }
+        }
+        if (n) console.info('[408quiz] 已修正 ' + n + ' 条历史时间戳记录');
+    } catch (e) { console.warn('[408quiz] 时间戳迁移跳过：', e); }
+}
+
 // ==================== 答题记录（对应 database._apply_answer） ====================
 async function applyAnswer(qid, subject, userAnswer, isCorrect, ts, trackWrong = true) {
+    // 时间戳归一化：调用方传数字（历史 zhenti 曾传 Date.now()）或空值时统一成标准字符串，
+    // 防止脏数据再进库；exam 路径的 'HH:MM:SS.NNN' 字符串原样保留
+    ts = tsToStr(ts) || now();
     await dbPut('progress', { question_id: qid, subject, user_answer: userAnswer, is_correct: isCorrect ? 1 : 0, answered_at: ts });
     const w = await dbGet('wrong', qid);
     if (!isCorrect) {
@@ -337,9 +377,11 @@ const REVIEW_INTERVALS = [2, 4, 7, 15];
 // 单题复习阶段计算：返回 {qid, interval(当前间隔天数), dueAt} 或 null（无动态/已豁免）
 function _reviewStageOf(w, st, nowMs) {
     const streak = w.correct_streak || 0;
-    const la = st ? st.answered_at || '' : '';
+    // 读取侧也归一化（双保险）：即使库里还有漏网的数字时间戳，也不会 .slice 抛错
+    const la = tsToStr(st && st.answered_at);
+    const lw = tsToStr(w.last_wrong_at);
     // 基准时间取最近一次动态（做错或作答），只取前19位规避考试批量提交的 .NNN 后缀
-    const baseStr = ((w.last_wrong_at || '') > la ? w.last_wrong_at || '' : la).slice(0, 19);
+    const baseStr = (lw > la ? lw : la).slice(0, 19);
     if (!baseStr) return null;
     // 用 T 分隔符解析，规避 Safari 不认空格分隔的日期格式
     const base = new Date(baseStr.replace(' ', 'T')).getTime();
@@ -693,6 +735,9 @@ async function api(url, opts = {}) {
             const errMsg = e => ((e && e.message) ? e.message : String(e));
             const warnings = [];
 
+            // 首次进首页时顺带修复历史脏时间戳（幂等、失败静默），修完本页统计即恢复正常
+            await migrateDirtyTimestamps();
+
             // 底层存储可读性探针：逐项容错（老库可能缺少后加的 daka_progress store，
             // 单个 store 读不到 ≠ 整体不可用，不能误报）。-1 = 该项读不到
             const stores = {};
@@ -735,7 +780,7 @@ async function api(url, opts = {}) {
             const cutStr = `${cutoff.getFullYear()}-${String(cutoff.getMonth() + 1).padStart(2, '0')}-${String(cutoff.getDate()).padStart(2, '0')}`;
             const byDay = {};
             for (const r of await dbAll('progress')) {
-                const day = r.answered_at.slice(0, 10);
+                const day = String(r.answered_at || '').slice(0, 10);
                 if (day < cutStr) continue;
                 if (!byDay[day]) byDay[day] = { day, total: 0, correct: 0 };
                 byDay[day].total++;
@@ -1312,3 +1357,4 @@ function showUpdateToast() {
 // 供 zhenti 等页面直接调用：真题数据（外部 id）客户端判分后写进度/错题本。
 // 显式挂 window，避免未来 backend 被包进 IIFE 时静默失效。
 window.applyAnswer = applyAnswer;
+window.now = now;   // 供 zhenti 等页面生成标准时间戳（勿再用 Date.now()）

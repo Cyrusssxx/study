@@ -445,7 +445,7 @@
         if (!f) return;
         const ok = !!f.a && key === f.a;
         if (typeof window.applyAnswer === 'function') {
-            await window.applyAnswer(iid, f.sid, key, ok, Date.now());
+            await window.applyAnswer(iid, f.sid, key, ok, (window.now ? window.now() : Date.now()));
         }
         state.progress[iid] = { user_answer: key, is_correct: ok ? 1 : 0 };
         state.sessionAnswered.add(iid);
@@ -716,7 +716,7 @@
             const key = state.pending[iid];
             const ok = !!f.a && key === f.a;
             if (typeof window.applyAnswer === 'function') {
-                await window.applyAnswer(iid, f.sid, key, ok, Date.now());
+                await window.applyAnswer(iid, f.sid, key, ok, (window.now ? window.now() : Date.now()));
             }
             state.progress[iid] = { user_answer: key, is_correct: ok ? 1 : 0 };
             state.sessionAnswered.add(iid);
