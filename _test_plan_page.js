@@ -39,9 +39,27 @@ function boot(preload) {
     /限时 3h 掐表/.test(PLAN) || /卷 \d+\/18/.test(PLAN), false);
   check('去单词（无「单词」字样）', /单词/.test(PLAN), false);
   check('实习日志 3 天（10/13–10/15）', (PLAN.match(/<tr class="it"/g) || []).length, 3);
-  check('阶段A 打卡表行 = 14', (PLAN.match(/<td class="cb">打卡表 \d+ 题/g) || []).length, 14);
+  check('阶段A 打卡表行 = 12（扣除 2 个机动日）', (PLAN.match(/<td class="cb">打卡表 \d+ 题/g) || []).length, 12);
+  check('阶段A 选择题收藏/错题并行 = 12 行',
+    (PLAN.match(/<td class="cw">收藏 \/ 错题 \d+ 题/g) || []).length, 12);
   check('阶段B 错题一刷行 = 22', (PLAN.match(/<td class="cw">错题 \d+ 题/g) || []).length, 22);
-  check('阶段B 三科大题行 = 44', (PLAN.match(/<td class="cb">大题 \d+ 题/g) || []).length, 44);
+  check('阶段B 三科大题行 = 38（扣除机动日与模拟日）',
+    (PLAN.match(/<td class="cb">大题 \d+ 题/g) || []).length, 38);
+  check('全真模拟日 = 3 天', (PLAN.match(/<tr class="sim"/g) || []).length, 3);
+  check('模拟日一天三套（数学 + 408 + 英语各一整套）',
+    /全套模拟 · 数学二 1 套/.test(PLAN) && /全套模拟 · 408 1 套/.test(PLAN)
+    && /全套模拟 · 英语二 2022 整套/.test(PLAN) && /全套模拟 · 英语二 2023 整套/.test(PLAN)
+    && /全套模拟 · 英语二 2024 整套/.test(PLAN), true);
+  check('模拟日红色强调（tr.sim 红底 + 红字 + 图例）',
+    /tr\.sim td \{ background: rgba\(220,38,38/.test(PLAN)
+    && /tr\.sim \.cw, tr\.sim \.cb, tr\.sim \.cma, tr\.sim \.cen \{ color: #b3261e/.test(PLAN)
+    && /class="sim">全真模拟日：12\/6 · 12\/13 · 12\/16/.test(PLAN), true);
+  check('机动日 = 7 天（12 月前每周日）', (PLAN.match(/<tr class="fx"/g) || []).length, 7);
+  check('机动日派活（英语作文背诵 + 数学讲义/错题 + 408 知识点）',
+    /作文背诵（模板 \+ 通用理由）/.test(PLAN) && /讲义 \+ 错题复习（不做新题）/.test(PLAN)
+    && /知识点复习｜本周错题章节回看/.test(PLAN), true);
+  check('英二 2022–2024 封存（常态队列不出现）',
+    /完型 2022|新题型 2022|译 2022|作文·小 2023|作文·大 2024/.test(PLAN), false);
   check('数学统一 30题（25 天）', (PLAN.match(/<td class="cma">30题<\/td>/g) || []).length, 25);
   check('英语阅读一天一篇（48 篇）', (PLAN.match(/阅读 (英一)?\d{4}·T\d/g) || []).length, 48);
   check('打卡复选框 67 个（=67 天）', (PLAN.match(/class="sprint-ck"/g) || []).length, 67);

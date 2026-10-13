@@ -36,6 +36,62 @@ D_PHASE_A_END = datetime.date(2026, 10, 29)   # 打卡表大题最后一天
 D_PHASE_B_END = datetime.date(2026, 12, 12)   # 错题+三科大题最后一天
 D_R1_END = datetime.date(2026, 11, 20)        # 错题一刷最后一天
 
+# —— 全真模拟日：最后三周每周一天，一天三套（数学 + 408 + 英语）——
+# 英语用留存的 2022 / 2023 / 2024 三年整套（此前一律不碰）
+SIM_DAYS = [(datetime.date(2026, 12, 6), '2022'),
+            (datetime.date(2026, 12, 13), '2023'),
+            (datetime.date(2026, 12, 16), '2024')]
+SIM_MAP = {d: y for d, y in SIM_DAYS}
+EN_SIM_YEARS = [y for _, y in SIM_DAYS]      # ['2022','2023','2024'] 封存年份
+
+# —— 机动日：12 月之前的每周日（每周一次，12 月前有几周就几次）——
+FX_DAYS = set()
+_d = datetime.date(2026, 10, 16)
+while _d < datetime.date(2026, 12, 1):
+    if _d.weekday() == 6:
+        FX_DAYS.add(_d)
+    _d += datetime.timedelta(days=1)
+FX_LIST = sorted(FX_DAYS)
+
+
+def day_cat(d):
+    """it=实习 / sim=全真模拟 / fx=机动 / n=正常推进"""
+    if d <= datetime.date(2026, 10, 15):
+        return 'it'
+    if d in SIM_MAP:
+        return 'sim'
+    if d in FX_DAYS:
+        return 'fx'
+    return 'n'
+
+
+def split_days(total, k):
+    """把 total 件事尽量均分到 k 天"""
+    if k <= 0:
+        return []
+    base, extra = divmod(total, k)
+    return [base + (1 if i < extra else 0) for i in range(k)]
+
+
+def alloc_days(total_days, weights):
+    """按权重把天数分配给各科（每科至少 1 天，总和对齐）"""
+    ks = list(weights.keys())
+    tot = sum(weights.values()) or 1
+    out = {k: max(1, int(round(total_days * weights[k] / float(tot)))) for k in ks}
+    diff = total_days - sum(out.values())
+    order = sorted(ks, key=lambda k: -weights[k])
+    i = 0
+    while diff != 0 and i < 500:
+        k = order[i % len(order)]
+        if diff > 0:
+            out[k] += 1
+            diff -= 1
+        elif out[k] > 1:
+            out[k] -= 1
+            diff += 1
+        i += 1
+    return out
+
 # ============================ 1. 读数据 ============================
 BK = json.load(io.open(BACKUP, encoding='utf-8'))
 
@@ -90,6 +146,17 @@ rem_daka.sort(key=lambda q: (PR_RANK.get(q['priority_label'], 9), mod_rank(q['mo
 N_DAKA = len(rem_daka)
 N_WRONG = sum(sum(c.values()) for c in chap_q.values())
 N_BIG = sum(n for lst in big_ch.values() for _, n in lst)
+
+# 收藏题 ∪ 未解决错题 = 阶段 A 并行推进的「选择题池」
+qid_set = set(qid_index.keys())
+fav_ids = set(f['question_id'] for f in BK['favorites']) & qid_set
+wrong_ids = set(w['question_id'] for w in BK['wrong'] if not w.get('is_resolved')) & qid_set
+choice_cnt = {s: collections.Counter() for s in ['os', 'co', 'ds', 'cn']}
+for qid in (fav_ids | wrong_ids):
+    s, c = qid_index[qid]
+    choice_cnt[s][c] += 1
+N_CHOICE = len(fav_ids | wrong_ids)
+N_FAV = len(fav_ids)
 # ============================ 2. 队列 ============================
 # —— 英语 ——
 READ_ER = [  # 英二低正确率篇目（沿用旧计划挑出的 17 篇）
@@ -102,15 +169,24 @@ N_READ_ER = sum(len(ts) for _, ts in READ_ER)
 N_READ_Y1 = len(READ_Y1) * 4
 read_queue = [('', y, t) for y, ts in READ_ER for t in ts] + \
              [('英一', y, t) for y in READ_Y1 for t in ['T1', 'T2', 'T3', 'T4']]
-cloze_queue = [('', str(y)) for y in range(2010, 2027)] + \
+SKIP_Y = set(EN_SIM_YEARS)      # 22/23/24 三年整套封存 → 只在全真模拟日拆封
+
+
+def keep(y):
+    return str(y) not in SKIP_Y
+
+
+cloze_queue = [('', str(y)) for y in range(2010, 2027) if keep(y)] + \
               [('英一', y) for y in ['2007', '2016', '2020', '2021']]
-newt_queue = [('', str(y)) for y in range(2010, 2027)]
+newt_queue = [('', str(y)) for y in range(2010, 2027) if keep(y)]
 trans_queue = []
 for y in list(range(2015, 2027)) + list(range(2010, 2015)):
+    if not keep(y):
+        continue
     trans_queue.append('译 %d（第 1–3 句）' % y)
     trans_queue.append('译 %d（第 4–5 句）' % y)
-SMALL_YEARS = [str(y) for y in range(2010, 2027)]              # 小作文 17 篇
-BIG_YEARS = [str(y) for y in range(2010, 2027) if y != 2012]   # 大作文 16 篇（2012 放弃）
+SMALL_YEARS = [str(y) for y in range(2010, 2027) if keep(y)]            # 小作文
+BIG_YEARS = [str(y) for y in range(2010, 2027) if y != 2012 and keep(y)]  # 大作文（2012 放弃）
 
 # ============================ 3. 408 选择题错题：按章分组 ============================
 # (科目, [章序号...], 备注)  —— 顺序即推进顺序；同组多章＝当天连做
@@ -141,13 +217,78 @@ def t1_day_label(sub, idxs, extra):
     return cnt, '%s %s' % (SUBJ_SHORT[sub], lab)
 
 
-# ============================ 4. 三科大题：按 ~6 题/天 摊 ============================
+# ============================ 3.5 阶段 A 的选择题：四科轮转按章，约 30–45 题/天 =====
+CAP = 42     # 单章单份上限，超过则拆成前半/后半（或上/中/下）
+
+
+def split_chunk(n, cap=CAP):
+    if n <= cap:
+        return [(n, '')]
+    k = min(3, -(-n // cap))
+    tag = {2: ['前半', '后半'], 3: ['上', '中', '下']}[k]
+    base, extra = divmod(n, k)
+    out = []
+    for i in range(k):
+        out.append((base + (1 if i < extra else 0), tag[i]))
+    return out
+
+
+_seq = []
+_maxch = max(len(chapters[s]) for s in ['os', 'co', 'ds', 'cn'])
+for r in range(_maxch):
+    for s in ['os', 'co', 'ds', 'cn']:
+        if r >= len(chapters[s]):
+            continue
+        c = chapters[s][r]
+        n = choice_cnt[s][c]
+        if not n:
+            continue
+        for sz, lab in split_chunk(n):
+            _seq.append((s, c, sz, lab))
+
+A_CH_DAYS = []       # [(总题数, [(sub, 章名, 题数, 分段标签)...])]
+_cur = []
+_cn = 0
+for it in _seq:
+    _cur.append(it)
+    _cn += it[2]
+    if _cn >= 30:
+        A_CH_DAYS.append((_cn, _cur))
+        _cur = []
+        _cn = 0
+if _cur:
+    A_CH_DAYS.append((_cn, _cur))
+
+
+def a_ch_label(items):
+    """同章的分段合并显示（前半+后半 → 整章）"""
+    segs = []
+    for s, c, sz, lab in items:
+        short = re.sub(r'^第\d+章\s*', '', c)
+        if segs and segs[-1][0] == (s, c):
+            segs[-1][2] += sz
+            segs[-1][3] = ''
+        else:
+            segs.append([(s, c), short, sz, lab])
+    return ' ＋ '.join('%s %s%s %d 题' % (SUBJ_SHORT[t[0][0]], t[1], ('·' + t[3]) if t[3] else '', t[2])
+                       for t in segs)
+
+
+# ============================ 4. 日期骨架与三科大题 ============================
+START = datetime.date(2026, 10, 13)
+END = datetime.date(2026, 12, 18)
+DAYS = [START + datetime.timedelta(days=i) for i in range((END - START).days + 1)]
+A_NORMAL = [d for d in DAYS
+            if datetime.date(2026, 10, 16) <= d <= D_PHASE_A_END and day_cat(d) == 'n']
+B_NORMAL = [d for d in DAYS
+            if D_PHASE_A_END < d <= D_PHASE_B_END and day_cat(d) == 'n']
+
 big_items = []   # (sub, 章名, 题内序号)
 for sub in ['os', 'co', 'cn']:
     for chname, n in big_ch[sub]:
         for i in range(n):
             big_items.append((sub, chname, i + 1))
-DAO_B_DAYS = 44      # 10/30 – 12/12
+DAO_B_DAYS = len(B_NORMAL)      # 阶段 B 的「正常推进日」（已扣除机动日 / 模拟日）
 base = N_BIG // DAO_B_DAYS
 extra = N_BIG - base * DAO_B_DAYS
 big_days = []
@@ -172,13 +313,12 @@ for i in range(DAO_B_DAYS):
 
 
 # ============================ 5. 逐日排 ============================
-START = datetime.date(2026, 10, 13)
-END = datetime.date(2026, 12, 18)
+N_CH_A = sum(A_CH_DAYS[i][0] for i in range(min(len(A_CH_DAYS), len(A_NORMAL))))  # 阶段 A 覆盖题量
 
-# 打卡表分天：53 张 → 前 11 天 4 张、后 3 天 3 张（10/16–10/29）
+# 打卡表分天：N_DAKA 张均分到阶段 A 的「正常推进日」（已扣除机动日）
 daka_days = []
 _i = 0
-for k in [4] * 11 + [3] * 3:
+for k in split_days(N_DAKA, len(A_NORMAL)):
     batch = rem_daka[_i:_i + k]
     _i += k
     if not batch:
@@ -188,15 +328,27 @@ for k in [4] * 11 + [3] * 3:
     daka_days.append((len(batch), _i - len(batch) + 1, _i,
                       '、'.join('%s×%d' % (g, n) for g, n in grp.items())))
 
+# 阶段 B 错题二刷天数：按各科错题量加权分配到剩余推进日
+R2_TOTAL = max(0, len(B_NORMAL) - len(T1_GROUPS))
+R2_ALLOC = alloc_days(R2_TOTAL, {s: sum(chap_q[s].values()) for s in ['os', 'co', 'ds', 'cn']})
+
 rows = []
 read_i = cloze_i = newt_i = trans_i = small_i = big_i = en_day = 0
-for d in [START + datetime.timedelta(days=i) for i in range((END - START).days + 1)]:
+n_math = 0      # 数学「30 题」推进计数（只在正常推进日累加）
+n_daka = 0      # 阶段 A 打卡表天索引
+n_ch = 0        # 阶段 A 选择题（收藏/错题）天索引
+n_t1 = 0        # 错题一刷索引
+n_r2 = 0        # 错题二刷索引
+n_big = 0       # 三科大题天索引
+
+for d in DAYS:
     key = '%d/%d' % (d.month, d.day)
     wd = WD[d.weekday()]
     row = {'key': key, 'cls': '', 'cw': '—', 'cb': '—', 'math': '—', 'en': '—', 'nt': ''}
+    cat = day_cat(d)
 
     # ---- 实习日志 10/13–10/15 ----
-    if d <= datetime.date(2026, 10, 15):
+    if cat == 'it':
         row['cls'] = 'it'
         row['cw'] = '实习日志'
         row['cb'] = '实习日志'
@@ -205,7 +357,30 @@ for d in [START + datetime.timedelta(days=i) for i in range((END - START).days +
         rows.append(row)
         continue
 
-    # ---- 英语（从 10/16 起每天） ----
+    # ---- 全真模拟日（最后三周每周一天）：一天三套，红色强调 ----
+    if cat == 'sim':
+        y = SIM_MAP[d]
+        row['cls'] = 'sim'
+        row['math'] = '全套模拟 · 数学二 1 套（8:30–11:30 限时）'
+        row['cw'] = '全套模拟 · 408 1 套（14:00–17:00 限时）'
+        row['cb'] = '↳ 随套卷一起批阅，不单列'
+        row['en'] = '全套模拟 · 英语二 %s 整套（19:00–22:00 限时）' % y
+        row['nt'] = '◆ 全真模拟日：一天三套（数学 / 408 / 英语）· 英语 %s 年整套首次拆封' % y
+        rows.append(row)
+        continue
+
+    # ---- 机动日（12 月前每周日）：复习型保底任务 + 补欠账 ----
+    if cat == 'fx':
+        row['cls'] = 'fx'
+        row['cw'] = '知识点复习｜本周错题章节回看 + 笔记 / 导图'
+        row['cb'] = '知识点复习｜易错点清单 + 算法 / 公式模板过一遍'
+        row['math'] = '讲义 + 错题复习（不做新题）'
+        row['en'] = '作文背诵（模板 + 通用理由）＋ 本周阅读生词 / 长难句复盘'
+        row['nt'] = '机动日：先补本周欠账，再按左侧保底量复习；没欠账就休息'
+        rows.append(row)
+        continue
+
+    # ---- 正常推进日 ----
     en_day += 1
     en = []
     if read_i < len(read_queue):
@@ -237,61 +412,64 @@ for d in [START + datetime.timedelta(days=i) for i in range((END - START).days +
         big_i += 1
     row['en'] = ' ＋ '.join(en) if en else '—'
 
-    # ---- 阶段 A：10/16–10/29 打卡表大题 ----
-    if d <= D_PHASE_A_END:
-        k = (d - datetime.date(2026, 10, 16)).days
-        if k < len(daka_days):
-            n, a, b, grp = daka_days[k]
-            row['cb'] = '打卡表 %d 题（第 %d–%d 张）<br><span class="s">%s</span>' % (n, a, b, grp)
+    # ---- 数学 ----
+    n_math += 1
+    if n_math <= 25:
         row['math'] = '30题'
+    else:
+        row['math'] = '模拟卷 1 套（限时）' if n_math % 2 else '错题回炉（≥2h）'
+
+    # ---- 阶段 A：10/16–10/29 打卡表大题 + 选择题收藏/错题 并行 ----
+    if d <= D_PHASE_A_END:
+        if n_ch < len(A_CH_DAYS):
+            cnt, items = A_CH_DAYS[n_ch]
+            n_ch += 1
+            row['cw'] = '收藏 / 错题 %d 题｜%s' % (cnt, a_ch_label(items))
+        else:
+            row['cw'] = '收藏 / 错题：按章快刷（自选薄弱章）'
+        if n_daka < len(daka_days):
+            n, a, b, grp = daka_days[n_daka]
+            n_daka += 1
+            row['cb'] = '打卡表 %d 题（第 %d–%d 张）<br><span class="s">%s</span>' % (n, a, b, grp)
         if d == datetime.date(2026, 10, 16):
             row['cls'] = 'ms'
-            row['nt'] = '◆ 阶段 A 启动：先啃打卡表大题（必做 + 高优先级置顶）'
+            row['nt'] = '◆ 阶段 A 启动：打卡表大题（必做 + 高优先级置顶）+ 选择题收藏/错题 并行'
         elif d == D_PHASE_A_END:
             row['cls'] = 'ms'
-            row['nt'] = '◆ 打卡表收官（%d 张）' % N_DAKA
-        elif d.weekday() == 6:
-            row['cls'] = 'wk'
-            row['nt'] = '周结算：统计完成度，调下周节奏；晚上半休'
+            row['nt'] = '◆ 打卡表收官（%d 张）→ 次日转阶段 B' % N_DAKA
         rows.append(row)
         continue
 
     # ---- 阶段 B：10/30–12/12 ----
     if d <= D_PHASE_B_END:
-        bi = (d - datetime.date(2026, 10, 30)).days
-        # 错题
-        if d <= D_R1_END:
-            k = (d - datetime.date(2026, 10, 30)).days
-            if k < len(T1_GROUPS):
-                sub, idxs, extra = T1_GROUPS[k]
-                cnt, lab = t1_day_label(sub, idxs, extra)
-                row['cw'] = '错题 %d 题｜%s' % (cnt, lab)
+        # 错题一刷（按章）→ 二刷（按科）
+        if n_t1 < len(T1_GROUPS):
+            sub, idxs, extra = T1_GROUPS[n_t1]
+            cnt, lab = t1_day_label(sub, idxs, extra)
+            n_t1 += 1
+            row['cw'] = '错题 %d 题｜%s' % (cnt, lab)
         else:
-            # 二刷：按科目分配（天数据一刷错题量），只重做仍错的
-            R2 = [('os', 7), ('co', 6), ('ds', 3), ('cn', 6)]
-            k = (d - datetime.date(2026, 11, 21)).days
+            k = n_r2
+            n_r2 += 1
             acc = 0
-            for sub, nd in R2:
+            for sub in ['os', 'co', 'ds', 'cn']:
+                nd = R2_ALLOC[sub]
                 if k < acc + nd:
                     row['cw'] = '错题二刷｜%s 全科（只重做一刷仍错的）' % SUBJ_SHORT[sub]
                     break
                 acc += nd
-        # 大题
-        if bi < len(big_days):
-            n, lab = big_days[bi]
+        # 三科大题
+        if n_big < len(big_days):
+            n, lab = big_days[n_big]
+            n_big += 1
             row['cb'] = '大题 %d 题｜%s' % (n, lab)
-        # 数学
-        mi = (d - datetime.date(2026, 10, 16)).days
-        if mi < 25:
-            row['math'] = '30题'
-        else:
-            row['math'] = '模拟卷 1 套（限时）' if mi % 2 else '错题回炉（≥2h）'
 
         # 备注 / 里程碑
         if d == datetime.date(2026, 10, 30):
             row['cls'] = 'ms'
-            row['nt'] = '◆ 阶段 B 启动：错题一刷（按章）+ 三科大题 并行'
-        elif d == datetime.date(2026, 11, 9):
+            row['nt'] = ('◆ 阶段 B 启动：错题一刷（按章）+ 三科大题 并行'
+                         '（阶段 A 已快刷 %d 题收藏/错题，此处按章系统刷，算二轮巩固）' % N_CH_A)
+        elif n_math == 25:
             row['cls'] = 'ms'
             row['nt'] = '◆ 数学 747 题收官 → 转模拟卷 / 错题回炉'
         elif d == datetime.date(2026, 11, 2):
@@ -299,12 +477,11 @@ for d in [START + datetime.timedelta(days=i) for i in range((END - START).days +
             row['nt'] = '◆ 小作文启动（每周一/三/五 各 1 篇）'
         elif d == datetime.date(2026, 11, 10):
             row['nt'] = '◆ 大作文启动（每周二/四/六 各 1 篇，2012 大作文放弃）'
-        elif d == datetime.date(2026, 11, 21):
+        elif n_t1 == len(T1_GROUPS) and n_r2 == 0:
             row['cls'] = 'ms'
-            row['nt'] = '◆ 错题一刷（26 章）完成 → 进入二刷'
-        elif d.weekday() == 6:
-            row['cls'] = 'wk'
-            row['nt'] = '周结算：统计完成度，调下周节奏；晚上半休'
+            row['nt'] = '◆ 错题一刷（26 章）完成 → 次日进入二刷'
+        elif n_r2 == 1:
+            row['nt'] = '◆ 错题二刷启动：只重做一刷仍错的'
         elif d.weekday() == 5:
             row['nt'] = '下午留 1h 机动（补欠账 / 休息）'
         rows.append(row)
@@ -314,18 +491,12 @@ for d in [START + datetime.timedelta(days=i) for i in range((END - START).days +
     row['cw'] = '错题总扫：高频错题 + 易错点清单'
     row['cb'] = '四科框架速览（笔记 / 导图）'
     row['math'] = '错题重做（一刷遗留）'
-    if d == datetime.date(2026, 12, 13):
+    if d == datetime.date(2026, 12, 14):
         row['cls'] = 'ms'
-        row['nt'] = '◆ 收口期启动：只看错题与框架，不做新题'
+        row['nt'] = '◆ 收口期：只看错题与框架，不做新题'
     elif d == datetime.date(2026, 12, 18):
         row['cls'] = 'ms'
         row['nt'] = '考前 Day：易错点清单 + 早睡，不动笔'
-    elif d == datetime.date(2026, 12, 16):
-        row['cls'] = 'fx'
-        row['cw'] = '机动'
-        row['cb'] = '机动'
-        row['math'] = '机动'
-        row['nt'] = '机动日：应对突发 / 补欠账（没欠账就休息）'
     rows.append(row)
 
 # ============================ 6. 渲染 ============================
@@ -389,7 +560,9 @@ src = re.sub(r'<title>.*?</title>', '<title>考研冲刺计划 · 10/13 – 12/1
 src = re.sub(
     r'<p class="sub">.*?</p>',
     '<p class="sub">2026-10-13 → 2026-12-18（67 天）· 初试 12/19–20 · 不出真题套卷：'
-    '先清打卡表大题 → 再选择题错题 + 三科大题 · 实习日志 10/13–15</p>', src, flags=re.S)
+    '阶段A 打卡表大题 + 选择题收藏/错题并行 → 阶段B 错题 + 三科大题 → 阶段C 收口；'
+    '<b style="color:#b3261e">最后三周每周一天全真模拟（数学 + 408 + 英语 三套）</b>；'
+    '实习日志 10/13–15；机动日 = 12 月前每周日</p>', src, flags=re.S)
 src = re.sub(
     r'<div class="legend">[\s\S]*?</div>',
     '''<div class="legend">
@@ -398,8 +571,10 @@ src = re.sub(
       <span class="c">阶段 C · 收口（12/13–12/18）</span>
       <span class="m">◆ 里程碑日：任务切换 / 收尾节点</span>
       <span class="it">实习日志 10/13–15</span>
-      <span class="fx">机动日：12/16</span>
-    </div>''', src, flags=re.S)
+      <span class="fx">机动日：12 月前每周日（%s，共 %d 天）</span>
+      <span class="sim">全真模拟日：%s（数学 + 408 + 英语 一天三套）</span>
+    </div>''' % ('、'.join('%d/%d' % (x.month, x.day) for x in FX_LIST), len(FX_LIST),
+                 ' · '.join('%d/%d' % (x.month, x.day) for x, _ in SIM_DAYS)), src, flags=re.S)
 src = re.sub(
     r'<section class="guide">[\s\S]*?</section>',
     '''<section class="guide">
@@ -407,7 +582,7 @@ src = re.sub(
       <h4>每日时间模板（10/16 起生效）</h4>
       <ul>
         <li>上午 <b>8:00–10:30 数学</b>（对齐考场 8:30–11:30 的脑力段）</li>
-        <li>下午 <b>14:00–17:00 408</b>（错题 + 大题两轨）</li>
+        <li>下午 <b>14:00–17:00 408</b>（选择题 + 大题两轨）</li>
         <li>晚上 <b>19:00–20:30 英语</b>；20:30 起复盘 + 机动</li>
         <li>打卡表大题按「必做 → 高优先级 → 中优先级 → 基本功」顺序推</li>
       </ul>
@@ -415,22 +590,41 @@ src = re.sub(
     <div class="gcard">
       <h4>408 三步走</h4>
       <ul>
-        <li><b>阶段 A（10/16–10/29）</b>：数据结构打卡表大题 %d 张，一天 3–4 张</li>
-        <li><b>阶段 B（10/30–12/12）</b>：选择题错题一天一章（一科推完换下一科，按 OS→CO→DS→CN，共 %d 题）；
-            同时三科大题（OS/CO/CN 共 %d 题）一天约 6 题</li>
+        <li><b>阶段 A（10/16–10/29）</b>：打卡表大题 %d 张（一天 4–5 张）
+            ＋ <b>选择题收藏 / 错题并行</b>（收藏 %d + 错题 %d，池共 %d 题；四科轮转按章，约 30–45 题/天）</li>
+        <li><b>阶段 B（10/30–12/12）</b>：错题一刷一天一章（一科推完换下一科，按 OS→CO→DS→CN，共 %d 题）→ 二刷；
+            同时三科大题（OS/CO/CN 共 %d 题）一天约 %d 题</li>
         <li><b>阶段 C（12/13–12/18）</b>：只过错题与框架，不做新题</li>
+      </ul>
+    </div>
+    <div class="gcard sim">
+      <h4>最后三周 · 全真模拟（一天三套）</h4>
+      <ul>
+        <li><b>12/6 · 12/13 · 12/16</b> 三天：上午数学、下午 408、晚上英语，各一整套，严格限时</li>
+        <li>英语用<b>封存的 2022 / 2023 / 2024</b> 三年整套 —— 这三年此前一律不碰</li>
+        <li>当晚只批阅不复盘，复盘挪到次日</li>
+      </ul>
+    </div>
+    <div class="gcard fx">
+      <h4>机动日（12 月前每周日，共 %d 天）</h4>
+      <ul>
+        <li>英语：作文背诵（模板 + 通用理由）+ 本周生词 / 长难句复盘</li>
+        <li>数学：讲义 + 错题复习（不做新题）</li>
+        <li>408：本周错题章节回看 + 笔记 / 导图 + 易错点清单</li>
+        <li>先补本周欠账，再按上面保底量复习；没欠账就休息</li>
       </ul>
     </div>
     <div class="gcard">
       <h4>英语节奏（一天：阅读 1 篇 + 完型/新题型 1 篇）</h4>
       <ul>
         <li>阅读<b>同一年份连排</b>、一天一篇：英二低正确率 %d 篇 + 英一指定 8 年 %d 篇</li>
-        <li>完型 / 新题型交替：完型 英二 17 篇 + 英一 4 年；新题型 英二 17 篇（英一小标题通用）</li>
-        <li>翻译细水长流：2015–2026，每年 5 句拆两天（3 句 + 2 句）</li>
-        <li>作文：小作文 11/2 起（一/三/五，17 篇）；大作文 11/10 起（二/四/六，16 篇，2012 放弃）</li>
+        <li>完型 / 新题型交替（<b style="color:#b3261e">2022–2024 全部封存</b>，只在模拟日拆封）</li>
+        <li>翻译细水长流：2015–2026 + 补 2010–2014，每年 5 句拆两天（3 句 + 2 句）</li>
+        <li>作文：小作文 11/2 起（一/三/五）；大作文 11/10 起（二/四/六，2012 放弃）</li>
       </ul>
     </div>
-  </section>''' % (N_DAKA, N_WRONG, N_BIG, N_READ_ER, N_READ_Y1), src, flags=re.S)
+  </section>''' % (N_DAKA, N_FAV, N_WRONG, N_CHOICE, N_WRONG, N_BIG, -(-N_BIG // max(1, DAO_B_DAYS)),
+                   len(FX_LIST), N_READ_ER, N_READ_Y1), src, flags=re.S)
 src = re.sub(r'<main>[\s\S]*?</main>', lambda m: MAIN, src, flags=re.S)
 
 assert '<main>' in src and 'data-key="10/16"' in src
@@ -458,6 +652,26 @@ EXTRA_CSS = """  /* v2 版式：408 拆「选择题错题 / 大题」两列 */
   .sprint-progress b { color: var(--phB); font-size: 15px; }
   .sprint-progress .reset { margin-left: 12px; font-size: 12px; color: var(--muted);
                             text-decoration: underline; cursor: pointer; }
+  /* 全真模拟日：一天三套，红色强调（语义色，不做淡化处理） */
+  tr.sim td { background: rgba(220,38,38,.10); }
+  tr.sim .dt { border-left-color: #b3261e; }
+  tr.sim .dt b { color: #b3261e; }
+  tr.sim .cw, tr.sim .cb, tr.sim .cma, tr.sim .cen { color: #b3261e; font-weight: 700; }
+  tr.sim .nt { font-weight: 700; color: #b3261e; text-decoration: underline;
+               text-underline-offset: 3px; }
+  .legend .sim { background: rgba(220,38,38,.12); border-left-color: #b3261e;
+                 font-weight: 700; color: #b3261e; }
+  .gcard.sim { border-color: rgba(220,38,38,.35); background: rgba(220,38,38,.05); }
+  .gcard.sim h4 { color: #b3261e; }
+  .gcard.fx { border-left: 3px solid var(--phB); }
+  @media (prefers-color-scheme: dark) {
+    tr.sim td { background: rgba(220,38,38,.18); }
+    tr.sim .dt { border-left-color: #ef8f89; }
+    tr.sim .dt b, tr.sim .cw, tr.sim .cb, tr.sim .cma, tr.sim .cen, tr.sim .nt { color: #f2a29c; }
+    .legend .sim { background: rgba(220,38,38,.20); color: #f2a29c; }
+    .gcard.sim { background: rgba(220,38,38,.10); }
+    .gcard.sim h4 { color: #f2a29c; }
+  }
   @media (max-width: 760px) {
     td.cw::before { content: "错题："; color: var(--muted); }
     td.cb::before { content: "大题："; color: var(--muted); }
