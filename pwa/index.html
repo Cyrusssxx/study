@@ -245,7 +245,9 @@
             catch (e) { alert('文件不是有效的 JSON'); return; }
             if (!Array.isArray(data.progress)) { alert('备份文件格式不正确（缺少 progress 数组）'); return; }
             const msg = `将全量覆盖当前数据：答题 ${data.progress.length} 条、错题 ${(data.wrong || []).length} 条、`
-                + `收藏 ${(data.favorites || []).length} 条、笔记 ${(data.notes || []).length} 条、打卡 ${(data.daka || []).length} 条。确定导入？`;
+                + `收藏 ${(data.favorites || []).length} 条、笔记 ${(data.notes || []).length} 条、打卡 ${(data.daka || []).length} 条`
+                + (Object.keys(data.local || {}).length ? `、本地存储 ${Object.keys(data.local).length} 项（记忆卡 / 批注 / 大题已练 / 每日一题 / 冲刺计划 / 偏好）` : '')
+                + '。确定导入？';
             if (!confirm(msg)) return;
             try {
                 const resp = await api('/api/backup/import', {

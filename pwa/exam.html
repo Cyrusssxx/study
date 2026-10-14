@@ -548,32 +548,6 @@
         return shuffled.slice(0, count);
     }
     
-    function getWrongQuestionsFromDB() {
-        // 从IndexedDB获取错题数据
-        return new Promise((resolve) => {
-            const request = indexedDB.open('wrong_db', 1);
-            request.onsuccess = function(event) {
-                const db = event.target.result;
-                const transaction = db.transaction(['wrong'], 'readonly');
-                const store = transaction.objectStore('wrong');
-                const getAll = store.getAll();
-                
-                getAll.onsuccess = function() {
-                    const wrongQuestions = getAll.result.map(item => item.q);
-                    resolve(wrongQuestions);
-                };
-                
-                getAll.onerror = function() {
-                    resolve([]); // 获取失败返回空数组
-                };
-            };
-            
-            request.onerror = function() {
-                resolve([]); // 数据库打开失败返回空数组
-            };
-        });
-    }
-    
     // 处理特殊模式的考试标题
     function getExamTitle(mode) {
         if (mode === 'favorites') return '收藏题考试';

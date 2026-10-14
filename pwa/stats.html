@@ -90,7 +90,7 @@
 
         <!-- 数据备份/导入 -->
         <div class="stats-section">
-            <h2>数据管理 <span class="chart-legend">手机 ↔ 电脑互迁：导出JSON后在另一端导入（导入会全量覆盖当前数据）</span></h2>
+            <h2>数据管理 <span class="chart-legend">手机 ↔ 电脑互迁：导出 JSON 后在另一端导入（全量覆盖）。含答题/错题/收藏/笔记/考试/打卡，以及记忆卡标记、大题已练、每日一题、冲刺计划、界面偏好等本地存储</span></h2>
             <div class="backup-actions">
                 <button class="btn btn-primary" onclick="exportBackup()">导出学习数据</button>
                 <button class="btn btn-secondary" onclick="document.getElementById('importFile').click()">导入备份文件</button>
@@ -245,7 +245,7 @@
         a.download = `408quiz-backup-${d.getFullYear()}${p(d.getMonth() + 1)}${p(d.getDate())}.json`;
         a.click();
         URL.revokeObjectURL(a.href);
-        document.getElementById('backupHint').textContent = `已导出：答题 ${data.progress.length} 条 / 错题 ${data.wrong.length} / 收藏 ${data.favorites.length} / 笔记 ${data.notes.length} / 考试 ${data.exams.length}`;
+        document.getElementById('backupHint').textContent = `已导出：答题 ${data.progress.length} 条 / 错题 ${data.wrong.length} / 收藏 ${data.favorites.length} / 笔记 ${data.notes.length} / 考试 ${data.exams.length} / 本地存储 ${Object.keys(data.local || {}).length} 项`;
     }
 
     async function importBackup(file) {
@@ -253,7 +253,10 @@
         let data;
         try { data = JSON.parse(await file.text()); } catch { alert('文件不是有效的JSON'); return; }
         if (!Array.isArray(data.progress)) { alert('备份文件格式不正确'); return; }
-        const msg = `将全量覆盖当前数据：答题 ${data.progress.length} 条、错题 ${(data.wrong || []).length}、收藏 ${(data.favorites || []).length}、笔记 ${(data.notes || []).length}、考试 ${(data.exams || []).length}。确定导入？`;
+        const nLocal = Object.keys(data.local || {}).length;
+        const msg = `将全量覆盖当前数据：答题 ${data.progress.length} 条、错题 ${(data.wrong || []).length}、收藏 ${(data.favorites || []).length}、笔记 ${(data.notes || []).length}、考试 ${(data.exams || []).length}`
+            + (nLocal ? `，以及本地存储 ${nLocal} 项（记忆卡标记 / 划词高亮与批注 / 大题已练 / 每日一题 / 冲刺计划 / 界面偏好）` : '（旧版备份不含本地存储项）')
+            + '。确定导入？';
         if (!confirm(msg)) return;
         const resp = await api('/api/backup/import', {
             method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data)

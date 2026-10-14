@@ -271,6 +271,23 @@ async function dbDelete(store, key) {
     });
 }
 
+// 备份用：收集当前 origin 下全部 localStorage 键值（原始字符串）。
+// 这些键承载用户内容/进度（记忆卡标记、划词高亮与行级批注、大题已练、每日一题、
+// 冲刺计划打卡与备注）以及 UI 偏好；自动全量收集，新功能无需改代码。
+// 隐私模式 / 存储被禁用时返回空对象（导出不因此失败）。
+function collectLocalStorage() {
+    const out = {};
+    try {
+        for (let i = 0; i < localStorage.length; i++) {
+            const k = localStorage.key(i);
+            if (k == null) continue;
+            const v = localStorage.getItem(k);
+            if (v != null) out[k] = v;
+        }
+    } catch (e) { console.warn('localStorage 收集失败', e); }
+    return out;
+}
+
 function now() {
     const d = new Date(), p = n => String(n).padStart(2, '0');
     return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())} ${p(d.getHours())}:${p(d.getMinutes())}:${p(d.getSeconds())}`;
@@ -1020,10 +1037,15 @@ async function api(url, opts = {}) {
         if (seg[1] === 'exam') return examApi(seg[2], body, seg[3]);
 
         // ---------- 数据备份 ----------
+        // 换设备迁移：除 IndexedDB 的 8 个 store 外，localStorage 里还有用户内容/进度
+        // （记忆卡 熟/收藏/不熟不会、讲义/图谱/算法/打卡的划词高亮与行级批注、大题已练、
+        //   每日一题、冲刺计划打卡与备注，以及各类 UI 偏好），必须一并带走。
+        // 做法：自动收集当前 origin 下全部 localStorage 键（以后新增功能无需改这里），
+        // 值以原始字符串存放，导入时原样 setItem 回写，保证逐字节还原。
         if (seg[1] === 'backup' && seg[2] === 'export') {
             const strip = (rows, key) => rows.map(r => { const o = { ...r }; delete o[key]; return o; });
             return jsonResp({
-                version: 1, exported_at: now(), source: 'pwa',
+                version: 2, exported_at: now(), source: 'pwa',
                 progress: strip(await dbAll('progress'), 'pk'),
                 wrong: await dbAll('wrong'),
                 favorites: await dbAll('favorites'),
@@ -1031,7 +1053,8 @@ async function api(url, opts = {}) {
                 dontknow: await dbAll('dontknow'),
                 notes: await dbAll('notes'),
                 exams: strip(await dbAll('exams'), 'id'),
-                daka: await dbAll('daka_progress')
+                daka: await dbAll('daka_progress'),
+                local: collectLocalStorage()
             });
         }
         if (seg[1] === 'backup' && seg[2] === 'import') {
@@ -1053,6 +1076,16 @@ async function api(url, opts = {}) {
                     tx.oncomplete = res; tx.onerror = () => rej(tx.error);
                 });
                 counts[key] = rows.length;
+            }
+            // localStorage 原样回写（记忆卡/批注/每日一题/冲刺计划等；v1 旧备份无此字段则跳过）
+            const localRows = (body.local && typeof body.local === 'object' && !Array.isArray(body.local)) ? body.local : null;
+            if (localRows) {
+                let n = 0;
+                for (const [k, v] of Object.entries(localRows)) {
+                    if (typeof v !== 'string') continue;   // 只接受导出格式的字符串值
+                    try { localStorage.setItem(k, v); n++; } catch (e) { }
+                }
+                counts.local = n;
             }
             return jsonResp({ success: true, counts });
         }
