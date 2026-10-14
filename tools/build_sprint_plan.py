@@ -746,6 +746,24 @@ EXTRA_CSS = """  /* v2 版式：408 拆「选择题错题 / 大题」两列 */
   }
   @media (max-width: 760px) { .plan-toc { display: none; } }
   @media print { .plan-toc { display: none; } }
+  /* 打开页面自动定位到今天：短暂橙色脉冲高亮（2.6s 后由 JS 移除） */
+  @keyframes todayPulse {
+    0% { background-color: transparent; }
+    15% { background-color: rgba(234,88,12,.26); }
+    40% { background-color: rgba(234,88,12,.10); }
+    65% { background-color: rgba(234,88,12,.20); }
+    100% { background-color: transparent; }
+  }
+  @keyframes todayPulseDark {
+    0% { background-color: transparent; }
+    15% { background-color: rgba(234,88,12,.34); }
+    40% { background-color: rgba(234,88,12,.14); }
+    65% { background-color: rgba(234,88,12,.26); }
+    100% { background-color: transparent; }
+  }
+  tr.today-flash td { animation: todayPulse 2.6s ease-in-out 1; }
+  @media (prefers-color-scheme: dark) { tr.today-flash td { animation-name: todayPulseDark; } }
+  @media print { tr.today-flash td { animation: none; } }
   /* 打卡列：勾选 + 我的备注（localStorage 持久化；桌面版与站内版各自独立存储） */
   th.ck, td.ck { width: 148px; }
   td.ck { white-space: normal; }
@@ -882,6 +900,21 @@ CK_JS = """<script>
   window.addEventListener('scroll', sync, { passive: true });
   window.addEventListener('resize', sync);
   sync();
+})();
+/* 打开页面按今天日期自动定位到对应行并短暂高亮（日期不在计划范围内则不动） */
+(function () {
+  var d = new Date();
+  var tr = document.querySelector('tr[data-key="' + (d.getMonth() + 1) + '/' + d.getDate() + '"]');
+  if (!tr) return;
+  var jump = function () {
+    var y = tr.getBoundingClientRect().top + window.scrollY - 76;   /* 76 = 吸顶头高度 */
+    window.scrollTo({ top: Math.max(0, y), behavior: 'smooth' });
+  };
+  setTimeout(function () {
+    jump();
+    tr.classList.add('today-flash');
+    setTimeout(function () { tr.classList.remove('today-flash'); }, 2700);
+  }, 120);
 })();
 </script>
 """

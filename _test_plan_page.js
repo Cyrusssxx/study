@@ -17,7 +17,7 @@ const sleep = ms => new Promise(r => setTimeout(r, ms));
 const PLAN = fs.readFileSync(path.join(ROOT, 'pwa/plan.html'), 'utf8');
 const DESK = fs.readFileSync('E:/Desktop/考研冲刺计划.html', 'utf8');
 
-function boot(preload) {
+function boot(preload, opts) {
   const vc = new VirtualConsole();
   vc.on('jsdomError', () => { });
   return new JSDOM(PLAN, {
@@ -29,6 +29,17 @@ function boot(preload) {
       w.confirm = () => true;
       w.alert = () => { };
       if (preload) for (const [k, v] of Object.entries(preload)) w.localStorage.setItem(k, v);
+      if (opts && opts.fixedDate) {
+        const [Y, M, D] = opts.fixedDate;   // M 为 0 起（11 月 = 10）
+        const F = class extends w.Date {
+          constructor(...a) { if (a.length === 0) super(Y, M, D, 9, 0, 0); else super(...a); }
+        };
+        w.Date = F;
+      }
+      if (opts && opts.countScroll) {
+        w.__scrolls = 0;
+        w.scrollTo = function () { w.__scrolls++; };
+      }
     }
   });
 }
@@ -79,7 +90,8 @@ function boot(preload) {
   check('数学统一 30题（25 天）', (PLAN.match(/<td class="cma">30题<\/td>/g) || []).length, 25);
   check('英语阅读一天一篇（48 篇）', (PLAN.match(/阅读 (英一)?\d{4}·T\d/g) || []).length, 48);
   check('打卡复选框 67 个（=67 天）', (PLAN.match(/class="sprint-ck"/g) || []).length, 67);
-  check('数据行均带 data-key', (PLAN.match(/data-key="/g) || []).length, 67);
+  check('数据行均带 data-key（锚定 <tr> 标签，避免计入 JS 选择器字符串）',
+    (PLAN.match(/<tr[^>]*data-key="/g) || []).length, 67);
   check('10 个周表头各加打卡列', (PLAN.match(/<th class="ck">/g) || []).length, 10);
   check('两列表头（选择题错题 / 大题）',
     /<th>408 · 选择题错题<\/th><th>408 · 大题<\/th>/.test(PLAN), true);
@@ -225,6 +237,35 @@ function boot(preload) {
   check('目录展开态不影响正文（面板默认 width:0 / pointer-events:none）',
     /\.plan-toc \.ptoc-body \{ width: 0; opacity: 0; pointer-events: none;/.test(PLAN), true);
   dom3.window.close();
+
+  console.log('\n▸ 今天自动定位 + 短暂高亮（2026-10-14 追加）');
+  check('今天定位：CSS 脉冲高亮（亮 / 暗两套 + 打印关闭）',
+    /@keyframes todayPulse \{/.test(PLAN) && /@keyframes todayPulseDark \{/.test(PLAN)
+    && /tr\.today-flash td \{ animation: todayPulse 2\.6s ease-in-out 1; \}/.test(PLAN)
+    && /@media \(prefers-color-scheme: dark\) \{ tr\.today-flash td \{ animation-name: todayPulseDark; \} \}/.test(PLAN)
+    && /@media print \{ tr\.today-flash td \{ animation: none; \} \}/.test(PLAN), true);
+  check('今天定位：JS 按日期查行 + 76px 吸顶偏移 + 2.7s 后移除高亮',
+    /querySelector\('tr\[data-key="' \+ \(d\.getMonth\(\) \+ 1\) \+ '\/' \+ d\.getDate\(\) \+ '"\]'\)/.test(PLAN)
+    && /window\.scrollY - 76/.test(PLAN)
+    && /classList\.remove\('today-flash'\); \}, 2700\)/.test(PLAN), true);
+  // dom4：日期桩固定为 2026-11-05（计划内）→ 应滚动 + 高亮 + 超时移除
+  const dom4 = boot(null, { fixedDate: [2026, 10, 5], countScroll: true });
+  const w4 = dom4.window, d4 = w4.document;
+  await sleep(400);
+  const rt = d4.querySelector('tr[data-key="11/5"]');
+  check('定位到 11/5 行并加 today-flash', !!rt && rt.classList.contains('today-flash'), true);
+  check('自动滚动恰好触发一次（76px 偏移）', w4.__scrolls, 1);
+  check('全表仅今天一行高亮', d4.querySelectorAll('tr.today-flash').length, 1);
+  await sleep(2700);
+  check('2.7s 后高亮自动移除', d4.querySelectorAll('tr.today-flash').length, 0);
+  dom4.window.close();
+  // dom5：日期桩固定为 2027-02-01（计划外）→ 不滚动、不高亮
+  const dom5 = boot(null, { fixedDate: [2027, 1, 1], countScroll: true });
+  const w5 = dom5.window, d5 = w5.document;
+  await sleep(400);
+  check('日期不在计划范围内：不滚动也不高亮',
+    [w5.__scrolls, d5.querySelectorAll('tr.today-flash').length], [0, 0]);
+  dom5.window.close();
 
   console.log(`\n${failed ? '❌' : '✅'} ${passed} 通过 / ${failed} 失败`);
   process.exit(failed ? 1 : 0);
