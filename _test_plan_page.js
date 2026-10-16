@@ -69,8 +69,9 @@ function boot(preload, opts) {
   check('第一周无机动日（机动日 = 10/25 起每周日共 6 天）',
     [...PLAN.matchAll(/<tr class="fx" data-key="([\d/]+)"/g)].map(m => m[1]),
     ['10/25', '11/1', '11/8', '11/15', '11/22', '11/29']);
-  check('机动日派活（英语作文背诵 + 数学讲义/错题 + 408 知识点）',
-    /作文背诵（模板 \+ 通用理由）/.test(PLAN) && /讲义 \+ 错题复习（不做新题）/.test(PLAN)
+  check('机动日派活（英语按背诵阶段复盘 + 数学讲义/错题 + 408 知识点）',
+    /作文·大 句池复盘/.test(PLAN) && /作文·小 拼信复盘/.test(PLAN)
+    && /作文套写复盘/.test(PLAN) && /讲义 \+ 错题复习（不做新题）/.test(PLAN)
     && /知识点复习｜本周错题章节回看/.test(PLAN), true);
   check('英二 2022–2024 封存（常态队列不出现）',
     /完型 2022|完型 2023|完型 2024|英二新题型二刷 2022|英二新题型二刷 2023|英二新题型二刷 2024/
@@ -106,15 +107,15 @@ function boot(preload, opts) {
     (PLAN.match(/<td class="cen">—<\/td>/g) || []).length, 3);
   check('收口队列以「考前速背」收尾（落在 12/18）',
     /考前：作文模板 \+ 通用理由速背（不动笔，22:30 前睡）/.test(PLAN), true);
-  check('英语节奏卡说明收口期（12/10 起转收口）',
-    /末段（12\/10 起）转收口/.test(PLAN), true);
+  check('英语节奏卡说明收口期（12/11 起转收口）',
+    /末段（12\/11 起）转收口/.test(PLAN), true);
   check('收口队列 7 项且末项落在 12/18（推进日由 54 增为 55）',
     /考前：作文模板 \+ 通用理由速背（不动笔，22:30 前睡）/.test(PLAN)
     && /data-key="12\/18"[\s\S]{0,400}?考前：作文模板/.test(PLAN), true);
   // —— 排版：阶段A 多科目分行 + 题数单独一行 ——
   check('阶段A 选择题：题数与科目分行（<br>），科目一行一个（span.s2）',
     /<td class="cw">收藏 \/ 错题 \d+ 题<br><span class="s2">/.test(PLAN)
-    && /<span class="s2">CO 计算机系统概述 19 题<\/span><span class="s2">DS 绪论 14 题<\/span>/.test(PLAN), true);
+    && /<span class="s2">CO 计算机系统概述 19 题<\/span><span class="s2">CN 计算机网络体系结构 31 题<\/span>/.test(PLAN), true);
   check('span.s2 为块级带细左导轨（CSS）', /\.cw \.s2 \{ display: block;/.test(PLAN)
     && /\.cw \.s2 \{[^}]*border-left: 2px solid var\(--line\)/.test(PLAN), true);
   // —— 悬浮半透明条状目录 ——
@@ -143,14 +144,47 @@ function boot(preload, opts) {
   check('打卡 / 备注列宽 148px（加宽后）', /th\.ck, td\.ck \{ width: 148px; \}/.test(PLAN), true);
   check('模拟卷来源建议（408 用 zhenti 2024–2026 三套）',
     /408 用 zhenti\.html 的/.test(PLAN) && /2024 \/ 2025 \/ 2026/.test(PLAN), true);
-  check('阶段A 文案口径（池去重 1282 / 覆盖 461 / 30–46 题每天）',
-    /池共 1282 题 ＝ 收藏 1130 ∪ 错题 662 去重/.test(PLAN) && /阶段 A 覆盖 461 题/.test(PLAN)
-    && /约 30–46 题\/天/.test(PLAN), true);
-  check('阶段A 每天题量落在 30–46 区间（13 天共 461 题）',
+  // —— 2026-10-16 修改：选择题前四天改 DS 一天一章 ——
+  check('阶段A 前四天选择题 = DS 一天一章（绪论 / 线性表 / 栈队列数组 / 串）',
+    /data-key="10\/16"[\s\S]{0,500}?DS 绪论 \d+ 题/.test(PLAN)
+    && /data-key="10\/17"[\s\S]{0,500}?DS 线性表 \d+ 题/.test(PLAN)
+    && /data-key="10\/18"[\s\S]{0,500}?DS 栈、队列和数组 \d+ 题/.test(PLAN)
+    && /data-key="10\/19"[\s\S]{0,500}?DS 串 \d+ 题/.test(PLAN), true);
+  check('10/20 起恢复四科轮转（原内容后移，OS 计算机系统概述整章打头）',
+    /data-key="10\/20"[\s\S]{0,500}?OS 计算机系统概述 44 题/.test(PLAN), true);
+  // —— 2026-10-16 修改：作文改大作文先行 16 天背诵 ——
+  check('作文大先行：骨架 3 天 → 句池 6 天（归因/补充/主体，每天套 1 篇真题）',
+    /作文·大 骨架 D1/.test(PLAN) && /作文·大 骨架 D3/.test(PLAN)
+    && /作文·大 句池①归因 16 句/.test(PLAN) && /作文·大 句池②第一段补充 12 句/.test(PLAN)
+    && /作文·大 句池③第三段主体 22 句/.test(PLAN)
+    && /句池①归因 16 句 ＋ 套写真题 2010/.test(PLAN)
+    && /句池③第三段主体 22 句 ＋ 套写真题 2016/.test(PLAN), true);
+  check('小作文后置：骨架 2 天 → 10 类 5 天（每天 2 类拼信）',
+    /作文·小 骨架 D1/.test(PLAN) && /作文·小 骨架 D2/.test(PLAN)
+    && /作文·小 10 类 D1（建议信＋推荐信/.test(PLAN)
+    && /作文·小 10 类 D5（通知＋备忘录/.test(PLAN), true);
+  check('11/20 起转限时套写：大作文一/三（2017–2026）＋ 小作文四/六',
+    /作文·大 套写 2017/.test(PLAN) && /作文·大 套写 2026/.test(PLAN)
+    && /作文·小 套写 2010/.test(PLAN) && /作文·小 套写 2017/.test(PLAN), true);
+  check('旧作文排期已移除（无「作文·小 2010」年签式旧标签）',
+    !/作文·小 \d{4}/.test(PLAN) && !/作文·大 \d{4}/.test(PLAN), true);
+  // —— 2026-10-16 修改：翻译改两天一篇（整篇）——
+  check('翻译两天一篇（整篇，共 14 篇，不再半篇天天写）',
+    /译 2015（整篇）/.test(PLAN) && /译 2010（整篇）/.test(PLAN)
+    && !/第 1–3 句/.test(PLAN) && !/第 4–5 句/.test(PLAN), true);
+  check('翻译每篇只出现一次（无同篇重复，杜绝「两天一篇写两次」）',
+    (() => {
+      const ys = [...PLAN.matchAll(/译 (\d{4})（整篇）/g)].map(m => m[1]);
+      return [ys.length, new Set(ys).size];
+    })(), [14, 14]);
+  check('阶段A 文案口径（池去重 1282 / 前四天 DS 一天一章 / 覆盖 387 题）',
+    /池共 1282 题 ＝ 收藏 1130 ∪ 错题 662 去重/.test(PLAN) && /阶段 A 覆盖 387 题/.test(PLAN)
+    && /DS 一天一章/.test(PLAN), true);
+  check('阶段A 选择题 13 天共 387 题（前四天 DS 单章 3–23 题，轮转日 30–50 题）',
     (() => {
       const qs = [...PLAN.matchAll(/<td class="cw">收藏 \/ 错题 (\d+) 题/g)].map(m => +m[1]);
-      return [qs.length, Math.min(...qs) >= 30, Math.max(...qs) <= 46, qs.reduce((a, b) => a + b, 0)];
-    })(), [13, true, true, 461]);
+      return [qs.length, Math.min(...qs) >= 3, Math.max(...qs) <= 50, qs.reduce((a, b) => a + b, 0)];
+    })(), [13, true, true, 387]);
   // 桌面版与站内版：去掉「返回首页」差异与全部空白后应完全一致（同源生成）
   const norm = s => s
     .replace(/[\s\S]*?<body>/, '')

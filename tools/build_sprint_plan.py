@@ -39,6 +39,7 @@ WD = ['周一', '周二', '周三', '周四', '周五', '周六', '周日']
 D_PHASE_A_END = datetime.date(2026, 10, 29)   # 打卡表大题最后一天
 D_PHASE_B_END = datetime.date(2026, 12, 12)   # 错题+三科大题最后一天
 D_R1_END = datetime.date(2026, 11, 20)        # 错题一刷最后一天
+ESSAY_START = datetime.date(2026, 11, 2)      # 作文背诵第 1 天（大作文先行，2026-10-16 用户定制）
 
 # —— 全真模拟日：最后三周每周一天，一天三套（数学 + 408 + 英语）——
 # 英语用留存的 2022 / 2023 / 2024 三年整套（此前一律不碰）
@@ -68,6 +69,17 @@ def day_cat(d):
     if d in FX_DAYS:
         return 'fx'
     return 'n'
+
+
+def fx_essay_text(d):
+    """机动日的英语内容：按作文背诵阶段给对应复盘任务"""
+    if d < ESSAY_START:
+        return '英语：本周阅读生词 / 长难句复盘（作文 11/2 起大作文先行）'
+    if d < datetime.date(2026, 11, 12):
+        return '作文·大 句池复盘（遮答案默写检验）＋ 本周阅读生词 / 长难句复盘'
+    if d < datetime.date(2026, 11, 20):
+        return '作文·小 拼信复盘（遮译文自测）＋ 本周阅读生词 / 长难句复盘'
+    return '作文套写复盘（自查表逐项过）＋ 本周阅读生词 / 长难句复盘'
 
 
 def split_days(total, k):
@@ -196,12 +208,12 @@ NEWT_ER_REVIEW = ['2021', '2020', '2018', '2016', '2025',
 # (显示名, 年份, 起始日闸门)  —— 闸门未到则该项不消费
 newt_queue = [('英一小标题', y, None) for y in Y1_HEADING] + \
              [('英二新题型二刷', y, NEWT_REVIEW_FROM) for y in NEWT_ER_REVIEW]
+# 翻译：两天一篇（整篇；用户 2026-10-16 要求：不再半篇天天写）
 trans_queue = []
 for y in list(range(2015, 2027)) + list(range(2010, 2015)):
     if not keep(y):
         continue
-    trans_queue.append('译 %d（第 1–3 句）' % y)
-    trans_queue.append('译 %d（第 4–5 句）' % y)
+    trans_queue.append('译 %d（整篇）' % y)
 SMALL_YEARS = [str(y) for y in range(2010, 2027) if keep(y)]            # 小作文
 BIG_YEARS = [str(y) for y in range(2010, 2027) if y != 2012 and keep(y)]  # 大作文（2012 放弃）
 
@@ -265,29 +277,35 @@ def split_chunk(n, cap=CAP):
     return out
 
 
-_seq = []
+# 用户要求（2026-10-16）：前四天选择题改 DS 一天一章（10/16–19：绪论 / 线性表 /
+# 栈、队列和数组 / 串），原四科轮转内容整体后移（10/20 起恢复）
+A_CH_DAYS = []       # [(总题数, [(sub, 章名, 题数, 分段标签)...])]
+for _i in [0, 1, 2, 3]:                  # DS 第 1–4 章
+    _c = chapters['ds'][_i]
+    _n = choice_cnt['ds'][_c]
+    if _n:
+        A_CH_DAYS.append((_n, [('ds', _c, _n, '')]))
+# 原四科轮转（跳过 DS 前 4 章，避免重复）
+_cur = []
+_cn = 0
 _maxch = max(len(chapters[s]) for s in ['os', 'co', 'ds', 'cn'])
 for r in range(_maxch):
     for s in ['os', 'co', 'ds', 'cn']:
         if r >= len(chapters[s]):
+            continue
+        if s == 'ds' and r in (0, 1, 2, 3):
             continue
         c = chapters[s][r]
         n = choice_cnt[s][c]
         if not n:
             continue
         for sz, lab in split_chunk(n):
-            _seq.append((s, c, sz, lab))
-
-A_CH_DAYS = []       # [(总题数, [(sub, 章名, 题数, 分段标签)...])]
-_cur = []
-_cn = 0
-for it in _seq:
-    _cur.append(it)
-    _cn += it[2]
-    if _cn >= 30:
-        A_CH_DAYS.append((_cn, _cur))
-        _cur = []
-        _cn = 0
+            _cur.append((s, c, sz, lab))
+            _cn += sz
+            if _cn >= 30:
+                A_CH_DAYS.append((_cn, _cur))
+                _cur = []
+                _cn = 0
 if _cur:
     A_CH_DAYS.append((_cn, _cur))
 
@@ -367,7 +385,8 @@ R2_TOTAL = max(0, len(B_NORMAL) - len(T1_GROUPS))
 R2_ALLOC = alloc_days(R2_TOTAL, {s: sum(chap_q[s].values()) for s in ['os', 'co', 'ds', 'cn']})
 
 rows = []
-read_i = cloze_i = newt_i = trans_i = small_i = big_i = en_day = en_fin_i = 0
+read_i = cloze_i = newt_i = trans_i = en_day = en_fin_i = 0
+essay_day = big_mo_i = big_tx_i = small_tx_i = 0
 n_math = 0      # 数学「30 题」推进计数（只在正常推进日累加）
 n_daka = 0      # 阶段 A 打卡表天索引
 n_ch = 0        # 阶段 A 选择题（收藏/错题）天索引
@@ -409,13 +428,15 @@ for d in DAYS:
         row['cw'] = '知识点复习｜本周错题章节回看 + 笔记 / 导图'
         row['cb'] = '知识点复习｜易错点清单 + 算法 / 公式模板过一遍'
         row['math'] = '讲义 + 错题复习（不做新题）'
-        row['en'] = '作文背诵（模板 + 通用理由）＋ 本周阅读生词 / 长难句复盘'
+        row['en'] = fx_essay_text(d)
         row['nt'] = '机动日：先补本周欠账，再按左侧保底量复习；没欠账就休息'
         rows.append(row)
         continue
 
     # ---- 正常推进日 ----
     en_day += 1
+    if d >= ESSAY_START:
+        essay_day += 1
     en = []
     if read_i < len(read_queue):
         pre, y, t = read_queue[read_i]
@@ -434,20 +455,41 @@ for d in DAYS:
         pre, y = cloze_queue[cloze_i]
         cloze_i += 1
         en.append('完型 %s%s' % (pre, y))
-    if trans_i < len(trans_queue):
+    # 翻译：两天一篇（整篇）
+    if trans_i < len(trans_queue) and en_day % 2 == 1:
         en.append(trans_queue[trans_i])
         trans_i += 1
-    # 作文：小 一三五（11/2 起），大 二四六（11/10 起）
-    if d >= datetime.date(2026, 11, 2) and d.weekday() in (0, 2, 4) and small_i < len(SMALL_YEARS):
-        en.append('作文·小 %s' % SMALL_YEARS[small_i])
-        small_i += 1
-    if d >= datetime.date(2026, 11, 10) and d.weekday() in (1, 3, 5) and big_i < len(BIG_YEARS):
-        en.append('作文·大 %s' % BIG_YEARS[big_i])
-        big_i += 1
+    # —— 作文：大作文先行 16 天背诵（2026-10-16 用户定制）——
+    # 背诵日 1–3 大作文骨架（5 骨架＋数据语言 6 组＋17 年真题归 4 组认图法）
+    # 背诵日 4–9 大作文句池：归因 16 句 → 第一段补充 12 句 → 第三段主体 22 句，每天套 1 篇真题
+    # 背诵日 10–11 小作文骨架（4 句通用骨架＋称呼落款＋6 句成文法）
+    # 背诵日 12–16 小作文 10 类（每天 2 类，拼信遮译文自测）
+    # 11/20 起转限时套写：大作文 周一/三、小作文 周四/六（每周大 2 篇＋小 2 篇）
+    if 1 <= essay_day <= 3:
+        en.append('作文·大 骨架 D%d（5 骨架＋数据语言 6 组＋认图法）' % essay_day)
+    elif 4 <= essay_day <= 9:
+        grp = '①归因 16 句' if essay_day <= 5 else ('②第一段补充 12 句' if essay_day <= 7 else '③第三段主体 22 句')
+        en.append('作文·大 句池%s ＋ 套写真题 %s' % (grp, BIG_YEARS[big_mo_i]))
+        big_mo_i += 1
+    elif 10 <= essay_day <= 11:
+        en.append('作文·小 骨架 D%d（4 句通用骨架＋称呼落款＋6 句成文法）' % (essay_day - 9))
+    elif 12 <= essay_day <= 16:
+        kinds = ['建议信＋推荐信', '邀请信＋道歉信', '感谢信＋祝贺信', '申请信＋投诉信', '通知＋备忘录']
+        en.append('作文·小 10 类 D%d（%s，拼信自测）' % (essay_day - 11, kinds[essay_day - 12]))
+    elif d >= datetime.date(2026, 11, 20):
+        if d.weekday() in (0, 2) and big_tx_i < len(BIG_YEARS) - 6:
+            en.append('作文·大 套写 %s（限时 30min＋自查表）' % BIG_YEARS[6 + big_tx_i])
+            big_tx_i += 1
+        if d.weekday() in (3, 5) and small_tx_i < len(SMALL_YEARS):
+            en.append('作文·小 套写 %s（限时 15min＋自查表）' % SMALL_YEARS[small_tx_i])
+            small_tx_i += 1
     # 常规队列全跑完后，用收口队列兜底（避免最后几天英语列空白）
-    if not en and en_fin_i < len(EN_FINISH):
-        en.append(EN_FINISH[en_fin_i])
-        en_fin_i += 1
+    if not en:
+        if d == END and EN_FINISH:
+            en.append(EN_FINISH[-1])      # 考前 Day 固定「速背」
+        elif en_fin_i < len(EN_FINISH):
+            en.append(EN_FINISH[en_fin_i])
+            en_fin_i += 1
     row['en'] = ' ＋ '.join(en) if en else '—'
 
     # ---- 数学 ----
@@ -472,7 +514,8 @@ for d in DAYS:
             row['cb'] = '打卡表 %d 题（第 %d–%d 张）<br><span class="s">%s</span>' % (n, a, b, grp)
         if d == datetime.date(2026, 10, 16):
             row['cls'] = 'ms'
-            row['nt'] = '◆ 阶段 A 启动：打卡表大题（必做 + 高优先级置顶）+ 选择题收藏/错题 并行'
+            row['nt'] = ('◆ 阶段 A 启动：打卡表大题（必做 + 高优先级置顶）＋ '
+                         '选择题前四天 DS 一天一章（绪论 / 线性表 / 栈队列数组 / 串），10/20 起恢复四科轮转')
         elif d == D_PHASE_A_END:
             row['cls'] = 'ms'
             row['nt'] = '◆ 打卡表收官（%d 张）→ 次日转阶段 B' % N_DAKA
@@ -513,9 +556,12 @@ for d in DAYS:
             row['nt'] = '◆ 数学 747 题收官 → 转模拟卷 / 错题回炉'
         elif d == datetime.date(2026, 11, 2):
             row['cls'] = 'ms'
-            row['nt'] = '◆ 小作文启动（每周一/三/五 各 1 篇）'
-        elif d == datetime.date(2026, 11, 10):
-            row['nt'] = '◆ 大作文启动（每周二/四/六 各 1 篇，2012 大作文放弃）'
+            row['nt'] = '◆ 大作文背诵启动：骨架 3 天 → 句池 6 天（每天套 1 篇真题）'
+        elif d == datetime.date(2026, 11, 12):
+            row['nt'] = '◆ 小作文背诵启动：骨架 2 天 → 10 类 5 天（每类拼 1 封）'
+        elif d == datetime.date(2026, 11, 20):
+            row['cls'] = 'ms'
+            row['nt'] = '◆ 作文背诵收官（16 天）→ 转限时套写：每周大 2 篇＋小 2 篇'
         elif n_t1 == len(T1_GROUPS) and n_r2 == 0:
             row['cls'] = 'ms'
             row['nt'] = '◆ 错题一刷（26 章）完成 → 次日进入二刷'
@@ -657,8 +703,9 @@ src = re.sub(
       <h4>408 三步走</h4>
       <ul>
         <li><b>阶段 A（10/16–10/29）</b>：打卡表大题 %d 张（一天 4–5 张）
-            ＋ <b>选择题收藏 / 错题并行</b>（池共 %d 题 ＝ 收藏 %d ∪ 错题 %d 去重；四科轮转按章，
-            约 30–46 题/天，阶段 A 覆盖 %d 题；其余收藏题在错题清完后自选）</li>
+            ＋ <b>选择题收藏 / 错题并行</b>（池共 %d 题 ＝ 收藏 %d ∪ 错题 %d 去重；前四天（10/16–19）
+            DS 一天一章：绪论 / 线性表 / 栈队列数组 / 串，10/20 起四科轮转按章约 30–50 题/天，
+            阶段 A 覆盖 %d 题；其余收藏题在错题清完后自选）</li>
         <li><b>阶段 B（10/30–12/12）</b>：错题一刷一天一章（一科推完换下一科，按 OS→CO→DS→CN，共 %d 题）→ 二刷；
             同时三科大题（OS/CO/CN 共 %d 题）一天约 %d 题</li>
         <li><b>阶段 C（12/14–12/18）</b>：只过错题与框架，不做新题</li>
@@ -676,24 +723,27 @@ src = re.sub(
     <div class="gcard fx">
       <h4>机动日（12 月前每周日，共 %d 天；第一周不排）</h4>
       <ul>
-        <li>英语：作文背诵（模板 + 通用理由）+ 本周生词 / 长难句复盘</li>
+        <li>英语：按背诵阶段复盘（句池默写 / 拼信自测 / 套写自查表）+ 本周生词 / 长难句复盘</li>
         <li>数学：讲义 + 错题复习（不做新题）</li>
         <li>408：本周错题章节回看 + 笔记 / 导图 + 易错点清单</li>
         <li>先补本周欠账，再按上面保底量复习；没欠账就休息</li>
       </ul>
     </div>
     <div class="gcard">
-      <h4>英语节奏（一天：阅读 1 篇 + 完型 / 新题型 1 篇）</h4>
+      <h4>英语节奏（一天：阅读 1 篇 + 完型 / 新题型 1 篇；翻译两天一篇）</h4>
       <ul>
         <li>阅读<b>同一年份连排</b>、一天一篇：英二低正确率 %d 篇 + 英一指定 8 年 %d 篇</li>
         <li><b>完型</b>优先排：英二 14 年 + 英一 4 年（2007 / 2016 / 2020 / 2021）</li>
         <li><b>英一小标题</b> = %s 三年（历年统计只考过这三年；2017–2019 排序、2021–2023 七选五、
             2024 信息匹配、2025 排序，均不计入）</li>
         <li><b>英二新题型</b>已一刷完（除 22–24）→ <b>11/1 起二刷</b>，低分年份优先：%s，其余年份快过</li>
-        <li>翻译细水长流：2015–2026 + 补 2010–2014，每年 5 句拆两天（3 句 + 2 句）</li>
-        <li>作文：小作文 11/2 起（一/三/五）；大作文 11/10 起（二/四/六，2012 放弃）</li>
+        <li>翻译两天一篇（整篇）：2015–2026 + 补 2010–2014，共 14 篇（不再半篇天天写）</li>
+        <li><b>作文大先行（11/2 起 16 天背诵）</b>：大作文骨架 3 天 → 句池 6 天（归因 16 句＋补充 12 句＋主体 22 句，
+            每天套 1 篇真题 2010–2016）→ 小作文骨架 2 天 → 10 类 5 天；<b>11/20 起</b>限时套写：
+            大作文周一/三（2017–2026 共 7 篇）＋ 小作文周四/六（2010–2016 共 7 篇），每周大 2 篇＋小 2 篇，
+            能默写就停背；小作文其余年份机动日自选</li>
         <li><b style="color:#b3261e">2022–2024 整套封存</b>，只在全真模拟日拆封</li>
-        <li>末段（12/10 起）转收口：作文成篇默写 → 错题 / 生词总扫 → 考前速背</li>
+        <li>末段（12/11 起）转收口：作文成篇默写 → 考前速背（套写期已完成限时成篇训练）</li>
       </ul>
     </div>
   </section>''' % (N_DAKA, N_CHOICE, N_FAV, N_WRONG, N_CH_A, N_WRONG, N_BIG, -(-N_BIG // max(1, DAO_B_DAYS)),
@@ -935,9 +985,9 @@ io.open(PWA_OUT, 'w', encoding='utf-8', newline='').write(pwa)
 print('rows=%d  weeks=%d' % (n_rows, len(weeks)))
 print('打卡表剩余 %d 张 / 错题 %d 题 / 三科大题 %d 题' % (N_DAKA, N_WRONG, N_BIG))
 print('英语队列：阅读 %d 篇（英二 %d + 英一 %d）｜完型 %d｜英一小标题 %d 年｜英二新题型二刷 %d 年'
-      '｜翻译 %d 天｜作文 小 %d + 大 %d｜收口 %d'
+      '｜翻译 %d 篇（两天一篇）｜作文 背诵 16 天（大先行）＋套写 大 %d + 小 %d｜收口 %d'
       % (len(read_queue), sum(len(ts) for _, ts in READ_ER), len(READ_Y1) * 4,
          len(cloze_queue), len(Y1_HEADING), len(NEWT_ER_REVIEW),
-         len(trans_queue), len(SMALL_YEARS), len(BIG_YEARS), len(EN_FINISH)))
+         len(trans_queue), len(BIG_YEARS) - 6, len(SMALL_YEARS) - 7, len(EN_FINISH)))
 print('机动日 %d 天：%s（第一周不排）'
       % (len(FX_LIST), '、'.join('%d/%d' % (x.month, x.day) for x in FX_LIST)))
