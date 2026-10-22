@@ -31,7 +31,6 @@
                 <a href="search.html" class="nav-link">搜题</a>
             </div>
             <div class="nav-tools">
-                <span class="nav-timer" id="navTimer" title="今日刷题时长（切换到其他窗口时暂停）">⏱ 00:00:00</span>
                 <button class="nav-switch" id="reciteSwitch" onclick="toggleRecite()" title="背题模式：直接显示答案与解析，不计入答题记录">
                     背题 <span class="switch-state" id="reciteState">关</span>
                 </button>
@@ -130,8 +129,10 @@
 
         <!-- 成绩单 / 历史试卷回顾视图 -->
         <div id="resultView" style="display:none">
-            <div class="page-header">
-                <h1 id="resultTitle">考试成绩单</h1>
+            <div class="result-topbar">
+                <button class="btn btn-secondary btn-sm" id="btnTopBack" onclick="backToSetup()">← 返回</button>
+                <span class="result-topbar-title" id="resultTitle">考试成绩单</span>
+                <span class="result-topbar-pad"></span>
             </div>
             <div id="resultArea"></div>
             <div class="exam-nav">
@@ -487,6 +488,7 @@
         lastResult = r;
         lastFromHistory = !!fromHistory;
         document.getElementById('resultTitle').textContent = fromHistory ? '试卷回顾' : '考试成绩单';
+        document.getElementById('btnTopBack').textContent = fromHistory ? '← 返回历史成绩' : '← 返回组卷';
         document.getElementById('btnResultBack').textContent = fromHistory ? '← 返回历史成绩' : '再来一场';
         let html = `
             <div class="result-score-card">

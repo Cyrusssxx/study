@@ -125,37 +125,25 @@ function applyDark() {
 }
 applyDark();
 
-// ============ 今日刷题计时器（按天累计，存localStorage，页面不可见时暂停） ============
+// ============ 今日刷题时长（按天累计，存 localStorage，页面不可见时暂停） ============
+// 导航栏已不再显示 ⏱ 计时器，但统计页的「今日学习时长」仍依赖这个累计值，所以继续在后台计时。
 (function () {
-    const el = document.getElementById('navTimer');
-    if (!el) return;
-
     const today = new Date().toISOString().slice(0, 10);
     if (localStorage.getItem('studyTimerDate') !== today) {
         localStorage.setItem('studyTimerDate', today);
         localStorage.setItem('studyTimerSec', '0');
     }
 
-    function fmt(sec) {
-        const h = String(Math.floor(sec / 3600)).padStart(2, '0');
-        const m = String(Math.floor((sec % 3600) / 60)).padStart(2, '0');
-        const s = String(sec % 60).padStart(2, '0');
-        return `${h}:${m}:${s}`;
-    }
+    let timerInterval = null;
 
-    function render() {
-        const sec = parseInt(localStorage.getItem('studyTimerSec') || '0', 10);
-        el.textContent = `⏱ ${fmt(sec)}`;
+    function tick() {
+        if (document.hidden) return;
+        const sec = parseInt(localStorage.getItem('studyTimerSec') || '0', 10) + 1;
+        localStorage.setItem('studyTimerSec', String(sec));
     }
 
     function startTimer() {
-        if (timerInterval) return;
-        timerInterval = setInterval(() => {
-            if (document.hidden || isPaused) return;
-            const sec = parseInt(localStorage.getItem('studyTimerSec') || '0', 10) + 1;
-            localStorage.setItem('studyTimerSec', String(sec));
-            render();
-        }, 1000);
+        if (!timerInterval) timerInterval = setInterval(tick, 1000);
     }
 
     function stopTimer() {
@@ -165,38 +153,11 @@ applyDark();
         }
     }
 
-    let timerInterval = null;
-    let isPaused = false;
-
-    // 初始化
-    render();
     startTimer();
-
-    // 页面可见性变化处理
     document.addEventListener('visibilitychange', () => {
-        if (document.hidden) {
-            stopTimer();
-        } else {
-            startTimer();
-        }
+        if (document.hidden) stopTimer();
+        else startTimer();
     });
-
-    // 导出全局函数供按钮调用
-    window.toggleTimer = function() {
-        isPaused = !isPaused;
-        updatePauseButton();
-    };
-
-    window.resetTimer = function() {
-        if (confirm('确定要重置计时器吗？当前时长将被清零。')) {
-            localStorage.setItem('studyTimerSec', '0');
-            render();
-            // 添加重置动画效果
-            el.style.animation = 'none';
-            el.offsetHeight; // 触发重排
-            el.style.animation = 'pulse 0.5s ease-in-out';
-        }
-    };
 })();
 
 // ============ 背题模式开关（quiz页读取 isReciteOn()，直接显示答案与解析） ============

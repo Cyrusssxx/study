@@ -2019,6 +2019,45 @@ mark {
     color: var(--primary);
 }
 
+/* 成绩单/回顾页顶部返回条（吸顶，避免翻 40 题找不到返回） */
+.result-topbar {
+    position: sticky;
+    top: 0;
+    z-index: 12;
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+    align-items: center;
+    gap: 10px;
+    background: var(--card-bg);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    padding: 10px 14px;
+    margin-bottom: 16px;
+}
+
+.result-topbar .btn {
+    justify-self: start;
+    white-space: nowrap;
+}
+
+.result-topbar-title {
+    justify-self: center;
+    font-weight: 700;
+    font-size: 1rem;
+    text-align: center;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.result-topbar-pad { justify-self: end; }
+
+@media (max-width: 600px) {
+    .result-topbar { padding: 8px 10px; gap: 6px; }
+    .result-topbar-title { font-size: 0.9rem; }
+    .result-topbar .btn { padding: 6px 10px; font-size: 0.8rem; }
+}
+
 .exam-timer.timer-warning {
     color: var(--danger);
     animation: blink 1s infinite;
