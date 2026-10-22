@@ -115,9 +115,13 @@
             .replace(/"/g, '&quot;');
     }
 
-    // 要点里的 **重点** 标记 → 红色加粗（来源：考点笔记里作者加粗的术语/结论）
+    // 要点里的标记：
+    //   **重点**  → 红色加粗（考点笔记里作者加粗的术语/结论）
+    //   ≈≈公式≈≈ → 黄色半高亮荧光笔（复杂度/取整/取模/等式等）
     function mdInline(s) {
-        return esc(s).replace(/\*\*(.+?)\*\*/g, '<strong class="fc-em">$1</strong>');
+        return esc(s)
+            .replace(/\*\*(.+?)\*\*/g, '<strong class="fc-em">$1</strong>')
+            .replace(/≈≈(.+?)≈≈/g, '<em class="fc-em fx">$1</em>');
     }
 
     function render() {
@@ -163,6 +167,11 @@
             htmlParts.push('<ul class="fc-pts">' + (c.points || []).map(p =>
                 `<li>${mdInline(p)}</li>`).join('') + '</ul>');
             if (c.tip) htmlParts.push(`<div class="fc-tip">易错点：${mdInline(c.tip)}</div>`);
+            if (c.tables && c.tables.length) {
+                htmlParts.push('<div class="fc-tables">' + c.tables.map(t =>
+                    `<div class="fc-tbl-cap">${esc(t.sub || '')}</div><div class="fc-table">${t.html || ''}</div>`
+                ).join('') + '</div>');
+            }
             htmlParts.push('<div class="fc-hint">点击卡片收起</div>');
         } else {
             // 问题态：章节 + 考点名 + 状态小标签 + 提示
@@ -171,7 +180,7 @@
             const noteBadge = notes[c.id] ? '<span class="fc-badge n">有笔记</span>' : '';
             htmlParts.push(`<div class="fc-chapter">${esc([c.chapter, c.section].filter(Boolean).join(' · '))}</div>`);
             htmlParts.push(`<div class="fc-title">${esc(c.title)}${badge}${noteBadge}</div>`);
-            htmlParts.push('<div class="fc-hint">点击卡片查看要点</div>');
+            htmlParts.push(`<div class="fc-hint">${c.tables && c.tables.length ? '点击卡片查看表格' : '点击卡片查看要点'}</div>`);
         }
         body.innerHTML = htmlParts.join('');
         syncButtons(c);

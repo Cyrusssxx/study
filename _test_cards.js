@@ -29,7 +29,7 @@ const SUBS = ['ds', 'os', 'cn', 'co'];
 check('四门科目都有卡片组', SUBS.every(s => (CARDS.cards[s] || []).length > 0), true);
 for (const s of SUBS) {
     const cs = CARDS.cards[s];
-    check(`${s} 卡片字段完整`, cs.every(c => c.id && c.title && (c.points || []).length > 0), true);
+    check(`${s} 卡片字段完整`, cs.every(c => c.id && c.title && ((c.points || []).length > 0 || (c.tables || []).length > 0)), true);
 }
 console.log('   卡片数：' + SUBS.map(s => `${s}=${CARDS.cards[s].length}`).join(' / '));
 
@@ -324,6 +324,41 @@ const $ = sel => w.document.querySelector(sel);
     check('CSS 笔记框淡色背景', CSS.includes('.fc-note') && CSS.includes('rgba(128, 128, 128, .06)'), true);
     check('CSS 虚线边框', /\.fc-note\s*\{[^}]*dashed/.test(CSS) || CSS.includes('border: 1px dashed'), true);
     check('CSS 有笔记角标', CSS.includes('.fc-badge.n'), true);
+
+    console.log('\n--- 公式荧光笔 + 重点表格 ---');
+    const truncated = ['ds', 'os', 'cn', 'co'].reduce((n, s) =>
+        n + (CARDS.cards[s] || []).reduce((m, c) => m + (c.points || []).filter(p => p.trimEnd().endsWith('…')).length, 0), 0);
+    check('要点几乎不再被截断', truncated <= 5, true);
+    const formulaCards = ['ds', 'os', 'cn', 'co'].reduce((n, s) =>
+        n + (CARDS.cards[s] || []).filter(c => (c.points || []).some(p => p.includes('≈≈'))).length, 0);
+    check('cards.json 有公式荧光标记', formulaCards > 50, true);
+    const fxCard = (CARDS.cards[w.Cards.state.subject] || []).find(c => (c.points || []).some(p => p.includes('≈≈')));
+    check('当前科目有含公式的卡', !!fxCard, true);
+    if (fxCard) w.jumpToCard(fxCard.id);
+    w.toggleView();
+    check('公式渲染成 .fc-em.fx', w.document.querySelectorAll('#fcBody .fc-em.fx').length > 0, true);
+    check('正文无 ≈≈ 残留', !/≈≈/.test($('#fcBody').textContent), true);
+    w.toggleView();
+
+    const tableCards = ['ds', 'os', 'cn', 'co'].reduce((n, s) =>
+        n + (CARDS.cards[s] || []).filter(c => (c.tables || []).length > 0).length, 0);
+    check('四科都有重点表格卡（≥20 张）', tableCards >= 20, true);
+    const subjNow2 = w.Cards.state.subject;
+    const tbl = (CARDS.cards[subjNow2] || []).find(c => (c.tables || []).length > 0);
+    check('当前科目有表格卡', !!tbl, true);
+    if (tbl) {
+        w.jumpToCard(tbl.id);
+        w.toggleView();
+        check('表格卡渲染出 <table>', w.document.querySelectorAll('#fcBody .fc-table table').length > 0, true);
+        check('表格带小节标题', w.document.querySelectorAll('#fcBody .fc-tbl-cap').length > 0, true);
+        w.toggleView();
+    }
+
+    console.log('\n--- 荧光笔/表格样式 ---');
+    check('CSS 公式荧光（黄色半高亮）', CSS.includes('.fc-em.fx') && CSS.includes('rgba(250, 204, 21, .62)'), true);
+    check('CSS 半高亮渐变', /\.fc-em\.fx\s*\{[^}]*linear-gradient\(transparent 52%/.test(CSS), true);
+    check('CSS 深色模式荧光', CSS.includes('.dark .fc-em.fx'), true);
+    check('CSS 表格样式', CSS.includes('.fc-table .mc-table'), true);
 
     console.log(`\nPASS ${pass} / FAIL ${fail}`);
     dom.window.close();

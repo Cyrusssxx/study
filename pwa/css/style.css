@@ -6628,6 +6628,63 @@ body.fc-modal-open { overflow: hidden; }
 .dark .fc-switch { background: rgba(255, 255, 255, .16); }
 .dark .fc-switch.on { background: var(--primary); }
 
+/* ===== 记忆卡：公式荧光笔（黄色半高亮） ===== */
+.fc-em.fx {
+    color: inherit;
+    font-style: normal;
+    font-weight: 700;
+    background: linear-gradient(transparent 52%, rgba(250, 204, 21, .62) 52%);
+    -webkit-box-decoration-break: clone;
+    box-decoration-break: clone;
+    padding: 0 1px;
+}
+
+.dark .fc-em.fx {
+    background: linear-gradient(transparent 52%, rgba(250, 204, 21, .42) 52%);
+}
+
+/* ===== 记忆卡：重点表格卡 ===== */
+.fc-tables { margin-top: 12px; }
+
+.fc-tbl-cap {
+    margin: 12px 0 4px;
+    font-size: 0.76rem;
+    font-weight: 600;
+    color: var(--text-light);
+}
+
+.fc-tbl-cap:first-child { margin-top: 0; }
+
+.fc-table {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+}
+
+.fc-table .mc-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.82rem;
+    line-height: 1.6;
+}
+
+.fc-table .mc-table th,
+.fc-table .mc-table td {
+    border: 1px solid var(--border);
+    padding: 6px 8px;
+    text-align: left;
+    vertical-align: top;
+}
+
+.fc-table .mc-table th {
+    background: rgba(128, 128, 128, .1);
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+.fc-table .mc-table tr:nth-child(even) td {
+    background: rgba(128, 128, 128, .04);
+}
+
 /* ===== 记忆卡：自建笔记（卡片下方，淡色） ===== */
 .fc-note-wrap {
     max-width: 720px;
