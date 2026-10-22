@@ -154,6 +154,67 @@ const $ = sel => w.document.querySelector(sel);
     check('不会按钮红语义色', /\.fc-btn\.on-d\s*\{[^}]*rgba\(220,\s*38,\s*38/.test(CSS), true);
     check('页面有底部操作栏元素', !!$('.fc-actions'), true);
 
+    console.log('\n--- 设置面板：自定义快捷键 ---');
+    check('进度行有设置按钮', !!$('#fcGear'), true);
+    check('页面有设置面板', !!$('#fcModal'), true);
+    check('面板默认隐藏', $('#fcModal').hidden, true);
+    w.openCardSettings();
+    check('打开后可见', $('#fcModal').hidden, false);
+    const rows = w.document.querySelectorAll('#fcSettingsBody .fc-set-row');
+    check('7 个动作 + 1 个开关行', rows.length, 8);
+    const keyBtns = [...w.document.querySelectorAll('#fcSettingsBody .fc-key')];
+    check('7 个快捷键按钮', keyBtns.length, 7);
+    check('默认「上一张」显示 ←', keyBtns[0].textContent.trim(), '←');
+    check('默认「下一张」显示 →', keyBtns[1].textContent.trim(), '→');
+    check('默认「查看」显示 空格', keyBtns[2].textContent.trim(), '空格');
+    check('默认「熟」显示 K', keyBtns[3].textContent.trim(), 'K');
+
+    // 录制：把「下一张」改成 J
+    w.startCapture('next');
+    check('录制态提示', [...w.document.querySelectorAll('#fcSettingsBody .fc-key')][1].textContent.trim(), '请按键…');
+    w.document.dispatchEvent(new w.KeyboardEvent('keydown', { key: 'j', bubbles: true }));
+    const savedKeys = JSON.parse(w.localStorage.getItem('cards_keys_v1') || '{}');
+    check('新键已持久化', savedKeys.next, 'j');
+    check('新键已显示', [...w.document.querySelectorAll('#fcSettingsBody .fc-key')][1].textContent.trim(), 'J');
+    check('按 J 会切到下一张', (() => {
+        const before = $('#fcCount').textContent.trim();
+        w.document.dispatchEvent(new w.KeyboardEvent('keydown', { key: 'j', bubbles: true }));
+        return $('#fcCount').textContent.trim() !== before;
+    })(), true);
+
+    // 冲突：把「上一张」也绑到 J → 「下一张」应被清空
+    w.startCapture('prev');
+    w.document.dispatchEvent(new w.KeyboardEvent('keydown', { key: 'j', bubbles: true }));
+    const conflict = JSON.parse(w.localStorage.getItem('cards_keys_v1') || '{}');
+    check('冲突时旧动作被清空', conflict.next, '');
+    check('新动作生效', conflict.prev, 'j');
+
+    // 恢复默认
+    w.resetCardKeys();
+    const defKeys = JSON.parse(w.localStorage.getItem('cards_keys_v1') || '{}');
+    check('恢复默认 → next', defKeys.next, 'ArrowRight');
+    check('恢复默认 → known', defKeys.known, 'k');
+
+    // 自动下一张开关
+    check('自动下一张默认关', $('#fcSettingsBody .fc-switch').classList.contains('on'), false);
+    w.toggleAutoNext();
+    check('开启后持久化', JSON.parse(w.localStorage.getItem('cards_autonext_v1') || 'false'), true);
+    check('开关呈 on 态', $('#fcSettingsBody .fc-switch').classList.contains('on'), true);
+    w.toggleAutoNext();
+    check('关闭后持久化', JSON.parse(w.localStorage.getItem('cards_autonext_v1') || 'true'), false);
+
+    // Esc 关闭
+    w.document.dispatchEvent(new w.KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
+    check('Esc 关闭面板', $('#fcModal').hidden, true);
+
+    console.log('\n--- 设置面板 / 移动端样式 ---');
+    check('设置按钮有触控尺寸', /\.fc-gear\s*\{[^}]*width:\s*28px/.test(CSS), true);
+    check('移动端面板为底部抽屉', /@media\s*\(max-width:\s*600px\)\s*\{[^}]*\.fc-modal\s*\{\s*align-items:\s*flex-end/.test(CSS.replace(/\s+/g, ' ')), true);
+    check('面板打开时锁滚动', /body\.fc-modal-open\s*\{\s*overflow:\s*hidden/.test(CSS), true);
+    check('卡片区 touch-action 交给脚本', /\.fc-stage\s*\{[^}]*touch-action:\s*pan-y/.test(CSS), true);
+    check('按钮去点击延迟', /touch-action:\s*manipulation/.test(CSS), true);
+    check('深色模式适配设置面板', /\.dark\s+\.fc-modal-panel/.test(CSS), true);
+
     console.log(`\nPASS ${pass} / FAIL ${fail}`);
     dom.window.close();
     process.exit(fail ? 1 : 0);

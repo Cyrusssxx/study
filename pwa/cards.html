@@ -46,6 +46,7 @@
             <span id="fcCount">0 / 0</span>
             <div class="fc-bar"><div class="fc-bar-fill" id="fcBar"></div></div>
             <span id="fcKnown">熟 0</span>
+            <button class="fc-gear" id="fcGear" onclick="openCardSettings()" title="设置：快捷键 / 标记后自动下一张" aria-label="设置">⚙</button>
         </div>
 
         <!-- 筛选：全部 / 未熟 / 熟 -->
@@ -69,6 +70,22 @@
         <button class="fc-btn" id="fcWeakUBtn" onclick="toggleWeak('u')" title="标记不熟">不熟</button>
         <button class="fc-btn" id="fcWeakDBtn" onclick="toggleWeak('d')" title="标记不会">不会</button>
         <button class="fc-btn" onclick="nextCard()" title="下一张">→</button>
+    </div>
+
+    <!-- 设置面板：自定义快捷键 + 操作偏好（移动端为底部抽屉） -->
+    <div class="fc-modal" id="fcModal" hidden>
+        <div class="fc-modal-mask" onclick="closeCardSettings()"></div>
+        <div class="fc-modal-panel" role="dialog" aria-modal="true" aria-label="记忆卡设置">
+            <div class="fc-modal-head">
+                <h3>记忆卡设置</h3>
+                <button class="fc-modal-close" onclick="closeCardSettings()" aria-label="关闭">✕</button>
+            </div>
+            <div class="fc-modal-body" id="fcSettingsBody"></div>
+            <div class="fc-modal-foot">
+                <button class="btn btn-secondary btn-sm" onclick="resetCardKeys()">恢复默认</button>
+                <button class="btn btn-primary btn-sm" onclick="closeCardSettings()">完成</button>
+            </div>
+        </div>
     </div>
 
     <script src="js/common.js"></script>

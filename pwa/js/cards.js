@@ -17,6 +17,29 @@
     const POS_KEY = 'cards_pos_v1';
     const SUBJ_KEY = 'cards_subj_v1';
     const FILTER_KEY = 'cards_filter_v1';
+    const KEYS_KEY = 'cards_keys_v1';       // 自定义快捷键 {act: key}
+    const AUTONEXT_KEY = 'cards_autonext_v1'; // 标记后自动下一张 '1'|'0'
+
+    // 默认快捷键（e.key 值；字母统一小写比较）
+    const DEFAULT_KEYS = {
+        prev: 'ArrowLeft',
+        next: 'ArrowRight',
+        view: ' ',
+        known: 'k',
+        fav: 'f',
+        weakU: 'u',
+        weakD: 'd'
+    };
+    // 可自定义的动作（顺序即设置面板里的顺序）
+    const KEY_ACTIONS = [
+        { act: 'prev', name: '上一张', run: () => prevCard() },
+        { act: 'next', name: '下一张', run: () => nextCard() },
+        { act: 'view', name: '查看 / 收起要点', run: () => toggleView() },
+        { act: 'known', name: '标记「熟」', run: () => toggleKnown() },
+        { act: 'fav', name: '收藏卡片', run: () => toggleFav() },
+        { act: 'weakU', name: '标记「不熟」', run: () => toggleWeak('u') },
+        { act: 'weakD', name: '标记「不会」', run: () => toggleWeak('d') }
+    ];
 
     let ALL = {};              // {subject: [card]}
     let subject = 'ds';
@@ -27,6 +50,9 @@
     let weak = {};             // {cardId: 'u'|'d'}
     let list = [];             // 当前筛选后的卡列表
     let viewing = false;       // 是否处于「查看要点」状态
+    let keys = Object.assign({}, DEFAULT_KEYS);  // 当前快捷键
+    let autoNext = false;      // 标记后自动下一张
+    let capturing = null;      // 正在录制快捷键的动作名
 
     function readJson(key, def) {
         try { const v = JSON.parse(localStorage.getItem(key) || 'null'); return v == null ? def : v; } catch (e) { return def; }
@@ -40,6 +66,8 @@
         known = readJson(KNOWN_KEY, {});
         fav = readJson(FAV_KEY, {});
         weak = readJson(WEAK_KEY, {});
+        keys = Object.assign({}, DEFAULT_KEYS, readJson(KEYS_KEY, {}) || {});
+        autoNext = readJson(AUTONEXT_KEY, false) === true;
         const resp = await fetch('data/cards.json');
         const data = await resp.json();
         ALL = data.cards || {};
@@ -170,9 +198,11 @@
         }
         writeJson(KNOWN_KEY, known);
         writeJson(WEAK_KEY, weak);
+        buzz(10);
         // 在「未熟」队列中标记熟 → 自动移出队列（index 由 applyFilter 收敛，等效自动下一张）
         if (filter === 'new' && known[c.id]) applyFilter();
         render();
+        afterMark(c);
     }
 
     function toggleFav() {
@@ -195,8 +225,23 @@
         }
         writeJson(WEAK_KEY, weak);
         writeJson(KNOWN_KEY, known);
+        buzz(10);
         if (filter === 'known' && !known[c.id]) applyFilter();   // 从「熟」队列移除
         render();
+        afterMark(c);
+    }
+
+    // 轻震动反馈（移动端支持才触发）
+    function buzz(ms) {
+        try { if (navigator.vibrate) navigator.vibrate(ms); } catch (e) { }
+    }
+
+    // 「标记后自动下一张」：当前列表已因筛选自动移出时不重复前进
+    function afterMark(c) {
+        if (!autoNext || !c) return;
+        if (filter === 'new' && known[c.id]) return;
+        if (filter === 'known' && !known[c.id]) return;
+        go(1);
     }
 
     function switchSubject(s) {
@@ -237,14 +282,103 @@
             // 横向滑动切题；「点击查看」交给 click（避免 touchend+click 双触发）
             if (Math.abs(dx) > 50 && Math.abs(dx) > Math.abs(dy)) { dx < 0 ? nextCard() : prevCard(); }
         }, { passive: true });
-        // 桌面：方向键切题，空格/回车查看
-        document.addEventListener('keydown', e => {
-            if (e.key === 'ArrowRight') nextCard();
-            else if (e.key === 'ArrowLeft') prevCard();
-            else if (e.key === ' ' || e.key === 'Enter') { e.preventDefault(); toggleView(); }
-        });
+        // 桌面：快捷键（可在 ⚙ 设置里自定义）
+        document.addEventListener('keydown', onKeyDown);
         // 点击卡片（鼠标或触屏）查看/收起；滑动后忽略
         document.getElementById('fcCard').addEventListener('click', () => { if (!moved) toggleView(); });
+    }
+
+    // ==================== 快捷键设置 ====================
+    function normKey(k) {
+        if (k === ' ' || k === 'Spacebar') return ' ';
+        const s = String(k == null ? '' : k);
+        return s.length === 1 ? s.toLowerCase() : s;
+    }
+
+    function keyLabel(k) {
+        if (!k) return '未设置';
+        const map = {
+            ' ': '空格', ArrowLeft: '←', ArrowRight: '→', ArrowUp: '↑', ArrowDown: '↓',
+            Enter: '回车', Escape: 'Esc', Backspace: '退格', Tab: 'Tab'
+        };
+        return map[k] || (k.length === 1 ? k.toUpperCase() : k);
+    }
+
+    function onKeyDown(e) {
+        if (capturing) return;                       // 录制中由 startCapture 处理
+        const t = e.target;
+        if (t && (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA' || t.tagName === 'SELECT' || t.isContentEditable)) return;
+        if (e.ctrlKey || e.metaKey || e.altKey) return;  // 不抢浏览器快捷键
+        if (e.key === 'Escape' && !document.getElementById('fcModal').hidden) { closeCardSettings(); return; }
+        const k = normKey(e.key);
+        const hit = KEY_ACTIONS.find(a => keys[a.act] && normKey(keys[a.act]) === k);
+        if (hit) { e.preventDefault(); hit.run(); return; }
+        // 回车：未被占用时仍可查看要点（默认行为）
+        if (e.key === 'Enter' && !Object.values(keys).some(v => v && normKey(v) === 'Enter')) {
+            e.preventDefault(); toggleView();
+        }
+    }
+
+    function openCardSettings() {
+        renderSettings();
+        document.getElementById('fcModal').hidden = false;
+        document.body.classList.add('fc-modal-open');
+    }
+
+    function closeCardSettings() {
+        capturing = null;
+        document.getElementById('fcModal').hidden = true;
+        document.body.classList.remove('fc-modal-open');
+    }
+
+    function renderSettings() {
+        const body = document.getElementById('fcSettingsBody');
+        if (!body) return;
+        const rows = KEY_ACTIONS.map(a => {
+            const k = keys[a.act];
+            const rec = capturing === a.act;
+            return `<div class="fc-set-row">
+                <span class="fc-set-name">${a.name}</span>
+                <button class="fc-key ${rec ? 'recording' : ''} ${k ? '' : 'empty'}" onclick="startCapture('${a.act}')">${rec ? '请按键…' : keyLabel(k)}</button>
+            </div>`;
+        }).join('');
+        body.innerHTML = rows + `
+            <div class="fc-set-row">
+                <span class="fc-set-name">标记后自动下一张</span>
+                <button class="fc-switch ${autoNext ? 'on' : ''}" onclick="toggleAutoNext()" aria-pressed="${autoNext}"><span></span></button>
+            </div>
+            <div class="fc-set-hint">点右侧按键即可重新绑定，按 Esc 取消。快捷键只在电脑端生效；手机用左右滑动 + 底部按钮。</div>`;
+    }
+
+    function startCapture(act) {
+        capturing = act;
+        renderSettings();
+        const handler = ev => {
+            ev.preventDefault();
+            ev.stopPropagation();
+            document.removeEventListener('keydown', handler, true);
+            if (ev.key === 'Escape') { capturing = null; renderSettings(); return; }
+            const k = normKey(ev.key);
+            for (const a of KEY_ACTIONS) if (a.act !== act && normKey(keys[a.act]) === k) keys[a.act] = '';
+            keys[act] = k;
+            writeJson(KEYS_KEY, keys);
+            capturing = null;
+            renderSettings();
+        };
+        document.addEventListener('keydown', handler, true);
+    }
+
+    function resetCardKeys() {
+        keys = Object.assign({}, DEFAULT_KEYS);
+        writeJson(KEYS_KEY, keys);
+        capturing = null;
+        renderSettings();
+    }
+
+    function toggleAutoNext() {
+        autoNext = !autoNext;
+        writeJson(AUTONEXT_KEY, !!autoNext);
+        renderSettings();
     }
 
     window.toggleView = toggleView;
@@ -255,7 +389,12 @@
     window.toggleWeak = toggleWeak;
     window.switchSubject = switchSubject;
     window.switchFilter = switchFilter;
-    window.Cards = { load, get state() { return { subject, filter, index, total: list.length, known, fav, weak }; } };
+    window.openCardSettings = openCardSettings;
+    window.closeCardSettings = closeCardSettings;
+    window.startCapture = startCapture;
+    window.resetCardKeys = resetCardKeys;
+    window.toggleAutoNext = toggleAutoNext;
+    window.Cards = { load, get state() { return { subject, filter, index, total: list.length, known, fav, weak, keys, autoNext }; } };
 
     if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', load);
     else load();
