@@ -91,5 +91,29 @@ ok('CSS 定义 review-opt.is-correct', /\.review-opt\.is-correct\s*\{/.test(CSS)
 ok('CSS 定义 review-opt.is-picked-wrong', /\.review-opt\.is-picked-wrong\s*\{/.test(CSS));
 ok('深色模式适配', /\.dark \.review-opt\.is-correct/.test(CSS));
 
+// ---- 6. 默认时长 & 抽题优先级 & 设置页排版 ----
+console.log('--- 默认时长 ---');
+ok('前端有 defaultMinutesFor', /function defaultMinutesFor/.test(EXAM_HTML));
+ok('默认 = 题量 × 1.5', /Math\.round\(count \* 1\.5\)/.test(EXAM_HTML));
+ok('后端默认 90 秒/题', /picked\.length \* 90/.test(BACKEND));
+ok('快捷按钮含 60 分钟', /onclick="setMinutes\(60\)"/.test(EXAM_HTML));
+ok('说明文字写明 40 题 = 60 分钟', /40 题 = 60 分钟/.test(EXAM_HTML));
+ok('用户手动改过后不覆盖', /if \(!force && minutesManual\) return;/.test(EXAM_HTML));
+
+console.log('--- 抽题优先级 ---');
+ok('按 progress/wrong 建索引', /progMap/.test(BACKEND) && /wrongMap/.test(BACKEND));
+ok('三层优先级函数', /function prioritize\(pool\)/.test(BACKEND));
+ok('未做过的优先', /if \(!p\) \{\s*fresh\.push/.test(BACKEND));
+ok('错题未解决次之', /w && !w\.is_resolved/.test(BACKEND));
+ok('做过的按日期从旧到新', /\[\.\.\.byDay\.keys\(\)\]\.sort\(\)/.test(BACKEND));
+ok('按科目抽题时使用优先级', /prioritize\(poolBySub\[k\]\)/.test(BACKEND));
+
+console.log('--- 设置页排版 ---');
+ok('只给行首 label 固定宽度', /\.setup-row > label:first-child\s*\{[^}]*flex:\s*0 0 80px/.test(CSS));
+ok('勾选项 label 不再固定宽度', /\.setup-row \.checkbox-label\s*\{[^}]*flex:\s*0 1 auto/.test(CSS));
+ok('勾选框重置最小宽度', /\.setup-row input\[type="checkbox"\][\s\S]{0,120}min-width:\s*0/.test(CSS));
+ok('说明文字独占一行', /\.setup-hint-block\s*\{/.test(CSS) && /class="setup-hint-block"/.test(EXAM_HTML));
+ok('窄屏字段名独占一行', /@media\s*\(max-width:\s*600px\)[\s\S]{0,200}\.setup-row > label:first-child\s*\{\s*flex:\s*0 0 100%/.test(CSS));
+
 console.log(`\n结果: ${pass} 通过 / ${fail} 失败`);
 process.exit(fail ? 1 : 0);

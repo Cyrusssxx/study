@@ -1947,10 +1947,29 @@ mark {
     margin-bottom: 16px;
 }
 
-.setup-row label {
+/* 只有行首的字段名占固定 80px；行内其它 label（如勾选项）按内容自适应，
+   否则「错题自动记入错题本」会被压成竖排 */
+.setup-row > label:first-child {
     flex: 0 0 80px;
     font-weight: 500;
     font-size: 0.9rem;
+}
+
+.setup-row .checkbox-label {
+    flex: 0 1 auto;
+    font-weight: 400;
+}
+
+/* 勾选框不该继承文本框的 200px 最小宽度和内边距 */
+.setup-row input[type="checkbox"],
+.setup-row input[type="radio"] {
+    min-width: 0;
+    width: 16px;
+    height: 16px;
+    padding: 0;
+    margin: 0;
+    flex: 0 0 auto;
+    accent-color: var(--primary);
 }
 
 .setup-row select, .setup-row input {
@@ -2138,11 +2157,25 @@ mark {
     align-items: center;
     gap: 8px;
     flex-wrap: wrap;
+    flex: 1;
+    min-width: 0;
+}
+
+.time-input-wrap input[type="number"] {
+    width: 132px;
+    min-width: 0;
+}
+
+.time-unit {
+    font-size: 0.82rem;
+    color: var(--text-light);
+    flex-shrink: 0;
 }
 
 .time-presets {
     display: flex;
     gap: 6px;
+    flex-wrap: wrap;
 }
 
 .time-preset {
@@ -2161,9 +2194,35 @@ mark {
     color: var(--primary);
 }
 
-.time-note {
-    color: var(--text-light);
+/* 说明文字单独一行，与字段名左对齐 */
+.setup-hint-block {
+    display: block;
+    margin: -8px 0 16px 92px;
     font-size: 0.78rem;
+    line-height: 1.6;
+    color: var(--text-light);
+}
+
+/* 窄屏：字段名在上、控件在下，避免横向挤压 */
+@media (max-width: 600px) {
+    .setup-row {
+        flex-wrap: wrap;
+        align-items: flex-start;
+        gap: 8px;
+    }
+    .setup-row > label:first-child {
+        flex: 0 0 100%;
+        font-size: 0.84rem;
+    }
+    .setup-row select,
+    .setup-row input[type="number"] {
+        min-width: 0;
+        flex: 1;
+    }
+    .time-input-wrap { width: 100%; }
+    .time-input-wrap input[type="number"] { flex: 1; width: auto; }
+    .setup-hint-block { margin-left: 0; }
+    .exam-setup-card { padding: 16px; }
 }
 
 /* ===== 模拟考试：超时提示（不强制交卷） ===== */

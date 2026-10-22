@@ -1241,14 +1241,41 @@ async function examApi(action, body, arg) {
         let picked = [];
         const pickedIds = new Set();
 
+        // ---- 抽题优先级（与每日一题同思路）：没做过 > 错题未解决 > 最久没做 > 最近做过 ----
+        // 空着没作答的题不会写 progress，因此天然落进「没做过」层，下次优先抽到。
+        const progMap = new Map();
+        for (const p of await dbAll('progress')) progMap.set(p.question_id, p);
+        const wrongMap = new Map();
+        for (const w of await dbAll('wrong')) wrongMap.set(w.question_id, w);
+
+        function prioritize(pool) {
+            const fresh = [], wrongs = [], byDay = new Map();
+            for (const q of pool) {
+                const p = progMap.get(q.id);
+                const w = wrongMap.get(q.id);
+                if (!p) {
+                    fresh.push(q);
+                } else if (w && !w.is_resolved) {
+                    wrongs.push(q);
+                } else {
+                    const day = String(p.answered_at || '').slice(0, 10) || '0000-00-00';
+                    if (!byDay.has(day)) byDay.set(day, []);
+                    byDay.get(day).push(q);
+                }
+            }
+            const ordered = shuffled(fresh).concat(shuffled(wrongs));
+            for (const day of [...byDay.keys()].sort()) ordered.push(...shuffled(byDay.get(day)));
+            return ordered;
+        }
+
         if (isSingle) {
-            picked = shuffled(poolBySub[mode]).slice(0, total);
+            picked = prioritize(poolBySub[mode]).slice(0, total);
         } else {
             // ---- 2. 第一轮：严格按真题各科题量抽 ----
             const quotas = allocQuotas(total);
             for (const k of EXAM_SUBJECT_ORDER) {
                 const take = Math.min(quotas[k], poolBySub[k].length);
-                for (const q of shuffled(poolBySub[k]).slice(0, take)) {
+                for (const q of prioritize(poolBySub[k]).slice(0, take)) {
                     picked.push(q);
                     pickedIds.add(q.id);
                 }
@@ -1284,7 +1311,7 @@ async function examApi(action, body, arg) {
             }
         }
         if (!picked.length) return jsonResp({ error: '题库为空，无法组卷' }, 400);
-        const duration = parseInt(body.duration_sec || 0, 10) || picked.length * 60;
+        const duration = parseInt(body.duration_sec || 0, 10) || picked.length * 90;   // 默认每题 1.5 分钟（40 题 = 60 分钟）
         // 废弃之前未交卷的会话
         for (const e of await dbAll('exams')) {
             if (e.status === 'in_progress') { e.status = 'abandoned'; await dbPut('exams', e); }

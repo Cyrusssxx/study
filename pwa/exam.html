@@ -80,17 +80,18 @@
                 <div class="setup-row">
                     <label>考试时长</label>
                     <div class="time-input-wrap">
-                        <input type="number" id="examMinutes" placeholder="留空 = 每题 1 分钟" min="1" max="600">
-                        <span class="setup-hint">分钟</span>
+                        <input type="number" id="examMinutes" placeholder="40 题 = 60 分钟" min="1" max="600">
+                        <span class="time-unit">分钟</span>
                         <div class="time-presets">
                             <button type="button" class="time-preset" onclick="setMinutes(45)">45</button>
+                            <button type="button" class="time-preset" onclick="setMinutes(60)">60</button>
                             <button type="button" class="time-preset" onclick="setMinutes(90)">90</button>
                             <button type="button" class="time-preset" onclick="setMinutes(120)">120</button>
                             <button type="button" class="time-preset" onclick="setMinutes(180)">180</button>
                         </div>
                     </div>
-                    <span class="setup-hint time-note">到时不强制交卷，可继续作答</span>
                 </div>
+                <div class="setup-hint-block">默认按每题 1.5 分钟（40 题 = 60 分钟）；到时间不会强制交卷，可继续作答</div>
                 <div class="setup-row">
                     <label>错题入本</label>
                     <label class="checkbox-label">
@@ -176,10 +177,8 @@
         const recordWrongRow = document.getElementById('recordWrong').closest('.setup-row');
 
         if (isSpecial) {
-            cnt.min = 5;
-            cnt.max = 150;
-            cnt.value = 40;
-            document.getElementById('countHint').textContent = '按真题各科题量分配，不足自动补充';
+            applyCountRange(cnt, 5, 150, 40);
+            document.getElementById('countHint').textContent = '按真题比例分配，优先抽没做过的题';
             sourceInfo.style.display = 'flex';
             sourceText.textContent = '正在读取…';
             recordWrongRow.style.display = mode === 'wrong' ? 'none' : 'flex';
@@ -203,28 +202,49 @@
                         .filter(k => bySub[k])
                         .map(k => `${names[k]} ${bySub[k]}`)
                         .join(' · ');
-                    sourceText.textContent = `${isFav ? '收藏' : '错题'} ${n} 题（${detail}）· 按真题比例抽，不够自动补题`;
+                    sourceText.textContent = `${isFav ? '收藏' : '错题'} ${n} 题（${detail}）· 按真题比例抽，优先没做过`;
                 }
             } catch (e) {
                 sourceText.textContent = '读取失败';
             }
         } else {
-            cnt.min = isFull ? 10 : 5;
-            cnt.max = isFull ? 150 : 100;
-            cnt.value = isFull ? 40 : 20;
+            applyCountRange(cnt, isFull ? 10 : 5, isFull ? 150 : 100, isFull ? 40 : 20);
             document.getElementById('countHint').textContent = isFull
-                ? '按真题各科题量分配（数构11·组成11·OS10·网络8），默认 40'
+                ? '按真题各科题量分配（数构11·组成11·OS10·网络8）'
                 : '单科 5-100 题，默认 20';
             sourceInfo.style.display = 'none';
             recordWrongRow.style.display = 'flex';
         }
+        // 题量变了就同步默认时长（用户手动改过时长则不动）
+        syncDefaultMinutes();
     }
 
     // 时长快捷选择（分钟）
     function setMinutes(n) {
         const el = document.getElementById('examMinutes');
         el.value = n;
+        minutesManual = true;
         PS.set({ minutes: String(n) });
+    }
+
+    // 题量输入框：切换模式时保留用户已填的值，只在新范围内做收拢
+    function applyCountRange(cnt, lo, hi, dft) {
+        const cur = parseInt(cnt.value, 10);
+        cnt.min = lo;
+        cnt.max = hi;
+        cnt.value = (cur && cur >= lo && cur <= hi) ? cur : dft;
+    }
+
+    // 默认时长 = 每题 1.5 分钟（40 题 → 60 分钟）；用户手动改过后不再自动覆盖
+    let minutesManual = false;
+    function defaultMinutesFor(count) {
+        return Math.max(5, Math.round(count * 1.5));
+    }
+    function syncDefaultMinutes(force) {
+        if (!force && minutesManual) return;
+        const n = parseInt(document.getElementById('examCount').value, 10) || 40;
+        document.getElementById('examMinutes').value = defaultMinutesFor(n);
+        PS.set({ minutes: String(defaultMinutesFor(n)) });
     }
 
     // ============ 组卷 / 恢复 ============
@@ -593,13 +613,25 @@
         if ([...m.options].some(o => o.value === ps.mode)) m.value = ps.mode;
     }
     if (ps.count) document.getElementById('examCount').value = ps.count;
-    if (ps.minutes) document.getElementById('examMinutes').value = ps.minutes;
+    if (ps.minutes) {
+        document.getElementById('examMinutes').value = ps.minutes;
+        minutesManual = true;      // 记住的手动时长，不被默认值覆盖
+    }
     if (ps.resultWrongOnly != null) resultWrongOnly = !!ps.resultWrongOnly;
     // 默认模式（仅收藏题）也要跑一次，才能带出题量提示与收藏数
     onModeChange();
+    if (!ps.minutes) syncDefaultMinutes(true);
     document.getElementById('examMode').addEventListener('change', () => PS.set({ mode: document.getElementById('examMode').value }));
+    document.getElementById('examCount').addEventListener('input', () => {
+        PS.set({ count: document.getElementById('examCount').value });
+        syncDefaultMinutes();
+    });
     document.getElementById('examCount').addEventListener('change', () => PS.set({ count: document.getElementById('examCount').value }));
-    document.getElementById('examMinutes').addEventListener('change', () => PS.set({ minutes: document.getElementById('examMinutes').value }));
+    document.getElementById('examMinutes').addEventListener('input', () => {
+        const v = document.getElementById('examMinutes').value;
+        minutesManual = v !== '';
+        PS.set({ minutes: v });
+    });
 
     checkActive();
     
