@@ -76,10 +76,20 @@ async function run() {
   check('做题模式年份完成度隐藏（取消后恢复）', /state\.examMode \? '' : `<span class="zt-year-done">/.test(js));
   check('题号导航做题模式隐藏历史色点', /if \(!state\.examMode && st\) cls \+= st\.is_correct/.test(js));
   // v7：题号点击修复（触屏容错 + 同题去重 + 只看收藏过滤）
-  check('题号点击：gotoQ 同题 700ms 去重', /lastGoto/.test(js) && /now - lastGoto\.t < 700/.test(js));
-  check('题号点击：触屏 pointerdown/pointerup 容错（12px/1s 阈值）',
+  check('题号点击：gotoQ 同题 300ms 去重（不吞用户重复点击）',
+    /lastGoto/.test(js) && /now - lastGoto\.t < 300/.test(js));
+  check('题号点击：gotoQ 目标缺失时不拦重试', /if \(!el\) return;/.test(js));
+  check('题号点击：触屏容错改为看面板是否真滚动',
     /bindFqTouch/.test(js) && /pointerdown/.test(js) && /pointerup/.test(js) &&
-    /> 12\) return/.test(js) && /fqDown/.test(js));
+    /box\.scrollTop - d\.top/.test(js) && /fqDown/.test(js));
+  check('题号面板：用户手动滚动时不被拽回（2s 避让）',
+    /fqUserScrollAt/.test(js) && /Date\.now\(\) - fqUserScrollAt < 2000/.test(js) &&
+    /bindFqUserScroll/.test(js));
+  check('题号面板：委托点击兜底 + preventDefault',
+    /bindFqClick/.test(js) && /e\.preventDefault\(\)/.test(js));
+  check('题号面板：flex:1 + min-height:0 + overscroll-behavior',
+    /\.zt-fq-body\s*\{[^}]*flex:[\s]*1/.test(css) && /min-height:[\s]*0/.test(css) &&
+    /overscroll-behavior:[\s]*contain/.test(css));
   check('题号点击：flushNote 抛错不拖垮跳转（try-catch）', /try \{ flushNote\(\); \} catch/.test(js));
   check('只看收藏：题号条与卡片流同过滤', /!state\.favOnly \|\| state\.favSet\.has\(it\.iid\)/.test(js));
   check('题号触摸目标：touch-action manipulation + user-select none',
@@ -321,17 +331,18 @@ async function run() {
   const fq10 = d.querySelector('#fqList .zt-fq-i[data-i="10"]');
   const iid10 = fq10.dataset.iid;
   fq10.dispatchEvent(mkPtr('pointerdown', 200, 300, 'touch'));
-  fq10.dispatchEvent(mkPtr('pointerup', 205, 303, 'touch'));   // 位移 8px ≤ 12 → 补偿触发
+  fq10.dispatchEvent(mkPtr('pointerup', 205, 303, 'touch'));   // 位移 8px、面板没滚 → 轻点
   await sleep(80);
   check('触屏轻点（轻微位移）：pointerup 补偿触发跳转', scrolled.includes('card-' + iid10), scrolled.join(','));
   const n1 = scrolled.length;
   fq10.dispatchEvent(mkPtr('pointerdown', 200, 300, 'touch'));
-  fq10.dispatchEvent(mkPtr('pointerup', 205, 303, 'touch'));   // 同题 700ms 内 → 去重
+  fq10.dispatchEvent(mkPtr('pointerup', 205, 303, 'touch'));   // 同题 300ms 内 → 去重
   await sleep(60);
-  check('触屏轻点：700ms 内同题二次触发被去重', scrolled.length === n1, `再滚 ${scrolled.length - n1} 次`);
+  check('触屏轻点：300ms 内同题二次触发被去重', scrolled.length === n1, `再滚 ${scrolled.length - n1} 次`);
   const n2 = scrolled.length;
+  const fq11 = d.querySelector('#fqList .zt-fq-i[data-i="11"]');
   fq10.dispatchEvent(mkPtr('pointerdown', 200, 300, 'touch'));
-  fq10.dispatchEvent(mkPtr('pointerup', 230, 305, 'touch'));   // 35px → 明确滑动
+  fq11.dispatchEvent(mkPtr('pointerup', 230, 305, 'touch'));   // 滑到另一条上 → 明确滑动
   await sleep(60);
   check('触屏滑动（>12px）：不触发跳转', scrolled.length === n2);
   const n3 = scrolled.length;

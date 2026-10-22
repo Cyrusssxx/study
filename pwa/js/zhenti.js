@@ -814,6 +814,21 @@
         if (el) el.textContent = `${done}/${list.length}`;
     }
 
+    // 用户手动滚动题号面板的时间戳：此时不让 syncFqCur 把面板拽回去，
+    // 否则条会在按下/抬起之间移开，点击落空（表现为"跳转不了 + 面板抖一下"）
+    let fqUserScrollAt = 0;
+    function bindFqUserScroll() {
+        const box = $('fqList');
+        if (!box) return;
+        const mark = () => { fqUserScrollAt = Date.now(); };
+        box.addEventListener('wheel', mark, { passive: true });
+        box.addEventListener('touchmove', mark, { passive: true });
+        box.addEventListener('scroll', e => {
+            // 只有用户触发的滚动才记（script 改 scrollTop 也会派发 scroll 事件）
+            if (e.isTrusted !== false) mark();
+        }, { passive: true });
+    }
+
     // 高亮滚动位置对应的题号条（随页面滑动而滑动）
     function syncFqCur() {
         const cards = document.querySelectorAll('#ztMain .question-card');
@@ -830,22 +845,38 @@
         const a = box.querySelector(`.zt-fq-i[data-iid="${cur.dataset.iid}"]`);
         if (!a) return;
         a.classList.add('cur');
-        // 容器内滚动跟随（当前条始终可见）
+        // 容器内滚动跟随（当前条始终可见）；用户刚手动滚过就避让，避免条被拽走
+        if (Date.now() - fqUserScrollAt < 2000) return;
         const ar = a.getBoundingClientRect();
         const br = box.getBoundingClientRect();
         if (ar.top < br.top + 6) box.scrollTop += ar.top - br.top - 6;
         else if (ar.bottom > br.bottom - 6) box.scrollTop += ar.bottom - br.bottom + 6;
     }
 
-    // 跳转到指定题（同题 700ms 去重：触屏 pointerup 补偿与随后补发的 click 只生效一次）
+    // 兜底点击：内联 onclick 之外再挂一层委托，防止重渲染后丢失；同时阻止 <a> 默认行为
+    function bindFqClick() {
+        const box = $('fqList');
+        if (!box) return;
+        box.addEventListener('click', e => {
+            const a = e.target && e.target.closest ? e.target.closest('.zt-fq-i') : null;
+            if (!a) return;
+            e.preventDefault();
+            gotoQ(a.dataset.iid);
+        });
+    }
+
+    // 跳转到指定题（同题 300ms 去重：触屏 pointerup 补偿与随后补发的 click 只生效一次）
     let lastGoto = { iid: '', t: 0 };
     function gotoQ(iid) {
+        const el = document.getElementById('card-' + iid);
+        if (!el) return;                                   // 目标不在 DOM（被筛选掉）：不记录，允许重试
         const now = Date.now();
-        if (iid === lastGoto.iid && now - lastGoto.t < 700) return;
+        // 只吞掉 pointerup 补偿与随后补发的 click 那次重复（同一事件循环内），
+        // 窗口从 700ms 收到 300ms——旧值会把用户 700ms 内的重复点击也吞掉，表现为"点了没反应"
+        if (iid === lastGoto.iid && now - lastGoto.t < 300) return;
         lastGoto = { iid: iid, t: now };
         try { flushNote(); } catch (e) { console.error(e); }   // 笔记落库失败不拖垮跳转
-        const el = document.getElementById('card-' + iid);
-        if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        el.scrollIntoView({ behavior: 'smooth', block: 'start' });
     }
 
     // 触屏点击容错：手指轻点条时若有轻微位移（被判为滑动 → click 事件丢失、只剩列表动了一下），
@@ -856,15 +887,20 @@
         box.addEventListener('pointerdown', e => {
             const a = e.target && e.target.closest ? e.target.closest('.zt-fq-i') : null;
             fqDown = (a && e.pointerType !== 'mouse')
-                ? { iid: a.dataset.iid, x: e.clientX, y: e.clientY, t: Date.now() }
+                ? { iid: a.dataset.iid, x: e.clientX, y: e.clientY, t: Date.now(), top: box.scrollTop }
                 : null;
         });
         box.addEventListener('pointerup', e => {
             const d = fqDown;
             fqDown = null;
             if (!d) return;
-            if (Math.abs(e.clientX - d.x) + Math.abs(e.clientY - d.y) > 12) return;  // 明确滑动
-            if (Date.now() - d.t > 1000) return;                                     // 长按
+            if (Date.now() - d.t > 1000) return;                       // 长按
+            // 只有面板真的被拖动滚动过，才算「在翻列表」；否则一律按轻点处理
+            // （旧版只看手指位移 >12px 就放弃，稍一晃就没法跳转，面板还会跟着抖一下）
+            if (Math.abs(box.scrollTop - d.top) > 2) return;
+            const over = e.target && e.target.closest ? e.target.closest('.zt-fq-i') : null;
+            const moved = Math.abs(e.clientX - d.x) + Math.abs(e.clientY - d.y);
+            if (moved > 26 && (!over || over.dataset.iid !== d.iid)) return;  // 明显滑到别的条
             gotoQ(d.iid);   // 浏览器若补发 click，会被 gotoQ 去重
         });
         box.addEventListener('pointercancel', () => { fqDown = null; });
@@ -939,6 +975,8 @@
             await renderPaper();
             bindScrollSpy();
             bindFqTouch();
+            bindFqClick();
+            bindFqUserScroll();
             if (typeof renderDarkSwitch === 'function') renderDarkSwitch();
         } catch (e) {
             console.error(e);
