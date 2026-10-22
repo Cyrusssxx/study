@@ -4847,16 +4847,19 @@ a.chapter-badge-link:hover {
 }
 
 /* 划词高亮色块 */
+/* 行级批注（笔记正文里的选区高亮）：与 .hl-* 同一套语言——下边线 + 极淡底 */
 .note-hl {
     border-radius: 2px;
-    padding: 0 1px;
+    padding: 0 2px;
     cursor: pointer;
+    -webkit-box-decoration-break: clone;
+    box-decoration-break: clone;
 }
 
-.note-hl-yellow { background: #fff3a3; }
-.note-hl-green  { background: #b8e6c0; }
-.note-hl-blue   { background: #b3d9f2; }
-.note-hl-pink   { background: #f5c2d5; }
+.note-hl-yellow { background: rgba(234, 179, 8, .22); border-bottom: 2px solid #ca8a04; }
+.note-hl-green  { background: rgba(34, 197, 94, .18); border-bottom: 2px solid #16a34a; }
+.note-hl-blue   { background: rgba(59, 130, 246, .16); border-bottom: 2px solid #2563eb; }
+.note-hl-pink   { background: rgba(236, 72, 153, .16); border-bottom: 2px solid #db2777; }
 
 /* 选区浮层工具条 */
 .hl-toolbar {
@@ -4881,10 +4884,11 @@ a.chapter-badge-link:hover {
 }
 
 .hl-dot:hover { transform: scale(1.15); }
-.hl-dot-yellow { background: #fff3a3; }
-.hl-dot-green  { background: #b8e6c0; }
-.hl-dot-blue   { background: #b3d9f2; }
-.hl-dot-pink   { background: #f5c2d5; }
+/* 取色圆点：浅底 + 2px 色环，和实际刷上去的效果一致（下边线那个色） */
+.hl-dot-yellow { background: rgba(234, 179, 8, .30); border: 2px solid #ca8a04; }
+.hl-dot-green  { background: rgba(34, 197, 94, .24); border: 2px solid #16a34a; }
+.hl-dot-blue   { background: rgba(59, 130, 246, .22); border: 2px solid #2563eb; }
+.hl-dot-pink   { background: rgba(236, 72, 153, .22); border: 2px solid #db2777; }
 
 /* 工具条内的 📝批注 按钮 */
 .hl-anno-btn {
@@ -4943,10 +4947,10 @@ a.chapter-badge-link:hover {
     background: #23272e;
 }
 
-.dark .note-hl-yellow { background: #6b5e1a; color: #f5f2e0; }
-.dark .note-hl-green  { background: #1e4d2b; color: #e0f2e4; }
-.dark .note-hl-blue   { background: #1e3a5f; color: #e0ecf7; }
-.dark .note-hl-pink   { background: #5f2440; color: #f7e0eb; }
+.dark .note-hl-yellow { background: rgba(234, 179, 8, .18); border-bottom-color: #facc15; }
+.dark .note-hl-green  { background: rgba(34, 197, 94, .16); border-bottom-color: #4ade80; }
+.dark .note-hl-blue   { background: rgba(59, 130, 246, .18); border-bottom-color: #60a5fa; }
+.dark .note-hl-pink   { background: rgba(236, 72, 153, .16); border-bottom-color: #f472b6; }
 
 /* 笔记页悬浮回顶按钮 */
 .notes-top-btn {

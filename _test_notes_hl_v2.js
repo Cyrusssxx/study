@@ -42,5 +42,14 @@ console.log('▸ 兼容性：旧数据/旧选择器不破');
 check('execCommand 内联背景兜底选择器仍在', /\[style\*="background-color:#fff3a3"\]/.test(css));
 check('全局 mark 规则保留（其余科目仍可用）', /\nmark \{\s*background:\s*#fff3bf/.test(css));
 
+console.log('▸ 行级批注（.note-hl-*，笔记正文里的选区高亮）');
+for (const [c, hex] of [['yellow', '#ca8a04'], ['green', '#16a34a'], ['blue', '#2563eb'], ['pink', '#db2777']]) {
+  const re = new RegExp('\\.note-hl-' + c + '\\s*\\{[^}]*border-bottom:\\s*2px solid ' + hex);
+  check('行级批注 ' + c + '：2px 下边框 ' + hex, re.test(css));
+}
+check('行级批注不再是实色平涂', !/\.note-hl-yellow\s*\{\s*background:\s*#fff3a3/.test(css));
+check('行级批注换行不断裂', /\.note-hl\s*\{[^}]*box-decoration-break:\s*clone/.test(css));
+check('深色模式行级批注边框提亮', /\.dark \.note-hl-yellow[^}]*border-bottom-color:\s*#facc15/.test(css));
+
 console.log(`\n结果: ${failed === 0 ? '全部通过' : failed + ' 项失败'}`);
 process.exit(failed ? 1 : 0);
