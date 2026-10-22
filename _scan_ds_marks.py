@@ -113,6 +113,12 @@ def classify(text, in_th=False, in_td=False):
         return 'DROP', '算法名'
     if len(core) <= 2:
         return 'DROP', '单字/数字'
+    # 代码块：整段代码被包进 <b> 会变成一大片红，必须脱掉
+    if re.search(r'[{};]|\n|#include|\btypedef\b|\bint\b|\bvoid\b|\bwhile\b|\bfor\s*\(', core) and len(core) > 16:
+        return 'DROP', '代码块'
+    # 超过 34 字的加粗扫不动，反而糊成一片
+    if len(core) > 34:
+        return 'DROP', '过长'
     if re.fullmatch(r'[\d\s.]+', core):
         return 'DROP', '纯数字'
     if core in GENERIC and not JUDGE.search(core):
@@ -124,6 +130,9 @@ def classify(text, in_th=False, in_td=False):
         return 'KEEP', '公式/复杂度'
     if PURPOSE.search(core) and len(core) >= 6:
         return 'KEEP', '目的/作用'
+    # 定义句：X 是/指/称为/即 Y —— 概念定义是考点
+    if 10 <= len(core) <= 32 and re.search(r'(是|指|称为|叫做|即|定义为)', core):
+        return 'KEEP', '定义句'
     # 判别技巧：状态模式 → 算法
     if '→' in core and len(core) >= 6:
         return 'KEEP', '判别技巧'

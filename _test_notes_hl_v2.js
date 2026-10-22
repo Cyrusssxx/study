@@ -16,16 +16,16 @@ const html = fs.readFileSync(path.join(ROOT, 'pwa/notes.html'), 'utf8');
 
 console.log('▸ 教材重点：荧光笔半高亮（DS 灰度）');
 check('notesContent 按科目加类', /classList\.add\('subj-' \+ SUBJECT\)/.test(html));
-check('mark 用半高亮渐变', /\.subj-ds \.notes-body mark\s*\{[^}]*linear-gradient\(transparent 58%/.test(css));
+check('mark 用半高亮渐变', /\.subj-ds \.notes-body mark\s*\{[^}]*linear-gradient\(transparent 5\d%/.test(css));
 check('mark 荧光色为黄', /rgba\(250,\s*204,\s*21,\s*\.62\)/.test(css));
 check('换行不断裂', /box-decoration-break:\s*clone/.test(css));
-check('作者加粗 b 用红色荧光', /\.subj-ds \.notes-body b[\s\S]{0,80}linear-gradient\(transparent 58%,\s*rgba\(226,\s*75,\s*74/.test(css));
+check('作者加粗 b 用红色荧光', /\.subj-ds \.notes-body b[\s\S]{0,220}linear-gradient\(transparent 6\d%,\s*rgba\(226,\s*75,\s*74/.test(css));
 check('b 不改变文字颜色（color: inherit）', /\.subj-ds \.notes-body b,[\s\S]{0,160}color:\s*inherit/.test(css));
 check('b 字重保持 700（不变细）', /\.subj-ds \.notes-body b,[\s\S]{0,220}font-weight:\s*700/.test(css));
 check('b 不再整体染红（无 #a32d2d）', !/#a32d2d/.test(css));
 check('只对 ds 生效（灰度）', /\.subj-ds \.notes-body/.test(css) && !/\.subj-os \.notes-body/.test(css));
 check('callout 内 b 保留橙色', /\.subj-ds \.notes-body \.key-callout b[\s\S]{0,80}color:\s*#d48806/.test(css));
-check('深色模式 mark 降透明度', /\.dark \.subj-ds \.notes-body mark\s*\{[^}]*rgba\(250,\s*204,\s*21,\s*\.40\)/.test(css));
+check('深色模式 mark 降透明度', /\.dark \.subj-ds \.notes-body mark\s*\{[^}]*rgba\(250,\s*204,\s*21,\s*\.4/.test(css));
 check('深色模式 b 也不改文字色', /\.dark \.subj-ds \.notes-body b,[\s\S]{0,180}color:\s*inherit/.test(css));
 
 console.log('▸ 我的批注：下划线语言（与教材重点区分）');

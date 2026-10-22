@@ -1756,10 +1756,10 @@ mark {
 /* ===== 笔记重点标记 v2：教材重点用荧光笔半高亮，批注用下划线，两者不混 ===== */
 /* 灰度：先只对数据结构（.subj-ds）生效，其余科目确认后再放开 */
 .subj-ds .notes-body mark {
-    background: linear-gradient(transparent 58%, rgba(250, 204, 21, .62) 58%);
+    background: linear-gradient(transparent 56%, rgba(250, 204, 21, .66) 56%);
     color: inherit;
-    padding: 0 1px;
-    border-radius: 2px;
+    padding: 0 2px;
+    border-radius: 3px;
     -webkit-box-decoration-break: clone;
     box-decoration-break: clone;
 }
@@ -1768,11 +1768,13 @@ mark {
    （早期版本把整句染红 + 字重降到 500，结果又红又细，看不清） */
 .subj-ds .notes-body b,
 .subj-ds .notes-body strong {
-    background: linear-gradient(transparent 58%, rgba(226, 75, 74, .18) 58%);
+    /* 术语级：极淡红底 + 2px 红下边线，与 mark 的纯荧光形成"词 vs 句"两级 */
+    background: linear-gradient(transparent 62%, rgba(226, 75, 74, .14) 62%);
     color: inherit;
     font-weight: 700;
-    padding: 0 1px;
-    border-radius: 2px;
+    padding: 0 2px;
+    border-bottom: 2px solid rgba(226, 75, 74, .5);
+    border-radius: 3px 3px 0 0;
     -webkit-box-decoration-break: clone;
     box-decoration-break: clone;
 }
@@ -1785,13 +1787,14 @@ mark {
 }
 
 .dark .subj-ds .notes-body mark {
-    background: linear-gradient(transparent 58%, rgba(250, 204, 21, .40) 58%);
+    background: linear-gradient(transparent 56%, rgba(250, 204, 21, .42) 56%);
 }
 
 .dark .subj-ds .notes-body b,
 .dark .subj-ds .notes-body strong {
-    background: linear-gradient(transparent 58%, rgba(242, 149, 149, .22) 58%);
+    background: linear-gradient(transparent 62%, rgba(242, 149, 149, .16) 62%);
     color: inherit;
+    border-bottom-color: rgba(242, 149, 149, .55);
 }
 
 .dark .subj-ds .notes-body .key-callout b,
@@ -4323,17 +4326,18 @@ h3.algo-h:first-child, h4.algo-h:first-child, h5.algo-h:first-child { margin-top
 /* 笔记正文内嵌对比表格 */
 .notes-sub-body table {
     border-collapse: collapse;
-    margin: 10px 0 12px;
+    margin: 10px 0 14px;
     width: 100%;
-    font-size: 0.88rem;
+    font-size: 0.87rem;
     letter-spacing: 0;
     text-align: center;
+    font-variant-numeric: tabular-nums;
 }
 .notes-sub-body table th,
 .notes-sub-body table td {
     border: 1px solid var(--border);
-    padding: 4px 8px;
-    line-height: 1.5;
+    padding: 5px 9px;
+    line-height: 1.62;
     text-align: left;
 }
 .notes-sub-body table th {
@@ -4404,8 +4408,13 @@ h3.algo-h:first-child, h4.algo-h:first-child, h5.algo-h:first-child { margin-top
 /* 笔记正文排版（JSON 里只用无属性的 h4/p/ul/ol/li/b/table 标签） */
 .notes-body {
     font-size: 1rem;
-    line-height: 2.0;
-    text-align: justify;
+    line-height: 1.88;
+    /* 技术内容夹着公式/英文，justify 会把字距拉出"河道"，改左对齐更稳 */
+    text-align: left;
+    /* n−1、O(n²)、⌈log₂n⌉ 这类数字对齐，扫读公式时更整齐 */
+    font-variant-numeric: tabular-nums;
+    font-feature-settings: "tnum" 1;
+    text-wrap: pretty;
 }
 
 .notes-body h4 {
@@ -4438,7 +4447,7 @@ h3.algo-h:first-child, h4.algo-h:first-child, h5.algo-h:first-child { margin-top
 }
 
 .notes-body p {
-    margin: 12px 0;
+    margin: 10px 0;
 }
 
 .notes-body code {
@@ -4457,7 +4466,7 @@ h3.algo-h:first-child, h4.algo-h:first-child, h5.algo-h:first-child { margin-top
 }
 
 .notes-body li {
-    margin: 10px 0;
+    margin: 8px 0;
 }
 
 .notes-body li > ul, .notes-body li > ol {
