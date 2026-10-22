@@ -6628,6 +6628,69 @@ body.fc-modal-open { overflow: hidden; }
 .dark .fc-switch { background: rgba(255, 255, 255, .16); }
 .dark .fc-switch.on { background: var(--primary); }
 
+/* ===== 记忆卡：自建笔记（卡片下方，淡色） ===== */
+.fc-note-wrap {
+    max-width: 720px;
+    margin: 10px auto 0;
+    padding: 0 4px;
+}
+
+.fc-note {
+    width: 100%;
+    box-sizing: border-box;
+    min-height: 46px;
+    padding: 9px 12px;
+    font-family: inherit;
+    font-size: 0.84rem;
+    line-height: 1.7;
+    color: var(--text);
+    background: rgba(128, 128, 128, .06);
+    border: 1px dashed var(--border);
+    border-radius: 10px;
+    resize: vertical;
+    -webkit-tap-highlight-color: transparent;
+}
+
+.fc-note::placeholder { color: var(--text-light); opacity: .75; }
+
+.fc-note:focus {
+    outline: none;
+    border-color: var(--primary);
+    border-style: solid;
+    background: var(--card-bg);
+}
+
+.fc-note-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-top: 4px;
+    font-size: 0.72rem;
+    color: var(--text-light);
+}
+
+.fc-note-clear {
+    border: none;
+    background: transparent;
+    color: var(--text-light);
+    font-size: 0.72rem;
+    cursor: pointer;
+    padding: 2px 6px;
+    border-radius: 6px;
+}
+
+.fc-note-clear:hover { color: var(--danger); background: rgba(128, 128, 128, .1); }
+
+.dark .fc-note { background: rgba(255, 255, 255, .05); }
+
+/* 「有笔记」角标（与不熟/不会同系） */
+.fc-badge.n {
+    background: rgba(79, 70, 229, .14);
+    color: var(--primary);
+}
+
+.dark .fc-badge.n { color: #a5b4fc; }
+
 /* ===== 记忆卡：重点标红（来自考点笔记的加粗术语/结论） ===== */
 .fc-em {
     color: var(--danger);
@@ -6734,6 +6797,33 @@ body.fc-modal-open { overflow: hidden; }
 
 .fc-toc-empty { padding: 12px 8px; font-size: 0.8rem; color: var(--text-light); }
 
+/* 左边缘悬停触发条：不可见，只负责把目录唤出 */
+.fc-toc-hover {
+    position: fixed;
+    left: 0;
+    top: 56px;
+    bottom: 0;
+    width: 14px;
+    z-index: 58;
+}
+
+@media (max-width: 900px) {
+    .fc-toc-hover { display: none; }   /* 手机上不用悬停，点 ☰ 或手势 */
+}
+
+/* 目录项上的 收藏 / 有笔记 标记 */
+.fc-toc-mark {
+    display: inline-block;
+    margin-right: 4px;
+    font-size: 0.74rem;
+}
+
+.fc-toc-mark.fav { color: #d97706; }
+
+.fc-toc-mark.note { color: var(--text-light); }
+
+.dark .fc-toc-mark.fav { color: #e0b45c; }
+
 /* 收起状态下的浮动入口 */
 .fc-toc-fab {
     position: fixed;
@@ -6760,14 +6850,6 @@ body.fc-modal-open { overflow: hidden; }
 .fc-toc-fab:hover { color: var(--primary); border-color: var(--primary); }
 
 body.fc-toc-open .fc-toc-fab { display: none; }
-
-/* 宽屏：目录展开时把正文右移，避免被半透明面板盖住 */
-@media (min-width: 901px) {
-    body.fc-toc-open .fc-wrap {
-        padding-left: 248px;
-        transition: padding-left .22s ease;
-    }
-}
 
 @media (max-width: 900px) {
     .fc-toc { width: 76vw; max-width: 300px; top: 52px; }

@@ -38,6 +38,9 @@
         </div>
     </nav>
 
+    <!-- 左边缘悬停触发条：鼠标移到这里自动展开目录（不占正文空间） -->
+    <div class="fc-toc-hover" id="fcTocHover" aria-hidden="true"></div>
+
     <!-- 左侧半透明目录（按当前科目分组，可收起） -->
     <button class="fc-toc-fab" id="fcTocFab" onclick="toggleToc()" title="展开卡片目录" aria-label="展开卡片目录">☰</button>
     <aside class="fc-toc" id="fcToc" aria-label="卡片目录">
@@ -70,6 +73,15 @@
                     <button class="fc-corner-btn" id="fcFavBtn" onclick="event.stopPropagation();toggleFav()" title="收藏卡片">☆ 收藏</button>
                 </div>
                 <div class="fc-body" id="fcBody"></div>
+            </div>
+        </div>
+
+        <!-- 自建笔记：跟着卡片走，自动保存 -->
+        <div class="fc-note-wrap" id="fcNoteWrap" style="display:none;">
+            <textarea class="fc-note" id="fcNote" rows="2" placeholder="随手记一笔…（自动保存，跟着这张卡走）"></textarea>
+            <div class="fc-note-bar">
+                <span class="fc-note-state" id="fcNoteState"></span>
+                <button type="button" class="fc-note-clear" onclick="clearNote()" title="清空这张卡的笔记">清空</button>
             </div>
         </div>
     </main>

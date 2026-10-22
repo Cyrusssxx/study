@@ -10,7 +10,7 @@
 (function () {
     const SUBJ_ORDER = ['ds', 'os', 'cn', 'co'];
     const SUBJ_NAMES = { ds: '数据结构', os: '操作系统', cn: '计算机网络', co: '计算机组成原理' };
-    const FILTERS = [{ k: 'all', n: '全部' }, { k: 'new', n: '未熟' }, { k: 'known', n: '熟' }];
+    const FILTERS = [{ k: 'all', n: '全部' }, { k: 'new', n: '未熟' }, { k: 'known', n: '熟' }, { k: 'fav', n: '收藏' }];
     const KNOWN_KEY = 'cards_known_v1';   // 熟：{cardId: 1}
     const FAV_KEY = 'cards_fav_v1';       // 收藏：{cardId: 1}
     const WEAK_KEY = 'cards_weak_v1';     // 不熟/不会：{cardId: 'u' | 'd'}（互斥）
@@ -20,6 +20,7 @@
     const KEYS_KEY = 'cards_keys_v1';       // 自定义快捷键 {act: key}
     const AUTONEXT_KEY = 'cards_autonext_v1'; // 标记后自动下一张 '1'|'0'
     const TOC_KEY = 'cards_toc_v1';           // 左侧目录是否展开
+    const NOTE_KEY = 'cards_notes_v1';        // 自建笔记：{cardId: 文本}
 
     // 鼠标侧键：button 3 = 后退侧键，4 = 前进侧键（浏览器默认会触发前进/后退，需拦截）
     const MOUSE_KEY = { 3: 'Mouse4', 4: 'Mouse5' };
@@ -57,7 +58,11 @@
     let keys = Object.assign({}, DEFAULT_KEYS);  // 当前快捷键
     let autoNext = false;      // 标记后自动下一张
     let capturing = null;      // 正在录制快捷键的动作名
-    let tocOpen = false;       // 左侧目录展开状态
+    let tocOpen = false;       // 左侧目录是否固定展开（点击 ☰ 切换，持久化）
+    let tocHover = false;      // 鼠标悬停左边缘时的临时展开（不写存储）
+    let notes = {};            // {cardId: '我的笔记'}
+    let noteDirty = false;     // 正在输入同一张卡，避免被覆盖
+    let noteCardId = null;     // 笔记框当前属于哪张卡
 
     function readJson(key, def) {
         try { const v = JSON.parse(localStorage.getItem(key) || 'null'); return v == null ? def : v; } catch (e) { return def; }
@@ -74,6 +79,7 @@
         keys = Object.assign({}, DEFAULT_KEYS, readJson(KEYS_KEY, {}) || {});
         autoNext = readJson(AUTONEXT_KEY, false) === true;
         tocOpen = readJson(TOC_KEY, window.innerWidth > 900) === true;
+        notes = readJson(NOTE_KEY, {}) || {};
         const resp = await fetch('data/cards.json');
         const data = await resp.json();
         ALL = data.cards || {};
@@ -81,12 +87,17 @@
         applyFilter();
         render();
         bindGestures();
+        bindNote();
+        bindTocHover();
         applyToc();
     }
 
     function applyFilter() {
         const src = ALL[subject] || [];
-        list = src.filter(c => filter === 'all' ? true : filter === 'known' ? !!known[c.id] : !known[c.id]);
+        list = src.filter(c =>
+            filter === 'all' ? true :
+            filter === 'known' ? !!known[c.id] :
+            filter === 'fav' ? !!fav[c.id] : !known[c.id]);
         if (!list.length) { index = 0; return; }
         if (index >= list.length) index = list.length - 1;
         if (index < 0) index = 0;
@@ -115,9 +126,12 @@
             `<button class="fc-chip ${s === subject ? 'on' : ''}" onclick="switchSubject('${s}')">${SUBJ_NAMES[s]}（${(ALL[s] || []).length}）</button>`
         ).join('');
         // 筛选 chips
-        document.getElementById('fcFilters').innerHTML = FILTERS.map(f =>
-            `<button class="fc-chip ${f.k === filter ? 'on' : ''}" onclick="switchFilter('${f.k}')">${f.n}</button>`
-        ).join('');
+        const knownTotal = (ALL[subject] || []).filter(x => known[x.id]).length;
+        const favTotal = (ALL[subject] || []).filter(x => fav[x.id]).length;
+        document.getElementById('fcFilters').innerHTML = FILTERS.map(f => {
+            const cnt = f.k === 'known' ? knownTotal : f.k === 'fav' ? favTotal : '';
+            return `<button class="fc-chip ${f.k === filter ? 'on' : ''}" onclick="switchFilter('${f.k}')">${f.n}${cnt ? ' ' + cnt : ''}</button>`;
+        }).join('');
 
         const total = list.length;
         const c = list[index];
@@ -133,9 +147,11 @@
             tip.className = 'fc-hint';
             tip.style.justifyContent = 'center';
             tip.textContent = filter === 'known' ? '还没有标记为「熟」的卡片' :
-                (filter === 'new' && (ALL[subject] || []).length ? '全部都已「熟」，去「熟」筛选里回顾吧' : '该科目暂无卡片');
+                (filter === 'fav' ? '还没有收藏的卡片，点卡片右上角 ☆ 收藏' :
+                (filter === 'new' && (ALL[subject] || []).length ? '全部都已「熟」，去「熟」筛选里回顾吧' : '该科目暂无卡片'));
             body.appendChild(tip);
             syncButtons(null);
+            renderNote(null);
             renderToc();
             return;
         }
@@ -152,12 +168,14 @@
             // 问题态：章节 + 考点名 + 状态小标签 + 提示
             const badge = weak[c.id] === 'u' ? '<span class="fc-badge u">不熟</span>' :
                 (weak[c.id] === 'd' ? '<span class="fc-badge d">不会</span>' : '');
+            const noteBadge = notes[c.id] ? '<span class="fc-badge n">有笔记</span>' : '';
             htmlParts.push(`<div class="fc-chapter">${esc([c.chapter, c.section].filter(Boolean).join(' · '))}</div>`);
-            htmlParts.push(`<div class="fc-title">${esc(c.title)}${badge}</div>`);
+            htmlParts.push(`<div class="fc-title">${esc(c.title)}${badge}${noteBadge}</div>`);
             htmlParts.push('<div class="fc-hint">点击卡片查看要点</div>');
         }
         body.innerHTML = htmlParts.join('');
         syncButtons(c);
+        renderNote(c);
         renderToc();
     }
 
@@ -309,15 +327,38 @@
     function applyToc() {
         const toc = document.getElementById('fcToc');
         if (!toc) return;
-        toc.classList.toggle('open', tocOpen);
-        document.body.classList.toggle('fc-toc-open', tocOpen);
+        const open = tocOpen || tocHover;      // 固定展开 或 悬停展开
+        toc.classList.toggle('open', open);
+        document.body.classList.toggle('fc-toc-open', open);
+        const fab = document.getElementById('fcTocFab');
+        if (fab) fab.style.opacity = open ? '0' : '';
+        if (open) renderToc();
     }
 
     function toggleToc(force) {
         tocOpen = (force === undefined) ? !tocOpen : !!force;
         writeJson(TOC_KEY, tocOpen);
         applyToc();
-        if (tocOpen) renderToc();
+    }
+
+    // 悬停左边缘 → 临时展开；鼠标离开目录 → 收起（未固定展开时）
+    function bindTocHover() {
+        const strip = document.getElementById('fcTocHover');
+        const toc = document.getElementById('fcToc');
+        if (strip) {
+            strip.addEventListener('mouseenter', () => {
+                if (tocOpen) return;
+                tocHover = true;
+                applyToc();
+            });
+        }
+        if (toc) {
+            toc.addEventListener('mouseleave', () => {
+                if (!tocHover) return;
+                tocHover = false;
+                applyToc();
+            });
+        }
     }
 
     function renderToc() {
@@ -337,7 +378,10 @@
             html += `<div class="fc-toc-chapter">${esc(ch)}</div>`;
             for (const c of map.get(ch)) {
                 const on = cur && cur.id === c.id;
-                html += `<button class="fc-toc-item${on ? ' on' : ''}" onclick="jumpToCard('${c.id}')">${esc(c.title)}</button>`;
+                // 收藏 / 有笔记 的卡片在目录里打标，收藏后条目不会消失，只是多个 ★
+                const mark = (fav[c.id] ? '<span class="fc-toc-mark fav">★</span>' : '')
+                    + (notes[c.id] ? '<span class="fc-toc-mark note">✎</span>' : '');
+                html += `<button class="fc-toc-item${on ? ' on' : ''}" onclick="jumpToCard('${c.id}')">${mark}${esc(c.title)}</button>`;
             }
         }
         box.innerHTML = html || '<div class="fc-toc-empty">本科目暂无卡片</div>';
@@ -357,6 +401,57 @@
         savePos();
         render();
         if (window.innerWidth <= 900) toggleToc(false);   // 手机跳转后收起，别挡内容
+    }
+
+    // ==================== 自建笔记 ====================
+    function renderNote(c) {
+        const wrap = document.getElementById('fcNoteWrap');
+        const box = document.getElementById('fcNote');
+        const state = document.getElementById('fcNoteState');
+        if (!wrap || !box) return;
+        if (!c) { wrap.style.display = 'none'; noteCardId = null; return; }
+        wrap.style.display = '';
+        // 换了卡就重新装载（哪怕正在输入），避免把上一张的笔记带到下一张
+        if (!noteDirty || noteCardId !== c.id) {
+            box.value = notes[c.id] || '';
+            noteDirty = false;
+            noteCardId = c.id;
+        }
+        if (state) state.textContent = notes[c.id] ? '已保存' : '';
+    }
+
+    function saveNote() {
+        const c = list[index];
+        const box = document.getElementById('fcNote');
+        if (!c || !box) return;
+        noteDirty = true;
+        noteCardId = c.id;
+        const v = box.value;
+        if (v) notes[c.id] = v; else delete notes[c.id];
+        writeJson(NOTE_KEY, notes);
+        document.getElementById('fcNoteState').textContent = v ? '已保存' : '';
+        renderToc();      // 刷新「有笔记」角标
+    }
+
+    function clearNote() {
+        const c = list[index];
+        if (!c) return;
+        delete notes[c.id];
+        writeJson(NOTE_KEY, notes);
+        document.getElementById('fcNote').value = '';
+        document.getElementById('fcNoteState').textContent = '';
+        render();
+    }
+
+    function bindNote() {
+        const box = document.getElementById('fcNote');
+        if (!box) return;
+        box.addEventListener('input', saveNote);
+        box.addEventListener('blur', () => { noteDirty = false; });
+        // 切题时若正聚焦在输入框，先失焦再走切题逻辑，避免丢字
+        box.addEventListener('keydown', e => {
+            if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); box.blur(); nextCard(); }
+        });
     }
 
     // ==================== 快捷键设置 ====================
@@ -488,6 +583,7 @@
     window.resetCardKeys = resetCardKeys;
     window.toggleAutoNext = toggleAutoNext;
     window.toggleToc = toggleToc;
+    window.clearNote = clearNote;
     window.jumpToCard = jumpToCard;
     window.Cards = { load, get state() { return { subject, filter, index, total: list.length, known, fav, weak, keys, autoNext }; } };
 

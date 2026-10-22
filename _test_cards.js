@@ -270,6 +270,61 @@ const $ = sel => w.document.querySelector(sel);
     check('CSS 展开复位', CSS.includes('.fc-toc.open') && CSS.includes('transform: none'), true);
     check('CSS 重点标红', CSS.includes('.fc-em') && CSS.includes('color: var(--danger)'), true);
 
+    console.log('\n--- 收藏筛选 ---');
+    const chips = [...w.document.querySelectorAll('#fcFilters .fc-chip')];
+    check('筛选 chips 4 个（含收藏）', chips.length, 4);
+    check('有收藏筛选项', chips.some(c => c.textContent.trim().startsWith('收藏')), true);
+    w.toggleFav();                       // 收藏当前卡
+    check('收藏 chip 带数量', /收藏\s*\d+/.test($('#fcFilters .fc-chip:nth-child(4)').textContent), true);
+    w.switchFilter('fav');
+    check('收藏筛选只剩 1 张', $('#fcCount').textContent.trim().endsWith('/ 1'), true);
+    w.switchFilter('all');
+
+    console.log('\n--- 自建笔记 ---');
+    check('页面有笔记框', !!$('#fcNote'), true);
+    check('有卡时笔记框可见', $('#fcNoteWrap').style.display, '');
+    const note = $('#fcNote');
+    note.value = 'B树分裂：结点满 m-1 个关键字再插就裂';
+    note.dispatchEvent(new w.Event('input', { bubbles: true }));
+    const noteSaved = JSON.parse(w.localStorage.getItem('cards_notes_v1') || '{}');
+    check('笔记写入 localStorage', Object.keys(noteSaved).length, 1);
+    check('显示已保存', $('#fcNoteState').textContent, '已保存');
+    const noteCardId = Object.keys(noteSaved)[0];
+    w.nextCard();
+    check('切题后笔记框清空', $('#fcNote').value, '');
+    w.prevCard();
+    check('切回来后笔记还在', $('#fcNote').value, noteSaved[noteCardId]);
+    w.clearNote();
+    check('清空后无记录', JSON.parse(w.localStorage.getItem('cards_notes_v1') || '{}'), {});
+    check('清空后输入框空', $('#fcNote').value, '');
+
+    console.log('\n--- 目录：不侵占正文 + 悬停展开 + 收藏标记 ---');
+    check('有悬停触发条', !!$('#fcTocHover'), true);
+    check('CSS 已移除正文避让', !CSS.includes('padding-left: 248px'), true);
+    check('CSS 悬停条贴左边缘', CSS.includes('.fc-toc-hover') && CSS.includes('width: 14px'), true);
+    check('CSS 目录标记样式', CSS.includes('.fc-toc-mark.fav'), true);
+    // 收藏后目录条目数不变（目录列本科目全部卡片），且带 ★
+    w.toggleToc(true);
+    const tocBefore = w.document.querySelectorAll('#fcTocBody .fc-toc-item').length;
+    w.toggleFav();
+    const after = w.document.querySelectorAll('#fcTocBody .fc-toc-item').length;
+    check('收藏后目录条目数不变', after, tocBefore);
+    check('收藏项带 ★ 标记', w.document.querySelectorAll('#fcTocBody .fc-toc-mark.fav').length >= 1, true);
+    // 笔记标记
+    note.value = '测试笔记';
+    note.dispatchEvent(new w.Event('input', { bubbles: true }));
+    check('有笔记项带 ✎ 标记', w.document.querySelectorAll('#fcTocBody .fc-toc-mark.note').length >= 1, true);
+    w.clearNote();
+    w.toggleToc(false);
+    check('收起后无 fc-toc-open', w.document.body.classList.contains('fc-toc-open'), false);
+    w.toggleToc(true);
+    check('固定展开后加 fc-toc-open', w.document.body.classList.contains('fc-toc-open'), true);
+
+    console.log('\n--- 笔记样式 ---');
+    check('CSS 笔记框淡色背景', CSS.includes('.fc-note') && CSS.includes('rgba(128, 128, 128, .06)'), true);
+    check('CSS 虚线边框', /\.fc-note\s*\{[^}]*dashed/.test(CSS) || CSS.includes('border: 1px dashed'), true);
+    check('CSS 有笔记角标', CSS.includes('.fc-badge.n'), true);
+
     console.log(`\nPASS ${pass} / FAIL ${fail}`);
     dom.window.close();
     process.exit(fail ? 1 : 0);
