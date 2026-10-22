@@ -776,22 +776,42 @@
         window.scrollTo({ top: 0 });
     }
 
-    /* ---------------- 题号导航（竖排半透明横条，目录式） ---------------- */
+    /* ---------------- 题号导航（竖排目录式：按学科分组） ---------------- */
+    const FQ_SUBJ_LABEL = { ds: '数结', co: '组成', os: '操作', cn: '网络' };
     function renderFq() {
         // 条列表与卡片流过滤保持一致（只看收藏时只列收藏题，避免点击无对应卡片）
-        const cells = state.flat
-            .filter(it => !state.favOnly || state.favSet.has(it.iid))
-            .map(it => {
-                const st = state.progress[it.iid];
-                let cls = 'zt-fq-i';
-                // 做题模式不显示历史对错色点，仅本次暂选的 picked
-                if (!state.examMode && st) cls += st.is_correct ? ' ok' : (it.group === 'choice' ? ' bad' : '');
-                else if (state.examMode && state.pending[it.iid]) cls += ' picked';
-                if (it.i === 41) cls += ' zt-fq-sep';   // 大题起点分隔
-                return `<a class="${cls}" data-iid="${it.iid}" data-i="${it.i}" onclick="gotoQ('${it.iid}')" title="第 ${it.i} 题">${it.i}</a>`;
-            }).join('');
-        $('fqList').innerHTML = cells;
+        const items = state.flat.filter(it => !state.favOnly || state.favSet.has(it.iid));
+        let html = '';
+        let curGroup = '';
+        for (const it of items) {
+            // 分组：选择题按学科，大题单独一组
+            const g = it.group === 'choice' ? ('c:' + (it.sid || '?')) : 'big';
+            if (g !== curGroup) {
+                curGroup = g;
+                const label = g === 'big' ? '综合题' : (FQ_SUBJ_LABEL[it.sid] || '');
+                if (label) html += `<div class="zt-fq-g">${label}</div>`;
+            }
+            const st = state.progress[it.iid];
+            let cls = 'zt-fq-i';
+            // 做题模式不显示历史对错色点，仅本次暂选的 picked
+            if (!state.examMode && st) cls += st.is_correct ? ' ok' : (it.group === 'choice' ? ' bad' : '');
+            else if (state.examMode && state.pending[it.iid]) cls += ' picked';
+            if (state.favSet.has(it.iid)) cls += ' fav';   // 收藏：右缘橙条
+            const subjName = (typeof SUBJECTS !== 'undefined' && it.sid && SUBJECTS[it.sid]) ? SUBJECTS[it.sid].name : '';
+            html += `<a class="${cls}" data-iid="${it.iid}" data-i="${it.i}" onclick="gotoQ('${it.iid}')" `
+                + `title="第 ${it.i} 题${subjName ? ' · ' + subjName : ''}${state.favSet.has(it.iid) ? ' · 已收藏' : ''}">${it.i}</a>`;
+        }
+        $('fqList').innerHTML = html;
         syncFqCur();
+        renderFqHead(items);
+    }
+
+    // 头部：当前题号 + 已答进度（随作答/滚动更新）
+    function renderFqHead(items) {
+        const list = items || state.flat.filter(it => !state.favOnly || state.favSet.has(it.iid));
+        const done = list.filter(it => state.examMode ? state.pending[it.iid] : state.progress[it.iid]).length;
+        const el = $('fqProg');
+        if (el) el.textContent = `${done}/${list.length}`;
     }
 
     // 高亮滚动位置对应的题号条（随页面滑动而滑动）
@@ -802,6 +822,7 @@
             if (c.getBoundingClientRect().top < 120) cur = c; else break;
         }
         $('fqNo').textContent = cur ? ('第 ' + cur.dataset.i + ' 题') : '—';
+        renderFqHead();
         const box = $('fqList');
         const prev = box.querySelector('.zt-fq-i.cur');
         if (prev) prev.classList.remove('cur');

@@ -46,8 +46,8 @@ async function run() {
   check('笔记：装载/序列化走 note_richtext（保留加粗/颜色形态）',
     /loadNoteIntoEditor\(el,/.test(js) && /serializeNote\(el\)/.test(js));
   check('笔记：保存时原图片数组透传（不误清 quiz 页图片）', /images:\s*state\.noteImages\[qid\] \|\| \[\]/.test(js));
-  check('题号导航放大（42×14px、10px 字）',
-    /\.zt-fq-i \{[^}]*width:\s*42px[^}]*height:\s*14px[^}]*font-size:\s*10px/.test(css));
+  check('题号导航放大（50×20px、11px 字）',
+    /\.zt-fq-i \{[^}]*width:\s*50px[^}]*height:\s*20px[^}]*font-size:\s*11px/.test(css));
   check('收起箭头钉目录右缘中点（ol-nav-toggle fixed · 50vh 折算）',
     /\.toc-fixed \.ol-nav-head \.ol-nav-toggle \{[^}]*position:\s*fixed[^}]*top:\s*calc\(50vh - var\(--toc-top\)\)/.test(css) &&
     /\.toc-fixed \.ol-nav \{[^}]*transform:\s*translateX\(0\)/.test(css));
@@ -192,7 +192,8 @@ async function run() {
   check('大题区存在', /二、大题/.test(d.querySelector('#ztMain').textContent));
   check('题号导航 47 格', d.querySelectorAll('#fqList .zt-fq-i').length === 47,
     `实际 ${d.querySelectorAll('#fqList .zt-fq-i').length}`);
-  check('题号导航竖排（无网格分组容器）', !d.querySelector('.zt-fq-grid') && !d.querySelector('.zt-fq-g'));
+  check('题号导航竖排 + 学科分组标题', !d.querySelector('.zt-fq-grid') && d.querySelectorAll('#fqList .zt-fq-g').length >= 4);
+  check('题号导航头部有进度', !!d.querySelector('#fqProg'));
   check('题号编排：第 1 题与第 41 题', /第 1 题/.test(d.querySelector('#ztMain').textContent) &&
     /第 41 题/.test(d.querySelector('#ztMain').textContent));
   // v6：默认进入做题模式（白纸）——年份完成度、历史痕迹全部隐藏

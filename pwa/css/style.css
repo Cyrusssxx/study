@@ -7375,7 +7375,7 @@ body.fc-toc-open .fc-toc-fab { display: none; }
 
 /* 右侧悬浮题号导航（竖排半透明横条 · 目录式，随滚动高亮跟随） */
 .zt-fq {
-    position: fixed; right: 4px; top: 74px; bottom: 80px; width: 48px;
+    position: fixed; right: 4px; top: 74px; bottom: 80px; width: 58px;
     z-index: 45; display: flex; flex-direction: column;
     background: transparent; border: none;
     pointer-events: none;   /* 仅头部与条条可交互 */
@@ -7390,15 +7390,16 @@ body.fc-toc-open .fc-toc-fab { display: none; }
     transition: background .15s ease;
 }
 .zt-fq-head:hover { background: rgba(74, 122, 184, .14); color: var(--primary); }
-.zt-fq-no { font-size: .68rem; color: var(--text-light); white-space: nowrap; }
+.zt-fq-no { font-size: .7rem; font-weight: 600; color: var(--text); white-space: nowrap; }
+.zt-fq-prog { font-size: .6rem; color: var(--text-light); white-space: nowrap; font-variant-numeric: tabular-nums; }
 .zt-fq-arrow { font-size: .64rem; color: var(--text-light); }
 .zt-fq-body { pointer-events: auto; overflow-y: auto; padding: 2px 0 6px; scrollbar-width: none; }
 .zt-fq-body::-webkit-scrollbar { display: none; }
 .zt-fq.zt-fq-closed .zt-fq-body { display: none; }
 .zt-fq-i {
-    display: block; width: 42px; height: 14px; line-height: 14px;
-    margin: 0 auto 1px; text-decoration: none;
-    font-size: 10px; text-align: center;
+    display: block; width: 50px; height: 20px; line-height: 20px;
+    margin: 0 auto 2px; text-decoration: none;
+    font-size: 11px; text-align: center;
     border-radius: 4px;
     background: rgba(var(--card-rgb), .42);
     color: var(--text-light);
@@ -7412,6 +7413,24 @@ body.fc-toc-open .fc-toc-fab { display: none; }
 .zt-fq-i.bad { background: rgba(198, 40, 40, .15); color: #c62828; }
 .zt-fq-i.picked { background: rgba(74, 122, 184, .2); color: var(--primary); }
 .zt-fq-i.zt-fq-sep { margin-top: 6px; }
+
+/* 学科分组小标题 */
+.zt-fq-g {
+    margin: 7px 0 3px;
+    font-size: 9px;
+    text-align: center;
+    letter-spacing: 1px;
+    color: var(--text-light);
+    opacity: .85;
+    pointer-events: none;
+    user-select: none;
+}
+
+.zt-fq-g:first-child { margin-top: 0; }
+
+/* 收藏题：右缘橙条标记，不打扰题号 */
+.zt-fq-i.fav { box-shadow: inset -3px 0 0 #d97706; }
+.dark .zt-fq-i.fav { box-shadow: inset -3px 0 0 #e0b45c; }
 .dark .zt-fq-i.ok { color: #81c784; }
 .dark .zt-fq-i.bad { color: #e57373; }
 .dark .zt-fq-i.cur { box-shadow: inset 0 0 0 1px rgba(143, 176, 217, .55); }
@@ -7422,8 +7441,9 @@ body.fc-toc-open .fc-toc-fab { display: none; }
 
 /* 窄屏：题号导航收窄（仍比旧版略大） */
 @media (max-width: 900px) {
-    .zt-fq { width: 36px; right: 3px; }
-    .zt-fq-i { width: 30px; height: 13px; line-height: 13px; font-size: 9px; }
+    .zt-fq { width: 46px; right: 2px; top: 68px; bottom: 72px; }
+    .zt-fq-i { width: 40px; height: 22px; line-height: 22px; font-size: 10px; margin-bottom: 3px; }
+    .zt-fq-g { font-size: 8px; margin: 5px 0 2px; }
 }
 
 /* ==================== 真题套卷 v2：外部数据渲染适配（2026-10-12） ==================== */
