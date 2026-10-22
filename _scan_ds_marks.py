@@ -23,7 +23,12 @@ import shutil
 from collections import Counter, OrderedDict
 from datetime import datetime
 
-NOTES = 'pwa/data/notes/ds_notes.json'
+import os as _os
+SUBJ = 'ds'
+for _a in sys.argv[1:]:
+    if _a.startswith('--subject='):
+        SUBJ = _a.split('=', 1)[1]
+NOTES = f'pwa/data/notes/{SUBJ}_notes.json'
 CARDS = 'pwa/data/cards.json'
 BACKUP_DIR = 'archive/backups_questions'
 APPLY = '--apply' in sys.argv
@@ -226,6 +231,7 @@ def main():
     d = json.load(open(NOTES, encoding='utf-8'))
     all_drop, all_keep = [], []
     added_total = 0
+    print(f'科目：{SUBJ}')
     for ch in d['chapters']:
         for s in ch['sections']:
             for sb in s.get('subsections') or []:
@@ -268,7 +274,7 @@ def main():
         print(f'  [{w}] ' + ' | '.join(x[:24] for x in ts))
 
     if APPLY:
-        shutil.copy2(NOTES, f'{BACKUP_DIR}/ds_notes.{datetime.now():%Y%m%d-%H%M%S}.bak')
+        shutil.copy2(NOTES, f'{BACKUP_DIR}/{SUBJ}_notes.{datetime.now():%Y%m%d-%H%M%S}.bak')
         with open(NOTES, 'w', encoding='utf-8') as f:
             json.dump(d, f, ensure_ascii=False, indent=1)
         print(f'\n已写入 {NOTES}')

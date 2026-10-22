@@ -217,6 +217,11 @@ const $ = sel => w.document.querySelector(sel);
 
     console.log('\n--- 重点标红 ---');
     w.switchFilter('all');
+    // 跳到一张确定带 ** 标记的卡（当前卡可能没有标记，早期是碰运气）
+    const markedCard = (CARDS.cards[w.Cards.state.subject] || [])
+        .find(c => (c.points || []).some(p => p.includes('**')));
+    check('当前科目存在带 ** 的卡片', !!markedCard, true);
+    if (markedCard) w.jumpToCard(markedCard.id);
     w.toggleView();
     const emCount = w.document.querySelectorAll('#fcBody .fc-em').length;
     check('查看态渲染出红色重点', emCount > 0, true);

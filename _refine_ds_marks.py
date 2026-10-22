@@ -20,7 +20,11 @@ import sys
 import shutil
 from datetime import datetime
 
-NOTES = 'pwa/data/notes/ds_notes.json'
+SUBJ = 'ds'
+for _a in sys.argv[1:]:
+    if _a.startswith('--subject='):
+        SUBJ = _a.split('=', 1)[1]
+NOTES = f'pwa/data/notes/{SUBJ}_notes.json'
 CARDS = 'pwa/data/cards.json'
 BACKUP_DIR = 'archive/backups_questions'
 DRY = '--dry' in sys.argv
@@ -168,7 +172,7 @@ def main():
 
     cards = json.load(open(CARDS, encoding='utf-8'))
     before = after = 0
-    for c in cards['cards']['ds']:
+    for c in cards['cards'][SUBJ]:
         phrases = bold_phrases(sec_html.get(c.get('title') or '', ''))
         for i, p in enumerate(c.get('points') or []):
             if '**' in p:
@@ -181,7 +185,7 @@ def main():
         if c.get('tip'):
             c['tip'] = mark(re.sub(r'\*\*(.+?)\*\*', r'\1', c['tip']), phrases)
 
-    print(f'\nds 卡片带重点标记的要点：{before} → {after}')
+    print(f'\n{SUBJ} 卡片带重点标记的要点：{before} → {after}')
     if not DRY:
         with open(CARDS, 'w', encoding='utf-8') as f:
             json.dump(cards, f, ensure_ascii=False, indent=2)
