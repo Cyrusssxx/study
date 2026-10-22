@@ -52,6 +52,9 @@ FORMULA = re.compile(
     r'≈\s*[A-Za-z]'                        # ≈ n log₂n
 )
 
+# 目的/作用/本质：这类是"这个东西为什么存在"，考纲里最值钱的表述
+PURPOSE = re.compile(r'目的|作用|本质|核心|关键|目标|意义|原则|前提|原因|理由|用途|好处|代价|缺点|优点')
+
 # 判断/限定词：必须是"多字实词"，单字（是/有/取/用）太容易误命中，一律不收
 JUDGE = re.compile(
     r'必须|只能|至少|至多|最多|最少|一定|唯一|不唯一|必然|等价|退化|退化为|决定|影响|导致|否则|'
@@ -79,6 +82,16 @@ GENERIC = {
 }
 
 
+def is_plain_arithmetic(t):
+    """纯数字算式（如 32×3 + 32 = 128 次 I/O）：没有变量字母 → 是例算，不是公式。"""
+    core = re.sub(r'[\u4e00-\u9fff（）()：:，,。\s]', '', t)
+    # 只看小写字母（n/m/k/r/d/i/j 这类变量）；I/O、ns、B 是单位，不算变量
+    if not core or re.search(r'[a-z]', core):
+        return False
+    nums = re.findall(r'\d+(?:\.\d+)?', core)
+    return len(nums) >= 2 and bool(re.search(r'[×xX÷+\-−*/=]', core))
+
+
 def plain(x):
     return re.sub(r'<[^>]+>', '', x).strip()
 
@@ -104,8 +117,13 @@ def classify(text, in_th=False, in_td=False):
         return 'DROP', '纯数字'
     if core in GENERIC and not JUDGE.search(core):
         return 'DROP', '泛化名词'
+    # 纯算式（没有变量字母，只有数字和运算符）：教材例算，不是考点
+    if is_plain_arithmetic(core):
+        return 'DROP', '教材例算'
     if FORMULA.search(core):
         return 'KEEP', '公式/复杂度'
+    if PURPOSE.search(core) and len(core) >= 6:
+        return 'KEEP', '目的/作用'
     # 表格单元：没有公式、判断词又不强 → 就是单元格取值，不标
     if in_td:
         if JUDGE.search(core) and len(core) >= 10:
@@ -118,6 +136,39 @@ def classify(text, in_th=False, in_td=False):
     if len(core) >= 14:
         return 'KEEP', '长结论句'
     return 'DROP', '短名词（无判断词）'
+
+
+# 需要"主动补标"的表述：目的 / 作用 / 本质 —— 原本可能没加粗，但它们是考纲最值钱的一句
+ADD_PATS = [
+    r'[^，。；：<>]{0,14}?目的\s*[=＝:：]\s*[^，。；<>]{4,26}',
+    r'作用\s*[=＝:：]\s*[^，。；<>]{4,26}',
+    r'本质\s*[=＝:：]\s*[^，。；<>]{4,26}',
+    r'关键\s*[=＝:：]\s*[^，。；<>]{4,26}',
+]
+
+
+def add_purpose_marks(html):
+    """给「目的/作用/本质 = …」这类表述补上 <b>（已在 <b> 内的跳过）。"""
+    parts = re.split(r'(<[^>]+>)', html)
+    out, in_b, added = [], 0, 0
+    for p in parts:
+        if p.startswith('<'):
+            if re.match(r'<(b|strong)[\s>]', p):
+                in_b += 1
+            elif re.match(r'</(b|strong)>', p):
+                in_b = max(0, in_b - 1)
+            out.append(p)
+            continue
+        if in_b:
+            out.append(p)
+            continue
+        for pat in ADD_PATS:
+            new, n = re.subn('(' + pat + ')', r'<b>\1</b>', p)
+            if n:
+                p = new
+                added += n
+        out.append(p)
+    return ''.join(out), added
 
 
 def walk_html(html, decider):
@@ -153,18 +204,22 @@ def walk_html(html, decider):
 def main():
     d = json.load(open(NOTES, encoding='utf-8'))
     all_drop, all_keep = [], []
+    added_total = 0
     for ch in d['chapters']:
         for s in ch['sections']:
             for sb in s.get('subsections') or []:
                 html = sb.get('html') or ''
                 if '<b' not in html and '<strong' not in html:
                     continue
+                html, added = add_purpose_marks(html)
+                added_total += added
                 new, drops, keeps = walk_html(html, classify)
                 sb['html'] = new
                 all_drop.extend(drops)
                 all_keep.extend(keeps)
 
     total = len(all_drop) + len(all_keep)
+    print(f'主动补标「目的/作用」{added_total} 处')
     print(f'加粗共 {total} 处 → 保留 {len(all_keep)}（{len(all_keep)/max(total,1)*100:.0f}%），脱掉 {len(all_drop)}')
     print('\n=== 保留原因分布 ===')
     for why, n in Counter(w for _, w in all_keep).most_common():
