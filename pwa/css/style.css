@@ -6646,6 +6646,46 @@ body.fc-modal-open { overflow: hidden; }
 /* ===== 记忆卡：重点表格卡 ===== */
 .fc-tables { margin-top: 12px; }
 
+/* 表格折叠项 */
+.fc-tbl-item {
+    margin-bottom: 6px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+.fc-tbl-item > summary {
+    cursor: pointer;
+    padding: 7px 10px;
+    font-size: 0.78rem;
+    font-weight: 600;
+    color: var(--text-light);
+    background: rgba(128, 128, 128, .07);
+    list-style: none;
+    -webkit-tap-highlight-color: transparent;
+    user-select: none;
+}
+
+.fc-tbl-item > summary::-webkit-details-marker { display: none; }
+
+.fc-tbl-item > summary::before {
+    content: '▸ ';
+    color: var(--text-light);
+}
+
+.fc-tbl-item[open] > summary::before { content: '▾ '; }
+
+.fc-tbl-item > summary:hover { color: var(--primary); }
+
+.fc-tbl-item[open] > summary {
+    color: var(--primary);
+    border-bottom: 1px solid var(--border);
+}
+
+.fc-tbl-item .fc-table { padding: 8px 10px 10px; }
+
+.fc-toc-mark.tbl { font-size: 0.68rem; }
+
 .fc-tbl-cap {
     margin: 12px 0 4px;
     font-size: 0.76rem;

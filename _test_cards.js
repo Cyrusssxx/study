@@ -350,7 +350,8 @@ const $ = sel => w.document.querySelector(sel);
         w.jumpToCard(tbl.id);
         w.toggleView();
         check('表格卡渲染出 <table>', w.document.querySelectorAll('#fcBody .fc-table table').length > 0, true);
-        check('表格带小节标题', w.document.querySelectorAll('#fcBody .fc-tbl-cap').length > 0, true);
+        check('表格可折叠（details/summary）', w.document.querySelectorAll('#fcBody .fc-tbl-item').length > 0, true);
+        check('默认只展开第一张表', w.document.querySelectorAll('#fcBody .fc-tbl-item[open]').length === 1, true);
         w.toggleView();
     }
 
@@ -359,6 +360,7 @@ const $ = sel => w.document.querySelector(sel);
     check('CSS 半高亮渐变', /\.fc-em\.fx\s*\{[^}]*linear-gradient\(transparent 52%/.test(CSS), true);
     check('CSS 深色模式荧光', CSS.includes('.dark .fc-em.fx'), true);
     check('CSS 表格样式', CSS.includes('.fc-table .mc-table'), true);
+    check('CSS 表格折叠样式', CSS.includes('.fc-tbl-item') && CSS.includes('.fc-tbl-item > summary'), true);
 
     console.log(`\nPASS ${pass} / FAIL ${fail}`);
     dom.window.close();

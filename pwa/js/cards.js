@@ -168,8 +168,11 @@
                 `<li>${mdInline(p)}</li>`).join('') + '</ul>');
             if (c.tip) htmlParts.push(`<div class="fc-tip">易错点：${mdInline(c.tip)}</div>`);
             if (c.tables && c.tables.length) {
-                htmlParts.push('<div class="fc-tables">' + c.tables.map(t =>
-                    `<div class="fc-tbl-cap">${esc(t.sub || '')}</div><div class="fc-table">${t.html || ''}</div>`
+                // 表格多时默认只展开第一张，其余折叠，避免一屏全是表
+                htmlParts.push('<div class="fc-tables">' + c.tables.map((t, ti) =>
+                    `<details class="fc-tbl-item"${ti === 0 ? ' open' : ''}>`
+                    + `<summary>${esc(t.sub || '重点表格')}</summary>`
+                    + `<div class="fc-table">${t.html || ''}</div></details>`
                 ).join('') + '</div>');
             }
             htmlParts.push('<div class="fc-hint">点击卡片收起</div>');
@@ -388,7 +391,8 @@
             for (const c of map.get(ch)) {
                 const on = cur && cur.id === c.id;
                 // 收藏 / 有笔记 的卡片在目录里打标，收藏后条目不会消失，只是多个 ★
-                const mark = (fav[c.id] ? '<span class="fc-toc-mark fav">★</span>' : '')
+                const mark = ((c.tables && c.tables.length) ? '<span class="fc-toc-mark tbl">📋</span>' : '')
+                    + (fav[c.id] ? '<span class="fc-toc-mark fav">★</span>' : '')
                     + (notes[c.id] ? '<span class="fc-toc-mark note">✎</span>' : '');
                 html += `<button class="fc-toc-item${on ? ' on' : ''}" onclick="jumpToCard('${c.id}')">${mark}${esc(c.title)}</button>`;
             }
