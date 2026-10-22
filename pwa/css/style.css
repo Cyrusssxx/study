@@ -1946,8 +1946,8 @@ mark {
 .note-input [style*="background-color: rgb(255, 243, 163)"],
 .note-input [style*="background-color:#fff3a3"],
 .note-input [style*="background:#fff3a3"] {
-    background: rgba(250, 204, 21, .16) !important;
-    border-bottom: 2px solid #d4a017;
+    background: rgba(234, 179, 8, .22) !important;
+    border-bottom: 2px solid #ca8a04;
     border-radius: 2px;
     padding: 0 2px;
     -webkit-box-decoration-break: clone;
@@ -1959,8 +1959,8 @@ mark {
 .note-input [style*="background-color: rgb(184, 230, 192)"],
 .note-input [style*="background-color:#b8e6c0"],
 .note-input [style*="background:#b8e6c0"] {
-    background: rgba(99, 153, 34, .16) !important;
-    border-bottom: 2px solid #639922;
+    background: rgba(34, 197, 94, .18) !important;
+    border-bottom: 2px solid #16a34a;
     border-radius: 2px;
     padding: 0 2px;
     -webkit-box-decoration-break: clone;
@@ -1972,8 +1972,8 @@ mark {
 .note-input [style*="background-color: rgb(179, 217, 242)"],
 .note-input [style*="background-color:#b3d9f2"],
 .note-input [style*="background:#b3d9f2"] {
-    background: rgba(55, 138, 221, .16) !important;
-    border-bottom: 2px solid #378add;
+    background: rgba(59, 130, 246, .16) !important;
+    border-bottom: 2px solid #2563eb;
     border-radius: 2px;
     padding: 0 2px;
     -webkit-box-decoration-break: clone;
@@ -1985,8 +1985,8 @@ mark {
 .note-input [style*="background-color: rgb(245, 194, 213)"],
 .note-input [style*="background-color:#f5c2d5"],
 .note-input [style*="background:#f5c2d5"] {
-    background: rgba(212, 83, 126, .16) !important;
-    border-bottom: 2px solid #d4537e;
+    background: rgba(236, 72, 153, .16) !important;
+    border-bottom: 2px solid #db2777;
     border-radius: 2px;
     padding: 0 2px;
     -webkit-box-decoration-break: clone;
@@ -1994,13 +1994,13 @@ mark {
 }
 
 .dark .note-input .hl-yellow,
-.dark .line-anno-text .hl-yellow { background: rgba(250, 204, 21, .14) !important; border-bottom-color: #e0b45c; }
+.dark .line-anno-text .hl-yellow { background: rgba(234, 179, 8, .18) !important; border-bottom-color: #facc15; }
 .dark .note-input .hl-green,
-.dark .line-anno-text .hl-green { background: rgba(99, 153, 34, .16) !important; border-bottom-color: #97c459; }
+.dark .line-anno-text .hl-green { background: rgba(34, 197, 94, .16) !important; border-bottom-color: #4ade80; }
 .dark .note-input .hl-blue,
-.dark .line-anno-text .hl-blue { background: rgba(55, 138, 221, .16) !important; border-bottom-color: #85b7eb; }
+.dark .line-anno-text .hl-blue { background: rgba(59, 130, 246, .18) !important; border-bottom-color: #60a5fa; }
 .dark .note-input .hl-pink,
-.dark .line-anno-text .hl-pink { background: rgba(212, 83, 126, .16) !important; border-bottom-color: #ed93b1; }
+.dark .line-anno-text .hl-pink { background: rgba(236, 72, 153, .16) !important; border-bottom-color: #f472b6; }
 
 .note-actions {
     display: flex;

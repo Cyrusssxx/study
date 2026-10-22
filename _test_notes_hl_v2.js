@@ -29,14 +29,14 @@ check('深色模式 mark 降透明度', /\.dark \.subj-ds \.notes-body mark\s*\{
 check('深色模式 b 也不改文字色', /\.dark \.subj-ds \.notes-body b,[\s\S]{0,180}color:\s*inherit/.test(css));
 
 console.log('▸ 我的批注：下划线语言（与教材重点区分）');
-for (const [c, hex] of [['yellow', '#d4a017'], ['green', '#639922'], ['blue', '#378add'], ['pink', '#d4537e']]) {
+for (const [c, hex] of [['yellow', '#ca8a04'], ['green', '#16a34a'], ['blue', '#2563eb'], ['pink', '#db2777']]) {
   const re = new RegExp(`\\.note-input \\.hl-${c}[\\s\\S]{0,340}?border-bottom:\\s*2px solid ${hex}`);
   check(`批注 ${c}：2px 下边框 ${hex}`, re.test(css));
 }
 check('批注底改为极淡（不再是实色 #fff3a3）', !/background:\s*#fff3a3 !important/.test(css));
-check('批注黄色底为 16% 淡黄', /rgba\(250,\s*204,\s*21,\s*\.16\) !important/.test(css));
+check('批注黄色底为 22% 琥珀', /rgba\(234,\s*179,\s*8,\s*\.22\) !important/.test(css));
 check('批注也有 box-decoration-break', (css.match(/box-decoration-break:\s*clone/g) || []).length >= 2);
-check('深色模式批注下边框提亮', /\.dark \.note-input \.hl-yellow[\s\S]{0,120}border-bottom-color:\s*#e0b45c/.test(css));
+check('深色模式批注下边框提亮', /\.dark \.note-input \.hl-yellow[\s\S]{0,120}border-bottom-color:\s*#facc15/.test(css));
 
 console.log('▸ 兼容性：旧数据/旧选择器不破');
 check('execCommand 内联背景兜底选择器仍在', /\[style\*="background-color:#fff3a3"\]/.test(css));
