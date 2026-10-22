@@ -1764,12 +1764,13 @@ mark {
     box-decoration-break: clone;
 }
 
-/* 作者加粗的术语/概念名：红色荧光 + 红字 */
+/* 作者加粗的术语/概念名：只加一层淡红荧光，文字颜色/字重都不动
+   （早期版本把整句染红 + 字重降到 500，结果又红又细，看不清） */
 .subj-ds .notes-body b,
 .subj-ds .notes-body strong {
-    background: linear-gradient(transparent 58%, rgba(226, 75, 74, .26) 58%);
-    color: #a32d2d;
-    font-weight: 500;
+    background: linear-gradient(transparent 58%, rgba(226, 75, 74, .18) 58%);
+    color: inherit;
+    font-weight: 700;
     padding: 0 1px;
     border-radius: 2px;
     -webkit-box-decoration-break: clone;
@@ -1789,8 +1790,8 @@ mark {
 
 .dark .subj-ds .notes-body b,
 .dark .subj-ds .notes-body strong {
-    background: linear-gradient(transparent 58%, rgba(242, 149, 149, .30) 58%);
-    color: #f7c1c1;
+    background: linear-gradient(transparent 58%, rgba(242, 149, 149, .22) 58%);
+    color: inherit;
 }
 
 .dark .subj-ds .notes-body .key-callout b,
