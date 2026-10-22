@@ -1113,7 +1113,44 @@ async function api(url, opts = {}) {
 }
 
 // ==================== 模拟考试（对应 app.py 考试 API） ====================
-const EXAM_RATIO = { ds: 45, co: 45, os: 35, cn: 25 };
+// 真题选择题各科题量：408 标准卷 40 道单选 = 数构 11 · 组成 11 · OS 10 · 网络 8
+// （官方各科分值 45/45/35/25，按同一比例落到 40 题即得此表）
+const EXAM_QUOTA_40 = { ds: 11, co: 11, os: 10, cn: 8 };
+const EXAM_SUBJECT_ORDER = ['ds', 'co', 'os', 'cn'];
+
+// 按真题比例把总题量拆到各科；余数按小数部分从大到小补，保证合计恰好等于 total
+function allocQuotas(total) {
+    const baseSum = EXAM_SUBJECT_ORDER.reduce((a, k) => a + EXAM_QUOTA_40[k], 0);
+    const raw = {};
+    const quotas = {};
+    let used = 0;
+    for (const k of EXAM_SUBJECT_ORDER) {
+        raw[k] = total * EXAM_QUOTA_40[k] / baseSum;
+        quotas[k] = Math.floor(raw[k]);
+        used += quotas[k];
+    }
+    let rest = total - used;
+    const byFrac = EXAM_SUBJECT_ORDER.slice().sort(
+        (a, b) => (raw[b] - Math.floor(raw[b])) - (raw[a] - Math.floor(raw[a]))
+    );
+    let i = 0;
+    while (rest > 0 && byFrac.length) {
+        quotas[byFrac[i % byFrac.length]]++;
+        rest--;
+        i++;
+    }
+    return quotas;
+}
+
+// Fisher-Yates 洗牌（不改原数组）
+function shuffled(arr) {
+    const a = arr.slice();
+    for (let i = a.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [a[i], a[j]] = [a[j], a[i]];
+    }
+    return a;
+}
 
 function stripAnswer(q) {
     const { answer, explanation, ...rest } = q;
@@ -1169,55 +1206,82 @@ async function gradeExam(exam, answers) {
 
 async function examApi(action, body, arg) {
     if (action === 'generate') {
-        const mode = body.mode || 'full';
+        const mode = body.mode || 'favorites';
         const count = parseInt(body.count || 0, 10);
-        let picked = [];
-        const sample = (pool, n) => {
-            const arr = pool.slice();
-            for (let i = arr.length - 1; i > 0; i--) {
-                const j = Math.floor(Math.random() * (i + 1));
-                [arr[i], arr[j]] = [arr[j], arr[i]];
-            }
-            return arr.slice(0, Math.min(n, arr.length));
-        };
-        if (mode === 'full') {
-            const total = count ? Math.min(Math.max(count, 10), 150) : 40; // 越界收拢到范围内
-            const ratioSum = Object.values(EXAM_RATIO).reduce((a, b) => a + b, 0);
-            const quotas = {};
-            for (const [k, v] of Object.entries(EXAM_RATIO)) quotas[k] = Math.floor(total * v / ratioSum);
-            const order = ['ds', 'co', 'os', 'cn'];
-            let i = 0;
-            while (Object.values(quotas).reduce((a, b) => a + b, 0) < total) { quotas[order[i % 4]]++; i++; }
-            for (const key of order) {
-                const pool = (await loadQuestions(key)).questions.filter(q => q.answer);
-                picked = picked.concat(sample(pool, quotas[key]));
-            }
-        } else if (SUBJECTS[mode]) {
-            const total = count ? Math.min(Math.max(count, 5), 100) : 20;
-            const pool = (await loadQuestions(mode)).questions.filter(q => q.answer);
-            picked = sample(pool, total);
-        } else if (mode === 'favorites') {
-            // 仅收藏题：从收藏夹中随机抽取
-            const favs = await dbAll('favorites');
-            const pool = [];
-            for (const f of favs) {
-                const q = await getQuestionById(f.question_id);
-                if (q && q.answer) pool.push(q);
-            }
-            const total = count ? Math.min(Math.max(count, 5), Math.max(pool.length, 5)) : Math.min(20, pool.length);
-            picked = sample(pool, total);
-        } else if (mode === 'wrong') {
-            // 仅错题：从错题本（未解决的）中随机抽取
-            const wrongs = (await dbAll('wrong')).filter(w => !w.is_resolved);
-            const pool = [];
-            for (const w of wrongs) {
-                const q = await getQuestionById(w.question_id);
-                if (q && q.answer) pool.push(q);
-            }
-            const total = count ? Math.min(Math.max(count, 5), Math.max(pool.length, 5)) : Math.min(20, pool.length);
-            picked = sample(pool, total);
-        } else {
+        const isSpecial = mode === 'favorites' || mode === 'wrong';
+        const isSingle = !!SUBJECTS[mode];
+        if (!isSpecial && !isSingle && mode !== 'full') {
             return jsonResp({ error: '无效的考试模式' }, 400);
+        }
+        const [lo, hi, dft] = mode === 'full' ? [10, 150, 40] : isSpecial ? [5, 150, 40] : [5, 100, 20];
+        const total = count ? Math.min(Math.max(count, lo), hi) : dft;
+
+        // ---- 1. 分科建池 ----
+        const poolBySub = {};
+        for (const k of EXAM_SUBJECT_ORDER) poolBySub[k] = [];
+        if (isSpecial) {
+            const rows = mode === 'favorites'
+                ? await dbAll('favorites')
+                : (await dbAll('wrong')).filter(w => !w.is_resolved);
+            for (const r of rows) {
+                const qid = r.question_id || '';
+                const subj = qid.split('_')[0];
+                if (!SUBJECTS[subj] || !poolBySub[subj]) continue;
+                const q = await getQuestionById(qid);
+                if (q && q.answer) poolBySub[subj].push(q);
+            }
+        } else if (isSingle) {
+            poolBySub[mode] = (await loadQuestions(mode)).questions.filter(q => q.answer);
+        } else {
+            for (const k of EXAM_SUBJECT_ORDER) {
+                poolBySub[k] = (await loadQuestions(k)).questions.filter(q => q.answer);
+            }
+        }
+
+        let picked = [];
+        const pickedIds = new Set();
+
+        if (isSingle) {
+            picked = shuffled(poolBySub[mode]).slice(0, total);
+        } else {
+            // ---- 2. 第一轮：严格按真题各科题量抽 ----
+            const quotas = allocQuotas(total);
+            for (const k of EXAM_SUBJECT_ORDER) {
+                const take = Math.min(quotas[k], poolBySub[k].length);
+                for (const q of shuffled(poolBySub[k]).slice(0, take)) {
+                    picked.push(q);
+                    pickedIds.add(q.id);
+                }
+            }
+            let short = total - picked.length;
+
+            // ---- 3. 第二轮：某科不够时，先用其它科池里剩下的补（收藏/错题仍优先）----
+            if (short > 0) {
+                const rest = [];
+                for (const k of EXAM_SUBJECT_ORDER) {
+                    for (const q of poolBySub[k]) if (!pickedIds.has(q.id)) rest.push(q);
+                }
+                for (const q of shuffled(rest).slice(0, short)) {
+                    picked.push(q);
+                    pickedIds.add(q.id);
+                }
+                short = total - picked.length;
+            }
+
+            // ---- 4. 第三轮：还差就跨科从全题库补 ----
+            if (short > 0) {
+                const rest = [];
+                for (const k of EXAM_SUBJECT_ORDER) {
+                    const data = await loadQuestions(k);
+                    for (const q of data.questions) {
+                        if (q.answer && !pickedIds.has(q.id)) rest.push(q);
+                    }
+                }
+                for (const q of shuffled(rest).slice(0, short)) {
+                    picked.push(q);
+                    pickedIds.add(q.id);
+                }
+            }
         }
         if (!picked.length) return jsonResp({ error: '题库为空，无法组卷' }, 400);
         const duration = parseInt(body.duration_sec || 0, 10) || picked.length * 60;
@@ -1248,11 +1312,8 @@ async function examApi(action, body, arg) {
         const active = (await dbAll('exams')).filter(e => e.status === 'in_progress').pop();
         if (!active) return jsonResp({ active: null });
         const started = new Date(active.started_at.replace(' ', 'T'));
+        // 超时不自动交卷：remaining_sec 允许为负，前端按"超时计时"展示，交卷由用户自己点
         const remaining = active.duration_sec - Math.floor((Date.now() - started.getTime()) / 1000);
-        if (remaining <= 0) {
-            const result = await gradeExam(active, active.answers || {});
-            return jsonResp({ active: null, auto_submitted: result });
-        }
         const questions = [];
         for (const qid of active.question_ids) {
             const q = await getQuestionById(qid);

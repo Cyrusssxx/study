@@ -59,13 +59,13 @@
                 <div class="setup-row">
                     <label>考试模式</label>
                     <select id="examMode" onchange="onModeChange()">
-                        <option value="full">完整 408 模拟（按分值比例：数构45 · 组成45 · OS35 · 网络25）</option>
+                        <option value="favorites">仅收藏题（默认 · 按真题各科题量抽）</option>
+                        <option value="wrong">仅错题</option>
+                        <option value="full">完整 408 模拟（数构11 · 组成11 · OS10 · 网络8）</option>
                         <option value="os">单科：操作系统</option>
                         <option value="co">单科：计算机组成原理</option>
                         <option value="ds">单科：数据结构</option>
                         <option value="cn">单科：计算机网络</option>
-                        <option value="favorites">仅收藏题</option>
-                        <option value="wrong">仅错题</option>
                     </select>
                 </div>
                 <div class="setup-row">
@@ -79,8 +79,17 @@
                 </div>
                 <div class="setup-row">
                     <label>考试时长</label>
-                    <input type="number" id="examMinutes" placeholder="留空 = 每题1分钟">
-                    <span class="setup-hint">单位：分钟</span>
+                    <div class="time-input-wrap">
+                        <input type="number" id="examMinutes" placeholder="留空 = 每题 1 分钟" min="1" max="600">
+                        <span class="setup-hint">分钟</span>
+                        <div class="time-presets">
+                            <button type="button" class="time-preset" onclick="setMinutes(45)">45</button>
+                            <button type="button" class="time-preset" onclick="setMinutes(90)">90</button>
+                            <button type="button" class="time-preset" onclick="setMinutes(120)">120</button>
+                            <button type="button" class="time-preset" onclick="setMinutes(180)">180</button>
+                        </div>
+                    </div>
+                    <span class="setup-hint time-note">到时不强制交卷，可继续作答</span>
                 </div>
                 <div class="setup-row">
                     <label>错题入本</label>
@@ -102,6 +111,7 @@
         <div id="examView" style="display:none">
             <div class="exam-topbar">
                 <span class="exam-timer" id="examTimer">--:--</span>
+                <span class="exam-overtime" id="examOvertime" style="display:none;">时间到 · 可继续作答</span>
                 <span class="exam-progress" id="examProgress">已答 0/0</span>
                 <button class="btn btn-danger" onclick="confirmSubmit()">交卷</button>
             </div>
@@ -148,6 +158,7 @@
     let examIndex = 0;
     let remainingSec = 0;
     let timerHandle = null;
+    let examModeCurrent = 'favorites';   // 本场考试的模式（恢复会话时以会话里的为准）
 
     function show(view) {
         for (const id of ['setupView', 'examView', 'resultView']) {
@@ -162,27 +173,38 @@
         const cnt = document.getElementById('examCount');
         const sourceInfo = document.getElementById('sourceInfo');
         const sourceText = document.getElementById('sourceText');
-        const durationRow = document.querySelectorAll('.setup-row')[3]; // 考试时长的行
-        
-        if (mode === 'favorites' || mode === 'wrong') {
+        const recordWrongRow = document.getElementById('recordWrong').closest('.setup-row');
+
+        if (isSpecial) {
             cnt.min = 5;
-            cnt.max = 100;
-            cnt.value = 20;
-            document.getElementById('countHint').textContent = mode === 'favorites' ? '收藏题 5-100 题，默认 20' : '错题 5-100 题，默认 20';
+            cnt.max = 150;
+            cnt.value = 40;
+            document.getElementById('countHint').textContent = '按真题各科题量分配，不足自动补充';
             sourceInfo.style.display = 'flex';
             sourceText.textContent = '正在读取…';
-            durationRow.style.display = 'none';
-            document.getElementById('recordWrong').parentElement.parentElement.style.display = 'none';
+            recordWrongRow.style.display = mode === 'wrong' ? 'none' : 'flex';
             try {
                 const isFav = mode === 'favorites';
                 const resp = await api(isFav ? '/api/favorites' : '/api/wrong');
                 const d = await resp.json();
-                const n = (isFav ? (d.favorites || []) : (d.wrong_questions || [])).length;
-                sourceText.textContent = isFav
-                    ? `从您收藏的题目中组卷（本浏览器当前可组 ${n} 题）`
-                    : `从您的错题本中组卷（本浏览器当前 ${n} 题）`;
-                cnt.max = Math.max(5, n);
-                if (cnt.value > cnt.max) cnt.value = cnt.max;
+                const rows = isFav ? (d.favorites || []) : (d.wrong_questions || []);
+                const n = rows.length;
+                if (!n) {
+                    sourceText.textContent = isFav ? '还没有收藏题' : '还没有未解决的错题';
+                } else {
+                    // 分科统计，让"按真题各科题量"这件事在组卷前就可见
+                    const bySub = { ds: 0, co: 0, os: 0, cn: 0 };
+                    for (const r of rows) {
+                        const k = String(r.question_id || r.id || '').toLowerCase().split('_')[0];
+                        if (bySub[k] != null) bySub[k]++;
+                    }
+                    const names = { ds: '数构', co: '组成', os: 'OS', cn: '网络' };
+                    const detail = Object.keys(bySub)
+                        .filter(k => bySub[k])
+                        .map(k => `${names[k]} ${bySub[k]}`)
+                        .join(' · ');
+                    sourceText.textContent = `${isFav ? '收藏' : '错题'} ${n} 题（${detail}）· 按真题比例抽，不够自动补题`;
+                }
             } catch (e) {
                 sourceText.textContent = '读取失败';
             }
@@ -190,11 +212,19 @@
             cnt.min = isFull ? 10 : 5;
             cnt.max = isFull ? 150 : 100;
             cnt.value = isFull ? 40 : 20;
-            document.getElementById('countHint').textContent = isFull ? '完整模拟 10-150 题，默认 40' : '单科 5-100 题，默认 20';
+            document.getElementById('countHint').textContent = isFull
+                ? '按真题各科题量分配（数构11·组成11·OS10·网络8），默认 40'
+                : '单科 5-100 题，默认 20';
             sourceInfo.style.display = 'none';
-            durationRow.style.display = 'flex';
-            document.getElementById('recordWrong').parentElement.parentElement.style.display = 'flex';
+            recordWrongRow.style.display = 'flex';
         }
+    }
+
+    // 时长快捷选择（分钟）
+    function setMinutes(n) {
+        const el = document.getElementById('examMinutes');
+        el.value = n;
+        PS.set({ minutes: String(n) });
     }
 
     // ============ 组卷 / 恢复 ============
@@ -215,14 +245,14 @@
         
         // 越界题量直接收拢到范围内并回写输入框，避免后端静默修正造成"改了没反应"
         const isSpecial = mode === 'favorites' || mode === 'wrong';
-        const [lo, hi, dft] = (mode === 'full') ? [10, 150, 40] : [5, 100, 20];
+        const [lo, hi, dft] = (mode === 'full') ? [10, 150, 40] : isSpecial ? [5, 150, 40] : [5, 100, 20];
         const count = Math.min(Math.max(parseInt(document.getElementById('examCount').value, 10) || dft, lo), hi);
         document.getElementById('examCount').value = count;
-        const minutes = parseInt(document.getElementById('examMinutes').value || '0', 10);
-        const body = { mode, count, record_wrong: isSpecial ? true : document.getElementById('recordWrong').checked };
+        const minutes = Math.min(Math.max(parseInt(document.getElementById('examMinutes').value || '0', 10) || 0, 0), 600);
+        // 错题模式不写错题本（避免自己喂自己），收藏模式尊重用户勾选
+        const recordWrong = mode === 'wrong' ? true : document.getElementById('recordWrong').checked;
+        const body = { mode, count, record_wrong: recordWrong };
         if (minutes > 0) body.duration_sec = minutes * 60;
-        // 特殊模式默认每题1分钟
-        if (isSpecial && !minutes) body.duration_sec = count * 60;
 
         const resp = await api('/api/exam/generate', {
             method: 'POST',
@@ -231,7 +261,7 @@
         });
         const data = await resp.json();
         if (data.error) { alert(data.error); return; }
-        enterExam(data.exam_id, data.questions, {}, data.duration_sec);
+        enterExam(data.exam_id, data.questions, {}, data.duration_sec, mode);
     }
 
     async function checkActive() {
@@ -246,8 +276,8 @@
         }
         if (data.active) {
             const a = data.active;
-            if (confirm(`检测到未完成的考试（${MODE_NAMES[a.mode] || a.mode}，剩余 ${Math.ceil(a.remaining_sec / 60)} 分钟），是否继续？\n取消将放弃该场考试。`)) {
-                enterExam(a.exam_id, a.questions, a.answers || {}, a.remaining_sec);
+            if (confirm(`检测到未完成的考试（${MODE_NAMES[a.mode] || a.mode}，${a.remaining_sec > 0 ? '剩余 ' + Math.ceil(a.remaining_sec / 60) + ' 分钟' : '已超时 ' + Math.ceil(-a.remaining_sec / 60) + ' 分钟'}），是否继续？\n取消将放弃该场考试。`)) {
+                enterExam(a.exam_id, a.questions, a.answers || {}, a.remaining_sec, a.mode);
                 return;
             }
             // 放弃：静默废弃——重新组卷时会自动置为abandoned
@@ -255,44 +285,55 @@
         loadHistory();
     }
 
-    function enterExam(id, questions, answers, remaining) {
+    function enterExam(id, questions, answers, remaining, mode) {
         examId = id;
         examQuestions = questions;
         examAnswers = answers;
         examIndex = 0;
         remainingSec = remaining;
-        
+        examModeCurrent = mode || document.getElementById('examMode').value;
+
         // 更新考试标题
-        const mode = document.getElementById('examMode').value;
-        const examTitle = getExamTitle(mode);
+        const examTitle = getExamTitle(examModeCurrent);
         document.getElementById('resultTitle').textContent = examTitle + ' - 成绩单';
         show('examView');
         renderExamQuestion();
         startTimer();
     }
 
-    // ============ 倒计时 ============
+    // ============ 倒计时（到时只提示，不强制交卷） ============
+    let overtimeNotified = false;
     function startTimer() {
         clearInterval(timerHandle);
+        overtimeNotified = false;
+        document.getElementById('examOvertime').style.display = 'none';
         updateTimerText();
         timerHandle = setInterval(() => {
             remainingSec--;
-            updateTimerText();
-            if (remainingSec <= 0) {
-                clearInterval(timerHandle);
-                alert('考试时间到，自动交卷！');
-                doSubmit();
+            if (remainingSec <= 0 && !overtimeNotified) {
+                overtimeNotified = true;
+                document.getElementById('examOvertime').style.display = '';
             }
+            updateTimerText();
         }, 1000);
     }
 
     function updateTimerText() {
-        const s = Math.max(0, remainingSec);
-        const mm = String(Math.floor(s / 60)).padStart(2, '0');
-        const ss = String(s % 60).padStart(2, '0');
         const el = document.getElementById('examTimer');
-        el.textContent = `⏳ ${mm}:${ss}`;
-        el.classList.toggle('timer-warning', s <= 300);
+        if (remainingSec > 0) {
+            const mm = String(Math.floor(remainingSec / 60)).padStart(2, '0');
+            const ss = String(remainingSec % 60).padStart(2, '0');
+            el.textContent = `⏳ ${mm}:${ss}`;
+            el.classList.toggle('timer-warning', remainingSec <= 300);
+            el.classList.remove('timer-overtime');
+        } else {
+            const over = -remainingSec;
+            const mm = String(Math.floor(over / 60)).padStart(2, '0');
+            const ss = String(over % 60).padStart(2, '0');
+            el.textContent = `⏰ +${mm}:${ss}`;
+            el.classList.remove('timer-warning');
+            el.classList.add('timer-overtime');
+        }
     }
 
     // ============ 答题 ============
@@ -467,19 +508,37 @@
         }
         r.details.forEach((d, i) => {
             if (resultWrongOnly && d.is_correct) return;
+            const correct = String(d.correct_answer || '').toUpperCase();
+            const user = String(d.user_answer || '').toUpperCase();
+            const opts = Object.entries(d.options || {}).map(([k, v]) => {
+                const isCorrect = correct.includes(k);
+                const isPicked = user.includes(k);
+                let cls = 'review-opt';
+                if (isCorrect) cls += ' is-correct';
+                if (isPicked && !isCorrect) cls += ' is-picked-wrong';
+                let tag = '';
+                if (isCorrect && isPicked) tag = '<span class="opt-tag ok">你选对了</span>';
+                else if (isCorrect) tag = '<span class="opt-tag ok">正确答案</span>';
+                else if (isPicked) tag = '<span class="opt-tag bad">你的选择</span>';
+                return `<li class="${cls}"><span class="opt-key">${k}</span><span class="opt-body">${fmtOptionText(v)}</span>${tag}</li>`;
+            }).join('');
             html += `
-                <div class="list-item ${d.is_correct ? '' : 'exam-wrong'}">
-                    <div class="item-header">
-                        <span class="item-info">第 ${i + 1} 题${d.chapter ? ' · ' + d.chapter : ''}</span>
-                        <span class="${d.is_correct ? 'badge-resolved' : 'badge-wrong'}">${d.is_correct ? '✓ 答对' : (d.user_answer ? `✗ 你选 ${d.multi_blank ? fmtSeq(d.user_answer) : d.user_answer}` : '未作答')} · 正确答案 ${d.multi_blank ? fmtSeq(d.correct_answer) : (d.correct_answer || '—')}</span>
+                <article class="review-item ${d.is_correct ? 'is-ok' : 'is-bad'}">
+                    <header class="review-head">
+                        <span class="review-no">第 ${i + 1} 题</span>
+                        ${d.chapter ? `<span class="review-chapter">${d.chapter}${d.section ? ' · ' + d.section : ''}</span>` : ''}
+                        <span class="review-verdict">${d.is_correct ? '✓ 正确' : (user ? '✗ 错误' : '— 未作答')}</span>
+                    </header>
+                    <div class="review-stem">${fmtContent(d.content)}</div>
+                    <ul class="review-opts">${opts}</ul>
+                    <div class="review-answer">
+                        <span class="ans-item">你的选择 <b class="${d.is_correct ? 'ans-ok' : 'ans-bad'}">${user ? (d.multi_blank ? fmtSeq(user) : user) : '未作答'}</b></span>
+                        <span class="ans-sep">·</span>
+                        <span class="ans-item">正确答案 <b class="ans-ok">${d.multi_blank ? fmtSeq(correct) : (correct || '—')}</b></span>
                     </div>
-                    <div class="item-content">${fmtContent(d.content)}</div>
-                    <div class="item-options">
-                        ${Object.entries(d.options || {}).map(([k,v]) => `<span class="mini-option">${k}. ${v}</span>`).join('')}
-                    </div>
-                    ${!d.is_correct && d.number != null ? `<details class="exam-expl"><summary>查看解析</summary><div>${d.explanation || '（该题暂无详细解析）'}</div></details>` : ''}
-                    ${!d.is_correct && d.number != null ? `<a class="btn-goto" href="${practiceLink(d)}">去练习该题 →</a>` : ''}
-                </div>`;
+                    ${!d.is_correct && d.number != null ? `<details class="review-expl"><summary>查看解析</summary><div>${d.explanation || '（该题暂无详细解析）'}</div></details>` : ''}
+                    ${d.number != null ? `<a class="btn-goto" href="${practiceLink(d)}">去练习该题 →</a>` : ''}
+                </article>`;
         });
         html += `</div>`;
         document.getElementById('resultArea').innerHTML = html;
@@ -531,11 +590,13 @@
     const ps = PS.get({ mode: '', count: '', minutes: '', resultWrongOnly: null });
     if (ps.mode) {
         const m = document.getElementById('examMode');
-        if ([...m.options].some(o => o.value === ps.mode)) { m.value = ps.mode; onModeChange(); }
+        if ([...m.options].some(o => o.value === ps.mode)) m.value = ps.mode;
     }
     if (ps.count) document.getElementById('examCount').value = ps.count;
     if (ps.minutes) document.getElementById('examMinutes').value = ps.minutes;
     if (ps.resultWrongOnly != null) resultWrongOnly = !!ps.resultWrongOnly;
+    // 默认模式（仅收藏题）也要跑一次，才能带出题量提示与收藏数
+    onModeChange();
     document.getElementById('examMode').addEventListener('change', () => PS.set({ mode: document.getElementById('examMode').value }));
     document.getElementById('examCount').addEventListener('change', () => PS.set({ count: document.getElementById('examCount').value }));
     document.getElementById('examMinutes').addEventListener('change', () => PS.set({ minutes: document.getElementById('examMinutes').value }));
