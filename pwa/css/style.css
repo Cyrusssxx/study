@@ -1753,6 +1753,52 @@ mark {
     border-radius: 2px;
 }
 
+/* ===== 笔记重点标记 v2：教材重点用荧光笔半高亮，批注用下划线，两者不混 ===== */
+/* 灰度：先只对数据结构（.subj-ds）生效，其余科目确认后再放开 */
+.subj-ds .notes-body mark {
+    background: linear-gradient(transparent 58%, rgba(250, 204, 21, .62) 58%);
+    color: inherit;
+    padding: 0 1px;
+    border-radius: 2px;
+    -webkit-box-decoration-break: clone;
+    box-decoration-break: clone;
+}
+
+/* 作者加粗的术语/概念名：红色荧光 + 红字 */
+.subj-ds .notes-body b,
+.subj-ds .notes-body strong {
+    background: linear-gradient(transparent 58%, rgba(226, 75, 74, .26) 58%);
+    color: #a32d2d;
+    font-weight: 500;
+    padding: 0 1px;
+    border-radius: 2px;
+    -webkit-box-decoration-break: clone;
+    box-decoration-break: clone;
+}
+
+/* callout 内的加粗保持原来的橙色，不被上面的红色规则抢走 */
+.subj-ds .notes-body .key-callout b,
+.subj-ds .notes-body .key-callout strong {
+    background: none;
+    color: #d48806;
+}
+
+.dark .subj-ds .notes-body mark {
+    background: linear-gradient(transparent 58%, rgba(250, 204, 21, .40) 58%);
+}
+
+.dark .subj-ds .notes-body b,
+.dark .subj-ds .notes-body strong {
+    background: linear-gradient(transparent 58%, rgba(242, 149, 149, .30) 58%);
+    color: #f7c1c1;
+}
+
+.dark .subj-ds .notes-body .key-callout b,
+.dark .subj-ds .notes-body .key-callout strong {
+    background: none;
+    color: #e0b45c;
+}
+
 .list-item-link {
     cursor: pointer;
     transition: box-shadow 0.15s, transform 0.15s;
@@ -1887,26 +1933,70 @@ mark {
 .note-color-dot:hover { transform: scale(1.15); border-color: var(--text-light); background: rgba(128,128,128,0.08); }
 /* 高亮背景色：execCommand('hiliteColor') 在不同浏览器/场景下可能生成 <font style="background">
    或把 background-color 加到已有标签上（<b> 等），用 inline style 子串匹配兜底 4 色 */
+/* 我的批注高亮：底部实线下划线 + 极淡同色底。
+   与教材重点的「荧光笔半高亮」是两套视觉语言，不会混。
+   注意：教材重点（mark/b）在 .notes-body 内，批注在 .note-input / .line-anno-text 内，
+   两者作用域不重叠；下边框色即四色 hue，和以前的选择器保持一致。 */
 .note-input .hl-yellow,
 .line-anno-text .hl-yellow,
 .note-input [style*="background-color: rgb(255, 243, 163)"],
 .note-input [style*="background-color:#fff3a3"],
-.note-input [style*="background:#fff3a3"] { background: #fff3a3 !important; }
+.note-input [style*="background:#fff3a3"] {
+    background: rgba(250, 204, 21, .16) !important;
+    border-bottom: 2px solid #d4a017;
+    border-radius: 2px;
+    padding: 0 2px;
+    -webkit-box-decoration-break: clone;
+    box-decoration-break: clone;
+}
+
 .note-input .hl-green,
 .line-anno-text .hl-green,
 .note-input [style*="background-color: rgb(184, 230, 192)"],
 .note-input [style*="background-color:#b8e6c0"],
-.note-input [style*="background:#b8e6c0"] { background: #b8e6c0 !important; }
+.note-input [style*="background:#b8e6c0"] {
+    background: rgba(99, 153, 34, .16) !important;
+    border-bottom: 2px solid #639922;
+    border-radius: 2px;
+    padding: 0 2px;
+    -webkit-box-decoration-break: clone;
+    box-decoration-break: clone;
+}
+
 .note-input .hl-blue,
 .line-anno-text .hl-blue,
 .note-input [style*="background-color: rgb(179, 217, 242)"],
 .note-input [style*="background-color:#b3d9f2"],
-.note-input [style*="background:#b3d9f2"] { background: #b3d9f2 !important; }
+.note-input [style*="background:#b3d9f2"] {
+    background: rgba(55, 138, 221, .16) !important;
+    border-bottom: 2px solid #378add;
+    border-radius: 2px;
+    padding: 0 2px;
+    -webkit-box-decoration-break: clone;
+    box-decoration-break: clone;
+}
+
 .note-input .hl-pink,
 .line-anno-text .hl-pink,
 .note-input [style*="background-color: rgb(245, 194, 213)"],
 .note-input [style*="background-color:#f5c2d5"],
-.note-input [style*="background:#f5c2d5"] { background: #f5c2d5 !important; }
+.note-input [style*="background:#f5c2d5"] {
+    background: rgba(212, 83, 126, .16) !important;
+    border-bottom: 2px solid #d4537e;
+    border-radius: 2px;
+    padding: 0 2px;
+    -webkit-box-decoration-break: clone;
+    box-decoration-break: clone;
+}
+
+.dark .note-input .hl-yellow,
+.dark .line-anno-text .hl-yellow { background: rgba(250, 204, 21, .14) !important; border-bottom-color: #e0b45c; }
+.dark .note-input .hl-green,
+.dark .line-anno-text .hl-green { background: rgba(99, 153, 34, .16) !important; border-bottom-color: #97c459; }
+.dark .note-input .hl-blue,
+.dark .line-anno-text .hl-blue { background: rgba(55, 138, 221, .16) !important; border-bottom-color: #85b7eb; }
+.dark .note-input .hl-pink,
+.dark .line-anno-text .hl-pink { background: rgba(212, 83, 126, .16) !important; border-bottom-color: #ed93b1; }
 
 .note-actions {
     display: flex;

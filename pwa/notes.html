@@ -59,6 +59,8 @@
         // PWA 版：客户端 fetch 笔记 JSON 渲染（Flask 版为服务端 Jinja 渲染的镜像）
         const _params = new URLSearchParams(location.search);
         const SUBJECT = _params.get('subject') || 'co';
+        // 科目挂到 notesContent 上：重点标记样式按科目灰度生效（当前 ds）
+        document.getElementById('notesContent').classList.add('subj-' + SUBJECT);
         const GOTO = _params.get('goto');
         const LINE = _params.get('line');   // 跳到该节第 N 行（data-line）
         const Q = _params.get('q');         // 关键词/题干片段：节内(+全局兜底)模糊定位最相关的小知识点并高亮
