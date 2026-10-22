@@ -19,6 +19,10 @@
     const FILTER_KEY = 'cards_filter_v1';
     const KEYS_KEY = 'cards_keys_v1';       // 自定义快捷键 {act: key}
     const AUTONEXT_KEY = 'cards_autonext_v1'; // 标记后自动下一张 '1'|'0'
+    const TOC_KEY = 'cards_toc_v1';           // 左侧目录是否展开
+
+    // 鼠标侧键：button 3 = 后退侧键，4 = 前进侧键（浏览器默认会触发前进/后退，需拦截）
+    const MOUSE_KEY = { 3: 'Mouse4', 4: 'Mouse5' };
 
     // 默认快捷键（e.key 值；字母统一小写比较）
     const DEFAULT_KEYS = {
@@ -53,6 +57,7 @@
     let keys = Object.assign({}, DEFAULT_KEYS);  // 当前快捷键
     let autoNext = false;      // 标记后自动下一张
     let capturing = null;      // 正在录制快捷键的动作名
+    let tocOpen = false;       // 左侧目录展开状态
 
     function readJson(key, def) {
         try { const v = JSON.parse(localStorage.getItem(key) || 'null'); return v == null ? def : v; } catch (e) { return def; }
@@ -68,6 +73,7 @@
         weak = readJson(WEAK_KEY, {});
         keys = Object.assign({}, DEFAULT_KEYS, readJson(KEYS_KEY, {}) || {});
         autoNext = readJson(AUTONEXT_KEY, false) === true;
+        tocOpen = readJson(TOC_KEY, window.innerWidth > 900) === true;
         const resp = await fetch('data/cards.json');
         const data = await resp.json();
         ALL = data.cards || {};
@@ -75,6 +81,7 @@
         applyFilter();
         render();
         bindGestures();
+        applyToc();
     }
 
     function applyFilter() {
@@ -95,6 +102,11 @@
         return String(s == null ? '' : s)
             .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
             .replace(/"/g, '&quot;');
+    }
+
+    // 要点里的 **重点** 标记 → 红色加粗（来源：考点笔记里作者加粗的术语/结论）
+    function mdInline(s) {
+        return esc(s).replace(/\*\*(.+?)\*\*/g, '<strong class="fc-em">$1</strong>');
     }
 
     function render() {
@@ -124,6 +136,7 @@
                 (filter === 'new' && (ALL[subject] || []).length ? '全部都已「熟」，去「熟」筛选里回顾吧' : '该科目暂无卡片');
             body.appendChild(tip);
             syncButtons(null);
+            renderToc();
             return;
         }
 
@@ -132,8 +145,8 @@
             // 查看态：小标题 + 要点 + 易错提示
             htmlParts.push(`<div class="fc-chapter">${esc(c.title)}</div>`);
             htmlParts.push('<ul class="fc-pts">' + (c.points || []).map(p =>
-                `<li>${esc(p)}</li>`).join('') + '</ul>');
-            if (c.tip) htmlParts.push(`<div class="fc-tip">易错点：${esc(c.tip)}</div>`);
+                `<li>${mdInline(p)}</li>`).join('') + '</ul>');
+            if (c.tip) htmlParts.push(`<div class="fc-tip">易错点：${mdInline(c.tip)}</div>`);
             htmlParts.push('<div class="fc-hint">点击卡片收起</div>');
         } else {
             // 问题态：章节 + 考点名 + 状态小标签 + 提示
@@ -145,6 +158,7 @@
         }
         body.innerHTML = htmlParts.join('');
         syncButtons(c);
+        renderToc();
     }
 
     function syncButtons(c) {
@@ -284,8 +298,65 @@
         }, { passive: true });
         // 桌面：快捷键（可在 ⚙ 设置里自定义）
         document.addEventListener('keydown', onKeyDown);
+        // 鼠标侧键：3=后退 4=前进，默认会触发浏览器前进/后退，这里拦下来当快捷键
+        document.addEventListener('mousedown', onMouseDown);
+        document.addEventListener('auxclick', e => { if (MOUSE_KEY[e.button]) e.preventDefault(); });
         // 点击卡片（鼠标或触屏）查看/收起；滑动后忽略
         document.getElementById('fcCard').addEventListener('click', () => { if (!moved) toggleView(); });
+    }
+
+    // ==================== 左侧目录 ====================
+    function applyToc() {
+        const toc = document.getElementById('fcToc');
+        if (!toc) return;
+        toc.classList.toggle('open', tocOpen);
+        document.body.classList.toggle('fc-toc-open', tocOpen);
+    }
+
+    function toggleToc(force) {
+        tocOpen = (force === undefined) ? !tocOpen : !!force;
+        writeJson(TOC_KEY, tocOpen);
+        applyToc();
+        if (tocOpen) renderToc();
+    }
+
+    function renderToc() {
+        const box = document.getElementById('fcTocBody');
+        if (!box) return;
+        const cards = ALL[subject] || [];
+        const cur = list[index];
+        const order = [];
+        const map = new Map();
+        for (const c of cards) {
+            const ch = c.chapter || '未分类';
+            if (!map.has(ch)) { map.set(ch, []); order.push(ch); }
+            map.get(ch).push(c);
+        }
+        let html = '';
+        for (const ch of order) {
+            html += `<div class="fc-toc-chapter">${esc(ch)}</div>`;
+            for (const c of map.get(ch)) {
+                const on = cur && cur.id === c.id;
+                html += `<button class="fc-toc-item${on ? ' on' : ''}" onclick="jumpToCard('${c.id}')">${esc(c.title)}</button>`;
+            }
+        }
+        box.innerHTML = html || '<div class="fc-toc-empty">本科目暂无卡片</div>';
+    }
+
+    function jumpToCard(id) {
+        let i = list.findIndex(x => x.id === id);
+        if (i < 0 && filter !== 'all') {
+            filter = 'all';
+            writeJson(FILTER_KEY, filter);
+            applyFilter();
+            i = list.findIndex(x => x.id === id);
+        }
+        if (i < 0) return;
+        index = i;
+        viewing = false;
+        savePos();
+        render();
+        if (window.innerWidth <= 900) toggleToc(false);   // 手机跳转后收起，别挡内容
     }
 
     // ==================== 快捷键设置 ====================
@@ -299,7 +370,8 @@
         if (!k) return '未设置';
         const map = {
             ' ': '空格', ArrowLeft: '←', ArrowRight: '→', ArrowUp: '↑', ArrowDown: '↓',
-            Enter: '回车', Escape: 'Esc', Backspace: '退格', Tab: 'Tab'
+            Enter: '回车', Escape: 'Esc', Backspace: '退格', Tab: 'Tab',
+            Mouse4: '侧键·后退', Mouse5: '侧键·前进'
         };
         return map[k] || (k.length === 1 ? k.toUpperCase() : k);
     }
@@ -317,6 +389,15 @@
         if (e.key === 'Enter' && !Object.values(keys).some(v => v && normKey(v) === 'Enter')) {
             e.preventDefault(); toggleView();
         }
+    }
+
+    function onMouseDown(e) {
+        const mk = MOUSE_KEY[e.button];
+        if (!mk) return;
+        e.preventDefault();                  // 阻止浏览器后退/前进
+        if (capturing) return;               // 录制中交给 startCapture
+        const hit = KEY_ACTIONS.find(a => keys[a.act] && normKey(keys[a.act]) === mk);
+        if (hit) hit.run();
     }
 
     function openCardSettings() {
@@ -347,25 +428,37 @@
                 <span class="fc-set-name">标记后自动下一张</span>
                 <button class="fc-switch ${autoNext ? 'on' : ''}" onclick="toggleAutoNext()" aria-pressed="${autoNext}"><span></span></button>
             </div>
-            <div class="fc-set-hint">点右侧按键即可重新绑定，按 Esc 取消。快捷键只在电脑端生效；手机用左右滑动 + 底部按钮。</div>`;
+            <div class="fc-set-hint">点右侧按键即可重新绑定（支持鼠标侧键），按 Esc 取消。快捷键只在电脑端生效；手机用左右滑动 + 底部按钮。</div>`;
     }
 
     function startCapture(act) {
         capturing = act;
         renderSettings();
-        const handler = ev => {
-            ev.preventDefault();
-            ev.stopPropagation();
+
+        function finish(k) {
             document.removeEventListener('keydown', handler, true);
-            if (ev.key === 'Escape') { capturing = null; renderSettings(); return; }
-            const k = normKey(ev.key);
+            document.removeEventListener('mousedown', mhandler, true);
+            if (!k) { capturing = null; renderSettings(); return; }
             for (const a of KEY_ACTIONS) if (a.act !== act && normKey(keys[a.act]) === k) keys[a.act] = '';
             keys[act] = k;
             writeJson(KEYS_KEY, keys);
             capturing = null;
             renderSettings();
-        };
+        }
+        function handler(ev) {
+            ev.preventDefault();
+            ev.stopPropagation();
+            finish(ev.key === 'Escape' ? '' : normKey(ev.key));
+        }
+        function mhandler(ev) {
+            const mk = MOUSE_KEY[ev.button];
+            if (!mk) return;                  // 只认侧键，左/右键不参与绑定
+            ev.preventDefault();
+            ev.stopPropagation();
+            finish(mk);
+        }
         document.addEventListener('keydown', handler, true);
+        document.addEventListener('mousedown', mhandler, true);
     }
 
     function resetCardKeys() {
@@ -394,6 +487,8 @@
     window.startCapture = startCapture;
     window.resetCardKeys = resetCardKeys;
     window.toggleAutoNext = toggleAutoNext;
+    window.toggleToc = toggleToc;
+    window.jumpToCard = jumpToCard;
     window.Cards = { load, get state() { return { subject, filter, index, total: list.length, known, fav, weak, keys, autoNext }; } };
 
     if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', load);

@@ -215,6 +215,61 @@ const $ = sel => w.document.querySelector(sel);
     check('按钮去点击延迟', /touch-action:\s*manipulation/.test(CSS), true);
     check('深色模式适配设置面板', /\.dark\s+\.fc-modal-panel/.test(CSS), true);
 
+    console.log('\n--- 重点标红 ---');
+    w.switchFilter('all');
+    w.toggleView();
+    const emCount = w.document.querySelectorAll('#fcBody .fc-em').length;
+    check('查看态渲染出红色重点', emCount > 0, true);
+    check('正文无 ** 标记残留', !/\*\*/.test($('#fcBody').textContent), true);
+    w.toggleView();
+    const markedCards = ['ds', 'os', 'cn', 'co'].reduce((n, s) =>
+        n + (CARDS.cards[s] || []).filter(c => (c.points || []).some(p => p.includes('**'))).length, 0);
+    check('cards.json 含重点标记的卡片 > 200', markedCards > 200, true);
+
+    console.log('\n--- 鼠标侧键 ---');
+    w.openCardSettings();
+    w.startCapture('prev');
+    w.document.dispatchEvent(new w.MouseEvent('mousedown', { button: 3, bubbles: true, cancelable: true }));
+    check('侧键可绑定到动作', JSON.parse(w.localStorage.getItem('cards_keys_v1') || '{}').prev, 'Mouse4');
+    check('面板显示侧键标签', /侧键/.test(w.document.getElementById('fcSettingsBody').textContent), true);
+    w.resetCardKeys();
+    // 用默认键位测触发：把「下一张」绑到前进侧键
+    w.startCapture('next');
+    w.document.dispatchEvent(new w.MouseEvent('mousedown', { button: 4, bubbles: true, cancelable: true }));
+    check('前进侧键绑定成功', JSON.parse(w.localStorage.getItem('cards_keys_v1') || '{}').next, 'Mouse5');
+    w.closeCardSettings();
+    const cBefore = $('#fcCount').textContent;
+    w.document.dispatchEvent(new w.MouseEvent('mousedown', { button: 4, bubbles: true, cancelable: true }));
+    check('按前进侧键触发下一张', $('#fcCount').textContent !== cBefore, true);
+    w.resetCardKeys();
+
+    console.log('\n--- 左侧目录 ---');
+    check('页面有目录容器', !!$('#fcToc'), true);
+    check('收起时有浮动入口', !!$('#fcTocFab'), true);
+    const subjNow = w.Cards.state.subject;
+    w.toggleToc(true);
+    const items = w.document.querySelectorAll('#fcTocBody .fc-toc-item');
+    check('目录条目数 = 本科目卡片数', items.length, (CARDS.cards[subjNow] || []).length);
+    const chapters = w.document.querySelectorAll('#fcTocBody .fc-toc-chapter');
+    check('目录按章分组', chapters.length > 0, true);
+    const target = (CARDS.cards[subjNow] || [])[4];
+    w.jumpToCard(target.id);
+    const wantIdx = (CARDS.cards[subjNow] || []).findIndex(c => c.id === target.id);
+    check('点目录跳到对应卡', w.Cards.state.index, wantIdx);
+    check('当前项高亮', !!$('#fcTocBody .fc-toc-item.on'), true);
+    w.toggleToc(false);
+    check('收起状态持久化', JSON.parse(w.localStorage.getItem('cards_toc_v1') || 'true'), false);
+    check('收起后移除 fc-toc-open', w.document.body.classList.contains('fc-toc-open'), false);
+    w.toggleToc(true);
+    check('展开后加 fc-toc-open', w.document.body.classList.contains('fc-toc-open'), true);
+
+    console.log('\n--- 目录/标红样式 ---');
+    check('CSS 半透明目录', CSS.includes('.fc-toc') && CSS.includes('rgba(var(--card-rgb)'), true);
+    check('CSS 毛玻璃', CSS.includes('backdrop-filter: blur'), true);
+    check('CSS 收起位移', CSS.includes('transform: translateX(-100%)'), true);
+    check('CSS 展开复位', CSS.includes('.fc-toc.open') && CSS.includes('transform: none'), true);
+    check('CSS 重点标红', CSS.includes('.fc-em') && CSS.includes('color: var(--danger)'), true);
+
     console.log(`\nPASS ${pass} / FAIL ${fail}`);
     dom.window.close();
     process.exit(fail ? 1 : 0);

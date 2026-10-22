@@ -6628,6 +6628,155 @@ body.fc-modal-open { overflow: hidden; }
 .dark .fc-switch { background: rgba(255, 255, 255, .16); }
 .dark .fc-switch.on { background: var(--primary); }
 
+/* ===== 记忆卡：重点标红（来自考点笔记的加粗术语/结论） ===== */
+.fc-em {
+    color: var(--danger);
+    font-weight: 700;
+    background: linear-gradient(transparent 62%, rgba(220, 38, 38, .12) 62%);
+}
+
+.dark .fc-em {
+    color: #ff8a8a;
+    background: linear-gradient(transparent 62%, rgba(255, 90, 90, .16) 62%);
+}
+
+/* ===== 记忆卡：左侧半透明目录 ===== */
+.fc-toc {
+    position: fixed;
+    left: 0;
+    top: 56px;
+    bottom: 0;
+    width: 236px;
+    display: flex;
+    flex-direction: column;
+    padding: 10px 8px calc(16px + env(safe-area-inset-bottom));
+    background: rgba(var(--card-rgb), 0.86);
+    -webkit-backdrop-filter: blur(12px);
+    backdrop-filter: blur(12px);
+    border-right: 1px solid var(--border);
+    box-shadow: 2px 0 14px rgba(0, 0, 0, .06);
+    transform: translateX(-100%);
+    transition: transform .22s ease;
+    z-index: 60;
+}
+
+.fc-toc.open { transform: none; }
+
+.fc-toc-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 2px 6px 8px;
+    font-size: 0.78rem;
+    font-weight: 600;
+    color: var(--text-light);
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 6px;
+    flex-shrink: 0;
+}
+
+.fc-toc-close {
+    width: 24px; height: 24px;
+    border: none; background: transparent;
+    color: var(--text-light);
+    font-size: 1rem; line-height: 1;
+    cursor: pointer; border-radius: 6px;
+}
+
+.fc-toc-close:hover { background: rgba(128, 128, 128, .14); color: var(--primary); }
+
+.fc-toc-body {
+    flex: 1;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior: contain;
+}
+
+.fc-toc-chapter {
+    position: sticky;
+    top: 0;
+    z-index: 1;
+    padding: 8px 6px 4px;
+    font-size: 0.72rem;
+    font-weight: 700;
+    color: var(--primary);
+    background: rgba(var(--card-rgb), 0.92);
+    -webkit-backdrop-filter: blur(8px);
+    backdrop-filter: blur(8px);
+}
+
+.fc-toc-item {
+    display: block;
+    width: 100%;
+    text-align: left;
+    padding: 6px 8px;
+    margin-bottom: 2px;
+    border: none;
+    border-radius: 6px;
+    background: transparent;
+    color: var(--text);
+    font-size: 0.82rem;
+    line-height: 1.5;
+    cursor: pointer;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    -webkit-tap-highlight-color: transparent;
+}
+
+.fc-toc-item:hover { background: rgba(128, 128, 128, .12); }
+
+.fc-toc-item.on {
+    background: rgba(79, 70, 229, .12);
+    color: var(--primary);
+    font-weight: 600;
+}
+
+.fc-toc-empty { padding: 12px 8px; font-size: 0.8rem; color: var(--text-light); }
+
+/* 收起状态下的浮动入口 */
+.fc-toc-fab {
+    position: fixed;
+    left: 0;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 28px;
+    height: 58px;
+    padding: 0;
+    border: 1px solid var(--border);
+    border-left: none;
+    border-radius: 0 10px 10px 0;
+    background: rgba(var(--card-rgb), 0.9);
+    -webkit-backdrop-filter: blur(10px);
+    backdrop-filter: blur(10px);
+    color: var(--text-light);
+    font-size: 0.95rem;
+    cursor: pointer;
+    z-index: 59;
+    box-shadow: 2px 0 10px rgba(0, 0, 0, .06);
+    -webkit-tap-highlight-color: transparent;
+}
+
+.fc-toc-fab:hover { color: var(--primary); border-color: var(--primary); }
+
+body.fc-toc-open .fc-toc-fab { display: none; }
+
+/* 宽屏：目录展开时把正文右移，避免被半透明面板盖住 */
+@media (min-width: 901px) {
+    body.fc-toc-open .fc-wrap {
+        padding-left: 248px;
+        transition: padding-left .22s ease;
+    }
+}
+
+@media (max-width: 900px) {
+    .fc-toc { width: 76vw; max-width: 300px; top: 52px; }
+}
+
+.dark .fc-toc { background: rgba(26, 30, 40, .9); }
+.dark .fc-toc-chapter { background: rgba(26, 30, 40, .94); }
+.dark .fc-toc-fab { background: rgba(26, 30, 40, .92); }
+
 /* ===== 记忆卡：移动端触控优化 ===== */
 .fc-stage {
     touch-action: pan-y;          /* 横向滑动交给脚本，纵向仍可滚动 */

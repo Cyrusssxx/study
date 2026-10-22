@@ -115,5 +115,17 @@ ok('勾选框重置最小宽度', /\.setup-row input\[type="checkbox"\][\s\S]{0,
 ok('说明文字独占一行', /\.setup-hint-block\s*\{/.test(CSS) && /class="setup-hint-block"/.test(EXAM_HTML));
 ok('窄屏字段名独占一行', /@media\s*\(max-width:\s*600px\)[\s\S]{0,200}\.setup-row > label:first-child\s*\{\s*flex:\s*0 0 100%/.test(CSS));
 
+console.log('--- 成绩单顶部返回 ---');
+ok('成绩单有吸顶返回条', /class="result-topbar"/.test(EXAM_HTML));
+ok('顶部有返回按钮', /id="btnTopBack"/.test(EXAM_HTML));
+ok('返回文案随来源变化', /fromHistory \? '← 返回历史成绩' : '← 返回组卷'/.test(EXAM_HTML));
+ok('CSS 吸顶定位', /\.result-topbar\s*\{[^}]*position:\s*sticky/.test(CSS));
+ok('标题三栏居中', /\.result-topbar\s*\{[^}]*grid-template-columns:\s*1fr auto 1fr/.test(CSS));
+
+console.log('--- 导航计时器已移除 ---');
+ok('exam.html 无 navTimer', !/navTimer/.test(EXAM_HTML));
+ok('common.js 无 navTimer 依赖', !/navTimer/.test(fs.readFileSync(path.join(ROOT, 'pwa', 'js', 'common.js'), 'utf8')));
+ok('common.js 仍保留时长累计', /studyTimerSec/.test(fs.readFileSync(path.join(ROOT, 'pwa', 'js', 'common.js'), 'utf8')));
+
 console.log(`\n结果: ${pass} 通过 / ${fail} 失败`);
 process.exit(fail ? 1 : 0);

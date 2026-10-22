@@ -38,6 +38,16 @@
         </div>
     </nav>
 
+    <!-- 左侧半透明目录（按当前科目分组，可收起） -->
+    <button class="fc-toc-fab" id="fcTocFab" onclick="toggleToc()" title="展开卡片目录" aria-label="展开卡片目录">☰</button>
+    <aside class="fc-toc" id="fcToc" aria-label="卡片目录">
+        <div class="fc-toc-head">
+            <span>卡片目录</span>
+            <button class="fc-toc-close" onclick="toggleToc()" title="收起目录" aria-label="收起目录">‹</button>
+        </div>
+        <div class="fc-toc-body" id="fcTocBody"></div>
+    </aside>
+
     <main class="fc-wrap">
         <!-- 四组卡片：按科目切换 -->
         <div class="fc-chips" id="fcSubjects"></div>
