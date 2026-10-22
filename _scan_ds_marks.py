@@ -124,6 +124,9 @@ def classify(text, in_th=False, in_td=False):
         return 'KEEP', '公式/复杂度'
     if PURPOSE.search(core) and len(core) >= 6:
         return 'KEEP', '目的/作用'
+    # 判别技巧：状态模式 → 算法
+    if '→' in core and len(core) >= 6:
+        return 'KEEP', '判别技巧'
     # 表格单元：没有公式、判断词又不强 → 就是单元格取值，不标
     if in_td:
         if JUDGE.search(core) and len(core) >= 10:
@@ -138,37 +141,40 @@ def classify(text, in_th=False, in_td=False):
     return 'DROP', '短名词（无判断词）'
 
 
-# 需要"主动补标"的表述：目的 / 作用 / 本质 —— 原本可能没加粗，但它们是考纲最值钱的一句
+# 需要"主动补标"的表述：
+#   1) 目的 / 作用 / 本质 —— "这东西为什么存在"，考纲最值钱的一句
+#   2) 箭头左侧的状态模式 —— "某枢轴左小右大 → 快排一趟" 这类判别技巧，真题常考
 ADD_PATS = [
     r'[^，。；：<>]{0,14}?目的\s*[=＝:：]\s*[^，。；<>]{4,26}',
     r'作用\s*[=＝:：]\s*[^，。；<>]{4,26}',
     r'本质\s*[=＝:：]\s*[^，。；<>]{4,26}',
     r'关键\s*[=＝:：]\s*[^，。；<>]{4,26}',
+    # 只标箭头左边，且左边必须描述"排序中间状态"（有序/就位/最终位/左小右大…），
+    # 否则 "头插法建立链表 → …" 这类普通流程也会被误标
+    r'[^，。；：<>→]{3,24}?(?:有序|就位|最终位|左小右大|归位|到位)[^，。；：<>→]{0,12}?(?=→)',
 ]
 
 
 def add_purpose_marks(html):
-    """给「目的/作用/本质 = …」这类表述补上 <b>（已在 <b> 内的跳过）。"""
-    parts = re.split(r'(<[^>]+>)', html)
-    out, in_b, added = [], 0, 0
-    for p in parts:
-        if p.startswith('<'):
-            if re.match(r'<(b|strong)[\s>]', p):
-                in_b += 1
-            elif re.match(r'</(b|strong)>', p):
-                in_b = max(0, in_b - 1)
-            out.append(p)
-            continue
-        if in_b:
-            out.append(p)
-            continue
-        for pat in ADD_PATS:
-            new, n = re.subn('(' + pat + ')', r'<b>\1</b>', p)
-            if n:
-                p = new
-                added += n
-        out.append(p)
-    return ''.join(out), added
+    """给「目的/作用」「状态模式 → 算法」补 <b>。
+
+    先把已有 <b>…</b> 换成占位符再匹配，避免嵌套；
+    不用"标签计数"判上下文——笔记里有畸形 HTML，计数一旦失衡后面整段会被跳过。
+    """
+    store = []
+
+    def hide(m):
+        store.append(m.group(0))
+        return '\x00%d\x00' % (len(store) - 1)
+
+    tmp = re.sub(r'<(b|strong)[^>]*>.*?</\1>', hide, html, flags=re.S)
+    added = 0
+    for pat in ADD_PATS:
+        tmp, n = re.subn('(' + pat + ')', r'<b>\1</b>', tmp)
+        added += n
+    for i, s in enumerate(store):
+        tmp = tmp.replace('\x00%d\x00' % i, s)
+    return tmp, added
 
 
 def walk_html(html, decider):
@@ -188,7 +194,13 @@ def walk_html(html, decider):
         in_td = td_i > max(th_i, th_c, td_c)
         inner = m.group(3)
         txt = plain(inner)
-        verdict, why = decider(txt, in_th, in_td)
+        # 紧跟箭头的加粗 = "状态模式 → 算法" 的判别技巧，一律保留
+        # （这类短语本身很短、也没有判断词，只靠内容判会被误删）
+        tail = html[m.end():m.end() + 3].strip()
+        if tail.startswith('→'):
+            verdict, why = 'KEEP', '判别技巧'
+        else:
+            verdict, why = decider(txt, in_th, in_td)
         out.append(html[pos:start])
         if verdict == 'KEEP':
             out.append(m.group(0))
