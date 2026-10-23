@@ -4170,6 +4170,8 @@ h3.algo-h:first-child, h4.algo-h:first-child, h5.algo-h:first-child { margin-top
     border: none;
     box-shadow: none;
     opacity: 0;
+    pointer-events: none;
+    visibility: hidden;
 }
 .notes-toc {
     position: sticky;
@@ -4701,6 +4703,8 @@ a.chapter-badge-link:hover {
         border: none;
         box-shadow: var(--shadow);
         border-radius: var(--radius);
+        pointer-events: auto;
+        visibility: visible;
     }
 }
 
@@ -7166,10 +7170,17 @@ body.fc-toc-open .fc-toc-fab { display: none; }
         max-height: none;
         z-index: 45;
     }
-    /* 收起态：宽度保持（靠 JS 的 WAAPI 位移滑出），避免宽度塌陷打断动画 */
+    /* 收起态：宽度保持 + 滑出屏幕 + 不可交互。
+       之前只保留宽度、靠 JS 的 WAAPI 位移滑出 —— 但 WAAPI 无 fill，动画结束效果即被移除，
+       面板会弹回原位变成一块 opacity:0 的透明区域，仍然拦截点击（残留可点击的根因）。
+       现在 CSS 直接落定终态：滑出 + 不可点，与 quiz 章节栏收起（translateX(-115%)）同款。 */
     .toc-fixed .notes-layout.notes-toc-collapsed .notes-toc {
         width: 230px;
         padding: 12px 8px;
+        opacity: 0;
+        transform: translateX(-120%);
+        pointer-events: none;
+        visibility: hidden;
     }
     /* 文章 + 页头：紧跟目录只留小间隙（页头与正文同列，避免被固定目录压住）；收起时回收空间 */
     .toc-fixed .notes-content,

@@ -44,6 +44,7 @@ function stripMedia(cssText, query) {
 
 const m801 = extractMedia(css, '(min-width: 801px)') || '';
 const m901 = extractMedia(css, '(min-width: 901px)') || '';
+const m800 = extractMedia(css, '(max-width: 800px)') || '';
 
 // ============ 1. 页面接入 ============
 console.log('▸ 页面接入（7 页）');
@@ -70,6 +71,14 @@ check('收起时正文回收（26px）', /\.toc-fixed \.notes-layout\.notes-toc-
 check('body.toc-collapsed 页头回收（26px）', /body\.toc-collapsed \.toc-fixed \.notes-header \{[^}]*margin-left:\s*calc\(var\(--bleed\) \+ 26px\)/.test(m801));
 check('箭头 fixed 钉中段（top:50%）', /\.toc-fixed \.notes-toc-toggle \{[^}]*position:\s*fixed[^}]*top:\s*50%/.test(m801));
 check('收起时箭头移到最左（left:4px）', /\.toc-fixed \.notes-layout\.notes-toc-collapsed \.notes-toc-toggle \{[^}]*left:\s*4px/.test(m801));
+// 收起后残留可点击的修复：滑出 + 不可交互（无反斜杠正则写法）
+check('目录收起=滑出 translateX(-120%)', /[.]toc-fixed [.]notes-layout[.]notes-toc-collapsed [.]notes-toc [{][^}]*translateX[(][-]120%[)]/.test(m801));
+check('目录收起=透明 opacity:0', /[.]toc-fixed [.]notes-layout[.]notes-toc-collapsed [.]notes-toc [{][^}]*opacity: *0/.test(m801));
+check('目录收起=不可点 pointer-events:none', /[.]toc-fixed [.]notes-layout[.]notes-toc-collapsed [.]notes-toc [{][^}]*pointer-events: *none/.test(m801));
+check('目录收起=键盘不可达 visibility:hidden', /[.]toc-fixed [.]notes-layout[.]notes-toc-collapsed [.]notes-toc [{][^}]*visibility: *hidden/.test(m801));
+check('通用收起态也不可点', /[.]notes-layout[.]notes-toc-collapsed [.]notes-toc [{][^}]*width: *0[^}]*pointer-events: *none/.test(css));
+check('窄屏强制显示目录时恢复可点', /[.]notes-layout[.]notes-toc-collapsed [.]notes-toc [{][^}]*pointer-events: *auto[^}]*visibility: *visible/.test(m800));
+
 
 // ============ 3. CSS · 801+ 刷题页三栏 ============
 console.log('▸ CSS · 刷题页（801+）');
