@@ -98,6 +98,7 @@
                         错题自动记入错题本
                     </label>
                 </div>
+                <div class="setup-hint-block">🖱️ 鼠标侧键 / 自定义快捷键 = 上一题 / 下一题（考试进行中生效，键位与刷题页共用，改键在刷题页设置面板）</div>
                 <button class="btn btn-primary btn-lg" onclick="startExam()">开始考试</button>
             </div>
 
@@ -639,6 +640,72 @@
         minutesManual = v !== '';
         PS.set({ minutes: v });
     });
+
+    // ============ 鼠标侧键 / 键盘快捷键：上一题 / 下一题（移植自刷题页） ============
+    // 与刷题页共用同一份键位配置（quiz_keybinds_v1 / quiz_sideguard）：
+    // 刷题页设置面板里绑的键，在模拟考里同样生效。
+    // 仅在「考试进行中」接管：侧键 = 翻题，绝不触发浏览器后退/前进；
+    // 设置页 / 成绩单侧键照常走浏览器（不劫持）。
+    let lastSideKeyAt = 0, lastSideButton = 0, popHandledAt = 0;
+    let examKb = { prev: 'mouse3', next: 'mouse4' };
+    try { examKb = Object.assign({}, examKb, JSON.parse(localStorage.getItem('quiz_keybinds_v1') || '{}')); } catch (e) { }
+    let examSideGuard = localStorage.getItem('quiz_sideguard') !== '0';
+
+    function examViewOn() {
+        const el = document.getElementById('examView');
+        return !!(el && el.style.display !== 'none');
+    }
+    function examInEditable(e) {
+        const t = e.target;
+        return !!(t && (t.isContentEditable || /^(INPUT|TEXTAREA|SELECT)$/.test(t.tagName || '')));
+    }
+    function examSideTakeover(e) {
+        if (!examViewOn()) return false;
+        const code = e.button === 3 ? 'mouse3' : 'mouse4';
+        return examSideGuard || code === examKb.prev || code === examKb.next;
+    }
+    ['mousedown', 'mouseup'].forEach(evt => {
+        document.addEventListener(evt, e => {
+            if (e.button !== 3 && e.button !== 4) return;
+            if (examSideTakeover(e)) { lastSideKeyAt = Date.now(); lastSideButton = e.button; e.preventDefault(); }
+        }, true);
+    });
+    document.addEventListener('auxclick', e => {
+        const b = e.button;
+        if (b !== 3 && b !== 4) return;
+        lastSideKeyAt = Date.now(); lastSideButton = b;
+        if (!examSideTakeover(e)) return;
+        if (examInEditable(e)) return;
+        e.preventDefault();
+        if (Date.now() - popHandledAt < 120) return;   // popstate 兜底刚翻过题，防双翻
+        if (b === 3) examPrev(); else examNext();
+    });
+    // popstate 兜底：同文档后退/前进发生瞬间恢复 + 转翻题
+    window.addEventListener('popstate', () => {
+        if (Date.now() - lastSideKeyAt > 400) return;   // 非侧键引起（手动后退等）→ 放行
+        if (Date.now() - popHandledAt < 50) return;
+        popHandledAt = Date.now();
+        try { history.pushState({ examGuard: 1 }, '', location.href); } catch (err) { }
+        if (examViewOn()) { if (lastSideButton === 3) examPrev(); else examNext(); }
+    });
+    // Firefox 专用侧键事件
+    document.addEventListener('mouseback', e => {
+        if (!examViewOn() || examKb.prev !== 'mouse3') return;
+        e.preventDefault(); examPrev();
+    });
+    document.addEventListener('mouseforward', e => {
+        if (!examViewOn() || examKb.next !== 'mouse4') return;
+        e.preventDefault(); examNext();
+    });
+    // 键盘快捷键（与刷题页共用键位）：考试进行中即翻题
+    document.addEventListener('keydown', e => {
+        if (!examViewOn() || e.ctrlKey || e.metaKey || e.altKey || e.repeat) return;
+        if (examInEditable(e)) return;
+        if (e.code === examKb.prev) { e.preventDefault(); examPrev(); }
+        else if (e.code === examKb.next) { e.preventDefault(); examNext(); }
+    });
+    // 进入页面制造同文档历史锚点：否则侧键后退=跨文档导航（页面卸载），popstate 兜底失效
+    try { history.pushState({ examGuard: 1 }, '', location.href); } catch (err) { }
 
     checkActive();
     

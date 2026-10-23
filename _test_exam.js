@@ -118,6 +118,19 @@ ok('收藏题不做错题/不熟加权', /function prioritizeByTime[\s\S]{0,900}
 ok('第二轮补缺也用同一顺序器', /for \(const q of order\(rest\)\.slice\(0, short\)\)/.test(BACKEND));
 ok('UI 提示：最早做过的先抽', /最早做过的题先抽/.test(EXAM_HTML));
 
+console.log('--- 鼠标侧键移植（刷题页 → 模拟考）---');
+ok('侧键接管函数 examSideTakeover', /function examSideTakeover/.test(EXAM_HTML));
+ok('仅考试进行中接管（examViewOn 门卫）', /function examViewOn/.test(EXAM_HTML));
+ok('mousedown/mouseup 捕获拦截', /\['mousedown', 'mouseup'\]\.forEach/.test(EXAM_HTML));
+ok('auxclick 转翻题（examPrev/examNext）', /if \(b === 3\) examPrev\(\); else examNext\(\);/.test(EXAM_HTML));
+ok('popstate 兜底恢复锚点', /history\.pushState\(\{ examGuard: 1 \}/.test(EXAM_HTML));
+ok('Firefox mouseback/mouseforward', /addEventListener\('mouseback'/.test(EXAM_HTML) && /addEventListener\('mouseforward'/.test(EXAM_HTML));
+ok('共用刷题页键位配置', /quiz_keybinds_v1/.test(EXAM_HTML));
+ok('共用侧键拦截开关', /quiz_sideguard/.test(EXAM_HTML));
+ok('键盘快捷键（与刷题页共用）', /e\.code === examKb\.prev/.test(EXAM_HTML));
+ok('可编辑区域不劫持', /function examInEditable/.test(EXAM_HTML));
+ok('载入时制造同文档历史锚点', /\{ examGuard: 1 \}[^)]*location\.href/.test(EXAM_HTML));
+
 console.log('--- 设置页排版 ---');
 ok('只给行首 label 固定宽度', /\.setup-row > label:first-child\s*\{[^}]*flex:\s*0 0 80px/.test(CSS));
 ok('勾选项 label 不再固定宽度', /\.setup-row \.checkbox-label\s*\{[^}]*flex:\s*0 1 auto/.test(CSS));
