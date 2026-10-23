@@ -103,7 +103,9 @@
             </div>
 
             <div class="stats-section">
-                <h2>历史成绩</h2>
+                <h2 style="display:flex;align-items:center;justify-content:space-between;">历史成绩
+                    <button class="btn btn-sm btn-secondary" id="clearHistoryBtn" onclick="confirmClearHistory()">清除记录</button>
+                </h2>
                 <div id="historyList"><div class="loading">加载中...</div></div>
             </div>
         </div>
@@ -575,7 +577,8 @@
     // ============ 历史成绩 ============
     async function loadHistory() {
         const resp = await api('/api/exam/history');
-        const { records } = await resp.json();
+        const data = await resp.json();
+        const records = data.records || [];
         const el = document.getElementById('historyList');
         if (!records.length) {
             el.innerHTML = '<div class="empty-state"><p>还没有考试记录，来一场试试</p></div>';
@@ -593,6 +596,27 @@
             </tr>`;
         }
         el.innerHTML = html + '</table>';
+    }
+
+    // 清除全部模拟考记录：确认弹窗列明会删多少（含进行中/已废弃会话），删后刷新列表
+    async function confirmClearHistory() {
+        const resp = await api('/api/exam/history');
+        const data = await resp.json();
+        const records = data.records || [];
+        const total = data.total || 0;
+        if (!total) { alert('当前没有模拟考记录'); return; }
+        const extra = total > records.length
+            ? `，另有 ${total - records.length} 场进行中/已放弃的会话将一并删除` : '';
+        if (!confirm(`确定清除全部模拟考记录吗？\n已完成 ${records.length} 场${extra}，删除后不可恢复。`)) return;
+        const r2 = await api('/api/exam/clear', {
+            method: 'POST', headers: { 'Content-Type': 'application/json' }, body: '{}'
+        });
+        const rd = await r2.json();
+        if (rd.cleared != null) {
+            loadHistory();
+        } else {
+            alert(rd.error || '清除失败');
+        }
     }
 
     // 按场次回看试卷：默认只看错题，可切全部看答过的每一题

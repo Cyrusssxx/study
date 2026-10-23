@@ -1388,7 +1388,8 @@ async function examApi(action, body, arg) {
     }
 
     if (action === 'history') {
-        const records = (await dbAll('exams'))
+        const all = await dbAll('exams');
+        const records = all
             .filter(e => e.status === 'submitted')
             .sort((a, b) => (a.submitted_at > b.submitted_at ? -1 : 1))
             .slice(0, 50)
@@ -1396,7 +1397,21 @@ async function examApi(action, body, arg) {
                 id: e.id, mode: e.mode, total_count: e.total_count, correct_count: e.correct_count,
                 score: e.score, duration_sec: e.duration_sec, started_at: e.started_at, submitted_at: e.submitted_at
             }));
-        return jsonResp({ records });
+        // total = 全部会话（含进行中/已废弃），供"清除记录"确认弹窗提示
+        return jsonResp({ records, total: all.length });
+    }
+
+    // 清除全部模拟考记录（含进行中/已废弃的会话）——前端有确认弹窗把关
+    if (action === 'clear') {
+        const all = await dbAll('exams');
+        const db = await openDB();
+        await new Promise((res, rej) => {
+            const tx = db.transaction('exams', 'readwrite');
+            tx.objectStore('exams').clear();
+            tx.oncomplete = res;
+            tx.onerror = () => rej(tx.error || new Error('清除失败'));
+        });
+        return jsonResp({ cleared: all.length });
     }
 
     if (action === 'detail') {

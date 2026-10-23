@@ -138,6 +138,16 @@ ok('勾选框重置最小宽度', /\.setup-row input\[type="checkbox"\][\s\S]{0,
 ok('说明文字独占一行', /\.setup-hint-block\s*\{/.test(CSS) && /class="setup-hint-block"/.test(EXAM_HTML));
 ok('窄屏字段名独占一行', /@media\s*\(max-width:\s*600px\)[\s\S]{0,200}\.setup-row > label:first-child\s*\{\s*flex:\s*0 0 100%/.test(CSS));
 
+console.log('--- 清除模拟考记录 ---');
+ok('后端有 clear 动作', /action === 'clear'/.test(BACKEND));
+ok('后端 clear 清空 exams 库', /objectStore\('exams'\)\.clear\(\)/.test(BACKEND));
+ok('history 响应带 total（含进行中/已废弃）', /return jsonResp\(\{ records, total: all\.length \}\)/.test(BACKEND));
+ok('前端有清除按钮', /onclick="confirmClearHistory\(\)"/.test(EXAM_HTML));
+ok('前端确认弹窗列明场数', /确定清除全部模拟考记录吗\？/.test(EXAM_HTML));
+ok('确认提示含进行中/已废弃警告', /进行中\/已放弃的会话将一并删除/.test(EXAM_HTML));
+ok('清除后刷新历史列表', /cleared != null[\s\S]{0,80}loadHistory\(\)/.test(EXAM_HTML));
+ok('无记录时直接提示', /当前没有模拟考记录/.test(EXAM_HTML));
+
 console.log('--- 成绩单顶部返回 ---');
 ok('成绩单有吸顶返回条', /class="result-topbar"/.test(EXAM_HTML));
 ok('顶部有返回按钮', /id="btnTopBack"/.test(EXAM_HTML));
