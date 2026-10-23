@@ -459,6 +459,33 @@ async function getDueReviewDetailed(subject) {
     return { stages, stageDue, dueCount, upcoming };
 }
 
+// ==================== 收藏题考试的到期错题层 ====================
+// 语义与错题本复习（艾宾浩斯 2/4/7/15 阶梯）不同，按用户规则独立实现：
+//   做对了不抽——最后做错之后若有更晚的答对记录，即算了结；
+//   做错了 4 天后再抽——固定间隔（last_wrong_at + 4 天），又做错则重新计 4 天；
+//   逾期越久越靠前——把很久之前写过的先过一遍，近期答错的不着急（自然排在队尾）。
+const EXAM_WRONG_REDRAW_DAYS = 4;
+async function examDueWrongIds() {
+    const statuses = await latestStatuses('');
+    const nowMs = Date.now();
+    const items = [];
+    for (const w of await dbAll('wrong')) {
+        if (w.is_resolved) continue;   // 已了结/手动清过的不抽
+        const lw = tsToStr(w.last_wrong_at).slice(0, 19);
+        if (!lw) continue;
+        const st = statuses[w.question_id];
+        // 做对了不抽：最后一次作答是答对、且晚于最后做错时间
+        if (st && st.is_correct && tsToStr(st.answered_at).slice(0, 19) > lw) continue;
+        const base = new Date(lw.replace(' ', 'T')).getTime();
+        if (isNaN(base)) continue;
+        if (nowMs < base + EXAM_WRONG_REDRAW_DAYS * 86400000) continue;   // 未满 4 天
+        items.push([lw, w.question_id]);
+    }
+    // 逾期越久越靠前 = last_wrong_at 越早越靠前；同刻按题号稳定排序
+    items.sort((a, b) => (a[0] < b[0] ? -1 : a[0] > b[0] ? 1 : (a[1] < b[1] ? -1 : 1)));
+    return items.map(x => x[1]);
+}
+
 // ==================== api() 路由 ====================
 function jsonResp(obj, status = 200) {
     return { ok: status < 400, status, json: async () => obj };
@@ -1292,36 +1319,27 @@ async function examApi(action, body, arg) {
         const wrongMap = new Map();
         for (const w of await dbAll('wrong')) wrongMap.set(w.question_id, w);
 
-        // 到期错题（艾宾浩斯 2/4/7/15 天间隔已到期，跨科目一次算好）：
-        // 收藏题考试里优先抽回卷面——这次做错的题按间隔到期后回来，答对顺延、连对毕业。
-        let dueSet = new Set();
-        try { dueSet = new Set((await getDueReview('', null)).ids); } catch (e) { /* 取不到就退化为纯时间队列 */ }
+        // 到期错题（跨科目一次算好）：只含「最近一次作答仍是错的」的题。
+        // 做对了即了结不抽；做错的 4 天后再抽；逾期越久越靠前（rank 越小越靠前）。
+        let dueRank = new Map();
+        try { (await examDueWrongIds()).forEach((id, i) => dueRank.set(id, i)); } catch (e) { /* 取不到就退化为纯时间队列 */ }
 
         // 收藏题（favorites）：到期错题 → 没做过 → 时间队列。
-        //   ① 到期错题最优先：内部按「最近动态」倒序（最近做错的先回卷），最多占本场该科
-        //      题量 1/3（向上取整）——复习优先但不挤掉新题推进；超帽的回流时间队列，
-        //      老积压在近期错题清完后自然补位；
+        //   ① 到期错题最优先：逾期越久越先抽（很久之前写过的先过一遍，近期答错的不着急），
+        //      最多占本场该科题量 1/3（向上取整）——复习优先但不挤掉新题推进；
+        //      超帽的回流时间队列，随队列自然再出现；
         //   ② 从没做过的排其次：还没进队列，按题号稳定序（不随机），对应"1312 题一天 40"的推进节奏；
         //   ③ 其余做过的按「最近一次作答时间」升序 = 最早做的排最前；
         //      作答后 answered_at 刷新 → 这题沉到队尾 → 下一场自然抽到下一批，形成轮转复习。
         function prioritizeByTime(pool, take) {
             const due = [], fresh = [], done = [];
             for (const q of pool) {
-                if (dueSet.has(q.id)) { due.push(q); continue; }
+                if (dueRank.has(q.id)) { due.push(q); continue; }
                 const p = progMap.get(q.id);
                 if (!p) fresh.push(q); else done.push(q);
             }
-            // 到期错题内部：最近动态（做错/作答）越新越靠前，同刻按题号稳定排序
-            const recentKey = qid => {
-                const pa = String((progMap.get(qid) || {}).answered_at || '');
-                const lw = String((wrongMap.get(qid) || {}).last_wrong_at || '');
-                return pa > lw ? pa : lw;
-            };
-            due.sort((a, b) => {
-                const ra = recentKey(a.id), rb = recentKey(b.id);
-                if (ra !== rb) return ra > rb ? -1 : 1;
-                return a.id < b.id ? -1 : 1;
-            });
+            // 到期错题内部：逾期越久越靠前（dueRank 由 examDueWrongIds 按最后做错时间升序生成）
+            due.sort((a, b) => (dueRank.get(a.id) - dueRank.get(b.id)) || (a.id < b.id ? -1 : 1));
             // 帽子 = 本场该科题量的 1/3：超出部分退回时间队列（并入 done 按作答时间排序）
             const dueCap = Math.ceil((take || pool.length) / 3);
             while (due.length > dueCap) done.push(due.pop());
@@ -1478,6 +1496,20 @@ async function examApi(action, body, arg) {
             tx.onerror = () => rej(tx.error || new Error('清除失败'));
         });
         return jsonResp({ cleared: all.length });
+    }
+
+    // 批量删除指定场次（历史列表勾选后删除）——前端有确认弹窗把关
+    if (action === 'delete') {
+        const ids = (Array.isArray(body.ids) ? body.ids : []).map(n => parseInt(n, 10)).filter(n => n > 0);
+        if (!ids.length) return jsonResp({ error: '未选择要删除的记录' }, 400);
+        const db = await openDB();
+        await new Promise((res, rej) => {
+            const tx = db.transaction('exams', 'readwrite');
+            for (const id of ids) tx.objectStore('exams').delete(id);
+            tx.oncomplete = res;
+            tx.onerror = () => rej(tx.error || new Error('删除失败'));
+        });
+        return jsonResp({ deleted: ids.length });
     }
 
     if (action === 'detail') {

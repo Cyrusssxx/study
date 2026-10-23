@@ -104,7 +104,10 @@
 
             <div class="stats-section">
                 <h2 style="display:flex;align-items:center;justify-content:space-between;">历史成绩
-                    <button class="btn btn-sm btn-secondary" id="clearHistoryBtn" onclick="confirmClearHistory()">清除记录</button>
+                    <span style="display:flex;gap:8px;">
+                        <button class="btn btn-sm btn-secondary" id="delSelectedBtn" style="display:none" onclick="confirmDeleteSelected()">删除选中</button>
+                        <button class="btn btn-sm btn-secondary" id="clearHistoryBtn" onclick="confirmClearHistory()">清除记录</button>
+                    </span>
                 </h2>
                 <div id="historyList"><div class="loading">加载中...</div></div>
             </div>
@@ -596,9 +599,10 @@
             el.innerHTML = '<div class="empty-state"><p>还没有考试记录，来一场试试</p></div>';
             return;
         }
-        let html = '<table class="history-table"><tr><th>时间</th><th>模式</th><th>得分</th><th>答对</th><th>时长</th><th>回顾</th></tr>';
+        let html = '<table class="history-table"><tr><th><input type="checkbox" id="histSelAll" onchange="histToggleAll(this)" title="全选/全不选"></th><th>时间</th><th>模式</th><th>得分</th><th>答对</th><th>时长</th><th>回顾</th></tr>';
         for (const rec of records) {
             html += `<tr>
+                <td><input type="checkbox" class="hist-sel" data-id="${rec.id}" onchange="histSelChange()"></td>
                 <td>${rec.submitted_at || rec.started_at}</td>
                 <td>${MODE_NAMES[rec.mode] || rec.mode}</td>
                 <td class="score-cell">${rec.correct_count * 2}</td>
@@ -611,6 +615,36 @@
             </tr>`;
         }
         el.innerHTML = html + '</table>';
+    }
+
+    // ============ 历史记录批量勾选删除 ============
+    function histToggleAll(on) {
+        document.querySelectorAll('.hist-sel').forEach(cb => { cb.checked = on; });
+        histSelChange();
+    }
+    function histSelChange() {
+        const n = document.querySelectorAll('.hist-sel:checked').length;
+        const btn = document.getElementById('delSelectedBtn');
+        if (!btn) return;
+        btn.style.display = n ? '' : 'none';
+        btn.textContent = n ? `删除选中（${n}）` : '删除选中';
+    }
+    async function confirmDeleteSelected() {
+        const ids = [...document.querySelectorAll('.hist-sel:checked')]
+            .map(cb => parseInt(cb.dataset.id, 10)).filter(n => n > 0);
+        if (!ids.length) { alert('先勾选要删除的考试记录'); return; }
+        if (!confirm(`确定删除选中的 ${ids.length} 场考试记录吗？\n该场的成绩、逐题明细与错题重刷入口一并删除，不可恢复。`)) return;
+        const r = await api('/api/exam/delete', {
+            method: 'POST', headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ ids })
+        });
+        const d = await r.json();
+        if (d.deleted != null) {
+            await loadHistory();
+            histSelChange();   // 重渲染后勾选清零，同步隐藏删除按钮
+        } else {
+            alert(d.error || '删除失败');
+        }
     }
 
     // 清除全部模拟考记录：确认弹窗列明会删多少（含进行中/已废弃会话），删后刷新列表

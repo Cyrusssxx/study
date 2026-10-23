@@ -216,13 +216,26 @@ ok('exam_wrong 模式右侧平铺全部错题号', /MODE === 'exam_wrong'[\s\S]{
 ok('题号面板标题带错题总数', /错题 \$\{questions\.length\} 个/.test(QUIZ_HTML));
 
 console.log('--- 抽题优先级：到期错题回卷（favorites） ---');
-ok('组卷时算全库到期错题（getDueReview 空科目）', /await getDueReview\('', null\)/.test(BACKEND));
+ok('专用到期错题函数（与复习阶梯解耦）', /async function examDueWrongIds\(\)/.test(BACKEND));
+ok('固定 4 天再抽间隔', /const EXAM_WRONG_REDRAW_DAYS = 4;/.test(BACKEND));
+ok('做对了不抽（答对且晚于最后做错 → 排除）', /st && st\.is_correct && tsToStr\(st\.answered_at\)\.slice\(0, 19\) > lw\) continue;/.test(BACKEND));
+ok('已了结（is_resolved）不抽', /if \(w\.is_resolved\) continue;/.test(BACKEND));
+ok('未满 4 天不抽', /nowMs < base \+ EXAM_WRONG_REDRAW_DAYS \* 86400000\) continue;/.test(BACKEND));
+ok('逾期越久越靠前（last_wrong_at 升序）', /a\[0\] < b\[0\] \? -1 : a\[0\] > b\[0\] \? 1/.test(BACKEND));
+ok('组卷按 rank 引用到期层', /dueRank\.has\(q\.id\)/.test(BACKEND) && /dueRank\.get\(a\.id\) - dueRank\.get\(b\.id\)/.test(BACKEND));
 ok('到期错题层最优先（due.concat(fresh, done)）', /return due\.concat\(fresh, done\);/.test(BACKEND));
-ok('到期错题内部按最近动态倒序（最近错的先回卷）', /if \(ra !== rb\) return ra > rb \? -1 : 1;/.test(BACKEND));
 ok('到期错题帽子 = 本场该科题量 1/3（向上取整）', /const dueCap = Math\.ceil\(\(take \|\| pool\.length\) \/ 3\);/.test(BACKEND));
 ok('超帽到期错题回流时间队列', /while \(due\.length > dueCap\) done\.push\(due\.pop\(\)\);/.test(BACKEND));
 ok('调用点传题量供帽子计算', /order\(poolBySub\[k\], take\)/.test(BACKEND) && /order\(rest, short\)/.test(BACKEND) && /order\(poolBySub\[mode\], total\)/.test(BACKEND));
 ok('组卷设置提示到期错题优先', /到期错题优先回卷/.test(EXAM_HTML));
+
+console.log('--- 历史记录批量勾选删除 ---');
+ok('后端有 delete 动作（按 ids 删）', /action === 'delete'/.test(BACKEND) && /tx\.objectStore\('exams'\)\.delete\(id\)/.test(BACKEND));
+ok('空选择直接拒绝', /未选择要删除的记录/.test(BACKEND));
+ok('历史表有勾选列与全选框', /class="hist-sel" data-id="\$\{rec\.id\}"/.test(EXAM_HTML) && /id="histSelAll"/.test(EXAM_HTML));
+ok('删除选中按钮随勾选显隐并带计数', /删除选中（\$\{n\}）/.test(EXAM_HTML));
+ok('删除前有确认弹窗', /确定删除选中的 \$\{ids\.length\} 场考试记录吗？/.test(EXAM_HTML));
+ok('删除后刷新历史列表', /d\.deleted != null[\s\S]{0,80}loadHistory\(\)/.test(EXAM_HTML));
 
 console.log(`\n结果: ${pass} 通过 / ${fail} 失败`);
 process.exit(fail ? 1 : 0);
