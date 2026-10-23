@@ -42,6 +42,12 @@ async function loadQuestions(key) {
     if (_qCache[key]) return _qCache[key];
     const resp = await fetch(`data/${SUBJECTS[key].json}`);
     const data = await resp.json();
+    // 标记 excluded 的题（数据有缺陷、暂不可用）不进题池：刷题 / 模拟考 / 收藏 / 搜索 全部不出现
+    if (Array.isArray(data.questions)) {
+        const before = data.questions.length;
+        data.questions = data.questions.filter(q => !q.excluded);
+        if (before !== data.questions.length) data.total = data.questions.length;
+    }
     const texts = [];
     for (const q of data.questions) {
         const m = REAL_EXAM_RE.exec((q.content || '').slice(0, 80));

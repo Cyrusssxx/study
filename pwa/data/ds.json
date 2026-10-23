@@ -1,7 +1,7 @@
 {
   "subject": "数据结构",
   "subject_key": "ds",
-  "total": 633,
+  "total": 632,
   "questions": [
     {
       "id": "ds_0001",
@@ -9575,6 +9575,7 @@
     },
     {
       "id": "ds_0633",
+      "excluded": true,
       "number": 598,
       "content": "下列排序算法中属于稳定排序的是（①），平均时间复杂度为 O(nlog<sub>2</sub>n) 的是（②），在最好的情况下，时间复杂度可以达到线性时间的有（③）。（注：多选题）<br>I. 冒泡排序　II. 堆排序　III. 选择排序　IV. 直接插入排序　V. 希尔排序　VI. 归并排序　VII. 快速排序",
       "options": {

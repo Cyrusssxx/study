@@ -381,12 +381,19 @@
         }
         let multiTpl = '';
         if (isMulti) {
-            const optHtml = ['<option value=""></option>']
-                .concat(Object.entries(q.options || {}).map(([k, v]) => `<option value="${k}">${k}. ${fmtOptionText(v)}</option>`))
+            // 每个空可能有自己的选项组（blank_opts），没有就都用 q.options
+            const optHtmlFor = opts => ['<option value=""></option>']
+                .concat(Object.entries(opts || {}).map(([k, v]) => `<option value="${k}">${k}. ${fmtOptionText(v)}</option>`))
                 .join('');
-            const selHtml = `<select class="blank-select" onchange="pickMultiAnswer()">${optHtml}</select>`;
-            multiTpl = fmtContent(q.content).replace(/<pre\b[\s\S]*?<\/pre>|(?<![A-Za-z0-9_])\(\s*\)/g, m =>
-                /^<pre/i.test(m) ? m : selHtml);
+            const useBlankOpts = Array.isArray(q.blank_opts) && q.blank_opts.length;
+            let bi = 0;
+            multiTpl = fmtContent(q.content).replace(
+                /<pre\b[\s\S]*?<\/pre>|(?<![A-Za-z0-9_])\(\s*\)|\([①-⑩]\)|（\s*）|（[①-⑩]）/g,
+                m => {
+                    if (/^<pre/i.test(m)) return m;
+                    const opts = useBlankOpts ? (q.blank_opts[bi++] || q.options) : q.options;
+                    return `<select class="blank-select" onchange="pickMultiAnswer()">${optHtmlFor(opts)}</select>`;
+                });
         }
         document.getElementById('examQuestionArea').innerHTML = `
             <div class="question-card">
