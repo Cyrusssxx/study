@@ -6023,6 +6023,37 @@ a.chapter-badge-link:hover {
 .mode-badge[data-mode="real"]     { background: #dbeafe; color: #1e40af; }
 .mode-badge[data-mode="fav_real"] { background: linear-gradient(90deg, #ccfbf1, #dbeafe); color: #0f766e; }
 .mode-badge[data-mode="sequential"] { background: #e5e7eb; color: #374151; }
+.mode-badge[data-mode="exam_wrong"] { background: #fee2e2; color: #b91c1c; }
+
+/* 试卷错题重刷：来源试卷信息横幅（quiz.html exam_wrong 模式） */
+.exam-replay-banner {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 6px 10px;
+    margin: 0 0 14px;
+    padding: 10px 14px;
+    background: #fef2f2;
+    border: 1px solid #fecaca;
+    border-radius: 10px;
+    font-size: 13px;
+    color: #7f1d1d;
+}
+.exam-replay-banner .exam-replay-when { font-weight: 600; }
+.exam-replay-banner .exam-replay-sep { color: #fca5a5; }
+.exam-replay-banner .exam-replay-wrong { font-weight: 700; }
+.exam-replay-banner .exam-replay-note {
+    margin-left: auto;
+    color: #b45309;
+    font-size: 12px;
+}
+.dark .exam-replay-banner {
+    background: #2b1a1a;
+    border-color: #5c2b2b;
+    color: #f3b8b8;
+}
+.dark .exam-replay-banner .exam-replay-sep { color: #7a4a4a; }
+.dark .exam-replay-banner .exam-replay-note { color: #d3a35c; }
 
 .dark .kb-sec-title { color: #aab6c2; }
 
@@ -6048,6 +6079,7 @@ a.chapter-badge-link:hover {
 .dark .mode-badge[data-mode="real"]     { background: #1a2b45; color: #7fb0ee; }
 .dark .mode-badge[data-mode="fav_real"] { background: linear-gradient(90deg, #123a30, #1a2b45); color: #6fd3c3; }
 .dark .mode-badge[data-mode="sequential"] { background: #26303b; color: #aab6c2; }
+.dark .mode-badge[data-mode="exam_wrong"] { background: #3d2020; color: #f8a5a5; }
 
 /* ==================== 刷题背景自定义（仅 quiz.html 生效） ==================== */
 #bgOverlay { position: fixed; inset: 0; z-index: -1; pointer-events: none; display: none; }

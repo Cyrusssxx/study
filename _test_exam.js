@@ -160,5 +160,43 @@ ok('exam.html 无 navTimer', !/navTimer/.test(EXAM_HTML));
 ok('common.js 无 navTimer 依赖', !/navTimer/.test(fs.readFileSync(path.join(ROOT, 'pwa', 'js', 'common.js'), 'utf8')));
 ok('common.js 仍保留时长累计', /studyTimerSec/.test(fs.readFileSync(path.join(ROOT, 'pwa', 'js', 'common.js'), 'utf8')));
 
+// ---- 试卷错题重刷（exam_wrong 模式）：exam 成绩单 → 刷题界面重做 ----
+const QUIZ_HTML = fs.readFileSync(path.join(ROOT, 'pwa', 'quiz.html'), 'utf8');
+const INDEX_HTML = fs.readFileSync(path.join(ROOT, 'pwa', 'index.html'), 'utf8');
+
+console.log('--- 试卷错题重刷：后端 exam_wrong 模式 ---');
+ok('questions API 有 exam_wrong 分支', /mode === 'exam_wrong'/.test(BACKEND));
+ok('按 exam_id 取卷且必须已交卷', /dbGet\('exams', parseInt\(p\.get\('exam_id'/.test(BACKEND) && /exam\.status !== 'submitted'/.test(BACKEND));
+ok('错题口径与 gradeExam 一致（含未作答）', /if \(!\(!!ua && ua === \(q\.answer \|\| ''\)\)\) wrongIds\.push\(qid\)/.test(BACKEND));
+ok('跨科目按卷面顺序重排', /orderMap\.get\(a\.id\) - orderMap\.get\(b\.id\)/.test(BACKEND));
+ok('每题带考试时的作答（exam_user_answer）', /exam_user_answer: examUa\[q\.id\]/.test(BACKEND));
+ok('响应带试卷元信息 exam_meta', /examMeta = \{[\s\S]{0,200}exam_id: exam\.id, mode: exam\.mode, score: exam\.score/.test(BACKEND) && /wrong_count: wrongIds\.length/.test(BACKEND));
+ok('混合模式下收藏/标记/笔记不按单科过滤', /mixed \|\| f\.subject === subject/.test(BACKEND) && /mixed \|\| n\.subject === subject/.test(BACKEND));
+ok('混合模式下进度状态取全量', /latestStatuses\(mixed \? '' : subject\)/.test(BACKEND));
+ok('exam_meta 只在该模式返回', /if \(examMeta\) out\.exam_meta = examMeta;/.test(BACKEND));
+
+console.log('--- 试卷错题重刷：刷题页 ---');
+ok('modeNames 有 exam_wrong', /'exam_wrong': '试卷错题'/.test(QUIZ_HTML));
+ok('解析 exam_id 参数', /const EXAM_ID = _params\.get\('exam_id'\)/.test(QUIZ_HTML));
+ok('加载 URL 带 exam_id', /const examQ = \(MODE === 'exam_wrong' && EXAM_ID\)/.test(QUIZ_HTML) && /&exam_id=\$\{encodeURIComponent\(EXAM_ID\)\}/.test(QUIZ_HTML));
+ok('标题脱离单科（试卷错题重刷）', /MODE === 'exam_wrong' \? '试卷错题重刷' : SUBJECT_NAME/.test(QUIZ_HTML));
+ok('横幅容器与渲染函数', /id="examReplayBanner"/.test(QUIZ_HTML) && /function renderExamMeta\(meta\)/.test(QUIZ_HTML));
+ok('横幅展示时间/得分/用时/错题数', /submitted_at \|\| .*started_at/.test(QUIZ_HTML) && /duration_sec/.test(QUIZ_HTML) && /wrong_count/.test(QUIZ_HTML));
+ok('空态提示（这场试卷没有错题）', /这场试卷没有错题/.test(QUIZ_HTML));
+ok('位置存档按试卷分档', /MODE === 'exam_wrong' && EXAM_ID \? '_' \+ EXAM_ID : ''/.test(QUIZ_HTML));
+ok('点章节回落顺序模式（防 exam_id 丢失成坏链）', /const mode = MODE === 'exam_wrong' \? 'sequential' : MODE;/.test(QUIZ_HTML));
+ok('笔记链接按题目自身科目跳转', /NOTES_SUBJECTS\.includes\(q\.id\.split\('_'\)\[0\]\)/.test(QUIZ_HTML));
+ok('混合题集不拉单科全量库覆盖序号', /MODE !== 'sequential' && MODE !== 'exam_wrong'/.test(QUIZ_HTML));
+
+console.log('--- 试卷错题重刷：模拟考入口 ---');
+ok('成绩单有重刷入口（带 exam_id 与 fresh=1）', /quiz\.html\?mode=exam_wrong&exam_id=\$\{r\.exam_id\}&fresh=1/.test(EXAM_HTML));
+ok('历史列表每行有重刷入口', /quiz\.html\?mode=exam_wrong&exam_id=\$\{rec\.id\}&fresh=1/.test(EXAM_HTML));
+ok('无错题不出入口', /\(wrongCnt && r\.exam_id\)/.test(EXAM_HTML));
+ok('首页继续刷题跳过 exam_wrong（防坏链）', /e\.mode === 'favorite' \|\| e\.mode === 'fav_real' \|\| e\.mode === 'exam_wrong'/.test(INDEX_HTML));
+
+console.log('--- 试卷错题重刷：样式 ---');
+ok('模式徽章 exam_wrong 配色（亮/暗）', /\.mode-badge\[data-mode="exam_wrong"\]/.test(CSS) && /\.dark \.mode-badge\[data-mode="exam_wrong"\]/.test(CSS));
+ok('横幅样式（亮/暗）', /\.exam-replay-banner\s*\{/.test(CSS) && /\.dark \.exam-replay-banner\s*\{/.test(CSS));
+
 console.log(`\n结果: ${pass} 通过 / ${fail} 失败`);
 process.exit(fail ? 1 : 0);

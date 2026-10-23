@@ -484,13 +484,46 @@ async function api(url, opts = {}) {
 
             const data = await loadQuestions(subject);
             let qs = data.questions;
+
+            // 试卷错题重刷（exam_wrong）：从指定模拟考卷里筛出错题（含未作答，口径与成绩单一致），
+            // 跨科目按卷面顺序返回，并带出该卷的时间/得分等元信息供刷题页展示。
+            // 一张卷覆盖四科，所以这里不按 URL 的 subject 过滤题、收藏、标记与笔记。
+            let examMeta = null;
+            if (mode === 'exam_wrong') {
+                const exam = await dbGet('exams', parseInt(p.get('exam_id') || '0', 10));
+                if (!exam || exam.status !== 'submitted') return jsonResp({ error: '试卷不存在或未交卷' }, 404);
+                const wrongIds = [], examUa = {};
+                for (const qid of exam.question_ids) {
+                    const q = await getQuestionById(qid);
+                    if (!q) continue;   // 已从题库移除的题无法重刷，跳过
+                    const ua = ((exam.answers || {})[qid] || '').toUpperCase();
+                    examUa[qid] = ua;
+                    if (!(!!ua && ua === (q.answer || ''))) wrongIds.push(qid);
+                }
+                const idSet = new Set(wrongIds);
+                const orderMap = new Map(wrongIds.map((id, i) => [id, i]));
+                qs = [];
+                for (const k of Object.keys(SUBJECTS)) {
+                    for (const q of (await loadQuestions(k)).questions) {
+                        if (idSet.has(q.id)) qs.push(Object.assign({}, q, { exam_user_answer: examUa[q.id] || '' }));
+                    }
+                }
+                qs.sort((a, b) => orderMap.get(a.id) - orderMap.get(b.id));
+                examMeta = {
+                    exam_id: exam.id, mode: exam.mode, score: exam.score,
+                    started_at: exam.started_at, submitted_at: exam.submitted_at,
+                    duration_sec: exam.duration_sec, wrong_count: wrongIds.length
+                };
+            }
+            const mixed = mode === 'exam_wrong';
+
             if (chapter) qs = qs.filter(q => q.chapter === chapter);
             if (section) qs = qs.filter(q => q.section === section);
 
-            const statuses = await latestStatuses(subject);
-            const favSet = new Set((await dbAll('favorites')).filter(f => f.subject === subject).map(f => f.question_id));
-            const unfamSet = new Set((await dbAll('unfamiliar')).filter(f => f.subject === subject).map(f => f.question_id));
-            const dontknowSet = new Set((await dbAll('dontknow')).filter(f => f.subject === subject).map(f => f.question_id));
+            const statuses = await latestStatuses(mixed ? '' : subject);
+            const favSet = new Set((await dbAll('favorites')).filter(f => mixed || f.subject === subject).map(f => f.question_id));
+            const unfamSet = new Set((await dbAll('unfamiliar')).filter(f => mixed || f.subject === subject).map(f => f.question_id));
+            const dontknowSet = new Set((await dbAll('dontknow')).filter(f => mixed || f.subject === subject).map(f => f.question_id));
 
             if (mode === 'random') {
                 qs = qs.slice();
@@ -554,7 +587,7 @@ async function api(url, opts = {}) {
             const total = qs.length;
             const pageQs = qs.slice((page - 1) * perPage, (page - 1) * perPage + perPage);
             const notes = {};
-            for (const n of await dbAll('notes')) if (n.subject === subject) notes[n.question_id] = n;
+            for (const n of await dbAll('notes')) if (mixed || n.subject === subject) notes[n.question_id] = n;
             const result = pageQs.map(q => ({
                 ...q,
                 is_favorited: favSet.has(q.id),
@@ -564,7 +597,9 @@ async function api(url, opts = {}) {
                 note: notes[q.id] ? notes[q.id].content : '',
                 note_images: (notes[q.id] && notes[q.id].images) || []
             }));
-            return jsonResp({ subject: data.subject, total, page, per_page: perPage, questions: result });
+            const out = { subject: data.subject, total, page, per_page: perPage, questions: result };
+            if (examMeta) out.exam_meta = examMeta;
+            return jsonResp(out);
         }
 
         // ---------- 章节树 ----------

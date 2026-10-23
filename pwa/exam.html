@@ -535,10 +535,15 @@
 
         // 逐题回顾：默认只看错题，可切全部；错题一律可看解析 + 跳转练习
         const wrongCnt = r.details.filter(d => !d.is_correct).length;
+        // 有错题且能定位到试卷时，给一个跳刷题页重做的入口（跨科目按卷面顺序重刷，笔记随题带出）
+        const replayLink = (wrongCnt && r.exam_id)
+            ? `<a class="btn btn-sm btn-primary" href="quiz.html?mode=exam_wrong&exam_id=${r.exam_id}&fresh=1" title="跳到刷题页按卷面顺序重做本场错题；你的笔记、收藏、标记随题带出">📝 在刷题界面重做错题 →</a>`
+            : '';
         html += `<div class="stats-section"><h2>逐题回顾${fromHistory ? '' : '（错题已自动记入错题本）'}</h2>
             <div class="result-filter">
                 <button class="btn btn-sm ${resultWrongOnly ? 'btn-primary' : 'btn-secondary'}" onclick="setResultFilter(true)">只看错题 ${wrongCnt}</button>
                 <button class="btn btn-sm ${resultWrongOnly ? 'btn-secondary' : 'btn-primary'}" onclick="setResultFilter(false)">全部 ${r.details.length}</button>
+                ${replayLink}
             </div>`;
         if (resultWrongOnly && !wrongCnt) {
             html += `<div class="empty-state"><p>本场全对，没有错题 🎉</p></div>`;
@@ -599,7 +604,10 @@
                 <td class="score-cell">${rec.score}</td>
                 <td>${rec.correct_count}/${rec.total_count}</td>
                 <td>${Math.round(rec.duration_sec / 60)} 分钟</td>
-                <td><button class="btn btn-sm btn-secondary" onclick="viewDetail(${rec.id})">查看</button></td>
+                <td>
+                    <button class="btn btn-sm btn-secondary" onclick="viewDetail(${rec.id})">查看</button>
+                    <a class="btn btn-sm btn-secondary" href="quiz.html?mode=exam_wrong&exam_id=${rec.id}&fresh=1" title="跳到刷题页，按卷面顺序重做本场错题（笔记随题带出）">错题重刷</a>
+                </td>
             </tr>`;
         }
         el.innerHTML = html + '</table>';
