@@ -468,8 +468,18 @@
             // 题头显示「小节 · 节内第几题」：按全库编号顺序给每题算节内序号
             _buildSecOrdinal(data.questions);
             // 非 sequential 模式下当前集合是子集（收藏/错题/随机…），再拉一次全量库作序号基准
-            // 试卷错题模式是跨科目混合集，单科全量库覆盖不了，直接用卷面顺序作序号基准
-            if (MODE !== 'sequential' && MODE !== 'exam_wrong') {
+            if (MODE === 'exam_wrong') {
+                // 试卷错题重刷：题头要显示题库原编号（小节 · 节内第几题）——
+                // 混合集覆盖四科，把卷内出现科目的全量库合并后算节内序号
+                const needSubs = [...new Set(questions.map(q => q.id.split('_')[0]))];
+                Promise.all(needSubs.map(k =>
+                    api(`/api/questions/${k}?mode=sequential&page=1&per_page=9999`).then(r => r.json())
+                )).then(all => {
+                    if (seq !== _loadSeq) return;
+                    _buildSecOrdinal(all.flatMap(d => d.questions || []));
+                    if (questions[currentIndex]) renderQuestion();
+                }).catch(() => { });
+            } else if (MODE !== 'sequential') {
                 api(`/api/questions/${SUBJECT}?mode=sequential&page=1&per_page=9999`)
                     .then(r => r.json())
                     .then(full => { if (seq !== _loadSeq) return; _buildSecOrdinal(full.questions); if (questions[currentIndex]) renderQuestion(); })

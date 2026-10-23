@@ -189,7 +189,7 @@ ok('空态提示（这场试卷没有错题）', /这场试卷没有错题/.test
 ok('位置存档按试卷分档', /MODE === 'exam_wrong' && EXAM_ID \? '_' \+ EXAM_ID : ''/.test(QUIZ_HTML));
 ok('点章节回落顺序模式（防 exam_id 丢失成坏链）', /const mode = MODE === 'exam_wrong' \? 'sequential' : MODE;/.test(QUIZ_HTML));
 ok('笔记链接按题目自身科目跳转', /NOTES_SUBJECTS\.includes\(q\.id\.split\('_'\)\[0\]\)/.test(QUIZ_HTML));
-ok('混合题集不拉单科全量库覆盖序号', /MODE !== 'sequential' && MODE !== 'exam_wrong'/.test(QUIZ_HTML));
+ok('题头节内序号用全量库基准（保留原题号）', /needSubs\.map\(k =>/.test(QUIZ_HTML) && /_buildSecOrdinal\(all\.flatMap\(d => d\.questions \|\| \[\]\)\)/.test(QUIZ_HTML));
 
 console.log('--- 试卷错题重刷：模拟考入口 ---');
 ok('成绩单有重刷入口（带 exam_id 与 fresh=1）', /quiz\.html\?mode=exam_wrong&exam_id=\$\{r\.exam_id\}&fresh=1/.test(EXAM_HTML));
