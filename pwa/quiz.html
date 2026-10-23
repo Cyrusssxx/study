@@ -444,7 +444,9 @@
             <span class="exam-replay-when">${when || '时间未知'}</span>
             <span class="exam-replay-sep">·</span>
             <span>${EXAM_MODE_NAMES[meta.mode] || '模拟考'}</span>
-            ${meta.score != null ? `<span class="exam-replay-sep">·</span><span>得分 <b>${meta.score}</b></span>` : ''}
+            ${meta.correct_count != null
+                ? `<span class="exam-replay-sep">·</span><span>得分 <b>${meta.correct_count * 2}</b> / 满分 ${meta.total_count * 2}</span>`
+                : (meta.score != null ? `<span class="exam-replay-sep">·</span><span>得分 <b>${meta.score}</b></span>` : '')}
             ${mins ? `<span class="exam-replay-sep">·</span><span>用时 ${mins} 分钟</span>` : ''}
             <span class="exam-replay-sep">·</span>
             <span class="exam-replay-wrong">错题 ${meta.wrong_count != null ? meta.wrong_count : questions.length} 题</span>
@@ -900,7 +902,12 @@
         if (!questions.length) { panel.innerHTML = ''; return; }
         const cur = questions[currentIndex];
         let html = '';
-        if (cur.chapter) {
+        if (MODE === 'exam_wrong') {
+            // 试卷错题重刷：跨科目混合集，按章节分组只会看到当前章 1~2 题——
+            // 平铺汇总全部错题号（与模拟考答题视图一致），标题带错题总数
+            html = `<div class="num-group-title">错题 ${questions.length} 个</div><div class="num-grid">`
+                + questions.map((q, i) => numBtnHtml(i, i + 1)).join('') + '</div>';
+        } else if (cur.chapter) {
             // 收集当前章的题，按小节分组（保持题序）
             const groups = [];
             let g = null;

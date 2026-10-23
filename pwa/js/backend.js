@@ -510,7 +510,8 @@ async function api(url, opts = {}) {
                 }
                 qs.sort((a, b) => orderMap.get(a.id) - orderMap.get(b.id));
                 examMeta = {
-                    exam_id: exam.id, mode: exam.mode, score: exam.score,
+                    exam_id: exam.id, mode: exam.mode,
+                    score: exam.score, correct_count: exam.correct_count, total_count: exam.total_count,
                     started_at: exam.started_at, submitted_at: exam.submitted_at,
                     duration_sec: exam.duration_sec, wrong_count: wrongIds.length
                 };
@@ -1230,7 +1231,9 @@ async function gradeExam(exam, answers) {
         idx++;
     }
     const total = details.length;
-    const score = total ? Math.round(correct / total * 1000) / 10 : 0;
+    // 统一 2 分/题：得分 = 答对数 × 2，恒为偶整数（无小数/奇数分）；
+    // 多空题答案按序列精确匹配，错一空即整题 0 分
+    const score = correct * 2;
     exam.answers = answers;
     exam.correct_count = correct;
     exam.score = score;

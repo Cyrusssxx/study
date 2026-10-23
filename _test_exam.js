@@ -170,7 +170,7 @@ ok('按 exam_id 取卷且必须已交卷', /dbGet\('exams', parseInt\(p\.get\('e
 ok('错题口径与 gradeExam 一致（含未作答）', /if \(!\(!!ua && ua === \(q\.answer \|\| ''\)\)\) wrongIds\.push\(qid\)/.test(BACKEND));
 ok('跨科目按卷面顺序重排', /orderMap\.get\(a\.id\) - orderMap\.get\(b\.id\)/.test(BACKEND));
 ok('每题带考试时的作答（exam_user_answer）', /exam_user_answer: examUa\[q\.id\]/.test(BACKEND));
-ok('响应带试卷元信息 exam_meta', /examMeta = \{[\s\S]{0,200}exam_id: exam\.id, mode: exam\.mode, score: exam\.score/.test(BACKEND) && /wrong_count: wrongIds\.length/.test(BACKEND));
+ok('响应带试卷元信息 exam_meta', /examMeta = \{[\s\S]{0,300}exam_id: exam\.id, mode: exam\.mode,[\s\S]{0,120}score: exam\.score/.test(BACKEND) && /wrong_count: wrongIds\.length/.test(BACKEND));
 ok('混合模式下收藏/标记/笔记不按单科过滤', /mixed \|\| f\.subject === subject/.test(BACKEND) && /mixed \|\| n\.subject === subject/.test(BACKEND));
 ok('混合模式下进度状态取全量', /latestStatuses\(mixed \? '' : subject\)/.test(BACKEND));
 ok('exam_meta 只在该模式返回', /if \(examMeta\) out\.exam_meta = examMeta;/.test(BACKEND));
@@ -197,6 +197,20 @@ ok('首页继续刷题跳过 exam_wrong（防坏链）', /e\.mode === 'favorite'
 console.log('--- 试卷错题重刷：样式 ---');
 ok('模式徽章 exam_wrong 配色（亮/暗）', /\.mode-badge\[data-mode="exam_wrong"\]/.test(CSS) && /\.dark \.mode-badge\[data-mode="exam_wrong"\]/.test(CSS));
 ok('横幅样式（亮/暗）', /\.exam-replay-banner\s*\{/.test(CSS) && /\.dark \.exam-replay-banner\s*\{/.test(CSS));
+
+console.log('--- 评分规则：2 分/题 + 多选错一不给分 ---');
+ok('gradeExam 得分 = 答对数 × 2（恒偶整数）', /const score = correct \* 2;/.test(BACKEND));
+ok('exam_meta 带答对数与总题数（供前端折算满分）', /correct_count: exam\.correct_count, total_count: exam\.total_count/.test(BACKEND));
+ok('成绩单大分按 2 分/题折算 + 显示满分', /\$\{r\.correct \* 2\}/.test(EXAM_HTML) && /满分 \$\{r\.total \* 2\} 分/.test(EXAM_HTML));
+ok('历史列表得分按 2 分/题折算', /\$\{rec\.correct_count \* 2\}/.test(EXAM_HTML));
+ok('重刷横幅显示得分/满分', /得分 <b>\$\{meta\.correct_count \* 2\}<\/b> \/ 满分 \$\{meta\.total_count \* 2\}/.test(QUIZ_HTML));
+ok('多空题精确匹配错一空即 0 分（exam）', /!!ua && ua === \(q\.answer \|\| ''\)/.test(BACKEND));
+const ZHENTI_JS = fs.readFileSync(path.join(ROOT, 'pwa', 'js', 'zhenti.js'), 'utf8');
+ok('多空题精确匹配错一空即 0 分（真题套卷）', /const ok = !!f\.a && key === f\.a;/.test(ZHENTI_JS));
+
+console.log('--- 重刷页右侧题号汇总 ---');
+ok('exam_wrong 模式右侧平铺全部错题号', /MODE === 'exam_wrong'[\s\S]{0,400}questions\.map\(\(q, i\) => numBtnHtml\(i, i \+ 1\)\)/.test(QUIZ_HTML));
+ok('题号面板标题带错题总数', /错题 \$\{questions\.length\} 个/.test(QUIZ_HTML));
 
 console.log(`\n结果: ${pass} 通过 / ${fail} 失败`);
 process.exit(fail ? 1 : 0);
