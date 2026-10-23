@@ -106,17 +106,20 @@ ok('三层优先级函数', /function prioritize\(pool\)/.test(BACKEND));
 ok('未做过的优先', /if \(!p\) \{\s*fresh\.push/.test(BACKEND));
 ok('错题未解决次之', /w && !w\.is_resolved/.test(BACKEND));
 ok('做过的按日期从旧到新', /\[\.\.\.byDay\.keys\(\)\]\.sort\(\)/.test(BACKEND));
-ok('按科目抽题时使用优先级', /order\(poolBySub\[k\]\)/.test(BACKEND));
+ok('按科目抽题时使用优先级', /order\(poolBySub\[k\], take\)/.test(BACKEND));
 
-console.log('--- 收藏题：最早做过的先抽 ---');
-ok('有独立的时间队列函数', /function prioritizeByTime\(pool\)/.test(BACKEND));
+console.log('--- 收藏题：到期错题优先 + 时间队列轮转 ---');
+ok('有独立的时间队列函数（带题量参数）', /function prioritizeByTime\(pool, take\)/.test(BACKEND));
 ok('收藏模式选用时间队列', /mode === 'favorites' \? prioritizeByTime : prioritize/.test(BACKEND));
 ok('时间队列：按 answered_at 升序', /ta !== tb\) return ta < tb \? -1 : 1/.test(BACKEND));
 ok('时间队列：同刻用题号兜底（不随机）', /a\.id < b\.id \? -1 : a\.id > b\.id \? 1 : 0/.test(BACKEND));
 ok('时间队列：未做过的按题号稳定排', /fresh\.sort\(\(a, b\) => \(a\.id < b\.id/.test(BACKEND));
-ok('收藏题不做错题/不熟加权', /function prioritizeByTime[\s\S]{0,900}?wrongMap/.test(BACKEND) === false);
-ok('第二轮补缺也用同一顺序器', /for \(const q of order\(rest\)\.slice\(0, short\)\)/.test(BACKEND));
-ok('UI 提示：最早做过的先抽', /最早做过的题先抽/.test(EXAM_HTML));
+ok('不熟/不会标记不参与抽题（仅到期错题加权）', (() => {
+    const m = BACKEND.match(/function prioritizeByTime[\s\S]*?\n        \}/);
+    return !!m && !/unfam|dontknow/i.test(m[0]);
+})());
+ok('第二轮补缺也用同一顺序器', /for \(const q of order\(rest, short\)\.slice\(0, short\)\)/.test(BACKEND));
+ok('UI 提示：到期错题优先回卷', /到期错题优先回卷/.test(EXAM_HTML));
 
 console.log('--- 鼠标侧键移植（刷题页 → 模拟考）---');
 ok('侧键接管函数 examSideTakeover', /function examSideTakeover/.test(EXAM_HTML));
@@ -211,6 +214,15 @@ ok('多空题精确匹配错一空即 0 分（真题套卷）', /const ok = !!f\
 console.log('--- 重刷页右侧题号汇总 ---');
 ok('exam_wrong 模式右侧平铺全部错题号', /MODE === 'exam_wrong'[\s\S]{0,400}questions\.map\(\(q, i\) => numBtnHtml\(i, i \+ 1\)\)/.test(QUIZ_HTML));
 ok('题号面板标题带错题总数', /错题 \$\{questions\.length\} 个/.test(QUIZ_HTML));
+
+console.log('--- 抽题优先级：到期错题回卷（favorites） ---');
+ok('组卷时算全库到期错题（getDueReview 空科目）', /await getDueReview\('', null\)/.test(BACKEND));
+ok('到期错题层最优先（due.concat(fresh, done)）', /return due\.concat\(fresh, done\);/.test(BACKEND));
+ok('到期错题内部按最近动态倒序（最近错的先回卷）', /if \(ra !== rb\) return ra > rb \? -1 : 1;/.test(BACKEND));
+ok('到期错题帽子 = 本场该科题量 1/3（向上取整）', /const dueCap = Math\.ceil\(\(take \|\| pool\.length\) \/ 3\);/.test(BACKEND));
+ok('超帽到期错题回流时间队列', /while \(due\.length > dueCap\) done\.push\(due\.pop\(\)\);/.test(BACKEND));
+ok('调用点传题量供帽子计算', /order\(poolBySub\[k\], take\)/.test(BACKEND) && /order\(rest, short\)/.test(BACKEND) && /order\(poolBySub\[mode\], total\)/.test(BACKEND));
+ok('组卷设置提示到期错题优先', /到期错题优先回卷/.test(EXAM_HTML));
 
 console.log(`\n结果: ${pass} 通过 / ${fail} 失败`);
 process.exit(fail ? 1 : 0);

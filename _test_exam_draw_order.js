@@ -1,5 +1,6 @@
 // 收藏题抽题逻辑的行为验证（真跑一遍排序函数，不是正则匹配）：
-//   最早做过的题必须最先抽；做完后自动沉到队尾形成轮转；未做过的排最前且顺序稳定。
+//   到期错题最优先（受 1/3 帽子约束、内部按最近动态倒序）；
+//   未做过的排其次且按题号稳定；其余按最早做过先抽、做完沉队尾形成轮转。
 const fs = require('fs');
 const path = require('path');
 const vm = require('vm');
@@ -12,16 +13,20 @@ function ok(name, cond, extra) {
   cond ? pass++ : fail++;
 }
 
-// ---- 从 backend.js 抽出 prioritizeByTime（含 progMap 依赖）----
-const m = BACKEND.match(/function prioritizeByTime\(pool\) \{[\s\S]*?\n        \}\n/);
+// ---- 从 backend.js 抽出 prioritizeByTime（含 progMap/wrongMap/dueSet 依赖）----
+const m = BACKEND.match(/function prioritizeByTime\(pool, take\) \{[\s\S]*?\n        \}\n/);
 if (!m) {
   console.log('FAIL 抽不到 prioritizeByTime');
   process.exit(1);
 }
 const src = m[0];
 
-function makeOrder(progRows) {
-  const ctx = { progMap: new Map(progRows.map(r => [r.question_id, r])) };
+function makeOrder(progRows, wrongRows, dueIds) {
+  const ctx = {
+    progMap: new Map(progRows.map(r => [r.question_id, r])),
+    wrongMap: new Map((wrongRows || []).map(r => [r.question_id, r])),
+    dueSet: new Set(dueIds || []),
+  };
   vm.createContext(ctx);
   vm.runInContext(src + '\nthis.f = prioritizeByTime;', ctx);
   return ctx.f;
@@ -29,7 +34,7 @@ function makeOrder(progRows) {
 
 const Q = id => ({ id });
 
-// 场景 1：做过三题，时间分别为 1/1、1/2、1/3（越早做越靠前）
+// 场景 1：无到期错题时——做过三题，时间 1/1、1/2、1/3（越早做越靠前）
 {
   const order = makeOrder([
     { question_id: 'c', answered_at: '2026-01-03 10:00:00' },
@@ -72,14 +77,51 @@ const Q = id => ({ id });
     got1.join(',') === 'ds_0005,ds_0012,ds_0030' && got2.join(',') === got1.join(','), got1.join(','));
 }
 
-// 场景 5：不受错题本影响（错题加权不参与收藏题排序）
+// 场景 5：到期错题最优先 + 1/3 帽子：超帽的回流时间队列按 answered_at 排序
 {
-  const withWrong = BACKEND.match(/function prioritizeByTime\(pool\) \{[\s\S]*?\n        \}\n/)[0];
-  ok('时间队列函数体内不引用 wrongMap',
-    !/wrongMap/.test(withWrong) && !/is_resolved/.test(withWrong));
+  const order = makeOrder([
+    { question_id: 'w1', answered_at: '2026-01-06 10:00:00' },
+    { question_id: 'w2', answered_at: '2026-01-05 10:00:00' },
+    { question_id: 'w3', answered_at: '2026-01-04 10:00:00' },
+    { question_id: 'd1', answered_at: '2026-01-01 10:00:00' },
+  ], [], ['w1', 'w2', 'w3']);
+  // take=3 → 帽子 ceil(3/3)=1 → 只有最近错的 w1 进到期层；w2/w3 回流 done：
+  // done 按 answered_at 升序 = d1(01-01) → w3(01-04) → w2(01-05)
+  const got = order([Q('f1'), Q('d1'), Q('w1'), Q('w2'), Q('w3')], 3).map(x => x.id);
+  ok('到期错题受 1/3 帽子约束（w1→f1→d1→w3→w2）',
+    got.join(',') === 'w1,f1,d1,w3,w2', got.join(','));
 }
 
-// 场景 6：收藏模式选用时间队列；错题本模式仍用三层优先级
+// 场景 6：到期错题内部按最近动态倒序——最近做错的先回卷（"这次错的尽快回来"）
+{
+  const order = makeOrder([
+    { question_id: 'w1', answered_at: '2026-01-06 10:00:00' },
+    { question_id: 'w2', answered_at: '2026-01-05 10:00:00' },
+    { question_id: 'w3', answered_at: '2026-01-04 10:00:00' },
+  ], [], ['w1', 'w2', 'w3']);
+  // take=9 → 帽子 3 不约束 → 三道到期错题全进到期层，最近错的 w1 最前
+  const got = order([Q('w3'), Q('w1'), Q('w2')], 9).map(x => x.id);
+  ok('到期层内最近错的排最前（w1→w2→w3）', got.join(',') === 'w1,w2,w3', got.join(','));
+}
+
+// 场景 7：最近动态可来自 wrong.last_wrong_at（无 progress 行时，如错题本记录）
+{
+  const order = makeOrder([], [
+    { question_id: 'w1', last_wrong_at: '2026-01-06 10:00:00' },
+    { question_id: 'w2', last_wrong_at: '2026-01-05 10:00:00' },
+  ], ['w1', 'w2']);
+  const got = order([Q('w1'), Q('w2')], 2).map(x => x.id);
+  ok('最近动态取 last_wrong_at（w1 先于 w2）', got.join(',') === 'w1,w2', got.join(','));
+}
+
+// 场景 8：不熟/不会标记不参与收藏题抽题（到期错题是唯一的错题加权）
+{
+  const body = m[0];
+  ok('时间队列函数体内不引用 不熟/不会 集合', !/unfam|dontknow/i.test(body));
+  ok('到期错题最近动态引用 wrongMap（last_wrong_at）', /last_wrong_at/.test(body));
+}
+
+// 场景 9：收藏模式选用时间队列；错题本模式仍用三层优先级
 {
   ok('收藏模式 → 时间队列', /mode === 'favorites' \? prioritizeByTime : prioritize/.test(BACKEND));
   ok('三层优先级函数仍在（错题本用）', /function prioritize\(pool\)/.test(BACKEND));

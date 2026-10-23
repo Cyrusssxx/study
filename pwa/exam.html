@@ -184,7 +184,7 @@
             const isFavHint = mode === 'favorites';
             applyCountRange(cnt, 5, 150, 40);
             document.getElementById('countHint').textContent = isFavHint
-                ? '按真题比例分配 · 最早做过的题先抽（做完自动轮转）'
+                ? '按真题比例分配 · 到期错题优先回卷（≤1/3），其次没做过的，其余按做的先后轮转'
                 : '按真题比例分配，优先抽没做过的题';
             sourceInfo.style.display = 'flex';
             sourceText.textContent = '正在读取…';
@@ -210,7 +210,7 @@
                         .map(k => `${names[k]} ${bySub[k]}`)
                         .join(' · ');
                     sourceText.textContent = isFav
-                        ? `收藏 ${n} 题（${detail}）· 按真题比例抽，最早做过的先抽`
+                        ? `收藏 ${n} 题（${detail}）· 到期错题优先回卷，其余按做的先后轮转`
                         : `错题 ${n} 题（${detail}）· 按真题比例抽，优先没做过`;
                 }
             } catch (e) {

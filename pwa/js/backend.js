@@ -1292,17 +1292,39 @@ async function examApi(action, body, arg) {
         const wrongMap = new Map();
         for (const w of await dbAll('wrong')) wrongMap.set(w.question_id, w);
 
-        // 收藏题（favorites）：时间队列 —— 最早做过的题先抽，做完自动沉到队尾。
-        //   ① 从没做过的排最前：还没进队列，按题号稳定序（不随机），对应"1312 题一天 40"的推进节奏；
-        //   ② 做过的按「最近一次作答时间」升序 = 最早做的排最前；
+        // 到期错题（艾宾浩斯 2/4/7/15 天间隔已到期，跨科目一次算好）：
+        // 收藏题考试里优先抽回卷面——这次做错的题按间隔到期后回来，答对顺延、连对毕业。
+        let dueSet = new Set();
+        try { dueSet = new Set((await getDueReview('', null)).ids); } catch (e) { /* 取不到就退化为纯时间队列 */ }
+
+        // 收藏题（favorites）：到期错题 → 没做过 → 时间队列。
+        //   ① 到期错题最优先：内部按「最近动态」倒序（最近做错的先回卷），最多占本场该科
+        //      题量 1/3（向上取整）——复习优先但不挤掉新题推进；超帽的回流时间队列，
+        //      老积压在近期错题清完后自然补位；
+        //   ② 从没做过的排其次：还没进队列，按题号稳定序（不随机），对应"1312 题一天 40"的推进节奏；
+        //   ③ 其余做过的按「最近一次作答时间」升序 = 最早做的排最前；
         //      作答后 answered_at 刷新 → 这题沉到队尾 → 下一场自然抽到下一批，形成轮转复习。
-        //   刻意不按错题/不熟加权 —— 那是错题本模式的逻辑；收藏题要的是"按做的先后排队"。
-        function prioritizeByTime(pool) {
-            const fresh = [], done = [];
+        function prioritizeByTime(pool, take) {
+            const due = [], fresh = [], done = [];
             for (const q of pool) {
+                if (dueSet.has(q.id)) { due.push(q); continue; }
                 const p = progMap.get(q.id);
                 if (!p) fresh.push(q); else done.push(q);
             }
+            // 到期错题内部：最近动态（做错/作答）越新越靠前，同刻按题号稳定排序
+            const recentKey = qid => {
+                const pa = String((progMap.get(qid) || {}).answered_at || '');
+                const lw = String((wrongMap.get(qid) || {}).last_wrong_at || '');
+                return pa > lw ? pa : lw;
+            };
+            due.sort((a, b) => {
+                const ra = recentKey(a.id), rb = recentKey(b.id);
+                if (ra !== rb) return ra > rb ? -1 : 1;
+                return a.id < b.id ? -1 : 1;
+            });
+            // 帽子 = 本场该科题量的 1/3：超出部分退回时间队列（并入 done 按作答时间排序）
+            const dueCap = Math.ceil((take || pool.length) / 3);
+            while (due.length > dueCap) done.push(due.pop());
             // 从没做过的：按题号稳定排序，保证每场抽到的顺序一致（不是随机）
             fresh.sort((a, b) => (a.id < b.id ? -1 : a.id > b.id ? 1 : 0));
             // 做过的：按最近一次作答时间升序 = 最早做的排最前；同刻用题号兜底
@@ -1312,7 +1334,7 @@ async function examApi(action, body, arg) {
                 if (ta !== tb) return ta < tb ? -1 : 1;
                 return a.id < b.id ? -1 : a.id > b.id ? 1 : 0;
             });
-            return fresh.concat(done);
+            return due.concat(fresh, done);
         }
 
         // 错题本（wrong）：三层优先级 —— 没做过 > 错题未解决 > 最久没做 > 最近做过
@@ -1340,13 +1362,13 @@ async function examApi(action, body, arg) {
         const order = mode === 'favorites' ? prioritizeByTime : prioritize;
 
         if (isSingle) {
-            picked = order(poolBySub[mode]).slice(0, total);
+            picked = order(poolBySub[mode], total).slice(0, total);
         } else {
             // ---- 2. 第一轮：严格按真题各科题量抽 ----
             const quotas = allocQuotas(total);
             for (const k of EXAM_SUBJECT_ORDER) {
                 const take = Math.min(quotas[k], poolBySub[k].length);
-                for (const q of order(poolBySub[k]).slice(0, take)) {
+                for (const q of order(poolBySub[k], take).slice(0, take)) {
                     picked.push(q);
                     pickedIds.add(q.id);
                 }
@@ -1359,8 +1381,8 @@ async function examApi(action, body, arg) {
                 for (const k of EXAM_SUBJECT_ORDER) {
                     for (const q of poolBySub[k]) if (!pickedIds.has(q.id)) rest.push(q);
                 }
-                // 同样按 order 排（收藏=最早做过的先补），不做随机
-                for (const q of order(rest).slice(0, short)) {
+                // 同样按 order 排（到期错题优先/收藏=最早做过的先补），不做随机
+                for (const q of order(rest, short).slice(0, short)) {
                     picked.push(q);
                     pickedIds.add(q.id);
                 }
