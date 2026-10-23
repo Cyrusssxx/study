@@ -178,8 +178,11 @@
         const recordWrongRow = document.getElementById('recordWrong').closest('.setup-row');
 
         if (isSpecial) {
+            const isFavHint = mode === 'favorites';
             applyCountRange(cnt, 5, 150, 40);
-            document.getElementById('countHint').textContent = '按真题比例分配，优先抽没做过的题';
+            document.getElementById('countHint').textContent = isFavHint
+                ? '按真题比例分配 · 最早做过的题先抽（做完自动轮转）'
+                : '按真题比例分配，优先抽没做过的题';
             sourceInfo.style.display = 'flex';
             sourceText.textContent = '正在读取…';
             recordWrongRow.style.display = mode === 'wrong' ? 'none' : 'flex';
@@ -203,7 +206,9 @@
                         .filter(k => bySub[k])
                         .map(k => `${names[k]} ${bySub[k]}`)
                         .join(' · ');
-                    sourceText.textContent = `${isFav ? '收藏' : '错题'} ${n} 题（${detail}）· 按真题比例抽，优先没做过`;
+                    sourceText.textContent = isFav
+                        ? `收藏 ${n} 题（${detail}）· 按真题比例抽，最早做过的先抽`
+                        : `错题 ${n} 题（${detail}）· 按真题比例抽，优先没做过`;
                 }
             } catch (e) {
                 sourceText.textContent = '读取失败';

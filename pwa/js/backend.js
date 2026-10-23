@@ -1241,13 +1241,37 @@ async function examApi(action, body, arg) {
         let picked = [];
         const pickedIds = new Set();
 
-        // ---- 抽题优先级（与每日一题同思路）：没做过 > 错题未解决 > 最久没做 > 最近做过 ----
+        // ---- 抽题优先级 ----
         // 空着没作答的题不会写 progress，因此天然落进「没做过」层，下次优先抽到。
         const progMap = new Map();
         for (const p of await dbAll('progress')) progMap.set(p.question_id, p);
         const wrongMap = new Map();
         for (const w of await dbAll('wrong')) wrongMap.set(w.question_id, w);
 
+        // 收藏题（favorites）：时间队列 —— 最早做过的题先抽，做完自动沉到队尾。
+        //   ① 从没做过的排最前：还没进队列，按题号稳定序（不随机），对应"1312 题一天 40"的推进节奏；
+        //   ② 做过的按「最近一次作答时间」升序 = 最早做的排最前；
+        //      作答后 answered_at 刷新 → 这题沉到队尾 → 下一场自然抽到下一批，形成轮转复习。
+        //   刻意不按错题/不熟加权 —— 那是错题本模式的逻辑；收藏题要的是"按做的先后排队"。
+        function prioritizeByTime(pool) {
+            const fresh = [], done = [];
+            for (const q of pool) {
+                const p = progMap.get(q.id);
+                if (!p) fresh.push(q); else done.push(q);
+            }
+            // 从没做过的：按题号稳定排序，保证每场抽到的顺序一致（不是随机）
+            fresh.sort((a, b) => (a.id < b.id ? -1 : a.id > b.id ? 1 : 0));
+            // 做过的：按最近一次作答时间升序 = 最早做的排最前；同刻用题号兜底
+            done.sort((a, b) => {
+                const ta = String((progMap.get(a.id) || {}).answered_at || '');
+                const tb = String((progMap.get(b.id) || {}).answered_at || '');
+                if (ta !== tb) return ta < tb ? -1 : 1;
+                return a.id < b.id ? -1 : a.id > b.id ? 1 : 0;
+            });
+            return fresh.concat(done);
+        }
+
+        // 错题本（wrong）：三层优先级 —— 没做过 > 错题未解决 > 最久没做 > 最近做过
         function prioritize(pool) {
             const fresh = [], wrongs = [], byDay = new Map();
             for (const q of pool) {
@@ -1268,14 +1292,17 @@ async function examApi(action, body, arg) {
             return ordered;
         }
 
+        // 收藏题用时间队列（最早做过的先抽）；错题本 / 整卷 / 单科保持原三层优先级
+        const order = mode === 'favorites' ? prioritizeByTime : prioritize;
+
         if (isSingle) {
-            picked = prioritize(poolBySub[mode]).slice(0, total);
+            picked = order(poolBySub[mode]).slice(0, total);
         } else {
             // ---- 2. 第一轮：严格按真题各科题量抽 ----
             const quotas = allocQuotas(total);
             for (const k of EXAM_SUBJECT_ORDER) {
                 const take = Math.min(quotas[k], poolBySub[k].length);
-                for (const q of prioritize(poolBySub[k]).slice(0, take)) {
+                for (const q of order(poolBySub[k]).slice(0, take)) {
                     picked.push(q);
                     pickedIds.add(q.id);
                 }
@@ -1288,7 +1315,8 @@ async function examApi(action, body, arg) {
                 for (const k of EXAM_SUBJECT_ORDER) {
                     for (const q of poolBySub[k]) if (!pickedIds.has(q.id)) rest.push(q);
                 }
-                for (const q of shuffled(rest).slice(0, short)) {
+                // 同样按 order 排（收藏=最早做过的先补），不做随机
+                for (const q of order(rest).slice(0, short)) {
                     picked.push(q);
                     pickedIds.add(q.id);
                 }

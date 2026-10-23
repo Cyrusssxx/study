@@ -106,7 +106,17 @@ ok('三层优先级函数', /function prioritize\(pool\)/.test(BACKEND));
 ok('未做过的优先', /if \(!p\) \{\s*fresh\.push/.test(BACKEND));
 ok('错题未解决次之', /w && !w\.is_resolved/.test(BACKEND));
 ok('做过的按日期从旧到新', /\[\.\.\.byDay\.keys\(\)\]\.sort\(\)/.test(BACKEND));
-ok('按科目抽题时使用优先级', /prioritize\(poolBySub\[k\]\)/.test(BACKEND));
+ok('按科目抽题时使用优先级', /order\(poolBySub\[k\]\)/.test(BACKEND));
+
+console.log('--- 收藏题：最早做过的先抽 ---');
+ok('有独立的时间队列函数', /function prioritizeByTime\(pool\)/.test(BACKEND));
+ok('收藏模式选用时间队列', /mode === 'favorites' \? prioritizeByTime : prioritize/.test(BACKEND));
+ok('时间队列：按 answered_at 升序', /ta !== tb\) return ta < tb \? -1 : 1/.test(BACKEND));
+ok('时间队列：同刻用题号兜底（不随机）', /a\.id < b\.id \? -1 : a\.id > b\.id \? 1 : 0/.test(BACKEND));
+ok('时间队列：未做过的按题号稳定排', /fresh\.sort\(\(a, b\) => \(a\.id < b\.id/.test(BACKEND));
+ok('收藏题不做错题/不熟加权', /function prioritizeByTime[\s\S]{0,900}?wrongMap/.test(BACKEND) === false);
+ok('第二轮补缺也用同一顺序器', /for \(const q of order\(rest\)\.slice\(0, short\)\)/.test(BACKEND));
+ok('UI 提示：最早做过的先抽', /最早做过的题先抽/.test(EXAM_HTML));
 
 console.log('--- 设置页排版 ---');
 ok('只给行首 label 固定宽度', /\.setup-row > label:first-child\s*\{[^}]*flex:\s*0 0 80px/.test(CSS));
