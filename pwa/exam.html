@@ -165,6 +165,7 @@
     let examAnswers = {};   // {qid: 'A'}
     let examIndex = 0;
     let remainingSec = 0;
+    let examDurationSec = 0;         // 限时秒数：计时延续显示用
     let timerHandle = null;
     let examModeCurrent = 'favorites';   // 本场考试的模式（恢复会话时以会话里的为准）
 
@@ -293,7 +294,7 @@
         });
         const data = await resp.json();
         if (data.error) { alert(data.error); return; }
-        enterExam(data.exam_id, data.questions, {}, data.duration_sec, mode);
+        enterExam(data.exam_id, data.questions, {}, data.duration_sec, mode, data.duration_sec);
     }
 
     async function checkActive() {
@@ -309,7 +310,7 @@
         if (data.active) {
             const a = data.active;
             if (confirm(`检测到未完成的考试（${MODE_NAMES[a.mode] || a.mode}，${a.remaining_sec > 0 ? '剩余 ' + Math.ceil(a.remaining_sec / 60) + ' 分钟' : '已超时 ' + Math.ceil(-a.remaining_sec / 60) + ' 分钟'}），是否继续？\n取消将放弃该场考试。`)) {
-                enterExam(a.exam_id, a.questions, a.answers || {}, a.remaining_sec, a.mode);
+                enterExam(a.exam_id, a.questions, a.answers || {}, a.remaining_sec, a.mode, a.duration_sec);
                 return;
             }
             // 放弃：静默废弃——重新组卷时会自动置为abandoned
@@ -317,12 +318,13 @@
         loadHistory();
     }
 
-    function enterExam(id, questions, answers, remaining, mode) {
+    function enterExam(id, questions, answers, remaining, mode, durationSec) {
         examId = id;
         examQuestions = questions;
         examAnswers = answers;
         examIndex = 0;
         remainingSec = remaining;
+        examDurationSec = durationSec || remaining;   // 限时秒数：超时后计时按总用时延续显示
         examModeCurrent = mode || document.getElementById('examMode').value;
 
         // 更新考试标题
@@ -352,18 +354,18 @@
 
     function updateTimerText() {
         const el = document.getElementById('examTimer');
+        // 连续计时：限时内显示剩余倒计时；到时后不归零重计，直接延续显示总用时
+        // （限时 60 分钟用时 70 分钟就显示 ⏰ 70:00），最后几分钟不闪烁
         if (remainingSec > 0) {
             const mm = String(Math.floor(remainingSec / 60)).padStart(2, '0');
             const ss = String(remainingSec % 60).padStart(2, '0');
             el.textContent = `⏳ ${mm}:${ss}`;
-            el.classList.toggle('timer-warning', remainingSec <= 300);
             el.classList.remove('timer-overtime');
         } else {
-            const over = -remainingSec;
-            const mm = String(Math.floor(over / 60)).padStart(2, '0');
-            const ss = String(over % 60).padStart(2, '0');
-            el.textContent = `⏰ +${mm}:${ss}`;
-            el.classList.remove('timer-warning');
+            const elapsed = Math.max(0, examDurationSec - remainingSec);
+            const mm = String(Math.floor(elapsed / 60)).padStart(2, '0');
+            const ss = String(elapsed % 60).padStart(2, '0');
+            el.textContent = `⏰ ${mm}:${ss}`;
             el.classList.add('timer-overtime');
         }
     }
@@ -538,9 +540,9 @@
 
         // 逐题回顾：默认只看错题，可切全部；错题一律可看解析 + 跳转练习
         const wrongCnt = r.details.filter(d => !d.is_correct).length;
-        // 有错题且能定位到试卷时，给一个跳刷题页重做的入口（跨科目按卷面顺序重刷，笔记随题带出）
-        const replayLink = (wrongCnt && r.exam_id)
-            ? `<a class="btn btn-sm btn-primary" href="quiz.html?mode=exam_wrong&exam_id=${r.exam_id}&fresh=1" title="跳到刷题页按卷面顺序重做本场错题；你的笔记、收藏、标记随题带出">📝 在刷题界面重做错题 →</a>`
+        // 能定位到试卷时给一个进入刷题式回顾的入口（默认错题、可切全部，笔记随题带出）
+        const replayLink = r.exam_id
+            ? `<a class="btn btn-sm btn-primary" href="quiz.html?mode=exam_review&exam_id=${r.exam_id}&fresh=1" title="进入刷题式试卷回顾：默认只看本次错题，可切全部题目（笔记随题带出）">📄 试卷回顾（刷题界面）→</a>`
             : '';
         html += `<div class="stats-section"><h2>逐题回顾${fromHistory ? '' : '（错题已自动记入错题本）'}</h2>
             <div class="result-filter">
@@ -583,7 +585,6 @@
                     </div>
                     ${!d.is_correct && d.number != null ? `<details class="review-expl"><summary>查看解析</summary><div>${d.explanation || '（该题暂无详细解析）'}</div></details>` : ''}
                     ${d.number != null ? `<a class="btn-goto" href="${practiceLink(d)}">去练习该题 →</a>` : ''}
-                    ${d.is_correct && d.number != null && r.exam_id ? `<button class="btn-goto btn-redo-add" data-qid="${d.id}" data-on="${(r.redo_ids || []).includes(d.id) ? 1 : 0}" onclick="toggleExamRedo(${r.exam_id}, '${d.id}', this)" title="猜对/想再验证的题也可加入本卷的错题重刷">${(r.redo_ids || []).includes(d.id) ? '✓ 已加入重刷' : '＋ 加入重刷'}</button>` : ''}
                 </article>`;
         });
         html += `</div>`;
@@ -602,17 +603,21 @@
         }
         let html = '<table class="history-table"><tr><th><input type="checkbox" id="histSelAll" onchange="histToggleAll(this)" title="全选/全不选"></th><th>时间</th><th>模式</th><th>得分</th><th>答对</th><th>时长</th><th>回顾</th></tr>';
         for (const rec of records) {
+            // 实际用时 = 交卷时刻 - 开考时刻（含超时部分：限时 60 分钟用了 70 分钟就显示 70）
+            let durSec = rec.duration_sec;
+            try {
+                const t0 = new Date(String(rec.started_at || '').replace(' ', 'T')).getTime();
+                const t1 = new Date(String(rec.submitted_at || rec.started_at || '').replace(' ', 'T')).getTime();
+                if (isFinite(t0) && isFinite(t1) && t1 > t0) durSec = Math.round((t1 - t0) / 1000);
+            } catch (e) { }
             html += `<tr>
                 <td><input type="checkbox" class="hist-sel" data-id="${rec.id}" onchange="histSelChange()"></td>
                 <td>${rec.submitted_at || rec.started_at}</td>
                 <td>${MODE_NAMES[rec.mode] || rec.mode}</td>
                 <td class="score-cell">${rec.correct_count * 2}</td>
                 <td>${rec.correct_count}/${rec.total_count}</td>
-                <td>${Math.round(rec.duration_sec / 60)} 分钟</td>
-                <td>
-                    <button class="btn btn-sm btn-secondary" onclick="viewDetail(${rec.id})">查看</button>
-                    <a class="btn btn-sm btn-secondary" href="quiz.html?mode=exam_wrong&exam_id=${rec.id}&fresh=1" title="跳到刷题页，按卷面顺序重做本场错题（笔记随题带出）">错题重刷</a>
-                </td>
+                <td>${Math.max(1, Math.round(durSec / 60))} 分钟</td>
+                <td><a class="btn btn-sm btn-secondary" href="quiz.html?mode=exam_review&exam_id=${rec.id}&fresh=1" title="进入试卷回顾（刷题界面）：默认只看本次错题，可切全部（笔记随题带出）">查看</a></td>
             </tr>`;
         }
         el.innerHTML = html + '</table>';
@@ -666,38 +671,6 @@
             loadHistory();
         } else {
             alert(rd.error || '清除失败');
-        }
-    }
-
-    // 按场次回看试卷：默认只看错题，可切全部看答过的每一题
-    async function viewDetail(id) {
-        const resp = await api(`/api/exam/detail/${id}`);
-        const r = await resp.json();
-        if (r.error) { alert(r.error); return; }
-        resultWrongOnly = true;
-        renderResult(r, true);
-        show('resultView');
-        window.scrollTo(0, 0);
-    }
-
-    // 试卷回顾：把答对（如猜对）的题加入/移出该卷的错题重刷集合（exam.redo_ids）
-    async function toggleExamRedo(examId, qid, btn) {
-        const on = btn.dataset.on !== '1';
-        try {
-            const resp = await api('/api/exam/redo', {
-                method: 'POST', headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ exam_id: examId, qid, on })
-            });
-            const d = await resp.json();
-            if (d.redo_ids) {
-                btn.dataset.on = on ? '1' : '0';
-                btn.textContent = on ? '✓ 已加入重刷' : '＋ 加入重刷';
-                if (lastResult && lastResult.exam_id === examId) lastResult.redo_ids = d.redo_ids;
-            } else {
-                alert(d.error || '操作失败');
-            }
-        } catch (e) {
-            alert('操作失败：' + e.message);
         }
     }
 

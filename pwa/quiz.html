@@ -156,7 +156,10 @@
     if (!MODE) MODE = 'sequential';
     let SECTION = _params.get('section') || '';
     const STAGE = _params.get('stage') || ''; // 复习阶段筛选（仅 review 模式生效）：2/4/7/15 天期
-    const EXAM_ID = _params.get('exam_id') || ''; // 试卷错题重刷（exam_wrong 模式）：来源模拟考卷 id
+    const EXAM_ID = _params.get('exam_id') || ''; // 试卷错题重刷/试卷回顾（exam_wrong/exam_review 模式）：来源模拟考卷 id
+    let examFilter = _params.get('filter') === 'all' ? 'all' : 'wrong'; // 试卷回顾（exam_review）：错题/全部，默认错题
+    let examReviewAll = [];       // exam_review 的整卷题集（错题/全部切换的基准）
+    let _lastExamMeta = null;     // 最近一次试卷元信息（切换筛选后刷新横幅用）
     const FRESH = _params.get('fresh') === '1'; // fresh=1：跳过位置恢复，从第 1 题开始
     let questions = [];
     let quizAllQuestions = [];   // 真题年份前端筛选的基准集合
@@ -192,12 +195,13 @@
         'code': '代码专项',
         'smart': '智能模式',
         'review': '复习模式',
-        'exam_wrong': '试卷错题'
+        'exam_wrong': '试卷错题',
+        'exam_review': '试卷回顾'
     };
 
     const SUBJECT_NAME = (SUBJECTS[SUBJECT] || {}).name || SUBJECT;
-    // 试卷错题重刷：一张卷跨四科，标题不按单科显示
-    const PAGE_TITLE = MODE === 'exam_wrong' ? '试卷错题重刷' : SUBJECT_NAME;
+    // 试卷错题重刷/试卷回顾：一张卷跨四科，标题不按单科显示
+    const PAGE_TITLE = MODE === 'exam_wrong' ? '试卷错题重刷' : MODE === 'exam_review' ? '试卷回顾' : SUBJECT_NAME;
     document.title = `${PAGE_TITLE} - 刷题`;
     document.getElementById('subjectTitle').textContent = PAGE_TITLE;
     document.getElementById('modeBadge').textContent = modeNames[MODE] || MODE;
@@ -428,17 +432,31 @@
 
     let _loadSeq = 0;   // 加载序号：模式热切换时丢弃过期响应，防止竞态覆盖
 
-    // 试卷错题重刷：顶部横幅展示来源试卷的时间/得分/用时（exam_wrong 模式专属）
+    // 试卷错题重刷/回顾：顶部横幅展示来源试卷的时间/得分/用时（exam_wrong/exam_review 模式专属）
     const EXAM_MODE_NAMES = {
         full: '完整408模拟', os: '操作系统', co: '计算机组成原理', ds: '数据结构', cn: '计算机网络',
         favorites: '仅收藏题', wrong: '仅错题'
     };
+    // 试卷回顾筛选：错题=最后一次作答不是正确答案的题（与成绩单口径一致）
+    function applyExamFilter(list) {
+        if (MODE !== 'exam_review' || examFilter === 'all') return list;
+        return list.filter(q => !(q.exam_user_answer && q.exam_user_answer === q.answer));
+    }
     function renderExamMeta(meta) {
+        _lastExamMeta = meta || null;
         const el = document.getElementById('examReplayBanner');
         if (!el) return;
-        if (MODE !== 'exam_wrong' || !meta) { el.style.display = 'none'; el.innerHTML = ''; return; }
+        if (MODE !== 'exam_wrong' && MODE !== 'exam_review') { el.style.display = 'none'; el.innerHTML = ''; return; }
+        if (!meta) { el.style.display = 'none'; el.innerHTML = ''; return; }
         const when = (meta.submitted_at || meta.started_at || '').slice(0, 16);   // YYYY-MM-DD HH:MM
         const mins = meta.duration_sec ? Math.round(meta.duration_sec / 60) : 0;
+        let chips = '';
+        if (MODE === 'exam_review') {
+            const wrongCnt = examReviewAll.filter(q => !(q.exam_user_answer && q.exam_user_answer === q.answer)).length;
+            chips = `
+            <span class="exam-filter-chip${examFilter === 'wrong' ? ' active' : ''}" onclick="setExamFilter('wrong')" title="只看本次做错/未作答的题">本次错题 ${wrongCnt}</span>
+            <span class="exam-filter-chip${examFilter === 'all' ? ' active' : ''}" onclick="setExamFilter('all')" title="浏览整卷全部题目">全部 ${examReviewAll.length}</span>`;
+        }
         el.innerHTML = `
             <span class="exam-replay-icon">📋</span>
             <span class="exam-replay-when">${when || '时间未知'}</span>
@@ -450,28 +468,58 @@
             ${mins ? `<span class="exam-replay-sep">·</span><span>用时 ${mins} 分钟</span>` : ''}
             <span class="exam-replay-sep">·</span>
             <span class="exam-replay-wrong">错题 ${meta.wrong_count != null ? meta.wrong_count : questions.length} 题</span>
-            <span class="exam-replay-note">本轮按卷面顺序重做，你的笔记随题带出</span>`;
+            ${chips || '<span class="exam-replay-note">本轮按卷面顺序重做，你的笔记随题带出</span>'}`;
         el.style.display = '';
+    }
+    // 试卷回顾：切换 本次错题/全部（保留当前题，切前冲刷笔记）
+    function setExamFilter(f) {
+        if (MODE !== 'exam_review' || examFilter === f) return;
+        flushNoteSave();
+        examFilter = f;
+        const cur = questions[currentIndex] ? questions[currentIndex].id : null;
+        questions = applyExamFilter(examReviewAll);
+        totalQuestions = questions.length;
+        try {
+            const u = new URL(location.href);
+            u.searchParams.set('filter', f);
+            history.replaceState(null, '', u.pathname + (u.search || '') + u.hash);
+        } catch (e) { }
+        renderExamMeta(_lastExamMeta);
+        const pi = cur ? questions.findIndex(q => q.id === cur) : -1;
+        if (!questions.length) {
+            document.getElementById('questionArea').innerHTML = '<div class="empty-state"><h3>本场全对 🎉</h3><p>没有错题，可点上方「全部」浏览整卷</p></div>';
+            renderNumberPanel();
+            return;
+        }
+        currentIndex = pi >= 0 ? pi : 0;
+        explanationShown = false;
+        noteShown = hasNoteOf(questions[currentIndex]);
+        renderQuestion();
     }
 
     async function loadQuizQuestions() {
         const seq = ++_loadSeq;
         try {
             const stageQ = (MODE === 'review' && STAGE) ? `&stage=${encodeURIComponent(STAGE)}` : '';
-            const examQ = (MODE === 'exam_wrong' && EXAM_ID) ? `&exam_id=${encodeURIComponent(EXAM_ID)}` : '';
+            const examQ = ((MODE === 'exam_wrong' || MODE === 'exam_review') && EXAM_ID) ? `&exam_id=${encodeURIComponent(EXAM_ID)}` : '';
             const resp = await api(`/api/questions/${SUBJECT}?mode=${MODE}&page=1&per_page=9999${stageQ}${examQ}`);
             if (seq !== _loadSeq) return;   // 已有更新的加载，丢弃本次结果
             const data = await resp.json();
             questions = data.questions;
             quizAllQuestions = data.questions;
+            // 试卷回顾：保留整卷题集，按 错题/全部 筛选（默认错题）
+            if (MODE === 'exam_review') {
+                examReviewAll = questions;
+                questions = applyExamFilter(examReviewAll);
+            }
             renderExamMeta(data.exam_meta);
             // 题头显示「小节 · 节内第几题」：按全库编号顺序给每题算节内序号
             _buildSecOrdinal(data.questions);
             // 非 sequential 模式下当前集合是子集（收藏/错题/随机…），再拉一次全量库作序号基准
-            if (MODE === 'exam_wrong') {
-                // 试卷错题重刷：题头要显示题库原编号（小节 · 节内第几题）——
+            if (MODE === 'exam_wrong' || MODE === 'exam_review') {
+                // 试卷重刷/回顾：题头要显示题库原编号（小节 · 节内第几题）——
                 // 混合集覆盖四科，把卷内出现科目的全量库合并后算节内序号
-                const needSubs = [...new Set(questions.map(q => q.id.split('_')[0]))];
+                const needSubs = [...new Set((MODE === 'exam_review' ? examReviewAll : questions).map(q => q.id.split('_')[0]))];
                 Promise.all(needSubs.map(k =>
                     api(`/api/questions/${k}?mode=sequential&page=1&per_page=9999`).then(r => r.json())
                 )).then(all => {
@@ -502,7 +550,7 @@
                 document.getElementById('questionArea').innerHTML = `
                     <div class="empty-state">
                         <h3>暂无题目</h3>
-                        <p>${MODE === 'wrong' ? '恭喜！没有错题需要复习' : MODE === 'exam_wrong' ? '这场试卷没有错题 🎉' : MODE === 'review' ? '今日没有到期的复习题 🎉' : MODE === 'favorite' ? '还没有收藏任何题目' : (MODE === 'unfamiliar' || MODE === 'dontknow') ? '还没有标记"不熟"或"不会"的题目（刷题时点卡片右上角 🟡不熟 或 🔴不会 即可标记）' : MODE === 'fav_real' ? '还没有收藏任何统考真题（先在收藏模式收藏真题，或直接用真题模式）' : MODE === 'code' ? '该科目暂无含代码的题目' : '题库为空'}</p>
+                        <p>${MODE === 'wrong' ? '恭喜！没有错题需要复习' : MODE === 'exam_wrong' ? '这场试卷没有错题 🎉' : MODE === 'exam_review' ? '本场全对 🎉 可点上方「全部」浏览整卷' : MODE === 'review' ? '今日没有到期的复习题 🎉' : MODE === 'favorite' ? '还没有收藏任何题目' : (MODE === 'unfamiliar' || MODE === 'dontknow') ? '还没有标记"不熟"或"不会"的题目（刷题时点卡片右上角 🟡不熟 或 🔴不会 即可标记）' : MODE === 'fav_real' ? '还没有收藏任何统考真题（先在收藏模式收藏真题，或直接用真题模式）' : MODE === 'code' ? '该科目暂无含代码的题目' : '题库为空'}</p>
                         <a href="index.html" class="btn btn-primary">返回首页</a>
                     </div>
                 `;
@@ -605,8 +653,8 @@
 
     function chapterLink(subjectKey, chapterName, sectionName) {
         // 保留当前模式（真题/未做等），点章节只收窄范围不退出模式
-        // 试卷错题模式例外：exam_id 丢了会得到空题集，点章节直接回顺序模式浏览
-        const mode = MODE === 'exam_wrong' ? 'sequential' : MODE;
+        // 试卷错题/回顾模式例外：exam_id 丢了会得到空题集，点章节直接回顺序模式浏览
+        const mode = (MODE === 'exam_wrong' || MODE === 'exam_review') ? 'sequential' : MODE;
         let url = `quiz.html?subject=${subjectKey}&mode=${mode}&chapter=${encodeURIComponent(chapterName)}`;
         if (sectionName) url += `&section=${encodeURIComponent(sectionName)}`;
         return url;
@@ -949,7 +997,7 @@
     // 记录练习位置：供首页「继续上次练习」与最近练习历史展示（本机 localStorage，同科目+模式+章节去重，最多留 6 条）
     // 位置存档 key：试卷错题模式按试卷 id 分档，不同试卷的位置互不串
     function posArchiveKey() {
-        return 'quiz_pos_' + SUBJECT + '_' + MODE + (MODE === 'exam_wrong' && EXAM_ID ? '_' + EXAM_ID : '');
+        return 'quiz_pos_' + SUBJECT + '_' + MODE + ((MODE === 'exam_wrong' || MODE === 'exam_review') && EXAM_ID ? '_' + EXAM_ID : '');
     }
 
     function trackPractice() {
@@ -980,10 +1028,11 @@
         if (!questions.length) { panel.innerHTML = ''; return; }
         const cur = questions[currentIndex];
         let html = '';
-        if (MODE === 'exam_wrong') {
-            // 试卷错题重刷：跨科目混合集，按章节分组只会看到当前章 1~2 题——
-            // 平铺汇总全部错题号（与模拟考答题视图一致），标题带错题总数
-            html = `<div class="num-group-title">错题 ${questions.length} 个</div><div class="num-grid">`
+        if (MODE === 'exam_wrong' || MODE === 'exam_review') {
+            // 试卷错题重刷/回顾：跨科目混合集，按章节分组只会看到当前章 1~2 题——
+            // 平铺汇总全部题号（与模拟考答题视图一致），标题带总数与当前筛选
+            const label = MODE === 'exam_review' ? (examFilter === 'all' ? '全部' : '本次错题') : '错题';
+            html = `<div class="num-group-title">${label} ${questions.length} 题</div><div class="num-grid">`
                 + questions.map((q, i) => numBtnHtml(i, i + 1)).join('') + '</div>';
         } else if (cur.chapter) {
             // 收集当前章的题，按小节分组（保持题序）

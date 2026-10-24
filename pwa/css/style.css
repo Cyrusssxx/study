@@ -2272,12 +2272,6 @@ mark {
     text-decoration: none;
 }
 
-/* 试卷回顾里答对的题「加入重刷」按钮：与去练习该题并排留缝 */
-.btn-redo-add {
-    margin-left: 10px;
-    cursor: pointer;
-}
-
 .btn-goto:hover {
     text-decoration: underline;
 }
@@ -6055,6 +6049,21 @@ a.chapter-badge-link:hover {
     color: #b45309;
     font-size: 12px;
 }
+/* 试卷回顾：错题/全部 切换 chip（点按即切，不刷新页面） */
+.exam-filter-chip {
+    padding: 3px 12px;
+    border-radius: 999px;
+    border: 1px solid #f3b8b8;
+    cursor: pointer;
+    font-weight: 600;
+    white-space: nowrap;
+}
+.exam-filter-chip.active {
+    background: #dc2626;
+    border-color: #dc2626;
+    color: #fff;
+}
+.exam-filter-chip:not(.active):hover { background: rgba(220, 38, 38, .12); }
 .dark .exam-replay-banner {
     background: #2b1a1a;
     border-color: #5c2b2b;

@@ -170,10 +170,10 @@ const INDEX_HTML = fs.readFileSync(path.join(ROOT, 'pwa', 'index.html'), 'utf8')
 console.log('--- 试卷错题重刷：后端 exam_wrong 模式 ---');
 ok('questions API 有 exam_wrong 分支', /mode === 'exam_wrong'/.test(BACKEND));
 ok('按 exam_id 取卷且必须已交卷', /dbGet\('exams', parseInt\(p\.get\('exam_id'/.test(BACKEND) && /exam\.status !== 'submitted'/.test(BACKEND));
-ok('错题口径与 gradeExam 一致（含未作答）+ 并入手动重刷题', /if \(!\(!!ua && ua === \(q\.answer \|\| ''\)\) \|\| redoSet\.has\(qid\)\) wrongIds\.push\(qid\)/.test(BACKEND));
+ok('错题口径与 gradeExam 一致（含未作答）', /const isWrong = !\(\(!!ua && ua === \(q\.answer |\| ''\)\)/.test(BACKEND));
 ok('跨科目按卷面顺序重排', /orderMap\.get\(a\.id\) - orderMap\.get\(b\.id\)/.test(BACKEND));
 ok('每题带考试时的作答（exam_user_answer）', /exam_user_answer: examUa\[q\.id\]/.test(BACKEND));
-ok('响应带试卷元信息 exam_meta', /examMeta = \{[\s\S]{0,300}exam_id: exam\.id, mode: exam\.mode,[\s\S]{0,120}score: exam\.score/.test(BACKEND) && /wrong_count: wrongIds\.length/.test(BACKEND));
+ok('响应带试卷元信息 exam_meta', /examMeta = \{[\s\S]{0,300}exam_id: exam\.id, mode: exam\.mode,[\s\S]{0,160}score: exam\.score/.test(BACKEND) && /wrong_count: wrongCnt/.test(BACKEND));
 ok('混合模式下收藏/标记/笔记不按单科过滤', /mixed \|\| f\.subject === subject/.test(BACKEND) && /mixed \|\| n\.subject === subject/.test(BACKEND));
 ok('混合模式下进度状态取全量', /latestStatuses\(mixed \? '' : subject\)/.test(BACKEND));
 ok('exam_meta 只在该模式返回', /if \(examMeta\) out\.exam_meta = examMeta;/.test(BACKEND));
@@ -181,25 +181,31 @@ ok('exam_meta 只在该模式返回', /if \(examMeta\) out\.exam_meta = examMeta
 console.log('--- 试卷错题重刷：刷题页 ---');
 ok('modeNames 有 exam_wrong', /'exam_wrong': '试卷错题'/.test(QUIZ_HTML));
 ok('解析 exam_id 参数', /const EXAM_ID = _params\.get\('exam_id'\)/.test(QUIZ_HTML));
-ok('加载 URL 带 exam_id', /const examQ = \(MODE === 'exam_wrong' && EXAM_ID\)/.test(QUIZ_HTML) && /&exam_id=\$\{encodeURIComponent\(EXAM_ID\)\}/.test(QUIZ_HTML));
-ok('标题脱离单科（试卷错题重刷）', /MODE === 'exam_wrong' \? '试卷错题重刷' : SUBJECT_NAME/.test(QUIZ_HTML));
+ok('加载 URL 带 exam_id', /const examQ = \(\(MODE === 'exam_wrong' |\| MODE === 'exam_review'\) && EXAM_ID\)/.test(QUIZ_HTML) && /&exam_id=\$\{encodeURIComponent\(EXAM_ID\)}/.test(QUIZ_HTML));
+ok('标题脱离单科（错题重刷/试卷回顾）', /MODE === 'exam_wrong' \? '试卷错题重刷' : MODE === 'exam_review' \? '试卷回顾' : SUBJECT_NAME/.test(QUIZ_HTML));
 ok('横幅容器与渲染函数', /id="examReplayBanner"/.test(QUIZ_HTML) && /function renderExamMeta\(meta\)/.test(QUIZ_HTML));
 ok('横幅展示时间/得分/用时/错题数', /submitted_at \|\| .*started_at/.test(QUIZ_HTML) && /duration_sec/.test(QUIZ_HTML) && /wrong_count/.test(QUIZ_HTML));
 ok('空态提示（这场试卷没有错题）', /这场试卷没有错题/.test(QUIZ_HTML));
-ok('位置存档按试卷分档', /MODE === 'exam_wrong' && EXAM_ID \? '_' \+ EXAM_ID : ''/.test(QUIZ_HTML));
-ok('点章节回落顺序模式（防 exam_id 丢失成坏链）', /const mode = MODE === 'exam_wrong' \? 'sequential' : MODE;/.test(QUIZ_HTML));
+ok('位置存档按试卷分档', /\(MODE === 'exam_wrong' |\| MODE === 'exam_review'\) && EXAM_ID ? '_' \+ EXAM_ID : ''/.test(QUIZ_HTML));
+ok('点章节回落顺序模式（防 exam_id 丢失成坏链）', /const mode = \(MODE === 'exam_wrong' |\| MODE === 'exam_review'\) ? 'sequential' : MODE;/.test(QUIZ_HTML));
 ok('笔记链接按题目自身科目跳转', /NOTES_SUBJECTS\.includes\(q\.id\.split\('_'\)\[0\]\)/.test(QUIZ_HTML));
 ok('题头节内序号用全量库基准（保留原题号）', /needSubs\.map\(k =>/.test(QUIZ_HTML) && /_buildSecOrdinal\(all\.flatMap\(d => d\.questions \|\| \[\]\)\)/.test(QUIZ_HTML));
 
 console.log('--- 试卷错题重刷：模拟考入口 ---');
-ok('成绩单有重刷入口（带 exam_id 与 fresh=1）', /quiz\.html\?mode=exam_wrong&exam_id=\$\{r\.exam_id\}&fresh=1/.test(EXAM_HTML));
-ok('历史列表每行有重刷入口', /quiz\.html\?mode=exam_wrong&exam_id=\$\{rec\.id\}&fresh=1/.test(EXAM_HTML));
-ok('无错题不出入口', /\(wrongCnt && r\.exam_id\)/.test(EXAM_HTML));
+ok('成绩单有试卷回顾入口（exam_review）', /quiz\.html\?mode=exam_review&exam_id=\$\{r\.exam_id\}&fresh=1/.test(EXAM_HTML));
+ok('历史列表单「查看」按钮直达回顾页', /quiz\.html\?mode=exam_review&exam_id=\$\{rec\.id\}&fresh=1/.test(EXAM_HTML) && !/mode=exam_wrong&exam_id=\$\{rec\.id\}/.test(EXAM_HTML));
+ok('回顾入口不限错题数（全对也能看整卷）', /const replayLink = r\.exam_id/.test(EXAM_HTML));
 ok('首页继续刷题跳过 exam_wrong（防坏链）', /e\.mode === 'favorite' \|\| e\.mode === 'fav_real' \|\| e\.mode === 'exam_wrong'/.test(INDEX_HTML));
 
 console.log('--- 试卷错题重刷：样式 ---');
 ok('模式徽章 exam_wrong 配色（亮/暗）', /\.mode-badge\[data-mode="exam_wrong"\]/.test(CSS) && /\.dark \.mode-badge\[data-mode="exam_wrong"\]/.test(CSS));
 ok('横幅样式（亮/暗）', /\.exam-replay-banner\s*\{/.test(CSS) && /\.dark \.exam-replay-banner\s*\{/.test(CSS));
+
+console.log('--- 考试计时：连续计时不闪烁 + 实际用时 ---');
+ok('enterExam 接收限时秒数', /function enterExam\(id, questions, answers, remaining, mode, durationSec\)/.test(EXAM_HTML) && /examDurationSec = durationSec |\| remaining;/.test(EXAM_HTML));
+ok('超时显示总用时（不归零重计）', /⏰ \$\{mm}:\$\{ss}/.test(EXAM_HTML) && /examDurationSec - remainingSec/.test(EXAM_HTML) && !/\+\$\{mm}:\$\{ss}/.test(EXAM_HTML));
+ok('最后几分钟不再闪烁', !/timer-warning/.test(EXAM_HTML));
+ok('历史时长显示实际用时（含超时）', /实际用时 = 交卷时刻 - 开考时刻/.test(EXAM_HTML) && /t1 - t0/.test(EXAM_HTML));
 
 console.log('--- 评分规则：2 分/题 + 多选错一不给分 ---');
 ok('gradeExam 得分 = 答对数 × 2（恒偶整数）', /const score = correct \* 2;/.test(BACKEND));
@@ -212,8 +218,8 @@ const ZHENTI_JS = fs.readFileSync(path.join(ROOT, 'pwa', 'js', 'zhenti.js'), 'ut
 ok('多空题精确匹配错一空即 0 分（真题套卷）', /const ok = !!f\.a && key === f\.a;/.test(ZHENTI_JS));
 
 console.log('--- 重刷页右侧题号汇总 ---');
-ok('exam_wrong 模式右侧平铺全部错题号', /MODE === 'exam_wrong'[\s\S]{0,400}questions\.map\(\(q, i\) => numBtnHtml\(i, i \+ 1\)\)/.test(QUIZ_HTML));
-ok('题号面板标题带错题总数', /错题 \$\{questions\.length\} 个/.test(QUIZ_HTML));
+ok('exam_wrong/review 模式右侧平铺全部题号', /MODE === 'exam_wrong' |\| MODE === 'exam_review'[\s\S]{0,420}questions\.map\(\(q, i\) => numBtnHtml\(i, i \+ 1\)\)/.test(QUIZ_HTML));
+ok('题号面板标题带总数与当前筛选', /\$\{label} \$\{questions\.length\} 题/.test(QUIZ_HTML));
 
 console.log('--- 抽题优先级：到期错题回卷（favorites） ---');
 ok('专用到期错题函数（与复习阶梯解耦）', /async function examDueWrongIds\(\)/.test(BACKEND));
@@ -237,15 +243,16 @@ ok('删除选中按钮随勾选显隐并带计数', /删除选中（\$\{n\}）/.
 ok('删除前有确认弹窗', /确定删除选中的 \$\{ids\.length\} 场考试记录吗？/.test(EXAM_HTML));
 ok('删除后刷新历史列表', /d\.deleted != null[\s\S]{0,80}loadHistory\(\)/.test(EXAM_HTML));
 
-console.log('--- 试卷回顾：答对的题加入重刷 ---');
-ok('后端有 redo 动作（加入/移出 redo_ids）', /action === 'redo'/.test(BACKEND) && /exam\.redo_ids = \[\.\.\.set\];/.test(BACKEND));
-ok('redo 校验题目属于该卷', /题目不属于该试卷/.test(BACKEND));
-ok('exam_wrong 并入手动加入的重刷题', /redoSet\.has\(qid\)\) wrongIds\.push\(qid\)/.test(BACKEND));
-ok('detail 返回 redo_ids', /redo_ids: exam\.redo_ids \|\| \[\], details/.test(BACKEND));
-ok('答对的题渲染加入重刷按钮', /d\.is_correct && d\.number != null && r\.exam_id \? `<button class="btn-goto btn-redo-add"/.test(EXAM_HTML));
-ok('按钮文案区分已加入/未加入', /✓ 已加入重刷/.test(EXAM_HTML) && /＋ 加入重刷/.test(EXAM_HTML));
-ok('toggleExamRedo 调 redo 接口并回写按钮状态', /async function toggleExamRedo\(/.test(EXAM_HTML) && /'✓ 已加入重刷' : '＋ 加入重刷'/.test(EXAM_HTML));
-ok('加入重刷按钮样式', /\.btn-redo-add\s*\{/.test(CSS));
-
-console.log(`\n结果: ${pass} 通过 / ${fail} 失败`);
-process.exit(fail ? 1 : 0);
+console.log('--- 试卷回顾（exam_review）：整卷可切 错题/全部 ---');
+ok('后端 exam_review 分支（整卷返回）', /mode === 'exam_wrong' |\| mode === 'exam_review'/.test(BACKEND) && /if \(mode === 'exam_review' |\| isWrong\) wrongIds\.push\(qid\)/.test(BACKEND));
+ok('exam_meta.wrong_count 为真实错题数', /wrong_count: wrongCnt/.test(BACKEND));
+ok('mixed（不按单科过滤）覆盖 exam_review', /const mixed = mode === 'exam_wrong' |\| mode === 'exam_review';/.test(BACKEND));
+ok('加入重刷功能已移除', !/action === 'redo'/.test(BACKEND) && !/toggleExamRedo/.test(EXAM_HTML) && !/btn-redo-add/.test(EXAM_HTML) && !/\.btn-redo-add/.test(CSS));
+ok('exam_review 加载整卷并本地筛选', /examReviewAll = questions;/.test(QUIZ_HTML) && /function applyExamFilter\(list\)/.test(QUIZ_HTML) && /questions = applyExamFilter\(examReviewAll\);/.test(QUIZ_HTML));
+ok('默认错题（filter 缺省 wrong）', /_params\.get\('filter'\) === 'all' \? 'all' : 'wrong'/.test(QUIZ_HTML));
+ok('横幅渲染 错题/全部 切换 chip', /setExamFilter\('wrong'\)/.test(QUIZ_HTML) && /setExamFilter\('all'\)/.test(QUIZ_HTML));
+ok('切换保留当前题并同步 URL', /history\.replaceState\(null, '', u\.pathname \+ \(u\.search |\| ''\) \+ u\.hash\);/.test(QUIZ_HTML));
+ok('切到错题为空时显示全对提示', /没有错题，可点上方「全部」浏览整卷/.test(QUIZ_HTML));
+ok('空态提示（本场全对）', /本场全对 🎉 可点上方「全部」浏览整卷/.test(QUIZ_HTML));
+ok('筛选 chip 样式', /\.exam-filter-chip\s*\{/.test(CSS) && /\.exam-filter-chip\.active/.test(CSS));
+ok('exam_review 复用定位键与章节回落', /\(MODE === 'exam_wrong' |\| MODE === 'exam_review'\) && EXAM_ID ? '_' \+ EXAM_ID/.test(QUIZ_HTML) && /\(MODE === 'exam_wrong' |\| MODE === 'exam_review'\) ? 'sequential'/.test(QUIZ_HTML));

@@ -516,19 +516,20 @@ async function api(url, opts = {}) {
             // 跨科目按卷面顺序返回，并带出该卷的时间/得分等元信息供刷题页展示。
             // 一张卷覆盖四科，所以这里不按 URL 的 subject 过滤题、收藏、标记与笔记。
             let examMeta = null;
-            if (mode === 'exam_wrong') {
+            if (mode === 'exam_wrong' || mode === 'exam_review') {
                 const exam = await dbGet('exams', parseInt(p.get('exam_id') || '0', 10));
                 if (!exam || exam.status !== 'submitted') return jsonResp({ error: '试卷不存在或未交卷' }, 404);
-                // 试卷回顾里可把答对的题（如猜对的）手动加入重刷集合（exam.redo_ids）
-                const redoSet = new Set(exam.redo_ids || []);
                 const wrongIds = [], examUa = {};
+                let wrongCnt = 0;
                 for (const qid of exam.question_ids) {
                     const q = await getQuestionById(qid);
                     if (!q) continue;   // 已从题库移除的题无法重刷，跳过
                     const ua = ((exam.answers || {})[qid] || '').toUpperCase();
                     examUa[qid] = ua;
-                    // 答错/未作答的题 + 用户手动加入重刷的题（并集），保持卷面顺序
-                    if (!(!!ua && ua === (q.answer || '')) || redoSet.has(qid)) wrongIds.push(qid);
+                    const isWrong = !(!!ua && ua === (q.answer || ''));
+                    if (isWrong) wrongCnt++;
+                    // exam_wrong：只出错题（含未作答）；exam_review：整卷全部题目（客户端切换 错题/全部）
+                    if (mode === 'exam_review' || isWrong) wrongIds.push(qid);
                 }
                 const idSet = new Set(wrongIds);
                 const orderMap = new Map(wrongIds.map((id, i) => [id, i]));
@@ -543,10 +544,10 @@ async function api(url, opts = {}) {
                     exam_id: exam.id, mode: exam.mode,
                     score: exam.score, correct_count: exam.correct_count, total_count: exam.total_count,
                     started_at: exam.started_at, submitted_at: exam.submitted_at,
-                    duration_sec: exam.duration_sec, wrong_count: wrongIds.length
+                    duration_sec: exam.duration_sec, wrong_count: wrongCnt
                 };
             }
-            const mixed = mode === 'exam_wrong';
+            const mixed = mode === 'exam_wrong' || mode === 'exam_review';
 
             if (chapter) qs = qs.filter(q => q.chapter === chapter);
             if (section) qs = qs.filter(q => q.section === section);
@@ -1540,21 +1541,8 @@ async function examApi(action, body, arg) {
         return jsonResp({
             exam_id: exam.id, mode: exam.mode, submitted_at: exam.submitted_at,
             total: exam.total_count, correct: exam.correct_count, score: exam.score,
-            redo_ids: exam.redo_ids || [], details
+            details
         });
-    }
-
-    // 试卷回顾：把答对（如猜对）的题加入/移出该卷的错题重刷集合
-    if (action === 'redo') {
-        const exam = body.exam_id ? await dbGet('exams', parseInt(body.exam_id, 10)) : null;
-        if (!exam || exam.status !== 'submitted') return jsonResp({ error: '考试记录不存在或未交卷' }, 404);
-        const qid = String(body.qid || '');
-        if (!qid || !(exam.question_ids || []).includes(qid)) return jsonResp({ error: '题目不属于该试卷' }, 400);
-        const set = new Set(exam.redo_ids || []);
-        if (body.on) set.add(qid); else set.delete(qid);
-        exam.redo_ids = [...set];
-        await dbPut('exams', exam);
-        return jsonResp({ redo_ids: exam.redo_ids });
     }
 
     return jsonResp({ error: '未知考试接口' }, 404);
