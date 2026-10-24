@@ -1339,21 +1339,49 @@
             });
         }
 
-        // 点击已有高亮 span 时，弹出一个仅含"取消高亮"按钮的小工具条；点按钮才删除
+        // 点击已有高亮 span 时，弹出工具条：换颜色圆点 + 取消高亮；点按钮才删除/换色
         function showHlCancelFor(span) {
             clearTimeout(hlMouseupTimer);   // 取消划词 mouseup 可能挂起的 showHlToolbar，避免覆盖本工具条
             hideHlToolbar();
+            const cur = span.dataset.color || '';
             const rect = span.getBoundingClientRect();
             hlToolbar = document.createElement('div');
             hlToolbar.className = 'hl-toolbar hl-cancel-only';
-            hlToolbar.innerHTML = '<span class="hl-cancel" title="取消高亮">✕ 取消高亮</span>';
+            hlToolbar.innerHTML = HL_COLORS.map(c =>
+                `<span class="hl-dot hl-dot-${c}${c === cur ? ' hl-dot-cur' : ''}" data-color="${c}" title="换成${c}高亮"></span>`).join('') +
+                '<span class="hl-cancel" title="取消高亮">✕ 取消高亮</span>';
             document.body.appendChild(hlToolbar);
             hlToolbar.style.top = (window.scrollY + rect.top - hlToolbar.offsetHeight - 8) + 'px';
             hlToolbar.style.left = (window.scrollX + rect.left) + 'px';
+            hlToolbar.querySelectorAll('.hl-dot').forEach(dot =>
+                dot.addEventListener('click', () => {
+                    if (dot.dataset.color === cur) { hideHlToolbar(); return; }   // 点当前色=无操作
+                    changeHlColor(span, dot.dataset.color);
+                    hideHlToolbar();
+                }));
             hlToolbar.querySelector('.hl-cancel').addEventListener('click', () => {
                 removeHighlight(span);
                 hideHlToolbar();
             });
+        }
+
+        // 换颜色：只改 hlItems 对应条目的 color 并同步刷新 spans（定位口径与 removeHighlight 一致：
+        // sec+start+旧色）——同一高亮跨内联标签拆成多个 span，须全部换色，避免颜色残留
+        function changeHlColor(span, newColor) {
+            const section = span.closest('.notes-section');
+            const sec = section.dataset.sec;
+            const start = +span.dataset.start;
+            const oldColor = span.dataset.color;
+            const it = hlItems.find(x => x.sec === sec && x.start === start && x.color === oldColor);
+            if (it) it.color = newColor;
+            section.querySelectorAll('.note-hl').forEach(s => {
+                if (+s.dataset.start === start && s.dataset.color === oldColor) {
+                    s.dataset.color = newColor;
+                    s.classList.remove('note-hl-' + oldColor);
+                    s.classList.add('note-hl-' + newColor);
+                }
+            });
+            saveHl();
         }
 
         function applyHighlight(body, range, color) {
