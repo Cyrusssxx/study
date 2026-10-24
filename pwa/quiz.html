@@ -816,6 +816,7 @@
                             : `<span class="chapter-badge" title="题目来源章节">${q.chapter}${q.section ? ' · ' + q.section : ''}</span>`) : ''}
                     </div>
                     <span class="mark-btns">
+                        <button class="mark-btn" onclick="copyQuestion(this)" title="一键复制：题干+选项+答案+解析">复制</button>
                         <button class="mark-btn ${q.is_unfamiliar ? 'mark-unfamiliar' : ''}" onclick="toggleMark('unfamiliar','${q.id}')" title="${q.is_unfamiliar ? '取消"不熟"标记' : '标记为不熟（黄色）'}">不熟</button>
                         <button class="mark-btn ${q.is_dontknow ? 'mark-dontknow' : ''}" onclick="toggleMark('dontknow','${q.id}')" title="${q.is_dontknow ? '取消"不会"标记' : '标记为不会（红色）'}">不会</button>
                     </span>
@@ -876,6 +877,45 @@
         renderNumberPanel();
         trackPractice();
         syncChapterTree();   // 左侧章节树随当前题同步（高亮/展开/滚动）
+    }
+
+    // ============ 一键复制题目：题干 + 选项（按当前显示顺序）+ 答案 + 解析 ============
+    // 刷题与试卷错题重刷共用 renderQuestion，按钮两处天然都有
+    function stripHtmlToText(html) {
+        const t = document.createElement('div');
+        t.innerHTML = html || '';
+        t.querySelectorAll('img').forEach(im => im.replaceWith('【题图】'));
+        return (t.innerText || t.textContent || '').replace(/[ \t]+\n/g, '\n').replace(/\n{3,}/g, '\n\n').trim();
+    }
+    function copyQuestion(btn) {
+        const q = questions[currentIndex];
+        if (!q) return;
+        let text = stripHtmlToText(q.content) + '\n';
+        for (const k of getOptionOrder(q)) {
+            text += `\n${k}. ${stripHtmlToText(q.options ? (q.options[k] || '') : '')}`;
+        }
+        if (q.answer) text += `\n\n【答案】${q.multi_blank ? [...q.answer].join('、') : q.answer}`;
+        if (q.explanation) text += `\n\n【解析】${stripHtmlToText(q.explanation)}`;
+        const ok = () => {
+            if (!btn) return;
+            const old = btn.textContent;
+            btn.textContent = '已复制 ✓';
+            setTimeout(() => { btn.textContent = old; }, 1200);
+        };
+        if (navigator.clipboard && window.isSecureContext) {
+            navigator.clipboard.writeText(text).then(ok).catch(() => copyViaTextarea(text, ok));
+        } else {
+            copyViaTextarea(text, ok);   // http/file 场景无剪贴板 API，走隐藏 textarea 兜底
+        }
+    }
+    function copyViaTextarea(text, ok) {
+        const ta = document.createElement('textarea');
+        ta.value = text;
+        ta.style.cssText = 'position:fixed;left:-999px;opacity:0';
+        document.body.appendChild(ta);
+        ta.select();
+        try { document.execCommand('copy'); ok(); } catch (e) { alert('复制失败，请手动选择内容复制'); }
+        ta.remove();
     }
 
     // 记录练习位置：供首页「继续上次练习」与最近练习历史展示（本机 localStorage，同科目+模式+章节去重，最多留 6 条）

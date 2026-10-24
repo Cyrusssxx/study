@@ -583,6 +583,7 @@
                     </div>
                     ${!d.is_correct && d.number != null ? `<details class="review-expl"><summary>查看解析</summary><div>${d.explanation || '（该题暂无详细解析）'}</div></details>` : ''}
                     ${d.number != null ? `<a class="btn-goto" href="${practiceLink(d)}">去练习该题 →</a>` : ''}
+                    ${d.is_correct && d.number != null && r.exam_id ? `<button class="btn-goto btn-redo-add" data-qid="${d.id}" data-on="${(r.redo_ids || []).includes(d.id) ? 1 : 0}" onclick="toggleExamRedo(${r.exam_id}, '${d.id}', this)" title="猜对/想再验证的题也可加入本卷的错题重刷">${(r.redo_ids || []).includes(d.id) ? '✓ 已加入重刷' : '＋ 加入重刷'}</button>` : ''}
                 </article>`;
         });
         html += `</div>`;
@@ -677,6 +678,27 @@
         renderResult(r, true);
         show('resultView');
         window.scrollTo(0, 0);
+    }
+
+    // 试卷回顾：把答对（如猜对）的题加入/移出该卷的错题重刷集合（exam.redo_ids）
+    async function toggleExamRedo(examId, qid, btn) {
+        const on = btn.dataset.on !== '1';
+        try {
+            const resp = await api('/api/exam/redo', {
+                method: 'POST', headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ exam_id: examId, qid, on })
+            });
+            const d = await resp.json();
+            if (d.redo_ids) {
+                btn.dataset.on = on ? '1' : '0';
+                btn.textContent = on ? '✓ 已加入重刷' : '＋ 加入重刷';
+                if (lastResult && lastResult.exam_id === examId) lastResult.redo_ids = d.redo_ids;
+            } else {
+                alert(d.error || '操作失败');
+            }
+        } catch (e) {
+            alert('操作失败：' + e.message);
+        }
     }
 
     function backToSetup() {

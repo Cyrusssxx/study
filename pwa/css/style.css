@@ -2272,6 +2272,12 @@ mark {
     text-decoration: none;
 }
 
+/* 试卷回顾里答对的题「加入重刷」按钮：与去练习该题并排留缝 */
+.btn-redo-add {
+    margin-left: 10px;
+    cursor: pointer;
+}
+
 .btn-goto:hover {
     text-decoration: underline;
 }

@@ -170,7 +170,7 @@ const INDEX_HTML = fs.readFileSync(path.join(ROOT, 'pwa', 'index.html'), 'utf8')
 console.log('--- 试卷错题重刷：后端 exam_wrong 模式 ---');
 ok('questions API 有 exam_wrong 分支', /mode === 'exam_wrong'/.test(BACKEND));
 ok('按 exam_id 取卷且必须已交卷', /dbGet\('exams', parseInt\(p\.get\('exam_id'/.test(BACKEND) && /exam\.status !== 'submitted'/.test(BACKEND));
-ok('错题口径与 gradeExam 一致（含未作答）', /if \(!\(!!ua && ua === \(q\.answer \|\| ''\)\)\) wrongIds\.push\(qid\)/.test(BACKEND));
+ok('错题口径与 gradeExam 一致（含未作答）+ 并入手动重刷题', /if \(!\(!!ua && ua === \(q\.answer \|\| ''\)\) \|\| redoSet\.has\(qid\)\) wrongIds\.push\(qid\)/.test(BACKEND));
 ok('跨科目按卷面顺序重排', /orderMap\.get\(a\.id\) - orderMap\.get\(b\.id\)/.test(BACKEND));
 ok('每题带考试时的作答（exam_user_answer）', /exam_user_answer: examUa\[q\.id\]/.test(BACKEND));
 ok('响应带试卷元信息 exam_meta', /examMeta = \{[\s\S]{0,300}exam_id: exam\.id, mode: exam\.mode,[\s\S]{0,120}score: exam\.score/.test(BACKEND) && /wrong_count: wrongIds\.length/.test(BACKEND));
@@ -236,6 +236,16 @@ ok('历史表有勾选列与全选框', /class="hist-sel" data-id="\$\{rec\.id\}
 ok('删除选中按钮随勾选显隐并带计数', /删除选中（\$\{n\}）/.test(EXAM_HTML));
 ok('删除前有确认弹窗', /确定删除选中的 \$\{ids\.length\} 场考试记录吗？/.test(EXAM_HTML));
 ok('删除后刷新历史列表', /d\.deleted != null[\s\S]{0,80}loadHistory\(\)/.test(EXAM_HTML));
+
+console.log('--- 试卷回顾：答对的题加入重刷 ---');
+ok('后端有 redo 动作（加入/移出 redo_ids）', /action === 'redo'/.test(BACKEND) && /exam\.redo_ids = \[\.\.\.set\];/.test(BACKEND));
+ok('redo 校验题目属于该卷', /题目不属于该试卷/.test(BACKEND));
+ok('exam_wrong 并入手动加入的重刷题', /redoSet\.has\(qid\)\) wrongIds\.push\(qid\)/.test(BACKEND));
+ok('detail 返回 redo_ids', /redo_ids: exam\.redo_ids \|\| \[\], details/.test(BACKEND));
+ok('答对的题渲染加入重刷按钮', /d\.is_correct && d\.number != null && r\.exam_id \? `<button class="btn-goto btn-redo-add"/.test(EXAM_HTML));
+ok('按钮文案区分已加入/未加入', /✓ 已加入重刷/.test(EXAM_HTML) && /＋ 加入重刷/.test(EXAM_HTML));
+ok('toggleExamRedo 调 redo 接口并回写按钮状态', /async function toggleExamRedo\(/.test(EXAM_HTML) && /'✓ 已加入重刷' : '＋ 加入重刷'/.test(EXAM_HTML));
+ok('加入重刷按钮样式', /\.btn-redo-add\s*\{/.test(CSS));
 
 console.log(`\n结果: ${pass} 通过 / ${fail} 失败`);
 process.exit(fail ? 1 : 0);
