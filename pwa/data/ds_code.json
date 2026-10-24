@@ -964,7 +964,8 @@
             "note": ""
           }
         ]
-      }
+      },
+      "content_text": "【2024统考真题】某有向图采用邻接矩阵存储，类型定义如下：<br>typedef struct {<br>&nbsp;&nbsp;&nbsp;&nbsp;int numVertices;&nbsp;&nbsp;// 顶点数<br>&nbsp;&nbsp;&nbsp;&nbsp;int Edge[MAXV][MAXV];&nbsp;&nbsp;// 邻接矩阵<br>} MGraph;<br>请设计一个尽可能高效的算法 int uniquely(MGraph G)，判断该有向图的拓扑序列是否唯一：若唯一返回 1，否则返回 0（若图中存在环，拓扑序列不存在，同样返回 0）。<br>要求：(1) 描述算法的基本思想；(2) 根据设计思想，采用 C 或 C++ 语言描述算法，关键之处给出注释"
     },
     {
       "id": "ds_code_2025",
@@ -1028,7 +1029,8 @@
             "note": ""
           }
         ]
-      }
+      },
+      "content_text": "【2025统考真题】已知数组 A[0..n-1] 中存放着 n 个整数（可正、可负、可为零），对每个 0 ≤ i ≤ n-1 定义 res[i] 为 A[i] 与 A[j]（i ≤ j ≤ n-1）乘积的最大值，即 res[i] = max{A[i]×A[j] | i ≤ j ≤ n-1}。请设计一个尽可能高效的算法 void CalMulMax(int A[], int res[], int n)，计算 res 数组的所有元素。<br>要求：(1) 描述算法的基本思想；(2) 根据设计思想，采用 C 或 C++ 语言描述算法，关键之处给出注释"
     },
     {
       "id": "ds_code_2026",
@@ -1055,7 +1057,7 @@
             "name": "沿 BST 搜索路径下溯（O(h)），利用有序性只下探一侧",
             "analysis": "",
             "thought": "利用二叉搜索树的有序性：走到某结点 p 时，若 K<p->data，则 p 右子树中所有结点的值都比 p->data 更远离 K（差值更大），与 K 差值最小的结点只可能在当前结点或左子树中，因此只需下探左子树；反之 K>p->data 只需下探右子树。每步比较一次，沿途记录最小差值；遇到差值更小的结点清空重记，差值并列的追加记录。这个性质保证「与 K 差值最小的结点一定在搜索路径上」，不需要遍历整棵树。",
-            "code": "typedef struct BTNode{\n    int data;\n    struct BTNode *left, *right;\n}BTNode;\n\nint minDiff = INT_MAX;   // 当前已找到的最小差值\nint best[3], cnt = 0;    // 并列最小的结点值（最坏情形是 K 两侧各一个，共 2 个）\n\nvoid findMinDiff(BTNode *p, int K)\n{\n    while (p) {\n        int d = (p->data > K) ? p->data - K : K - p->data;\n        if (d < minDiff) {          // 更小差值：清空重记\n            minDiff = d; cnt = 0; best[cnt++] = p->data;\n        } else if (d == minDiff) {  // 并列最小：追加输出\n            if (cnt < 2) best[cnt++] = p->data;\n        }\n        if (d == 0) return;         // 恰好等于 K：差 0 已最优，提前终止\n        if (K < p->data) p = p->left;   // 只可能在其左子树\n        else p = p->right;              // 只可能在其右子树\n    }\n}\n\nvoid solve(BTNode *root, int K)    // 调用入口\n{\n    findMinDiff(root, K);\n    for (int i = 0; i < cnt; i++) printf(\"%d \", best[i]);  // 输出全部并列最小结点值\n}",
+            "code": "typedef struct BTNode{\n    int data;\n    struct BTNode *left, *right;\n}BTNode;\n\nint minDiff = INT_MAX;   // 当前已找到的最小差值\nint best[3], cnt = 0;    // 并列最小的结点值（最坏情形是 K 两侧各一个，共 2 个）\n\nvoid findMinDiff(BTNode *p, int K)\n{\n    while (p) {\n        int d = (p->data > K) ? p->data - K : K - p->data;\n        if (d < minDiff) {          // 更小差值：清空重记\n            minDiff = d; cnt = 0; best[cnt++] = p->data;\n        } else if (d == minDiff) {  // 并列最小：追加输出\n            if (cnt < 2) best[cnt++] = p->data;\n        }\n        if (d == 0) return;         // 恰好等于 K：差 0 已最优，提前终止\n        if (K < p->data) p = p->left;   // 只可能在其左子树\n        else p = p->right;              // 只可能在其右子树\n    }\n}\n\nvoid SearchX(BTNode *root, int k)    // 调用入口\n{\n    findMinDiff(root, k);\n     printf(\"%d\\n\", minDiff);            // 输出差值的绝对值\n    for (int i = 0; i < cnt; i++) printf(\"%d \", best[i]);  // 输出全部并列最小结点值\n}",
             "complexity": "时间复杂度：O(h)（h 为树高，每层最多访问 1 个结点；最坏退化单链时 O(n)）   空间复杂度：O(1)（仅几个变量）",
             "note": ""
           },
@@ -1065,13 +1067,13 @@
             "name": "中序遍历递增序列 + 差值单谷提前终止（O(n)）",
             "analysis": "",
             "thought": "BST 的中序遍历序列是递增序列，结点值随遍历单调增大，则 |结点值-K| 的差值先递减、达到最小值、后递增（单谷）。中序遍历过程中记录当前最小差值：遇更小差值清空重记、遇并列差值追加；一旦差值开始回升（比当前最小值大），说明后续结点的差值只会更大，用标志位提前终止递归。该解法不依赖「搜索路径」性质，思路直白，但最坏需遍历整棵树。",
-            "code": "typedef struct BTNode{\n    int data;\n    struct BTNode *left, *right;\n}BTNode;\n\nint minDiff = INT_MAX;   // 当前最小差值\nint best[3], cnt = 0;    // 并列最小的全部结点值\nint stop = 0;            // 提前终止标志\n\nvoid InOrder(BTNode *p, int K)\n{\n    if (p == NULL || stop) return;              // 空结点或已提前终止\n    InOrder(p->left, K);\n    int d = (p->data > K) ? p->data - K : K - p->data;\n    if (d < minDiff) {            // 更小：清空重记\n        minDiff = d; cnt = 0; best[cnt++] = p->data;\n    } else if (d == minDiff) {    // 并列：追加\n        if (cnt < 2) best[cnt++] = p->data;\n    } else stop = 1;              // 差值回升：后续更大，终止\n    InOrder(p->right, K);\n}\n\nvoid solve(BTNode *root, int K)    // 调用入口\n{\n    InOrder(root, K);\n    for (int i = 0; i < cnt; i++) printf(\"%d \", best[i]);\n}                                               // 输出全部并列最小结点值",
+            "code": "typedef struct BTNode{\n    int data;\n    struct BTNode *left, *right;\n}BTNode;\n\nint minDiff = INT_MAX;   // 当前最小差值\nint best[3], cnt = 0;    // 并列最小的全部结点值\nint stop = 0;            // 提前终止标志\n\nvoid InOrder(BTNode *p, int K)\n{\n    if (p == NULL || stop) return;              // 空结点或已提前终止\n    InOrder(p->left, K);\n    int d = (p->data > K) ? p->data - K : K - p->data;\n    if (d < minDiff) {            // 更小：清空重记\n        minDiff = d; cnt = 0; best[cnt++] = p->data;\n    } else if (d == minDiff) {    // 并列：追加\n        if (cnt < 2) best[cnt++] = p->data;\n    } else stop = 1;              // 差值回升：后续更大，终止\n    InOrder(p->right, K);\n}\n\nvoid SearchX(BTNode *root, int k)    // 调用入口\n{\n    InOrder(root, k);\n     printf(\"%d\\n\", minDiff);            // 输出差值的绝对值\n    for (int i = 0; i < cnt; i++) printf(\"%d \", best[i]);\n}                                               // 输出全部并列最小结点值",
             "complexity": "时间复杂度：O(n)（最坏需遍历整棵树）   空间复杂度：O(h)（递归栈，h 为树高）",
             "note": ""
           }
         ]
       },
-      "content_text": "【2026 统考真题】已知一棵二叉搜索树（BST）采用二叉链表存储，结点结构为 data left right，其中 data 域存放结点关键字。给定一个整数 K，请设计算法在二叉搜索树中查找与 K 差值最小的结点；若存在多个结点与 K 的差值相同（并列最小），则全部输出。要求：<br>1)给出算法的基本设计思想；<br>2)使用 C 或 C++ 语言，给出二叉树结点的数据类型定义；<br>3)根据设计思想，采用 C 或 C++ 语言描述算法，关键之处给出注释；<br>4)说明你所设计算法的时间复杂度和空间复杂度。"
+      "content_text": "【2026统考真题】二叉搜索树采用二叉链表存储，类型定义如下：<br>typedef struct BSTNode {<br>&nbsp;&nbsp;&nbsp;&nbsp;int data;<br>&nbsp;&nbsp;&nbsp;&nbsp;struct BSTNode *left, *right;<br>} BSTNode;<br>typedef BSTNode BTNode;<br>给定一棵非空二叉搜索树 T（root 是指向 T 中根结点的指针）和整数 k，请设计一个尽可能高效的算法 void SearchX(BTNode *root, int k)，查找关键字值与 k 的差值的绝对值最小的所有结点，输出差值的绝对值和结点的关键字值。<br>要求：(1) 描述算法的基本思想；(2) 根据设计思想，采用 C 或 C++ 语言描述算法，关键之处给出注释"
     }
   ]
 }
