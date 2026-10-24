@@ -896,26 +896,54 @@
         }
         if (q.answer) text += `\n\n【答案】${q.multi_blank ? [...q.answer].join('、') : q.answer}`;
         if (q.explanation) text += `\n\n【解析】${stripHtmlToText(q.explanation)}`;
-        const ok = () => {
-            if (!btn) return;
-            const old = btn.textContent;
-            btn.textContent = '已复制 ✓';
-            setTimeout(() => { btn.textContent = old; }, 1200);
-        };
+        // ① 同步路径优先：隐藏 textarea + execCommand，在点击手势内同步执行并校验返回值——
+        //    规避 clipboard.writeText 在文档失焦时挂起不落盘的静默失败（粘贴出旧内容）
+        let done = false;
+        try {
+            const ta = document.createElement('textarea');
+            ta.value = text;
+            ta.style.cssText = 'position:fixed;left:-999px;top:0;opacity:0';
+            document.body.appendChild(ta);
+            ta.focus(); ta.select();
+            done = document.execCommand('copy');
+            ta.remove();
+        } catch (e) { done = false; }
+        if (done) { flashCopied(btn); return; }
+        // ② 剪贴板 API（同步路径不可用的浏览器）
         if (navigator.clipboard && window.isSecureContext) {
-            navigator.clipboard.writeText(text).then(ok).catch(() => copyViaTextarea(text, ok));
-        } else {
-            copyViaTextarea(text, ok);   // http/file 场景无剪贴板 API，走隐藏 textarea 兜底
+            navigator.clipboard.writeText(text).then(() => flashCopied(btn)).catch(() => showCopyFallback(text));
+            return;
         }
+        showCopyFallback(text);
     }
-    function copyViaTextarea(text, ok) {
+    function flashCopied(btn) {
+        if (!btn) return;
+        const old = btn.textContent;
+        btn.textContent = '已复制 ✓';
+        setTimeout(() => { btn.textContent = old; }, 1200);
+    }
+    // ③ 终极兜底：弹出可全选的浮层让用户手动复制
+    function showCopyFallback(text) {
+        const old = document.getElementById('copyFallbackBox');
+        if (old) old.remove();
+        const box = document.createElement('div');
+        box.id = 'copyFallbackBox';
+        box.style.cssText = 'position:fixed;left:50%;top:16%;transform:translateX(-50%);z-index:9999;background:var(--card,#fff);color:inherit;border:1px solid #ccc;border-radius:10px;padding:12px;box-shadow:0 8px 30px rgba(0,0,0,.25);width:min(92vw,560px)';
+        box.innerHTML = '<div style="font-weight:600;margin-bottom:6px">自动复制失败，请手动复制（已全选，Ctrl+C / 长按复制）</div>';
         const ta = document.createElement('textarea');
         ta.value = text;
-        ta.style.cssText = 'position:fixed;left:-999px;opacity:0';
-        document.body.appendChild(ta);
-        ta.select();
-        try { document.execCommand('copy'); ok(); } catch (e) { alert('复制失败，请手动选择内容复制'); }
-        ta.remove();
+        ta.style.cssText = 'width:100%;height:180px;font-size:12px;line-height:1.5';
+        box.appendChild(ta);
+        const row = document.createElement('div');
+        row.style.cssText = 'text-align:right;margin-top:8px';
+        const close = document.createElement('button');
+        close.className = 'btn btn-sm btn-primary';
+        close.textContent = '关闭';
+        close.onclick = () => box.remove();
+        row.appendChild(close);
+        box.appendChild(row);
+        document.body.appendChild(box);
+        ta.focus(); ta.select();
     }
 
     // 记录练习位置：供首页「继续上次练习」与最近练习历史展示（本机 localStorage，同科目+模式+章节去重，最多留 6 条）
