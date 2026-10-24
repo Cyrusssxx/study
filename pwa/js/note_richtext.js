@@ -154,24 +154,65 @@
         el.addEventListener('blur', () => updateNotePlaceholder(el));
     };
 
+    // 选中保护：把选区两端用零宽标记钉住，fn() 的 DOM 变更结束后依据标记重建选区。
+    // 没有 这层保护，execCommand('foreColor') 产物 font→span 替换、高亮手动包 span 的
+    // extractContents/insertNode 都会让选区折叠 →「染完色选区没了」→ 格式刷无法武装。
+    function preserveNoteSelection(el, fn) {
+        const sel = window.getSelection();
+        if (!sel || sel.rangeCount === 0 || sel.isCollapsed) return fn();
+        const range = sel.getRangeAt(0);
+        if (!el.contains(range.startContainer) || !el.contains(range.endContainer)) return fn();
+        const mkS = document.createElement('span');
+        const mkE = document.createElement('span');
+        mkS.dataset.pselMark = 's';
+        mkE.dataset.pselMark = 'e';
+        // 先钉末端标记：起点插入会使末端 offset 偏移，必须先用原始 range 定末端
+        const rE = document.createRange();
+        rE.setStart(range.endContainer, range.endOffset);
+        rE.collapse(true);
+        rE.insertNode(mkE);
+        const rS = document.createRange();
+        rS.setStart(range.startContainer, range.startOffset);
+        rS.collapse(true);
+        rS.insertNode(mkS);
+        try {
+            return fn();
+        } finally {
+            try {
+                const sel2 = window.getSelection();
+                const nr = document.createRange();
+                nr.setStartBefore(mkS);
+                nr.setEndAfter(mkE);
+                sel2.removeAllRanges();
+                sel2.addRange(nr);          // Live Range 随标记移除自动收拢到原文本边界
+            } catch (e) { /* fn 把标记弄丢了：放弃恢复 */ }
+            mkS.remove();
+            mkE.remove();
+        }
+    }
+
     window.applyNoteHighlight = function (el, color) {
         const sel = window.getSelection();
         if (!sel || sel.isCollapsed || !sel.rangeCount) return;
         const range = sel.getRangeAt(0);
         // 选区必须在 el 内
         if (!el.contains(range.startContainer) || !el.contains(range.endContainer)) return;
-        // 用 execCommand 的 hiliteColor 作为后备（兼容性最好）
-        const ok = document.execCommand('hiliteColor', false, ({
-            yellow: '#fff3a3', green: '#b8e6c0', blue: '#b3d9f2', pink: '#f5c2d5'
-        })[color]);
-        if (ok) return;
-        // 后备失败：手动包 span
-        try {
-            const span = document.createElement('span');
-            span.className = 'hl hl-' + color;
-            span.appendChild(range.extractContents());
-            range.insertNode(span);
-        } catch (e) { /* 选区越界，忽略 */ }
+        preserveNoteSelection(el, () => {
+            // color 可以是色名（工具栏圆点）或 css 色值（格式刷回放 inline 高亮时直接透传）
+            const known = { yellow: '#fff3a3', green: '#b8e6c0', blue: '#b3d9f2', pink: '#f5c2d5' }[color];
+            const css = known || color;
+            // 用 execCommand 的 hiliteColor 作为后备（兼容性最好）
+            const ok = document.execCommand('hiliteColor', false, css);
+            if (ok) return;
+            // 后备失败：手动包 span
+            try {
+                const span = document.createElement('span');
+                if (known) span.className = 'hl hl-' + color;
+                else span.style.backgroundColor = color;   // 非色名走内联背景（保存白名单保留 background-color）
+                span.appendChild(range.extractContents());
+                range.insertNode(span);
+            } catch (e) { /* 选区越界，忽略 */ }
+        });
     };
 
     window.applyNoteForeColor = function (el, color) {
@@ -180,25 +221,27 @@
         const range = sel.getRangeAt(0);
         // 选区必须在 el 内
         if (!el.contains(range.startContainer) || !el.contains(range.endContainer)) return;
-        // 用 execCommand('foreColor') 优先（选区/嵌套处理比手动 span 更稳），
-        // 但 Firefox 会生成 <font color>，而 font 标签不在保存白名单里，会被 sanitizer 剥掉——统一转成 span style.color
-        const ok = document.execCommand('foreColor', false, color);
-        if (ok) {
-            el.querySelectorAll('font[color]').forEach(f => {
-                const sp = document.createElement('span');
-                sp.style.color = f.getAttribute('color');
-                while (f.firstChild) sp.appendChild(f.firstChild);
-                f.replaceWith(sp);
-            });
-            return;
-        }
-        // 后备失败：手动包 span（style.color 在白名单中会被保留）
-        try {
-            const span = document.createElement('span');
-            span.style.color = color;
-            span.appendChild(range.extractContents());
-            range.insertNode(span);
-        } catch (e) { /* 选区越界，忽略 */ }
+        preserveNoteSelection(el, () => {
+            // 用 execCommand('foreColor') 优先（选区/嵌套处理比手动 span 更稳），
+            // 但 Firefox 会生成 <font color>，而 font 标签不在保存白名单里，会被 sanitizer 剥掉——统一转成 span style.color
+            const ok = document.execCommand('foreColor', false, color);
+            if (ok) {
+                el.querySelectorAll('font[color]').forEach(f => {
+                    const sp = document.createElement('span');
+                    sp.style.color = f.getAttribute('color');
+                    while (f.firstChild) sp.appendChild(f.firstChild);
+                    f.replaceWith(sp);
+                });
+                return;
+            }
+            // 后备失败：手动包 span（style.color 在白名单中会被保留）
+            try {
+                const span = document.createElement('span');
+                span.style.color = color;
+                span.appendChild(range.extractContents());
+                range.insertNode(span);
+            } catch (e) { /* 选区越界，忽略 */ }
+        });
     };
 
     // 「清除格式」：撤销 行内(粗体/斜体/颜色/字体) + 块级(H1/H2/H3/引用) + 高亮
@@ -208,26 +251,38 @@
         // 不调用 el.focus():contenteditable 失焦后 focus 会折叠选区(jsdom 亦然),导致剥色范围失效
         const sel = window.getSelection();
         if (!sel || sel.rangeCount === 0) { if (typeof onNoteInput === 'function') onNoteInput(); return; }
-        // 1) 行内格式
-        document.execCommand('removeFormat');
-        // 2) 块级格式：H1/H2/H3/blockquote → 普通段落 P（removeFormat 对 formatBlock 无效）
-        try { document.execCommand('formatBlock', false, 'P'); } catch (e) {}
-        // 3) 高亮：剥掉 class 化 span 与内联 background（removeFormat 不处理这两类）
-        window.stripNoteHighlight(sel.getRangeAt(0), el);
+        preserveNoteSelection(el, () => {
+            // 1) 行内格式
+            document.execCommand('removeFormat');
+            // 2) 块级格式：H1/H2/H3/blockquote → 普通段落 P（removeFormat 对 formatBlock 无效）
+            try { document.execCommand('formatBlock', false, 'P'); } catch (e) {}
+            // 3) 高亮：剥掉 class 化 span 与内联 background（removeFormat 不处理这两类）
+            window.stripNoteHighlight(sel.getRangeAt(0), el);
+        });
         if (typeof onNoteInput === 'function') onNoteInput();
     };
 
     // ==================== 格式刷（Format Painter） ====================
     // 用法：① 选中一段带格式的文字（颜色/加粗/斜体/高亮）→ 点「🖌 格式刷」
-    //       ② 再选中目标文字，格式自动套用（一次性的，用完自动解除）
+    //       ② 再选中目标文字，格式自动套用；连续刷多个目标，再点按钮 / Esc 退出
     // 实现：从选区元素里读取内联样式与标签，目标选区用 execCommand 回放。
     // 兼容三种编辑器容器（quiz 笔记 / notes-map 批注），格式刷按钮由工具栏事件委托触发。
-    let _painterFmt = null;          // 捕获到的格式 {bold, italic, hl, color}
+    let _painterFmt = null;          // 捕获到的格式 {bold, italic, hl, hlRaw, color}
+    let _painterSrcRange = null;     // 捕获时的源选区：武装后防抖不能把格式回放到源选区自己身上
     let _painterBtn = null;          // 当前高亮的格式刷按钮
     let _painterEl = null;           // 当前绑定的编辑器元素
     let _painterListening = false;   // 是否已挂 selectionchange 监听（全局只挂一次）
     let _painterIgnoreUntil = 0;     // 回放后防连锁的时间戳（execCommand/后备 span 可能引发 selectionchange）
     let _painterTimer = null;        // 划选防抖定时器（selectionchange 连续触发时取最后一次稳定选区）
+
+    // 当前选区是否就是捕获时的源选区（同边界）——是则跳过回放，
+    // 否则武装瞬间源选区仍处于选中态，selectionchange→250ms 回放会把
+    // execCommand('bold') 这类开关命令打到源选区上，把源文字的粗体切掉。
+    function painterSelIsSource(r) {
+        return !!(_painterSrcRange &&
+            r.startContainer === _painterSrcRange.startContainer && r.startOffset === _painterSrcRange.startOffset &&
+            r.endContainer === _painterSrcRange.endContainer && r.endOffset === _painterSrcRange.endOffset);
+    }
 
     window.toggleFormatPainter = function (el, btn) {
         // 已武装：再次点击 = 取消
@@ -239,22 +294,25 @@
 
         // 采集格式：克隆选区内容遍历元素（cloneContents 比 TreeWalker+intersectsNode 兼容性好，
         // jsdom 与各浏览器均支持；无需依赖 intersectsNode 的实现差异）
-        const fmt = { bold: false, italic: false, hl: null, color: null };
+        const fmt = { bold: false, italic: false, hl: null, hlRaw: null, color: null };
         const frag = range.cloneContents();
         frag.querySelectorAll('*').forEach(n => {
             const t = n.tagName;
             if (t === 'B' || t === 'STRONG') fmt.bold = true;
             if (t === 'I' || t === 'EM') fmt.italic = true;
             if (!fmt.color && n.style && n.style.color) fmt.color = n.style.color;
+            // class 化高亮（旧笔记/手动后备产物）与 inline 背景高亮（hiliteColor 成功路径产物）都要认
             if (!fmt.hl && n.classList && (n.classList.contains('hl') || /^hl-/.test(n.className))) {
                 fmt.hl = [...n.classList].find(c => /^hl-/.test(c)) || 'hl-yellow';
             }
+            if (!fmt.hl && !fmt.hlRaw && n.style && n.style.backgroundColor) fmt.hlRaw = n.style.backgroundColor;
         });
         // 选区起止文本节点上浮一层再扫一次，覆盖"样式在文本节点父级"的情况
         const scan = (node) => {
             let n = node && node.nodeType === 3 ? node.parentElement : node;
             while (n && n !== el) {
                 if (n.style && n.style.color && !fmt.color) fmt.color = n.style.color;
+                if (n.style && n.style.backgroundColor && !fmt.hl && !fmt.hlRaw) fmt.hlRaw = n.style.backgroundColor;
                 if (n.classList && n.classList.contains('hl') && !fmt.hl) fmt.hl = [...n.classList].find(c => /^hl-/.test(c)) || 'hl-yellow';
                 if ((n.tagName === 'B' || n.tagName === 'STRONG') && !fmt.bold) fmt.bold = true;
                 if ((n.tagName === 'I' || n.tagName === 'EM') && !fmt.italic) fmt.italic = true;
@@ -263,13 +321,14 @@
         };
         scan(range.startContainer); scan(range.endContainer);
 
-        if (!fmt.bold && !fmt.italic && !fmt.hl && !fmt.color) {
+        if (!fmt.bold && !fmt.italic && !fmt.hl && !fmt.hlRaw && !fmt.color) {
             // 源选区没有可复制的格式，给出轻提示
             const hint = document.querySelector('#noteHint, .anno-hint');
             if (hint) { hint.textContent = '源文字没有可复制的格式（颜色/加粗/斜体/高亮）'; setTimeout(() => { hint.textContent = ''; }, 1800); }
             return;
         }
         _painterFmt = fmt;
+        _painterSrcRange = range.cloneRange();
         _painterEl = el;
         _painterBtn = btn || null;
         // 重新武装后清除旧的防连锁窗口与待执行防抖，保证「第二次使用」第一次划选立即生效
@@ -285,8 +344,9 @@
                 const s = window.getSelection();
                 if (!s || s.isCollapsed || !s.rangeCount) return;
                 const r = s.getRangeAt(0);
-                // 要求新选区在编辑器内
+                // 要求新选区在编辑器内，且不是源选区自身
                 if (!_painterEl.contains(r.startContainer) || !_painterEl.contains(r.endContainer)) return;
+                if (painterSelIsSource(r)) return;
                 // 划选是连续 selectionchange 流（拖动/松开各触发多次，间隔约 50ms）：
                 // 防抖窗口必须覆盖完整拖选（30ms 太短会在拖到一半时就回放半截选区，
                 // 最终选区反而被 400ms 防连锁窗口吞掉 →「只会刷第一个」），取最后一次稳定选区回放
@@ -305,6 +365,7 @@
                 if (!s || s.isCollapsed || !s.rangeCount) return;
                 const r = s.getRangeAt(0);
                 if (!_painterEl.contains(r.startContainer) || !_painterEl.contains(r.endContainer)) return;
+                if (painterSelIsSource(r)) return;
                 if (_painterTimer) { clearTimeout(_painterTimer); _painterTimer = null; }
                 window.applyFormatPainter();
             });
@@ -319,6 +380,7 @@
     window.cancelFormatPainter = function () {
         _painterFmt = null;
         _painterEl = null;
+        _painterSrcRange = null;
         // 取消时同时清掉防连锁窗口与待执行防抖，否则旧窗口/旧定时器会吞掉下一次武装的首次划选
         _painterIgnoreUntil = 0;
         if (_painterTimer) { clearTimeout(_painterTimer); _painterTimer = null; }
@@ -334,11 +396,16 @@
         if (!sel || sel.isCollapsed || !sel.rangeCount) return;
         const range = sel.getRangeAt(0);
         if (!el.contains(range.startContainer) || !el.contains(range.endContainer)) return;
-        // 高亮/颜色先恢复选区（execCommand 依赖当前选区），按"颜色→加粗→斜体→高亮"顺序回放
+        if (painterSelIsSource(range)) return;
+        // 高亮/颜色先恢复选区（execCommand 依赖当前选区），按"颜色→加粗→斜体→高亮"顺序回放。
+        // 加粗/斜体必须查状态再套：execCommand 是开关行为，目标已有该格式时再执行=取消格式；
+        // queryCommandState 在 jsdom 会抛异常 → 按未格式化处理（照常执行），真实浏览器正常返回
+        const st = (cmd) => { try { return document.queryCommandState(cmd); } catch (e) { return false; } };
         if (fmt.color) window.applyNoteForeColor(el, fmt.color);
-        if (fmt.bold) document.execCommand('bold');
-        if (fmt.italic) document.execCommand('italic');
+        if (fmt.bold && !st('bold')) document.execCommand('bold');
+        if (fmt.italic && !st('italic')) document.execCommand('italic');
         if (fmt.hl) window.applyNoteHighlight(el, fmt.hl.replace(/^hl-/, ''));
+        else if (fmt.hlRaw) window.applyNoteHighlight(el, fmt.hlRaw);
         // 回放可能改变选区/触发 selectionchange → 短窗口内忽略，防止对同一选区重复回放；
         // 用户继续刷下一个目标需重新划选，间隔远超此窗口
         _painterIgnoreUntil = Date.now() + 400;
