@@ -1,15 +1,5 @@
 {
-  "priority_remaining": [
-    "os_0611",
-    "os_0626",
-    "os_0631",
-    "os_0632",
-    "os_0633",
-    "os_0641",
-    "os_0646",
-    "os_0650",
-    "os_0651"
-  ],
+  "priority_remaining": [],
   "rest_remaining": [
     "cn_0019",
     "cn_0021",
@@ -723,7 +713,8 @@
     "os_0624",
     "os_0644"
   ],
-  "done_count": 596,
+  "done_count": 636,
   "priority_total": 600,
-  "favs_total": 1312
+  "favs_total": 1312,
+  "priority_done": 600
 }
