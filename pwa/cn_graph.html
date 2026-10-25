@@ -303,14 +303,8 @@
         .dark .cg-layer-body mark { background: linear-gradient(transparent 56%, rgba(250, 204, 21, .42) 56%); }
 
         /* ==== 块级批注：标题旁按钮 + 块底批注卡（黄左边线） ==== */
-        .cg-anno-btn {
-            flex: 0 0 auto; margin-left: 8px; padding: 1px 9px; border-radius: 999px;
-            border: 1px solid var(--c); background: var(--cb); color: var(--c);
-            font-size: .72rem; font-weight: 600; cursor: pointer; line-height: 1.5;
-        }
-        .cg-anno-btn:hover { background: var(--cb2); }
-        .cg-anno-btn.has { background: var(--c); color: #fff; }
-        .cg-anno {
+        /* 批注卡可点击进入编辑（无常显按钮：新建走划词工具条 📝批注） */
+        .cg-anno { cursor: pointer; transition: background .15s;
             margin-top: 10px; padding: 8px 12px; border-radius: 0 8px 8px 0;
             border-left: 3px solid #e6a817; background: rgba(230, 168, 23, .08);
             font-size: .85rem; line-height: 1.75;
@@ -1852,7 +1846,7 @@
                 hideHlToolbar();
                 const el = range.startContainer.nodeType === 1 ? range.startContainer : range.startContainer.parentElement;
                 const block = el && el.closest('.cg-block');
-                if (block && block.querySelector('.cg-anno-btn')) cgAnnoToggle(block.querySelector('.cg-anno-btn'));
+                if (block) cgAnnoToggle(block);
             });
             hlToolbar.querySelector('.hl-cancel').addEventListener('click', () => {
                 const span = (range.startContainer.parentElement || range.startContainer).closest
@@ -1981,23 +1975,8 @@
                     blk.dataset.bid = blk.id || (layer.id + '-' + (i + 1));
                 });
             });
-            document.querySelectorAll('.cg-block').forEach(blk => {
-                const h3 = blk.querySelector(':scope > h3');
-                if (!h3) return;
-                h3.style.display = 'flex';
-                h3.style.flexWrap = 'wrap';
-                h3.style.alignItems = 'center';
-                h3.style.gap = '6px';
-                const btn = document.createElement('button');
-                btn.className = 'cg-anno-btn';
-                btn.title = '给这个考点块写批注';
-                btn.textContent = '📝 批注';
-                btn.onclick = e => { e.stopPropagation(); cgAnnoToggle(btn); };
-                h3.appendChild(btn);
-            });
         }
-        function cgAnnoToggle(btn) {
-            const blk = btn.closest('.cg-block');
+        function cgAnnoToggle(blk) {
             const existing = blk.querySelector(':scope > .cg-anno-editor');
             if (existing) { existing.remove(); return; }
             const bid = blk.dataset.bid;
@@ -2039,13 +2018,13 @@
         function renderAnnoCard(blk) {
             const bid = blk.dataset.bid;
             const it = annoItems.find(x => x.block === bid);
-            const btn = blk.querySelector(':scope > h3 .cg-anno-btn');
-            if (btn) btn.classList.toggle('has', !!it);
             let card = blk.querySelector(':scope > .cg-anno');
             if (!it) { if (card) card.remove(); return; }
             if (!card) {
                 card = document.createElement('div');
                 card.className = 'cg-anno';
+                card.title = '点击编辑此批注';
+                card.onclick = () => cgAnnoToggle(blk);
                 blk.insertBefore(card, blk.querySelector(':scope > .cg-anno-editor'));
             }
             card.innerHTML = it.html;
