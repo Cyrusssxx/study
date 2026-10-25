@@ -243,6 +243,11 @@ ok('删除选中按钮随勾选显隐并带计数', /删除选中（\$\{n\}）/.
 ok('删除前有确认弹窗', /确定删除选中的 \$\{ids\.length\} 场考试记录吗？/.test(EXAM_HTML));
 ok('删除后刷新历史列表', /d\.deleted != null[\s\S]{0,80}loadHistory\(\)/.test(EXAM_HTML));
 
+console.log('--- 回顾/重刷：题头累计错误次数徽标 ---');
+ok('后端每题附全局累计 wrong_count', /const wrongCntMap = {}; for " + B + "(const w of wrongRows" + B + ") wrongCntMap[w.question_id] = w.wrong_count |" + B + "| 0;/.test(BACKEND) && /wrong_count: wrongCntMap" + B + "[q" + B + ".id] |" + B + "| 0/.test(BACKEND));
+ok('题头徽标仅回顾/重刷模式且 N>=1 显示', /\(MODE === 'exam_review' |\| MODE === 'exam_wrong'\) && \(q\.wrong_count |\| 0\) >= 1/.test(QUIZ_HTML) && /badge-wrongcnt/.test(QUIZ_HTML));
+ok('徽标样式', /\.badge-wrongcnt \{/.test(CSS));
+
 console.log('--- 试卷回顾（exam_review）：整卷可切 错题/全部 ---');
 ok('后端 exam_review 分支（整卷返回）', /mode === 'exam_wrong' |\| mode === 'exam_review'/.test(BACKEND) && /if \(mode === 'exam_review' |\| isWrong\) wrongIds\.push\(qid\)/.test(BACKEND));
 ok('exam_meta.wrong_count 为真实错题数', /wrong_count: wrongCnt/.test(BACKEND));

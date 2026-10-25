@@ -882,6 +882,16 @@ body {
     font-size: 0.75rem;
 }
 
+/* 试卷回顾/重刷：题头累计错误次数徽标（红底白字，N>=1 才显示） */
+.badge-wrongcnt {
+    background: #dc2626;
+    color: #fff;
+    padding: 2px 8px;
+    border-radius: 10px;
+    font-size: 0.75rem;
+    font-weight: 600;
+}
+
 .badge-streak {
     background: #fffaf0;
     color: #b7791f;

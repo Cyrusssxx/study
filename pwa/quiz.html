@@ -858,6 +858,7 @@
                 <div class="question-header">
                     <div class="question-meta">
                         <span class="question-number">${secLabel(q) && _secOrdinal[q.id] ? `${secLabel(q)} · 第 ${_secOrdinal[q.id]} 题` : `题号 ${q.number}`}（本轮第 ${currentIndex + 1} 题）</span>
+                        ${(MODE === 'exam_review' || MODE === 'exam_wrong') && (q.wrong_count || 0) >= 1 ? `<span class="badge-wrongcnt" title="全局累计错误次数（刷题/模拟考/套卷合计）">错 ${q.wrong_count} 次</span>` : ''}
                         ${q.is_real_exam ? `<span class="badge-real">${q.exam_year ? q.exam_year + ' ' : ''}统考真题</span>` : ''}
                         ${q.chapter ? (NOTES_SUBJECTS.includes(q.id.split('_')[0]) && q.section
                             ? `<a class="chapter-badge chapter-badge-link" href="notes.html?subject=${q.id.split('_')[0]}&goto=${encodeURIComponent(q.subsection || q.section)}&q=${encodeURIComponent((q.content||'').slice(0,60))}" target="_blank" title="点击新窗口查看该知识点笔记（已定位到小节）">${q.chapter} · ${q.section} 📖</a>`

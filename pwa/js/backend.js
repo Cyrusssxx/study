@@ -519,6 +519,8 @@ async function api(url, opts = {}) {
             if (mode === 'exam_wrong' || mode === 'exam_review') {
                 const exam = await dbGet('exams', parseInt(p.get('exam_id') || '0', 10));
                 if (!exam || exam.status !== 'submitted') return jsonResp({ error: '试卷不存在或未交卷' }, 404);
+                const wrongRows = await dbAll('wrong');
+                const wrongCntMap = {}; for (const w of wrongRows) wrongCntMap[w.question_id] = w.wrong_count || 0;
                 const wrongIds = [], examUa = {};
                 let wrongCnt = 0;
                 for (const qid of exam.question_ids) {
@@ -536,7 +538,7 @@ async function api(url, opts = {}) {
                 qs = [];
                 for (const k of Object.keys(SUBJECTS)) {
                     for (const q of (await loadQuestions(k)).questions) {
-                        if (idSet.has(q.id)) qs.push(Object.assign({}, q, { exam_user_answer: examUa[q.id] || '' }));
+                        if (idSet.has(q.id)) qs.push(Object.assign({}, q, { exam_user_answer: examUa[q.id] || '', wrong_count: wrongCntMap[q.id] || 0 }));
                     }
                 }
                 qs.sort((a, b) => orderMap.get(a.id) - orderMap.get(b.id));
