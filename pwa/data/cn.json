@@ -3363,7 +3363,8 @@
       "chapter": "第3章 数据链路层",
       "section": "3.6 局域网",
       "subsection": "3.6.2 以太网与IEEE 802.3",
-      "_pdf_qno": 18
+      "_pdf_qno": 18,
+      "kp_analysis": "<div class=\"kp-sec\"><b>考点</b>二进制指数退避：第 i 次冲突后从 0 ~ 2<sup>i</sup>−1 随机取数等待；<b>i 达 10 后区间封顶 2¹⁰−1 = 1023</b>；连续 16 次冲突放弃该帧并上报。11 次冲突 → 0~1023。答案 C。</div><div class=\"kp-sec\"><b>易错点</b><span class=\"kp-trap\">区间按 2^min(i,10) 算，不是 2¹¹=2047（10 次封顶）；16 次是\"放弃\"阈值，10 是\"封顶\"阈值，两个数字别混。</span></div>"
     },
     {
       "id": "cn_0191",
@@ -3397,7 +3398,8 @@
       "chapter": "第3章 数据链路层",
       "section": "3.6 局域网",
       "subsection": "3.6.2 以太网与IEEE 802.3",
-      "_pdf_qno": 20
+      "_pdf_qno": 20,
+      "kp_analysis": "<div class=\"kp-sec\"><b>考点</b>CSMA/CD 冲突检测时间 = <b>最远两站间往返传播时延</b>（2τ）：两站最长距离 = 2×100m = 200m → 2×200m ÷ 2×10⁸m/s = 2μs。答案 A。</div><div class=\"kp-sec\"><b>易错点</b><span class=\"kp-trap\">题目给的是\"站点到 Hub 最长 100m\"——先翻倍成站间 200m 再乘 2（往返），两步都别漏；速率 200000km/s = 2×10⁸m/s。</span></div>"
     },
     {
       "id": "cn_0193",
@@ -3465,7 +3467,8 @@
       "chapter": "第3章 数据链路层",
       "section": "3.6 局域网",
       "subsection": "3.6.2 以太网与IEEE 802.3",
-      "_pdf_qno": 24
+      "_pdf_qno": 24,
+      "kp_analysis": "<div class=\"kp-sec\"><b>考点</b>高速以太网（100/1000/10000Base 系列）的 MAC 帧格式与标准以太网<b>完全相同</b>——升级只改物理层（速率/介质），向后兼容。答案 A。</div><div class=\"kp-sec\"><b>易错点</b><span class=\"kp-trap\">帧格式（6+6+2+数据+4）是 MAC 层标准，与速率无关；变化的是编码方式与传输介质。</span></div>"
     },
     {
       "id": "cn_0197",
@@ -3533,7 +3536,8 @@
       "chapter": "第3章 数据链路层",
       "section": "3.6 局域网",
       "subsection": "3.6.3 IEEE 802.11无线局域网",
-      "_pdf_qno": 28
+      "_pdf_qno": 28,
+      "kp_analysis": "<div class=\"kp-sec\"><b>考点</b>CSMA/CA 特点：①监听到空闲还要<b>再等 DIFS</b> 才发（不是立即发）；②<b>不做冲突检测</b>（无线半双工难以边发边听），靠 ACK 确认 + 超时重传保可靠；③信道预约（RTS/CTS）是可选机制。答案 D（发后等确认、超时重传）。</div><div class=\"kp-sec\"><b>易错点</b><span class=\"kp-trap\">A 是 CSMA/CD 的\"立即发送\"；B \"边发边检测\"是 CD 的定义——CA 恰恰不做；预约不是强制。三句话区分 CD 与 CA 是高频考点。</span></div>"
     },
     {
       "id": "cn_0201",
@@ -3584,7 +3588,8 @@
       "chapter": "第3章 数据链路层",
       "section": "3.6 局域网",
       "subsection": "3.6.2 以太网与IEEE 802.3",
-      "_pdf_qno": 31
+      "_pdf_qno": 31,
+      "kp_analysis": "<div class=\"kp-sec\"><b>考点</b>802.11 四地址规则：地址 1 = 直接接收方、地址 2 = 直接发送方、地址 3 = 最终目的/原始源（不直接出现在无线链路两端的一方）。AP2→B 方向：地址1 = MACB、地址2 = BSSID2、地址3 = MACA。答案 D。</div><div class=\"kp-sec\"><b>易错点</b><span class=\"kp-trap\">口诀：地址1/2 = 当前这段无线链路的两端（先收后发），地址3 补\"真正的源/目的\"；\"去往 AP/来自 AP\"标志决定字段取 BSSID 还是 MAC。</span></div>"
     },
     {
       "id": "cn_0204",
@@ -3618,7 +3623,8 @@
       "chapter": "第3章 数据链路层",
       "section": "3.6 局域网",
       "subsection": "3.6.1 局域网的基本概念和体系结构",
-      "_pdf_qno": 33
+      "_pdf_qno": 33,
+      "kp_analysis": "<div class=\"kp-sec\"><b>考点</b>VLAN 隔离：<b>不同 VLAN 即使接同一交换机也不能在数据链路层直接通信</b>（要靠三层路由）；同一 VLAN 可跨多台交换机；802.1Q 帧最大 1522B（1518+4 标签）。错误的是 B。答案 B。</div><div class=\"kp-sec\"><b>易错点</b><span class=\"kp-trap\">VLAN 的本质是隔离广播域——同交换机不同 VLAN 的两台主机比隔了路由器还\"远\"；A 的 1522B = 1518+4 别记成 1518。</span></div>"
     },
     {
       "id": "cn_0206",
@@ -3652,7 +3658,8 @@
       "chapter": "第3章 数据链路层",
       "section": "3.6 局域网",
       "subsection": "3.6.4 VLAN基本概念与基本原理",
-      "_pdf_qno": 35
+      "_pdf_qno": 35,
+      "kp_analysis": "<div class=\"kp-sec\"><b>考点</b>VLAN 划分方式三种：基于<b>接口</b>、基于 <b>MAC 地址</b>、基于<b>网络层地址/协议（IP）</b>。\"基于用户名\"不是 VLAN 的划分方式（那是认证/授权，如 802.1X）。答案 C。</div><div class=\"kp-sec\"><b>易错点</b><span class=\"kp-trap\">三种划分各有利弊：接口简单但移动需重配、MAC 移动免配置但初始化工作量大、IP 支持按应用/协议划分——用户名属于准入控制范畴。</span></div>"
     },
     {
       "id": "cn_0208",
@@ -3669,7 +3676,8 @@
       "chapter": "第3章 数据链路层",
       "section": "3.6 局域网",
       "subsection": "3.6.4 VLAN基本概念与基本原理",
-      "_pdf_qno": 36
+      "_pdf_qno": 36,
+      "kp_analysis": "<div class=\"kp-sec\"><b>考点</b>VLAN 优点：有效共享资源、抑制广播域、简化管理、提高安全性/保密性；<b>链路聚合</b>（多条链路捆绑扩带宽）是独立技术，不是 VLAN 的优点。答案 C。</div><div class=\"kp-sec\"><b>易错点</b><span class=\"kp-trap\">\"带虚拟的技术都能共享资源\"记忆法；链路聚合解决的是交换机间带宽瓶颈，与 VLAN 分隔广播域是两回事。</span></div>"
     },
     {
       "id": "cn_0209",
@@ -3686,7 +3694,8 @@
       "chapter": "第3章 数据链路层",
       "section": "3.6 局域网",
       "subsection": "3.6.2 以太网与IEEE 802.3",
-      "_pdf_qno": 37
+      "_pdf_qno": 37,
+      "kp_analysis": "<div class=\"kp-sec\"><b>考点</b>2009 真题：最短帧长 = 速率 × 争用期（2τ）。帧长减 800bit → 发送时间减 0.8μs（1Gb/s 下 800bit=0.8μs）→ 争用期须同步减 0.8μs → 往返总距离减 2×10⁸m/s×0.8μs = 160m → <b>单程距离减 80m</b>。答案 D。</div><div class=\"kp-sec\"><b>易错点</b><span class=\"kp-trap\">①帧长变化只影响发送时延，传播时延不变但\"争用期=2τ\"必须随之压缩；②往返减 160m 对应单程减 80m——问的是\"两站点间距离\"取单程。</span></div>"
     },
     {
       "id": "cn_0210",
@@ -3720,7 +3729,8 @@
       "chapter": "第3章 数据链路层",
       "section": "3.6 局域网",
       "subsection": "3.6.2 以太网与IEEE 802.3",
-      "_pdf_qno": 39
+      "_pdf_qno": 39,
+      "kp_analysis": "<div class=\"kp-sec\"><b>考点</b>2012 真题：以太网 MAC 提供<b>无连接的不可靠服务</b>：不编号、不确认、尽最大努力交付；差错纠正规高层负责（信道质量好，简化通信）。答案 A。</div><div class=\"kp-sec\"><b>易错点</b><span class=\"kp-trap\">以太网\"简单\"两原则：无连接 + 不确认；与 PPP（有连接不可靠）、TCP（有连接可靠）对比成组记忆。</span></div>"
     },
     {
       "id": "cn_0212",
@@ -3737,7 +3747,8 @@
       "chapter": "第3章 数据链路层",
       "section": "3.6 局域网",
       "subsection": "3.6.3 IEEE 802.11无线局域网",
-      "_pdf_qno": 40
+      "_pdf_qno": 40,
+      "kp_analysis": "<div class=\"kp-sec\"><b>考点</b>2015 真题：CSMA/CD 叙述错误的是 B——\"适用于无线网络\"。CD 需要边发边听，无线信号强度衰减快、自身信号淹没碰撞，无线用 CSMA/CA。A 边发边听 ✓、C 最小帧长限跨距 ✓、D 传播时延→0 时利用率→100% ✓。答案 B。</div><div class=\"kp-sec\"><b>易错点</b><span class=\"kp-trap\">CD 与 CA 的适用介质是必考点：有线以太网=CD，无线 802.11=CA；\"传播时延趋 0 利用率趋 100%\"可由 U=T_D/(T_D+2τ) 直接看出。</span></div>"
     },
     {
       "id": "cn_0213",
@@ -3788,7 +3799,8 @@
       "chapter": "第3章 数据链路层",
       "section": "3.6 局域网",
       "subsection": "3.6.3 IEEE 802.11无线局域网",
-      "_pdf_qno": 43
+      "_pdf_qno": 43,
+      "kp_analysis": "<div class=\"kp-sec\"><b>考点</b>2018 真题：CSMA/CA 信道预约 = <b>RTS/CTS 握手</b>——A 发 RTS（含占用时长）→ AP 广播 CTS（许可 + 通知其他站别发）→ 解决隐藏站冲突。答案 D。</div><div class=\"kp-sec\"><b>易错点</b><span class=\"kp-trap\">确认帧管可靠传输、二进制指数退避管冲突重传、多 MAC 地址与预约无关——RTS/CTS 才是\"预约\"关键词。</span></div>"
     },
     {
       "id": "cn_0216",
@@ -3822,7 +3834,8 @@
       "chapter": "第3章 数据链路层",
       "section": "3.6 局域网",
       "subsection": "3.6.2 以太网与IEEE 802.3",
-      "_pdf_qno": 45
+      "_pdf_qno": 45,
+      "kp_analysis": "<div class=\"kp-sec\"><b>考点</b>2019 真题：100Base-T = 100Mb/s + 基带 + <b>T 双绞线</b>（5 类 UTP/1 类 STP）。答案 A。</div><div class=\"kp-sec\"><b>易错点</b><span class=\"kp-trap\">命名三段式：速率/Base/介质字母（T 双绞线、F 光纤、数字=同轴缆长）；看到 Base-T 系列直接锁定双绞线。</span></div>"
     },
     {
       "id": "cn_0218",
@@ -3873,7 +3886,8 @@
       "chapter": "第3章 数据链路层",
       "section": "3.6 局域网",
       "subsection": "3.6.3 IEEE 802.11无线局域网",
-      "_pdf_qno": 48
+      "_pdf_qno": 48,
+      "kp_analysis": "<div class=\"kp-sec\"><b>考点</b>2024 真题：NAV（网络分配向量）= RTS/CTS 携带的\"信道将忙\"总时长。A 发 RTS 起：SIFS+CTS+SIFS+DATA(296μs)+SIFS+ACK(2μs) = 28+2+28+296+28+2 = 384μs；隐藏站 B 收到 CTS 时刻起算 CTS 之后：SIFS+DATA+SIFS+ACK = 28+296+28+2 = 354μs。答案 B。</div><div class=\"kp-sec\"><b>易错点</b><span class=\"kp-trap\">NAV 从收到帧的时刻起算——B 在收到 CTS 时设置，故只含 CTS 之后的部分（SIFS+DATA+SIFS+ACK）；296μs = 1998×8/54M；SIFS 在每段衔接处各有一个，逐段累加别漏。</span></div>"
     },
     {
       "id": "cn_0221",
@@ -3907,7 +3921,8 @@
       "chapter": "第3章 数据链路层",
       "section": "3.7 广域网",
       "subsection": "3.7.1 广域网的基本概念",
-      "_pdf_qno": 1
+      "_pdf_qno": 1,
+      "kp_analysis": "<div class=\"kp-sec\"><b>考点</b>局域网 vs 广域网：差异不止覆盖范围，更在<b>所使用的协议与技术</b>（局域网广播/以太网，广域网点对点/分组交换）。答案 B。</div><div class=\"kp-sec\"><b>易错点</b><span class=\"kp-trap\">介质、通信量、服务都随协议与技术派生——追根问底到\"协议层次\"才是根因。</span></div>"
     },
     {
       "id": "cn_0223",
@@ -3958,7 +3973,8 @@
       "chapter": "第3章 数据链路层",
       "section": "3.7 广域网",
       "subsection": "3.7.1 广域网的基本概念",
-      "_pdf_qno": 4
+      "_pdf_qno": 4,
+      "kp_analysis": "<div class=\"kp-sec\"><b>考点</b>广域网拓扑：节点多、覆盖广，为可靠性与可扩展性采用<b>网状结构</b>（任意两点多路径冗余）。答案 C。</div><div class=\"kp-sec\"><b>易错点</b><span class=\"kp-trap\">星形有单点故障、总线/环形扩展性差——广域网的可用性要求决定了网状。</span></div>"
     },
     {
       "id": "cn_0226",
@@ -4009,7 +4025,8 @@
       "chapter": "第3章 数据链路层",
       "section": "3.7 广域网",
       "subsection": "3.7.2 点对点协议",
-      "_pdf_qno": 7
+      "_pdf_qno": 7,
+      "kp_analysis": "<div class=\"kp-sec\"><b>考点</b>PPP 透明传输按线路分：<b>异步线路 = 字节填充</b>（转义字符 0x7D）；<b>同步线路 = 零比特填充</b>（5 个连 1 后插 0）。默认异步线路 → 字符填充。答案 B。</div><div class=\"kp-sec\"><b>易错点</b><span class=\"kp-trap\">PPP 面向字节（帧长整数个字节）→ 异步用字节填充；HDLC 面向比特 → 零比特填充。两两配对记。</span></div>"
     },
     {
       "id": "cn_0229",
@@ -4026,7 +4043,8 @@
       "chapter": "第3章 数据链路层",
       "section": "3.7 广域网",
       "subsection": "3.7.2 点对点协议",
-      "_pdf_qno": 8
+      "_pdf_qno": 8,
+      "kp_analysis": "<div class=\"kp-sec\"><b>考点</b>PPP 特点：有差错检测（CRC）无纠错、支持多种网络层协议（两端可运行不同网络层协议）、支持动态分配 IP（拨号）、支持身份鉴别（PAP/CHAP）。错误的是 B（\"仅支持 IP\"）。答案 B。</div><div class=\"kp-sec\"><b>易错点</b><span class=\"kp-trap\">PPP 不是\"仅 IP\"——LCP 协商后 NCP 可承载多种网络层协议（IPCP 只是其中之一）；\"检测不纠错\"也别写成\"有纠错\"。</span></div>"
     },
     {
       "id": "cn_0230",
@@ -4077,7 +4095,8 @@
       "chapter": "第3章 数据链路层",
       "section": "3.7 广域网",
       "subsection": "3.7.2 点对点协议",
-      "_pdf_qno": 11
+      "_pdf_qno": 11,
+      "kp_analysis": "<div class=\"kp-sec\"><b>考点</b>PPP 定位：<b>数据链路层协议</b>、面向字节、全双工（不支持半双工）、两端网络层协议可不同、支持身份鉴别与动态分配地址。答案 D。</div><div class=\"kp-sec\"><b>易错点</b><span class=\"kp-trap\">A 错在层（是链路层不是网络层）；B 错在双工方式（只支持全双工点对点链路）；C 错在协议限制（NCP 支持多种网络层协议）。</span></div>"
     },
     {
       "id": "cn_0233",
@@ -4094,7 +4113,8 @@
       "chapter": "第3章 数据链路层",
       "section": "3.7 广域网",
       "subsection": "3.7.2 点对点协议",
-      "_pdf_qno": 12
+      "_pdf_qno": 12,
+      "kp_analysis": "<div class=\"kp-sec\"><b>考点</b>PPP 服务形态：<b>有连接</b>（建立 LCP 链路后传输）的<b>不可靠</b>服务——CRC 检验正确就收、错就丢，不确认不重传。答案 C。</div><div class=\"kp-sec\"><b>易错点</b><span class=\"kp-trap\">\"有连接\"来自 LCP 建链过程；\"不可靠\"来自帧级只检错不重传——与以太网（无连接不可靠）、TCP（有连接可靠）三点连成一组。</span></div>"
     },
     {
       "id": "cn_0234",
@@ -4145,7 +4165,8 @@
       "chapter": "第3章 数据链路层",
       "section": "3.8 数据链路层设备",
       "subsection": "3.8.2 以太网交换机",
-      "_pdf_qno": 3
+      "_pdf_qno": 3,
+      "kp_analysis": "<div class=\"kp-sec\"><b>考点</b>交换机（链路层）分网好处：①分割冲突域（每接口一个冲突域）；②增加总带宽（各接口并行转发）；③过滤网段间数据（MAC 表转发）；<b>不能缩小广播域</b>（广播帧向所有接口泛洪）。答案 D。</div><div class=\"kp-sec\"><b>易错点</b><span class=\"kp-trap\">交换机隔离冲突域不隔离广播域——广播域要靠路由器/VLAN 划分；这条边界与 cn_0240 成对出现。</span></div>"
     },
     {
       "id": "cn_0237",
@@ -4213,7 +4234,8 @@
       "chapter": "第3章 数据链路层",
       "section": "3.8 数据链路层设备",
       "subsection": "3.8.2 以太网交换机",
-      "_pdf_qno": 7
+      "_pdf_qno": 7,
+      "kp_analysis": "<div class=\"kp-sec\"><b>考点</b>设备与域的对应：<b>交换机 = 隔离冲突域、不隔离广播域</b>（交换机连接的一组工作站=一个广播域、多个冲突域）。答案 B。</div><div class=\"kp-sec\"><b>易错点</b><span class=\"kp-trap\">三件套口诀：集线器——冲突域广播域都不隔离；交换机/网桥——隔离冲突域；路由器——两者都隔离。</span></div>"
     },
     {
       "id": "cn_0241",
@@ -4264,7 +4286,8 @@
       "chapter": "第3章 数据链路层",
       "section": "3.8 数据链路层设备",
       "subsection": "3.8.3 共享式以太网",
-      "_pdf_qno": 10
+      "_pdf_qno": 10,
+      "kp_analysis": "<div class=\"kp-sec\"><b>考点</b>共享式以太网（集线器连接）：物理拓扑星形、<b>逻辑拓扑总线形</b>；无确认无连接的简化设计；只含物理层与数据链路层；半双工<b>必用 CSMA/CD</b>。答案 C。</div><div class=\"kp-sec\"><b>易错点</b><span class=\"kp-trap\">A 把物理拓扑与逻辑拓扑弄反（星形布线、总线逻辑）；D 与半双工绑定——全双工交换式以太网才可不用 CSMA/CD。</span></div>"
     },
     {
       "id": "cn_0244",
@@ -4315,7 +4338,8 @@
       "chapter": "第3章 数据链路层",
       "section": "3.8 数据链路层设备",
       "subsection": "3.8.2 以太网交换机",
-      "_pdf_qno": 13
+      "_pdf_qno": 13,
+      "kp_analysis": "<div class=\"kp-sec\"><b>考点</b>交换机 vs 集线器吞吐量：交换机各接口并行转发可叠加（9 主机+2 服务器全速 = 900+200 = <b>1100Mb/s</b>）；集线器共享式一个碰撞域封顶 100Mb/s。三种配置：全交换 1100 / 系内换集线器 500（3×100 + 2×100）/ 全集线器 100。答案 A。</div><div class=\"kp-sec\"><b>易错点</b><span class=\"kp-trap\">集线器域内所有站<b>共享</b>总带宽（不是叠加）——一个碰撞域上限即速率上限；交换机每接口独享带宽可同时互传。</span></div>"
     },
     {
       "id": "cn_0247",
@@ -4332,7 +4356,8 @@
       "chapter": "第3章 数据链路层",
       "section": "3.8 数据链路层设备",
       "subsection": "3.8.2 以太网交换机",
-      "_pdf_qno": 14
+      "_pdf_qno": 14,
+      "kp_analysis": "<div class=\"kp-sec\"><b>考点</b>交换机 vs 集线器的部署选择：交换机隔离冲突域（各接口独享带宽），适合<b>本地通信量大</b>的网段——A 网 80% 流量在网内，用交换机让内部并行互传不占外联带宽。答案 A。</div><div class=\"kp-sec\"><b>易错点</b><span class=\"kp-trap\">B 网恰相反（80% 流量出网），内部冲突少、瓶颈在外联链路，交换机/集线器差别不大；判断依据是\"内部流量占比\"，不是谁贵谁新。</span></div>"
     },
     {
       "id": "cn_0248",
@@ -4400,7 +4425,8 @@
       "chapter": "第3章 数据链路层",
       "section": "3.8 数据链路层设备",
       "subsection": "3.8.2 以太网交换机",
-      "_pdf_qno": 18
+      "_pdf_qno": 18,
+      "kp_analysis": "<div class=\"kp-sec\"><b>考点</b>交换机自学习 + 洪泛：交换表空 → 洪泛（除入接口全转发）；表中有目的 MAC → 只从对应接口转发。A→B 洪泛（全收）、H→A 精确转发、E→X 洪泛（经集线器全收）。错误的叙述是 D（X→E 交换机 2 收不到——X 发的帧交换机 2 必从其接口收到）。答案 D。</div><div class=\"kp-sec\"><b>易错点</b><span class=\"kp-trap\">洪泛的范围 = 除进入接口外的<b>所有接口</b>（连着的集线器再向其所有端口扩散）；自学习只登记\"源 MAC→入接口\"，转发看\"目的 MAC\"。</span></div>"
     },
     {
       "id": "cn_0252",
@@ -4417,7 +4443,8 @@
       "chapter": "第3章 数据链路层",
       "section": "3.8 数据链路层设备",
       "subsection": "3.8.2 以太网交换机",
-      "_pdf_qno": 19
+      "_pdf_qno": 19,
+      "kp_analysis": "<div class=\"kp-sec\"><b>考点</b>2009 真题：以太网交换机 = 多端口网桥，工作在数据链路层，转发决策用 PDU 的<b>目的物理地址（目的 MAC）</b>查交换表。答案 A。</div><div class=\"kp-sec\"><b>易错点</b><span class=\"kp-trap\">交换表是\"MAC→接口\"，查表用的是<b>目的</b> MAC（源 MAC 只用于自学习登记）；IP 地址是网络层的事。</span></div>"
     },
     {
       "id": "cn_0253",
@@ -4434,7 +4461,8 @@
       "chapter": "第3章 数据链路层",
       "section": "3.8 数据链路层设备",
       "subsection": "3.8.2 以太网交换机",
-      "_pdf_qno": 20
+      "_pdf_qno": 20,
+      "kp_analysis": "<div class=\"kp-sec\"><b>考点</b>2013 真题：直通交换 = 收到<b>目的 MAC 地址（6B）</b>就查表转发，不必收完整帧 → 最短转发时延 = 6×8 ÷ 100Mb/s = <b>0.48μs</b>。答案 B。</div><div class=\"kp-sec\"><b>易错点</b><span class=\"kp-trap\">存储转发要收完整帧（不含前导码 121.44μs 是 D 的数字）；直通的前 6 字节不含前导码；0.48 = 48bit/100M。</span></div>"
     },
     {
       "id": "cn_0254",
@@ -4468,7 +4496,8 @@
       "chapter": "第3章 数据链路层",
       "section": "3.8 数据链路层设备",
       "subsection": "3.8.2 以太网交换机",
-      "_pdf_qno": 22
+      "_pdf_qno": 22,
+      "kp_analysis": "<div class=\"kp-sec\"><b>考点</b>2015 真题：以太网交换机 = <b>多端口网桥</b>（A ✓）；各接口划分<b>冲突域</b>不划广播域（B、C ✗）；工作在链路层，不能互连不同网络层协议的网络（D ✗）。答案 A。</div><div class=\"kp-sec\"><b>易错点</b><span class=\"kp-trap\">三句边界：交换机分冲突域不分广播域（广播域归路由器/VLAN）；链路层设备无法跨越网络层协议差异。</span></div>"
     },
     {
       "id": "cn_0256",
@@ -4485,7 +4514,8 @@
       "chapter": "第3章 数据链路层",
       "section": "3.8 数据链路层设备",
       "subsection": "3.8.3 共享式以太网",
-      "_pdf_qno": 23
+      "_pdf_qno": 23,
+      "kp_analysis": "<div class=\"kp-sec\"><b>考点</b>2016 真题：交换机隔离冲突域（查表精确转发），集线器不隔离（除入接口全广播）。H4 的确认帧：交换机转发到 H2 所在接口，但 H3 挂在同一<b>集线器</b>下 → 物理层上 H2、H3 都收到。答案 D。</div><div class=\"kp-sec\"><b>易错点</b><span class=\"kp-trap\">\"物理层上收到\"看的是电信号扩散范围——集线器域内人人收到，与交换表怎么转发无关；H1 在另一交换机接口，收不到。</span></div>"
     },
     {
       "id": "cn_0257",
@@ -4502,7 +4532,8 @@
       "chapter": "第4章 网络层",
       "section": "4.1 网络层的功能",
       "subsection": "4.1.1 异构网络互连",
-      "_pdf_qno": 1
+      "_pdf_qno": 1,
+      "kp_analysis": "<div class=\"kp-sec\"><b>考点</b>路由器连接的\"异构网络\"指<b>物理层与数据链路层协议不同</b>的网络（介质、编码、帧格式各异）。答案 C。</div><div class=\"kp-sec\"><b>易错点</b><span class=\"kp-trap\">异构性定义在下两层：路由器向上屏蔽了下两层的差异；\"拓扑/OS 不同\"不是网络异构的定义口径。</span></div>"
     },
     {
       "id": "cn_0258",
@@ -4536,7 +4567,8 @@
       "chapter": "第4章 网络层",
       "section": "4.1 网络层的功能",
       "subsection": "4.1.1 异构网络互连",
-      "_pdf_qno": 3
+      "_pdf_qno": 3,
+      "kp_analysis": "<div class=\"kp-sec\"><b>考点</b>路由器互联的协议边界：<b>物理层、数据链路层、网络层协议可以不同</b>（路由器重构网络层分组），<b>网络层以上（传输层及以上）必须相同</b>。答案 C。</div><div class=\"kp-sec\"><b>易错点</b><span class=\"kp-trap\">易误选 B：\"网络层必须相同\"只对普通路由器成立——NAT/协议转换路由器可连 IPv4 与 IPv6 网络，故网络层也可不同；上层（端到端语义）必须一致。</span></div>"
     },
     {
       "id": "cn_0260",
@@ -4604,7 +4636,8 @@
       "chapter": "第4章 网络层",
       "section": "4.1 网络层的功能",
       "subsection": "4.1.1 异构网络互连",
-      "_pdf_qno": 7
+      "_pdf_qno": 7,
+      "kp_analysis": "<div class=\"kp-sec\"><b>考点</b>IP 选路 = 逐跳（hop-by-hop）：主机只把分组交给默认网关，每个路由器只按路由表选<b>下一跳</b>——源主机和中间路由器<b>都不知道完整路径</b>。答案 B。</div><div class=\"kp-sec\"><b>易错点</b><span class=\"kp-trap\">\"知道完整路径\"对数据报方式不成立：每台设备只维护\"下一跳\"信息，路径是逐跳拼接出来的（虚电路方式才建全路径）。</span></div>"
     },
     {
       "id": "cn_0264",
@@ -4638,7 +4671,8 @@
       "chapter": "第4章 网络层",
       "section": "4.1 网络层的功能",
       "subsection": "4.1.3 网络层提供的两种服务",
-      "_pdf_qno": 9
+      "_pdf_qno": 9,
+      "kp_analysis": "<div class=\"kp-sec\"><b>考点</b>三种交换方式叙述纠错：电路交换无差错控制（A ✓）、分组有最大长度限制（B ✓）、虚电路面向连接可靠（C ✓）；<b>故障率高的链路不适合虚电路</b>——虚电路经过的节点故障则整条虚电路失效（数据报可绕行）。答案 D。</div><div class=\"kp-sec\"><b>易错点</b><span class=\"kp-trap\">虚电路的\"可靠\"指网络层有序且不丢（同一路径），代价是路径固定——路径不可靠时这反而是缺点；数据报的健壮性来自独立选路。</span></div>"
     },
     {
       "id": "cn_0266",
@@ -4706,7 +4740,8 @@
       "chapter": "第4章 网络层",
       "section": "4.1 网络层的功能",
       "subsection": "4.1.3 网络层提供的两种服务",
-      "_pdf_qno": 13
+      "_pdf_qno": 13,
+      "kp_analysis": "<div class=\"kp-sec\"><b>考点</b>虚电路 vs 数据报纠错：①虚电路也是分组交换、按存储转发工作（A ✗）；②虚电路分<b>SVC（临时）与 PVC（永久）</b>，不只是临时连接（B ✗）；③数据报不保证可靠也<b>不保证有序</b>（C ✗）；④数据报每个分组<b>必须携带完整源/目的地址</b>（D ✓）。答案 D。</div><div class=\"kp-sec\"><b>易错点</b><span class=\"kp-trap\">虚电路分组只带<b>虚电路号</b>（建立时用过一次完整地址）；\"永久型虚电路\"是运营商预配置的常驻连接——这两点是与数据报的核心差异。</span></div>"
     },
     {
       "id": "cn_0270",
@@ -4723,7 +4758,8 @@
       "chapter": "第4章 网络层",
       "section": "4.1 网络层的功能",
       "subsection": "4.1.3 网络层提供的两种服务",
-      "_pdf_qno": 14
+      "_pdf_qno": 14,
+      "kp_analysis": "<div class=\"kp-sec\"><b>考点</b>虚电路特性：①自身实现差错控制（可靠），不依赖其他协议（A ✗）；②分组<b>只需携带虚电路号</b>，不必带完整目的地址（B ✗）；③结合电路交换思想（先建逻辑连接），适合长时间实时通信（C ✓）；④多条虚电路复用同一物理链路靠虚电路号区分，<b>不产生冲突</b>（D ✗）。答案 C。</div><div class=\"kp-sec\"><b>易错点</b><span class=\"kp-trap\">B 与 D 都是\"把电路交换的物理独占\"错套到虚电路上——虚电路是<b>逻辑</b>连接，物理链路仍被多路复用。</span></div>"
     },
     {
       "id": "cn_0271",
@@ -4740,7 +4776,8 @@
       "chapter": "第4章 网络层",
       "section": "4.1 网络层的功能",
       "subsection": "4.1.3 网络层提供的两种服务",
-      "_pdf_qno": 15
+      "_pdf_qno": 15,
+      "kp_analysis": "<div class=\"kp-sec\"><b>考点</b>虚电路再辨析：建立的是<b>逻辑连接</b>不是物理连接（A ✗）；中间节点故障 → 整条虚电路失效需重建（B ✗，对比数据报可绕行）；只有建立连接的分组携带完整地址，后续分组带虚电路号（C ✓）；同一会话的分组<b>沿同一路径按序到达</b>（D ✗）。答案 C。</div><div class=\"kp-sec\"><b>易错点</b><span class=\"kp-trap\">与 cn_0269 成对：两题合起来覆盖虚电路 vs 数据报的六条差异（连接/地址/路径/顺序/可靠性/故障影响）。</span></div>"
     },
     {
       "id": "cn_0272",
@@ -4774,7 +4811,8 @@
       "chapter": "第4章 网络层",
       "section": "4.1 网络层的功能",
       "subsection": "4.1.4 SDN的基本概念",
-      "_pdf_qno": 17
+      "_pdf_qno": 17,
+      "kp_analysis": "<div class=\"kp-sec\"><b>考点</b>SDN 三特征：①<b>控制与转发分离</b>；②控制平面<b>集中化</b>（远程控制器统一算路由下发流表）；③接口<b>开放可编程</b>。OpenFlow 是控制层↔转发层的接口协议，<b>并不取代路由协议</b>（路由计算移到了控制器）。答案 D。</div><div class=\"kp-sec\"><b>易错点</b><span class=\"kp-trap\">\"路由器之间不再交换路由信息、由远程控制器计算最佳路由\"——变化的主体是\"谁来算\"，OpenFlow 只是下发流表的通道。</span></div>"
     },
     {
       "id": "cn_0274",
@@ -4791,7 +4829,8 @@
       "chapter": "第4章 网络层",
       "section": "4.1 网络层的功能",
       "subsection": "4.1.4 SDN的基本概念",
-      "_pdf_qno": 18
+      "_pdf_qno": 18,
+      "kp_analysis": "<div class=\"kp-sec\"><b>考点</b>SDN 细节：SDN 是新型<b>网络体系结构</b>（设计/构建/管理方法），不是新型物理网络（I 错）；OpenFlow 交换机按\"流表\"匹配+动作转发（II 对）；远程控制器是<b>独立的服务器</b>，不在交换机中（III 错）；OpenFlow = 控制层↔数据层的接口（IV 对）。答案 A（I 和 III 错）。</div><div class=\"kp-sec\"><b>易错点</b><span class=\"kp-trap\">\"SDN 不是物理网络结构\"与\"远程控制器不在交换机里\"是两条最容易想当然的点——控制器天生是集中式的独立设备。</span></div>"
     },
     {
       "id": "cn_0275",
@@ -4944,7 +4983,8 @@
       "chapter": "第4章 网络层",
       "section": "4.2 IPv4",
       "subsection": "4.2.1 IPv4分组",
-      "_pdf_qno": 6
+      "_pdf_qno": 6,
+      "kp_analysis": "<div class=\"kp-sec\"><b>考点</b>IP 分片重组只在<b>目的主机</b>进行：分片可能走不同路径，中间路由器无法收齐所有分片，也不做重组。答案 D。</div><div class=\"kp-sec\"><b>易错点</b><span class=\"kp-trap\">中间路由器只管继续分片（MTU 更小时）与转发——\"分片可重组于任意路由器\"是绝对陷阱；重组点唯一 = 目的端主机。</span></div>"
     },
     {
       "id": "cn_0284",
@@ -4995,7 +5035,8 @@
       "chapter": "第4章 网络层",
       "section": "4.2 IPv4",
       "subsection": "4.2.1 IPv4分组",
-      "_pdf_qno": 9
+      "_pdf_qno": 9,
+      "kp_analysis": "<div class=\"kp-sec\"><b>考点</b>片偏移单位 = <b>8 字节</b>：片偏移 100 → 该片第一个字节 = 原数据报第 100×8 = <b>800</b> 字节。答案 D。</div><div class=\"kp-sec\"><b>易错点</b><span class=\"kp-trap\">三个字段三套单位：首部单位 4B、片偏移单位 8B、总长度单位 1B——片偏移值必须乘 8 才是字节位置；偏移 0 表示第一片或未分片。</span></div>"
     },
     {
       "id": "cn_0287",
@@ -5097,7 +5138,8 @@
       "chapter": "第4章 网络层",
       "section": "4.2 IPv4",
       "subsection": "4.2.2 IPv4地址",
-      "_pdf_qno": 15
+      "_pdf_qno": 15,
+      "kp_analysis": "<div class=\"kp-sec\"><b>考点</b>单播地址判定三步：①排除 D 类（224 起头=多播）；②算主机号是否全 0（网络地址）或全 1（广播）。172.31.128.255/18：18 位掩码下主机号 = 后 14 位 = 01111111111111 不全 1 → 单播 ✓。10.255.255.255（A 类主机号全 1 = 广播 ✗）、192.168.24.59/30（后 2 位 11 全 1 = 广播 ✗）、224.x = D 类 ✗。答案 A。</div><div class=\"kp-sec\"><b>易错点</b><span class=\"kp-trap\">CIDR 地址要先按掩码切主机号再判全 0/全 1——59 = 00111011 在 /30 下主机号是后两位 11，不是整个 59。</span></div>"
     },
     {
       "id": "cn_0293",
@@ -5131,7 +5173,8 @@
       "chapter": "第4章 网络层",
       "section": "4.2 IPv4",
       "subsection": "4.2.2 IPv4地址",
-      "_pdf_qno": 17
+      "_pdf_qno": 17,
+      "kp_analysis": "<div class=\"kp-sec\"><b>考点</b>可分配给主机的地址 = 主机号非全 0（网络地址）非全 1（广播）、非回环（127.x）、语法合法（每段 ≤255）。A 主机号全 0 ✗、C 回环 ✗、D 出现 256 语法错 ✗、B（A 类，主机号 47.10.0）✓。答案 B。</div><div class=\"kp-sec\"><b>易错点</b><span class=\"kp-trap\">C 类默认掩码 255.255.255.0 下 192.46.10.0 主机号全 0 是网络地址；127/8 整段回环；\"256\"是绝对不会出现的字节值。</span></div>"
     },
     {
       "id": "cn_0295",
@@ -5148,7 +5191,8 @@
       "chapter": "第4章 网络层",
       "section": "4.2 IPv4",
       "subsection": "4.2.2 IPv4地址",
-      "_pdf_qno": 18
+      "_pdf_qno": 18,
+      "kp_analysis": "<div class=\"kp-sec\"><b>考点</b>特殊 IP 规则：0.0.0.0 = 本网络本主机（DHCP 源地址可用，A ✓）；255.255.255.255 = 受限广播（路由器不转发，B ✓）；127.x 既可作源也可作目的（C 说法错误 ✓）；主机号全 1 = 直接广播地址，<b>路由器可以转发</b>（D ✓）。错误的说法是 C。答案 C。</div><div class=\"kp-sec\"><b>易错点</b><span class=\"kp-trap\">广播分两种：受限广播 255.255.255.255（不出本网）与直接广播 主机号全 1（可跨网转发）——两者转发规则相反，最易混。</span></div>"
     },
     {
       "id": "cn_0296",
@@ -5165,7 +5209,8 @@
       "chapter": "第4章 网络层",
       "section": "4.2 IPv4",
       "subsection": "4.2.2 IPv4地址",
-      "_pdf_qno": 19
+      "_pdf_qno": 19,
+      "kp_analysis": "<div class=\"kp-sec\"><b>考点</b>B 类 + 子网掩码 255.255.240.0：240 = 11110000 → 主机位 12 位 → 每子网主机数 = 2¹² − 2 = <b>4094</b>。答案 C。</div><div class=\"kp-sec\"><b>易错点</b><span class=\"kp-trap\">减 2 = 主机号全 0（网络地址）与全 1（广播地址）不可用；240 的二进制给出子网位 4 位（16 个子网）、主机位 12 位。</span></div>"
     },
     {
       "id": "cn_0297",
@@ -5199,7 +5244,8 @@
       "chapter": "第4章 网络层",
       "section": "4.2 IPv4",
       "subsection": "4.2.2 IPv4地址",
-      "_pdf_qno": 21
+      "_pdf_qno": 21,
+      "kp_analysis": "<div class=\"kp-sec\"><b>考点</b>划分子网的目的/收益：子网间经路由器互连 → <b>减少广播域大小</b>、提高效率与安全性（C ✓）；子网数增加是结果不是目的（D）；主机总数因全 0/全 1 不可用而减少（B ✗）；冲突域与子网划分无关（A ✗）。答案 C。</div><div class=\"kp-sec\"><b>易错点</b><span class=\"kp-trap\">\"增加网络的数量\"与\"划分的目的\"要分清——题问好处/目的，把结果当目的就掉坑；划分子网不改变冲突域（那由交换机/集线器决定）。</span></div>"
     },
     {
       "id": "cn_0299",
@@ -5216,7 +5262,8 @@
       "chapter": "第4章 网络层",
       "section": "4.2 IPv4",
       "subsection": "4.2.2 IPv4地址",
-      "_pdf_qno": 22
+      "_pdf_qno": 22,
+      "kp_analysis": "<div class=\"kp-sec\"><b>考点</b>198.90.10.0/27：主机号 5 位。主机号只留 1 位时无可分配地址（全 0/全 1 均不可用）→ 最少留 2 位 → 子网位最多 3 位 → 最多 <b>8 个子网</b>；不划子网时每子网主机 = 2⁵ − 2 = <b>30</b>。答案 A。</div><div class=\"kp-sec\"><b>易错点</b><span class=\"kp-trap\">\"最多子网数\"受\"每子网至少 2 个可用地址\"约束——子网位不能吃光主机位；两个空的问法各算各的：子网数看子网位、主机数看主机位。</span></div>"
     },
     {
       "id": "cn_0300",
@@ -5233,7 +5280,8 @@
       "chapter": "第4章 网络层",
       "section": "4.2 IPv4",
       "subsection": "4.2.2 IPv4地址",
-      "_pdf_qno": 23
+      "_pdf_qno": 23,
+      "kp_analysis": "<div class=\"kp-sec\"><b>考点</b>一台主机两个 IP = 属于两个网络：192.168.11.25 是 C 类（前三段为网络号），另一个 IP 必须网络号不同才属于不同网络 → 192.168.13.25。答案 C。</div><div class=\"kp-sec\"><b>易错点</b><span class=\"kp-trap\">A/B/D 与原地址同网段（192.168.11.x）——同一网段的多个地址仍属同一网络，起不到\"接入两个网络\"的作用。</span></div>"
     },
     {
       "id": "cn_0301",
