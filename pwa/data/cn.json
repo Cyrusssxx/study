@@ -251,7 +251,7 @@
       "section": "1.1 计算机网络概述",
       "subsection": "1.1.4 电路交换、报文交换与分组交换",
       "_pdf_qno": 13,
-      "kp_analysis": "<div class=\"kp-sec\"><b>考点</b>分组拆装 + 尾部时延：①有效载荷 = 分组 1000B − 首部 20B = 980B，980000B ÷ 980B = <b>1000 组</b>（首部计入传输量，共 10⁶B）；②80ms 发完全部后，末组还需依次过 <b>2 个交换机 = 2 段链路</b>，每段 0.08ms → 80.16ms。</div><div class=\"kp-sec\"><b>易错点</b><span class=\"kp-trap\">①漏首部按 980000÷1000=980 组算是最大坑（有效数据 980B ≠ 分组 1000B）；②尾部要过 2 个交换机=2 段链路，漏一段得 80.08；③80ms 是 H1 发完全部的时刻，末组此刻刚离开 H1。</span></div>"
+      "kp_analysis": "<div class=\"kp-sec\"><b>考点</b>分组拆装 + 尾部时延：①有效载荷 = 分组 1000B − 首部 20B = 980B，980000B ÷ 980B = <b>1000 组</b>（首部计入传输量，共 10<sup>6</sup>B）；②80ms 发完全部后，末组还需依次过 <b>2 个交换机 = 2 段链路</b>，每段 0.08ms → 80.16ms。</div><div class=\"kp-sec\"><b>易错点</b><span class=\"kp-trap\">①漏首部按 980000÷1000=980 组算是最大坑（有效数据 980B ≠ 分组 1000B）；②尾部要过 2 个交换机=2 段链路，漏一段得 80.08；③80ms 是 H1 发完全部的时刻，末组此刻刚离开 H1。</span></div>"
     },
     {
       "id": "cn_0014",
@@ -286,7 +286,7 @@
       "section": "1.1 计算机网络概述",
       "subsection": "1.1.4 电路交换、报文交换与分组交换",
       "_pdf_qno": 15,
-      "kp_analysis": "<div class=\"kp-sec\"><b>考点</b>时延带宽积 = 传播时延 × 带宽 = 链路中\"在途比特总量\"；反推传播时延 = 积/带宽 = 1000b/100Mb/s = 0.01ms。分组流水线：1000 组 × 0.08ms = 80ms 全部发出；<b>只有最后一组暴露尾部全程</b>：0.01 传播 + 0.08 路由器转发 + 0.01 传播 = 0.10ms。1M = 10⁶（速率）。</div><div class=\"kp-sec\"><b>易错点</b><span class=\"kp-trap\">前面的组都被流水线藏进 80ms 里，总时延 = 80 + 最后一组独享的 0.10；漏 0.08（存储转发）得 80.02、漏末段传播得 80.09；1M=10⁶ 不是 2²⁰。</span></div>"
+      "kp_analysis": "<div class=\"kp-sec\"><b>考点</b>时延带宽积 = 传播时延 × 带宽 = 链路中\"在途比特总量\"；反推传播时延 = 积/带宽 = 1000b/100Mb/s = 0.01ms。分组流水线：1000 组 × 0.08ms = 80ms 全部发出；<b>只有最后一组暴露尾部全程</b>：0.01 传播 + 0.08 路由器转发 + 0.01 传播 = 0.10ms。1M = 10<sup>6</sup>（速率）。</div><div class=\"kp-sec\"><b>易错点</b><span class=\"kp-trap\">前面的组都被流水线藏进 80ms 里，总时延 = 80 + 最后一组独享的 0.10；漏 0.08（存储转发）得 80.02、漏末段传播得 80.09；1M=10<sup>6</sup> 不是 2<sup>20</sup>。</span></div>"
     },
     {
       "id": "cn_0016",
@@ -1044,7 +1044,7 @@
       "section": "2.1 通信基础",
       "subsection": "2.1.1 基本概念",
       "_pdf_qno": 1,
-      "kp_analysis": "<div class=\"kp-sec\"><b>考点</b>通信基础概念辨析：①<b>信道 ≠ 电路</b>——一条双向电路含收/发两个信道，多用户共用时每用户另有信道；②<b>调制</b> = 数据 → 模拟信号（变数字信号叫编码）；③码元速率（波特率）与信息速率（比特率）关系：波特率 = 比特率 ÷ log₂n。</div><div class=\"kp-sec\"><b>易错点</b><span class=\"kp-trap\">①\"调制是把数据变数字信号\"错——变模拟信号才叫调制，变数字信号叫编码；②波特率与比特率的换算方向别反：波特率 = 比特率 / log₂n。</span></div>"
+      "kp_analysis": "<div class=\"kp-sec\"><b>考点</b>通信基础概念辨析：①<b>信道 ≠ 电路</b>——一条双向电路含收/发两个信道，多用户共用时每用户另有信道；②<b>调制</b> = 数据 → 模拟信号（变数字信号叫编码）；③码元速率（波特率）与信息速率（比特率）关系：波特率 = 比特率 ÷ log<sub>2</sub>n。</div><div class=\"kp-sec\"><b>易错点</b><span class=\"kp-trap\">①\"调制是把数据变数字信号\"错——变模拟信号才叫调制，变数字信号叫编码；②波特率与比特率的换算方向别反：波特率 = 比特率 / log<sub>2</sub>n。</span></div>"
     },
     {
       "id": "cn_0057",
@@ -1062,7 +1062,7 @@
       "section": "2.1 通信基础",
       "subsection": "2.1.2 信道的极限容量",
       "_pdf_qno": 2,
-      "kp_analysis": "<div class=\"kp-sec\"><b>考点</b>香农定理：C = W·log₂(1+S/N)——信道极限速率由<b>带宽 W</b> 与<b>信噪比 S/N</b> 决定（S/N = 信号功率/噪声功率）。码元速率、发送功率都不是公式的直接变量。</div><div class=\"kp-sec\"><b>易错点</b><span class=\"kp-trap\">信噪比 S/N 由信号功率与噪声功率之比决定，但题目问\"主要因素\"答的是带宽与信噪比这对组合；单独的\"码元速率/发送功率\"都不是香农公式的变量。</span></div>"
+      "kp_analysis": "<div class=\"kp-sec\"><b>考点</b>香农定理：C = W·log<sub>2</sub>(1+S/N)——信道极限速率由<b>带宽 W</b> 与<b>信噪比 S/N</b> 决定（S/N = 信号功率/噪声功率）。码元速率、发送功率都不是公式的直接变量。</div><div class=\"kp-sec\"><b>易错点</b><span class=\"kp-trap\">信噪比 S/N 由信号功率与噪声功率之比决定，但题目问\"主要因素\"答的是带宽与信噪比这对组合；单独的\"码元速率/发送功率\"都不是香农公式的变量。</span></div>"
     },
     {
       "id": "cn_0058",
@@ -1150,7 +1150,7 @@
       "section": "2.1 通信基础",
       "subsection": "2.1.2 信道的极限容量",
       "_pdf_qno": 7,
-      "kp_analysis": "<div class=\"kp-sec\"><b>考点</b>波特率↔比特率：比特率 = 波特率 × log₂n（n = 码元离散值个数）。逆推：每码元比特数 k = 比特率/波特率 = 4000/1000 = 4 bit → n = 2⁴ = <b>16</b>。</div><div class=\"kp-sec\"><b>易错点</b><span class=\"kp-trap\">方向别反：n = 2^k（k=每码元比特数），先求 k 再求 n；4kb/s 与 1000Baud 的单位都是\"千\"，直接相除不用再乘 1000。</span></div>"
+      "kp_analysis": "<div class=\"kp-sec\"><b>考点</b>波特率↔比特率：比特率 = 波特率 × log<sub>2</sub>n（n = 码元离散值个数）。逆推：每码元比特数 k = 比特率/波特率 = 4000/1000 = 4 bit → n = 2<sup>4</sup> = <b>16</b>。</div><div class=\"kp-sec\"><b>易错点</b><span class=\"kp-trap\">方向别反：n = 2^k（k=每码元比特数），先求 k 再求 n；4kb/s 与 1000Baud 的单位都是\"千\"，直接相除不用再乘 1000。</span></div>"
     },
     {
       "id": "cn_0063",
@@ -1185,7 +1185,7 @@
       "section": "2.1 通信基础",
       "subsection": "2.1.2 信道的极限容量",
       "_pdf_qno": 9,
-      "kp_analysis": "<div class=\"kp-sec\"><b>考点</b>码元离散值 V=4 = 2² → 每码元 2 bit；波特率 = 比特率 ÷ log₂V = 64kb/s ÷ 2 = <b>32kBaud</b>。与上题互为逆运算：知速率求波特率用除法，知波特率求速率用乘法。</div><div class=\"kp-sec\"><b>易错点</b><span class=\"kp-trap\">与上题互为逆运算：知比特率求波特率用除法，知波特率求比特率用乘法；4 个离散值对应 log₂4 = 2 bit。</span></div>"
+      "kp_analysis": "<div class=\"kp-sec\"><b>考点</b>码元离散值 V=4 = 2<sup>2</sup> → 每码元 2 bit；波特率 = 比特率 ÷ log<sub>2</sub>V = 64kb/s ÷ 2 = <b>32kBaud</b>。与上题互为逆运算：知速率求波特率用除法，知波特率求速率用乘法。</div><div class=\"kp-sec\"><b>易错点</b><span class=\"kp-trap\">与上题互为逆运算：知比特率求波特率用除法，知波特率求比特率用乘法；4 个离散值对应 log<sub>2</sub>4 = 2 bit。</span></div>"
     },
     {
       "id": "cn_0065",
@@ -1203,7 +1203,7 @@
       "section": "2.1 通信基础",
       "subsection": "2.1.2 信道的极限容量",
       "_pdf_qno": 10,
-      "kp_analysis": "<div class=\"kp-sec\"><b>考点</b>无噪声信道用<b>奈奎斯特准则</b>：C = 2W·log₂V = 2×8000×log₂8 = <b>48kb/s</b>。最大陷阱：\"每秒采样 24k 次\"是干扰信息——采样率超过波特率上限 2W = 16kBaud 的部分无意义，别用 24k×3 = 72k。</div><div class=\"kp-sec\"><b>易错点</b><span class=\"kp-trap\">最大陷阱：\"每秒采样 24k 次\"是干扰信息——采样率超过波特率上限 2W=16kBaud 的部分无意义，别用 24k×log₂8=72k 掉坑。</span></div>"
+      "kp_analysis": "<div class=\"kp-sec\"><b>考点</b>无噪声信道用<b>奈奎斯特准则</b>：C = 2W·log<sub>2</sub>V = 2×8000×log<sub>2</sub>8 = <b>48kb/s</b>。最大陷阱：\"每秒采样 24k 次\"是干扰信息——采样率超过波特率上限 2W = 16kBaud 的部分无意义，别用 24k×3 = 72k。</div><div class=\"kp-sec\"><b>易错点</b><span class=\"kp-trap\">最大陷阱：\"每秒采样 24k 次\"是干扰信息——采样率超过波特率上限 2W=16kBaud 的部分无意义，别用 24k×log<sub>2</sub>8=72k 掉坑。</span></div>"
     },
     {
       "id": "cn_0066",
@@ -1272,7 +1272,7 @@
       "section": "2.1 通信基础",
       "subsection": "2.1.2 信道的极限容量",
       "_pdf_qno": 14,
-      "kp_analysis": "<div class=\"kp-sec\"><b>考点</b>香农定理：C = W·log₂(1+S/N)。带宽 W = 3.9−3.5 = 0.4MHz（上限减下限）；S/N = 0.14/0.02 = 7 → log₂8 = 3 → C = 0.4M×3 = <b>1.2Mb/s</b>。信噪比 dB = 10·lg(S/N)，用倍数代入公式。</div><div class=\"kp-sec\"><b>易错点</b><span class=\"kp-trap\">①带宽是\"上限减下限\"不是取下限；②log₂(1+S/N) 里 S/N 用倍数不用 dB——7 恰好是 2³，log=3 是送分；③信噪比 dB=10lg(S/N)。</span></div>"
+      "kp_analysis": "<div class=\"kp-sec\"><b>考点</b>香农定理：C = W·log<sub>2</sub>(1+S/N)。带宽 W = 3.9−3.5 = 0.4MHz（上限减下限）；S/N = 0.14/0.02 = 7 → log<sub>2</sub>8 = 3 → C = 0.4M×3 = <b>1.2Mb/s</b>。信噪比 dB = 10·lg(S/N)，用倍数代入公式。</div><div class=\"kp-sec\"><b>易错点</b><span class=\"kp-trap\">①带宽是\"上限减下限\"不是取下限；②log<sub>2</sub>(1+S/N) 里 S/N 用倍数不用 dB——7 恰好是 2<sup>3</sup>，log=3 是送分；③信噪比 dB=10lg(S/N)。</span></div>"
     },
     {
       "id": "cn_0070",
@@ -1290,7 +1290,7 @@
       "section": "2.1 通信基础",
       "subsection": "2.1.3 编码与调制",
       "_pdf_qno": 15,
-      "kp_analysis": "<div class=\"kp-sec\"><b>考点</b>QAM 调制状态数 = 相位数 × 幅度数 = 8×2 = <b>16</b> 种 → 每码元 log₂16 = 4 bit → C = 1200×4 = <b>4800b/s</b>。三步：状态数相乘 → 取 log 得每码元比特数 → 乘波特率。</div><div class=\"kp-sec\"><b>易错点</b><span class=\"kp-trap\">相位与幅度是相乘关系（每种相位配每种幅度都算一种状态），不是相加；先算状态数再取 log，最后乘波特率，三步别跳。</span></div>"
+      "kp_analysis": "<div class=\"kp-sec\"><b>考点</b>QAM 调制状态数 = 相位数 × 幅度数 = 8×2 = <b>16</b> 种 → 每码元 log<sub>2</sub>16 = 4 bit → C = 1200×4 = <b>4800b/s</b>。三步：状态数相乘 → 取 log 得每码元比特数 → 乘波特率。</div><div class=\"kp-sec\"><b>易错点</b><span class=\"kp-trap\">相位与幅度是相乘关系（每种相位配每种幅度都算一种状态），不是相加；先算状态数再取 log，最后乘波特率，三步别跳。</span></div>"
     },
     {
       "id": "cn_0071",
@@ -1325,7 +1325,7 @@
       "section": "2.1 通信基础",
       "subsection": "2.1.2 信道的极限容量",
       "_pdf_qno": 17,
-      "kp_analysis": "<div class=\"kp-sec\"><b>考点</b>双限制取<b>较小值</b>：奈氏 C₁ = 2W·log₂V；香农 C₂ = W·log₂(1+S/N)。原状态：奈氏 100Mb/s = 香农 ≈100Mb/s（30dB = 1000 倍）；提升后：奈氏 200 < 香农 ≈260 → 极限 200Mb/s = 2 倍。40dB = 10⁴ 倍。</div><div class=\"kp-sec\"><b>易错点</b><span class=\"kp-trap\">①信噪比 30dB=1000 倍、40dB=10⁴ 倍（dB=10lg 换算）；②\"大约\"别精算 log₂1001≈9.97；③受限速率永远取二者较小值——提升后香农给 260 但奈氏只给 200，卡在 200。</span></div>"
+      "kp_analysis": "<div class=\"kp-sec\"><b>考点</b>双限制取<b>较小值</b>：奈氏 C<sub>1</sub> = 2W·log<sub>2</sub>V；香农 C<sub>2</sub> = W·log<sub>2</sub>(1+S/N)。原状态：奈氏 100Mb/s = 香农 ≈100Mb/s（30dB = 1000 倍）；提升后：奈氏 200 < 香农 ≈260 → 极限 200Mb/s = 2 倍。40dB = 10<sup>4</sup> 倍。</div><div class=\"kp-sec\"><b>易错点</b><span class=\"kp-trap\">①信噪比 30dB=1000 倍、40dB=10<sup>4</sup> 倍（dB=10lg 换算）；②\"大约\"别精算 log<sub>2</sub>1001≈9.97；③受限速率永远取二者较小值——提升后香农给 260 但奈氏只给 200，卡在 200。</span></div>"
     },
     {
       "id": "cn_0073",
@@ -2310,7 +2310,7 @@
       "section": "3.4 流量控制与可靠传输机制",
       "subsection": "3.4.1 流量控制与滑动窗口机制",
       "_pdf_qno": 9,
-      "kp_analysis": "<div class=\"kp-sec\"><b>考点</b>GBN 滑动窗口：收到 5 号确认 → 窗口后移至 6 号起；\"还可发 6 帧\" → 发送窗口 W = 6+1 = 7；GBN 窗口 W = 2<sup>n</sup>−1 → 2<sup>n</sup>−1 = 7 → n = 3。答案 A。</div><div class=\"kp-sec\"><b>易错点</b><span class=\"kp-trap\">确认 5 号=累积确认（5 号及以前全收）；\"可发 6 个\"别直接当 W=6——当前还有 1 帧未确认占位，W = 6+1；GBN 上限 2ⁿ−1（留 1 位防重复帧歧义）。</span></div>"
+      "kp_analysis": "<div class=\"kp-sec\"><b>考点</b>GBN 滑动窗口：收到 5 号确认 → 窗口后移至 6 号起；\"还可发 6 帧\" → 发送窗口 W = 6+1 = 7；GBN 窗口 W = 2<sup>n</sup>−1 → 2<sup>n</sup>−1 = 7 → n = 3。答案 A。</div><div class=\"kp-sec\"><b>易错点</b><span class=\"kp-trap\">确认 5 号=累积确认（5 号及以前全收）；\"可发 6 个\"别直接当 W=6——当前还有 1 帧未确认占位，W = 6+1；GBN 上限 2<sup>n</sup>−1（留 1 位防重复帧歧义）。</span></div>"
     },
     {
       "id": "cn_0130",
@@ -3364,7 +3364,7 @@
       "section": "3.6 局域网",
       "subsection": "3.6.2 以太网与IEEE 802.3",
       "_pdf_qno": 18,
-      "kp_analysis": "<div class=\"kp-sec\"><b>考点</b>二进制指数退避：第 i 次冲突后从 0 ~ 2<sup>i</sup>−1 随机取数等待；<b>i 达 10 后区间封顶 2¹⁰−1 = 1023</b>；连续 16 次冲突放弃该帧并上报。11 次冲突 → 0~1023。答案 C。</div><div class=\"kp-sec\"><b>易错点</b><span class=\"kp-trap\">区间按 2^min(i,10) 算，不是 2¹¹=2047（10 次封顶）；16 次是\"放弃\"阈值，10 是\"封顶\"阈值，两个数字别混。</span></div>"
+      "kp_analysis": "<div class=\"kp-sec\"><b>考点</b>二进制指数退避：第 i 次冲突后从 0 ~ 2<sup>i</sup>−1 随机取数等待；<b>i 达 10 后区间封顶 2<sup>10</sup>−1 = 1023</b>；连续 16 次冲突放弃该帧并上报。11 次冲突 → 0~1023。答案 C。</div><div class=\"kp-sec\"><b>易错点</b><span class=\"kp-trap\">区间按 2^min(i,10) 算，不是 2<sup>11</sup>=2047（10 次封顶）；16 次是\"放弃\"阈值，10 是\"封顶\"阈值，两个数字别混。</span></div>"
     },
     {
       "id": "cn_0191",
@@ -3399,7 +3399,7 @@
       "section": "3.6 局域网",
       "subsection": "3.6.2 以太网与IEEE 802.3",
       "_pdf_qno": 20,
-      "kp_analysis": "<div class=\"kp-sec\"><b>考点</b>CSMA/CD 冲突检测时间 = <b>最远两站间往返传播时延</b>（2τ）：两站最长距离 = 2×100m = 200m → 2×200m ÷ 2×10⁸m/s = 2μs。答案 A。</div><div class=\"kp-sec\"><b>易错点</b><span class=\"kp-trap\">题目给的是\"站点到 Hub 最长 100m\"——先翻倍成站间 200m 再乘 2（往返），两步都别漏；速率 200000km/s = 2×10⁸m/s。</span></div>"
+      "kp_analysis": "<div class=\"kp-sec\"><b>考点</b>CSMA/CD 冲突检测时间 = <b>最远两站间往返传播时延</b>（2τ）：两站最长距离 = 2×100m = 200m → 2×200m ÷ 2×10<sup>8</sup>m/s = 2μs。答案 A。</div><div class=\"kp-sec\"><b>易错点</b><span class=\"kp-trap\">题目给的是\"站点到 Hub 最长 100m\"——先翻倍成站间 200m 再乘 2（往返），两步都别漏；速率 200000km/s = 2×10<sup>8</sup>m/s。</span></div>"
     },
     {
       "id": "cn_0193",
@@ -3695,7 +3695,7 @@
       "section": "3.6 局域网",
       "subsection": "3.6.2 以太网与IEEE 802.3",
       "_pdf_qno": 37,
-      "kp_analysis": "<div class=\"kp-sec\"><b>考点</b>2009 真题：最短帧长 = 速率 × 争用期（2τ）。帧长减 800bit → 发送时间减 0.8μs（1Gb/s 下 800bit=0.8μs）→ 争用期须同步减 0.8μs → 往返总距离减 2×10⁸m/s×0.8μs = 160m → <b>单程距离减 80m</b>。答案 D。</div><div class=\"kp-sec\"><b>易错点</b><span class=\"kp-trap\">①帧长变化只影响发送时延，传播时延不变但\"争用期=2τ\"必须随之压缩；②往返减 160m 对应单程减 80m——问的是\"两站点间距离\"取单程。</span></div>"
+      "kp_analysis": "<div class=\"kp-sec\"><b>考点</b>2009 真题：最短帧长 = 速率 × 争用期（2τ）。帧长减 800bit → 发送时间减 0.8μs（1Gb/s 下 800bit=0.8μs）→ 争用期须同步减 0.8μs → 往返总距离减 2×10<sup>8</sup>m/s×0.8μs = 160m → <b>单程距离减 80m</b>。答案 D。</div><div class=\"kp-sec\"><b>易错点</b><span class=\"kp-trap\">①帧长变化只影响发送时延，传播时延不变但\"争用期=2τ\"必须随之压缩；②往返减 160m 对应单程减 80m——问的是\"两站点间距离\"取单程。</span></div>"
     },
     {
       "id": "cn_0210",
@@ -5210,7 +5210,7 @@
       "section": "4.2 IPv4",
       "subsection": "4.2.2 IPv4地址",
       "_pdf_qno": 19,
-      "kp_analysis": "<div class=\"kp-sec\"><b>考点</b>B 类 + 子网掩码 255.255.240.0：240 = 11110000 → 主机位 12 位 → 每子网主机数 = 2¹² − 2 = <b>4094</b>。答案 C。</div><div class=\"kp-sec\"><b>易错点</b><span class=\"kp-trap\">减 2 = 主机号全 0（网络地址）与全 1（广播地址）不可用；240 的二进制给出子网位 4 位（16 个子网）、主机位 12 位。</span></div>"
+      "kp_analysis": "<div class=\"kp-sec\"><b>考点</b>B 类 + 子网掩码 255.255.240.0：240 = 11110000 → 主机位 12 位 → 每子网主机数 = 2<sup>12</sup> − 2 = <b>4094</b>。答案 C。</div><div class=\"kp-sec\"><b>易错点</b><span class=\"kp-trap\">减 2 = 主机号全 0（网络地址）与全 1（广播地址）不可用；240 的二进制给出子网位 4 位（16 个子网）、主机位 12 位。</span></div>"
     },
     {
       "id": "cn_0297",
@@ -5263,7 +5263,7 @@
       "section": "4.2 IPv4",
       "subsection": "4.2.2 IPv4地址",
       "_pdf_qno": 22,
-      "kp_analysis": "<div class=\"kp-sec\"><b>考点</b>198.90.10.0/27：主机号 5 位。主机号只留 1 位时无可分配地址（全 0/全 1 均不可用）→ 最少留 2 位 → 子网位最多 3 位 → 最多 <b>8 个子网</b>；不划子网时每子网主机 = 2⁵ − 2 = <b>30</b>。答案 A。</div><div class=\"kp-sec\"><b>易错点</b><span class=\"kp-trap\">\"最多子网数\"受\"每子网至少 2 个可用地址\"约束——子网位不能吃光主机位；两个空的问法各算各的：子网数看子网位、主机数看主机位。</span></div>"
+      "kp_analysis": "<div class=\"kp-sec\"><b>考点</b>198.90.10.0/27：主机号 5 位。主机号只留 1 位时无可分配地址（全 0/全 1 均不可用）→ 最少留 2 位 → 子网位最多 3 位 → 最多 <b>8 个子网</b>；不划子网时每子网主机 = 2<sup>5</sup> − 2 = <b>30</b>。答案 A。</div><div class=\"kp-sec\"><b>易错点</b><span class=\"kp-trap\">\"最多子网数\"受\"每子网至少 2 个可用地址\"约束——子网位不能吃光主机位；两个空的问法各算各的：子网数看子网位、主机数看主机位。</span></div>"
     },
     {
       "id": "cn_0300",
@@ -5489,7 +5489,7 @@
       "section": "4.2 IPv4",
       "subsection": "4.2.3 网络地址转换NAT",
       "_pdf_qno": 34,
-      "kp_analysis": "<div class=\"kp-sec\"><b>考点</b>子网划分双约束：需 35+16=51 个子网 → 子网位 6 位（2⁵=32<51≤2⁶=64）；剩余 10 位主机位 → 每子网 2¹⁰−2 = 1022 ≥ 800 ✓ → 掩码 255.255.252.0。答案 B。</div><div class=\"kp-sec\"><b>易错点</b><span class=\"kp-trap\">①\"将来可能增加\"要并入当下需求一起算子网位；②别选 248（9 位主机 510 台 < 800 不够）；③掩码 252 = 11111100，主机位 10 位。</span></div>"
+      "kp_analysis": "<div class=\"kp-sec\"><b>考点</b>子网划分双约束：需 35+16=51 个子网 → 子网位 6 位（2<sup>5</sup>=32<51≤2<sup>6</sup>=64）；剩余 10 位主机位 → 每子网 2<sup>10</sup>−2 = 1022 ≥ 800 ✓ → 掩码 255.255.252.0。答案 B。</div><div class=\"kp-sec\"><b>易错点</b><span class=\"kp-trap\">①\"将来可能增加\"要并入当下需求一起算子网位；②别选 248（9 位主机 510 台 < 800 不够）；③掩码 252 = 11111100，主机位 10 位。</span></div>"
     },
     {
       "id": "cn_0312",
@@ -6010,7 +6010,7 @@
       "section": "4.2 IPv4",
       "subsection": "4.2.2 IPv4地址",
       "_pdf_qno": 64,
-      "kp_analysis": "<div class=\"kp-sec\"><b>考点</b>2019 真题：变长子网划分（VLSM）——5 个子网要\"最小子网可分配地址数最少\"→ 不平均切，按 1/2、1/4、1/8… 递切：最大子网取 1 位子网号（2048 地址，可分配 2046），第二大取 2 位（1022），最小子网取 <b>5 位子网号</b>（/25，主机 7 位 → 可分配 126）。答案 A。</div><div class=\"kp-sec\"><b>易错点</b><span class=\"kp-trap\">变长划分技巧：子网号位数 1,2,3,4,5 依次分配（2⁵=32 ≥ 5 个子网够用）；最小子网 = 子网号最长的 = /25 → 2⁷−2 = 126；若平均切 /23 每子网 510 个反而浪费。</span></div>"
+      "kp_analysis": "<div class=\"kp-sec\"><b>考点</b>2019 真题：变长子网划分（VLSM）——5 个子网要\"最小子网可分配地址数最少\"→ 不平均切，按 1/2、1/4、1/8… 递切：最大子网取 1 位子网号（2048 地址，可分配 2046），第二大取 2 位（1022），最小子网取 <b>5 位子网号</b>（/25，主机 7 位 → 可分配 126）。答案 A。</div><div class=\"kp-sec\"><b>易错点</b><span class=\"kp-trap\">变长划分技巧：子网号位数 1,2,3,4,5 依次分配（2<sup>5</sup>=32 ≥ 5 个子网够用）；最小子网 = 子网号最长的 = /25 → 2<sup>7</sup>−2 = 126；若平均切 /23 每子网 510 个反而浪费。</span></div>"
     },
     {
       "id": "cn_0342",
@@ -7952,7 +7952,7 @@
       "section": "5.3 TCP",
       "subsection": "5.3.2 TCP报文段",
       "_pdf_qno": 15,
-      "kp_analysis": "<div class=\"kp-sec\"><b>考点</b>序号绕回时间：序号 32 位共 2³² 个字节序号；40Gb/s 线路每秒发 5×10⁹B → 2³²/(5×10⁹) = <b>859ms</b> 绕回一次。答案 A。</div><div class=\"kp-sec\"><b>易错点</b><span class=\"kp-trap\">绕回时间 = 2³² 字节 ÷ 线路字节速率；单位换算 40Gb/s = 5×10⁹ B/s 是除法的前提；1GB ≈ 10⁹B 的量级感要熟。</span></div>"
+      "kp_analysis": "<div class=\"kp-sec\"><b>考点</b>序号绕回时间：序号 32 位共 2<sup>32</sup> 个字节序号；40Gb/s 线路每秒发 5×10<sup>9</sup>B → 2<sup>32</sup>/(5×10<sup>9</sup>) = <b>859ms</b> 绕回一次。答案 A。</div><div class=\"kp-sec\"><b>易错点</b><span class=\"kp-trap\">绕回时间 = 2<sup>32</sup> 字节 ÷ 线路字节速率；单位换算 40Gb/s = 5×10<sup>9</sup> B/s 是除法的前提；1GB ≈ 10<sup>9</sup>B 的量级感要熟。</span></div>"
     },
     {
       "id": "cn_0454",
@@ -8572,7 +8572,7 @@
       "section": "5.3 TCP",
       "subsection": "5.3.3 TCP连接管理",
       "_pdf_qno": 50,
-      "kp_analysis": "<div class=\"kp-sec\"><b>考点</b>2019 真题：快速重传触发条件 = 收到<b>同一确认号的 3 个重复确认</b>（首次确认不计入冗余）。t₀ 收到 ack=100 后，t₁/t₂/t₃ 连续 3 个 ack=100 → 在 <b>t₃ 立即重传</b> seq=100 段。答案 C。</div><div class=\"kp-sec\"><b>易错点</b><span class=\"kp-trap\">\"3 个重复确认\"不含第一次；不等超时计时器到期就提前重传——这就是\"快速\"；t₄ 是第 4 个冗余确认，晚了。</span></div>"
+      "kp_analysis": "<div class=\"kp-sec\"><b>考点</b>2019 真题：快速重传触发条件 = 收到<b>同一确认号的 3 个重复确认</b>（首次确认不计入冗余）。t<sub>0</sub> 收到 ack=100 后，t<sub>1</sub>/t<sub>2</sub>/t<sub>3</sub> 连续 3 个 ack=100 → 在 <b>t<sub>3</sub> 立即重传</b> seq=100 段。答案 C。</div><div class=\"kp-sec\"><b>易错点</b><span class=\"kp-trap\">\"3 个重复确认\"不含第一次；不等超时计时器到期就提前重传——这就是\"快速\"；t<sub>4</sub> 是第 4 个冗余确认，晚了。</span></div>"
     },
     {
       "id": "cn_0489",
