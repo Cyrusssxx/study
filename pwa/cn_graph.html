@@ -256,10 +256,17 @@
             display: grid; grid-template-columns: repeat(3, minmax(0, 1fr));
             gap: 6px; margin: 12px 0; grid-auto-rows: minmax(40px, auto);
         }
+        /* 三套模型的表头：深色填充头部卡 + 白字，与下方层格(.cg-mc 浅蓝描边)完全区分 */
         .cg-mh {
-            text-align: center; font-size: .8rem; font-weight: 700;
-            padding: 5px 4px; border-radius: 6px; background: var(--cb2); color: var(--text);
+            text-align: center; font-size: .82rem; font-weight: 700;
+            padding: 6px 4px; border-radius: 8px 8px 6px 6px;
+            background: linear-gradient(160deg, #3f5f96, #2f476e);
+            color: #fff;
+            box-shadow: inset 0 -2px 0 rgba(0,0,0,.18);
+            letter-spacing: .5px;
         }
+        .cg-mh small { display: block; margin-top: 2px; font-weight: 400; font-size: .64rem; color: rgba(255,255,255,.82); letter-spacing: 0; }
+        .dark .cg-mh { background: linear-gradient(160deg, #2b3f63, #1f2e4a); }
         .cg-mc {
             display: flex; flex-direction: column; align-items: center; justify-content: center;
             text-align: center; font-size: .81rem; font-weight: 600; line-height: 1.3;
@@ -272,6 +279,51 @@
         .cg-mc.d { background: rgba(74,122,184,.05); border-color: rgba(74,122,184,.22); }
         .cg-mc.e { background: rgba(74,122,184,.03); border-color: rgba(74,122,184,.16); }
         .cg-mc.f { background: rgba(74,122,184,.02); border-color: rgba(74,122,184,.12); }
+
+        /* ==== 重点两级体系（与 notes.html 一致）：b=术语（极淡红底+红下边线），mark=重点句（黄荧光） ====
+           作用域：正文/表格/题注；cg-tip 与 cg-flow-i 内的 b 保持原有层级色（对应 notes 的 callout 不被抢色） */
+        .cg-layer-body b, .cg-layer-body strong {
+            background: linear-gradient(transparent 62%, rgba(226, 75, 74, .14) 62%);
+            color: inherit; font-weight: 700; padding: 0 2px;
+            border-bottom: 2px solid rgba(226, 75, 74, .5);
+            border-radius: 3px 3px 0 0;
+            -webkit-box-decoration-break: clone; box-decoration-break: clone;
+        }
+        .cg-layer-body mark {
+            background: linear-gradient(transparent 56%, rgba(250, 204, 21, .66) 56%);
+            color: inherit; padding: 0 2px; border-radius: 3px;
+            -webkit-box-decoration-break: clone; box-decoration-break: clone;
+        }
+        .cg-tip b, .cg-flow-i b, .cg-mh b, .cg-anno b { background: none; border-bottom: none; padding: 0; }
+        .cg-tip b { color: var(--c); }
+        .dark .cg-layer-body b, .dark .cg-layer-body strong {
+            background: linear-gradient(transparent 62%, rgba(242, 149, 149, .16) 62%);
+            border-bottom-color: rgba(242, 149, 149, .55);
+        }
+        .dark .cg-layer-body mark { background: linear-gradient(transparent 56%, rgba(250, 204, 21, .42) 56%); }
+
+        /* ==== 块级批注：标题旁按钮 + 块底批注卡（黄左边线） ==== */
+        .cg-anno-btn {
+            flex: 0 0 auto; margin-left: 8px; padding: 1px 9px; border-radius: 999px;
+            border: 1px solid var(--c); background: var(--cb); color: var(--c);
+            font-size: .72rem; font-weight: 600; cursor: pointer; line-height: 1.5;
+        }
+        .cg-anno-btn:hover { background: var(--cb2); }
+        .cg-anno-btn.has { background: var(--c); color: #fff; }
+        .cg-anno {
+            margin-top: 10px; padding: 8px 12px; border-radius: 0 8px 8px 0;
+            border-left: 3px solid #e6a817; background: rgba(230, 168, 23, .08);
+            font-size: .85rem; line-height: 1.75;
+        }
+        .dark .cg-anno { background: rgba(230, 168, 23, .12); }
+        .cg-anno-editor { margin-top: 10px; }
+        .cg-anno-editor .note-input {
+            min-height: 64px; max-height: 220px; overflow-y: auto;
+            border: 1px solid var(--border); border-radius: 8px; padding: 8px 10px;
+            background: var(--card-bg); font-size: .85rem; line-height: 1.7; outline: none;
+        }
+        .cg-anno-editor .note-input:focus { border-color: var(--c); }
+        .cg-anno-editor .note-actions { display: flex; gap: 8px; margin-top: 6px; }
 
         .cg-fab {
             position: fixed; right: 20px; bottom: 20px; z-index: 2000;
@@ -500,7 +552,7 @@
                         <div class="cg-mc e" style="grid-column:3;grid-row:8">物理层<small>比特 bit</small></div>
                     </div>
                     <div class="cg-tip">
-                        <b>考点：</b>OSI 是 ISO 制定的<b>法定标准</b>（理论参考模型），TCP/IP 是<b>事实标准</b>（先有协议后有模型）；考研用<b>五层</b>。OSI 的「表示层 / 会话层」在 TCP/IP 中并入应用层，TCP/IP 的「网络接口层」在五层中拆成数据链路层 + 物理层。
+                        <b>考点：</b>OSI 是 ISO 制定的<b>法定标准</b>（理论参考模型），TCP/IP 是<b>事实标准</b>（先有协议后有模型）；考研用<b>五层</b>。<mark>OSI 的「表示层 / 会话层」在 TCP/IP 中并入应用层，TCP/IP 的「网络接口层」在五层中拆成数据链路层 + 物理层。</mark>
                     </div>
                 </div>
 
@@ -638,7 +690,7 @@
                         </table>
                     </div>
                     <div class="cg-tip">
-                        <b>RTT 计算题套路：</b>「1 RTT 建立 TCP 连接」+「1 RTT 请求并收到响应」= 2 RTT/对象（非持久）。<b>三次握手恰好是 1.5 RTT 还是 1 RTT？</b>考研题默认<b>建立连接算 1 个 RTT</b>（第 3 次握手的 ACK 与请求可合并/忽略），并通常<b>忽略传输时延与处理时延</b>——务必先读题干的"忽略"条件。
+                        <b>RTT 计算题套路：</b>「1 RTT 建立 TCP 连接」+「1 RTT 请求并收到响应」= 2 RTT/对象（非持久）。<b>三次握手恰好是 1.5 RTT 还是 1 RTT？</b><mark>考研题默认<b>建立连接算 1 个 RTT</b>（第 3 次握手的 ACK 与请求可合并/忽略），并通常<b>忽略传输时延与处理时延</b></mark>——务必先读题干的"忽略"条件。
                     </div>
                     <ul class="cg-pts">
                         <li><b>HTTP 报文</b>：请求报文（请求行 + 首部行 + 空行 + 实体）／响应报文（状态行 + 首部行 + 空行 + 实体）。<b>无状态</b>协议——靠 Cookie 维持状态。</li>
@@ -1087,7 +1139,7 @@
                     <h3>⑧ IP 分片 <small>（片偏移以 8B 为单位）</small></h3>
                     <div class="cg-tip">
                         <b>例题：</b>一个总长 <code>4000B</code> 的 IP 数据报（首部 20B、数据 3980B），要经过 MTU = 1500 的网络，如何分片？<br>
-                        每片最大数据 = 1500 − 20 = <b>1480B</b>（须为 <b>8 的整数倍</b>）<br>
+                        每片最大数据 = 1500 − 20 = <b>1480B</b>（<mark>须为 8 的整数倍</mark>）<br>
                         → 片 1：数据 1480，片偏移 <code>0</code>，MF=1<br>
                         → 片 2：数据 1480，片偏移 <code>1480/8 = 185</code>，MF=1<br>
                         → 片 3：数据 1020，片偏移 <code>2960/8 = 370</code>，MF=0<br>
@@ -1189,7 +1241,7 @@
                     </ul>
                     <div class="cg-tip">
                         <b>CSMA/CD（有线以太网）：先听后发、边听边发、冲突停发、随机重发</b><br>
-                        <b>① 争用期（冲突窗口）</b> = <code>2τ</code>（τ 为单程传播时延）—— <b>最迟要 2τ 才能确定没冲突</b>。<br>
+                        <b>① 争用期（冲突窗口）</b> = <code>2τ</code>（τ 为单程传播时延）—— <mark>最迟要 2τ 才能确定没冲突</mark>。<br>
                         <b>② 最短帧长</b> = <code>2τ × 数据率</code>。以太网 10Mb/s、2τ = 51.2μs → <span class="cg-hot">512 bit = 64B</span>。<br>
                         <b>③ 截断二进制指数退避</b>：重传第 k 次时取 <code>k = min(重传次数, 10)</code>，从 <code>[0, 2<sup>k</sup>−1]</code> 随机取 r，退避 <code>r × 2τ</code>；<b>连续 16 次失败即丢弃并报告</b>。<br>
                         <b>④ 为什么最短帧长是考点</b>：帧太短会导致<b>发完了冲突才回来</b>，发送方误以为发送成功。凡帧长 &lt; 64B 的帧一律视为<b>无效帧（碎片）丢弃</b>。
@@ -1437,7 +1489,7 @@
                     </div>
                     <div class="cg-tip">
                         <b>首部长度速记（考试反复考）：</b><code>TCP 首部 20B</code> ｜ <code>IP 首部 20B</code> ｜ <code>MAC 首部 14B ＋ MAC 尾部 4B</code> ｜ <code>前导码 8B（不计入帧长）</code>。<br>
-                        <b>最小以太网帧 = 64B</b>（14＋46＋4），<b>最大 1518B</b>（14＋1500＋4）。
+                        <mark><b>最小以太网帧 = 64B</b>（14＋46＋4），<b>最大 1518B</b>（14＋1500＋4）</mark>。
                     </div>
                     <ul class="cg-pts">
                         <li><span class="cg-key">必考</span><b>解封装</b>：接收端自下而上剥壳 —— 先按 FCS 校验收帧（链路层），再看类型字段交给 IP（网络层），再按协议字段交给 TCP（传输层），最后按端口号交给应用进程（应用层）。</li>
@@ -1627,6 +1679,8 @@
 
     <script src="js/common.js"></script>
     <script src="js/background.js"></script>
+    <script src="js/backend.js"></script>
+    <script src="js/note_richtext.js"></script>
     <script>
         // 层折叠/展开（状态不持久化：图谱每次打开都完整展开，便于通读）
         function cgToggle(head) {
@@ -1697,6 +1751,346 @@
         window.addEventListener('scroll', () => {
             document.getElementById('cgFab').classList.toggle('show', window.scrollY > 600);
         }, { passive: true });
+
+        /* ==================== 批注与划词高亮（移植自 notes.html，共用 notes store） ====================
+         * 存储：/api/note/cn_graph_anno = [{block:'L5-2', html}]（块级批注）
+         *       /api/note/cn_graph_hl  = [{sec:'L5', start, end, color, text}]（划词高亮，文本偏移口径同 notes）
+         */
+        const noteApi = (url, opts) => api(url, opts);
+        const HL_KEY = () => 'cn_graph_hl';
+        const ANNO_KEY = () => 'cn_graph_anno';
+        const HL_COLORS = ['yellow', 'green', 'blue', 'pink'];
+        let hlItems = [];      // 划词高亮
+        let annoItems = [];    // 块批注
+        let hlSaveTimer = null, annoSaveTimer = null;
+
+        function inAnno(n) {
+            const el = n.nodeType === 1 ? n : n.parentElement;
+            return !!(el && el.closest && el.closest('.cg-anno, .cg-anno-editor, .cg-bar, .cg-side-fab'));
+        }
+        function inSvg(n) {
+            const el = n.nodeType === 1 ? n : n.parentElement;
+            return !!(el && el.closest && el.closest('svg'));
+        }
+        const hlWalkFilter = { acceptNode: n => (inAnno(n) || inSvg(n)) ? NodeFilter.FILTER_REJECT : NodeFilter.FILTER_ACCEPT };
+        function cleanTextOf(root) {
+            const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, hlWalkFilter);
+            let t = '', node;
+            while ((node = walker.nextNode())) t += node.nodeValue;
+            return t;
+        }
+        function offsetInRoot(root, container, offset) {
+            const target = container.nodeType === 3 ? container : (container.childNodes[offset] || null);
+            const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, hlWalkFilter);
+            let pos = 0, node;
+            while ((node = walker.nextNode())) {
+                if (container.nodeType === 3) {
+                    if (node === container) return pos + offset;
+                } else if (target && (target === node || (target.contains && target.contains(node)))) {
+                    return pos;
+                }
+                pos += node.nodeValue.length;
+            }
+            return pos;
+        }
+        function wrapRange(root, start, end, cls, ds) {
+            const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, hlWalkFilter);
+            let pos = 0, node;
+            const pieces = [];
+            while ((node = walker.nextNode())) {
+                const len = node.nodeValue.length;
+                const ns = pos, ne = pos + len;
+                pos = ne;
+                if (ne <= start || ns >= end) continue;
+                pieces.push({ node, s: Math.max(start, ns) - ns, e: Math.min(end, ne) - ns });
+            }
+            for (let i = pieces.length - 1; i >= 0; i--) {
+                const p = pieces[i];
+                const range = document.createRange();
+                range.setStart(p.node, p.s);
+                range.setEnd(p.node, p.e);
+                const span = document.createElement('span');
+                span.className = cls;
+                if (ds) { span.dataset.start = ds.start; span.dataset.color = ds.color; }
+                if (p.node.parentElement && p.node.parentElement.closest && p.node.parentElement.closest('svg')) continue;
+                range.surroundContents(span);
+            }
+        }
+        function bodyOf(n) {
+            const el = n.nodeType === 1 ? n : n.parentElement;
+            return el ? el.closest('.cg-layer-body') : null;
+        }
+
+        // ---------- 划词高亮：工具条（四色 + 批注 + 取消） ----------
+        let hlToolbar = null;
+        let hlMouseupTimer = null;
+        function hideHlToolbar() { if (hlToolbar) { hlToolbar.remove(); hlToolbar = null; } }
+        function showHlToolbar() {
+            if (hlToolbar && hlToolbar.classList.contains('hl-cancel-only')) return;
+            const sel = window.getSelection();
+            if (!sel || sel.isCollapsed || !sel.rangeCount) { hideHlToolbar(); return; }
+            const range = sel.getRangeAt(0);
+            const body = bodyOf(range.startContainer);
+            if (!body || bodyOf(range.endContainer) !== body) { hideHlToolbar(); return; }
+            if (inAnno(range.startContainer) || inAnno(range.endContainer)) { hideHlToolbar(); return; }
+            if (inSvg(range.startContainer) || inSvg(range.endContainer)) { hideHlToolbar(); return; }
+            hideHlToolbar();
+            const rect = range.getBoundingClientRect();
+            hlToolbar = document.createElement('div');
+            hlToolbar.className = 'hl-toolbar';
+            hlToolbar.innerHTML = HL_COLORS.map(c =>
+                `<span class="hl-dot hl-dot-${c}" data-color="${c}" title="${c}"></span>`).join('') +
+                '<span class="hl-anno-btn" title="批注此块">📝批注</span>' +
+                '<span class="hl-cancel" title="取消高亮">✕</span>';
+            document.body.appendChild(hlToolbar);
+            hlToolbar.style.top = (window.scrollY + rect.top - hlToolbar.offsetHeight - 8) + 'px';
+            hlToolbar.style.left = (window.scrollX + rect.left) + 'px';
+            hlToolbar.querySelectorAll('.hl-dot').forEach(dot =>
+                dot.addEventListener('click', () => applyHighlight(body, range, dot.dataset.color)));
+            hlToolbar.querySelector('.hl-anno-btn').addEventListener('click', () => {
+                window.getSelection().removeAllRanges();
+                hideHlToolbar();
+                const el = range.startContainer.nodeType === 1 ? range.startContainer : range.startContainer.parentElement;
+                const block = el && el.closest('.cg-block');
+                if (block && block.querySelector('.cg-anno-btn')) cgAnnoToggle(block.querySelector('.cg-anno-btn'));
+            });
+            hlToolbar.querySelector('.hl-cancel').addEventListener('click', () => {
+                const span = (range.startContainer.parentElement || range.startContainer).closest
+                    ? (range.startContainer.parentElement || range.startContainer).closest('.note-hl') : null;
+                if (span) removeHighlight(span);
+                hideHlToolbar();
+            });
+        }
+        function applyHighlight(body, range, color) {
+            const start = offsetInRoot(body, range.startContainer, range.startOffset);
+            const end = offsetInRoot(body, range.endContainer, range.endOffset);
+            if (end <= start) { hideHlToolbar(); return; }
+            const text = range.toString();
+            const sec = body.closest('.cg-layer').id;
+            hlItems.push({ sec, start, end, color, text });
+            wrapRange(body, start, end, 'note-hl note-hl-' + color, { start, color });
+            window.getSelection().removeAllRanges();
+            hideHlToolbar();
+            saveHl();
+        }
+        function removeHighlight(span) {
+            const layer = span.closest('.cg-layer');
+            const sec = layer.id;
+            const start = +span.dataset.start;
+            const color = span.dataset.color;
+            hlItems = hlItems.filter(it => !(it.sec === sec && it.start === start && it.color === color));
+            layer.querySelectorAll('.note-hl').forEach(s => {
+                if (+s.dataset.start === start && s.dataset.color === color) {
+                    const parent = s.parentNode;
+                    while (s.firstChild) parent.insertBefore(s.firstChild, s);
+                    parent.removeChild(s);
+                    parent.normalize();
+                }
+            });
+            saveHl();
+        }
+        // 点击已有高亮：换色圆点 + 取消
+        function showHlCancelFor(span) {
+            clearTimeout(hlMouseupTimer);
+            hideHlToolbar();
+            const cur = span.dataset.color || '';
+            const rect = span.getBoundingClientRect();
+            hlToolbar = document.createElement('div');
+            hlToolbar.className = 'hl-toolbar hl-cancel-only';
+            hlToolbar.innerHTML = HL_COLORS.map(c =>
+                `<span class="hl-dot hl-dot-${c}${c === cur ? ' hl-dot-cur' : ''}" data-color="${c}" title="换成${c}高亮"></span>`).join('') +
+                '<span class="hl-cancel" title="取消高亮">✕ 取消高亮</span>';
+            document.body.appendChild(hlToolbar);
+            hlToolbar.style.top = (window.scrollY + rect.top - hlToolbar.offsetHeight - 8) + 'px';
+            hlToolbar.style.left = (window.scrollX + rect.left) + 'px';
+            hlToolbar.querySelectorAll('.hl-dot').forEach(dot =>
+                dot.addEventListener('click', () => {
+                    if (dot.dataset.color === cur) { hideHlToolbar(); return; }
+                    changeHlColor(span, dot.dataset.color);
+                    hideHlToolbar();
+                }));
+            hlToolbar.querySelector('.hl-cancel').addEventListener('click', () => {
+                removeHighlight(span);
+                hideHlToolbar();
+            });
+        }
+        function changeHlColor(span, newColor) {
+            const layer = span.closest('.cg-layer');
+            const sec = layer.id;
+            const start = +span.dataset.start;
+            const oldColor = span.dataset.color;
+            const it = hlItems.find(x => x.sec === sec && x.start === start && x.color === oldColor);
+            if (it) it.color = newColor;
+            layer.querySelectorAll('.note-hl').forEach(s => {
+                if (+s.dataset.start === start && s.dataset.color === oldColor) {
+                    s.dataset.color = newColor;
+                    s.classList.remove('note-hl-' + oldColor);
+                    s.classList.add('note-hl-' + newColor);
+                }
+            });
+            saveHl();
+        }
+        function saveHl() {
+            clearTimeout(hlSaveTimer);
+            hlSaveTimer = setTimeout(async () => {
+                try {
+                    await noteApi('/api/note/' + encodeURIComponent(HL_KEY()), {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ content: JSON.stringify(hlItems), images: [] })
+                    });
+                } catch (e) { /* 高亮保存失败静默 */ }
+            }, 500);
+        }
+        async function loadHighlights() {
+            let items = [];
+            try {
+                const resp = await noteApi('/api/note/' + encodeURIComponent(HL_KEY()));
+                const d = await resp.json();
+                items = d.note ? JSON.parse(d.note) : [];
+            } catch (e) { return; }
+            if (!Array.isArray(items) || !items.length) return;
+            hlItems = [];
+            const bySec = {};
+            for (const it of items) (bySec[it.sec] = bySec[it.sec] || []).push(it);
+            document.querySelectorAll('.cg-layer').forEach(layer => {
+                const list = bySec[layer.id];
+                if (!list) return;
+                const body = layer.querySelector('.cg-layer-body');
+                const full = cleanTextOf(body);
+                list.sort((a, b) => a.start - b.start);
+                for (const it of list) {
+                    let { start, end } = it;
+                    if (full.slice(start, end) !== it.text) {
+                        const idx = full.indexOf(it.text);
+                        if (idx < 0 || !it.text) continue;
+                        start = idx; end = idx + it.text.length;
+                    }
+                    wrapRange(body, start, end, 'note-hl note-hl-' + it.color, { start, color: it.color });
+                    hlItems.push({ sec: layer.id, start, end, color: it.color, text: it.text });
+                }
+            });
+            saveHl();
+        }
+
+        // ---------- 块级批注：📝 按钮 + 富文本编辑器 + 常显批注卡 ----------
+        function initCgAnnos() {
+            // 每个 cg-block 编稳定 id：层id-序号（跨会话稳定，内容顺序变化才会漂移）
+            document.querySelectorAll('.cg-layer').forEach(layer => {
+                layer.querySelectorAll('.cg-block').forEach((blk, i) => {
+                    blk.dataset.bid = blk.id || (layer.id + '-' + (i + 1));
+                });
+            });
+            document.querySelectorAll('.cg-block').forEach(blk => {
+                const h3 = blk.querySelector(':scope > h3');
+                if (!h3) return;
+                h3.style.display = 'flex';
+                h3.style.flexWrap = 'wrap';
+                h3.style.alignItems = 'center';
+                h3.style.gap = '6px';
+                const btn = document.createElement('button');
+                btn.className = 'cg-anno-btn';
+                btn.title = '给这个考点块写批注';
+                btn.textContent = '📝 批注';
+                btn.onclick = e => { e.stopPropagation(); cgAnnoToggle(btn); };
+                h3.appendChild(btn);
+            });
+        }
+        function cgAnnoToggle(btn) {
+            const blk = btn.closest('.cg-block');
+            const existing = blk.querySelector(':scope > .cg-anno-editor');
+            if (existing) { existing.remove(); return; }
+            const bid = blk.dataset.bid;
+            const it = annoItems.find(x => x.block === bid);
+            const ed = document.createElement('div');
+            ed.className = 'cg-anno-editor note-editor';
+            ed.innerHTML = (typeof noteToolbarHtml === 'function' ? noteToolbarHtml() : '') +
+                `<div class="note-input" contenteditable="true" spellcheck="false" data-placeholder="记批注：易错点 / 口诀 / 关联真题…"></div>` +
+                `<div class="note-actions">
+                    <button class="btn btn-primary btn-sm">保存</button>
+                    <button class="btn btn-sm btn-secondary">删除</button>
+                    <button class="btn btn-sm btn-secondary">收起</button>
+                </div>`;
+            blk.appendChild(ed);
+            const input = ed.querySelector('.note-input');
+            loadNoteIntoEditor(input, it ? it.html : '');
+            if (typeof bindNoteToolbar === 'function') bindNoteToolbar(input);
+            ed.querySelector('.note-actions .btn-primary').onclick = () => {
+                const html = window.sanitizeNoteHtml(window.serializeNote(input));
+                if (html) {
+                    const cur = annoItems.find(x => x.block === bid);
+                    if (cur) cur.html = html; else annoItems.push({ block: bid, html });
+                } else {
+                    annoItems = annoItems.filter(x => x.block !== bid);
+                }
+                saveAnnos();
+                renderAnnoCard(blk);
+                ed.remove();
+            };
+            ed.querySelectorAll('.note-actions .btn-secondary')[0].onclick = () => {
+                annoItems = annoItems.filter(x => x.block !== bid);
+                saveAnnos();
+                renderAnnoCard(blk);
+                ed.remove();
+            };
+            ed.querySelectorAll('.note-actions .btn-secondary')[1].onclick = () => ed.remove();
+            input.focus();
+        }
+        function renderAnnoCard(blk) {
+            const bid = blk.dataset.bid;
+            const it = annoItems.find(x => x.block === bid);
+            const btn = blk.querySelector(':scope > h3 .cg-anno-btn');
+            if (btn) btn.classList.toggle('has', !!it);
+            let card = blk.querySelector(':scope > .cg-anno');
+            if (!it) { if (card) card.remove(); return; }
+            if (!card) {
+                card = document.createElement('div');
+                card.className = 'cg-anno';
+                blk.insertBefore(card, blk.querySelector(':scope > .cg-anno-editor'));
+            }
+            card.innerHTML = it.html;
+        }
+        function saveAnnos() {
+            clearTimeout(annoSaveTimer);
+            annoSaveTimer = setTimeout(async () => {
+                try {
+                    await noteApi('/api/note/' + encodeURIComponent(ANNO_KEY()), {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ content: JSON.stringify(annoItems), images: [] })
+                    });
+                } catch (e) { alert('批注保存失败: ' + e.message); }
+            }, 300);
+        }
+        async function loadAnnos() {
+            try {
+                const resp = await noteApi('/api/note/' + encodeURIComponent(ANNO_KEY()));
+                const d = await resp.json();
+                annoItems = d.note ? JSON.parse(d.note) : [];
+            } catch (e) { annoItems = []; }
+            if (!Array.isArray(annoItems)) annoItems = [];
+            annoItems = annoItems.filter(it => it && it.block && typeof it.html === 'string');
+            document.querySelectorAll('.cg-block').forEach(renderAnnoCard);
+        }
+
+        // ---------- 事件绑定与启动 ----------
+        (function () {
+            const content = document.getElementById('cgMain') || document.querySelector('.cg-main') || document.body;
+            content.addEventListener('click', e => {
+                const span = e.target.closest && e.target.closest('.note-hl');
+                if (span) { e.stopPropagation(); showHlCancelFor(span); }
+            });
+            content.addEventListener('mouseup', () => {
+                clearTimeout(hlMouseupTimer);
+                hlMouseupTimer = setTimeout(showHlToolbar, 0);
+            });
+            document.addEventListener('mousedown', e => {
+                if (hlToolbar && !hlToolbar.contains(e.target)) hideHlToolbar();
+            });
+            initCgAnnos();
+            loadAnnos();
+            loadHighlights();
+        })();
     </script>
 </body>
 </html>
