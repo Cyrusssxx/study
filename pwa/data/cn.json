@@ -6595,7 +6595,8 @@
       "chapter": "第4章 网络层",
       "section": "4.4 路由算法与路由协议",
       "subsection": "4.4.3 路由信息协议",
-      "_pdf_qno": 19
+      "_pdf_qno": 19,
+      "kp_analysis": "<div class=\"kp-sec\"><b>考点</b>BGP 交换的是<b>到达某网络所要经过的自治系统（AS）序列</b>——路径向量信息（不是链路状态摘要、不是单纯下一跳、不带距离度量）。答案 A。</div><div class=\"kp-sec\"><b>易错点</b><span class=\"kp-trap\">三类协议\"交换什么\"对照：RIP 交换路由表（距离+下一跳）、OSPF 洪泛链路状态摘要、BGP 交换到网络的 AS 路径序列——\"跟谁换、换什么\"一张表记全。</span></div>"
     },
     {
       "id": "cn_0376",
@@ -6646,7 +6647,8 @@
       "chapter": "第4章 网络层",
       "section": "4.4 路由算法与路由协议",
       "subsection": "4.4.4 开放最短路径优先协议",
-      "_pdf_qno": 22
+      "_pdf_qno": 22,
+      "kp_analysis": "<div class=\"kp-sec\"><b>考点</b>距离向量算法更新：邻居向量 <b>每个分量先加上到该邻居的链路代价</b> 再与本地当前值比较取小。C 到 B/D/E 延迟 6/3/5：经 B = (11,6,14,18,12,8)，经 D = (19,15,9,3,12,13)，经 E = (12,11,8,14,5,9) → 逐分量取小 = (11,6,0,3,5,8)。答案 B。</div><div class=\"kp-sec\"><b>易错点</b><span class=\"kp-trap\">忘记加链路代价直接比较是最大陷阱（A 就是 B 的原向量）；C 到自身恒为 0；逐分量独立取最小，最后合成新向量。</span></div>"
     },
     {
       "id": "cn_0379",
@@ -6748,7 +6750,8 @@
       "chapter": "第4章 网络层",
       "section": "4.5 IP多播",
       "subsection": "4.5.1 多播的概念",
-      "_pdf_qno": 1
+      "_pdf_qno": 1,
+      "kp_analysis": "<div class=\"kp-sec\"><b>考点</b>多播 vs 多个单播仿真：多播路由器可从<b>多个接口</b>转发（单播只从一个）；多播所需带宽<b>小于</b>多个单播之和（链路上只传一份）；仿真多播时<b>时延显著更大</b>。错误的说法是 D（\"时延基本相同\"）。答案 D。</div><div class=\"kp-sec\"><b>易错点</b><span class=\"kp-trap\">\"多个单播仿真多播时延基本相同\"错——每条单播都要独立复制转发，路由器处理与链路占用都翻倍；带宽省、时延小是多播的两大优势。</span></div>"
     },
     {
       "id": "cn_0385",
@@ -6816,7 +6819,8 @@
       "chapter": "第4章 网络层",
       "section": "4.6 移动IP",
       "subsection": "4.6.2 移动IP通信过程",
-      "_pdf_qno": 1
+      "_pdf_qno": 1,
+      "kp_analysis": "<div class=\"kp-sec\"><b>考点</b>移动 IP 四阶段：代理发现 → 注册 → 分组路由（隧道）→ 注销。注册的作用是向<b>归属代理（本地代理）</b>通知新的转交地址；归属代理与外部代理间建立<b>隧道</b>转发分组。错误的说法是 C（\"通知外部代理\"——新可达信息要告诉归属代理）。答案 C。</div><div class=\"kp-sec\"><b>易错点</b><span class=\"kp-trap\">方向别搞反：外部代理只是\"当前所在网络\"的接入点，真正要把发往移动节点的分组隧道转发过来的，是\"老家\"的归属代理。</span></div>"
     },
     {
       "id": "cn_0389",
@@ -6884,7 +6888,8 @@
       "chapter": "第4章 网络层",
       "section": "4.7 网络层设备",
       "subsection": "4.7.1 冲突域和广播域",
-      "_pdf_qno": 2
+      "_pdf_qno": 2,
+      "kp_analysis": "<div class=\"kp-sec\"><b>考点</b>冲突域定义 = <b>能产生冲突的所有设备的集合</b>（这些设备同时发送数据会互相干扰）。答案 C。</div><div class=\"kp-sec\"><b>易错点</b><span class=\"kp-trap\">\"广播帧的接收集合\"那是广播域的定义——冲突域看\"碰撞可能性\"，广播域看\"广播可达性\"，两个域的判定依据不同。</span></div>"
     },
     {
       "id": "cn_0393",
@@ -6935,7 +6940,8 @@
       "chapter": "第4章 网络层",
       "section": "4.7 网络层设备",
       "subsection": "4.7.2 路由器的组成和功能",
-      "_pdf_qno": 5
+      "_pdf_qno": 5,
+      "kp_analysis": "<div class=\"kp-sec\"><b>考点</b>路由器实现的层次 = <b>物理层 + 数据链路层 + 网络层</b>（含网络层及其以下）；传输层/应用层是端到端的事，路由器不实现。答案 C。</div><div class=\"kp-sec\"><b>易错点</b><span class=\"kp-trap\">必须包含网络层以下的下两层（收帧/发帧、比特流），但不包含传输层及以上——\"三层设备\"的完整说法。</span></div>"
     },
     {
       "id": "cn_0396",
@@ -6986,7 +6992,8 @@
       "chapter": "第4章 网络层",
       "section": "4.7 网络层设备",
       "subsection": "4.7.2 路由器的组成和功能",
-      "_pdf_qno": 8
+      "_pdf_qno": 8,
+      "kp_analysis": "<div class=\"kp-sec\"><b>考点</b>路由表内容 = 到<b>目的网络</b>（不是主机）的<b>下一跳</b>信息（不是完整路径）。答案 C。</div><div class=\"kp-sec\"><b>易错点</b><span class=\"kp-trap\">按目的网络聚合（不按主机，规模不可想象）、只记下一跳（逐跳选路不知道也不需要完整路径）——两条原则锁定答案。</span></div>"
     },
     {
       "id": "cn_0399",
@@ -7054,7 +7061,8 @@
       "chapter": "第4章 网络层",
       "section": "4.7 网络层设备",
       "subsection": "4.7.3 路由表与分组转发",
-      "_pdf_qno": 12
+      "_pdf_qno": 12,
+      "kp_analysis": "<div class=\"kp-sec\"><b>考点</b>路由器转发分组的三层处理：<b>物理层</b>（收发比特流）→ <b>数据链路层</b>（拆帧/封装帧）→ <b>网络层</b>（查转发表定输出端口）。答案 D。</div><div class=\"kp-sec\"><b>易错点</b><span class=\"kp-trap\">输入输出端口都各有这三层模块——只答\"网络层处理\"漏掉了收发帧与比特流的两层封装动作。</span></div>"
     },
     {
       "id": "cn_0403",
@@ -7105,7 +7113,8 @@
       "chapter": "第4章 网络层",
       "section": "4.7 网络层设备",
       "subsection": "4.7.3 路由表与分组转发",
-      "_pdf_qno": 15
+      "_pdf_qno": 15,
+      "kp_analysis": "<div class=\"kp-sec\"><b>考点</b>默认路由的表示：目的地址 = <b>0.0.0.0</b>、子网掩码 = <b>0.0.0.0</b>（最长前缀匹配都失败时的兜底出口）。答案 C。</div><div class=\"kp-sec\"><b>易错点</b><span class=\"kp-trap\">0.0.0.0/0 意味着\"不匹配任何具体条目就走我\"；掩码写 255.255.255.255 会变成主机路由——默认路由两条都必须为 0。</span></div>"
     },
     {
       "id": "cn_0406",
@@ -7122,7 +7131,8 @@
       "chapter": "第4章 网络层",
       "section": "4.7 网络层设备",
       "subsection": "4.7.3 路由表与分组转发",
-      "_pdf_qno": 16
+      "_pdf_qno": 16,
+      "kp_analysis": "<div class=\"kp-sec\"><b>考点</b>路由器转发分组（已匹配条目）时，按路由表中的<b>接口标识符</b>（如 G0/0）确定输出端口；下一跳地址用于决定帧的目的 MAC。答案 D。</div><div class=\"kp-sec\"><b>易错点</b><span class=\"kp-trap\">下一跳地址解决\"发给谁\"，接口标识符解决\"从哪个口发出去\"——最终选端口靠接口字段。</span></div>"
     },
     {
       "id": "cn_0407",
@@ -7190,7 +7200,8 @@
       "chapter": "第4章 网络层",
       "section": "4.7 网络层设备",
       "subsection": "4.7.3 路由表与分组转发",
-      "_pdf_qno": 20
+      "_pdf_qno": 20,
+      "kp_analysis": "<div class=\"kp-sec\"><b>考点</b>2012 真题：路由器功能四说法：I 运行路由协议设备路由表 ✓；II 拥塞时合理丢弃分组 ✓；III 对 IP 首部差错检验 ✓ 但<b>不保证分组不丢失</b>（检验只丢弃坏帧，拥塞/线路丢包照旧，✗）；IV 按目的 IP 转发到合适输出线路 ✓。正确 = I、II、IV。答案 C。</div><div class=\"kp-sec\"><b>易错点</b><span class=\"kp-trap\">\"确保传输的 IP 分组不丢失\"是 IP 尽最大努力交付做不到的——IP 层无确认无重传；可靠交付是传输层的责任。</span></div>"
     },
     {
       "id": "cn_0411",
@@ -7241,7 +7252,8 @@
       "chapter": "第5章 传输层",
       "section": "5.1 传输层提供的服务",
       "subsection": "5.1.1 传输层的功能",
-      "_pdf_qno": 2
+      "_pdf_qno": 2,
+      "kp_analysis": "<div class=\"kp-sec\"><b>考点</b>传输层提供<b>进程到进程（端到端）</b>的逻辑通信；网络层提供主机到主机的逻辑通信。答案 B。</div><div class=\"kp-sec\"><b>易错点</b><span class=\"kp-trap\">对比记忆：网络层（IP）管主机，传输层（端口）管进程——端口号正是为了把交付细分到进程。</span></div>"
     },
     {
       "id": "cn_0414",
@@ -7258,7 +7270,8 @@
       "chapter": "第5章 传输层",
       "section": "5.1 传输层提供的服务",
       "subsection": "5.1.3 无连接服务与面向连接服务",
-      "_pdf_qno": 3
+      "_pdf_qno": 3,
+      "kp_analysis": "<div class=\"kp-sec\"><b>考点</b>面向连接服务的特性：先建立连接、全程监控管理、通信完释放；<b>保证可靠交付 + 保证顺序交付</b>（如 TCP）。答案 D。</div><div class=\"kp-sec\"><b>易错点</b><span class=\"kp-trap\">面向连接与可靠/有序强绑定；无连接服务（如 UDP）则三者都不保证——两两成对记忆。</span></div>"
     },
     {
       "id": "cn_0415",
@@ -7292,7 +7305,8 @@
       "chapter": "第5章 传输层",
       "section": "5.1 传输层提供的服务",
       "subsection": "5.1.3 无连接服务与面向连接服务",
-      "_pdf_qno": 5
+      "_pdf_qno": 5,
+      "kp_analysis": "<div class=\"kp-sec\"><b>考点</b>\"可靠\"的定义 = <b>使用确认机制确保传输的数据不丢失</b>（收到就确认、没收到就重传，如 TCP）；\"尽力而为\"（如 UDP/IP）即不可靠。答案 D。</div><div class=\"kp-sec\"><b>易错点</b><span class=\"kp-trap\">\"可靠\"不看是否面向连接、也不看有没有滑动窗口（滑动窗口管流量控制），判定标准只有一个——有没有确认重传机制。</span></div>"
     },
     {
       "id": "cn_0417",
@@ -7326,7 +7340,8 @@
       "chapter": "第5章 传输层",
       "section": "5.1 传输层提供的服务",
       "subsection": "5.1.1 传输层的功能",
-      "_pdf_qno": 7
+      "_pdf_qno": 7,
+      "kp_analysis": "<div class=\"kp-sec\"><b>考点</b>端口号三段：熟知端口 0~1023（FTP 21、HTTP 80 等常用协议保留）；登记端口 1024~49151；客户端（短暂）端口 49152~65535。答案 D。</div><div class=\"kp-sec\"><b>易错点</b><span class=\"kp-trap\">三段的分界数字 1023 / 49151 别混；熟知端口由 IANA 限制分配，普通应用写服务端监听端口时应避开 0~1023。</span></div>"
     },
     {
       "id": "cn_0419",
@@ -7394,7 +7409,8 @@
       "chapter": "第5章 传输层",
       "section": "5.2 UDP",
       "subsection": "5.2.1 UDP数据报",
-      "_pdf_qno": 1
+      "_pdf_qno": 1,
+      "kp_analysis": "<div class=\"kp-sec\"><b>考点</b>UDP 不可靠（无确认、无流量控制）——使用 UDP 的应用若需要可靠传输，由<b>应用层</b>自己实现（如 QUIC/自定义确认）。答案 B。</div><div class=\"kp-sec\"><b>易错点</b><span class=\"kp-trap\">可靠性的层次归属：传输层不提供就上浮到应用层实现，而不是下沉到网络层——网络层（IP）同样不可靠帮不上忙。</span></div>"
     },
     {
       "id": "cn_0423",
@@ -7428,7 +7444,8 @@
       "chapter": "第5章 传输层",
       "section": "5.2 UDP",
       "subsection": "5.2.1 UDP数据报",
-      "_pdf_qno": 3
+      "_pdf_qno": 3,
+      "kp_analysis": "<div class=\"kp-sec\"><b>考点</b>UDP 首部 4 字段共 8B：源端口、目的端口、<b>长度</b>（首部+数据）、检验和——<b>没有\"首部长度\"字段</b>（首部固定 8B，无需标注）。答案 D。</div><div class=\"kp-sec\"><b>易错点</b><span class=\"kp-trap\">对比 TCP 首部有\"数据偏移\"字段（首部长度可变 20~60B）——UDP 首部定长所以不需要；易把\"长度字段\"误当\"首部长度字段\"。</span></div>"
     },
     {
       "id": "cn_0425",
@@ -7445,7 +7462,8 @@
       "chapter": "第5章 传输层",
       "section": "5.2 UDP",
       "subsection": "5.2.1 UDP数据报",
-      "_pdf_qno": 4
+      "_pdf_qno": 4,
+      "kp_analysis": "<div class=\"kp-sec\"><b>考点</b>UDP 首部的<b>长度字段 = 首部（8B）+ 数据部分</b>的总长度，以字节为单位（所以 UDP 数据最长 65535−8=65527B）。答案 D。</div><div class=\"kp-sec\"><b>易错点</b><span class=\"kp-trap\">最小值是 8（只有首部无数据，如 DNS 查询为空的探测报文）；\"只记录数据部分长度\"漏了首部 8B。</span></div>"
     },
     {
       "id": "cn_0426",
@@ -7547,7 +7565,8 @@
       "chapter": "第5章 传输层",
       "section": "5.2 UDP",
       "subsection": "5.2.1 UDP数据报",
-      "_pdf_qno": 10
+      "_pdf_qno": 10,
+      "kp_analysis": "<div class=\"kp-sec\"><b>考点</b>适合 UDP 的应用：请求响应都很短的 C/S、远程调用（RPC）、实时多媒体（容忍少量错误、可用多播）；<b>远程登录（Telnet/SSH）需要可靠连接，不适合 UDP</b>。答案 D。</div><div class=\"kp-sec\"><b>易错点</b><span class=\"kp-trap\">交互式字符流应用丢一个字符就乱码且无法容忍——需要可靠有序的字节流；\"短报文一次交互\"与\"实时容忍错误\"是 UDP 两大适用场景。</span></div>"
     },
     {
       "id": "cn_0432",
@@ -7598,7 +7617,8 @@
       "chapter": "第5章 传输层",
       "section": "5.2 UDP",
       "subsection": "5.2.2 UDP检验",
-      "_pdf_qno": 13
+      "_pdf_qno": 13,
+      "kp_analysis": "<div class=\"kp-sec\"><b>考点</b>跨网 UDP 通信字段变化分析：①UDP 总长度不变（应用数据定死）；②UDP 检验和不因转发而变（伪首部源/目的 IP 中间不改）；③FCS 每过一跳重新计算；④目的 MAC 每跳更新为下一跳；⑤目的 IP 不变；⑥IP 检验和因 TTL 减 1 而<b>必须重算</b>。一定不变的是 I、II、V。答案 B。</div><div class=\"kp-sec\"><b>易错点</b><span class=\"kp-trap\">漏 V 的原因：忘了 IP 检验和覆盖 TTL——TTL 每跳减 1 → IP 检验和每跳重算，是\"不变项\"判断里最隐蔽的一条；MAC/FCS 属帧级，逐跳全换。</span></div>"
     },
     {
       "id": "cn_0435",
@@ -7649,7 +7669,8 @@
       "chapter": "第5章 传输层",
       "section": "5.2 UDP",
       "subsection": "5.2.2 UDP检验",
-      "_pdf_qno": 16
+      "_pdf_qno": 16,
+      "kp_analysis": "<div class=\"kp-sec\"><b>考点</b>2024 真题：UDP 检验和 = <b>二进制反码求和后取反</b>：1011 1001 1011 0110 + 0110 0101 1100 0101 = [1] 0001 1111 0111 1011（最高位进位 1 回卷加到最低位）→ 0001 1111 0111 1100 → 取反 = <b>1110 0000 1000 0011</b>。答案 C。</div><div class=\"kp-sec\"><b>易错点</b><span class=\"kp-trap\">两步别漏：①进位回卷（[1] 加到最低位，0111 1011 变 0111 1100）；②最后取反（0 变 1、1 变 0）——只求和不取反会错选 A。</span></div>"
     },
     {
       "id": "cn_0438",
@@ -7666,7 +7687,8 @@
       "chapter": "第5章 传输层",
       "section": "5.2 UDP",
       "subsection": "5.2.1 UDP数据报",
-      "_pdf_qno": 17
+      "_pdf_qno": 17,
+      "kp_analysis": "<div class=\"kp-sec\"><b>考点</b>2025 真题：NAT 修改 UDP 报文的字段：①源 IP 被替换 → 伪首部随之变 → <b>检验和必须重算</b>（IV 变）；②<b>源端口号被替换</b>为 NAT 映射端口（I 变）；目的端口号不变（II）；总长度由报文自身决定不变（III）。仅 I、IV 被修改。答案 B。</div><div class=\"kp-sec\"><b>易错点</b><span class=\"kp-trap\">伪首部包含源 IP/目的 IP/协议/UDP 长度——凡 IP 层改了源地址，UDP/TCP 的检验和都要跟着重算；目的端口是通信对端的信息，NAT 不碰。</span></div>"
     },
     {
       "id": "cn_0439",
@@ -7734,7 +7756,8 @@
       "chapter": "第5章 传输层",
       "section": "5.3 TCP",
       "subsection": "5.3.1 TCP的特点",
-      "_pdf_qno": 4
+      "_pdf_qno": 4,
+      "kp_analysis": "<div class=\"kp-sec\"><b>考点</b>TCP 服务特点：字节流（无消息边界）、全双工、可靠、<b>一对一</b>——<b>不支持广播/多播</b>（广播多播是 UDP 的能力）。答案 D。</div><div class=\"kp-sec\"><b>易错点</b><span class=\"kp-trap\">\"一对一本就是\"字节流点对点语义的必然结果：广播要给多个对端各维持一份字节流状态，TCP 的确认与序号机制无法套用。</span></div>"
     },
     {
       "id": "cn_0443",
@@ -7751,7 +7774,8 @@
       "chapter": "第5章 传输层",
       "section": "5.3 TCP",
       "subsection": "5.3.1 TCP的特点",
-      "_pdf_qno": 5
+      "_pdf_qno": 5,
+      "kp_analysis": "<div class=\"kp-sec\"><b>考点</b>TCP 特性：比 UDP 开销大（首部 20~60B + 确认重传机制）、强制重传错误分组、把消息按 MSS 分段并在目的主机重组——但 <b>TCP 首部中没有目标主机的 IP 地址</b>（IP 地址是 IP 首部的字段，TCP 首部只有端口号）。答案 C。</div><div class=\"kp-sec\"><b>易错点</b><span class=\"kp-trap\">分层字段归属：端口在 TCP/UDP 首部、IP 地址在 IP 首部——\"TCP 首部有 IP 地址\"违反封装原则，是典型的跨层混淆。</span></div>"
     },
     {
       "id": "cn_0444",
