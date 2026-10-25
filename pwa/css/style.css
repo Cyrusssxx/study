@@ -1333,8 +1333,6 @@ body {
     font-size: .76rem;
     margin-right: 8px;
 }
-.kp-opt-ok { color: #16a34a; font-weight: 600; }
-.kp-opt-bad { color: #dc2626; }
 .kp-trap { color: #b45309; }
 .kp-loading { color: var(--text-light); font-size: .85rem; padding: 4px 0; }
 

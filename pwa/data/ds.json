@@ -306,7 +306,7 @@
       "chapter": "第1章 绪论",
       "section": "1.2 算法和算法评价",
       "subsection": "1.2.2 算法效率的度量",
-      "kp_analysis": "<div class=\"kp-sec\"><b>考什么</b>循环次数法求 while 循环时间复杂度：第 k 轮循环后 sum = 1+2+…+k = k(k+1)/2，令其首次 ≥ n。</div><div class=\"kp-sec\"><b>选项拆解</b>解 k(k+1)/2 ≥ n 得 k ≈ √(2n)，循环体执行 O(√n) 次，故选 <span class=\"kp-ok\">B O(n<sup>1/2</sup>) ✓</span>。<span class=\"kp-opt-bad\">A ✗</span>O(log n) 对应每轮翻倍（sum *= 2 或 i *= 2），本题是 sum += ++i 的二次累加。<span class=\"kp-opt-bad\">C ✗</span>O(n) 是线性累加（每轮加常数）；本题 sum 按平方速度增长，循环次数是 √n 量级。<span class=\"kp-opt-bad\">D ✗</span>没有二分/递归对半结构，不产生 log 因子。</div><div class=\"kp-sec\"><b>易错陷阱</b><span class=\"kp-trap\">①sum += ++i 是\"先自增再累加\"，第 k 轮加的是 k；②复杂度看\"循环执行多少轮停\"，不是看 sum 最终多大——列不等式 k(k+1)/2 ≥ n 是这类题的固定套路。</span></div>"
+      "kp_analysis": "<div class=\"kp-sec\"><b>考点</b>循环次数法求 while 复杂度：第 k 轮后 sum = k(k+1)/2，首次 ≥ n 时 k ≈ √(2n)，故 O(√n)。答案 B。</div><div class=\"kp-sec\"><b>易错点</b><span class=\"kp-trap\">①sum += ++i 是先自增再累加，第 k 轮加的是 k（不是 k−1）；②别看 sum 最终多大，要看\"循环跑多少轮\"——列 k(k+1)/2 ≥ n 是这类题固定套路；③误选 O(log n) 多半把累加想成了翻倍。</span></div>"
     },
     {
       "id": "ds_0021",
@@ -4693,7 +4693,7 @@
       "chapter": "第5章 树与二叉树",
       "section": "5.5 树与二叉树的应用",
       "subsection": "5.5.2 并查集",
-      "kp_analysis": "<div class=\"kp-sec\"><b>考什么</b>并查集三大操作（Find / Union）与两个经典优化：路径压缩、按规模（按秩）合并，以及并查集判环这一图论应用。</div><div class=\"kp-sec\"><b>选项拆解</b><span class=\"kp-opt-bad\">A ✗</span>判环恰是并查集的招牌应用：边逐一加入前查两端点是否已属同一集合，同集合再加边必成环（Kruskal 选边防环同理）。<span class=\"kp-opt-bad\">B ✗</span>路径压缩后树高接近常数（均摊 O(α(n))，α 为反阿克曼函数）；\"最坏高度 O(n)\"是未压缩的退化链情形。<span class=\"kp-opt-bad\">C ✗</span>Find 返回的是集合的<b>代表元（根结点）</b>，不是元素个数的相反数（把根结点存 −size 是\"按个数合并\"的实现技巧，不是 Find 的返回值）。<span class=\"kp-ok\">D ✓</span>Union 时把小集合（矮树）挂到大集合（高树）下，防止合并出的树越长越高——与路径压缩配合是标准写法。</div><div class=\"kp-sec\"><b>易错陷阱</b><span class=\"kp-trap\">①\"Find 返回根\"与\"根存 −size\"两件事容易串；②路径压缩优化的是 Find 路径上的树高，按秩合并优化的是 Union 方向，二者互补。</span></div>"
+      "kp_analysis": "<div class=\"kp-sec\"><b>考点</b>并查集的 Find/Union 与两个优化：路径压缩（Find 路上全部直挂根，树高均摊近常数）+ 按规模合并（小树挂大树防退化）；并查集判环：加边前查两端点是否同集合。</div><div class=\"kp-sec\"><b>易错点</b><span class=\"kp-trap\">①Find 返回的是代表元（根），不是\"元素个数的相反数\"——根存 −size 是按个数合并的实现技巧，别与 Find 混；②\"路径压缩后最坏高度 O(n)\"错，那是未压缩的退化链。</span></div>"
     },
     {
       "id": "ds_0294",

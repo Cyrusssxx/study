@@ -451,7 +451,7 @@
       "chapter": "第1章 计算机系统概述",
       "section": "1.2 操作系统发展历程",
       "subsection": "1.2.2 批处理阶段（操作系统开始出现）",
-      "kp_analysis": "<div class=\"kp-sec\"><b>考什么</b>批处理系统（单道/多道）的特征边界：无交互、成批处理、中断技术支撑 I/O 与 CPU 并行。</div><div class=\"kp-sec\"><b>选项拆解</b><span class=\"kp-opt-bad\">I ✗</span>\"允许多个用户直接交互\"是<b>分时系统</b>的特点，批处理恰恰追求无人值守、成批运行（作业周转时间长、无交互性）。<span class=\"kp-ok\">II ✓ III ✓</span>批处理分单道与多道两类；中断技术使 I/O 设备与 CPU 并行工作，是多道批处理\"多道程序并发\"的技术前提。故 <span class=\"kp-ok\">A（仅 II、III）✓</span>。</div><div class=\"kp-sec\"><b>易错陷阱</b><span class=\"kp-trap\">把分时系统的\"交互性\"安到批处理头上是最常见陷阱；记对立面：批处理=吞吐量/周转，分时=交互/响应，实时=时限。</span></div>"
+      "kp_analysis": "<div class=\"kp-sec\"><b>考点</b>批处理 vs 分时系统特征：批处理 = 成批、无交互、追求吞吐量/周转（分单道/多道）；分时 = 交互、响应快；中断技术使 I/O 与 CPU 并行，是多道批处理的基础。答案 A（仅 II、III）。</div><div class=\"kp-sec\"><b>易错点</b><span class=\"kp-trap\">\"允许多用户直接交互\"是分时系统的特点——硬安到批处理上是最常见陷阱；记对立面：批处理重吞吐、分时重交互、实时重时限。</span></div>"
     },
     {
       "id": "os_0029",
@@ -484,7 +484,7 @@
       "chapter": "第1章 计算机系统概述",
       "section": "1.2 操作系统发展历程",
       "subsection": "1.2.2 批处理阶段（操作系统开始出现）",
-      "kp_analysis": "<div class=\"kp-sec\"><b>考什么</b>多任务（多道）操作系统的本质特征：并发与共享，及其对硬件的要求边界。</div><div class=\"kp-sec\"><b>选项拆解</b><span class=\"kp-ok\">I ✓</span>多任务系统必然具备并发性（宏观同时运行），多 CPU 平台上还能真正并行。<span class=\"kp-ok\">II ✓</span>多任务共享资源（内存、文件、外设），必须提供互斥/保护机制防互相干扰。<span class=\"kp-opt-bad\">III ✗</span>单 CPU + 分时轮转就是多任务系统（Windows/早期 Linux 都是单 CPU 多任务），不需要多 CPU 硬件。故 <span class=\"kp-ok\">C（仅 I、II）✓</span>。</div><div class=\"kp-sec\"><b>易错陷阱</b><span class=\"kp-trap\">并发 ≠ 并行：并发是宏观\"同时\"、微观轮流；并行才需要多硬件部件。多任务系统\"要求\"的只是并发与共享保护，不要求多 CPU。</span></div>"
+      "kp_analysis": "<div class=\"kp-sec\"><b>考点</b>多任务 OS 的必要条件：并发（宏观同时、微观轮转）+ 共享资源保护（互斥/同步）；单 CPU 分时轮转即可实现多任务。答案 C（仅 I、III 错在\"需多 CPU\"）。</div><div class=\"kp-sec\"><b>易错点</b><span class=\"kp-trap\">并发 ≠ 并行：并发单 CPU 就有（轮流），并行才要多硬件；多任务系统\"要求\"的只是并发与保护，不要求多 CPU。</span></div>"
     },
     {
       "id": "os_0031",
@@ -629,7 +629,7 @@
       "chapter": "第1章 计算机系统概述",
       "section": "1.3 操作系统的运行环境",
       "subsection": "1.3.2 处理机的双重工作模式",
-      "kp_analysis": "<div class=\"kp-sec\"><b>考什么</b>特权指令与非特权指令的划分：凡直接管资源、改系统状态、控整机运行的指令必须在内核态（管态）执行。</div><div class=\"kp-sec\"><b>选项拆解</b><span class=\"kp-opt-bad\">I ✗</span>置时钟：改系统时钟会破坏时间片轮转调度，属特权指令。<span class=\"kp-opt-bad\">II ✗</span>停机：直接控制系统运行，属特权指令。<span class=\"kp-ok\">III ✓ IV ✓</span>存数（普通访存写）、寄存器清零（普通数据运算）只影响本进程数据，用户态即可执行。故 <span class=\"kp-ok\">B（III、IV）✓</span>。</div><div class=\"kp-sec\"><b>易错陷阱</b><span class=\"kp-trap\">特权三类口诀：①资源管理（时钟、设备启停、开关中断）②状态修改（改中断向量、模式切换）③系统控制（停机、重启）。普通数据处理/访存/流程控制指令一律用户态可执行。</span></div>"
+      "kp_analysis": "<div class=\"kp-sec\"><b>考点</b>特权指令三类：①资源管理（置时钟、启停设备、开关中断）②状态修改（改中断向量、模式切换）③系统控制（停机、重启）；普通数据处理/访存/流程控制指令用户态可执行。答案 B（存数+寄存器清零）。</div><div class=\"kp-sec\"><b>易错点</b><span class=\"kp-trap\">置时钟为什么是特权：用户改时钟就能骗过时间片轮转调度；存数/取数只动自己进程的数据，用户态随便执行。</span></div>"
     },
     {
       "id": "os_0040",
