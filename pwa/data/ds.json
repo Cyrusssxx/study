@@ -306,7 +306,7 @@
       "chapter": "第1章 绪论",
       "section": "1.2 算法和算法评价",
       "subsection": "1.2.2 算法效率的度量",
-      "kp_analysis": "<div class=\"kp-sec\"><b>考点</b>循环次数法求 while 复杂度：第 k 轮后 sum = k(k+1)/2，首次 ≥ n 时 k ≈ √(2n)，故 O(√n)。答案 B。</div><div class=\"kp-sec\"><b>易错点</b><span class=\"kp-trap\">①sum += ++i 是先自增再累加，第 k 轮加的是 k（不是 k−1）；②别看 sum 最终多大，要看\"循环跑多少轮\"——列 k(k+1)/2 ≥ n 是这类题固定套路；③误选 O(log n) 多半把累加想成了翻倍。</span></div>"
+      "kp_analysis": "<div class=\"kp-sec\"><b>考点</b>时间复杂度·循环次数法：①第 k 轮循环后 sum = 1+2+…+k = k(k+1)/2（sum += ++i 是先自增再累加）；②解不等式 k(k+1)/2 ≥ n 得 k ≈ √(2n)，循环 O(√n) 次即答案 O(n<sup>1/2</sup>)；③对照记忆——每轮翻倍→O(log n)，每轮加常数→O(n)，二次累加→O(√n)。</div><div class=\"kp-sec\"><b>易错点</b><span class=\"kp-trap\">①sum += ++i 是先自增再累加，第 k 轮加的是 k（不是 k−1）；②别看 sum 最终多大，要看\"循环跑多少轮\"——列 k(k+1)/2 ≥ n 是这类题固定套路；③误选 O(log n) 多半把累加想成了翻倍。</span></div>"
     },
     {
       "id": "ds_0021",
@@ -4693,7 +4693,7 @@
       "chapter": "第5章 树与二叉树",
       "section": "5.5 树与二叉树的应用",
       "subsection": "5.5.2 并查集",
-      "kp_analysis": "<div class=\"kp-sec\"><b>考点</b>并查集的 Find/Union 与两个优化：路径压缩（Find 路上全部直挂根，树高均摊近常数）+ 按规模合并（小树挂大树防退化）；并查集判环：加边前查两端点是否同集合。</div><div class=\"kp-sec\"><b>易错点</b><span class=\"kp-trap\">①Find 返回的是代表元（根），不是\"元素个数的相反数\"——根存 −size 是按个数合并的实现技巧，别与 Find 混；②\"路径压缩后最坏高度 O(n)\"错，那是未压缩的退化链。</span></div>"
+      "kp_analysis": "<div class=\"kp-sec\"><b>考点</b>并查集（Disjoint Set）：①存储——双亲表示法（parent 数组）；②Find——沿父指针找根，<b>路径压缩</b>使沿途结点直挂根，均摊近乎常数；③Union——<b>按规模/按秩合并</b>（小树挂大树）防树退化成链；④判环应用——加边前查两端点是否同根（Kruskal 选边同理）；⑤复杂度——n 次操作均摊 O(nα(n))≈线性。</div><div class=\"kp-sec\"><b>易错点</b><span class=\"kp-trap\">①Find 返回的是代表元（根），不是\"元素个数的相反数\"——根存 −size 是按个数合并的实现技巧，别与 Find 混；②\"路径压缩后最坏高度 O(n)\"错，那是未压缩的退化链。</span></div>"
     },
     {
       "id": "ds_0294",
