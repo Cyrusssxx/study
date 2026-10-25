@@ -2793,7 +2793,7 @@
       "section": "4.2 串的模式匹配",
       "multi_blank": true,
       "subsection": "4.2.2 串的模式匹配算法——KMP算法",
-      "kp_analysis": "<div class=\"kp-sec\"><b>考点</b>简单模式匹配 O(mn)、KMP O(m+n)——两空分别选 C、D。简单匹配最坏逐字符回退比较 mn 次；KMP 主串指针不回退。</div><div class=\"kp-sec\"><b>易错点</b><span class=\"kp-trap\">简单匹配\"实际近似 O(m+n)\"但理论最坏仍是 O(mn)——题目问理论复杂度选 O(mn)；KMP 的 O(m+n) = 求 next O(m) + 匹配 O(n)。</span></div>"
+      "kp_analysis": "<div class=\"kp-sec\"><b>考点</b>简单模式匹配 O(mn)、KMP O(m+n)——两空分别选 C、D。简单匹配最坏逐字符回退比较 mn 次；KMP 主串指针不回退。<b>答案 CD。</b></div><div class=\"kp-sec\"><b>易错点</b><span class=\"kp-trap\">简单匹配\"实际近似 O(m+n)\"但理论最坏仍是 O(mn)——题目问理论复杂度选 O(mn)；KMP 的 O(m+n) = 求 next O(m) + 匹配 O(n)。</span></div>"
     },
     {
       "id": "ds_0171",
@@ -4827,7 +4827,7 @@
       "chapter": "第5章 树与二叉树",
       "section": "5.5 树与二叉树的应用",
       "subsection": "5.5.2 并查集",
-      "kp_analysis": "<div class=\"kp-sec\"><b>考点</b>并查集（Disjoint Set）：①存储——双亲表示法（parent 数组）；②Find——沿父指针找根，<b>路径压缩</b>使沿途结点直挂根，均摊近乎常数；③Union——<b>按规模/按秩合并</b>（小树挂大树）防树退化成链；④判环应用——加边前查两端点是否同根（Kruskal 选边同理）；⑤复杂度——n 次操作均摊 O(nα(n))≈线性。</div><div class=\"kp-sec\"><b>易错点</b><span class=\"kp-trap\">①Find 返回的是代表元（根），不是\"元素个数的相反数\"——根存 −size 是按个数合并的实现技巧，别与 Find 混；②\"路径压缩后最坏高度 O(n)\"错，那是未压缩的退化链。</span></div>"
+      "kp_analysis": "<div class=\"kp-sec\"><b>考点</b>并查集（Disjoint Set）：①存储——双亲表示法（parent 数组）；②Find——沿父指针找根，<b>路径压缩</b>使沿途结点直挂根，均摊近乎常数；③Union——<b>按规模/按秩合并</b>（小树挂大树）防树退化成链；④判环应用——加边前查两端点是否同根（Kruskal 选边同理）；⑤复杂度——n 次操作均摊 O(nα(n))≈线性。<b>答案 D。</b></div><div class=\"kp-sec\"><b>易错点</b><span class=\"kp-trap\">①Find 返回的是代表元（根），不是\"元素个数的相反数\"——根存 −size 是按个数合并的实现技巧，别与 Find 混；②\"路径压缩后最坏高度 O(n)\"错，那是未压缩的退化链。</span></div>"
     },
     {
       "id": "ds_0294",
@@ -7701,7 +7701,7 @@
       "chapter": "第7章 查找",
       "section": "7.4 B树和B+树",
       "subsection": "7.4.1 B树及其基本操作",
-      "kp_analysis": "<div class=\"kp-sec\"><b>考点</b>3阶B树高3：根至少2子树✓、至多2关键字✓、最多26关键字✓、分裂可增高✓。全对→B。</div><div class=\"kp-sec\"><b>易错点</b><span class=\"kp-trap\">最多=m^h-1=3^2-1=26。</span></div>"
+      "kp_analysis": "<div class=\"kp-sec\"><b>考点</b>3阶B树高3：根至少2子树✓、至多2关键字✓、最多26关键字✓、分裂可增高✓。全对→B。<b>答案 B。</b></div><div class=\"kp-sec\"><b>易错点</b><span class=\"kp-trap\">最多=m^h-1=3^2-1=26。</span></div>"
     },
     {
       "id": "ds_0466",
