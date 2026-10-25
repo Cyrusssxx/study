@@ -5409,7 +5409,8 @@
       "chapter": "第4章 网络层",
       "section": "4.2 IPv4",
       "subsection": "4.2.2 IPv4地址",
-      "_pdf_qno": 24
+      "_pdf_qno": 24,
+      "kp_analysis": "<div class=\"kp-sec\"><b>考点</b>CIDR 主要作用 = <b>有效分配 IP 地址空间（按需分配前缀）+ 路由聚合减少路由表规模</b>。答案 A。</div><div class=\"kp-sec\"><b>易错点</b><span class=\"kp-trap\">CIDR 只能\"缓解\"不能\"彻底解决\"地址枯竭（那是 IPv6 的事）；\"划分子网\"是 CIDR 的结果/手段，题目问\"作用\"别选它。</span></div>"
     },
     {
       "id": "cn_0302",
@@ -5426,7 +5427,8 @@
       "chapter": "第4章 网络层",
       "section": "4.2 IPv4",
       "subsection": "4.2.2 IPv4地址",
-      "_pdf_qno": 25
+      "_pdf_qno": 25,
+      "kp_analysis": "<div class=\"kp-sec\"><b>考点</b>126.166.66.99/22：前缀 22 位、主机号 10 位、地址块含 2<sup>10</sup>=1024 个地址；块内<b>第一个地址</b> = 主机号全 0 = <b>126.166.64.0</b>（66=01000010，第 3 字节后 2 位清零得 64）。错误描述 = D。答案 D。</div><div class=\"kp-sec\"><b>易错点</b><span class=\"kp-trap\">地址块首地址 = 网络地址（主机位全 0）——把 66.99 当首地址是没做\"主机位清零\"；第 3 字节 66 落在块 64~67 内。</span></div>"
     },
     {
       "id": "cn_0303",
@@ -5565,7 +5567,8 @@
       "chapter": "第4章 网络层",
       "section": "4.2 IPv4",
       "subsection": "4.2.3 网络地址转换NAT",
-      "_pdf_qno": 32
+      "_pdf_qno": 32,
+      "kp_analysis": "<div class=\"kp-sec\"><b>考点</b>/29 前缀第 4 字节占 5 位：已分配 96=01100xxx → C 的 96/28（前 4 位 0110）与之<b>重叠</b>，不能再分配。A(01111)/B(01000)/D(01101) 与 01100 均不冲突。答案 C。</div><div class=\"kp-sec\"><b>易错点</b><span class=\"kp-trap\">子网重叠判定 = 把各前缀二进制化比公共位——/28 的前 4 位 0110 是 01100 的前缀，大块含小块必冲突；逐位对别心算。</span></div>"
     },
     {
       "id": "cn_0310",
@@ -5617,7 +5620,8 @@
       "chapter": "第4章 网络层",
       "section": "4.2 IPv4",
       "subsection": "4.2.2 IPv4地址",
-      "_pdf_qno": 35
+      "_pdf_qno": 35,
+      "kp_analysis": "<div class=\"kp-sec\"><b>考点</b>路由聚合：129=10000001、130=10000010、132=10000100、133=10000101——第 3 字节<b>公共前缀 5 位</b>（10000）→ 掩码 8+8+5=21 → 聚合为 <b>172.18.128.0/21</b>。答案 A。</div><div class=\"kp-sec\"><b>易错点</b><span class=\"kp-trap\">聚合位长 = 各网络前缀逐位比对的最长公共位——保留公共位、其余清零；/22 只覆盖 2 个、/23 更窄，选最长覆盖且不超界者。</span></div>"
     },
     {
       "id": "cn_0313",
@@ -5652,7 +5656,8 @@
       "chapter": "第4章 网络层",
       "section": "4.2 IPv4",
       "subsection": "4.2.2 IPv4地址",
-      "_pdf_qno": 37
+      "_pdf_qno": 37,
+      "kp_analysis": "<div class=\"kp-sec\"><b>考点</b>点对点链路只需 2 个主机地址 → 主机号 2 位（2<sup>2</sup>−2=2）→ 掩码 <b>255.255.255.252（/30）</b>。答案 A。</div><div class=\"kp-sec\"><b>易错点</b><span class=\"kp-trap\">浪费最小化的反向思维：由\"需要几台主机\"反推主机位数再得掩码；248 是 /29 只剩 6 台、240 更大——按需选最小够用块。</span></div>"
     },
     {
       "id": "cn_0315",
@@ -5740,7 +5745,8 @@
       "chapter": "第4章 网络层",
       "section": "4.2 IPv4",
       "subsection": "4.2.2 IPv4地址",
-      "_pdf_qno": 42
+      "_pdf_qno": 42,
+      "kp_analysis": "<div class=\"kp-sec\"><b>考点</b>目的地址 255.255.255.255 = <b>受限广播地址</b>：只在本地网络内广播，路由器<b>一律不转发</b>（丢弃）。答案 A。</div><div class=\"kp-sec\"><b>易错点</b><span class=\"kp-trap\">受限广播（255.255.255.255）不出本地网、直接广播（主机号全 1）可跨网由路由器转成对应子网广播——\"路由器见到受限广播\"的唯一动作就是丢弃。</span></div>"
     },
     {
       "id": "cn_0320",
@@ -5864,7 +5870,8 @@
       "chapter": "第4章 网络层",
       "section": "4.2 IPv4",
       "subsection": "4.2.7 网际控制报文协议ICMP",
-      "_pdf_qno": 49
+      "_pdf_qno": 49,
+      "kp_analysis": "<div class=\"kp-sec\"><b>考点</b>错误叙述 = C：<b>PING 使用 ICMP 询问报文</b>（回送请求/回答），不是差错报文。A 两类分法、B 只对第一个分片报错、D 多播不产生差错报文都对。答案 C。</div><div class=\"kp-sec\"><b>易错点</b><span class=\"kp-trap\">ICMP 两类报文各管各：差错报告（终点不可达/超时/参数问题/改变路由）与询问（回送/时间戳）——PING、traceroute 常考\"用的哪类\"。</span></div>"
     },
     {
       "id": "cn_0327",
@@ -5881,7 +5888,8 @@
       "chapter": "第4章 网络层",
       "section": "4.2 IPv4",
       "subsection": "4.2.2 IPv4地址",
-      "_pdf_qno": 50
+      "_pdf_qno": 50,
+      "kp_analysis": "<div class=\"kp-sec\"><b>考点</b>192.168.5.0/24 划 /29（248=11111000）：子网位 5 → <b>32 个子网</b>；主机位 3 → 2<sup>3</sup>−2 = <b>6 个可分配地址</b>。答案 B。</div><div class=\"kp-sec\"><b>易错点</b><span class=\"kp-trap\">定长划分两步：掩码比 /24 多出的位是子网位、剩下是主机位——\"可分配\"永远要减全 0 网络地址与全 1 广播地址。</span></div>"
     },
     {
       "id": "cn_0328",
@@ -5916,7 +5924,8 @@
       "chapter": "第4章 网络层",
       "section": "4.2 IPv4",
       "subsection": "4.2.3 网络地址转换NAT",
-      "_pdf_qno": 52
+      "_pdf_qno": 52,
+      "kp_analysis": "<div class=\"kp-sec\"><b>考点</b>2011 真题：192.168.4.0/30 主机位 2 位 → 地址 0~3，其中 4.3 = 主机号全 1 = <b>广播地址</b>——子网内全部 <b>2 台主机</b>都能收到。答案 C。</div><div class=\"kp-sec\"><b>易错点</b><span class=\"kp-trap\">问\"能收到广播的主机数\"不扣网络/广播地址本身（它们不是主机），只扣两个保留地址得 2——先判 4.3 是广播地址再数主机。</span></div>"
     },
     {
       "id": "cn_0330",
@@ -5933,7 +5942,8 @@
       "chapter": "第4章 网络层",
       "section": "4.2 IPv4",
       "subsection": "4.2.2 IPv4地址",
-      "_pdf_qno": 53
+      "_pdf_qno": 53,
+      "kp_analysis": "<div class=\"kp-sec\"><b>考点</b>2011 真题：192.168.2.0/25 与 192.168.2.128/25 前两段及第 3 字节前 7 位相同 → 聚合为 <b>192.168.2.0/24</b>（掩码 255.255.255.0）；下一跳 = 相邻路由器 R2 接口 <b>192.168.1.2</b>。答案 D。</div><div class=\"kp-sec\"><b>易错点</b><span class=\"kp-trap\">聚合取公共前缀、下一跳取\"直接相连邻居的接口 IP\"——192.168.1.1 是 R1 自己侧的地址，不能当下一跳。</span></div>"
     },
     {
       "id": "cn_0331",
@@ -5950,7 +5960,8 @@
       "chapter": "第4章 网络层",
       "section": "4.2 IPv4",
       "subsection": "4.2.2 IPv4地址",
-      "_pdf_qno": 54
+      "_pdf_qno": 54,
+      "kp_analysis": "<div class=\"kp-sec\"><b>考点</b>2012 真题：180.80.77.55 /22（252=11111100）→ 网络块 180.80.76.0/22（76~79）→ 广播地址 = 主机号全 1 = <b>180.80.79.255</b>。答案 D。</div><div class=\"kp-sec\"><b>易错点</b><span class=\"kp-trap\">/22 跨第 3 字节的后 2 位——76=01001100 落块 76~79；广播地址 = 块末尾 79.255，别就近选 77.255。</span></div>"
     },
     {
       "id": "cn_0332",
@@ -6001,7 +6012,8 @@
       "chapter": "第4章 网络层",
       "section": "4.2 IPv4",
       "subsection": "4.2.1 IPv4分组",
-      "_pdf_qno": 57
+      "_pdf_qno": 57,
+      "kp_analysis": "<div class=\"kp-sec\"><b>考点</b>2015 真题：最长前缀匹配——169.96.40.5 与 169.96.40.0/27 匹配位数最多 → 接口 <b>S3</b>；默认路由只在全不匹配时兜底。答案 C。</div><div class=\"kp-sec\"><b>易错点</b><span class=\"kp-trap\">逐表项算匹配位数取最大——27 位精确命中；即使某表项是 0.0.0.0/0 也永远轮不到它优先。</span></div>"
     },
     {
       "id": "cn_0335",
@@ -6018,7 +6030,8 @@
       "chapter": "第4章 网络层",
       "section": "4.2 IPv4",
       "subsection": "4.2.2 IPv4地址",
-      "_pdf_qno": 58
+      "_pdf_qno": 58,
+      "kp_analysis": "<div class=\"kp-sec\"><b>考点</b>2016 真题：H1/H2 同属 /125 网段可直通；H1 与 H3 跨网段须经网关，但 H1 的默认网关配成了 192.168.3.1（≠R2 接口 192.168.3.254）→ <b>H1 不能与 H3 正常通信</b>。答案 C。</div><div class=\"kp-sec\"><b>易错点</b><span class=\"kp-trap\">跨网段通信 = \"同网段判断 + 网关可达 + 路由器不回入口转发\"三关——网关配错第一关就挂；H1/H2 同网段直通不受网关错误影响。</span></div>"
     },
     {
       "id": "cn_0336",
@@ -6035,7 +6048,8 @@
       "chapter": "第4章 网络层",
       "section": "4.2 IPv4",
       "subsection": "4.2.3 网络地址转换NAT",
-      "_pdf_qno": 59
+      "_pdf_qno": 59,
+      "kp_analysis": "<div class=\"kp-sec\"><b>考点</b>2016 真题：出公网的分组经 NAT 改<b>源地址为路由器出口的全球地址</b>——R1 与 R2 间链路 201.1.3.8/30，R1 端 201.1.3.9 → R2 端 <b>201.1.3.10</b>；目的 = Web 服务器 130.18.10.1。答案 D。</div><div class=\"kp-sec\"><b>易错点</b><span class=\"kp-trap\">/30 点对点链路四个地址：网络 x8、两个接口 x9/x10、广播 x11——由一端推另一端；私有源地址 192.168.x.x 出了 NAT 就不该再出现。</span></div>"
     },
     {
       "id": "cn_0337",
@@ -6069,7 +6083,8 @@
       "chapter": "第4章 网络层",
       "section": "4.2 IPv4",
       "subsection": "4.2.1 IPv4分组",
-      "_pdf_qno": 61
+      "_pdf_qno": 61,
+      "kp_analysis": "<div class=\"kp-sec\"><b>考点</b>2017 真题：只能作<b>源地址</b>不能作目的地址 = <b>0.0.0.0</b>（本主机在本网络尚无地址时用）。答案 A。</div><div class=\"kp-sec\"><b>易错点</b><span class=\"kp-trap\">特殊地址四兄弟：0.0.0.0 只源、127.x 回环（源目的都可但不出本机）、255.255.255.255 只目的（受限广播）、C 类地址普通两用。</span></div>"
     },
     {
       "id": "cn_0339",
@@ -6086,7 +6101,8 @@
       "chapter": "第4章 网络层",
       "section": "4.2 IPv4",
       "subsection": "4.2.3 网络地址转换NAT",
-      "_pdf_qno": 62
+      "_pdf_qno": 62,
+      "kp_analysis": "<div class=\"kp-sec\"><b>考点</b>聚合 35.230.32/40/48/56（第 3 字节 00100000、00101000、00110000、00111000）——公共前缀仅 <b>3 位（001）</b> → /16+3 = /19 → <b>35.230.32.0/19</b>。答案 C。</div><div class=\"kp-sec\"><b>易错点</b><span class=\"kp-trap\">4 个地址不连续（32/40/48/56 跳 8）——公共位只有前 3 位，别惯性凑 /20 或 /21；聚合地址 = 公共位保留 + 其余清零 = 32。</span></div>"
     },
     {
       "id": "cn_0340",
@@ -6103,7 +6119,8 @@
       "chapter": "第4章 网络层",
       "section": "4.2 IPv4",
       "subsection": "4.2.2 IPv4地址",
-      "_pdf_qno": 63
+      "_pdf_qno": 63,
+      "kp_analysis": "<div class=\"kp-sec\"><b>考点</b>2018 真题：跨路由器传帧 MAC 每段重写——H1 发出的帧目的 MAC = <b>路由器 R 入接口</b>（00-1a-2b-3c-4d-51）；H2 收到的帧源 MAC = <b>R 出接口</b>（00-a1-b2-c3-d4-61）。答案 D。</div><div class=\"kp-sec\"><b>易错点</b><span class=\"kp-trap\">IP 端到端不变、MAC 逐段更换（\"源/目的 MAC 只在一段链路内有效\"）——答案必是路由器两个不同端口的 MAC，H1/H2 自身 MAC 是干扰。</span></div>"
     },
     {
       "id": "cn_0341",
@@ -6138,7 +6155,8 @@
       "chapter": "第4章 网络层",
       "section": "4.2 IPv4",
       "subsection": "4.2.2 IPv4地址",
-      "_pdf_qno": 65
+      "_pdf_qno": 65,
+      "kp_analysis": "<div class=\"kp-sec\"><b>考点</b>2021 真题：已划 10/26（192.168.9.128/26）；B 的 0/26（192.168.9.0/26）加上 10/26 后剩 01/26+11/26 两块无法与\"再划 1 块\"凑成 3 块不重叠 → <b>B 不可能</b>。答案 B。</div><div class=\"kp-sec\"><b>易错点</b><span class=\"kp-trap\">子网划分二叉树法：把 /24 看成一棵树逐位向右走，已占子树与候选子树不得相交且恰好铺满——0/26 挡路导致剩余空间只能切 4 块。</span></div>"
     },
     {
       "id": "cn_0343",
@@ -6190,7 +6208,8 @@
       "chapter": "第4章 网络层",
       "section": "4.2 IPv4",
       "subsection": "4.2.3 网络地址转换NAT",
-      "_pdf_qno": 68
+      "_pdf_qno": 68,
+      "kp_analysis": "<div class=\"kp-sec\"><b>考点</b>2022 真题：默认网关 = <b>离主机最近的路由器接口地址</b>（192.168.1.62，/27 块 192.168.1.32~63 的末尾）；掩码按前缀 /27 = <b>255.255.255.224</b>。答案 D。</div><div class=\"kp-sec\"><b>易错点</b><span class=\"kp-trap\">网关不是 .1 惯性——看图中路由器接口实际地址；掩码与网关所在子网一致，/27 → 224。</span></div>"
     },
     {
       "id": "cn_0346",
@@ -6207,7 +6226,8 @@
       "chapter": "第4章 网络层",
       "section": "4.2 IPv4",
       "subsection": "4.2.3 网络地址转换NAT",
-      "_pdf_qno": 69
+      "_pdf_qno": 69,
+      "kp_analysis": "<div class=\"kp-sec\"><b>考点</b>2023 真题：NAT 路由器把分组<b>源 IP 改为外部接口的全球地址</b>：R2 外口与 195.123.0.34/30 同子网（块 195.123.0.32/30：32 网络、33/34 可用、35 广播）→ R2 外口 = <b>195.123.0.33</b>。答案 A。</div><div class=\"kp-sec\"><b>易错点</b><span class=\"kp-trap\">由\"另一端 34/30\"推\"本端 33/30\"——/30 只有 2 个可用地址；私有地址 192.168.x.x 出 NAT 后必被替换。</span></div>"
     },
     {
       "id": "cn_0347",
@@ -6224,7 +6244,8 @@
       "chapter": "第4章 网络层",
       "section": "4.2 IPv4",
       "subsection": "4.2.2 IPv4地址",
-      "_pdf_qno": 70
+      "_pdf_qno": 70,
+      "kp_analysis": "<div class=\"kp-sec\"><b>考点</b>2023 真题：168.16.84.24/20 → 与 /20 掩码相与得网络地址 168.16.80.0（80~95 共 16 个第 3 字节）→ 可分配范围 <b>168.16.80.1 ~ 168.16.95.254</b>。答案 B。</div><div class=\"kp-sec\"><b>易错点</b><span class=\"kp-trap\">/20 跨第 3 字节后 4 位——84 落块 80~95；范围 = 网络地址+1 到 广播地址−1，首尾两个保留地址不分配。</span></div>"
     },
     {
       "id": "cn_0348",
@@ -6241,7 +6262,8 @@
       "chapter": "第4章 网络层",
       "section": "4.2 IPv4",
       "subsection": "4.2.5 地址解析协议（ARP）",
-      "_pdf_qno": 71
+      "_pdf_qno": 71,
+      "kp_analysis": "<div class=\"kp-sec\"><b>考点</b>2024 真题：ARP 表只存<b>同一 VLAN/子网内</b>主机的 IP↔MAC 映射——H4 在 VLAN1，H6 在 VLAN3 → <b>192.168.3.129 的映射不会出现</b>。答案 D。</div><div class=\"kp-sec\"><b>易错点</b><span class=\"kp-trap\">ARP 只在本地网段解析——跨 VLAN/跨网段的通信走网关，表里出现的是网关的 MAC 而非对端主机；跨 VLAN 的主机映射必然缺席。</span></div>"
     },
     {
       "id": "cn_0349",
@@ -6293,7 +6315,8 @@
       "chapter": "第4章 网络层",
       "section": "4.3 IPv6",
       "subsection": "4.3.2 IPv6数据报的基本首部",
-      "_pdf_qno": 2
+      "_pdf_qno": 2,
+      "kp_analysis": "<div class=\"kp-sec\"><b>考点</b>IPv6 相比 IPv4：<b>没有首部检验和字段</b>（链路层和传输层自有校验，省去可提速）。128 位地址、首部字段反而精简为 8 个、支持 QoS。答案 D。</div><div class=\"kp-sec\"><b>易错点</b><span class=\"kp-trap\">\"地址更长≠首部更臃肿\"——IPv6 固定 40B 基本首部 + 扩展首部；取消校验和是\"信任下层\"的设计取舍。</span></div>"
     },
     {
       "id": "cn_0352",
@@ -6310,7 +6333,8 @@
       "chapter": "第4章 网络层",
       "section": "4.3 IPv6",
       "subsection": "4.3.3 IPv6地址",
-      "_pdf_qno": 3
+      "_pdf_qno": 3,
+      "kp_analysis": "<div class=\"kp-sec\"><b>考点</b>IPv6 零压缩规则：<b>双冒号 \"::\" 在一个地址中只能出现一次</b>——C 出现两次违规。A/B/D 的单次压缩与逐段前导零省略都合法。答案 C。</div><div class=\"kp-sec\"><b>易错点</b><span class=\"kp-trap\">零压缩两条：每段前导 0 可省（00C0→C0）；连续全零段用一次 :: 替代——多处零段时挑最长的一处压，只准一次。</span></div>"
     },
     {
       "id": "cn_0353",
@@ -6345,7 +6369,8 @@
       "chapter": "第4章 网络层",
       "section": "4.3 IPv6",
       "subsection": "4.3.1 IPv6的特点",
-      "_pdf_qno": 5
+      "_pdf_qno": 5,
+      "kp_analysis": "<div class=\"kp-sec\"><b>考点</b>错误叙述 = D：<b>IPv6 取消了首部检验和</b>（加快路由器处理）。A 首部长度固定 40B、B 中间路由器不分片、C 16B=128 位地址都用不完——都对。答案 D。</div><div class=\"kp-sec\"><b>易错点</b><span class=\"kp-trap\">IPv6 三取消：检验和、首部长度字段（因固定）、分片的中间路由责任（只允许源端分片）——D 是\"取消\"被说成\"使用\"。</span></div>"
     },
     {
       "id": "cn_0355",
@@ -6362,7 +6387,8 @@
       "chapter": "第4章 网络层",
       "section": "4.3 IPv6",
       "subsection": "4.3.2 IPv6数据报的基本首部",
-      "_pdf_qno": 6
+      "_pdf_qno": 6,
+      "kp_analysis": "<div class=\"kp-sec\"><b>考点</b>IPv6 路由器收到<b>大于出链路 MTU</b> 的数据报：<b>直接丢弃</b>，并向源点发\"分组太大\"的 ICMPv6 报文（不允许中间路由器分片）。答案 A。</div><div class=\"kp-sec\"><b>易错点</b><span class=\"kp-trap\">IPv6 把分片责任移回源端（路径 MTU 发现）——暂存/分片/改道都不是路由器的动作，\"丢弃+通知\"才是标准剧本。</span></div>"
     },
     {
       "id": "cn_0356",
@@ -6379,7 +6405,8 @@
       "chapter": "第4章 网络层",
       "section": "4.3 IPv6",
       "subsection": "4.3.4 从IPv4向IPv6过渡",
-      "_pdf_qno": 7
+      "_pdf_qno": 7,
+      "kp_analysis": "<div class=\"kp-sec\"><b>考点</b>2023 真题：正确 = III 双协议栈+隧道过渡、IV HopLimit 等价 TTL。I 错——地址空间是 2<sup>96</sup> 倍不是 96 倍；II 错——IPv6 基本首部固定 40B 不可变。答案 D。</div><div class=\"kp-sec\"><b>易错点</b><span class=\"kp-trap\">\"2 的 96 次方倍\"与\"96 倍\"一字之差；IPv4 首部 4B 倍数可变、IPv6 固定 40B——两句话记死这对对照。</span></div>"
     },
     {
       "id": "cn_0357",
@@ -6396,7 +6423,8 @@
       "chapter": "第4章 网络层",
       "section": "4.4 路由算法与路由协议",
       "subsection": "4.4.2 分层次的路由选择协议",
-      "_pdf_qno": 1
+      "_pdf_qno": 1,
+      "kp_analysis": "<div class=\"kp-sec\"><b>考点</b>动态 vs 静态路由选择的核心区别 = <b>动态可随通信量/拓扑自适应调整，静态需手工配置调整</b>。答案 B。</div><div class=\"kp-sec\"><b>易错点</b><span class=\"kp-trap\">A 反了（静态反而可能需全网信息）、C 反了（静态简单开销小）、D 都用路由表——\"自适应\"三个字是动态路由的身份标签。</span></div>"
     },
     {
       "id": "cn_0358",
@@ -6448,7 +6476,8 @@
       "chapter": "第4章 网络层",
       "section": "4.4 路由算法与路由协议",
       "subsection": "4.4.1 路由算法",
-      "_pdf_qno": 4
+      "_pdf_qno": 4,
+      "kp_analysis": "<div class=\"kp-sec\"><b>考点</b>链路状态路由算法：各路由器交换邻居代价构建<b>完整拓扑</b>后，用 <b>Dijkstra 最短路径算法</b>计算到各节点的最短路径。答案 B。</div><div class=\"kp-sec\"><b>易错点</b><span class=\"kp-trap\">算法对号入座：链路状态→Dijkstra（OSPF 内）、距离向量→Bellman-Ford（RIP 内）——Prim/Kruskal 是最小生成树，不做路由。</span></div>"
     },
     {
       "id": "cn_0361",
@@ -6465,7 +6494,8 @@
       "chapter": "第4章 网络层",
       "section": "4.4 路由算法与路由协议",
       "subsection": "4.4.2 分层次的路由选择协议",
-      "_pdf_qno": 5
+      "_pdf_qno": 5,
+      "kp_analysis": "<div class=\"kp-sec\"><b>考点</b>错误叙述 = B：分层路由中路由器<b>只知本区域内的目标如何路由</b>，对其他区域结构毫不知情（跨区域交给区域边界）。答案 B。</div><div class=\"kp-sec\"><b>易错点</b><span class=\"kp-trap\">分层路由的全部意义 = 隐藏区域内部细节以缩表——\"还知道如何路由到其他区域内部\"违背信息隐藏原则；跨网连接靠把每个网络当一个区域。</span></div>"
     },
     {
       "id": "cn_0362",
@@ -6482,7 +6512,8 @@
       "chapter": "第4章 网络层",
       "section": "4.4 路由算法与路由协议",
       "subsection": "4.4.2 分层次的路由选择协议",
-      "_pdf_qno": 6
+      "_pdf_qno": 6,
+      "kp_analysis": "<div class=\"kp-sec\"><b>考点</b>错误叙述 = B：分层划分区域使交换信息种类增多、OSPF <b>更复杂了</b>——但换来区域内通信量大幅减少，得以支持超大规模 AS。答案 B。</div><div class=\"kp-sec\"><b>易错点</b><span class=\"kp-trap\">代价与收益同现：复杂度升（代价）↔ 每区域洪泛范围缩小（收益）——\"更加简单\"与设计初衷正好说反。</span></div>"
     },
     {
       "id": "cn_0363",
@@ -6499,7 +6530,8 @@
       "chapter": "第4章 网络层",
       "section": "4.4 路由算法与路由协议",
       "subsection": "4.4.2 分层次的路由选择协议",
-      "_pdf_qno": 7
+      "_pdf_qno": 7,
+      "kp_analysis": "<div class=\"kp-sec\"><b>考点</b>路由选择协议功能<b>不包括</b>\"发现下一跳的物理地址\"——那是 <b>ARP</b> 的职责；交换状态信息、选最佳路径、更新路由表才是它的工作。答案 D。</div><div class=\"kp-sec\"><b>易错点</b><span class=\"kp-trap\">\"路由选择管 IP 层找路、ARP 管下一跳 MAC\"——把 ARP 的活安到路由协议头上是经典混淆。</span></div>"
     },
     {
       "id": "cn_0364",
@@ -6567,7 +6599,8 @@
       "chapter": "第4章 网络层",
       "section": "4.4 路由算法与路由协议",
       "subsection": "4.4.3 路由信息协议",
-      "_pdf_qno": 11
+      "_pdf_qno": 11,
+      "kp_analysis": "<div class=\"kp-sec\"><b>考点</b>错误叙述 = C：RIP 只向<b>相邻路由器</b>发布路由信息，不是向整个 AS 发布（洪泛全网是 OSPF 的做法）。答案 C。</div><div class=\"kp-sec\"><b>易错点</b><span class=\"kp-trap\">RIP 三特征：距离向量、只与邻居交换、周期性（30s）发整表——B\"关于整个 AS 的信息\"没错，错在发布对象写成全网。</span></div>"
     },
     {
       "id": "cn_0368",
@@ -6602,7 +6635,8 @@
       "chapter": "第4章 网络层",
       "section": "4.4 路由算法与路由协议",
       "subsection": "4.4.2 分层次的路由选择协议",
-      "_pdf_qno": 13
+      "_pdf_qno": 13,
+      "kp_analysis": "<div class=\"kp-sec\"><b>考点</b>路由收敛 = 网络拓扑变化后各路由器调整路由表、最终达到<b>路由表与网络拓扑结构保持一致</b>的稳定状态。答案 C。</div><div class=\"kp-sec\"><b>易错点</b><span class=\"kp-trap\">收敛描述的是\"表与拓扑同步\"不是转发/处理速度——A 是转发的基本功能、D 是聚合，都与收敛无关。</span></div>"
     },
     {
       "id": "cn_0370",
@@ -6619,7 +6653,8 @@
       "chapter": "第4章 网络层",
       "section": "4.4 路由算法与路由协议",
       "subsection": "4.4.3 路由信息协议",
-      "_pdf_qno": 14
+      "_pdf_qno": 14,
+      "kp_analysis": "<div class=\"kp-sec\"><b>考点</b>错误叙述 = A：<b>RIP 是应用层协议</b>（报文用 UDP 封装，端口 520），OSPF 才直接用 IP（协议号 89）属网络层。答案 A。</div><div class=\"kp-sec\"><b>易错点</b><span class=\"kp-trap\">封装位置定层级：RIP-over-UDP→应用层、OSPF-over-IP→网络层、BGP-over-TCP→应用层——\"路由协议≠都在网络层\"。</span></div>"
     },
     {
       "id": "cn_0371",
@@ -6654,7 +6689,8 @@
       "chapter": "第4章 网络层",
       "section": "4.4 路由算法与路由协议",
       "subsection": "4.4.2 分层次的路由选择协议",
-      "_pdf_qno": 16
+      "_pdf_qno": 16,
+      "kp_analysis": "<div class=\"kp-sec\"><b>考点</b>最准确的描述 = A：<b>OSPF 基于链路状态计算最佳路由</b>。B 它是域内（IGP）协议；C 能动态适应变化；D 适用于大中型网络并分区管理。答案 A。</div><div class=\"kp-sec\"><b>易错点</b><span class=\"kp-trap\">OSPF 关键词：链路状态 + Dijkstra + 区域划分 + 洪泛链路状态更新（且只在变化时发增量）——\"外部网关/静态/小型\"全是反着说的。</span></div>"
     },
     {
       "id": "cn_0373",
@@ -6689,7 +6725,8 @@
       "chapter": "第4章 网络层",
       "section": "4.4 路由算法与路由协议",
       "subsection": "4.4.5 边界网关协议",
-      "_pdf_qno": 18
+      "_pdf_qno": 18,
+      "kp_analysis": "<div class=\"kp-sec\"><b>考点</b>错误叙述 = D：<b>主干路由器可以兼作区域边界路由器</b>（主干区域内的路由器都称主干路由器，边界路由器就在主干与下层的接缝上）。答案 D。</div><div class=\"kp-sec\"><b>易错点</b><span class=\"kp-trap\">OSPF 四类路由器（区域内/主干/区域边界/AS 边界）身份可叠加——位于主干区域的 ABR 同时拥有两个头衔。</span></div>"
     },
     {
       "id": "cn_0375",
@@ -6724,7 +6761,8 @@
       "chapter": "第4章 网络层",
       "section": "4.4 路由算法与路由协议",
       "subsection": "4.4.2 分层次的路由选择协议",
-      "_pdf_qno": 20
+      "_pdf_qno": 20,
+      "kp_analysis": "<div class=\"kp-sec\"><b>考点</b>三协议算法对号：<b>RIP = 距离向量、OSPF = 链路状态、BGP = 路径向量</b>。答案 D。</div><div class=\"kp-sec\"><b>易错点</b><span class=\"kp-trap\">BGP\"力求较好不求最佳\"（只求不兜圈）用路径向量记录 AS 路径——三连组合题把三个名字背成一句话即可。</span></div>"
     },
     {
       "id": "cn_0377",
@@ -6741,7 +6779,8 @@
       "chapter": "第4章 网络层",
       "section": "4.4 路由算法与路由协议",
       "subsection": "4.4.2 分层次的路由选择协议",
-      "_pdf_qno": 21
+      "_pdf_qno": 21,
+      "kp_analysis": "<div class=\"kp-sec\"><b>考点</b>从<b>封装</b>看层级：RIP（over UDP）与 BGP（over TCP）是<b>应用层</b>；OSPF（over IP）与 ICMP（over IP）是网络层。答案 B。</div><div class=\"kp-sec\"><b>易错点</b><span class=\"kp-trap\">同上对号表——判断标准是\"封装在谁的报文里\"不是\"管不管路由\"；ICMP 也是路由器间的网络层协议。</span></div>"
     },
     {
       "id": "cn_0378",
@@ -6776,7 +6815,8 @@
       "chapter": "第4章 网络层",
       "section": "4.4 路由算法与路由协议",
       "subsection": "4.4.1 路由算法",
-      "_pdf_qno": 23
+      "_pdf_qno": 23,
+      "kp_analysis": "<div class=\"kp-sec\"><b>考点</b>2024 真题：OSPF 最短路径 5 段链路（代价 2+3+1+1+2）→ 4 个路由器存储转发；1000B@100Mb/s = 0.08ms/跳；1000 个分组：首分组 0.08×5 = 0.4ms + 其余 999×0.08 流水到达 = <b>80.32ms</b>。答案 C。</div><div class=\"kp-sec\"><b>易错点</b><span class=\"kp-trap\">流水线公式：总时间 = 首分组走完全程 + (N−1)×单跳发送时延——数据 980B/分组要先用\"总长÷有效载荷\"算分组数，别用 1000B 直接除。</span></div>"
     },
     {
       "id": "cn_0380",
