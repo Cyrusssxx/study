@@ -272,7 +272,7 @@
     let _painterBtn = null;          // 当前高亮的格式刷按钮
     let _painterEl = null;           // 当前绑定的编辑器元素
     let _painterListening = false;   // 是否已挂 selectionchange 监听（全局只挂一次）
-    let _painterIgnoreUntil = 0;     // 回放后防连锁的时间戳（execCommand/后备 span 可能引发 selectionchange）
+    let _painterIgnoreUntil = 0;     // 回放后 120ms 防连锁小窗：只压 execCommand 自触发的 selectionchange 突发；人手连刷间隔远超此值不会被吞（旧 400ms 会吞快速连刷 →「刷着刷着停了」）
     let _painterTimer = null;        // 划选防抖定时器（selectionchange 连续触发时取最后一次稳定选区）
 
     // 当前选区是否就是捕获时的源选区（同边界）——是则跳过回放，
@@ -331,7 +331,7 @@
         _painterSrcRange = range.cloneRange();
         _painterEl = el;
         _painterBtn = btn || null;
-        // 重新武装后清除旧的防连锁窗口与待执行防抖，保证「第二次使用」第一次划选立即生效
+        // 重新武装后清除防连锁小窗与待执行防抖，保证「第二次使用」第一次划选立即生效
         _painterIgnoreUntil = 0;
         if (_painterTimer) { clearTimeout(_painterTimer); _painterTimer = null; }
         if (btn) btn.classList.add('painter-active');
@@ -340,7 +340,7 @@
                 if (!_painterFmt || !_painterEl) return;
                 // 编辑器已被重建/移除（切题、面板重开等）：武装自动失效，避免静默拦截新编辑器的划选
                 if (!_painterEl.isConnected) { window.cancelFormatPainter(); return; }
-                if (Date.now() < _painterIgnoreUntil) return;   // 回放刚结束的连锁窗口，忽略
+                if (Date.now() < _painterIgnoreUntil) return;   // 回放后 120ms 小窗：只压自触发连锁
                 const s = window.getSelection();
                 if (!s || s.isCollapsed || !s.rangeCount) return;
                 const r = s.getRangeAt(0);
@@ -360,7 +360,7 @@
             // 也避免快速连续划选时旧防抖残留吞掉下一次）
             document.addEventListener('mouseup', () => {
                 if (!_painterFmt || !_painterEl) return;
-                if (Date.now() < _painterIgnoreUntil) return;
+                if (Date.now() < _painterIgnoreUntil) return;   // 回放后 120ms 小窗
                 const s = window.getSelection();
                 if (!s || s.isCollapsed || !s.rangeCount) return;
                 const r = s.getRangeAt(0);
@@ -381,7 +381,7 @@
         _painterFmt = null;
         _painterEl = null;
         _painterSrcRange = null;
-        // 取消时同时清掉防连锁窗口与待执行防抖，否则旧窗口/旧定时器会吞掉下一次武装的首次划选
+        // 取消时同时清掉防连锁小窗与待执行防抖，否则旧窗口/旧定时器会吞掉下一次武装的首次划选
         _painterIgnoreUntil = 0;
         if (_painterTimer) { clearTimeout(_painterTimer); _painterTimer = null; }
         if (_painterBtn) { _painterBtn.classList.remove('painter-active'); _painterBtn = null; }
@@ -406,9 +406,9 @@
         if (fmt.italic && !st('italic')) document.execCommand('italic');
         if (fmt.hl) window.applyNoteHighlight(el, fmt.hl.replace(/^hl-/, ''));
         else if (fmt.hlRaw) window.applyNoteHighlight(el, fmt.hlRaw);
-        // 回放可能改变选区/触发 selectionchange → 短窗口内忽略，防止对同一选区重复回放；
-        // 用户继续刷下一个目标需重新划选，间隔远超此窗口
-        _painterIgnoreUntil = Date.now() + 400;
+        // 回放会触发 selectionchange（execCommand 改 DOM）→ 120ms 小窗只压这波自触发突发；
+        // 用户刷下一个目标（拖选+松开）远超 120ms，照常回放，不会像旧 400ms 那样被吞
+        _painterIgnoreUntil = Date.now() + 120;
         if (typeof onNoteInput === 'function') onNoteInput();
     };
 
