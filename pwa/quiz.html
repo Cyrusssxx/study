@@ -170,6 +170,8 @@
     let answered = {};  // {questionId: {answer, isCorrect}}
     let explanationShown = false;  // 当前题解析面板是否展开
     let noteShown = false;  // 当前题笔记面板是否展开
+    let kpShown = false;    // 收藏题「考点分析」面板是否展开
+    const _kpCache = { notes: {}, bank: {}, rows: null };   // 考点分析数据缓存：科目笔记/全量库/作答行
     // 题目是否有真正的笔记内容：文本去掉所有空白/HTML 标签/空 br 后看是否非空
     // ——旧版本只判断 !!q.note，导致只含 <br> 的"空气笔记"被算成有内容，触发自动展开看到空面板
     function hasRealNote(q) {
@@ -493,6 +495,7 @@
         }
         currentIndex = pi >= 0 ? pi : 0;
         explanationShown = false;
+        kpShown = false;
         noteShown = hasNoteOf(questions[currentIndex]);
         renderQuestion();
     }
@@ -743,6 +746,7 @@
         if (idx >= 0) {
             currentIndex = idx;
             explanationShown = false;
+            kpShown = false;
             noteShown = false;
             renderQuestion();
         } else {
@@ -885,10 +889,12 @@
                     <button class="btn-explanation ${noteShown ? 'active' : ''} ${(q.note || (q.note_images || []).length) ? 'has-note' : ''}" onclick="toggleNote()">
                         ${(q.note || (q.note_images || []).length) ? '笔记 ●' : '笔记'} ${noteShown ? '▴' : '▾'}
                     </button>
+                    ${q.is_favorited ? `<button class="btn-explanation kp-btn ${kpShown ? 'active' : ''}" onclick="toggleKp()" title="考点定位 + 该节笔记精华 + 个人数据 + 关联真题">考点分析 ${kpShown ? '▴' : '▾'}</button>` : ''}
                     ${status ? '<button class="btn-redo" onclick="redoQuestion()">重新作答 ↺</button>' : ''}
                 </div>
                 ${explanationHtml}
                 ${noteHtml}
+                ${kpShown && q.is_favorited ? '<div class="kp-panel" id="kpPanel"><div class="kp-loading">正在汇总考点…</div></div>' : ''}
             </div>
         `;
 
@@ -900,6 +906,10 @@
             bindNoteToolbar(noteInput);
         }
         renderNoteImages();
+
+        // 考点分析面板（收藏题）：数据异步汇总，就位后整体替换
+        const kpEl = document.getElementById('kpPanel');
+        if (kpEl) fillKp(q, kpEl);
 
         // 更新提交按钮状态（背题/快刷模式下隐藏：背题不可作答，快刷点选即判）
         const btnSubmit = document.getElementById('btnSubmit');
@@ -1065,6 +1075,7 @@
         flushNoteSave();
         currentIndex = i;
         explanationShown = false;
+        kpShown = false;
         noteShown = hasNoteOf(questions[i]);  // 有笔记（文本或图片）默认展开，没有不展开
         renderQuestion();
     }
@@ -1077,6 +1088,20 @@
     function toggleNote() {
         noteShown = !noteShown;
         renderQuestion();
+    }
+
+    function toggleKp() {
+        kpShown = !kpShown;
+        renderQuestion();
+    }
+
+    // ============ 收藏题「考点分析」面板：逐题 AI 专属分析（存题库 kp_analysis 字段，分批生成） ============
+    async function fillKp(q, el) {
+        if (q.kp_analysis) {
+            el.innerHTML = q.kp_analysis;
+        } else {
+            el.innerHTML = '<div class="kp-loading">该题暂未生成考点分析（1312 道收藏题分批生成中）</div>';
+        }
     }
 
     // 进入编辑态：恢复保存按钮（取消淡化）

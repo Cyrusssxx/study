@@ -1305,7 +1305,38 @@ body {
 /* ===== 答案解析面板 ===== */
 .question-tools {
     margin-top: 14px;
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 8px;
 }
+/* 「重新作答」顶到工具行最右 */
+.question-tools .btn-redo { margin-left: auto; }
+
+/* ===== 收藏题「考点分析」面板（逐题 AI 专属分析，题库 kp_analysis 字段） ===== */
+.kp-panel {
+    margin-top: 12px;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 12px 14px;
+    background: var(--card-bg, #fff);
+    font-size: .86rem;
+    line-height: 1.75;
+}
+.kp-sec { margin: 8px 0; }
+.kp-sec > b {
+    display: inline-block;
+    background: rgba(79, 70, 229, .10);
+    color: var(--primary);
+    padding: 1px 10px;
+    border-radius: 999px;
+    font-size: .76rem;
+    margin-right: 8px;
+}
+.kp-opt-ok { color: #16a34a; font-weight: 600; }
+.kp-opt-bad { color: #dc2626; }
+.kp-trap { color: #b45309; }
+.kp-loading { color: var(--text-light); font-size: .85rem; padding: 4px 0; }
 
 .btn-explanation {
     background: none;
