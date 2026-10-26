@@ -1272,6 +1272,17 @@ async function gradeExam(exam, answers) {
     exam.score = score;
     exam.status = 'submitted';
     exam.submitted_at = now();
+    // 实际用时（扣掉暂停）：墙钟 - 累计暂停 - 本次未结算的暂停。历史成绩优先用这个，
+    // 否则中途暂停 20 分钟会被算进「时长」里。
+    try {
+        const t0 = new Date(String(exam.started_at).replace(' ', 'T')).getTime();
+        const wall = Math.max(0, Math.floor((Date.now() - t0) / 1000));
+        const paused = (exam.paused_sec || 0) +
+            (exam.paused_at ? Math.max(0, Math.floor((Date.now() - exam.paused_at) / 1000)) : 0);
+        exam.paused_sec = paused;
+        exam.paused_at = null;
+        exam.used_sec = Math.max(0, wall - paused);
+    } catch (e) { exam.used_sec = 0; }
     await dbPut('exams', exam);
     return {
         exam_id: exam.id, total, correct, score,
@@ -1438,7 +1449,9 @@ async function examApi(action, body, arg) {
             mode, question_ids: picked.map(q => q.id), answers: {},
             total_count: picked.length, correct_count: 0, score: 0,
             duration_sec: duration, status: 'in_progress', started_at: now(), submitted_at: null,
-            record_wrong: body.record_wrong === false ? 0 : 1
+            record_wrong: body.record_wrong === false ? 0 : 1,
+            // 暂停计时：paused_sec = 累计已暂停秒数，paused_at = 本次暂停开始的毫秒时间戳（未暂停为 null）
+            paused_sec: 0, paused_at: null
         });
         return jsonResp({ exam_id: examId, duration_sec: duration, questions: picked.map(stripAnswer) });
     }
@@ -1457,8 +1470,12 @@ async function examApi(action, body, arg) {
         const active = (await dbAll('exams')).filter(e => e.status === 'in_progress').pop();
         if (!active) return jsonResp({ active: null });
         const started = new Date(active.started_at.replace(' ', 'T'));
-        // 超时不自动交卷：remaining_sec 允许为负，前端按"超时计时"展示，交卷由用户自己点
-        const remaining = active.duration_sec - Math.floor((Date.now() - started.getTime()) / 1000);
+        // 超时不自动交卷：remaining_sec 允许为负，前端按"超时计时"展示，交卷由用户自己点。
+        // 暂停期间不计入：实际计时 = 墙钟 - 累计已暂停 - 本次暂停至今
+        const wallSec = Math.floor((Date.now() - started.getTime()) / 1000);
+        const pausedSec = active.paused_sec || 0;
+        const pausedNowSec = active.paused_at ? Math.max(0, Math.floor((Date.now() - active.paused_at) / 1000)) : 0;
+        const remaining = active.duration_sec - (wallSec - pausedSec - pausedNowSec);
         const questions = [];
         for (const qid of active.question_ids) {
             const q = await getQuestionById(qid);
@@ -1466,8 +1483,34 @@ async function examApi(action, body, arg) {
         }
         return jsonResp({ active: {
             exam_id: active.id, mode: active.mode, remaining_sec: remaining,
-            duration_sec: active.duration_sec, answers: active.answers || {}, questions
+            duration_sec: active.duration_sec, answers: active.answers || {}, questions,
+            paused: !!active.paused_at, paused_sec: pausedSec + pausedNowSec
         }});
+    }
+
+    // 暂停 / 继续：暂停期间时间不走，刷新页面重进也不会被追回（active 按扣除后的实际计时重算）
+    if (action === 'pause') {
+        const exam = body.exam_id ? await dbGet('exams', body.exam_id) : null;
+        if (!exam) return jsonResp({ error: '考试不存在' }, 404);
+        if (exam.status !== 'in_progress') return jsonResp({ error: '考试不在进行中' }, 400);
+        if (!exam.paused_at) {
+            exam.paused_at = Date.now();
+            await dbPut('exams', exam);
+        }
+        return jsonResp({ success: true, paused_at: exam.paused_at, paused_sec: exam.paused_sec || 0 });
+    }
+
+    if (action === 'resume') {
+        const exam = body.exam_id ? await dbGet('exams', body.exam_id) : null;
+        if (!exam) return jsonResp({ error: '考试不存在' }, 404);
+        if (exam.status !== 'in_progress') return jsonResp({ error: '考试不在进行中' }, 400);
+        if (exam.paused_at) {
+            const add = Math.max(0, Math.floor((Date.now() - exam.paused_at) / 1000));
+            exam.paused_sec = (exam.paused_sec || 0) + add;
+            exam.paused_at = null;
+            await dbPut('exams', exam);
+        }
+        return jsonResp({ success: true, paused_sec: exam.paused_sec || 0 });
     }
 
     if (action === 'submit') {
@@ -1485,7 +1528,8 @@ async function examApi(action, body, arg) {
             .slice(0, 50)
             .map(e => ({
                 id: e.id, mode: e.mode, total_count: e.total_count, correct_count: e.correct_count,
-                score: e.score, duration_sec: e.duration_sec, started_at: e.started_at, submitted_at: e.submitted_at
+                score: e.score, duration_sec: e.duration_sec, started_at: e.started_at, submitted_at: e.submitted_at,
+                used_sec: e.used_sec || 0, paused_sec: e.paused_sec || 0
             }));
         // total = 全部会话（含进行中/已废弃），供"清除记录"确认弹窗提示
         return jsonResp({ records, total: all.length });

@@ -202,10 +202,13 @@ ok('模式徽章 exam_wrong 配色（亮/暗）', /\.mode-badge\[data-mode="exam
 ok('横幅样式（亮/暗）', /\.exam-replay-banner\s*\{/.test(CSS) && /\.dark \.exam-replay-banner\s*\{/.test(CSS));
 
 console.log('--- 考试计时：连续计时不闪烁 + 实际用时 ---');
-ok('enterExam 接收限时秒数', /function enterExam\(id, questions, answers, remaining, mode, durationSec\)/.test(EXAM_HTML) && /examDurationSec = durationSec |\| remaining;/.test(EXAM_HTML));
+// 签名后面追加了 paused / pausedSec（暂停器），老断言只认到 durationSec
+ok('enterExam 接收限时秒数', /function enterExam\(id, questions, answers, remaining, mode, durationSec[,)]/.test(EXAM_HTML) && /examDurationSec = durationSec \|\| remaining;/.test(EXAM_HTML));
 ok('超时显示总用时（不归零重计）', /⏰ \$\{mm}:\$\{ss}/.test(EXAM_HTML) && /examDurationSec - remainingSec/.test(EXAM_HTML) && !/\+\$\{mm}:\$\{ss}/.test(EXAM_HTML));
 ok('最后几分钟不再闪烁', !/timer-warning/.test(EXAM_HTML));
-ok('历史时长显示实际用时（含超时）', /实际用时 = 交卷时刻 - 开考时刻/.test(EXAM_HTML) && /t1 - t0/.test(EXAM_HTML));
+// 实际用时口径：优先后端结算的 used_sec（扣掉暂停），旧记录退回墙钟 t1 - t0
+ok('历史时长显示实际用时（优先 used_sec，扣除暂停）',
+  /rec\.used_sec \|\| 0/.test(EXAM_HTML) && /t1 - t0/.test(EXAM_HTML));
 
 console.log('--- 评分规则：2 分/题 + 多选错一不给分 ---');
 ok('gradeExam 得分 = 答对数 × 2（恒偶整数）', /const score = correct \* 2;/.test(BACKEND));

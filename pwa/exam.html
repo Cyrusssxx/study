@@ -117,6 +117,8 @@
         <div id="examView" style="display:none">
             <div class="exam-topbar">
                 <span class="exam-timer" id="examTimer">--:--</span>
+                <button class="btn btn-sm btn-secondary" id="examPauseBtn" onclick="togglePause()"
+                    title="暂停计时：暂停期间时间不走，可离开去喝水/上厕所，回来继续">⏸ 暂停</button>
                 <span class="exam-overtime" id="examOvertime" style="display:none;">时间到 · 可继续作答</span>
                 <span class="exam-progress" id="examProgress">已答 0/0</span>
                 <button class="btn btn-danger" onclick="confirmSubmit()">交卷</button>
@@ -130,6 +132,17 @@
             <div class="exam-nav">
                 <button class="btn btn-secondary" onclick="examPrev()">← 上一题</button>
                 <button class="btn btn-secondary" onclick="examNext()">下一题 →</button>
+            </div>
+
+            <!-- 暂停遮罩：全屏挡住题目，防止暂停期间偷看/误操作 -->
+            <div class="exam-pause-mask" id="examPauseMask" style="display:none;">
+                <div class="exam-pause-card">
+                    <div class="exam-pause-ico">⏸</div>
+                    <h3>计时已暂停</h3>
+                    <p>这段时间不计入考试用时，可以放心离开。<br>回来点下面的按钮继续作答。</p>
+                    <button class="btn btn-primary" onclick="togglePause()">▶ 继续考试</button>
+                    <div class="exam-pause-hint" id="examPauseHint"></div>
+                </div>
             </div>
         </div>
 
@@ -167,6 +180,7 @@
     let remainingSec = 0;
     let examDurationSec = 0;         // 限时秒数：计时延续显示用
     let timerHandle = null;
+    let isPaused = false;            // 暂停中：计时冻结、题目被遮罩挡住
     let examModeCurrent = 'favorites';   // 本场考试的模式（恢复会话时以会话里的为准）
 
     function show(view) {
@@ -309,8 +323,8 @@
         }
         if (data.active) {
             const a = data.active;
-            if (confirm(`检测到未完成的考试（${MODE_NAMES[a.mode] || a.mode}，${a.remaining_sec > 0 ? '剩余 ' + Math.ceil(a.remaining_sec / 60) + ' 分钟' : '已超时 ' + Math.ceil(-a.remaining_sec / 60) + ' 分钟'}），是否继续？\n取消将放弃该场考试。`)) {
-                enterExam(a.exam_id, a.questions, a.answers || {}, a.remaining_sec, a.mode, a.duration_sec);
+            if (confirm(`检测到未完成的考试（${MODE_NAMES[a.mode] || a.mode}，${a.remaining_sec > 0 ? '剩余 ' + Math.ceil(a.remaining_sec / 60) + ' 分钟' : '已超时 ' + Math.ceil(-a.remaining_sec / 60) + ' 分钟'}${a.paused ? '，当前为暂停状态' : ''}），是否继续？\n取消将放弃该场考试。`)) {
+                enterExam(a.exam_id, a.questions, a.answers || {}, a.remaining_sec, a.mode, a.duration_sec, a.paused, a.paused_sec || 0);
                 return;
             }
             // 放弃：静默废弃——重新组卷时会自动置为abandoned
@@ -318,7 +332,7 @@
         loadHistory();
     }
 
-    function enterExam(id, questions, answers, remaining, mode, durationSec) {
+    function enterExam(id, questions, answers, remaining, mode, durationSec, paused, pausedSec) {
         examId = id;
         examQuestions = questions;
         examAnswers = answers;
@@ -332,15 +346,22 @@
         document.getElementById('resultTitle').textContent = examTitle + ' - 成绩单';
         show('examView');
         renderExamQuestion();
-        startTimer();
+        if (paused) {
+            // 上次是在暂停中关掉页面的：原样恢复暂停态，不跑表
+            setPaused(true, pausedSec || 0);
+        } else {
+            startTimer();
+        }
     }
 
     // ============ 倒计时（到时只提示，不强制交卷） ============
     let overtimeNotified = false;
-    function startTimer() {
+    function startTimer(keepState) {
         clearInterval(timerHandle);
-        overtimeNotified = false;
-        document.getElementById('examOvertime').style.display = 'none';
+        if (!keepState) {
+            overtimeNotified = false;
+            document.getElementById('examOvertime').style.display = 'none';
+        }
         updateTimerText();
         timerHandle = setInterval(() => {
             remainingSec--;
@@ -350,6 +371,68 @@
             }
             updateTimerText();
         }, 1000);
+    }
+
+    // ============ 暂停 / 继续 ============
+    // 语义：暂停期间计时冻结，且时间不计入考试用时（后端记 paused_sec / paused_at，
+    // 刷新页面重进按扣除后的实际计时重算，暂停不会"白停"）。
+    async function togglePause() {
+        if (!examId) return;
+        if (isPaused) await resumeExam(); else await pauseExam();
+    }
+
+    async function pauseExam() {
+        // 先把当前答案存下（暂停往往意味着要离开页面）
+        try { await saveAnswers(); } catch (e) { }
+        try {
+            const r = await api('/api/exam/pause', {
+                method: 'POST', headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ exam_id: examId })
+            });
+            const d = await r.json();
+            if (d.error) { alert(d.error); return; }
+        } catch (e) { /* 离线也允许本地暂停，只是刷新后可能被墙钟追回 */ }
+        setPaused(true);
+    }
+
+    async function resumeExam() {
+        try {
+            await api('/api/exam/resume', {
+                method: 'POST', headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ exam_id: examId })
+            });
+        } catch (e) { }
+        setPaused(false);
+        startTimer(true);   // keepState：暂停前已超时的提示不要被清掉
+    }
+
+    function setPaused(p, pausedSec) {
+        isPaused = !!p;
+        const timerEl = document.getElementById('examTimer');
+        const btn = document.getElementById('examPauseBtn');
+        const mask = document.getElementById('examPauseMask');
+        const hint = document.getElementById('examPauseHint');
+        if (p) {
+            clearInterval(timerHandle);
+            timerHandle = null;
+            timerEl.textContent = '⏸ 暂停中';
+            timerEl.classList.add('timer-paused');
+            btn.textContent = '▶ 继续';
+            btn.classList.remove('btn-secondary');
+            btn.classList.add('btn-primary');
+            mask.style.display = 'flex';
+            const done = Math.floor(pausedSec || 0);
+            hint.textContent = done >= 60
+                ? `本场已累计暂停 ${Math.floor(done / 60)} 分 ${done % 60} 秒`
+                : '本场尚未累计暂停时长';
+        } else {
+            timerEl.classList.remove('timer-paused');
+            btn.textContent = '⏸ 暂停';
+            btn.classList.add('btn-secondary');
+            btn.classList.remove('btn-primary');
+            mask.style.display = 'none';
+            updateTimerText();
+        }
     }
 
     function updateTimerText() {
@@ -443,11 +526,9 @@
         document.getElementById('examProgress').textContent = `已答 ${done}/${examQuestions.length}`;
     }
 
-    async function pickAnswer(qid, key) {
-        examAnswers[qid] = key;
-        renderExamNumbers();
-        updateProgress();
-        // 随选随存，崩溃/刷新可恢复
+    // 答案落库：随选随存 + 暂停时也存一次（暂停往往意味着要离开页面，崩溃/刷新可恢复）
+    async function persistAnswers() {
+        if (!examId) return;
         try {
             await api('/api/exam/save', {
                 method: 'POST',
@@ -457,9 +538,16 @@
         } catch (e) { /* 保存异常不打断作答，交卷时以最终 answers 为准 */ }
     }
 
-    function examGoto(i) { examIndex = i; renderExamQuestion(); }
-    function examPrev() { if (examIndex > 0) { examIndex--; renderExamQuestion(); } }
-    function examNext() { if (examIndex < examQuestions.length - 1) { examIndex++; renderExamQuestion(); } }
+    async function pickAnswer(qid, key) {
+        examAnswers[qid] = key;
+        renderExamNumbers();
+        updateProgress();
+        await persistAnswers();
+    }
+
+    function examGoto(i) { if (isPaused) return; examIndex = i; renderExamQuestion(); }
+    function examPrev() { if (isPaused) return; if (examIndex > 0) { examIndex--; renderExamQuestion(); } }
+    function examNext() { if (isPaused) return; if (examIndex < examQuestions.length - 1) { examIndex++; renderExamQuestion(); } }
 
     // ============ 交卷 ============
     function confirmSubmit() {
@@ -471,6 +559,17 @@
 
     async function doSubmit() {
         clearInterval(timerHandle);
+        // 暂停中直接交卷：先结算暂停，让成绩单里的「用时」不吃掉暂停时长
+        if (isPaused) {
+            try {
+                await api('/api/exam/resume', {
+                    method: 'POST', headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ exam_id: examId })
+                });
+            } catch (e) { }
+            isPaused = false;
+            document.getElementById('examPauseMask').style.display = 'none';
+        }
         const resp = await api('/api/exam/submit', {
             method: 'POST',
             headers: {'Content-Type': 'application/json'},
@@ -603,13 +702,16 @@
         }
         let html = '<table class="history-table"><tr><th><input type="checkbox" id="histSelAll" onchange="histToggleAll(this)" title="全选/全不选"></th><th>时间</th><th>模式</th><th>得分</th><th>答对</th><th>时长</th><th>回顾</th></tr>';
         for (const rec of records) {
-            // 实际用时 = 交卷时刻 - 开考时刻（含超时部分：限时 60 分钟用了 70 分钟就显示 70）
-            let durSec = rec.duration_sec;
-            try {
-                const t0 = new Date(String(rec.started_at || '').replace(' ', 'T')).getTime();
-                const t1 = new Date(String(rec.submitted_at || rec.started_at || '').replace(' ', 'T')).getTime();
-                if (isFinite(t0) && isFinite(t1) && t1 > t0) durSec = Math.round((t1 - t0) / 1000);
-            } catch (e) { }
+            // 实际用时：优先用后端结算的 used_sec（已扣除暂停时长）；旧记录没有该字段时才退回墙钟
+            let durSec = rec.used_sec || 0;
+            if (!durSec) {
+                durSec = rec.duration_sec;
+                try {
+                    const t0 = new Date(String(rec.started_at || '').replace(' ', 'T')).getTime();
+                    const t1 = new Date(String(rec.submitted_at || rec.started_at || '').replace(' ', 'T')).getTime();
+                    if (isFinite(t0) && isFinite(t1) && t1 > t0) durSec = Math.round((t1 - t0) / 1000);
+                } catch (e) { }
+            }
             html += `<tr>
                 <td><input type="checkbox" class="hist-sel" data-id="${rec.id}" onchange="histSelChange()"></td>
                 <td>${rec.submitted_at || rec.started_at}</td>

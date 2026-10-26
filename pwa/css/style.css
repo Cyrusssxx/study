@@ -2416,6 +2416,69 @@ mark {
     border-color: rgba(255, 90, 90, 0.32);
 }
 
+/* ===== 模拟考试：暂停计时 ===== */
+/* 暂停中：计时器退成中性色，避免和"倒计时告警"抢注意力 */
+.exam-timer.timer-paused {
+    color: var(--text-light);
+    font-size: 1.15rem;
+    letter-spacing: .04em;
+}
+
+/* 全屏遮罩：挡住题目/题号/顶栏，防止暂停期间偷看或误操作。
+   z-index 90 —— 低于导航栏(100)，用户想离开页面走导航仍可行；
+   回到页面时后端记着 paused_at，会原样恢复成暂停态。 */
+.exam-pause-mask {
+    position: fixed;
+    inset: 0;
+    z-index: 90;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    background: rgba(18, 24, 33, .7);
+    -webkit-backdrop-filter: blur(6px);
+    backdrop-filter: blur(6px);
+}
+
+.exam-pause-card {
+    width: min(92vw, 380px);
+    text-align: center;
+    background: var(--card-bg);
+    border-radius: 16px;
+    padding: 28px 24px 20px;
+    box-shadow: 0 20px 56px rgba(0, 0, 0, .3);
+}
+
+.exam-pause-ico {
+    font-size: 2.1rem;
+    line-height: 1;
+    margin-bottom: 12px;
+    color: var(--primary);
+}
+
+.exam-pause-card h3 {
+    margin: 0 0 8px;
+    font-size: 1.05rem;
+}
+
+.exam-pause-card p {
+    margin: 0 0 18px;
+    font-size: .87rem;
+    line-height: 1.75;
+    color: var(--text-light);
+}
+
+.exam-pause-card .btn {
+    width: 100%;
+}
+
+.exam-pause-hint {
+    margin-top: 10px;
+    font-size: .76rem;
+    color: var(--text-light);
+    font-variant-numeric: tabular-nums;
+}
+
 /* ===== 模拟考试：逐题回顾卡片 ===== */
 .review-item {
     background: var(--card-bg);
