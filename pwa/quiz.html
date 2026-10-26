@@ -540,6 +540,17 @@
 
             // 恢复历史答题记录（last_status），刷新/跳转页面后不丢失
             for (const q of questions) {
+                // 试卷回顾 / 错题重刷：以**本场试卷的作答**为准，不用全局 last_status
+                // （后者可能已被后续刷题覆盖，拿它会把对错显示错）。
+                // 未作答的题不写 answered —— 题号保持中性色，不谎报"错"。
+                if ((MODE === 'exam_review' || MODE === 'exam_wrong') && q.exam_user_answer) {
+                    answered[q.id] = {
+                        answer: q.exam_user_answer,
+                        isCorrect: q.answer ? q.exam_user_answer === q.answer : null,
+                        correctAnswer: q.answer || ''
+                    };
+                    continue;
+                }
                 if (q.last_status && !answered[q.id]) {
                     answered[q.id] = {
                         answer: q.last_status.user_answer,
@@ -1027,11 +1038,29 @@
 
     // ============ 右侧题号面板：只显示当前章，按小节分组，点击跳转 ============
     function numBtnHtml(i, label) {
-        const st = answered[questions[i].id];
+        const q = questions[i];
+        const st = answered[q.id];
         let cls = 'num-btn';
         if (st) cls += st.isCorrect === true ? ' correct' : (st.isCorrect === false ? ' wrong' : ' done');
         if (i === currentIndex) cls += ' current';
-        return `<button class="${cls}" onclick="gotoQuestion(${i})">${label}</button>`;
+        // 已加入「下次练习池」的题：左上角小圆点（黄=不熟，红=不会），与错题红底不冲突
+        if (q.is_unfamiliar) cls += ' unm';
+        else if (q.is_dontknow) cls += ' dk';
+        // 试卷回顾/错题重刷：题号右下角标出「本场选了什么」——答对绿、答错红，不用点进去也能复盘
+        let opt = '';
+        if (MODE === 'exam_review' || MODE === 'exam_wrong') {
+            opt = (st && st.answer) || q.exam_user_answer || '';
+        }
+        let optHtml = '';
+        if (opt) {
+            const lvl = opt.length >= 3 ? 'l3' : opt.length === 2 ? 'l2' : 'l1';   // 多空题答案如 BAA，字号逐级缩小
+            optHtml = `<i class="num-opt ${lvl}">${opt}</i>`;
+            cls += ' has-opt';
+        }
+        const verdict = !opt ? '未作答'
+            : (st && st.isCorrect === true ? '答对' : st && st.isCorrect === false ? '答错' : '');
+        const tip = opt ? ` title="第 ${label} 题 · 本场选了 ${opt}${verdict ? '（' + verdict + '）' : ''}"` : '';
+        return `<button class="${cls}"${tip} onclick="gotoQuestion(${i})">${label}${optHtml}</button>`;
     }
 
     function renderNumberPanel() {
@@ -1480,6 +1509,15 @@
                 q.is_unfamiliar = !!result.is_unfamiliar;
                 q.is_dontknow = !!result.is_dontknow;
                 renderQuestion();
+                renderNumberPanel();   // 题号面板的「已加入练习池」小圆点要同步
+            }
+            // 标记类操作给一次轻反馈：不熟的题就是"下次练习池"的来源，不能静默
+            if (kind === 'unfamiliar') {
+                showTip(result.is_unfamiliar
+                    ? '已加入下次练习池 · 模拟考可选「仅不熟题」'
+                    : '已移出下次练习池');
+            } else {
+                showTip(result.is_dontknow ? '已标为「不会」· 也在下次练习池里' : '已取消「不会」标记');
             }
             // 若本次操作导致「当前模式的集合」发生变化（取消标记），重载列表
             const removedFromCurrent =
@@ -1490,6 +1528,21 @@
         } catch (e) {
             console.error('标记失败:', e);
         }
+    }
+
+    // 轻提示：底部浮一条，1.8s 自动消失（标记类操作反馈用，不打断做题）
+    function showTip(text) {
+        let el = document.getElementById('quizTip');
+        if (!el) {
+            el = document.createElement('div');
+            el.id = 'quizTip';
+            el.className = 'quiz-tip';
+            document.body.appendChild(el);
+        }
+        el.textContent = text;
+        el.classList.add('show');
+        clearTimeout(el._hideTimer);
+        el._hideTimer = setTimeout(() => el.classList.remove('show'), 1800);
     }
 
     async function resetFavProgress() {

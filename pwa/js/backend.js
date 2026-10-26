@@ -535,10 +535,16 @@ async function api(url, opts = {}) {
                 }
                 const idSet = new Set(wrongIds);
                 const orderMap = new Map(wrongIds.map((id, i) => [id, i]));
+                // 不熟/不会标记：题号面板要显示"这题已加入下次练习池"，随题带出
+                const unfamSet = new Set((await dbAll('unfamiliar')).map(x => x.question_id));
+                const dkSet = new Set((await dbAll('dontknow')).map(x => x.question_id));
                 qs = [];
                 for (const k of Object.keys(SUBJECTS)) {
                     for (const q of (await loadQuestions(k)).questions) {
-                        if (idSet.has(q.id)) qs.push(Object.assign({}, q, { exam_user_answer: examUa[q.id] || '', wrong_count: wrongCntMap[q.id] || 0 }));
+                        if (idSet.has(q.id)) qs.push(Object.assign({}, q, {
+                            exam_user_answer: examUa[q.id] || '', wrong_count: wrongCntMap[q.id] || 0,
+                            is_unfamiliar: unfamSet.has(q.id), is_dontknow: dkSet.has(q.id)
+                        }));
                     }
                 }
                 qs.sort((a, b) => orderMap.get(a.id) - orderMap.get(b.id));
@@ -1296,7 +1302,7 @@ async function examApi(action, body, arg) {
     if (action === 'generate') {
         const mode = body.mode || 'favorites';
         const count = parseInt(body.count || 0, 10);
-        const isSpecial = mode === 'favorites' || mode === 'wrong';
+        const isSpecial = mode === 'favorites' || mode === 'wrong' || mode === 'unfamiliar';
         const isSingle = !!SUBJECTS[mode];
         if (!isSpecial && !isSingle && mode !== 'full') {
             return jsonResp({ error: '无效的考试模式' }, 400);
@@ -1308,9 +1314,15 @@ async function examApi(action, body, arg) {
         const poolBySub = {};
         for (const k of EXAM_SUBJECT_ORDER) poolBySub[k] = [];
         if (isSpecial) {
-            const rows = mode === 'favorites'
-                ? await dbAll('favorites')
-                : (await dbAll('wrong')).filter(w => !w.is_resolved);
+            // 三个特殊池：收藏 / 未解决错题 / 不熟题（unfamiliar + dontknow 两个标记合并）
+            let rows;
+            if (mode === 'favorites') {
+                rows = await dbAll('favorites');
+            } else if (mode === 'unfamiliar') {
+                rows = [...(await dbAll('unfamiliar')), ...(await dbAll('dontknow'))];
+            } else {
+                rows = (await dbAll('wrong')).filter(w => !w.is_resolved);
+            }
             for (const r of rows) {
                 const qid = r.question_id || '';
                 const subj = qid.split('_')[0];

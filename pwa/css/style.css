@@ -1077,6 +1077,7 @@ body {
 }
 
 .num-btn {
+    position: relative;
     height: 32px;
     border: 1px dashed #c8cdd4;
     border-radius: 8px;
@@ -1118,6 +1119,66 @@ body {
 
 .num-btn.current.correct { color: #2e7d32; }
 .num-btn.current.wrong { color: #c62828; }
+
+/* 试卷回顾 / 错题重刷：题号右下角标出「本场选了哪个选项」
+   答对 = 绿格绿字，答错 = 红格红字，不点进去也能一眼复盘。
+   多空题答案形如 BAA，按长度分三档缩字号，避免撑破 32px 的格子。 */
+.num-btn.has-opt { position: relative; }
+.num-btn .num-opt {
+    position: absolute;
+    right: 3px;
+    bottom: 1px;
+    font-style: normal;
+    font-weight: 600;
+    line-height: 1;
+    letter-spacing: 0;
+    opacity: .9;
+    pointer-events: none;
+}
+.num-btn .num-opt.l1 { font-size: 0.58rem; }
+.num-btn .num-opt.l2 { font-size: 0.5rem; }
+.num-btn .num-opt.l3 { font-size: 0.44rem; }
+
+/* 已加入「下次练习池」的题：左上角小圆点（黄=不熟，红=不会）。
+   用角点而不是整格换色 —— 错题/答对已经占了底色，两者要能同时显示。 */
+.num-btn.unm::after,
+.num-btn.dk::after {
+    content: '';
+    position: absolute;
+    left: 3px;
+    top: 3px;
+    width: 5px;
+    height: 5px;
+    border-radius: 50%;
+    pointer-events: none;
+}
+.num-btn.unm::after { background: #f0b429; }
+.num-btn.dk::after { background: #e24b4a; }
+
+/* 标记类操作的轻提示（底部浮一条，1.8s 自动消失） */
+.quiz-tip {
+    position: fixed;
+    left: 50%;
+    bottom: 40px;
+    transform: translate(-50%, 12px);
+    z-index: 3000;
+    max-width: 80vw;
+    padding: 9px 16px;
+    border-radius: 10px;
+    background: rgba(24, 30, 40, .9);
+    color: #fff;
+    font-size: 0.84rem;
+    line-height: 1.5;
+    text-align: center;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity .18s ease, transform .18s ease;
+}
+
+.quiz-tip.show {
+    opacity: 1;
+    transform: translate(-50%, 0);
+}
 
 .sidebar-title {
     padding: 14px 16px;
