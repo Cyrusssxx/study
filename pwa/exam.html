@@ -61,8 +61,8 @@
                     <span>待抽收藏题（没做过）</span>
                 </div>
                 <div class="pool-cell">
-                    <b id="psCooling">--</b>
-                    <span>冷却中（7 天内做过）</span>
+                    <b id="psCorrect">--</b>
+                    <span>做过·答对（最低优先）</span>
                 </div>
                 <div class="pool-cell">
                     <b id="psUnfam">--</b>
@@ -822,6 +822,8 @@
         const extra = total > records.length
             ? `，另有 ${total - records.length} 场进行中/已放弃的会话将一并删除` : '';
         if (!confirm(`确定清除全部模拟考记录吗？\n已完成 ${records.length} 场${extra}，删除后不可恢复。`)) return;
+        // 二次确认：不可逆操作，第一下可能是手滑，第二下才算数
+        if (!confirm(`再确认一次：\n\n即将删除 ${total} 场会话的全部成绩单、得分统计与错题回顾入口，\n删除后无法恢复。\n\n真的要清除吗？`)) return;
         const r2 = await api('/api/exam/clear', {
             method: 'POST', headers: { 'Content-Type': 'application/json' }, body: '{}'
         });
@@ -839,21 +841,22 @@
         loadPoolStats();   // 刚交完一场，池子数字变了（冷却中 +N）
     }
 
-    // 池子统计：待抽收藏题 / 冷却中 / 不熟 / 不会（口径与后端抽题一致，都按 7 天冷却算）
+    // 池子统计：待抽收藏题 / 做过答对 / 不熟 / 不会（口径与后端抽题分层一致）
     async function loadPoolStats() {
         try {
             const d = await (await api('/api/exam/pool')).json();
             if (d.error) return;
             const set = (id, v) => { const el = document.getElementById(id); if (el) el.textContent = v; };
             set('psFresh', d.favorites_fresh);
-            set('psCooling', d.favorites_cooling);
+            set('psCorrect', d.favorites_correct);
             set('psUnfam', d.unfamiliar);
             set('psDk', d.dontknow);
             const bar = document.getElementById('examPoolBar');
             if (bar) {
-                bar.title = `收藏池共 ${d.favorites_total} 题：待抽 ${d.favorites_fresh} · 冷却中 ${d.favorites_cooling}`
-                    + ` · 已过冷却可轮转 ${d.favorites_ready} · 到期错题 ${d.due_wrong}`
-                    + `（答过的题 ${d.cooldown_days} 天内不再抽）`;
+                bar.title = `收藏池共 ${d.favorites_total} 题：待抽 ${d.favorites_fresh}`
+                    + ` · 做过的错题 ${d.favorites_wrongish} · 做过的对题 ${d.favorites_correct}`
+                    + `\n到期错题 ${d.due_wrong} · 模拟考错题 ${d.exam_wrong}`
+                    + `\n7 天后重练：待到期 ${d.redo_pending} · 已到期 ${d.redo_due}`;
             }
         } catch (e) { /* 统计失败不挡组卷 */ }
     }

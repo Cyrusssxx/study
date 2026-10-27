@@ -470,6 +470,13 @@ body {
     color: #dc3545;
     font-weight: 600;
 }
+/* 7 天后重练 → 蓝（时间排期标记，与"掌握程度"的黄/红区分开） */
+.mark-btn.mark-redo {
+    background: rgba(55, 138, 221, 0.14);
+    border-color: #378add;
+    color: #2b6cb0;
+    font-weight: 600;
+}
 .dark .mark-btn.mark-unfamiliar {
     color: #e6c74f;
     border-color: #e6c74f;
@@ -479,6 +486,11 @@ body {
     color: #ff6b6b;
     border-color: #ff6b6b;
     background: rgba(255, 107, 107, 0.16);
+}
+.dark .mark-btn.mark-redo {
+    color: #74b3f0;
+    border-color: #74b3f0;
+    background: rgba(116, 179, 240, 0.16);
 }
 
 /* 答题页面 */
@@ -1154,6 +1166,19 @@ body {
 }
 .num-btn.unm::after { background: #f0b429; }
 .num-btn.dk::after { background: #e24b4a; }
+
+/* 已排「7 天后重练」：右上角蓝点（右下角留给选项字母） */
+.num-btn.redo::after {
+    content: '';
+    position: absolute;
+    right: 3px;
+    top: 3px;
+    width: 5px;
+    height: 5px;
+    border-radius: 50%;
+    background: #378add;
+    pointer-events: none;
+}
 
 /* 标记类操作的轻提示（底部浮一条，1.8s 自动消失） */
 .quiz-tip {

@@ -129,7 +129,9 @@ async function waitFor(fn, ms = 5000) {
   check('saveNote 不再用响应回写 note_images', /q\.note_images\s*=\s*result\.images/.test(QUIZ_SRC), false);
   check('saveNote 不再用响应回写 note', /q\.note\s*=\s*result\.note/.test(QUIZ_SRC), false);
   check('存在串行保存链 _noteSaveChain', /_noteSaveChain/.test(QUIZ_SRC), true);
-  check('DB_VER 已提升到 3', /const DB_VER = 3;/.test(BACKEND_SRC), true);
+  // 这条断言的本意是「新增 store 必须提升 DB_VER」，不是锁死某个版本号
+  const dbVer = (BACKEND_SRC.match(/const DB_VER = (\d+);/) || [])[1];
+  check('DB_VER 已提升到 3 以上（新增 store 必须升版本）', Number(dbVer) >= 3, true);
 
   // ---------- 场景 1：一次粘贴两张 ----------
   console.log('\n--- 场景 1：一次粘贴 2 张图 ---');

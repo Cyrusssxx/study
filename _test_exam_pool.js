@@ -1,21 +1,13 @@
-// 模拟考抽题：7 天冷却 + 池子统计 回归测试
+// 模拟考抽题分层 + 池子统计 + 7 天后重练 回归测试
 //
-// 用户规则：模拟考里答过的题，7 天内不再被抽到；满 7 天后才重新进抽取池。
-// 原实现只有「答错的题 4 天后重抽」，答对的题走时间队列、没有冷却 ——
-// 收藏池小的时候会出现「刚做完又抽到」，等于没练。
+// 用户规则（2026-10-27 修订）：
+//   1) 答对的题**不要 7 天冷却**，改为优先级最低 —— 排在"做过的错题"之后，
+//      只要上面几层抽完就照样抽到（不是"永远不抽"）
+//   2) 错题的 7 天重抽门槛保留
+//   3) 试卷回顾里做对的题，可手动排进"7 天后重练"池
 //
-// 覆盖：
-//   一、抽题顺序（真跑 examApi generate）
-//      1) 没做过 → 已过冷却（最早做的先） → 冷却中（兜底）
-//      2) 冷却中的题在池子够用时不会被抽到
-//   二、到期错题门槛
-//      3) 答错 5 天前 → 未满 7 天，不进 due
-//      4) 答错 8 天前 → 进 due，且排最前
-//   三、池子统计 /api/exam/pool
-//      5) 收藏池总数 / 待抽（没做过）/ 冷却中 / 已过冷却
-//      6) 不熟 / 不会 数量
-//   四、前端
-//      7) 设置页有 4 个统计格 + loadPoolStats 接线
+// 分层顺序：due（到期错题 + 到期重练）→ fresh（没做过）→ wrongish（做过且错题未解决）
+//           → correct（做过且答对）
 //
 // 用法：NODE_PATH=<workspace>/node_modules node _test_exam_pool.js
 const fs = require('fs');
@@ -32,6 +24,7 @@ if (!JSDOM || !IDBFactory) {
 
 const ROOT = __dirname;
 const EXAM_SRC = fs.readFileSync(path.join(ROOT, 'pwa/exam.html'), 'utf8');
+const QUIZ_SRC = fs.readFileSync(path.join(ROOT, 'pwa/quiz.html'), 'utf8');
 const BACKEND_SRC = fs.readFileSync(path.join(ROOT, 'pwa/js/backend.js'), 'utf8');
 const CSS = fs.readFileSync(path.join(ROOT, 'pwa/css/style.css'), 'utf8');
 
@@ -96,15 +89,28 @@ const DAY = 86400000;
     tx.oncomplete = res; tx.onerror = () => rej(tx.error);
   });
 
-  // 收藏池 3 题：1 没做过 / 2 三天前做过（冷却中）/ 3 十天前做过（已过冷却）
-  await put('favorites', [
-    { question_id: 'cn_0001', subject: 'cn', added_at: fmt(Date.now() - 30 * DAY) },
-    { question_id: 'cn_0002', subject: 'cn', added_at: fmt(Date.now() - 30 * DAY) },
-    { question_id: 'cn_0003', subject: 'cn', added_at: fmt(Date.now() - 30 * DAY) }
-  ]);
+  // 收藏池 6 题，覆盖四层：
+  //   cn_0001 没做过                        → fresh
+  //   cn_0002 3 天前做过、答对              → correct（最低优先，但没有冷却）
+  //   cn_0003 3 天前做过、答错且未解决      → wrongish（未满 7 天，不进 due）
+  //   cn_0004 8 天前答错且未解决            → due（到期错题）
+  //   cn_0005 没做过，但被排了已到期的重练  → due（重练层，排在错题之后）
+  //   cn_0006 排了未到期的重练              → 不参与本轮
+  await put('favorites', [1, 2, 3, 4, 5, 6].map(n => ({
+    question_id: 'cn_000' + n, subject: 'cn', added_at: fmt(Date.now() - 30 * DAY)
+  })));
   await put('progress', [
     { question_id: 'cn_0002', subject: 'cn', answered_at: fmt(Date.now() - 3 * DAY), is_correct: 1, user_answer: 'A' },
-    { question_id: 'cn_0003', subject: 'cn', answered_at: fmt(Date.now() - 10 * DAY), is_correct: 1, user_answer: 'A' }
+    { question_id: 'cn_0003', subject: 'cn', answered_at: fmt(Date.now() - 3 * DAY), is_correct: 0, user_answer: 'B' },
+    { question_id: 'cn_0004', subject: 'cn', answered_at: fmt(Date.now() - 8 * DAY), is_correct: 0, user_answer: 'C' }
+  ]);
+  await put('wrong', [
+    { question_id: 'cn_0003', subject: 'cn', wrong_count: 1, is_resolved: 0, last_wrong_at: fmt(Date.now() - 3 * DAY) },
+    { question_id: 'cn_0004', subject: 'cn', wrong_count: 1, is_resolved: 0, last_wrong_at: fmt(Date.now() - 8 * DAY) }
+  ]);
+  await put('redo', [
+    { question_id: 'cn_0005', subject: 'cn', added_at: fmt(Date.now() - 10 * DAY), due_at: Date.now() - DAY },
+    { question_id: 'cn_0006', subject: 'cn', added_at: fmt(Date.now()), due_at: Date.now() + 5 * DAY }
   ]);
 
   const gen = (mode, count) => w.api('/api/exam/generate', {
@@ -112,73 +118,68 @@ const DAY = 86400000;
     body: JSON.stringify({ mode, count })
   }).then(r => r.json());
 
-  console.log('--- 一、抽题顺序：没做过 → 已过冷却 → 冷却中 ---');
-  const g1 = await gen('favorites', 5);
-  check('组卷成功', !!g1.exam_id, true);
-  const order = (g1.questions || []).map(q => q.id);
-  check('前 3 题顺序 = 没做过(cn_0001) → 已过冷却(cn_0003) → 冷却中(cn_0002)',
-    order.slice(0, 3), ['cn_0001', 'cn_0003', 'cn_0002']);
-  check('池子只有 3 题，其余从全题库补足到 5', order.length, 5);
+  console.log('--- 一、抽题分层顺序 ---');
+  const g = await gen('favorites', 6);
+  check('组卷成功', !!g.exam_id, true);
+  const ids = (g.questions || []).map(q => q.id);
+  const at = id => ids.indexOf(id);
+  check('抽出 6 题', ids.length, 6);
+  check('到期错题 cn_0004 排最前', at('cn_0004'), 0);
+  check('没做过的 cn_0001 在"做过的对题"之前', at('cn_0001') < at('cn_0002'), true);
+  check('做过的错题 cn_0003 在"做过的对题"之前', at('cn_0003') < at('cn_0002'), true);
+  check('答对的 cn_0002 排在最后一位', at('cn_0002'), ids.length - 1);
+  check('到期重练 cn_0005 也进池（排在到期错题之后）', at('cn_0005') > at('cn_0004') && at('cn_0005') >= 0, true);
+  // cn_0006 本身没做过，所以它作为普通新题仍在池里；关键是它不能进 due 层
+  check('未到期的重练 cn_0006 不进 due 层（排在到期重练之后）', at('cn_0006') > at('cn_0005'), true);
 
-  console.log('\n--- 二、池子够用时，冷却中的题不出现 ---');
-  // 再加两题没做过的收藏题 → 池子 5 题，请求 3 题时冷却中的 cn_0002 应被排除
-  await put('favorites', [
-    { question_id: 'cn_0004', subject: 'cn', added_at: fmt(Date.now() - 20 * DAY) },
-    { question_id: 'cn_0005', subject: 'cn', added_at: fmt(Date.now() - 20 * DAY) }
-  ]);
-  const g2 = await gen('favorites', 5);
-  const order2 = (g2.questions || []).map(q => q.id);
-  check('5 题请求里，冷却中的 cn_0002 排最后（前 4 题不含它）',
-    order2.slice(0, 4).includes('cn_0002'), false);
-  check('没做过的三题排最前', order2.slice(0, 3).sort(), ['cn_0001', 'cn_0004', 'cn_0005']);
+  console.log('\n--- 二、答对的题不再有 7 天冷却 ---');
+  check('3 天前答对的题仍被抽到（没有冷却硬排除）', at('cn_0002') >= 0, true);
+  check('源码里已无 cooling 层', /cooling\.push\(q\)/.test(BACKEND_SRC), false);
+  check('源码分层 = due + fresh + wrongish + correct',
+    /return due\.concat\(fresh, wrongish, correct\)/.test(BACKEND_SRC), true);
 
-  console.log('\n--- 三、到期错题门槛：满 7 天才进 due ---');
-  // cn_0006 答错 5 天前 → 未满 7 天，不进 due
-  await put('wrong', [{ question_id: 'cn_0006', subject: 'cn', wrong_count: 1, is_resolved: 0, last_wrong_at: fmt(Date.now() - 5 * DAY) }]);
-  await put('progress', [{ question_id: 'cn_0006', subject: 'cn', answered_at: fmt(Date.now() - 5 * DAY), is_correct: 0, user_answer: 'B' }]);
-  let pool = await w.api('/api/exam/pool').then(r => r.json());
-  check('答错 5 天：不算到期错题', pool.due_wrong, 0);
+  console.log('\n--- 三、池子统计与抽题同口径 ---');
+  const pool = await w.api('/api/exam/pool').then(r => r.json());
+  check('收藏池总数 6', pool.favorites_total, 6);
+  check('待抽（没做过）3 题（cn_0001 / cn_0005 / cn_0006）', pool.favorites_fresh, 3);
+  check('做过的错题 2 题（cn_0003 / cn_0004）', pool.favorites_wrongish, 2);
+  check('做过的对题 1 题（cn_0002）', pool.favorites_correct, 1);
+  check('三层之和 = 收藏总数',
+    pool.favorites_fresh + pool.favorites_wrongish + pool.favorites_correct, pool.favorites_total);
+  check('到期错题 1 题', pool.due_wrong, 1);
+  check('重练池：已到期 1 / 待到期 1', [pool.redo_due, pool.redo_pending], [1, 1]);
 
-  // 改成 8 天前 → 进 due
-  await put('wrong', [{ question_id: 'cn_0006', subject: 'cn', wrong_count: 1, is_resolved: 0, last_wrong_at: fmt(Date.now() - 8 * DAY) }]);
-  await put('progress', [{ question_id: 'cn_0006', subject: 'cn', answered_at: fmt(Date.now() - 8 * DAY), is_correct: 0, user_answer: 'B' }]);
-  pool = await w.api('/api/exam/pool').then(r => r.json());
-  check('答错 8 天：算到期错题', pool.due_wrong, 1);
+  console.log('\n--- 四、7 天后重练：加入 / 取消 ---');
+  const r1 = await w.api('/api/mark/redo/cn_0007', { method: 'POST' }).then(r => r.json());
+  check('加入成功', r1.is_redo, true);
+  check('回传冷却天数 7', r1.days, 7);
+  check('due_at 约为 7 天后', Math.abs(r1.due_at - (Date.now() + 7 * DAY)) < 5000, true);
+  const pool2 = await w.api('/api/exam/pool').then(r => r.json());
+  check('重练池待到期 +1', pool2.redo_pending, 2);
 
-  console.log('\n--- 四、池子统计 ---');
-  await put('unfamiliar', [{ question_id: 'cn_0007', subject: 'cn', added_at: fmt(Date.now()) }]);
-  await put('dontknow', [
-    { question_id: 'cn_0008', subject: 'cn', added_at: fmt(Date.now()) },
-    { question_id: 'cn_0001', subject: 'cn', added_at: fmt(Date.now()) }
-  ]);
-  pool = await w.api('/api/exam/pool').then(r => r.json());
-  check('收藏池总数 5', pool.favorites_total, 5);
-  check('待抽（没做过）3 题', pool.favorites_fresh, 3);
-  check('冷却中 1 题', pool.favorites_cooling, 1);
-  check('已过冷却可轮转 1 题', pool.favorites_ready, 1);
-  check('不熟 1 题', pool.unfamiliar, 1);
-  check('不会 2 题', pool.dontknow, 2);
-  check('冷却天数回传 7', pool.cooldown_days, 7);
-  check('四项之和 = 收藏总数', pool.favorites_fresh + pool.favorites_cooling + pool.favorites_ready, pool.favorites_total);
+  const r2 = await w.api('/api/mark/redo/cn_0007', { method: 'POST' }).then(r => r.json());
+  check('再次点击取消', r2.is_redo, false);
+  const pool3 = await w.api('/api/exam/pool').then(r => r.json());
+  check('重练池待到期回到 1', pool3.redo_pending, 1);
 
-  console.log('\n--- 五、前端接线 ---');
-  for (const id of ['examPoolBar', 'psFresh', 'psCooling', 'psUnfam', 'psDk']) {
+  console.log('\n--- 五、前端：统计条 / 二次确认 / 重练按钮 ---');
+  for (const id of ['examPoolBar', 'psFresh', 'psCorrect', 'psUnfam', 'psDk']) {
     check(`设置页有 #${id}`, !!w.document.getElementById(id), true);
   }
-  check('loadPoolStats 已定义', typeof w.loadPoolStats, 'function');
-  check('统计卡有 4 格', w.document.querySelectorAll('#examPoolBar .pool-cell').length, 4);
-  check('文案含「待抽收藏题（没做过）」', /待抽收藏题（没做过）/.test(w.document.getElementById('examPoolBar').textContent), true);
-  check('文案含「冷却中（7 天内做过）」', /冷却中（7 天内做过）/.test(w.document.getElementById('examPoolBar').textContent), true);
-  check('CSS 有 .exam-pool-bar 栅格', /\.exam-pool-bar\s*\{[^}]*grid-template-columns/.test(CSS), true);
-  check('backToSetup 会刷新统计', /function backToSetup\(\)[\s\S]{0,200}?loadPoolStats\(\)/.test(EXAM_SRC), true);
+  check('统计条 4 格', w.document.querySelectorAll('#examPoolBar .pool-cell').length, 4);
+  check('文案含「做过·答对（最低优先）」', /做过·答对（最低优先）/.test(w.document.getElementById('examPoolBar').textContent), true);
+  check('清除记录有二次确认', /再确认一次/.test(EXAM_SRC), true);
+  check('二次确认列出会话数', /即将删除 \$\{total\} 场会话/.test(EXAM_SRC), true);
+  check('quiz 有 toggleRedo', /async function toggleRedo\(questionId\)/.test(QUIZ_SRC), true);
+  check('重练按钮仅在试卷回顾 + 答对时出现',
+    /MODE === 'exam_review' \|\| MODE === 'exam_wrong'\) && q\.exam_user_answer && q\.exam_user_answer === q\.answer/.test(QUIZ_SRC), true);
+  check('题号面板有 redo 角标类', /if \(q\.is_redo\) cls \+= ' redo'/.test(QUIZ_SRC), true);
+  check('CSS 有 .num-btn.redo 角标', /\.num-btn\.redo::after\s*\{/.test(CSS), true);
+  check('CSS 有 .mark-btn.mark-redo', /\.mark-btn\.mark-redo\s*\{/.test(CSS), true);
 
-  console.log('\n--- 六、源码口径 ---');
-  check('冷却常量 = 7 天', /const EXAM_REDO_COOLDOWN_DAYS = 7;/.test(BACKEND_SRC), true);
-  check('旧 4 天常量已移除', /EXAM_WRONG_REDRAW_DAYS/.test(BACKEND_SRC), false);
-  check('到期错题与收藏队列共用同一常量',
-    (BACKEND_SRC.match(/EXAM_REDO_COOLDOWN_MS/g) || []).length >= 2, true);
-  check('prioritizeByTime 分出 cooling 层', /cooling\.push\(q\)/.test(BACKEND_SRC), true);
-  check('冷却层排在最后（兜底才用）', /return due\.concat\(fresh, ready, cooling\)/.test(BACKEND_SRC), true);
+  console.log('\n--- 六、DB 版本与 store ---');
+  check('DB_VER 升到 4（新增 redo store）', /const DB_VER = 4;/.test(BACKEND_SRC), true);
+  check('建库列表含 redo', /'unfamiliar', 'dontknow', 'redo'/.test(BACKEND_SRC), true);
 
   dom.window.close();
   console.log(`\n结果: ${pass} / ${pass + fail}` + (fail ? `，${fail} 项失败` : '，全部通过'));

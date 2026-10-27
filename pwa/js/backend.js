@@ -196,9 +196,10 @@ async function loadMapIndex() {
 // ==================== IndexedDB ====================
 const DB_NAME = 'quiz408';
 // v3：新增 unfamiliar / dontknow 两个 store（「不熟 / 不会」标记）。
+// v4：新增 redo store（试卷回顾「7 天后重练」——把做对的题手动排进 7 天后的抽取池）。
 // 注意：新增 store 必须同时提升 DB_VER，否则老用户库不会被升级、
 // onupgradeneeded 不触发 → 新 store 不存在 → 写入静默失败。
-const DB_VER = 3;
+const DB_VER = 4;
 let _dbPromise = null;
 
 function openDB() {
@@ -213,7 +214,7 @@ function openDB() {
                 prog.createIndex('by_qid', 'question_id');
                 prog.createIndex('by_subject', 'subject');
             }
-            for (const s of ['wrong', 'favorites', 'notes', 'unfamiliar', 'dontknow']) {
+            for (const s of ['wrong', 'favorites', 'notes', 'unfamiliar', 'dontknow', 'redo']) {
                 if (!db.objectStoreNames.contains(s)) db.createObjectStore(s, { keyPath: 'question_id' });
             }
             if (!db.objectStoreNames.contains('exams')) {
@@ -459,22 +460,13 @@ async function getDueReviewDetailed(subject) {
     return { stages, stageDue, dueCount, upcoming };
 }
 
-// ==================== 模拟考「答过的题」冷却期 ====================
-// 用户规则：模拟考里答过的题，7 天内不再被抽到；满 7 天后才重新进抽取池。
-// 一条常量统一管两处，避免两套口径打架：
-//   ① examDueWrongIds —— 到期错题（答错且未解决）
-//   ② prioritizeByTime —— 收藏题里"做过"的那一层
+// ==================== 模拟考「重抽间隔」7 天 ====================
+// 只管两件事，**不再用于「答对的题」**（用户明确：答对的题不要冷却，排最后就行）：
+//   ① examDueWrongIds —— 答错且未解决的题，满 7 天才重新进到期层
+//   ② redo 池        —— 试卷回顾里手动「7 天后重练」的题，到期后才进抽取池
 // 逾期越久越靠前：把很久之前写过的先过一遍，近期做过的不着急（自然排在队尾）。
 const EXAM_REDO_COOLDOWN_DAYS = 7;
 const EXAM_REDO_COOLDOWN_MS = EXAM_REDO_COOLDOWN_DAYS * 86400000;
-
-// 某题是否仍在冷却期（作答时间 < 7 天前才算可抽）
-function isCoolingDown(answeredAt, nowMs) {
-    if (!answeredAt) return false;   // 没作答记录 = 没做过，不受冷却约束
-    const t = new Date(String(answeredAt).replace(' ', 'T')).getTime();
-    if (isNaN(t)) return false;      // 脏时间戳当作可抽，不让坏数据把题永久锁死
-    return (nowMs - t) < EXAM_REDO_COOLDOWN_MS;
-}
 
 async function examDueWrongIds() {
     const statuses = await latestStatuses('');
@@ -546,15 +538,17 @@ async function api(url, opts = {}) {
                 }
                 const idSet = new Set(wrongIds);
                 const orderMap = new Map(wrongIds.map((id, i) => [id, i]));
-                // 不熟/不会标记：题号面板要显示"这题已加入下次练习池"，随题带出
+                // 不熟/不会标记 + 7 天后重练：题卡与题号面板要显示状态，随题带出
                 const unfamSet = new Set((await dbAll('unfamiliar')).map(x => x.question_id));
                 const dkSet = new Set((await dbAll('dontknow')).map(x => x.question_id));
+                const redoSet = new Set((await dbAll('redo')).map(x => x.question_id));
                 qs = [];
                 for (const k of Object.keys(SUBJECTS)) {
                     for (const q of (await loadQuestions(k)).questions) {
                         if (idSet.has(q.id)) qs.push(Object.assign({}, q, {
                             exam_user_answer: examUa[q.id] || '', wrong_count: wrongCntMap[q.id] || 0,
-                            is_unfamiliar: unfamSet.has(q.id), is_dontknow: dkSet.has(q.id)
+                            is_unfamiliar: unfamSet.has(q.id), is_dontknow: dkSet.has(q.id),
+                            is_redo: redoSet.has(q.id)
                         }));
                     }
                 }
@@ -710,11 +704,28 @@ async function api(url, opts = {}) {
         if (seg[1] === 'mark') {
             const kind = seg[2];
             const qid = seg[3];
-            if (kind !== 'unfamiliar' && kind !== 'dontknow') {
+            if (kind !== 'unfamiliar' && kind !== 'dontknow' && kind !== 'redo') {
                 return jsonResp({ error: '无效的标记类型' }, 400);
             }
             const subject = qid.split('_')[0];
             if (!SUBJECTS[subject]) return jsonResp({ error: '无效的题目ID' }, 400);
+
+            // 「7 天后重练」：把题排进 7 天后的抽取池（试卷回顾里对做对的题手动加）。
+            // 与不熟/不会**不互斥**——那两者是掌握程度标记，这个是时间排期，可以同时存在。
+            if (kind === 'redo') {
+                const existing = await dbGet('redo', qid);
+                if (existing) {
+                    await dbDelete('redo', qid);
+                    return jsonResp({ question_id: qid, is_redo: false });
+                }
+                const dueAt = Date.now() + EXAM_REDO_COOLDOWN_MS;
+                await dbPut('redo', { question_id: qid, subject, added_at: now(), due_at: dueAt });
+                return jsonResp({
+                    question_id: qid, is_redo: true, due_at: dueAt,
+                    days: EXAM_REDO_COOLDOWN_DAYS
+                });
+            }
+
             const store = kind === 'unfamiliar' ? 'unfamiliar' : 'dontknow';
             const otherStore = kind === 'unfamiliar' ? 'dontknow' : 'unfamiliar';
             const key = kind === 'unfamiliar' ? 'is_unfamiliar' : 'is_dontknow';
@@ -1388,33 +1399,44 @@ async function examApi(action, body, arg) {
         // 做对了即了结不抽；做错的满冷却期（7 天）后再抽；逾期越久越靠前（rank 越小越靠前）。
         let dueRank = new Map();
         try { (await examDueWrongIds()).forEach((id, i) => dueRank.set(id, i)); } catch (e) { /* 取不到就退化为纯时间队列 */ }
-
-        // 收藏题（favorites）：到期错题 → 没做过 → 过了冷却期的 → 冷却中（兜底）。
-        //   ① 到期错题最优先：逾期越久越先抽（很久之前写过的先过一遍，近期答错的不着急），
-        //      最多占本场该科题量 1/3（向上取整）——复习优先但不挤掉新题推进；
-        //      超帽的回流到"过了冷却期"层，随队列自然再出现；
-        //   ② 从没做过的排其次：还没进队列，按题号稳定序（不随机），对应"1312 题一天 40"的推进节奏；
-        //   ③ 做过的按最近一次作答时间升序（最早做的排最前）；
-        //   ④ **7 天内做过的排最后**：冷却期内的题不主动抽，只有当上面三层凑不够题量时才兜底用
-        //      —— 否则收藏池小的时候会"刚做完又抽到"，等于没练。
-        function prioritizeByTime(pool, take) {
+        // 到期的「7 天后重练」题（试卷回顾里手动排的）：并入到期层，但排在错题之后
+        // —— 错题是"没掌握"，重练是"想再确认一遍"，优先级低于错题。
+        try {
             const nowMs = Date.now();
-            const due = [], fresh = [], ready = [], cooling = [];
+            let idx = dueRank.size;
+            for (const r of await dbAll('redo')) {
+                const qid = r && r.question_id;
+                if (!qid || dueRank.has(qid)) continue;
+                if ((r.due_at || 0) > nowMs) continue;   // 还没到 7 天
+                dueRank.set(qid, idx++);
+            }
+        } catch (e) { /* 取不到就只按错题层 */ }
+
+        // 收藏题（favorites）：到期错题 → 没做过 → 做过的错题 → 做过的对题。
+        //   ① 到期错题最优先：逾期越久越先抽，最多占本场该科题量 1/3（向上取整）；
+        //   ② 从没做过的排其次：按题号稳定序（不随机），对应"1312 题一天 40"的推进节奏；
+        //   ③ 做过且错题本里仍挂着未解决 → 排在"做对过"的前面；
+        //   ④ **做过且答对的排最后**：优先级最低，但没有时间冷却 ——
+        //      只要上面三层抽完，答对的题照样会被抽到（不是"永远不抽"）。
+        function prioritizeByTime(pool, take) {
+            const due = [], fresh = [], wrongish = [], correct = [];
+            const isWrongish = q => {
+                const w = wrongMap.get(q.id);
+                return !!(w && !w.is_resolved);
+            };
             for (const q of pool) {
                 const p = progMap.get(q.id);
                 if (!p) { fresh.push(q); continue; }               // 从没做过
-                if (dueRank.has(q.id)) { due.push(q); continue; }  // 到期错题（本身已满冷却期）
-                if (isCoolingDown(p.answered_at, nowMs)) cooling.push(q);
-                else ready.push(q);
+                if (dueRank.has(q.id)) { due.push(q); continue; }  // 到期错题
+                (isWrongish(q) ? wrongish : correct).push(q);
             }
             // 到期错题内部：逾期越久越靠前（dueRank 由 examDueWrongIds 按最后做错时间升序生成）
             due.sort((a, b) => (dueRank.get(a.id) - dueRank.get(b.id)) || (a.id < b.id ? -1 : 1));
-            // 帽子 = 本场该科题量的 1/3：超出部分退回"已过冷却"层
+            // 帽子 = 本场该科题量的 1/3：超出部分退回"做过的错题"层
             const dueCap = Math.ceil((take || pool.length) / 3);
             while (due.length > dueCap) {
                 const q = due.pop();
-                const p = progMap.get(q.id);
-                (isCoolingDown(p && p.answered_at, nowMs) ? cooling : ready).push(q);
+                (isWrongish(q) ? wrongish : correct).push(q);
             }
             // 从没做过的：按题号稳定排序，保证每场抽到的顺序一致（不是随机）
             fresh.sort((a, b) => (a.id < b.id ? -1 : a.id > b.id ? 1 : 0));
@@ -1425,9 +1447,9 @@ async function examApi(action, body, arg) {
                 if (ta !== tb) return ta < tb ? -1 : 1;
                 return a.id < b.id ? -1 : a.id > b.id ? 1 : 0;
             };
-            ready.sort(byAnswered);
-            cooling.sort(byAnswered);
-            return due.concat(fresh, ready, cooling);
+            wrongish.sort(byAnswered);
+            correct.sort(byAnswered);
+            return due.concat(fresh, wrongish, correct);
         }
 
         // 错题本（wrong）：三层优先级 —— 没做过 > 错题未解决 > 最久没做 > 最近做过
@@ -1529,12 +1551,16 @@ async function examApi(action, body, arg) {
         const nowMs = Date.now();
         const progMap = new Map();
         for (const p of await dbAll('progress')) progMap.set(p.question_id, p);
+        const wrongMap = new Map();
+        for (const w of await dbAll('wrong')) wrongMap.set(w.question_id, w);
         const favs = await dbAll('favorites');
-        let fresh = 0, ready = 0, cooling = 0;
+        // 与 prioritizeByTime 完全同口径：没做过 / 做过且错题未解决 / 做过且答对
+        let fresh = 0, wrongish = 0, correct = 0;
         for (const f of favs) {
             const p = progMap.get(f.question_id);
             if (!p) { fresh++; continue; }
-            if (isCoolingDown(p.answered_at, nowMs)) cooling++; else ready++;
+            const w = wrongMap.get(f.question_id);
+            if (w && !w.is_resolved) wrongish++; else correct++;
         }
         const unfam = (await dbAll('unfamiliar')).length;
         const dk = (await dbAll('dontknow')).length;
@@ -1548,16 +1574,25 @@ async function examApi(action, body, arg) {
             const k = String(qid).split('_')[0];
             if (examWrongBySub[k] != null) examWrongBySub[k]++;
         }
+        // 「7 天后重练」池：未到期（还在等）/ 已到期（下几场会抽到）
+        let redoPending = 0, redoDue = 0;
+        try {
+            for (const r of await dbAll('redo')) {
+                if ((r.due_at || 0) <= nowMs) redoDue++; else redoPending++;
+            }
+        } catch (e) { /* 取不到就报 0 */ }
         return jsonResp({
             favorites_total: favs.length,
-            favorites_fresh: fresh,        // 待抽：收藏池里从没做过的
-            favorites_ready: ready,        // 做过且已过冷却期，可轮转抽到
-            favorites_cooling: cooling,    // 7 天内做过，暂不主动抽
+            favorites_fresh: fresh,        // 待抽：收藏池里从没做过的（最高优先级的新题）
+            favorites_wrongish: wrongish,  // 做过且错题本仍挂着未解决（排在答对之前）
+            favorites_correct: correct,    // 做过且答对（优先级最低，但不是不抽）
             unfamiliar: unfam,
             dontknow: dk,
             due_wrong: dueWrong,
             exam_wrong: examWrongIds.length,
             exam_wrong_by_subject: examWrongBySub,
+            redo_pending: redoPending,
+            redo_due: redoDue,
             cooldown_days: EXAM_REDO_COOLDOWN_DAYS
         });
     }
