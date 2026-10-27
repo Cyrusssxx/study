@@ -210,10 +210,12 @@ const DB_NAME = 'quiz408';
 // onupgradeneeded 不触发 → 新 store 不存在 → 写入静默失败。
 const DB_VER = 4;
 let _dbPromise = null;
+let _dbBlocked = false;   // 是否卡在「升级被占用」上（页面可据此给出可操作提示）
 
 function openDB() {
     if (_dbPromise) return _dbPromise;
     _dbPromise = new Promise((resolve, reject) => {
+        let settled = false;
         const req = indexedDB.open(DB_NAME, DB_VER);
         req.onupgradeneeded = () => {
             const db = req.result;
@@ -233,13 +235,33 @@ function openDB() {
                 db.createObjectStore('daka_progress', { keyPath: 'question_id' });
             }
         };
-        req.onsuccess = () => resolve(req.result);
-        req.onerror = () => reject(req.error || new Error('indexedDB 打开失败'));
-        // 其他标签页持有旧的数据库连接时，升级会被 blocked（open 永远 pending，
-        // 表现为首页一直"加载中"）——超时后以明确错误 reject，交由上层降级展示
+        req.onsuccess = () => {
+            const db = req.result;
+            // 关键：别让自己成为别人的阻塞源。其他页面要升级数据库时会收到 versionchange，
+            // 主动关掉连接，否则对方永远卡在 blocked（这正是"页面一直加载中"的成因）。
+            db.onversionchange = () => {
+                try { db.close(); } catch (e) { }
+                _dbPromise = null;
+            };
+            _dbBlocked = false;
+            settled = true;
+            resolve(db);
+        };
+        req.onerror = () => {
+            settled = true;
+            reject(req.error || new Error('indexedDB 打开失败'));
+        };
+        // blocked：其他上下文（其它标签页 / PWA 独立窗口 / 旧 Service Worker）仍持有旧连接。
+        // **不要立刻 reject** —— 对方关闭后升级会自动继续。先等，超时才报错，
+        // 否则会出现「reject → 重试 → 再 blocked」的死循环，页面永远转圈。
         req.onblocked = () => {
-            console.warn('IndexedDB 升级被其他标签页阻塞：请关闭本站其它标签页后刷新');
-            setTimeout(() => reject(new Error('数据库被其他标签页占用（请关闭本站其它标签页后重试）')), 1200);
+            _dbBlocked = true;
+            console.warn('[quiz408] 本地数据库升级被其他页面占用，等待其释放…');
+            setTimeout(() => {
+                if (settled) return;
+                settled = true;
+                reject(new Error('本地数据库被其他页面占用：请关闭本站其它标签页 / PWA 窗口后刷新'));
+            }, 8000);
         };
     }).catch(e => {
         _dbPromise = null;   // 失败不缓存：允许用户关闭占用标签页后自动重试

@@ -192,6 +192,33 @@ const DAY = 86400000;
   check('DB_VER 升到 4（新增 redo store）', /const DB_VER = 4;/.test(BACKEND_SRC), true);
   check('建库列表含 redo', /'unfamiliar', 'dontknow', 'redo'/.test(BACKEND_SRC), true);
 
+  console.log('\n--- 七、数据库被占用时不能永久转圈 ---');
+  // 其他页面持有旧连接 → 升级 blocked。旧实现 1.2s 就 reject 且立刻重试，
+  // 会陷入「reject → 重试 → 再 blocked」死循环，页面永远显示加载中。
+  check('连接持有 onversionchange（主动让路给升级）',
+    /db\.onversionchange = \(\) => \{/.test(BACKEND_SRC), true);
+  check('blocked 不立即 reject（等 8 秒）',
+    /req\.onblocked = \(\) => \{[\s\S]{0,600}?\}, 8000\);/.test(BACKEND_SRC), true);
+  check('失败不缓存 promise（允许重试）',
+    /_dbPromise = null;   \/\/ 失败不缓存/.test(BACKEND_SRC), true);
+  check('exam 页有接口超时包装 apiTimeout', /function apiTimeout\(url, opts, ms\)/.test(EXAM_SRC), true);
+  check('loadHistory 有 try/catch + 重试按钮',
+    /async function loadHistory\(\)[\s\S]{0,700}?onclick="loadHistory\(\)">重试/.test(EXAM_SRC), true);
+  check('checkActive 有超时兜底（不挡首屏）',
+    /apiTimeout\('\/api\/exam\/active', undefined, 6000\)/.test(EXAM_SRC), true);
+  check('统计失败把原因写进 tooltip', /池子统计读取失败：/.test(EXAM_SRC), true);
+
+  // 行为验证：接口抛错时，历史区要给出错误 + 重试，而不是停在「加载中」
+  const realApi = w.api;
+  w.api = () => Promise.reject(new Error('模拟数据库不可用'));
+  await w.loadHistory();
+  await sleep(50);
+  const histHtml = w.document.getElementById('historyList').innerHTML;
+  check('接口失败后不再显示「加载中」', /加载中/.test(histHtml), false);
+  check('接口失败后显示错误原因', /历史成绩加载失败/.test(histHtml), true);
+  check('接口失败后提供重试按钮', /onclick="loadHistory\(\)">重试/.test(histHtml), true);
+  w.api = realApi;
+
   dom.window.close();
   console.log(`\n结果: ${pass} / ${pass + fail}` + (fail ? `，${fail} 项失败` : '，全部通过'));
   process.exit(fail ? 1 : 0);

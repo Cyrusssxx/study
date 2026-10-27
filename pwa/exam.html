@@ -376,8 +376,15 @@
     }
 
     async function checkActive() {
-        const resp = await api('/api/exam/active');
-        const data = await resp.json();
+        let data;
+        try {
+            const resp = await apiTimeout('/api/exam/active', undefined, 6000);
+            data = await resp.json();
+        } catch (e) {
+            // 读不到就当作没有进行中的会话，别让首屏卡在检测上
+            console.warn('[exam] 检测未完成会话失败：', e.message);
+            return;
+        }
         if (data.auto_submitted) {
             // 上次考试超时，已自动交卷，直接看成绩
             resultWrongOnly = true;
@@ -755,11 +762,32 @@
     }
 
     // ============ 历史成绩 ============
+    // 本地存储异常（升级被占用 / 浏览器禁用）时接口会一直 pending，
+    // 统一加超时兜底，让页面给出可操作提示，而不是永远转圈
+    function apiTimeout(url, opts, ms) {
+        return Promise.race([
+            api(url, opts),
+            new Promise((_, rej) => setTimeout(
+                () => rej(new Error('本地数据读取超时（可能被其他页面占用）')), ms || 8000))
+        ]);
+    }
+
     async function loadHistory() {
-        const resp = await api('/api/exam/history');
-        const data = await resp.json();
-        const records = data.records || [];
         const el = document.getElementById('historyList');
+        let data;
+        try {
+            const resp = await apiTimeout('/api/exam/history');
+            data = await resp.json();
+        } catch (e) {
+            el.innerHTML = `<div class="empty-state">
+                <p>历史成绩加载失败：${e.message}</p>
+                <button class="btn btn-primary" onclick="loadHistory()">重试</button>
+                <p style="font-size:.8rem;color:var(--text-light);margin-top:10px;line-height:1.7;">
+                    若反复失败：先关闭本站其它标签页 / PWA 独立窗口，再刷新本页。</p>
+            </div>`;
+            return;
+        }
+        const records = data.records || [];
         if (!records.length) {
             el.innerHTML = '<div class="empty-state"><p>还没有考试记录，来一场试试</p></div>';
             return;
@@ -853,11 +881,15 @@
 
     async function loadPoolStats() {
         try {
-            const d = await (await api('/api/exam/pool')).json();
+            const d = await (await apiTimeout('/api/exam/pool')).json();
             if (d.error) return;
             _poolStats = d;
             renderPoolStats(d);
-        } catch (e) { /* 统计失败不挡组卷 */ }
+        } catch (e) {
+            // 统计失败不挡组卷，但要把原因写进 tooltip（否则用户只看到两个破折号）
+            const bar = document.getElementById('examPoolBar');
+            if (bar) bar.title = '池子统计读取失败：' + e.message;
+        }
     }
 
     function renderPoolStats(d) {
