@@ -2609,6 +2609,37 @@ mark {
     font-variant-numeric: tabular-nums;
 }
 
+/* ===== 数据库降级提示（升级被其它页面占用时，底部黄条） ===== */
+.db-degraded-tip {
+    position: fixed;
+    left: 50%;
+    bottom: 16px;
+    transform: translateX(-50%);
+    z-index: 3100;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    max-width: min(92vw, 640px);
+    padding: 10px 14px;
+    border-radius: 10px;
+    background: #fff8e1;
+    border: 1px solid #f0b429;
+    color: #7a4f01;
+    font-size: .82rem;
+    line-height: 1.6;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, .14);
+}
+
+.db-degraded-tip .btn {
+    flex: none;
+}
+
+.dark .db-degraded-tip {
+    background: rgba(240, 180, 41, .14);
+    border-color: rgba(240, 180, 41, .5);
+    color: #fcd34d;
+}
+
 /* ===== 模拟考试：逐题回顾卡片 ===== */
 .review-item {
     background: var(--card-bg);

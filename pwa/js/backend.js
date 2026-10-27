@@ -210,16 +210,17 @@ const DB_NAME = 'quiz408';
 // onupgradeneeded 不触发 → 新 store 不存在 → 写入静默失败。
 const DB_VER = 4;
 let _dbPromise = null;
-let _dbBlocked = false;   // 是否卡在「升级被占用」上（页面可据此给出可操作提示）
+let _dbBlocked = false;    // 是否卡在「升级被占用」上
+let _dbDegraded = false;   // 是否以低于 DB_VER 的版本打开（新 store 缺失 → 新功能不可用）
 
-function openDB() {
-    if (_dbPromise) return _dbPromise;
-    _dbPromise = new Promise((resolve, reject) => {
+// 打开指定版本（ver 省略 = 打开当前已有版本，不触发升级、不会被 blocked）
+function openRaw(ver) {
+    return new Promise((resolve, reject) => {
         let settled = false;
-        const req = indexedDB.open(DB_NAME, DB_VER);
+        const req = ver ? indexedDB.open(DB_NAME, ver) : indexedDB.open(DB_NAME);
         req.onupgradeneeded = () => {
             const db = req.result;
-            // 幂等建库：只新增缺失的 store，不动老数据（v2 新增 daka_progress）
+            // 幂等建库：只新增缺失的 store，不动老数据
             if (!db.objectStoreNames.contains('progress')) {
                 const prog = db.createObjectStore('progress', { keyPath: 'pk', autoIncrement: true });
                 prog.createIndex('by_qid', 'question_id');
@@ -238,7 +239,7 @@ function openDB() {
         req.onsuccess = () => {
             const db = req.result;
             // 关键：别让自己成为别人的阻塞源。其他页面要升级数据库时会收到 versionchange，
-            // 主动关掉连接，否则对方永远卡在 blocked（这正是"页面一直加载中"的成因）。
+            // 主动关掉连接，否则对方永远卡在 blocked（这正是「开着两个页面就加载不出来」的成因）。
             db.onversionchange = () => {
                 try { db.close(); } catch (e) { }
                 _dbPromise = null;
@@ -251,19 +252,38 @@ function openDB() {
             settled = true;
             reject(req.error || new Error('indexedDB 打开失败'));
         };
-        // blocked：其他上下文（其它标签页 / PWA 独立窗口 / 旧 Service Worker）仍持有旧连接。
-        // **不要立刻 reject** —— 对方关闭后升级会自动继续。先等，超时才报错，
-        // 否则会出现「reject → 重试 → 再 blocked」的死循环，页面永远转圈。
+        // blocked：还有别的页面（旧代码，没有 onversionchange）持有旧连接。
+        // 这里不干等：2.5 秒后标记 blocked 交给上层**降级打开**，让页面先能用。
         req.onblocked = () => {
             _dbBlocked = true;
-            console.warn('[quiz408] 本地数据库升级被其他页面占用，等待其释放…');
+            console.warn('[quiz408] 数据库升级被其他页面占用，尝试降级打开…');
             setTimeout(() => {
                 if (settled) return;
                 settled = true;
-                reject(new Error('本地数据库被其他页面占用：请关闭本站其它标签页 / PWA 窗口后刷新'));
-            }, 8000);
+                const err = new Error('数据库升级被其他页面占用');
+                err.blocked = true;
+                reject(err);
+            }, 2500);
         };
-    }).catch(e => {
+    });
+}
+
+function openDB() {
+    if (_dbPromise) return _dbPromise;
+    _dbPromise = (async () => {
+        try {
+            return await openRaw(DB_VER);
+        } catch (e) {
+            // 升级被占用 → 用**当前已有版本**打开（不触发升级，绝不会被 blocked）。
+            // 代价是缺 redo 等新 store，新功能降级不可用；但页面能正常打开、数据全在。
+            if (!e.blocked) throw e;
+            const db = await openRaw();
+            _dbDegraded = db.version < DB_VER;
+            window.__dbDegraded = _dbDegraded;   // 页面可据此提示用户
+            console.warn(`[quiz408] 已降级到 v${db.version}（目标 v${DB_VER}）：新功能暂不可用`);
+            return db;
+        }
+    })().catch(e => {
         _dbPromise = null;   // 失败不缓存：允许用户关闭占用标签页后自动重试
         throw e;
     });
@@ -271,8 +291,11 @@ function openDB() {
 }
 
 // Promise 化的通用读写
+// 降级打开时可能缺 store（如 v3 库里没有 redo）：读操作返回空值而不是抛错，
+// 让页面照常渲染；写操作仍报错（写入失败不能静默）。
 async function dbAll(store) {
     const db = await openDB();
+    if (!db.objectStoreNames.contains(store)) return [];
     return new Promise((res, rej) => {
         const r = db.transaction(store).objectStore(store).getAll();
         r.onsuccess = () => res(r.result);
@@ -282,6 +305,7 @@ async function dbAll(store) {
 
 async function dbGet(store, key) {
     const db = await openDB();
+    if (!db.objectStoreNames.contains(store)) return undefined;
     return new Promise((res, rej) => {
         const r = db.transaction(store).objectStore(store).get(key);
         r.onsuccess = () => res(r.result);
@@ -291,6 +315,9 @@ async function dbGet(store, key) {
 
 async function dbPut(store, val) {
     const db = await openDB();
+    if (!db.objectStoreNames.contains(store)) {
+        throw new Error(`本地数据库缺少 ${store}（升级未完成，请关闭其它页面后刷新）`);
+    }
     return new Promise((res, rej) => {
         const tx = db.transaction(store, 'readwrite');
         const r = tx.objectStore(store).put(val);
@@ -301,6 +328,7 @@ async function dbPut(store, val) {
 
 async function dbDelete(store, key) {
     const db = await openDB();
+    if (!db.objectStoreNames.contains(store)) return;
     return new Promise((res, rej) => {
         const tx = db.transaction(store, 'readwrite');
         tx.objectStore(store).delete(key);

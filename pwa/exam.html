@@ -877,6 +877,19 @@
     }
 
     // 池子统计：待抽收藏题 / 做过答对 / 不熟 / 不会（口径与后端抽题分层一致）
+    // 降级提示：其它页面（旧代码，没有 onversionchange）还持有旧连接时，
+    // 数据库升级会一直被阻塞。backend 会降级打开保证能用，这里说明原因和恢复方式。
+    function showDbDegradedTip() {
+        if (!window.__dbDegraded || document.getElementById('dbDegradedTip')) return;
+        const t = document.createElement('div');
+        t.id = 'dbDegradedTip';
+        t.className = 'db-degraded-tip';
+        t.innerHTML = '<span>本地数据库正被其它页面占用，已降级运行（「7 天后重练」暂不可用）。'
+            + '关闭本站其它页面 / PWA 窗口后刷新即可恢复。</span>'
+            + '<button class="btn btn-sm btn-secondary" onclick="location.reload()">刷新</button>';
+        document.body.appendChild(t);
+    }
+
     let _poolStats = null;   // 池子统计缓存：选模式时不必再请求一次
 
     async function loadPoolStats() {
@@ -1026,6 +1039,9 @@
     loadHistory();
     checkActive();
     setTimeout(refreshExamWrongStat, 400);
+    // 数据库升级被其它页面占用时，backend 会降级打开（缺 redo store）。
+    // 页面能正常用，但要明确告知「为什么少了个功能」以及怎么恢复。
+    setTimeout(showDbDegradedTip, 1500);
     
     // ============ 辅助函数 ============
     function getRandomItems(array, count) {

@@ -197,8 +197,8 @@ const DAY = 86400000;
   // 会陷入「reject → 重试 → 再 blocked」死循环，页面永远显示加载中。
   check('连接持有 onversionchange（主动让路给升级）',
     /db\.onversionchange = \(\) => \{/.test(BACKEND_SRC), true);
-  check('blocked 不立即 reject（等 8 秒）',
-    /req\.onblocked = \(\) => \{[\s\S]{0,600}?\}, 8000\);/.test(BACKEND_SRC), true);
+  check('blocked 只等 2.5 秒就降级（不无限等）',
+    /req\.onblocked = \(\) => \{[\s\S]{0,700}?\}, 2500\);/.test(BACKEND_SRC), true);
   check('失败不缓存 promise（允许重试）',
     /_dbPromise = null;   \/\/ 失败不缓存/.test(BACKEND_SRC), true);
   check('exam 页有接口超时包装 apiTimeout', /function apiTimeout\(url, opts, ms\)/.test(EXAM_SRC), true);
@@ -218,6 +218,25 @@ const DAY = 86400000;
   check('接口失败后显示错误原因', /历史成绩加载失败/.test(histHtml), true);
   check('接口失败后提供重试按钮', /onclick="loadHistory\(\)">重试/.test(histHtml), true);
   w.api = realApi;
+
+  console.log('\n--- 八、降级打开（其它页面占着旧连接时不卡死）---');
+  check('openRaw 支持不带版本打开（不触发升级 → 不会被 blocked）',
+    /function openRaw\(ver\)[\s\S]{0,260}?ver \? indexedDB\.open\(DB_NAME, ver\) : indexedDB\.open\(DB_NAME\)/.test(BACKEND_SRC), true);
+  check('blocked 后降级打开当前版本',
+    /if \(!e\.blocked\) throw e;[\s\S]{0,220}?const db = await openRaw\(\);/.test(BACKEND_SRC), true);
+  check('降级标记暴露给页面', /window\.__dbDegraded = _dbDegraded/.test(BACKEND_SRC), true);
+  check('缺 store 时读操作返回空（不抛错）',
+    /async function dbAll\(store\)[\s\S]{0,160}?if \(!db\.objectStoreNames\.contains\(store\)\) return \[\];/.test(BACKEND_SRC), true);
+  check('缺 store 时 dbGet 返回 undefined',
+    /async function dbGet\(store, key\)[\s\S]{0,160}?if \(!db\.objectStoreNames\.contains\(store\)\) return undefined;/.test(BACKEND_SRC), true);
+  check('缺 store 时写操作明确报错（不静默）',
+    /async function dbPut\(store, val\)[\s\S]{0,220}?throw new Error\(`本地数据库缺少 \$\{store\}/.test(BACKEND_SRC), true);
+  check('页面有降级提示条', /function showDbDegradedTip\(\)/.test(EXAM_SRC), true);
+  check('CSS 有 .db-degraded-tip', /\.db-degraded-tip\s*\{/.test(CSS), true);
+
+  // 行为：读一个不存在的 store 必须返回空数组，而不是抛错把整页拖垮
+  const ghost = await w.dbAll('__not_exist__');
+  check('dbAll 读不存在的 store 返回 []', ghost, []);
 
   dom.window.close();
   console.log(`\n结果: ${pass} / ${pass + fail}` + (fail ? `，${fail} 项失败` : '，全部通过'));
