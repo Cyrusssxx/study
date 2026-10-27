@@ -1640,6 +1640,10 @@ async function examApi(action, body, arg) {
         }
         const unfam = (await dbAll('unfamiliar')).length;
         const dk = (await dbAll('dontknow')).length;
+        // 模拟考去重题数：历次已交卷的卷面题目并集（不碰题库，只读会话）
+        const examRows = (await dbAll('exams')).filter(e => e.status === 'submitted');
+        const examQidSet = new Set();
+        for (const e of examRows) for (const qid of e.question_ids || []) examQidSet.add(qid);
         let dueWrong = 0;
         try { dueWrong = (await examDueWrongIds()).length; } catch (e) { /* 取不到就报 0 */ }
         // 模拟考错题池（只认模拟考来源，最后一场作答仍错/未作答）
@@ -1663,6 +1667,8 @@ async function examApi(action, body, arg) {
             favorites_fresh: fresh,        // 待抽：收藏池里从没做过的（最高优先级的新题）
             favorites_wrongish: wrongish,  // 做过且错题本仍挂着未解决（排在答对之前）
             favorites_correct: correct,    // 做过且答对（优先级最低，但不是不抽）
+            exam_answered: examQidSet.size,   // 模拟考做过的去重题数（历次卷面并集）
+            exam_sessions: examRows.length,   // 已交卷场数
             unfamiliar: unfam,
             dontknow: dk,
             due_wrong: dueWrong,

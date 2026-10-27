@@ -57,12 +57,12 @@
             <!-- 池子统计：组卷前先看清"现在有多少题可抽" -->
             <div class="exam-pool-bar" id="examPoolBar">
                 <div class="pool-cell">
-                    <b id="psFresh">--</b>
-                    <span>待抽收藏题（没做过）</span>
+                    <b id="psFav">--</b>
+                    <span id="psFavSub">收藏题</span>
                 </div>
                 <div class="pool-cell">
-                    <b id="psCorrect">--</b>
-                    <span>做过·答对（最低优先）</span>
+                    <b id="psExam">--</b>
+                    <span id="psExamSub">模拟考做过</span>
                 </div>
                 <div class="pool-cell">
                     <b id="psUnfam">--</b>
@@ -907,16 +907,24 @@
 
     function renderPoolStats(d) {
         const set = (id, v) => { const el = document.getElementById(id); if (el) el.textContent = v; };
-        set('psFresh', d.favorites_fresh);
-        set('psCorrect', d.favorites_correct);
+        // 第 1 格：收藏池总量，副标点出「还剩多少没做过」（用户要的"待抽"）
+        set('psFav', d.favorites_total);
+        set('psFavSub', `收藏题 · 待抽 ${d.favorites_fresh}`);
+        // 第 2 格：模拟考做过的去重题数（不是收藏池里的，两者口径不同）
+        set('psExam', d.exam_answered);
+        set('psExamSub', `模拟考做过 · ${d.exam_sessions} 场`);
         set('psUnfam', d.unfamiliar);
         set('psDk', d.dontknow);
         const bar = document.getElementById('examPoolBar');
         if (bar) {
-            bar.title = `收藏池共 ${d.favorites_total} 题：待抽 ${d.favorites_fresh}`
-                + ` · 做过的错题 ${d.favorites_wrongish} · 做过的对题 ${d.favorites_correct}`
-                + `\n到期错题 ${d.due_wrong} · 模拟考错题 ${d.exam_wrong}`
-                + `\n7 天后重练：待到期 ${d.redo_pending} · 已到期 ${d.redo_due}`;
+            bar.title = `【收藏池】共 ${d.favorites_total} 题`
+                + `｜没做过 ${d.favorites_fresh}（待抽·最高优先）`
+                + `｜做过的错题 ${d.favorites_wrongish}`
+                + `｜做过的对题 ${d.favorites_correct}（最低优先）`
+                + `\n【模拟考】${d.exam_sessions} 场，做过 ${d.exam_answered} 题（去重）`
+                + `｜其中仍错 ${d.exam_wrong}｜到期错题 ${d.due_wrong}`
+                + `\n【标记】不熟 ${d.unfamiliar}｜不会 ${d.dontknow}`
+                + `\n【7 天后重练】待到期 ${d.redo_pending}｜已到期 ${d.redo_due}`;
         }
     }
 

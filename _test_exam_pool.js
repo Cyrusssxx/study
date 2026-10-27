@@ -159,6 +159,8 @@ const DAY = 86400000;
     pool.favorites_fresh + pool.favorites_wrongish + pool.favorites_correct, pool.favorites_total);
   check('到期错题 1 题', pool.due_wrong, 1);
   check('重练池：已到期 1 / 待到期 1', [pool.redo_due, pool.redo_pending], [1, 1]);
+  check('本用例没造模拟考会话 → exam_answered 0', pool.exam_answered, 0);
+  check('已交卷场数 0', pool.exam_sessions, 0);
 
   console.log('\n--- 四、7 天后重练：加入 / 取消 ---');
   const r1 = await w.api('/api/mark/redo/cn_0007', { method: 'POST' }).then(r => r.json());
@@ -174,11 +176,17 @@ const DAY = 86400000;
   check('重练池待到期回到 1', pool3.redo_pending, 1);
 
   console.log('\n--- 五、前端：统计条 / 二次确认 / 重练按钮 ---');
-  for (const id of ['examPoolBar', 'psFresh', 'psCorrect', 'psUnfam', 'psDk']) {
+  for (const id of ['examPoolBar', 'psFav', 'psFavSub', 'psExam', 'psExamSub', 'psUnfam', 'psDk']) {
     check(`设置页有 #${id}`, !!w.document.getElementById(id), true);
   }
   check('统计条 4 格', w.document.querySelectorAll('#examPoolBar .pool-cell').length, 4);
-  check('文案含「做过·答对（最低优先）」', /做过·答对（最低优先）/.test(w.document.getElementById('examPoolBar').textContent), true);
+  // 第 1 格是收藏池总量（副标写待抽），第 2 格是模拟考做过 —— 两者口径不同，别混
+  w.renderPoolStats(pool);
+  check('第 1 格显示收藏池总量', w.document.getElementById('psFav').textContent, String(pool.favorites_total));
+  check('第 1 格副标点出待抽数', /收藏题 · 待抽 \d+/.test(w.document.getElementById('psFavSub').textContent), true);
+  check('第 2 格显示模拟考做过题数', w.document.getElementById('psExam').textContent, String(pool.exam_answered));
+  check('第 2 格副标点出场数', /模拟考做过 · \d+ 场/.test(w.document.getElementById('psExamSub').textContent), true);
+  check('tooltip 分区块说明口径', /【收藏池】[\s\S]*【模拟考】[\s\S]*【标记】/.test(w.document.getElementById('examPoolBar').title), true);
   check('清除记录有二次确认', /再确认一次/.test(EXAM_SRC), true);
   check('二次确认列出会话数', /即将删除 \$\{total\} 场会话/.test(EXAM_SRC), true);
   check('quiz 有 toggleRedo', /async function toggleRedo\(questionId\)/.test(QUIZ_SRC), true);
