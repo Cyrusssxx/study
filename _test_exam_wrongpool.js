@@ -99,10 +99,19 @@ const sleep = ms => new Promise(r => setTimeout(r, ms));
   ]);
 
   console.log('--- 一、池子口径 ---');
-  const pool = await w.api('/api/exam/pool').then(r => r.json());
-  check('模拟考错题 2 题（cn_0003 未作答 + cn_0004 答错）', pool.exam_wrong, 2);
-  check('分科统计：网络 2', pool.exam_wrong_by_subject.cn, 2);
-  check('其它科目为 0', [pool.exam_wrong_by_subject.ds, pool.exam_wrong_by_subject.co, pool.exam_wrong_by_subject.os], [0, 0, 0]);
+  // 首屏统计（pool）不碰题库：老会话没有 wrong_ids 时数字为 0（性能取舍）
+  const pool0 = await w.api('/api/exam/pool').then(r => r.json());
+  check('首屏 pool 不触发题库（老会话暂算 0）', pool0.exam_wrong, 0);
+
+  // 补算接口才遍历题库，返回准确结果
+  const calc = await w.api('/api/exam/examwrong').then(r => r.json());
+  check('补算后：模拟考错题 2 题（cn_0003 未作答 + cn_0004 答错）', calc.exam_wrong, 2);
+  check('分科统计：网络 2', calc.exam_wrong_by_subject.cn, 2);
+  check('其它科目为 0', [calc.exam_wrong_by_subject.ds, calc.exam_wrong_by_subject.co, calc.exam_wrong_by_subject.os], [0, 0, 0]);
+
+  // 补算会把 wrong_ids 写回会话，之后 pool 直接命中
+  const pool1 = await w.api('/api/exam/pool').then(r => r.json());
+  check('写回后 pool 也能拿到准确数字', pool1.exam_wrong, 2);
 
   console.log('\n--- 二、组卷只抽模拟考错题 ---');
   const g = await w.api('/api/exam/generate', {
@@ -142,10 +151,15 @@ const sleep = ms => new Promise(r => setTimeout(r, ms));
   check('组卷前提示口径（以最后一场作答为准）', /同一题以最后一场作答为准/.test(EXAM_SRC), true);
 
   console.log('\n--- 五、源码口径 ---');
-  check('backend 有 examWrongQids', /async function examWrongQids\(\)/.test(BACKEND_SRC), true);
+  check('backend 有 examWrongQids', /async function examWrongQids\(calc\)/.test(BACKEND_SRC), true);
   check('只取已交卷会话', /filter\(e => e\.status === 'submitted'\)/.test(BACKEND_SRC), true);
-  check('按交卷时间升序、后者覆盖前者', /latest\.set\(qid, String\(\(e\.answers \|\| \{\}\)\[qid\] \|\| ''\)\.toUpperCase\(\)\)/.test(BACKEND_SRC), true);
-  check('未作答算错（!ua）', /if \(!ua \|\| ua !== q\.answer\) out\.push\(qid\);/.test(BACKEND_SRC), true);
+  check('以最后一场为准（latest 覆盖）', /for \(const \[qid, isWrong\] of latest\) if \(isWrong\) out\.push\(qid\);/.test(BACKEND_SRC), true);
+  check('未作答算错（!ua）', /if \(!ua \|\| ua !== q\.answer\) ids\.push\(qid\);/.test(BACKEND_SRC), true);
+  check('交卷时固化 wrong_ids（避免事后遍历题库）',
+    /exam\.wrong_ids = details\.filter\(d => !d\.is_correct\)\.map\(d => d\.id\);/.test(BACKEND_SRC), true);
+  check('首屏 pool 传 calc=false（不碰题库）',
+    /examWrongQids\(false\)/.test(BACKEND_SRC), true);
+  check('后台补算接口存在', /action === 'examwrong'/.test(BACKEND_SRC), true);
   check('组卷 isSpecial 含 examwrong',
     /const isSpecial = mode === 'favorites' \|\| mode === 'wrong' \|\| mode === 'unfamiliar' \|\| mode === 'examwrong';/.test(BACKEND_SRC), true);
 

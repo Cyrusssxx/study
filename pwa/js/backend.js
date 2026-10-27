@@ -36,6 +36,7 @@ const SEARCH_NOTE_LIMIT = 40;
 
 // ==================== 题库加载（内存缓存） ====================
 const _qCache = {};      // {subject: data}
+const _qIndex = {};      // {subject: Map(id → question)} —— O(1) 查找，替代每次 find 的 O(n)
 const _searchTexts = {}; // {subject: [(id, 规范化可搜索文本)]}
 
 async function loadQuestions(key) {
@@ -63,21 +64,29 @@ async function loadQuestions(key) {
         texts.push([q.id, normText(raw.replace(TAG_RE, ' '))]);
     }
     _searchTexts[key] = texts;
+    // id → 题目 的哈希索引：getQuestionById 从 O(n) find 变成 O(1) get。
+    // 组卷 / 收藏列表 / 模拟考错题统计会成千次调用，这一层是主要热点。
+    const idx = new Map();
+    for (const q of data.questions) if (q && q.id) idx.set(q.id, q);
+    _qIndex[key] = idx;
     _qCache[key] = data;
     return data;
 }
 
 // 清空题库与搜索索引缓存（数据更新后调用，下次访问自动用新数据重建索引）
 function resetQuestionCache(key) {
-    if (key) { delete _qCache[key]; delete _searchTexts[key]; }
-    else { for (const k of Object.keys(_qCache)) { delete _qCache[k]; delete _searchTexts[k]; } }
+    if (key) { delete _qCache[key]; delete _searchTexts[key]; delete _qIndex[key]; }
+    else {
+        for (const k of Object.keys(_qCache)) { delete _qCache[k]; delete _searchTexts[k]; delete _qIndex[k]; }
+    }
 }
 
 async function getQuestionById(qid) {
-    const key = qid.split('_')[0];
+    const key = String(qid || '').split('_')[0];
     if (!SUBJECTS[key]) return null;
-    const data = await loadQuestions(key);
-    return data.questions.find(q => q.id === qid) || null;
+    if (!_qIndex[key]) await loadQuestions(key);
+    const idx = _qIndex[key];
+    return (idx && idx.get(qid)) || null;
 }
 
 // 题量元数据：首页 /api/stats 只需各科总题数画进度条，无需整份题库。
@@ -1300,6 +1309,8 @@ async function gradeExam(exam, answers) {
     exam.score = score;
     exam.status = 'submitted';
     exam.submitted_at = now();
+    // 交卷即固化错题 id：之后「仅模拟考错题」池直接读，不必再遍历题库比对答案
+    exam.wrong_ids = details.filter(d => !d.is_correct).map(d => d.id);
     // 实际用时（扣掉暂停）：墙钟 - 累计暂停 - 本次未结算的暂停。历史成绩优先用这个，
     // 否则中途暂停 20 分钟会被算进「时长」里。
     try {
@@ -1325,22 +1336,37 @@ async function gradeExam(exam, answers) {
 // 与错题本（wrong store，混了刷题/套卷/模拟考所有来源）刻意区分开。
 // 口径：同一题在多场模拟考出现时以**最后一场**的作答为准 —— 后来做对了就不再算错题，
 //       避免把已经掌握的题反复回炉；未作答也算错（与成绩单口径一致）。
-async function examWrongQids() {
+//
+// 性能：交卷时 gradeExam 已把错题 id 落库到 exam.wrong_ids，这里直接读，不再遍历题库。
+// 老会话（升级前交的卷）没有该字段 —— 由 calc=true 时才补算并写回，只发生一次。
+// **首屏统计传 calc=false**：只用已有 wrong_ids，绝不触发 2.9MB 题库加载，
+// 数字可能暂时偏少，前端随后调 /api/exam/examwrong 在后台补算并刷新。
+async function examWrongQids(calc) {
     const exams = (await dbAll('exams'))
         .filter(e => e.status === 'submitted')
         .sort((a, b) => String(a.submitted_at || '').localeCompare(String(b.submitted_at || '')));
-    const latest = new Map();   // qid -> 最后一场的作答
-    for (const e of exams) {
-        for (const qid of e.question_ids || []) {
-            latest.set(qid, String((e.answers || {})[qid] || '').toUpperCase());
+    if (calc) {
+        for (const e of exams) {
+            if (Array.isArray(e.wrong_ids)) continue;
+            const ids = [];
+            for (const qid of e.question_ids || []) {
+                const q = await getQuestionById(qid);
+                if (!q || !q.answer) continue;
+                const ua = String((e.answers || {})[qid] || '').toUpperCase();
+                if (!ua || ua !== q.answer) ids.push(qid);
+            }
+            e.wrong_ids = ids;
+            await dbPut('exams', e);   // 写回，下次直接命中
         }
     }
-    const out = [];
-    for (const [qid, ua] of latest) {
-        const q = await getQuestionById(qid);
-        if (!q || !q.answer) continue;
-        if (!ua || ua !== q.answer) out.push(qid);
+    const latest = new Map();   // qid -> 最后一场是否算错
+    for (const e of exams) {
+        if (!Array.isArray(e.wrong_ids)) continue;   // 未补算的场次先跳过（calc=true 时会补齐）
+        const wrongSet = new Set(e.wrong_ids);
+        for (const qid of e.question_ids || []) latest.set(qid, wrongSet.has(qid));
     }
+    const out = [];
+    for (const [qid, isWrong] of latest) if (isWrong) out.push(qid);
     return out;
 }
 
@@ -1367,7 +1393,7 @@ async function examApi(action, body, arg) {
             } else if (mode === 'unfamiliar') {
                 qids = [...(await dbAll('unfamiliar')), ...(await dbAll('dontknow'))].map(r => r.question_id);
             } else if (mode === 'examwrong') {
-                qids = await examWrongQids();
+                qids = await examWrongQids(true);   // 组卷要准确池子：允许补算老会话
             } else {
                 qids = (await dbAll('wrong')).filter(w => !w.is_resolved).map(r => r.question_id);
             }
@@ -1567,8 +1593,9 @@ async function examApi(action, body, arg) {
         let dueWrong = 0;
         try { dueWrong = (await examDueWrongIds()).length; } catch (e) { /* 取不到就报 0 */ }
         // 模拟考错题池（只认模拟考来源，最后一场作答仍错/未作答）
+        // calc=false：只用已落库的 wrong_ids，不触发题库加载 —— 首屏必须快
         let examWrongIds = [];
-        try { examWrongIds = await examWrongQids(); } catch (e) { /* 取不到就报 0 */ }
+        try { examWrongIds = await examWrongQids(false); } catch (e) { /* 取不到就报 0 */ }
         const examWrongBySub = { ds: 0, co: 0, os: 0, cn: 0 };
         for (const qid of examWrongIds) {
             const k = String(qid).split('_')[0];
@@ -1595,6 +1622,18 @@ async function examApi(action, body, arg) {
             redo_due: redoDue,
             cooldown_days: EXAM_REDO_COOLDOWN_DAYS
         });
+    }
+
+    // 后台补算「模拟考错题」池：老会话没有 wrong_ids，需要遍历题库比对答案。
+    // 单独成一个接口，让首屏统计（pool）不必等它，也不会被 2.9MB 题库加载拖住。
+    if (action === 'examwrong') {
+        const ids = await examWrongQids(true);
+        const bySub = { ds: 0, co: 0, os: 0, cn: 0 };
+        for (const qid of ids) {
+            const k = String(qid).split('_')[0];
+            if (bySub[k] != null) bySub[k]++;
+        }
+        return jsonResp({ exam_wrong: ids.length, exam_wrong_by_subject: bySub });
     }
 
     if (action === 'active') {

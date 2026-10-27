@@ -237,10 +237,16 @@
             try {
                 const names = { ds: '数构', co: '组成', os: 'OS', cn: '网络' };
                 if (mode === 'examwrong') {
-                    // 模拟考错题没有列表接口，直接读池子统计（数量 + 分科）
-                    const d = await (await api('/api/exam/pool')).json();
-                    const n = d.exam_wrong || 0;
-                    const by = d.exam_wrong_by_subject || {};
+                    // 优先用首屏已拿到的统计，避免每次切模式都等一次补算
+                    let n, by;
+                    if (_poolStats && _poolStats.exam_wrong != null) {
+                        n = _poolStats.exam_wrong;
+                        by = _poolStats.exam_wrong_by_subject || {};
+                    } else {
+                        const d = await (await api('/api/exam/examwrong')).json();
+                        n = d.exam_wrong || 0;
+                        by = d.exam_wrong_by_subject || {};
+                    }
                     const detail = Object.keys(names).filter(k => by[k]).map(k => `${names[k]} ${by[k]}`).join(' · ');
                     sourceText.textContent = n
                         ? `模拟考错题 ${n} 题（${detail}）· 按真题比例抽，优先没做过`
@@ -327,7 +333,8 @@
         if (mode === 'favorites' || mode === 'wrong' || mode === 'unfamiliar' || mode === 'examwrong') {
             let poolLen = 0;
             if (mode === 'examwrong') {
-                const d = await (await api('/api/exam/pool')).json();
+                // 点开始才补算（老会话要遍历题库），保证池子判定准确
+                const d = await (await api('/api/exam/examwrong')).json();
                 poolLen = d.exam_wrong || 0;
             } else {
                 const checkUrl = mode === 'favorites' ? '/api/favorites'
@@ -386,7 +393,7 @@
             }
             // 放弃：静默废弃——重新组卷时会自动置为abandoned
         }
-        loadHistory();
+        // loadHistory 由页面初始化统一发起（与池子统计并行），这里不再串行等待
     }
 
     function enterExam(id, questions, answers, remaining, mode, durationSec, paused, pausedSec) {
@@ -842,23 +849,47 @@
     }
 
     // 池子统计：待抽收藏题 / 做过答对 / 不熟 / 不会（口径与后端抽题分层一致）
+    let _poolStats = null;   // 池子统计缓存：选模式时不必再请求一次
+
     async function loadPoolStats() {
         try {
             const d = await (await api('/api/exam/pool')).json();
             if (d.error) return;
-            const set = (id, v) => { const el = document.getElementById(id); if (el) el.textContent = v; };
-            set('psFresh', d.favorites_fresh);
-            set('psCorrect', d.favorites_correct);
-            set('psUnfam', d.unfamiliar);
-            set('psDk', d.dontknow);
-            const bar = document.getElementById('examPoolBar');
-            if (bar) {
-                bar.title = `收藏池共 ${d.favorites_total} 题：待抽 ${d.favorites_fresh}`
-                    + ` · 做过的错题 ${d.favorites_wrongish} · 做过的对题 ${d.favorites_correct}`
-                    + `\n到期错题 ${d.due_wrong} · 模拟考错题 ${d.exam_wrong}`
-                    + `\n7 天后重练：待到期 ${d.redo_pending} · 已到期 ${d.redo_due}`;
-            }
+            _poolStats = d;
+            renderPoolStats(d);
         } catch (e) { /* 统计失败不挡组卷 */ }
+    }
+
+    function renderPoolStats(d) {
+        const set = (id, v) => { const el = document.getElementById(id); if (el) el.textContent = v; };
+        set('psFresh', d.favorites_fresh);
+        set('psCorrect', d.favorites_correct);
+        set('psUnfam', d.unfamiliar);
+        set('psDk', d.dontknow);
+        const bar = document.getElementById('examPoolBar');
+        if (bar) {
+            bar.title = `收藏池共 ${d.favorites_total} 题：待抽 ${d.favorites_fresh}`
+                + ` · 做过的错题 ${d.favorites_wrongish} · 做过的对题 ${d.favorites_correct}`
+                + `\n到期错题 ${d.due_wrong} · 模拟考错题 ${d.exam_wrong}`
+                + `\n7 天后重练：待到期 ${d.redo_pending} · 已到期 ${d.redo_due}`;
+        }
+    }
+
+    // 后台补算「模拟考错题」：老会话没有 wrong_ids，要遍历题库（会触发 2.9MB 题库加载），
+    // 所以延后执行，绝不挡首屏的收藏/不熟/不会/历史成绩
+    async function refreshExamWrongStat() {
+        try {
+            const d = await (await api('/api/exam/examwrong')).json();
+            if (d.error || d.exam_wrong == null) return;
+            if (_poolStats) {
+                _poolStats.exam_wrong = d.exam_wrong;
+                _poolStats.exam_wrong_by_subject = d.exam_wrong_by_subject;
+                renderPoolStats(_poolStats);
+            }
+            // 当前正停在「仅模拟考错题」模式：来源行一并刷新
+            const sel = document.getElementById('examMode');
+            if (sel && sel.value === 'examwrong') onModeChange();
+        } catch (e) { /* 补算失败不影响组卷（组卷时会再算一次） */ }
     }
 
     // 恢复上次的"错题入本"选择（默认开启）
@@ -957,8 +988,12 @@
     // 进入页面制造同文档历史锚点：否则侧键后退=跨文档导航（页面卸载），popstate 兜底失效
     try { history.pushState({ examGuard: 1 }, '', location.href); } catch (err) { }
 
-    checkActive();
+    // 首屏优先：池子统计（收藏 / 不熟 / 不会）与历史成绩互不依赖，并行发起；
+    // 模拟考错题需要遍历题库（老会话），延后到首屏之后后台补算
     loadPoolStats();
+    loadHistory();
+    checkActive();
+    setTimeout(refreshExamWrongStat, 400);
     
     // ============ 辅助函数 ============
     function getRandomItems(array, count) {

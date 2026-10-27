@@ -89,6 +89,17 @@ const DAY = 86400000;
     tx.oncomplete = res; tx.onerror = () => rej(tx.error);
   });
 
+  // 性能护栏：首屏统计（pool）绝不能触发题库加载（4 个 JSON 共 2.9MB）
+  let bankFetches = 0;
+  const origFetch = w.fetch;
+  w.fetch = (url) => {
+    if (/data\/(ds|co|os|cn)\.json/.test(String(url))) bankFetches++;
+    return origFetch(url);
+  };
+  bankFetches = 0;
+  await w.api('/api/exam/pool').then(r => r.json());
+  check('首屏 pool 不加载题库（性能护栏）', bankFetches, 0);
+
   // 收藏池 6 题，覆盖四层：
   //   cn_0001 没做过                        → fresh
   //   cn_0002 3 天前做过、答对              → correct（最低优先，但没有冷却）
