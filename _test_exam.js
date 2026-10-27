@@ -226,15 +226,17 @@ ok('题号面板标题带总数与当前筛选', /\$\{label} \$\{questions\.leng
 
 console.log('--- 抽题优先级：到期错题回卷（favorites） ---');
 ok('专用到期错题函数（与复习阶梯解耦）', /async function examDueWrongIds\(\)/.test(BACKEND));
-ok('固定 4 天再抽间隔', /const EXAM_WRONG_REDRAW_DAYS = 4;/.test(BACKEND));
+// 冷却期由「4 天」统一为「7 天」，到期错题与收藏时间队列共用同一常量
+ok('答过的题 7 天冷却（统一常量）', /const EXAM_REDO_COOLDOWN_DAYS = 7;/.test(BACKEND) && /const EXAM_REDO_COOLDOWN_MS = EXAM_REDO_COOLDOWN_DAYS \* 86400000;/.test(BACKEND));
 ok('做对了不抽（答对且晚于最后做错 → 排除）', /st && st\.is_correct && tsToStr\(st\.answered_at\)\.slice\(0, 19\) > lw\) continue;/.test(BACKEND));
 ok('已了结（is_resolved）不抽', /if \(w\.is_resolved\) continue;/.test(BACKEND));
-ok('未满 4 天不抽', /nowMs < base \+ EXAM_WRONG_REDRAW_DAYS \* 86400000\) continue;/.test(BACKEND));
+ok('未满 7 天不抽', /nowMs < base \+ EXAM_REDO_COOLDOWN_MS\) continue;/.test(BACKEND));
 ok('逾期越久越靠前（last_wrong_at 升序）', /a\[0\] < b\[0\] \? -1 : a\[0\] > b\[0\] \? 1/.test(BACKEND));
 ok('组卷按 rank 引用到期层', /dueRank\.has\(q\.id\)/.test(BACKEND) && /dueRank\.get\(a\.id\) - dueRank\.get\(b\.id\)/.test(BACKEND));
-ok('到期错题层最优先（due.concat(fresh, done)）', /return due\.concat\(fresh, done\);/.test(BACKEND));
+ok('到期错题层最优先（due.concat(fresh, ready, cooling)）', /return due\.concat\(fresh, ready, cooling\);/.test(BACKEND));
 ok('到期错题帽子 = 本场该科题量 1/3（向上取整）', /const dueCap = Math\.ceil\(\(take \|\| pool\.length\) \/ 3\);/.test(BACKEND));
-ok('超帽到期错题回流时间队列', /while \(due\.length > dueCap\) done\.push\(due\.pop\(\)\);/.test(BACKEND));
+ok('超帽到期错题回流（冷却中的进 cooling，否则进 ready）',
+  /while \(due\.length > dueCap\)[\s\S]{0,220}?isCoolingDown\(p && p\.answered_at, nowMs\) \? cooling : ready/.test(BACKEND));
 ok('调用点传题量供帽子计算', /order\(poolBySub\[k\], take\)/.test(BACKEND) && /order\(rest, short\)/.test(BACKEND) && /order\(poolBySub\[mode\], total\)/.test(BACKEND));
 ok('组卷设置提示到期错题优先', /到期错题优先回卷/.test(EXAM_HTML));
 

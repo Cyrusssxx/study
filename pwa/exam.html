@@ -54,6 +54,26 @@
                 <p>限时作答，交卷统一评分</p>
             </div>
 
+            <!-- 池子统计：组卷前先看清"现在有多少题可抽" -->
+            <div class="exam-pool-bar" id="examPoolBar">
+                <div class="pool-cell">
+                    <b id="psFresh">--</b>
+                    <span>待抽收藏题（没做过）</span>
+                </div>
+                <div class="pool-cell">
+                    <b id="psCooling">--</b>
+                    <span>冷却中（7 天内做过）</span>
+                </div>
+                <div class="pool-cell">
+                    <b id="psUnfam">--</b>
+                    <span>不熟题</span>
+                </div>
+                <div class="pool-cell">
+                    <b id="psDk">--</b>
+                    <span>不会题</span>
+                </div>
+            </div>
+
             <div class="exam-setup-card">
                 <div class="setup-row">
                     <label>考试模式</label>
@@ -794,6 +814,26 @@
     function backToSetup() {
         show('setupView');
         loadHistory();
+        loadPoolStats();   // 刚交完一场，池子数字变了（冷却中 +N）
+    }
+
+    // 池子统计：待抽收藏题 / 冷却中 / 不熟 / 不会（口径与后端抽题一致，都按 7 天冷却算）
+    async function loadPoolStats() {
+        try {
+            const d = await (await api('/api/exam/pool')).json();
+            if (d.error) return;
+            const set = (id, v) => { const el = document.getElementById(id); if (el) el.textContent = v; };
+            set('psFresh', d.favorites_fresh);
+            set('psCooling', d.favorites_cooling);
+            set('psUnfam', d.unfamiliar);
+            set('psDk', d.dontknow);
+            const bar = document.getElementById('examPoolBar');
+            if (bar) {
+                bar.title = `收藏池共 ${d.favorites_total} 题：待抽 ${d.favorites_fresh} · 冷却中 ${d.favorites_cooling}`
+                    + ` · 已过冷却可轮转 ${d.favorites_ready} · 到期错题 ${d.due_wrong}`
+                    + `（答过的题 ${d.cooldown_days} 天内不再抽）`;
+            }
+        } catch (e) { /* 统计失败不挡组卷 */ }
     }
 
     // 恢复上次的"错题入本"选择（默认开启）
@@ -893,6 +933,7 @@
     try { history.pushState({ examGuard: 1 }, '', location.href); } catch (err) { }
 
     checkActive();
+    loadPoolStats();
     
     // ============ 辅助函数 ============
     function getRandomItems(array, count) {

@@ -459,12 +459,23 @@ async function getDueReviewDetailed(subject) {
     return { stages, stageDue, dueCount, upcoming };
 }
 
-// ==================== 收藏题考试的到期错题层 ====================
-// 语义与错题本复习（艾宾浩斯 2/4/7/15 阶梯）不同，按用户规则独立实现：
-//   做对了不抽——最后做错之后若有更晚的答对记录，即算了结；
-//   做错了 4 天后再抽——固定间隔（last_wrong_at + 4 天），又做错则重新计 4 天；
-//   逾期越久越靠前——把很久之前写过的先过一遍，近期答错的不着急（自然排在队尾）。
-const EXAM_WRONG_REDRAW_DAYS = 4;
+// ==================== 模拟考「答过的题」冷却期 ====================
+// 用户规则：模拟考里答过的题，7 天内不再被抽到；满 7 天后才重新进抽取池。
+// 一条常量统一管两处，避免两套口径打架：
+//   ① examDueWrongIds —— 到期错题（答错且未解决）
+//   ② prioritizeByTime —— 收藏题里"做过"的那一层
+// 逾期越久越靠前：把很久之前写过的先过一遍，近期做过的不着急（自然排在队尾）。
+const EXAM_REDO_COOLDOWN_DAYS = 7;
+const EXAM_REDO_COOLDOWN_MS = EXAM_REDO_COOLDOWN_DAYS * 86400000;
+
+// 某题是否仍在冷却期（作答时间 < 7 天前才算可抽）
+function isCoolingDown(answeredAt, nowMs) {
+    if (!answeredAt) return false;   // 没作答记录 = 没做过，不受冷却约束
+    const t = new Date(String(answeredAt).replace(' ', 'T')).getTime();
+    if (isNaN(t)) return false;      // 脏时间戳当作可抽，不让坏数据把题永久锁死
+    return (nowMs - t) < EXAM_REDO_COOLDOWN_MS;
+}
+
 async function examDueWrongIds() {
     const statuses = await latestStatuses('');
     const nowMs = Date.now();
@@ -478,7 +489,7 @@ async function examDueWrongIds() {
         if (st && st.is_correct && tsToStr(st.answered_at).slice(0, 19) > lw) continue;
         const base = new Date(lw.replace(' ', 'T')).getTime();
         if (isNaN(base)) continue;
-        if (nowMs < base + EXAM_WRONG_REDRAW_DAYS * 86400000) continue;   // 未满 4 天
+        if (nowMs < base + EXAM_REDO_COOLDOWN_MS) continue;   // 未满 7 天（冷却中）
         items.push([lw, w.question_id]);
     }
     // 逾期越久越靠前 = last_wrong_at 越早越靠前；同刻按题号稳定排序
@@ -1349,39 +1360,49 @@ async function examApi(action, body, arg) {
         for (const w of await dbAll('wrong')) wrongMap.set(w.question_id, w);
 
         // 到期错题（跨科目一次算好）：只含「最近一次作答仍是错的」的题。
-        // 做对了即了结不抽；做错的 4 天后再抽；逾期越久越靠前（rank 越小越靠前）。
+        // 做对了即了结不抽；做错的满冷却期（7 天）后再抽；逾期越久越靠前（rank 越小越靠前）。
         let dueRank = new Map();
         try { (await examDueWrongIds()).forEach((id, i) => dueRank.set(id, i)); } catch (e) { /* 取不到就退化为纯时间队列 */ }
 
-        // 收藏题（favorites）：到期错题 → 没做过 → 时间队列。
+        // 收藏题（favorites）：到期错题 → 没做过 → 过了冷却期的 → 冷却中（兜底）。
         //   ① 到期错题最优先：逾期越久越先抽（很久之前写过的先过一遍，近期答错的不着急），
         //      最多占本场该科题量 1/3（向上取整）——复习优先但不挤掉新题推进；
-        //      超帽的回流时间队列，随队列自然再出现；
+        //      超帽的回流到"过了冷却期"层，随队列自然再出现；
         //   ② 从没做过的排其次：还没进队列，按题号稳定序（不随机），对应"1312 题一天 40"的推进节奏；
-        //   ③ 其余做过的按「最近一次作答时间」升序 = 最早做的排最前；
-        //      作答后 answered_at 刷新 → 这题沉到队尾 → 下一场自然抽到下一批，形成轮转复习。
+        //   ③ 做过的按最近一次作答时间升序（最早做的排最前）；
+        //   ④ **7 天内做过的排最后**：冷却期内的题不主动抽，只有当上面三层凑不够题量时才兜底用
+        //      —— 否则收藏池小的时候会"刚做完又抽到"，等于没练。
         function prioritizeByTime(pool, take) {
-            const due = [], fresh = [], done = [];
+            const nowMs = Date.now();
+            const due = [], fresh = [], ready = [], cooling = [];
             for (const q of pool) {
-                if (dueRank.has(q.id)) { due.push(q); continue; }
                 const p = progMap.get(q.id);
-                if (!p) fresh.push(q); else done.push(q);
+                if (!p) { fresh.push(q); continue; }               // 从没做过
+                if (dueRank.has(q.id)) { due.push(q); continue; }  // 到期错题（本身已满冷却期）
+                if (isCoolingDown(p.answered_at, nowMs)) cooling.push(q);
+                else ready.push(q);
             }
             // 到期错题内部：逾期越久越靠前（dueRank 由 examDueWrongIds 按最后做错时间升序生成）
             due.sort((a, b) => (dueRank.get(a.id) - dueRank.get(b.id)) || (a.id < b.id ? -1 : 1));
-            // 帽子 = 本场该科题量的 1/3：超出部分退回时间队列（并入 done 按作答时间排序）
+            // 帽子 = 本场该科题量的 1/3：超出部分退回"已过冷却"层
             const dueCap = Math.ceil((take || pool.length) / 3);
-            while (due.length > dueCap) done.push(due.pop());
+            while (due.length > dueCap) {
+                const q = due.pop();
+                const p = progMap.get(q.id);
+                (isCoolingDown(p && p.answered_at, nowMs) ? cooling : ready).push(q);
+            }
             // 从没做过的：按题号稳定排序，保证每场抽到的顺序一致（不是随机）
             fresh.sort((a, b) => (a.id < b.id ? -1 : a.id > b.id ? 1 : 0));
             // 做过的：按最近一次作答时间升序 = 最早做的排最前；同刻用题号兜底
-            done.sort((a, b) => {
+            const byAnswered = (a, b) => {
                 const ta = String((progMap.get(a.id) || {}).answered_at || '');
                 const tb = String((progMap.get(b.id) || {}).answered_at || '');
                 if (ta !== tb) return ta < tb ? -1 : 1;
                 return a.id < b.id ? -1 : a.id > b.id ? 1 : 0;
-            });
-            return due.concat(fresh, done);
+            };
+            ready.sort(byAnswered);
+            cooling.sort(byAnswered);
+            return due.concat(fresh, ready, cooling);
         }
 
         // 错题本（wrong）：三层优先级 —— 没做过 > 错题未解决 > 最久没做 > 最近做过
@@ -1476,6 +1497,34 @@ async function examApi(action, body, arg) {
             await dbPut('exams', exam);
         }
         return jsonResp({ success: true });
+    }
+
+    // 池子统计：模拟考设置页展示"待抽多少题"，让"按真题比例抽"这件事在组卷前可见
+    if (action === 'pool') {
+        const nowMs = Date.now();
+        const progMap = new Map();
+        for (const p of await dbAll('progress')) progMap.set(p.question_id, p);
+        const favs = await dbAll('favorites');
+        let fresh = 0, ready = 0, cooling = 0;
+        for (const f of favs) {
+            const p = progMap.get(f.question_id);
+            if (!p) { fresh++; continue; }
+            if (isCoolingDown(p.answered_at, nowMs)) cooling++; else ready++;
+        }
+        const unfam = (await dbAll('unfamiliar')).length;
+        const dk = (await dbAll('dontknow')).length;
+        let dueWrong = 0;
+        try { dueWrong = (await examDueWrongIds()).length; } catch (e) { /* 取不到就报 0 */ }
+        return jsonResp({
+            favorites_total: favs.length,
+            favorites_fresh: fresh,        // 待抽：收藏池里从没做过的
+            favorites_ready: ready,        // 做过且已过冷却期，可轮转抽到
+            favorites_cooling: cooling,    // 7 天内做过，暂不主动抽
+            unfamiliar: unfam,
+            dontknow: dk,
+            due_wrong: dueWrong,
+            cooldown_days: EXAM_REDO_COOLDOWN_DAYS
+        });
     }
 
     if (action === 'active') {

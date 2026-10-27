@@ -2133,6 +2133,50 @@ mark {
     max-width: 640px;
 }
 
+/* ===== 模拟考设置页：池子统计（组卷前先看清有多少题可抽） ===== */
+.exam-pool-bar {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 10px;
+    margin-bottom: 20px;
+    max-width: 640px;
+}
+
+.pool-cell {
+    background: var(--card-bg);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    padding: 12px 10px;
+    text-align: center;
+}
+
+.pool-cell b {
+    display: block;
+    font-size: 1.45rem;
+    font-weight: 700;
+    line-height: 1.2;
+    color: var(--primary);
+    font-variant-numeric: tabular-nums;
+}
+
+.pool-cell span {
+    display: block;
+    margin-top: 4px;
+    font-size: 0.74rem;
+    line-height: 1.45;
+    color: var(--text-light);
+}
+
+@media (max-width: 640px) {
+    .exam-pool-bar {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .pool-cell b {
+        font-size: 1.25rem;
+    }
+}
+
 .setup-row {
     display: flex;
     align-items: center;
