@@ -66,11 +66,11 @@
                 </div>
                 <div class="pool-cell">
                     <b id="psUnfam">--</b>
-                    <span>不熟题</span>
+                    <span id="psUnfamSub">不熟题</span>
                 </div>
                 <div class="pool-cell">
                     <b id="psDk">--</b>
-                    <span>不会题</span>
+                    <span id="psDkSub">不会题</span>
                 </div>
             </div>
 
@@ -907,23 +907,27 @@
 
     function renderPoolStats(d) {
         const set = (id, v) => { const el = document.getElementById(id); if (el) el.textContent = v; };
-        // 第 1 格：收藏池总量，副标点出「还剩多少没做过」（用户要的"待抽"）
+        // 第 1 格：收藏池总量 + 「待抽 / 已做」拆开写，让 1312 = 1 + 1311 一眼自洽
+        // （"已做"含模拟考作答 —— 交卷时每题都写了 progress，所以模拟考做过的必然不在待抽里）
         set('psFav', d.favorites_total);
-        set('psFavSub', `收藏题 · 待抽 ${d.favorites_fresh}`);
-        // 第 2 格：模拟考做过的去重题数（不是收藏池里的，两者口径不同）
+        set('psFavSub', `待抽 ${d.favorites_fresh} · 已做 ${d.favorites_total - d.favorites_fresh}`);
         set('psExam', d.exam_answered);
         set('psExamSub', `模拟考做过 · ${d.exam_sessions} 场`);
         set('psUnfam', d.unfamiliar);
+        set('psUnfamSub', `不熟 · 未做 ${d.unfamiliar_undone}`);
         set('psDk', d.dontknow);
+        set('psDkSub', `不会 · 未做 ${d.dontknow_undone}`);
         const bar = document.getElementById('examPoolBar');
         if (bar) {
             bar.title = `【收藏池】共 ${d.favorites_total} 题`
-                + `｜没做过 ${d.favorites_fresh}（待抽·最高优先）`
+                + `\n  待抽（从没做过）${d.favorites_fresh}`
                 + `｜做过的错题 ${d.favorites_wrongish}`
-                + `｜做过的对题 ${d.favorites_correct}（最低优先）`
+                + `｜做过的对题 ${d.favorites_correct}`
+                + `\n  注：模拟考交卷会写作答记录，所以模拟考做过的题已经算在"已做"里，不在待抽中`
                 + `\n【模拟考】${d.exam_sessions} 场，做过 ${d.exam_answered} 题（去重）`
                 + `｜其中仍错 ${d.exam_wrong}｜到期错题 ${d.due_wrong}`
-                + `\n【标记】不熟 ${d.unfamiliar}｜不会 ${d.dontknow}`
+                + `\n【标记】不熟 ${d.unfamiliar}（未做 ${d.unfamiliar_undone}）`
+                + `｜不会 ${d.dontknow}（未做 ${d.dontknow_undone}）`
                 + `\n【7 天后重练】待到期 ${d.redo_pending}｜已到期 ${d.redo_due}`;
         }
     }

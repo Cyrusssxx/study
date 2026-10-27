@@ -150,6 +150,12 @@ const DAY = 86400000;
     /return due\.concat\(fresh, wrongish, correct\)/.test(BACKEND_SRC), true);
 
   console.log('\n--- 三、池子统计与抽题同口径 ---');
+  // 不熟/不会各放一条「没做过」和「做过」的，验证未做数只算前者
+  await put('unfamiliar', [{ question_id: 'cn_0007', subject: 'cn', added_at: fmt(Date.now()) }]);
+  await put('dontknow', [
+    { question_id: 'cn_0008', subject: 'cn', added_at: fmt(Date.now()) },
+    { question_id: 'cn_0002', subject: 'cn', added_at: fmt(Date.now()) }   // cn_0002 做过
+  ]);
   const pool = await w.api('/api/exam/pool').then(r => r.json());
   check('收藏池总数 6', pool.favorites_total, 6);
   check('待抽（没做过）3 题（cn_0001 / cn_0005 / cn_0006）', pool.favorites_fresh, 3);
@@ -161,6 +167,10 @@ const DAY = 86400000;
   check('重练池：已到期 1 / 待到期 1', [pool.redo_due, pool.redo_pending], [1, 1]);
   check('本用例没造模拟考会话 → exam_answered 0', pool.exam_answered, 0);
   check('已交卷场数 0', pool.exam_sessions, 0);
+  check('不熟 1 题', pool.unfamiliar, 1);
+  check('不熟池里未做的 1 题（cn_0007）', pool.unfamiliar_undone, 1);
+  check('不会 2 题', pool.dontknow, 2);
+  check('不会池里未做的 1 题（cn_0008；cn_0002 做过不算）', pool.dontknow_undone, 1);
 
   console.log('\n--- 四、7 天后重练：加入 / 取消 ---');
   const r1 = await w.api('/api/mark/redo/cn_0007', { method: 'POST' }).then(r => r.json());
@@ -183,9 +193,11 @@ const DAY = 86400000;
   // 第 1 格是收藏池总量（副标写待抽），第 2 格是模拟考做过 —— 两者口径不同，别混
   w.renderPoolStats(pool);
   check('第 1 格显示收藏池总量', w.document.getElementById('psFav').textContent, String(pool.favorites_total));
-  check('第 1 格副标点出待抽数', /收藏题 · 待抽 \d+/.test(w.document.getElementById('psFavSub').textContent), true);
+  check('第 1 格副标把「待抽 / 已做」拆开写', /待抽 \d+ · 已做 \d+/.test(w.document.getElementById('psFavSub').textContent), true);
   check('第 2 格显示模拟考做过题数', w.document.getElementById('psExam').textContent, String(pool.exam_answered));
   check('第 2 格副标点出场数', /模拟考做过 · \d+ 场/.test(w.document.getElementById('psExamSub').textContent), true);
+  check('不熟副标带未做数', /不熟 · 未做 \d+/.test(w.document.getElementById('psUnfamSub').textContent), true);
+  check('不会副标带未做数', /不会 · 未做 \d+/.test(w.document.getElementById('psDkSub').textContent), true);
   check('tooltip 分区块说明口径', /【收藏池】[\s\S]*【模拟考】[\s\S]*【标记】/.test(w.document.getElementById('examPoolBar').title), true);
   check('清除记录有二次确认', /再确认一次/.test(EXAM_SRC), true);
   check('二次确认列出会话数', /即将删除 \$\{total\} 场会话/.test(EXAM_SRC), true);

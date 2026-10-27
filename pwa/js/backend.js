@@ -1638,8 +1638,14 @@ async function examApi(action, body, arg) {
             const w = wrongMap.get(f.question_id);
             if (w && !w.is_resolved) wrongish++; else correct++;
         }
-        const unfam = (await dbAll('unfamiliar')).length;
-        const dk = (await dbAll('dontknow')).length;
+        // 不熟 / 不会：总数 + 其中"还没做过"的（用户要看这两个池子里真正待抽多少）
+        const unfamRows = await dbAll('unfamiliar');
+        const dkRows = await dbAll('dontknow');
+        const unfam = unfamRows.length;
+        const dk = dkRows.length;
+        let unfamUndone = 0, dkUndone = 0;
+        for (const r of unfamRows) if (!progMap.has(r.question_id)) unfamUndone++;
+        for (const r of dkRows) if (!progMap.has(r.question_id)) dkUndone++;
         // 模拟考去重题数：历次已交卷的卷面题目并集（不碰题库，只读会话）
         const examRows = (await dbAll('exams')).filter(e => e.status === 'submitted');
         const examQidSet = new Set();
@@ -1670,7 +1676,9 @@ async function examApi(action, body, arg) {
             exam_answered: examQidSet.size,   // 模拟考做过的去重题数（历次卷面并集）
             exam_sessions: examRows.length,   // 已交卷场数
             unfamiliar: unfam,
+            unfamiliar_undone: unfamUndone,   // 不熟池里还没做过的
             dontknow: dk,
+            dontknow_undone: dkUndone,        // 不会池里还没做过的
             due_wrong: dueWrong,
             exam_wrong: examWrongIds.length,
             exam_wrong_by_subject: examWrongBySub,
