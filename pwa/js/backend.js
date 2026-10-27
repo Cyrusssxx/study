@@ -417,6 +417,12 @@ async function applyAnswer(qid, subject, userAnswer, isCorrect, ts, trackWrong =
         if (w.correct_streak >= 2) w.is_resolved = 1;
         await dbPut('wrong', w);
     }
+    // 答对即移出「不熟 / 不会」池（用户规则：答对 1 次就移出，池子只保留当前真正薄弱的题）。
+    // 与错题本"连对 2 次"不同 —— 不熟是主观标记，做对一次即可认为已过关。
+    if (isCorrect) {
+        if (await dbGet('unfamiliar', qid)) await dbDelete('unfamiliar', qid);
+        if (await dbGet('dontknow', qid)) await dbDelete('dontknow', qid);
+    }
 }
 
 // 每题最近一次作答 {qid: {user_answer, is_correct, answered_at}}

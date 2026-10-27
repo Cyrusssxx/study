@@ -185,6 +185,23 @@ const DAY = 86400000;
   const pool3 = await w.api('/api/exam/pool').then(r => r.json());
   check('重练池待到期回到 1', pool3.redo_pending, 1);
 
+  console.log('\n--- 四半、不熟/不会：答对 1 次自动移出 ---');
+  // 用户规则：标记池只保留「当前真正薄弱」的题，做对一次即过关（错题本是连对 2 次）
+  await w.api('/api/mark/unfamiliar/cn_0008', { method: 'POST' }).then(r => r.json());
+  let marks = await w.api('/api/marks?kind=all').then(r => r.json());
+  const beforeCorrect = marks.total;
+  check('cn_0008 已标不熟', marks.marks.some(m => m.question_id === 'cn_0008'), true);
+  await w.applyAnswer('cn_0008', 'cn', 'A', true, null, false);
+  marks = await w.api('/api/marks?kind=all').then(r => r.json());
+  check('答对后标记自动移出', marks.total, beforeCorrect - 1);
+  check('cn_0008 已不在标记池', marks.marks.some(m => m.question_id === 'cn_0008'), false);
+
+  // 答错不应移出
+  await w.api('/api/mark/dontknow/cn_0008', { method: 'POST' }).then(r => r.json());
+  await w.applyAnswer('cn_0008', 'cn', 'B', false, null, false);
+  marks = await w.api('/api/marks?kind=all').then(r => r.json());
+  check('答错后标记保留', marks.marks.some(m => m.question_id === 'cn_0008'), true);
+
   console.log('\n--- 五、前端：统计条 / 二次确认 / 重练按钮 ---');
   for (const id of ['examPoolBar', 'psFav', 'psFavSub', 'psExam', 'psExamSub', 'psUnfam', 'psDk']) {
     check(`设置页有 #${id}`, !!w.document.getElementById(id), true);
