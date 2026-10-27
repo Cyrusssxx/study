@@ -277,6 +277,37 @@ const DAY = 86400000;
   const ghost = await w.dbAll('__not_exist__');
   check('dbAll 读不存在的 store 返回 []', ghost, []);
 
+  console.log('\n--- 九、模拟考答对 → 退出抽题；「猜对了」→ 放回垫底 ---');
+  // cn_0002 在收藏池里、状态是"做过且答对"（correct 层）。造一场模拟考也答对它。
+  await put('exams', [{
+    id: 99, mode: 'full', question_ids: ['cn_0002'], answers: { cn_0002: 'A' },
+    total_count: 1, correct_count: 1, score: 2, duration_sec: 3600,
+    status: 'submitted', started_at: '2026-10-26 10:00:00', submitted_at: '2026-10-26 10:50:00'
+  }]);
+  const g2 = await gen('favorites', 6);
+  const ids2 = (g2.questions || []).map(q => q.id);
+  check('模拟考答对的 cn_0002 退出抽题', ids2.includes('cn_0002'), false);
+  check('其余题照常抽出', ids2.length, 6);
+
+  // 标「猜对了」→ 放回垫底层
+  const gs = await w.api('/api/mark/guessed/cn_0002', { method: 'POST' }).then(r => r.json());
+  check('「猜对了」标记成功', gs.is_guessed, true);
+  const g3 = await gen('favorites', 6);
+  const ids3 = (g3.questions || []).map(q => q.id);
+  check('标「猜对了」后重新可抽', ids3.includes('cn_0002'), true);
+  check('放回后仍在垫底（最后一个）', ids3.indexOf('cn_0002'), ids3.length - 1);
+
+  // 再点一次取消 → 又退出
+  await w.api('/api/mark/guessed/cn_0002', { method: 'POST' }).then(r => r.json());
+  const g4 = await gen('favorites', 6);
+  check('取消「猜对了」后再次退出', (g4.questions || []).map(q => q.id).includes('cn_0002'), false);
+
+  // 「猜对了」不能污染 7 天后重练池的统计
+  await w.api('/api/mark/guessed/cn_0002', { method: 'POST' }).then(r => r.json());
+  const poolG = await w.api('/api/exam/pool').then(r => r.json());
+  check('guessed 单独计数', poolG.guessed, 1);
+  check('guessed 不计入重练池已到期', poolG.redo_due, 1);   // 仍是最初那条 cn_0005
+
   dom.window.close();
   console.log(`\n结果: ${pass} / ${pass + fail}` + (fail ? `，${fail} 项失败` : '，全部通过'));
   process.exit(fail ? 1 : 0);

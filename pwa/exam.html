@@ -225,7 +225,7 @@
         if (isSpecial) {
             applyCountRange(cnt, 5, 150, 40);
             const HINTS = {
-                favorites: '按真题比例分配 · 到期错题（≤1/3）→ 做过的错题 → 没做过的 → 做过的对题（垫底）',
+                favorites: '按真题比例分配 · 到期错题（≤1/3）→ 做过的错题 → 没做过的 · 模拟考答对的题不再抽（可标「猜对了」放回）',
                 unfamiliar: '按真题比例分配 · 只抽标了「不熟/不会」的题，优先没做过的',
                 examwrong: '按真题比例分配 · 只抽历次模拟考里做错的题（同一题以最后一场作答为准）',
                 wrong: '按真题比例分配，优先抽没做过的题'
@@ -276,7 +276,7 @@
                             .map(k => `${names[k]} ${bySub[k]}`)
                             .join(' · ');
                         sourceText.textContent = mode === 'favorites'
-                            ? `收藏 ${n} 题（${detail}）· 先清错题，再推没做过的，答对的垫底`
+                            ? `收藏 ${n} 题（${detail}）· 先清错题，再推没做过的，模拟考答对的退出抽题`
                             : mode === 'unfamiliar'
                                 ? `不熟 ${n} 题（${detail}）· 按真题比例抽，优先没做过`
                                 : `错题 ${n} 题（${detail}）· 按真题比例抽，优先没做过`;

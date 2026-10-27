@@ -885,7 +885,9 @@
                         <button class="mark-btn ${q.is_dontknow ? 'mark-dontknow' : ''}" onclick="toggleMark('dontknow','${q.id}')" title="${q.is_dontknow ? '取消"不会"标记' : '标记为不会（红色）'}">不会</button>
                         ${(MODE === 'exam_review' || MODE === 'exam_wrong') && q.exam_user_answer && q.exam_user_answer === q.answer
                             ? `<button class="mark-btn ${q.is_redo ? 'mark-redo' : ''}" onclick="toggleRedo('${q.id}')"
-                                    title="${q.is_redo ? '取消「7 天后重练」' : '这题做对了，但想 7 天后再确认一遍'}">${q.is_redo ? '✓ 已排重练' : '7 天后重练'}</button>`
+                                    title="${q.is_redo ? '取消「7 天后重练」' : '这题做对了，但想 7 天后再确认一遍'}">${q.is_redo ? '✓ 已排重练' : '7 天后重练'}</button>
+                               <button class="mark-btn ${q.is_guessed ? 'mark-guessed' : ''}" onclick="toggleGuessed('${q.id}')"
+                                    title="${q.is_guessed ? '取消「猜对了」' : '这题是蒙对的 → 放回收藏池垫底层，下次还会抽到'}">${q.is_guessed ? '✓ 已放回' : '猜对了'}</button>`
                             : ''}
                     </span>
                     <button class="btn-icon ${isFav ? 'favorited' : ''}" onclick="toggleFavorite('${q.id}')" title="${isFav ? '取消收藏' : '收藏'}">
@@ -1052,6 +1054,8 @@
         else if (q.is_dontknow) cls += ' dk';
         // 已排「7 天后重练」：右上角蓝点（与右下角选项字母错开位置）
         if (q.is_redo) cls += ' redo';
+        // 已标「猜对了」（放回垫底层）：左下角橙点
+        if (q.is_guessed) cls += ' guessed';
         // 试卷回顾/错题重刷：题号右下角标出「本场选了什么」——答对绿、答错红，不用点进去也能复盘
         let opt = '';
         if (MODE === 'exam_review' || MODE === 'exam_wrong') {
@@ -1551,6 +1555,26 @@
             showTip(result.is_redo
                 ? `已排入 ${result.days} 天后的重练池（到期后模拟考会抽到）`
                 : '已取消「7 天后重练」');
+        } catch (e) {
+            showTip('操作失败：' + e.message);
+        }
+    }
+
+    // 试卷回顾：「猜对了」——模拟考里答对但其实是蒙的 → 放回收藏池垫底层（否则答对即退出抽题）
+    async function toggleGuessed(questionId) {
+        try {
+            const resp = await api(`/api/mark/guessed/${questionId}`, {method: 'POST'});
+            const result = await resp.json();
+            if (result.error) { showTip(result.error); return; }
+            const q = questions[currentIndex];
+            if (q.id === questionId) {
+                q.is_guessed = !!result.is_guessed;
+                renderQuestion();
+                renderNumberPanel();
+            }
+            showTip(result.is_guessed
+                ? '已放回收藏池（垫底层）· 下次模拟考会抽到'
+                : '已取消「猜对了」· 这题不再抽');
         } catch (e) {
             showTip('操作失败：' + e.message);
         }

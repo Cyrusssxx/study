@@ -606,14 +606,16 @@ async function api(url, opts = {}) {
                 // 不熟/不会标记 + 7 天后重练：题卡与题号面板要显示状态，随题带出
                 const unfamSet = new Set((await dbAll('unfamiliar')).map(x => x.question_id));
                 const dkSet = new Set((await dbAll('dontknow')).map(x => x.question_id));
-                const redoSet = new Set((await dbAll('redo')).map(x => x.question_id));
+                const redoRows0 = await dbAll('redo');
+                const redoSet = new Set(redoRows0.filter(r => r.kind !== 'guessed').map(r => r.question_id));
+                const guessedSet0 = new Set(redoRows0.filter(r => r.kind === 'guessed').map(r => r.question_id));
                 qs = [];
                 for (const k of Object.keys(SUBJECTS)) {
                     for (const q of (await loadQuestions(k)).questions) {
                         if (idSet.has(q.id)) qs.push(Object.assign({}, q, {
                             exam_user_answer: examUa[q.id] || '', wrong_count: wrongCntMap[q.id] || 0,
                             is_unfamiliar: unfamSet.has(q.id), is_dontknow: dkSet.has(q.id),
-                            is_redo: redoSet.has(q.id)
+                            is_redo: redoSet.has(q.id), is_guessed: guessedSet0.has(q.id)
                         }));
                     }
                 }
@@ -769,11 +771,24 @@ async function api(url, opts = {}) {
         if (seg[1] === 'mark') {
             const kind = seg[2];
             const qid = seg[3];
-            if (kind !== 'unfamiliar' && kind !== 'dontknow' && kind !== 'redo') {
+            if (kind !== 'unfamiliar' && kind !== 'dontknow' && kind !== 'redo' && kind !== 'guessed') {
                 return jsonResp({ error: '无效的标记类型' }, 400);
             }
             const subject = qid.split('_')[0];
             if (!SUBJECTS[subject]) return jsonResp({ error: '无效的题目ID' }, 400);
+
+            // 「猜对了」：模拟考里答对、但其实是蒙的 → 放回收藏池的垫底层（否则答对即退出抽题）。
+            // 与 redo 共用 store，用 kind 区分：redo = 7 天后重练（时间排期），
+            // guessed = 垫底层放行（无时间概念，due_at 置 0）。
+            if (kind === 'guessed') {
+                const existing = await dbGet('redo', qid);
+                if (existing && existing.kind === 'guessed') {
+                    await dbDelete('redo', qid);
+                    return jsonResp({ question_id: qid, is_guessed: false });
+                }
+                await dbPut('redo', { question_id: qid, subject, kind: 'guessed', added_at: now(), due_at: 0 });
+                return jsonResp({ question_id: qid, is_guessed: true });
+            }
 
             // 「7 天后重练」：把题排进 7 天后的抽取池（试卷回顾里对做对的题手动加）。
             // 与不熟/不会**不互斥**——那两者是掌握程度标记，这个是时间排期，可以同时存在。
@@ -1367,6 +1382,8 @@ async function gradeExam(exam, answers) {
     exam.submitted_at = now();
     // 交卷即固化错题 id：之后「仅模拟考错题」池直接读，不必再遍历题库比对答案
     exam.wrong_ids = details.filter(d => !d.is_correct).map(d => d.id);
+    // 同理固化答对的题：收藏池抽题时，这些题默认退出（除非用户标了「猜对了」）
+    exam.right_ids = details.filter(d => d.is_correct).map(d => d.id);
     // 实际用时（扣掉暂停）：墙钟 - 累计暂停 - 本次未结算的暂停。历史成绩优先用这个，
     // 否则中途暂停 20 分钟会被算进「时长」里。
     try {
@@ -1423,6 +1440,42 @@ async function examWrongQids(calc) {
     }
     const out = [];
     for (const [qid, isWrong] of latest) if (isWrong) out.push(qid);
+    return out;
+}
+
+// 模拟考里「答对过」的题（同一题以最后一场为准）。
+// 用途：收藏池抽题时这些题默认退出 —— 用户规则「模拟考做对即视为掌握，不再抽」，
+// 但在试卷回顾里点「猜对了」可以放回垫底层（guessed 标记）。
+async function examCorrectQids(calc) {
+    const exams = (await dbAll('exams'))
+        .filter(e => e.status === 'submitted')
+        .sort((a, b) => String(a.submitted_at || '').localeCompare(String(b.submitted_at || '')));
+    if (calc) {
+        for (const e of exams) {
+            if (Array.isArray(e.right_ids)) continue;
+            if (!Array.isArray(e.wrong_ids)) {
+                const ids = [];
+                for (const qid of e.question_ids || []) {
+                    const q = await getQuestionById(qid);
+                    if (!q || !q.answer) continue;
+                    const ua = String((e.answers || {})[qid] || '').toUpperCase();
+                    if (!ua || ua !== q.answer) ids.push(qid);
+                }
+                e.wrong_ids = ids;
+            }
+            const wrongSet = new Set(e.wrong_ids);
+            e.right_ids = (e.question_ids || []).filter(qid => !wrongSet.has(qid));
+            await dbPut('exams', e);
+        }
+    }
+    const latest = new Map();   // qid -> 最后一场是否答对
+    for (const e of exams) {
+        if (!Array.isArray(e.right_ids)) continue;
+        const rightSet = new Set(e.right_ids);
+        for (const qid of e.question_ids || []) latest.set(qid, rightSet.has(qid));
+    }
+    const out = [];
+    for (const [qid, isRight] of latest) if (isRight) out.push(qid);
     return out;
 }
 
@@ -1483,23 +1536,33 @@ async function examApi(action, body, arg) {
         try { (await examDueWrongIds()).forEach((id, i) => dueRank.set(id, i)); } catch (e) { /* 取不到就退化为纯时间队列 */ }
         // 到期的「7 天后重练」题（试卷回顾里手动排的）：并入到期层，但排在错题之后
         // —— 错题是"没掌握"，重练是"想再确认一遍"，优先级低于错题。
+        // 注意 redo store 里还混着 kind='guessed'（猜对了）的标记，那不是时间排期，要跳过。
+        const redoRows = await dbAll('redo').catch(() => []);
         try {
             const nowMs = Date.now();
             let idx = dueRank.size;
-            for (const r of await dbAll('redo')) {
+            for (const r of redoRows) {
                 const qid = r && r.question_id;
                 if (!qid || dueRank.has(qid)) continue;
+                if (r.kind === 'guessed') continue;      // 猜对了标记：只影响垫底层，不进到期层
                 if ((r.due_at || 0) > nowMs) continue;   // 还没到 7 天
                 dueRank.set(qid, idx++);
             }
         } catch (e) { /* 取不到就只按错题层 */ }
 
-        // 收藏题（favorites）：到期错题 → 做过的错题 → 没做过 → 做过的对题。
+        // 收藏模式专用：模拟考答对过的题默认退出抽题；标了「猜对了」的放行到垫底层
+        let examRightSet = new Set(), guessedSet = new Set();
+        if (mode === 'favorites') {
+            try { examRightSet = new Set(await examCorrectQids(true)); } catch (e) { /* 取不到就不排除 */ }
+            for (const r of redoRows) if (r.kind === 'guessed') guessedSet.add(r.question_id);
+        }
+
+        // 收藏题（favorites）：到期错题 → 做过的错题 → 没做过 → 做过的对题（垫底）。
         //   ① 到期错题最优先：逾期越久越先抽，最多占本场该科题量 1/3（向上取整）；
         //   ② 做过且错题本里仍挂着未解决（含未到 7 天的）：先把错过的题过一遍；
         //   ③ 从没做过的：按题号稳定序（不随机），对应"1312 题一天 40"的推进节奏；
-        //   ④ **做过且答对的排最后**：优先级最低，前面三层抽完才会轮到它。
-        //   用户明确要求「先清错题、再推新题、答对的垫底」——②在③之前是刻意的。
+        //   ④ 做过的对题垫底 —— 但**模拟考里答对的题默认退出**（用户规则：模拟考做对即视为掌握），
+        //      除非在试卷回顾里点过「猜对了」（guessed 标记），那样才回到垫底层可抽。
         function prioritizeByTime(pool, take) {
             const due = [], fresh = [], wrongish = [], correct = [];
             const isWrongish = q => {
@@ -1510,7 +1573,12 @@ async function examApi(action, body, arg) {
                 const p = progMap.get(q.id);
                 if (!p) { fresh.push(q); continue; }               // 从没做过
                 if (dueRank.has(q.id)) { due.push(q); continue; }  // 到期错题
-                (isWrongish(q) ? wrongish : correct).push(q);
+                if (isWrongish(q)) { wrongish.push(q); continue; } // 做过的错题
+                if (p.is_correct) {
+                    // 模拟考答对过、且没标「猜对了」→ 退出抽题池
+                    if (examRightSet.has(q.id) && !guessedSet.has(q.id)) continue;
+                    correct.push(q);   // 其余答对的题垫底
+                }
             }
             // 到期错题内部：逾期越久越靠前（dueRank 由 examDueWrongIds 按最后做错时间升序生成）
             due.sort((a, b) => (dueRank.get(a.id) - dueRank.get(b.id)) || (a.id < b.id ? -1 : 1));
@@ -1531,7 +1599,7 @@ async function examApi(action, body, arg) {
             };
             wrongish.sort(byAnswered);
             correct.sort(byAnswered);
-            // 顺序：到期错题 → 做过的错题 → 没做过 → 做过的对题
+            // 顺序：到期错题 → 做过的错题 → 没做过 → 做过的对题（垫底）
             return due.concat(wrongish, fresh, correct);
         }
 
@@ -1588,12 +1656,16 @@ async function examApi(action, body, arg) {
             }
 
             // ---- 4. 第三轮：还差就跨科从全题库补 ----
+            // 收藏模式兜底时同样排除「答对过」的题 —— 否则会从全库把刚排除的题又捞回来。
             if (short > 0) {
                 const rest = [];
                 for (const k of EXAM_SUBJECT_ORDER) {
                     const data = await loadQuestions(k);
                     for (const q of data.questions) {
-                        if (q.answer && !pickedIds.has(q.id)) rest.push(q);
+                        if (!q.answer || pickedIds.has(q.id)) continue;
+                        // 与池内规则保持一致：只排除「模拟考答对且没标猜对了」的题
+                        if (mode === 'favorites' && examRightSet.has(q.id) && !guessedSet.has(q.id)) continue;
+                        rest.push(q);
                     }
                 }
                 for (const q of shuffled(rest).slice(0, short)) {
@@ -1669,9 +1741,11 @@ async function examApi(action, body, arg) {
             if (examWrongBySub[k] != null) examWrongBySub[k]++;
         }
         // 「7 天后重练」池：未到期（还在等）/ 已到期（下几场会抽到）
-        let redoPending = 0, redoDue = 0;
+        // 同 store 里的 kind='guessed'（猜对了）不是时间排期，单独计数
+        let redoPending = 0, redoDue = 0, guessedCnt = 0;
         try {
             for (const r of await dbAll('redo')) {
+                if (r.kind === 'guessed') { guessedCnt++; continue; }
                 if ((r.due_at || 0) <= nowMs) redoDue++; else redoPending++;
             }
         } catch (e) { /* 取不到就报 0 */ }
@@ -1691,6 +1765,7 @@ async function examApi(action, body, arg) {
             exam_wrong_by_subject: examWrongBySub,
             redo_pending: redoPending,
             redo_due: redoDue,
+            guessed: guessedCnt,              // 「猜对了」标记数（放回垫底层的题）
             cooldown_days: EXAM_REDO_COOLDOWN_DAYS
         });
     }

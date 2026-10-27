@@ -477,6 +477,13 @@ body {
     color: #2b6cb0;
     font-weight: 600;
 }
+/* 猜对了 → 橙（放回垫底层，与"重练"的蓝区分） */
+.mark-btn.mark-guessed {
+    background: rgba(249, 115, 22, 0.14);
+    border-color: #f97316;
+    color: #c2410c;
+    font-weight: 600;
+}
 .dark .mark-btn.mark-unfamiliar {
     color: #e6c74f;
     border-color: #e6c74f;
@@ -491,6 +498,11 @@ body {
     color: #74b3f0;
     border-color: #74b3f0;
     background: rgba(116, 179, 240, 0.16);
+}
+.dark .mark-btn.mark-guessed {
+    color: #fb923c;
+    border-color: #fb923c;
+    background: rgba(251, 146, 60, 0.16);
 }
 
 /* 答题页面 */
@@ -1177,6 +1189,20 @@ body {
     height: 5px;
     border-radius: 50%;
     background: #378add;
+    pointer-events: none;
+}
+
+/* 已标「猜对了」（放回垫底层）：左下角橙点。
+   用 ::before 而非 ::after —— ::after 已被不熟/不会/重练三个角标占用。 */
+.num-btn.guessed::before {
+    content: '';
+    position: absolute;
+    left: 3px;
+    bottom: 3px;
+    width: 5px;
+    height: 5px;
+    border-radius: 50%;
+    background: #f97316;
     pointer-events: none;
 }
 
