@@ -119,7 +119,7 @@ ok('不熟/不会标记不参与抽题（仅到期错题加权）', (() => {
     return !!m && !/unfam|dontknow/i.test(m[0]);
 })());
 ok('第二轮补缺也用同一顺序器', /for \(const q of order\(rest, short\)\.slice\(0, short\)\)/.test(BACKEND));
-ok('UI 提示：到期错题优先回卷', /到期错题优先回卷/.test(EXAM_HTML));
+ok('UI 提示：分层顺序写清楚', /到期错题（≤1\/3）→ 做过的错题 → 没做过的 → 做过的对题/.test(EXAM_HTML));
 
 console.log('--- 鼠标侧键移植（刷题页 → 模拟考）---');
 ok('侧键接管函数 examSideTakeover', /function examSideTakeover/.test(EXAM_HTML));
@@ -233,14 +233,15 @@ ok('已了结（is_resolved）不抽', /if \(w\.is_resolved\) continue;/.test(BA
 ok('未满 7 天不抽', /nowMs < base \+ EXAM_REDO_COOLDOWN_MS\) continue;/.test(BACKEND));
 ok('逾期越久越靠前（last_wrong_at 升序）', /a\[0\] < b\[0\] \? -1 : a\[0\] > b\[0\] \? 1/.test(BACKEND));
 ok('组卷按 rank 引用到期层', /dueRank\.has\(q\.id\)/.test(BACKEND) && /dueRank\.get\(a\.id\) - dueRank\.get\(b\.id\)/.test(BACKEND));
-ok('到期错题层最优先（due.concat(fresh, wrongish, correct)）', /return due\.concat\(fresh, wrongish, correct\);/.test(BACKEND));
+ok('分层顺序 = 到期错题 → 做过的错题 → 没做过 → 做过的对题',
+  /return due\.concat\(wrongish, fresh, correct\);/.test(BACKEND));
 ok('到期错题帽子 = 本场该科题量 1/3（向上取整）', /const dueCap = Math\.ceil\(\(take \|\| pool\.length\) \/ 3\);/.test(BACKEND));
 ok('超帽到期错题回流（错题未解决的进 wrongish，否则进 correct）',
   /while \(due\.length > dueCap\)[\s\S]{0,200}?isWrongish\(q\) \? wrongish : correct/.test(BACKEND));
 ok('答对的题不再有 7 天冷却（无 cooling 层）', /cooling\.push\(q\)/.test(BACKEND) === false);
 ok('做过且错题未解决排在答对之前', /\(isWrongish\(q\) \? wrongish : correct\)\.push\(q\)/.test(BACKEND));
 ok('调用点传题量供帽子计算', /order\(poolBySub\[k\], take\)/.test(BACKEND) && /order\(rest, short\)/.test(BACKEND) && /order\(poolBySub\[mode\], total\)/.test(BACKEND));
-ok('组卷设置提示到期错题优先', /到期错题优先回卷/.test(EXAM_HTML));
+ok('组卷设置提示先清错题', /先清错题，再推没做过的，答对的垫底/.test(EXAM_HTML));
 
 console.log('--- 历史记录批量勾选删除 ---');
 ok('后端有 delete 动作（按 ids 删）', /action === 'delete'/.test(BACKEND) && /tx\.objectStore\('exams'\)\.delete\(id\)/.test(BACKEND));

@@ -1494,12 +1494,12 @@ async function examApi(action, body, arg) {
             }
         } catch (e) { /* 取不到就只按错题层 */ }
 
-        // 收藏题（favorites）：到期错题 → 没做过 → 做过的错题 → 做过的对题。
+        // 收藏题（favorites）：到期错题 → 做过的错题 → 没做过 → 做过的对题。
         //   ① 到期错题最优先：逾期越久越先抽，最多占本场该科题量 1/3（向上取整）；
-        //   ② 从没做过的排其次：按题号稳定序（不随机），对应"1312 题一天 40"的推进节奏；
-        //   ③ 做过且错题本里仍挂着未解决 → 排在"做对过"的前面；
-        //   ④ **做过且答对的排最后**：优先级最低，但没有时间冷却 ——
-        //      只要上面三层抽完，答对的题照样会被抽到（不是"永远不抽"）。
+        //   ② 做过且错题本里仍挂着未解决（含未到 7 天的）：先把错过的题过一遍；
+        //   ③ 从没做过的：按题号稳定序（不随机），对应"1312 题一天 40"的推进节奏；
+        //   ④ **做过且答对的排最后**：优先级最低，前面三层抽完才会轮到它。
+        //   用户明确要求「先清错题、再推新题、答对的垫底」——②在③之前是刻意的。
         function prioritizeByTime(pool, take) {
             const due = [], fresh = [], wrongish = [], correct = [];
             const isWrongish = q => {
@@ -1531,7 +1531,8 @@ async function examApi(action, body, arg) {
             };
             wrongish.sort(byAnswered);
             correct.sort(byAnswered);
-            return due.concat(fresh, wrongish, correct);
+            // 顺序：到期错题 → 做过的错题 → 没做过 → 做过的对题
+            return due.concat(wrongish, fresh, correct);
         }
 
         // 错题本（wrong）：三层优先级 —— 没做过 > 错题未解决 > 最久没做 > 最近做过

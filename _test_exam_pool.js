@@ -136,8 +136,10 @@ const DAY = 86400000;
   const at = id => ids.indexOf(id);
   check('抽出 6 题', ids.length, 6);
   check('到期错题 cn_0004 排最前', at('cn_0004'), 0);
+  // 用户要求：先清错题、再推新题 → wrongish 必须排在 fresh 之前
+  check('做过的错题 cn_0003 排在没做过的 cn_0001 之前', at('cn_0003') < at('cn_0001'), true);
+  check('做过的错题 cn_0003 排在没做过的 cn_0006 之前', at('cn_0003') < at('cn_0006'), true);
   check('没做过的 cn_0001 在"做过的对题"之前', at('cn_0001') < at('cn_0002'), true);
-  check('做过的错题 cn_0003 在"做过的对题"之前', at('cn_0003') < at('cn_0002'), true);
   check('答对的 cn_0002 排在最后一位', at('cn_0002'), ids.length - 1);
   check('到期重练 cn_0005 也进池（排在到期错题之后）', at('cn_0005') > at('cn_0004') && at('cn_0005') >= 0, true);
   // cn_0006 本身没做过，所以它作为普通新题仍在池里；关键是它不能进 due 层
@@ -146,8 +148,8 @@ const DAY = 86400000;
   console.log('\n--- 二、答对的题不再有 7 天冷却 ---');
   check('3 天前答对的题仍被抽到（没有冷却硬排除）', at('cn_0002') >= 0, true);
   check('源码里已无 cooling 层', /cooling\.push\(q\)/.test(BACKEND_SRC), false);
-  check('源码分层 = due + fresh + wrongish + correct',
-    /return due\.concat\(fresh, wrongish, correct\)/.test(BACKEND_SRC), true);
+  check('源码分层 = due + wrongish + fresh + correct',
+    /return due\.concat\(wrongish, fresh, correct\)/.test(BACKEND_SRC), true);
 
   console.log('\n--- 三、池子统计与抽题同口径 ---');
   // 不熟/不会各放一条「没做过」和「做过」的，验证未做数只算前者
