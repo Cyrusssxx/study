@@ -1309,11 +1309,35 @@ async function gradeExam(exam, answers) {
     };
 }
 
+// ==================== 模拟考错题池 ====================
+// 「仅模拟考错题」模式的池子：只认**历次模拟考**这一条来源，
+// 与错题本（wrong store，混了刷题/套卷/模拟考所有来源）刻意区分开。
+// 口径：同一题在多场模拟考出现时以**最后一场**的作答为准 —— 后来做对了就不再算错题，
+//       避免把已经掌握的题反复回炉；未作答也算错（与成绩单口径一致）。
+async function examWrongQids() {
+    const exams = (await dbAll('exams'))
+        .filter(e => e.status === 'submitted')
+        .sort((a, b) => String(a.submitted_at || '').localeCompare(String(b.submitted_at || '')));
+    const latest = new Map();   // qid -> 最后一场的作答
+    for (const e of exams) {
+        for (const qid of e.question_ids || []) {
+            latest.set(qid, String((e.answers || {})[qid] || '').toUpperCase());
+        }
+    }
+    const out = [];
+    for (const [qid, ua] of latest) {
+        const q = await getQuestionById(qid);
+        if (!q || !q.answer) continue;
+        if (!ua || ua !== q.answer) out.push(qid);
+    }
+    return out;
+}
+
 async function examApi(action, body, arg) {
     if (action === 'generate') {
         const mode = body.mode || 'favorites';
         const count = parseInt(body.count || 0, 10);
-        const isSpecial = mode === 'favorites' || mode === 'wrong' || mode === 'unfamiliar';
+        const isSpecial = mode === 'favorites' || mode === 'wrong' || mode === 'unfamiliar' || mode === 'examwrong';
         const isSingle = !!SUBJECTS[mode];
         if (!isSpecial && !isSingle && mode !== 'full') {
             return jsonResp({ error: '无效的考试模式' }, 400);
@@ -1325,18 +1349,19 @@ async function examApi(action, body, arg) {
         const poolBySub = {};
         for (const k of EXAM_SUBJECT_ORDER) poolBySub[k] = [];
         if (isSpecial) {
-            // 三个特殊池：收藏 / 未解决错题 / 不熟题（unfamiliar + dontknow 两个标记合并）
-            let rows;
+            // 四个特殊池：收藏 / 未解决错题 / 不熟题（两个标记合并）/ 模拟考错题
+            let qids;
             if (mode === 'favorites') {
-                rows = await dbAll('favorites');
+                qids = (await dbAll('favorites')).map(r => r.question_id);
             } else if (mode === 'unfamiliar') {
-                rows = [...(await dbAll('unfamiliar')), ...(await dbAll('dontknow'))];
+                qids = [...(await dbAll('unfamiliar')), ...(await dbAll('dontknow'))].map(r => r.question_id);
+            } else if (mode === 'examwrong') {
+                qids = await examWrongQids();
             } else {
-                rows = (await dbAll('wrong')).filter(w => !w.is_resolved);
+                qids = (await dbAll('wrong')).filter(w => !w.is_resolved).map(r => r.question_id);
             }
-            for (const r of rows) {
-                const qid = r.question_id || '';
-                const subj = qid.split('_')[0];
+            for (const qid of qids) {
+                const subj = String(qid || '').split('_')[0];
                 if (!SUBJECTS[subj] || !poolBySub[subj]) continue;
                 const q = await getQuestionById(qid);
                 if (q && q.answer) poolBySub[subj].push(q);
@@ -1515,6 +1540,14 @@ async function examApi(action, body, arg) {
         const dk = (await dbAll('dontknow')).length;
         let dueWrong = 0;
         try { dueWrong = (await examDueWrongIds()).length; } catch (e) { /* 取不到就报 0 */ }
+        // 模拟考错题池（只认模拟考来源，最后一场作答仍错/未作答）
+        let examWrongIds = [];
+        try { examWrongIds = await examWrongQids(); } catch (e) { /* 取不到就报 0 */ }
+        const examWrongBySub = { ds: 0, co: 0, os: 0, cn: 0 };
+        for (const qid of examWrongIds) {
+            const k = String(qid).split('_')[0];
+            if (examWrongBySub[k] != null) examWrongBySub[k]++;
+        }
         return jsonResp({
             favorites_total: favs.length,
             favorites_fresh: fresh,        // 待抽：收藏池里从没做过的
@@ -1523,6 +1556,8 @@ async function examApi(action, body, arg) {
             unfamiliar: unfam,
             dontknow: dk,
             due_wrong: dueWrong,
+            exam_wrong: examWrongIds.length,
+            exam_wrong_by_subject: examWrongBySub,
             cooldown_days: EXAM_REDO_COOLDOWN_DAYS
         });
     }

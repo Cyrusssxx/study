@@ -79,8 +79,9 @@
                     <label>考试模式</label>
                     <select id="examMode" onchange="onModeChange()">
                         <option value="favorites">仅收藏题（默认 · 按真题各科题量抽）</option>
+                        <option value="examwrong">仅模拟考错题（历次模拟考做错的）</option>
                         <option value="unfamiliar">仅不熟题（下次练习池）</option>
-                        <option value="wrong">仅错题</option>
+                        <option value="wrong">仅错题（错题本全部来源）</option>
                         <option value="full">完整 408 模拟（数构11 · 组成11 · OS10 · 网络8）</option>
                         <option value="os">单科：操作系统</option>
                         <option value="co">单科：计算机组成原理</option>
@@ -193,7 +194,8 @@
         cn: '计算机网络',
         favorites: '仅收藏题',
         wrong: '仅错题',
-        unfamiliar: '仅不熟题'
+        unfamiliar: '仅不熟题',
+        examwrong: '仅模拟考错题'
     };
     let examId = null;
     let examQuestions = [];
@@ -214,7 +216,7 @@
     async function onModeChange() {
         const mode = document.getElementById('examMode').value;
         const isFull = mode === 'full';
-        const isSpecial = mode === 'favorites' || mode === 'wrong' || mode === 'unfamiliar';
+        const isSpecial = mode === 'favorites' || mode === 'wrong' || mode === 'unfamiliar' || mode === 'examwrong';
         const cnt = document.getElementById('examCount');
         const sourceInfo = document.getElementById('sourceInfo');
         const sourceText = document.getElementById('sourceText');
@@ -222,44 +224,57 @@
 
         if (isSpecial) {
             applyCountRange(cnt, 5, 150, 40);
-            document.getElementById('countHint').textContent = mode === 'favorites'
-                ? '按真题比例分配 · 到期错题优先回卷（≤1/3），其次没做过的，其余按做的先后轮转'
-                : mode === 'unfamiliar'
-                    ? '按真题比例分配 · 只抽标了「不熟/不会」的题，优先没做过的'
-                    : '按真题比例分配，优先抽没做过的题';
+            const HINTS = {
+                favorites: '按真题比例分配 · 到期错题优先回卷（≤1/3），其次没做过的，其余按做的先后轮转',
+                unfamiliar: '按真题比例分配 · 只抽标了「不熟/不会」的题，优先没做过的',
+                examwrong: '按真题比例分配 · 只抽历次模拟考里做错的题（同一题以最后一场作答为准）',
+                wrong: '按真题比例分配，优先抽没做过的题'
+            };
+            document.getElementById('countHint').textContent = HINTS[mode] || '按真题比例分配';
             sourceInfo.style.display = 'flex';
             sourceText.textContent = '正在读取…';
             recordWrongRow.style.display = mode === 'wrong' ? 'none' : 'flex';
             try {
-                const url = mode === 'favorites' ? '/api/favorites'
-                    : mode === 'unfamiliar' ? '/api/marks?kind=all'
-                        : '/api/wrong';
-                const d = await (await api(url)).json();
-                const rows = mode === 'favorites' ? (d.favorites || [])
-                    : mode === 'unfamiliar' ? (d.marks || [])
-                        : (d.wrong_questions || []);
-                const n = rows.length;
-                if (!n) {
-                    sourceText.textContent = mode === 'favorites' ? '还没有收藏题'
-                        : mode === 'unfamiliar' ? '还没有标记「不熟/不会」的题（刷题/试卷回顾时点 🟡不熟 即可加入）'
-                            : '还没有未解决的错题';
+                const names = { ds: '数构', co: '组成', os: 'OS', cn: '网络' };
+                if (mode === 'examwrong') {
+                    // 模拟考错题没有列表接口，直接读池子统计（数量 + 分科）
+                    const d = await (await api('/api/exam/pool')).json();
+                    const n = d.exam_wrong || 0;
+                    const by = d.exam_wrong_by_subject || {};
+                    const detail = Object.keys(names).filter(k => by[k]).map(k => `${names[k]} ${by[k]}`).join(' · ');
+                    sourceText.textContent = n
+                        ? `模拟考错题 ${n} 题（${detail}）· 按真题比例抽，优先没做过`
+                        : '还没有模拟考错题（先做一场模拟考，交卷后这里就有了）';
                 } else {
-                    // 分科统计，让"按真题各科题量"这件事在组卷前就可见
-                    const bySub = { ds: 0, co: 0, os: 0, cn: 0 };
-                    for (const r of rows) {
-                        const k = String(r.question_id || r.id || '').toLowerCase().split('_')[0];
-                        if (bySub[k] != null) bySub[k]++;
+                    const url = mode === 'favorites' ? '/api/favorites'
+                        : mode === 'unfamiliar' ? '/api/marks?kind=all'
+                            : '/api/wrong';
+                    const d = await (await api(url)).json();
+                    const rows = mode === 'favorites' ? (d.favorites || [])
+                        : mode === 'unfamiliar' ? (d.marks || [])
+                            : (d.wrong_questions || []);
+                    const n = rows.length;
+                    if (!n) {
+                        sourceText.textContent = mode === 'favorites' ? '还没有收藏题'
+                            : mode === 'unfamiliar' ? '还没有标记「不熟/不会」的题（刷题/试卷回顾时点 🟡不熟 即可加入）'
+                                : '还没有未解决的错题';
+                    } else {
+                        // 分科统计，让"按真题各科题量"这件事在组卷前就可见
+                        const bySub = { ds: 0, co: 0, os: 0, cn: 0 };
+                        for (const r of rows) {
+                            const k = String(r.question_id || r.id || '').toLowerCase().split('_')[0];
+                            if (bySub[k] != null) bySub[k]++;
+                        }
+                        const detail = Object.keys(bySub)
+                            .filter(k => bySub[k])
+                            .map(k => `${names[k]} ${bySub[k]}`)
+                            .join(' · ');
+                        sourceText.textContent = mode === 'favorites'
+                            ? `收藏 ${n} 题（${detail}）· 到期错题优先回卷，其余按做的先后轮转`
+                            : mode === 'unfamiliar'
+                                ? `不熟 ${n} 题（${detail}）· 按真题比例抽，优先没做过`
+                                : `错题 ${n} 题（${detail}）· 按真题比例抽，优先没做过`;
                     }
-                    const names = { ds: '数构', co: '组成', os: 'OS', cn: '网络' };
-                    const detail = Object.keys(bySub)
-                        .filter(k => bySub[k])
-                        .map(k => `${names[k]} ${bySub[k]}`)
-                        .join(' · ');
-                    sourceText.textContent = mode === 'favorites'
-                        ? `收藏 ${n} 题（${detail}）· 到期错题优先回卷，其余按做的先后轮转`
-                        : mode === 'unfamiliar'
-                            ? `不熟 ${n} 题（${detail}）· 按真题比例抽，优先没做过`
-                            : `错题 ${n} 题（${detail}）· 按真题比例抽，优先没做过`;
                 }
             } catch (e) {
                 sourceText.textContent = '读取失败';
@@ -308,25 +323,32 @@
     async function startExam() {
         const mode = document.getElementById('examMode').value;
         
-        // 收藏题 / 错题 / 不熟题模式：检查是否有足够的题目
-        if (mode === 'favorites' || mode === 'wrong' || mode === 'unfamiliar') {
-            const checkUrl = mode === 'favorites' ? '/api/favorites'
-                : mode === 'unfamiliar' ? '/api/marks?kind=all'
-                    : '/api/wrong';
-            const checkData = await (await api(checkUrl)).json();
-            const pool = mode === 'favorites' ? (checkData.favorites || [])
-                : mode === 'unfamiliar' ? (checkData.marks || [])
-                    : (checkData.wrong_questions || []);
-            if (pool.length === 0) {
+        // 收藏题 / 错题 / 不熟题 / 模拟考错题 模式：检查是否有足够的题目
+        if (mode === 'favorites' || mode === 'wrong' || mode === 'unfamiliar' || mode === 'examwrong') {
+            let poolLen = 0;
+            if (mode === 'examwrong') {
+                const d = await (await api('/api/exam/pool')).json();
+                poolLen = d.exam_wrong || 0;
+            } else {
+                const checkUrl = mode === 'favorites' ? '/api/favorites'
+                    : mode === 'unfamiliar' ? '/api/marks?kind=all'
+                        : '/api/wrong';
+                const checkData = await (await api(checkUrl)).json();
+                poolLen = (mode === 'favorites' ? (checkData.favorites || [])
+                    : mode === 'unfamiliar' ? (checkData.marks || [])
+                        : (checkData.wrong_questions || [])).length;
+            }
+            if (poolLen === 0) {
                 alert(mode === 'favorites' ? '您还没有收藏任何题目，无法进行收藏题考试。'
                     : mode === 'unfamiliar' ? '您还没有标记「不熟/不会」的题目。\n在刷题或试卷回顾里点题目右上角的「不熟」按钮即可加入。'
-                        : '您还没有错题，无法进行错题考试。');
+                        : mode === 'examwrong' ? '您还没有模拟考错题。\n先做一场模拟考，交卷后这里就会出现那场做错的题。'
+                            : '您还没有错题，无法进行错题考试。');
                 return;
             }
         }
         
         // 越界题量直接收拢到范围内并回写输入框，避免后端静默修正造成"改了没反应"
-        const isSpecial = mode === 'favorites' || mode === 'wrong' || mode === 'unfamiliar';
+        const isSpecial = mode === 'favorites' || mode === 'wrong' || mode === 'unfamiliar' || mode === 'examwrong';
         const [lo, hi, dft] = (mode === 'full') ? [10, 150, 40] : isSpecial ? [5, 150, 40] : [5, 100, 20];
         const count = Math.min(Math.max(parseInt(document.getElementById('examCount').value, 10) || dft, lo), hi);
         document.getElementById('examCount').value = count;
@@ -946,6 +968,7 @@
         if (mode === 'favorites') return '收藏题考试';
         if (mode === 'wrong') return '错题考试';
         if (mode === 'unfamiliar') return '不熟题考试';
+        if (mode === 'examwrong') return '模拟考错题考试';
         return MODE_NAMES[mode] || '模拟考试';
     }
 </script>
