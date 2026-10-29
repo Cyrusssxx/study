@@ -645,12 +645,18 @@
                     onkeydown="onSearchKey(event)">
                 <div class="notes-search-results" id="notesSearchResults" hidden></div>
             </div>`;
-            let body = '';
+            // ---- 正文：先建骨架占位，再按时间片逐节填充 ----
+            // 原实现把整科笔记（最大 846KB）一次性拼成字符串 + 一次 innerHTML，
+            // 且每节都要跑 fmtNotes 的 4 轮全文正则 —— 全在同一个同步任务里，
+            // 主线程被堵死（点「知识点」进来时表现为鼠标卡飞、页面无响应）。
+            // 改为：骨架占位（保持 DOM 顺序）→ 目标节优先渲染 → 其余按 8ms 时间片逐节填充。
+            const flat = [];          // 扁平化 {ch, sec}，下标即 slot 的 data-i
+            let skeleton = '';
             for (const ch of notes.chapters) {
                 // 章标题也可点：跳到该章第一个节（data-sec 由下方循环填充，这里先记首节名）
                 const chFirst = (ch.sections[0] && ch.sections[0].section) || '';
                 toc += `<div class="notes-toc-ch" data-sec="${chFirst}" title="跳到「${ch.chapter}」">${ch.chapter}</div>`;
-                body += `<h2 class="notes-ch-title">${ch.chapter}</h2>`;
+                skeleton += `<div class="notes-ch-block"><h2 class="notes-ch-title">${ch.chapter}</h2>`;
                 for (const sec of ch.sections) {
                     const subs = sec.subsections || [];
                     const hasSub = subs.length > 0;
@@ -661,28 +667,60 @@
                             `<a class="notes-toc-sub${s.important ? ' notes-toc-sub-strong' : ''}" data-sec="${s.section}">${s.section}</a>`
                         ).join('') + `</div>`;
                     }
-                    // 正文：节标题 + (小节 + 节尾)
-                    body += `
+                    skeleton += `<div class="notes-sec-slot" data-i="${flat.length}"></div>`;
+                    flat.push({ ch, sec });
+                }
+                skeleton += `</div>`;
+            }
+            document.getElementById('notesToc').innerHTML = toc;
+            const contentEl = document.getElementById('notesContent');
+            contentEl.innerHTML = skeleton;
+            const secSlots = contentEl.querySelectorAll('.notes-sec-slot');
+
+            // 单节渲染（幂等）：fmtNotes 只在这一节的 html 上跑，不再全量同步处理
+            function renderSection(i) {
+                const item = flat[i];
+                const slot = secSlots[i];
+                if (!item || !slot || slot.dataset.done) return;
+                slot.dataset.done = '1';
+                const ch = item.ch, sec = item.sec;
+                const subs = sec.subsections || [];
+                const hasSub = subs.length > 0;
+                let h = `
                     <section class="notes-section" data-sec="${sec.section}">
                         <div class="notes-sec-head">
                             <h3 class="notes-sec-title">${sec.section}</h3>
                             <a class="notes-prac-link" href="quiz.html?subject=${SUBJECT}&mode=sequential&chapter=${encodeURIComponent(ch.chapter)}&section=${encodeURIComponent(sec.section)}" target="_blank" rel="noopener noreferrer" title="新窗口打开该节对应的练习题">📝 相关题目</a>
                         </div>
                         <div class="notes-body">`;
-                    if (hasSub) {
-                        body += subs.map(s => `
+                if (hasSub) {
+                    h += subs.map(s => `
                         <div class="notes-sub${s.important ? ' notes-sub-strong' : ''}" data-sec="${s.section}">
                             <h4 class="notes-sub-title">${s.section}</h4>
                             <div class="notes-sub-body">${fmtNotes(s.html)}</div>
                         </div>`).join('');
-                    }
-                    body += `${fmtNotes(sec.html)}
+                }
+                h += `${fmtNotes(sec.html)}
                         </div>
                     </section>`;
-                }
+                slot.innerHTML = h;
             }
-            document.getElementById('notesToc').innerHTML = toc;
-            document.getElementById('notesContent').innerHTML = body;
+
+            // 目标节（?goto=）优先渲染：点「知识点」进来时先看到它，不必等全文
+            const findSecIdx = name => flat.findIndex(t =>
+                t.sec.section === name || (t.sec.subsections || []).some(s => s.section === name));
+            const targetIdx = GOTO ? findSecIdx(GOTO) : -1;
+            if (targetIdx >= 0) renderSection(targetIdx);
+
+            // 其余按 8ms 时间片逐节填充：每帧最多占用 8ms，鼠标始终能响应
+            const queue = flat.map((_, i) => i).filter(i => i !== targetIdx);
+            let qi = 0;
+            function pump() {
+                const t0 = performance.now();
+                while (qi < queue.length && performance.now() - t0 < 8) renderSection(queue[qi++]);
+                if (qi < queue.length) requestAnimationFrame(pump);
+                else finishNotes();
+            }
 
             // 目录点击事件委托：
             // ① 章标题 → 跳到该章第一个节；
@@ -691,42 +729,33 @@
             //    旧行为点"有子节的节"只折叠不跳转，用户视角就是"点了没反应"；
             // ④ 小节 → 跳转。
             const tocBox = document.getElementById('notesToc');
+            // 目录可能在切片渲染完成前就被点击：先把目标节渲染出来，jumpTo 才有落点
+            const ensureSecRendered = name => {
+                if (!name) return;
+                const i = findSecIdx(name);
+                if (i >= 0) renderSection(i);
+            };
             tocBox.onclick = e => {
                 const chLink = e.target.closest('.notes-toc-ch');
-                if (chLink) { if (chLink.dataset.sec) jumpTo(chLink.dataset.sec, false); return; }
+                if (chLink) { if (chLink.dataset.sec) { ensureSecRendered(chLink.dataset.sec); jumpTo(chLink.dataset.sec, false); } return; }
                 if (e.target.closest('.toc-sec-arrow')) {
                     const arrowSec = e.target.closest('.notes-toc-sec');
                     if (arrowSec && arrowSec.dataset.hassub) toggleTocSec(arrowSec);
                     return;
                 }
                 const subLink = e.target.closest('.notes-toc-sub');
-                if (subLink) { jumpTo(subLink.dataset.sec, false); return; }
+                if (subLink) { ensureSecRendered(subLink.dataset.sec); jumpTo(subLink.dataset.sec, false); return; }
                 const secLink = e.target.closest('.notes-toc-sec');
                 if (!secLink) return;
+                ensureSecRendered(secLink.dataset.sec);
                 jumpTo(secLink.dataset.sec, false);
             };
 
             initTocSecStates();
 
-            // 滚动时目录跟随高亮（节+小节均参与，DOM顺序靠后者优先→天然偏向最深可见项）
-            const sections = Array.from(document.querySelectorAll('.notes-section, .notes-sub'));
-            const tocLinks = Array.from(document.querySelectorAll('.notes-toc-sec, .notes-toc-sub'));
-            let ticking = false;
-            window.addEventListener('scroll', () => {
-                if (ticking) return;
-                ticking = true;
-                requestAnimationFrame(() => {
-                    ticking = false;
-                    let current = null;
-                    for (const s of sections) {
-                        if (s.getBoundingClientRect().top <= 90) current = s.dataset.sec;
-                    }
-                    if (current) tocLinks.forEach(l => l.classList.toggle('active', l.dataset.sec === current));
-                });
-            }, { passive: true });
-
             // 细粒度跳转：?line=N 跳该节某行；?goto=节/小节名 精确落位；
             // 仅当 goto 无法解析时才用 ?q= 题干片段做模糊定位兜底（不再默认"搜索式"跳行）
+            // 目标节已优先渲染，60ms 足够布局稳定
             if (GOTO) setTimeout(() => {
                 let done = false;
                 const secEl = resolveSectionEl(GOTO);
@@ -742,20 +771,44 @@
                     ['goto', 'line', 'q'].forEach(k => u.searchParams.delete(k));
                     history.replaceState(null, '', u.pathname + (u.search || '') + u.hash);
                 } catch (e) {}
-            }, 100);
-            // 长表格加横向滚动包裹，防止移动端列被压扁
-            document.querySelectorAll('.notes-body table').forEach(t => {
-                const wrap = document.createElement('div');
-                wrap.className = 'notes-table-wrap';
-                t.parentNode.insertBefore(wrap, t);
-                wrap.appendChild(t);
-            });
-            initAnnoAndHl();
+            }, 60);
 
-            // 滚动位置恢复（带 GOTO/LINE 跳转进入时不恢复，避免追滚打断锚点跳转）。
-            // v2 起不再恢复/重放上次搜索词：进入页面一律搜索框为空、下拉收起，
-            // 杜绝"一进来自动弹出搜索记录/结果"（旧行为：PS.q 存在就 doNoteSearch 重放）
-            if (!GOTO && !LINE) PS.restoreScroll();
+            // 启动时间片渲染（每帧 8ms，跑完自动进 finishNotes）
+            requestAnimationFrame(pump);
+
+            // 全量渲染完成后才做的事：这些都要遍历正文 DOM，必须等切片跑完
+            function finishNotes() {
+                // 滚动时目录跟随高亮（节+小节均参与，DOM顺序靠后者优先→天然偏向最深可见项）
+                const sections = Array.from(contentEl.querySelectorAll('.notes-section, .notes-sub'));
+                const tocLinks = Array.from(document.querySelectorAll('.notes-toc-sec, .notes-toc-sub'));
+                let ticking = false;
+                window.addEventListener('scroll', () => {
+                    if (ticking) return;
+                    ticking = true;
+                    requestAnimationFrame(() => {
+                        ticking = false;
+                        let current = null;
+                        for (const s of sections) {
+                            if (s.getBoundingClientRect().top <= 90) current = s.dataset.sec;
+                        }
+                        if (current) tocLinks.forEach(l => l.classList.toggle('active', l.dataset.sec === current));
+                    });
+                }, { passive: true });
+
+                // 长表格加横向滚动包裹，防止移动端列被压扁
+                contentEl.querySelectorAll('.notes-body table').forEach(t => {
+                    const wrap = document.createElement('div');
+                    wrap.className = 'notes-table-wrap';
+                    t.parentNode.insertBefore(wrap, t);
+                    wrap.appendChild(t);
+                });
+                initAnnoAndHl();
+
+                // 滚动位置恢复（带 GOTO/LINE 跳转进入时不恢复，避免追滚打断锚点跳转）。
+                // v2 起不再恢复/重放上次搜索词：进入页面一律搜索框为空、下拉收起，
+                // 杜绝"一进来自动弹出搜索记录/结果"（旧行为：PS.q 存在就 doNoteSearch 重放）
+                if (!GOTO && !LINE) PS.restoreScroll();
+            }
         }
 
         // ==================== 考点笔记：行级批注 + 划词高亮 ====================
