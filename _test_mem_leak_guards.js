@@ -72,5 +72,28 @@ for (const [name, re] of [
   check(`${name} 绑定次数 ≤ 2（初始化 + 侧键区）`, n <= 2, true);
 }
 
+console.log('\n--- 七、定时器必须有对应清理 ---');
+const TIMER_FILES = ['pwa/exam.html', 'pwa/js/common.js'];
+for (const f of TIMER_FILES) {
+  const src = read(f);
+  const hasSet = /setInterval\(/.test(src);
+  const hasClear = /clearInterval\(/.test(src);
+  check(`${f} 用 setInterval 就必须有 clearInterval`, !hasSet || hasClear, true);
+}
+
+console.log('\n--- 八、IntersectionObserver 必须能释放 ---');
+const DAKA = read('pwa/daka.html');
+check('daka 的观察器重绑前先 disconnect', /if \(_dakaWarmObs\) _dakaWarmObs\.disconnect\(\)/.test(DAKA), true);
+const ALGO = read('pwa/algo.html');
+check('algo 的滚动监听只建一次（setupScrollSpy 单次调用）',
+  (ALGO.match(/setupScrollSpy\(\);/g) || []).length, 1);
+
+console.log('\n--- 九、全局脚本的初始化只跑一次 ---');
+const BG = read('pwa/js/background.js');
+check('background.js 整体包在 IIFE 里', /^\(function \(\) \{/m.test(BG) && /\}\)\(\);\s*$/.test(BG.trim()), true);
+check('MutationObserver 在 init() 内（不随渲染重复建）',
+  /function init\(\)[\s\S]{0,4000}?new MutationObserver/.test(BG), true);
+check('init() 只有一处调用', (BG.match(/\binit\(\);|\bdocument\.addEventListener\('DOMContentLoaded', init\)/g) || []).length, 2);
+
 console.log(`\n结果: ${pass} / ${pass + fail}` + (fail ? `，${fail} 项失败` : '，全部通过'));
 process.exit(fail ? 1 : 0);
