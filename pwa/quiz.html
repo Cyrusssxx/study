@@ -876,7 +876,7 @@
                         ${(MODE === 'exam_review' || MODE === 'exam_wrong') && (q.wrong_count || 0) >= 1 ? `<span class="badge-wrongcnt" title="全局累计错误次数（刷题/模拟考/套卷合计）">错 ${q.wrong_count} 次</span>` : ''}
                         ${q.is_real_exam ? `<span class="badge-real">${q.exam_year ? q.exam_year + ' ' : ''}统考真题</span>` : ''}
                         ${q.chapter ? (NOTES_SUBJECTS.includes(q.id.split('_')[0]) && q.section
-                            ? `<a class="chapter-badge chapter-badge-link" href="notes.html?subject=${q.id.split('_')[0]}&goto=${encodeURIComponent(q.subsection || q.section)}&q=${encodeURIComponent((q.content||'').slice(0,60))}" target="_blank" title="点击新窗口查看该知识点笔记（已定位到小节）">${q.chapter} · ${q.section} 📖</a>`
+                            ? `<a class="chapter-badge chapter-badge-link" href="notes.html?subject=${q.id.split('_')[0]}&goto=${encodeURIComponent(q.subsection || q.section)}&q=${encodeURIComponent((q.content||'').slice(0,60))}" target="_blank" rel="noopener noreferrer" title="点击新窗口查看该知识点笔记（已定位到小节）">${q.chapter} · ${q.section} 📖</a>`
                             : `<span class="chapter-badge" title="题目来源章节">${q.chapter}${q.section ? ' · ' + q.section : ''}</span>`) : ''}
                     </div>
                     <span class="mark-btns">
@@ -1282,7 +1282,10 @@
                 URL.revokeObjectURL(img.src);
                 resolve(canvas.toDataURL('image/jpeg', 0.85));
             };
-            img.onerror = () => reject(new Error('图片读取失败'));
+            img.onerror = () => {
+                URL.revokeObjectURL(img.src);   // 失败路径也要释放，否则 blob 一直挂着
+                reject(new Error('图片读取失败'));
+            };
             img.src = URL.createObjectURL(file);
         });
     }
