@@ -865,11 +865,14 @@
         }
 
         // 渲染后建索引：章标题(w=0)、节标题(w=1)、正文行(w=2)；批注在搜索时实时读 annoItems
+        // 注意：正文现在是「骨架 + 分片填充」，结构为
+        //   #notesContent > .notes-ch-block > (h2.notes-ch-title | .notes-sec-slot > section.notes-section)
+        // 所以这里必须用**后代选择器**。用 `>` 直接子代会一个都匹配不到 → 索引为空 → 搜索全空。
         function buildNoteIndex() {
             noteIndex = [];
             invertedIndex = new Map();
             let order = 0;
-            document.querySelectorAll('.notes-content > .notes-ch-title, .notes-content > .notes-section').forEach(node => {
+            document.querySelectorAll('.notes-content .notes-ch-title, .notes-content .notes-section').forEach(node => {
                 if (node.classList.contains('notes-ch-title')) {
                     const txt = node.textContent.trim();
                     noteIndex.push({ text: txt, path: '章', w: 0, r: 0, order: order++ });

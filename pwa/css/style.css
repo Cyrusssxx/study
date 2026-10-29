@@ -4511,6 +4511,29 @@ h3.algo-h:first-child, h4.algo-h:first-child, h5.algo-h:first-child { margin-top
 }
 .notes-toc-ch:hover { color: var(--primary); }
 
+/* 目录层级（仅笔记页 #notesToc，不影响 algo 等复用 .notes-toc-sub 的页面）：
+   章 = 分组标题（加下分隔线）；小节区 = 左侧竖线，明确从属于所在节。
+   原来章→节只差 10px、节→小节差 18px，三级看起来像两级。 */
+#notesToc .notes-toc-ch {
+    margin-top: 4px;
+    border-bottom: 1px solid var(--border);
+    border-radius: 0;
+    padding-bottom: 6px;
+}
+#notesToc .notes-toc-ch:first-child {
+    margin-top: 0;
+}
+#notesToc .notes-toc-subs {
+    margin-left: 26px;
+    border-left: 2px solid var(--border);
+    padding-left: 0;
+}
+/* 缩进改由父容器承担（26 + 2 + 10 = 原 38px），多出一条竖线体现层级 */
+#notesToc .notes-toc-sub {
+    padding-left: 10px;
+    border-radius: 0 5px 5px 0;
+}
+
 .notes-toc-sec {
     display: block;
     padding: 5px 10px 5px 20px;
@@ -4664,7 +4687,11 @@ h3.algo-h:first-child, h4.algo-h:first-child, h5.algo-h:first-child { margin-top
     border-left: 4px solid var(--primary);
 }
 
-.notes-ch-title:first-child {
+/* 首章标题去掉上边距。
+   注意：正文改成「骨架 + 分片填充」后，每个章标题都被包进 .notes-ch-block，
+   所以 h2 是**每个块**的 first-child —— 直接写 .notes-ch-title:first-child
+   会让所有章标题都 margin-top:0（章与章之间挤在一起）。 */
+.notes-ch-block:first-child .notes-ch-title {
     margin-top: 0;
 }
 

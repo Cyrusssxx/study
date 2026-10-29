@@ -127,8 +127,22 @@ async function waitFor(fn, ms = 6000) {
   check('最后一节内容渲染', /页面置换/.test(doc.querySelector('.notes-section[data-sec="3.3 虚拟内存"]').textContent), true);
 
   console.log('\n--- 三、渲染完成后 finishNotes 的收尾工作 ---');
+  await sleep(120);   // 等最后一帧的 finishNotes 跑完（建索引 / 表格包裹）
   check('表格已包 .notes-table-wrap', doc.querySelectorAll('.notes-table-wrap').length, 1);
   check('目录链接已生成', doc.querySelectorAll('.notes-toc-sec').length, TOTAL_SECS);
+
+  console.log('\n--- 三半、搜索能命中正文（骨架包裹层曾打断索引）---');
+  let searchOk = false, searchPath = '';
+  try {
+    w.doNoteSearch('操作系统');
+    await sleep(50);
+    const box = doc.getElementById('notesSearchResults');
+    searchOk = /搜索结果 · \d+ 条/.test(box.innerHTML);
+    const m = box.innerHTML.match(/notes-sr-path">([^<]*)</);
+    searchPath = m ? m[1] : '';
+  } catch (e) { console.log('    [debug] doNoteSearch 抛错:', e.message); }
+  check('搜正文词能命中（不再是 0 结果）', searchOk, true);
+  check('命中的是正文所在的节', searchPath, '1.1 基本概念');
 
   console.log('\n--- 四、源码：不能退回一次性 innerHTML ---');
   const BACK = SRC;
@@ -139,6 +153,17 @@ async function waitFor(fn, ms = 6000) {
   check('不再有 body 一次性拼接 + 一次 innerHTML',
     /document\.getElementById\('notesContent'\)\.innerHTML = body;/.test(BACK), false);
   check('占位骨架保留 DOM 顺序', /notes-sec-slot/.test(BACK), true);
+
+  console.log('\n--- 五、搜索索引不能被骨架包裹层打断 ---');
+  // 骨架结构：#notesContent > .notes-ch-block > (h2 | .notes-sec-slot > section)
+  // 索引用 `>` 直接子代会一个都匹配不到 → 索引为空 → 搜什么都搜不到
+  check('buildNoteIndex 用后代选择器',
+    /querySelectorAll\('\.notes-content \.notes-ch-title, \.notes-content \.notes-section'\)/.test(BACK), true);
+  check('buildNoteIndex 不再用直接子选择器',
+    /querySelectorAll\('\.notes-content > \.notes-ch-title/.test(BACK), false);
+  check('首章标题样式已适配包裹层',
+    /\.notes-ch-block:first-child \.notes-ch-title/.test(
+      fs.readFileSync(path.join(ROOT, 'pwa/css/style.css'), 'utf8')), true);
 
   dom.window.close();
   console.log(`\n结果: ${pass} / ${pass + fail}` + (fail ? `，${fail} 项失败` : '，全部通过'));
