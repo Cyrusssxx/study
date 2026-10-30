@@ -154,13 +154,14 @@ async function waitFor(fn, ms = 6000) {
     /document\.getElementById\('notesContent'\)\.innerHTML = body;/.test(BACK), false);
   check('占位骨架保留 DOM 顺序', /notes-sec-slot/.test(BACK), true);
 
-  console.log('\n--- 五、搜索索引不能被骨架包裹层打断 ---');
-  // 骨架结构：#notesContent > .notes-ch-block > (h2 | .notes-sec-slot > section)
-  // 索引用 `>` 直接子代会一个都匹配不到 → 索引为空 → 搜什么都搜不到
-  check('buildNoteIndex 用后代选择器',
-    /querySelectorAll\('\.notes-content \.notes-ch-title, \.notes-content \.notes-section'\)/.test(BACK), true);
-  check('buildNoteIndex 不再用直接子选择器',
-    /querySelectorAll\('\.notes-content > \.notes-ch-title/.test(BACK), false);
+  console.log('\n--- 五、索引随渲染逐节累积（不再一次性遍历全页） ---');
+  // 旧实现 buildNoteIndex 在 finishNotes 里用 TreeWalker 遍历几千个节点，
+  // 是分片渲染后的第二波卡顿源。新实现 indexSection 随 renderSection 逐节调用。
+  check('存在 indexSection 增量索引函数', /function indexSection\(section\)/.test(BACK), true);
+  check('已删除 buildNoteIndex 整页遍历', /function buildNoteIndex\(\)/.test(BACK), false);
+  check('indexSection 随渲染调用', /indexSection\(secEl\)/.test(BACK), true);
+  check('行号标注在 indexSection 内完成', /el\.dataset\.line = line\+\+/.test(BACK), true);
+  check('章标题直接进索引（不等 DOM）', /noteIndex\.push\(\{ text: ch\.chapter, path: '章'/.test(BACK), true);
   check('首章标题样式已适配包裹层',
     /\.notes-ch-block:first-child \.notes-ch-title/.test(
       fs.readFileSync(path.join(ROOT, 'pwa/css/style.css'), 'utf8')), true);

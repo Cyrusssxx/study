@@ -656,6 +656,9 @@
                 // 章标题也可点：跳到该章第一个节（data-sec 由下方循环填充，这里先记首节名）
                 const chFirst = (ch.sections[0] && ch.sections[0].section) || '';
                 toc += `<div class="notes-toc-ch" data-sec="${chFirst}" title="跳到「${ch.chapter}」">${ch.chapter}</div>`;
+                // 章标题直接进索引（数据在手，不必等 DOM 渲染）
+                noteIndex.push({ text: ch.chapter, path: '章', w: 0, r: 0, order: noteOrder++ });
+                addToInverted(ch.chapter, noteIndex[noteOrder - 1]);
                 skeleton += `<div class="notes-ch-block"><h2 class="notes-ch-title">${ch.chapter}</h2>`;
                 for (const sec of ch.sections) {
                     const subs = sec.subsections || [];
@@ -704,6 +707,9 @@
                         </div>
                     </section>`;
                 slot.innerHTML = h;
+                // 就地索引这一节（含行号标注）：成本随分片摊平，finishNotes 不必再整页遍历
+                const secEl = slot.querySelector('.notes-section');
+                if (secEl) indexSection(secEl);
             }
 
             // 目标节（?goto=）优先渲染：点「知识点」进来时先看到它，不必等全文
@@ -849,7 +855,7 @@
         // ② 点击输入框必有反应：空 → 历史；非空 → 重放当前词结果（click 驱动，不依赖 focus）
         // ③ 输入即时搜；Enter 跳第一条结果；Esc / 点外部收起
         // ④ 点结果定位失败自动回退命中所在节，绝不静默
-        let noteIndex = [], invertedIndex = new Map(), lastNoteHits = [];
+        let noteIndex = [], invertedIndex = new Map(), lastNoteHits = [], noteOrder = 0;
         const NOTE_HIST_KEY = 'notesSearchHistory';
 
         function nsEsc(s) {
@@ -864,35 +870,31 @@
             return nsEsc(text).replace(re, '<mark class="notes-hl-kw">$1</mark>');
         }
 
-        // 渲染后建索引：章标题(w=0)、节标题(w=1)、正文行(w=2)；批注在搜索时实时读 annoItems
-        // 注意：正文现在是「骨架 + 分片填充」，结构为
-        //   #notesContent > .notes-ch-block > (h2.notes-ch-title | .notes-sec-slot > section.notes-section)
-        // 所以这里必须用**后代选择器**。用 `>` 直接子代会一个都匹配不到 → 索引为空 → 搜索全空。
-        function buildNoteIndex() {
-            noteIndex = [];
-            invertedIndex = new Map();
-            let order = 0;
-            document.querySelectorAll('.notes-content .notes-ch-title, .notes-content .notes-section').forEach(node => {
-                if (node.classList.contains('notes-ch-title')) {
-                    const txt = node.textContent.trim();
-                    noteIndex.push({ text: txt, path: '章', w: 0, r: 0, order: order++ });
-                    addToInverted(txt, noteIndex[noteIndex.length - 1]);
-                    return;
-                }
-                const sec = node.dataset.sec;
-                const t = node.querySelector('.notes-sec-title');
-                if (t) {
-                    const txt = t.textContent.trim();
-                    noteIndex.push({ text: txt, path: '节', sec, w: 1, r: 0, order: order++ });
+        // 单节增量索引：随分片渲染调用，每节只处理自己的段落。
+        // 原 buildNoteIndex 用 TreeWalker 逐个 p/li 提取文本，在 846KB 笔记上
+        // 一次性遍历几千个节点，是 finishNotes 里的第二波卡顿源。
+        // 这里改用 textContent：索引建立时批注尚未注入 DOM，等价于 cleanTextOf，
+        // 且不含 SVG 排除（搜索本来就该能搜到示意图里的文字）。
+        function indexSection(section) {
+            const sec = section.dataset.sec;
+            const t = section.querySelector('.notes-sec-title');
+            if (t) {
+                const txt = t.textContent.trim();
+                if (txt) {
+                    noteIndex.push({ text: txt, path: '节', sec, w: 1, r: 0, order: noteOrder++ });
                     addToInverted(txt, noteIndex[noteIndex.length - 1]);
                 }
-                node.querySelectorAll('.notes-body li, .notes-body p').forEach(el => {
-                    const txt = cleanTextOf(el).trim().replace(/\s+/g, ' ');
-                    if (txt) {
-                        noteIndex.push({ text: txt, path: sec, sec, w: 2, r: 0, order: order++ });
-                        addToInverted(txt, noteIndex[noteIndex.length - 1]);
-                    }
-                });
+            }
+            let line = 0;
+            section.querySelectorAll('.notes-body li, .notes-body p').forEach(el => {
+                // 行号标注就地完成（原在 initAnnoAndHl 里整页遍历）
+                el.classList.add('anno-line');
+                el.dataset.line = line++;
+                const txt = (el.textContent || '').replace(/\s+/g, ' ').trim();
+                if (txt) {
+                    noteIndex.push({ text: txt, path: sec, sec, w: 2, r: 0, order: noteOrder++ });
+                    addToInverted(txt, noteIndex[noteOrder - 1]);
+                }
             });
         }
 
@@ -1069,14 +1071,8 @@
 
         // ---------- 行级批注：划词后工具条点 📝批注，批注挂在该行正下方 ----------
         function initAnnoAndHl() {
-            // 给正文里的 li / p 编行号作批注锚点（笔记内容静态，行号稳定）
-            document.querySelectorAll('.notes-section').forEach(section => {
-                section.querySelectorAll('.notes-body li, .notes-body p').forEach((el, i) => {
-                    el.classList.add('anno-line');
-                    el.dataset.line = i;
-                });
-            });
-            buildNoteIndex();
+            // 行号（anno-line + data-line）已在 indexSection 里随渲染逐节完成，
+            // 这里不再整页遍历，也不再调 buildNoteIndex（已废弃，重活）。
             const sb = document.getElementById('notesSearchBox');
             if (sb) sb.hidden = false;
             initHighlight();
