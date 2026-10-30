@@ -928,6 +928,9 @@
         const kpEl = document.getElementById('kpPanel');
         if (kpEl) fillKp(q, kpEl);
 
+        // 宽表格包横向滚动容器（题干/解析里 16 道题含表格，最多 14 列）
+        wrapWideTables(document.getElementById('questionArea'));
+
         // 更新提交按钮状态（背题/快刷模式下隐藏：背题不可作答，快刷点选即判）
         const btnSubmit = document.getElementById('btnSubmit');
         btnSubmit.style.display = (recite || isQuickOn()) ? 'none' : '';
@@ -957,6 +960,20 @@
 
     // ============ 一键复制题目：题干 + 选项（按当前显示顺序）+ 答案 + 解析 ============
     // 刷题与试卷错题重刷共用 renderQuestion，按钮两处天然都有
+
+    // 宽表格：包一层可横向滚动的容器（幂等，已包过的跳过）。
+    // 不包的话，14 列的表格会把 .quiz-container 撑宽 → 整页出现横向滚动条。
+    function wrapWideTables(root) {
+        if (!root) return;
+        root.querySelectorAll('.question-content table, .explanation-body table, .kp-panel table').forEach(t => {
+            if (t.parentElement && t.parentElement.classList.contains('q-table-wrap')) return;
+            const wrap = document.createElement('div');
+            wrap.className = 'q-table-wrap';
+            t.parentNode.insertBefore(wrap, t);
+            wrap.appendChild(t);
+        });
+    }
+
     function stripHtmlToText(html) {
         const t = document.createElement('div');
         t.innerHTML = html || '';

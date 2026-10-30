@@ -565,12 +565,26 @@
                 <div class="question-content">${isMulti ? multiTpl : fmtContent(q.content)}</div>
                 ${isMulti ? '<div class="multi-hint">请在题干的每个（ ）下拉框中选择答案，全部选完该题才算作答</div>' : `<div class="options-list">${optionsHtml}</div>`}
             </div>`;
+        // 宽表格包横向滚动容器（与刷题页同款，避免整页横向滚动条）
+        wrapWideTables(document.getElementById('examQuestionArea'));
         // 多空题回填已选答案
         if (isMulti && ua) {
             document.querySelectorAll('.blank-select').forEach((sel, i) => { sel.value = ua[i] || ''; });
         }
         renderExamNumbers();
         updateProgress();
+    }
+
+    // 宽表格：包一层可横向滚动的容器（幂等，已包过的跳过）
+    function wrapWideTables(root) {
+        if (!root) return;
+        root.querySelectorAll('.question-content table, .review-stem table, .explanation-body table').forEach(t => {
+            if (t.parentElement && t.parentElement.classList.contains('q-table-wrap')) return;
+            const wrap = document.createElement('div');
+            wrap.className = 'q-table-wrap';
+            t.parentNode.insertBefore(wrap, t);
+            wrap.appendChild(t);
+        });
     }
 
     // 多空题：下拉全部选完才记录该题答案（避免提交不完整的序列）
@@ -759,6 +773,8 @@
         });
         html += `</div>`;
         document.getElementById('resultArea').innerHTML = html;
+        // 成绩回顾里的题干也可能是宽表格
+        wrapWideTables(document.getElementById('resultArea'));
     }
 
     // ============ 历史成绩 ============

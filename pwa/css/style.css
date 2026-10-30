@@ -439,6 +439,10 @@ body {
     gap: 6px;
     margin-right: 8px;
     align-items: center;
+    /* 试卷回顾里最多 5 个按钮（复制/不熟/不会/7天后重练/猜对了）：
+       容器不够宽时换行右对齐，而不是整行溢出 */
+    flex-wrap: wrap;
+    justify-content: flex-end;
 }
 .mark-btn {
     font-size: 0.78rem;
@@ -509,6 +513,10 @@ body {
 .quiz-container {
     max-width: 800px;
     margin: 0 auto;
+    /* 它是 .quiz-layout 的 flex 子项：不写 flex:1 + min-width:0 时，
+       宽内容（题头一排徽标/按钮、宽表格、长 pre）会把整页撑出横向滚动条 */
+    flex: 1 1 auto;
+    min-width: 0;
 }
 
 .quiz-header {
@@ -547,6 +555,10 @@ body {
     justify-content: space-between;
     align-items: center;
     margin-bottom: 16px;
+    /* 窄屏/侧栏展开时换行排布，而不是把整行 min-content 撑出视口。
+       试卷回顾模式下右侧最多 5 个标记按钮 + 长章节徽标，不换行必然溢出 */
+    flex-wrap: wrap;
+    gap: 8px 12px;
 }
 
 .question-number {
@@ -565,6 +577,7 @@ body {
     align-items: center;
     gap: 10px;
     flex-wrap: wrap;
+    min-width: 0;   /* 允许收缩：配合章节徽标省略号，避免长章节名撑破题头 */
 }
 
 .chapter-badge {
@@ -576,6 +589,10 @@ body {
     color: var(--primary);
     font-size: 0.8rem;
     white-space: nowrap;
+    /* 超长「章 · 节」名（如 co 第5章 5.1）在窄容器里省略，不撑出横向滚动条 */
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 /* ===== 题目内容中英混排优化（统一入口）：西文衬线 Times 系 + 中文雅黑系 ===== */
@@ -600,6 +617,9 @@ body {
     margin-bottom: 24px;
     padding-bottom: 16px;
     border-bottom: 1px solid var(--border);
+    /* 长英文/数字串（如地址、十六进制）断行兜底：
+       break-word 不影响 min-content，anywhere 才能让 flex 容器收窄 */
+    overflow-wrap: anywhere;
 }
 .question-content p { margin-bottom: 0.6em; }
 
@@ -609,6 +629,14 @@ body {
 .daily-q pre, .daily-q code,
 .daily-fold-body pre, .daily-fold-body code {
     font-family: Consolas, "Courier New", monospace;
+}
+/* 题干内裸 pre 横向可滚（49 道题含 pre，长代码行不撑破页面） */
+.question-content pre,
+.item-content pre,
+.daily-q pre,
+.daily-fold-body pre {
+    overflow-x: auto;
+    max-width: 100%;
 }
 
 /* 题干内嵌表格 */
@@ -636,6 +664,17 @@ body {
 .daka-content table.q-table th {
     background: var(--light);
     font-weight: 600;
+}
+/* 宽表格（最多 14 列，16 道题干含表格）：包一层横向滚动容器，
+   由 quiz.html wrapWideTables() 注入，避免整页出现横向滚动条 */
+.q-table-wrap {
+    overflow-x: auto;
+    max-width: 100%;
+    margin: 10px auto;
+    -webkit-overflow-scrolling: touch;
+}
+.q-table-wrap table.q-table {
+    margin: 0;
 }
 
 /* 选项 */
