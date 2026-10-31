@@ -72,8 +72,20 @@ check('exam 定义 wrapWideTables', /function wrapWideTables\(root\)/.test(EXAM)
 check('exam 答题视图调用', /wrapWideTables\(document\.getElementById\('examQuestionArea'\)\)/.test(EXAM), true);
 check('exam 成绩回顾调用', /wrapWideTables\(document\.getElementById\('resultArea'\)\)/.test(EXAM), true);
 
-console.log('\n--- 四、行为：包装函数真能把 table 包进滚动容器 ---');
-try {
+console.log('\n--- 三半、贴屏侧栏的 --bleed 必须扣掉滚动条宽度 ---');
+// 100vw 含竖向滚动条（Windows ~17px），容器居中留白按 clientWidth 算；
+// 直接用 100vw 会把 .quiz-layout 的负 margin 推出屏幕 → 整页横向滚动条。
+const COMMON = fs.readFileSync(path.join(ROOT, 'pwa/js/common.js'), 'utf8');
+const bleedRule = CSS.match(/--bleed:\s*calc\([^;]+;/);
+check('--bleed 用 calc 计算', !!bleedRule, true);
+check('--bleed 扣掉 --sbw（滚动条宽度）', !!bleedRule && /var\(--sbw/.test(bleedRule[0]), true);
+check('--bleed 不再直接用裸 100vw 算留白',
+  !!bleedRule && !/100vw\s*-\s*1200px/.test(bleedRule[0]), true);
+check('common.js 写入 --sbw', /setProperty\('--sbw'/.test(COMMON), true);
+check('--sbw = innerWidth - clientWidth', /window\.innerWidth - root\.clientWidth/.test(COMMON), true);
+check('--sbw 变化时才写（防 ResizeObserver 循环）', /if \(sbw === last\) return;/.test(COMMON), true);
+
+console.log('\n--- 四、行为：包装函数真能把 table 包进滚动容器 ---');try {
   const { JSDOM } = require('jsdom');
   const fnSrc = QUIZ.match(/function wrapWideTables\(root\)[\s\S]*?\n    \}/)[0];
   const dom = new JSDOM(

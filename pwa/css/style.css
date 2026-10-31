@@ -1485,8 +1485,11 @@ body {
     background: var(--card-bg, #fff);
     font-size: .86rem;
     line-height: 1.75;
+    /* 考点分析里常有长公式串（如 512MB/8KB=2^16）：断行兜底，别撑破卡片 */
+    max-width: 100%;
+    overflow-wrap: anywhere;
 }
-.kp-sec { margin: 8px 0; }
+.kp-sec { margin: 8px 0; overflow-wrap: anywhere; }
 .kp-sec > b {
     display: inline-block;
     background: rgba(79, 70, 229, .10);
@@ -7551,7 +7554,10 @@ body.fc-toc-open .fc-toc-fab { display: none; }
    状态类：body.toc-collapsed（笔记/讲义页头让位用）。 */
 @media (min-width: 801px) {
     .toc-fixed {
-        --bleed: calc(-1 * (max(0px, (100vw - 1200px) / 2) + 20px));
+        /* 100vw 含竖向滚动条宽度（Windows 约 17px），而容器居中留白按 clientWidth
+           （不含滚动条）计算 —— 两者相差一个滚动条宽度，负 margin 贴边时会把侧栏
+           推出屏幕 17px，触发整页横向滚动条。--sbw 由 common.js 写入真实差值。 */
+        --bleed: calc(-1 * (max(0px, (100vw - var(--sbw, 0px) - 1200px) / 2) + 20px));
         /* 贴屏面板的垂直留白：顶部与正文顶线齐平（顶栏 60 + 容器上内边距 24），
            底部取同一数值 —— 上下对称，不再「上紧下松」；--toc-fab 是栏内给右下角 🎨 的留白 */
         --toc-top: 84px;

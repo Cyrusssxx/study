@@ -381,3 +381,26 @@ window.addEventListener('load', () => {
         run();
     }
 })();
+
+// ============ 滚动条宽度变量 --sbw（供 .toc-fixed 的 --bleed 精确贴边） ============
+// 背景：CSS 的 100vw 包含竖向滚动条宽度（Windows 约 17px），而容器居中留白是按
+// clientWidth（不含滚动条）算的。两者相差一个滚动条宽度 → 侧栏负 margin 贴边时
+// 会被推出屏幕十几像素 → 整页出现横向滚动条（表现为页面底部一条几乎占满的滑条）。
+// 这里把真实差值写进 --sbw，CSS 里用 calc(100vw - var(--sbw)) 还原 clientWidth。
+(function () {
+    const root = document.documentElement;
+    let last = -1;
+    function syncSbw() {
+        // innerWidth 含滚动条，clientWidth 不含 → 差值就是滚动条宽度（无滚动条时为 0）
+        const sbw = Math.max(0, window.innerWidth - root.clientWidth);
+        if (sbw === last) return;      // 只在真的变化时写，避免 ResizeObserver 反复触发
+        last = sbw;
+        root.style.setProperty('--sbw', sbw + 'px');
+    }
+    syncSbw();
+    window.addEventListener('resize', syncSbw, { passive: true });
+    // 滚动条出现/消失不一定触发 resize（内容变长也会），用 ResizeObserver 兜底
+    if (window.ResizeObserver) {
+        try { new ResizeObserver(syncSbw).observe(root); } catch (e) { /* 老浏览器忽略 */ }
+    }
+})();
