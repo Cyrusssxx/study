@@ -79,7 +79,7 @@
                     <label>考试模式</label>
                     <select id="examMode" onchange="onModeChange()">
                         <option value="favorites">仅收藏题（默认 · 按真题各科题量抽）</option>
-                        <option value="examwrong">仅模拟考错题（历次模拟考做错的）</option>
+                        <option value="examwrong">仅模拟考错题（含「7 天后重练」「猜对了」标记）</option>
                         <option value="unfamiliar">仅不熟题（下次练习池）</option>
                         <option value="wrong">仅错题（错题本全部来源）</option>
                         <option value="full">完整 408 模拟（数构11 · 组成11 · OS10 · 网络8）</option>
@@ -227,7 +227,7 @@
             const HINTS = {
                 favorites: '按真题比例分配 · 到期错题（≤1/3）→ 做过的错题 → 没做过的 · 模拟考答对的题不再抽（可标「猜对了」放回）',
                 unfamiliar: '按真题比例分配 · 只抽标了「不熟/不会」的题，优先没做过的',
-                examwrong: '按真题比例分配 · 只抽历次模拟考里做错的题（同一题以最后一场作答为准）',
+                examwrong: '按真题比例分配 · 模拟考仍错的题 + 「7 天后重练」「猜对了」标记题 · 标记题做对过就只留不抽',
                 wrong: '按真题比例分配，优先抽没做过的题'
             };
             document.getElementById('countHint').textContent = HINTS[mode] || '按真题比例分配';
@@ -240,7 +240,7 @@
                     // 优先用首屏已拿到的统计，避免每次切模式都等一次补算
                     let n, by;
                     if (_poolStats && _poolStats.exam_wrong != null) {
-                        n = _poolStats.exam_wrong;
+                        n = _poolStats.exam_pool_total != null ? _poolStats.exam_pool_total : _poolStats.exam_wrong;
                         by = _poolStats.exam_wrong_by_subject || {};
                     } else {
                         const d = await (await api('/api/exam/examwrong')).json();
@@ -335,7 +335,7 @@
             if (mode === 'examwrong') {
                 // 点开始才补算（老会话要遍历题库），保证池子判定准确
                 const d = await (await api('/api/exam/examwrong')).json();
-                poolLen = d.exam_wrong || 0;
+                poolLen = d.exam_wrong || 0;   // 已是合并后的可抽总数
             } else {
                 const checkUrl = mode === 'favorites' ? '/api/favorites'
                     : mode === 'unfamiliar' ? '/api/marks?kind=all'
@@ -348,7 +348,7 @@
             if (poolLen === 0) {
                 alert(mode === 'favorites' ? '您还没有收藏任何题目，无法进行收藏题考试。'
                     : mode === 'unfamiliar' ? '您还没有标记「不熟/不会」的题目。\n在刷题或试卷回顾里点题目右上角的「不熟」按钮即可加入。'
-                        : mode === 'examwrong' ? '您还没有模拟考错题。\n先做一场模拟考，交卷后这里就会出现那场做错的题。'
+                        : mode === 'examwrong' ? '池子是空的。\n模拟考做错的题会自动进来；试卷回顾里点「7 天后重练」「猜对了」也会加进来。'
                             : '您还没有错题，无法进行错题考试。');
                 return;
             }
@@ -944,7 +944,10 @@
                 + `｜其中仍错 ${d.exam_wrong}｜到期错题 ${d.due_wrong}`
                 + `\n【标记】不熟 ${d.unfamiliar}（未做 ${d.unfamiliar_undone}）`
                 + `｜不会 ${d.dontknow}（未做 ${d.dontknow_undone}）`
-                + `\n【7 天后重练】待到期 ${d.redo_pending}｜已到期 ${d.redo_due}`;
+                + `\n【模拟考错题池】可抽 ${d.exam_pool_total != null ? d.exam_pool_total : d.exam_wrong} 题`
+                + `（模拟考仍错 ${d.exam_wrong} + 标记未掌握 ${d.marked_pending || 0}）`
+                + `\n  已做对、留池不抽的标记题 ${d.marked_mastered || 0}`
+                + `\n【7 天后重练】待到期 ${d.redo_pending}｜已到期 ${d.redo_due}｜猜对了 ${d.guessed || 0}`;
         }
     }
 

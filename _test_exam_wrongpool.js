@@ -142,13 +142,13 @@ const sleep = ms => new Promise(r => setTimeout(r, ms));
   const sel = w.document.getElementById('examMode');
   const opt = [...sel.options].find(o => o.value === 'examwrong');
   check('下拉有 examwrong 选项', !!opt, true);
-  check('选项文案', opt ? opt.textContent.trim() : '', '仅模拟考错题（历次模拟考做错的）');
+  check('选项文案（含两个标记来源）', opt ? opt.textContent.trim() : '', '仅模拟考错题（含「7 天后重练」「猜对了」标记）');
   check('「仅错题」文案标注了来源范围',
     /仅错题（错题本全部来源）/.test(sel.innerHTML), true);
   check('MODE_NAMES 有 examwrong', /examwrong: '仅模拟考错题'/.test(EXAM_SRC), true);
   check('getExamTitle 有对应标题', /if \(mode === 'examwrong'\) return '模拟考错题考试';/.test(EXAM_SRC), true);
-  check('空池有引导文案', /先做一场模拟考，交卷后这里就会出现那场做错的题/.test(EXAM_SRC), true);
-  check('组卷前提示口径（以最后一场作答为准）', /同一题以最后一场作答为准/.test(EXAM_SRC), true);
+  check('空池有引导文案', /模拟考做错的题会自动进来；试卷回顾里点「7 天后重练」「猜对了」也会加进来/.test(EXAM_SRC), true);
+  check('组卷前提示口径（含标记题规则）', /模拟考仍错的题 \+ 「7 天后重练」「猜对了」标记题/.test(EXAM_SRC), true);
 
   console.log('\n--- 五、源码口径 ---');
   check('backend 有 examWrongQids', /async function examWrongQids\(calc\)/.test(BACKEND_SRC), true);

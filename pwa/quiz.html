@@ -884,10 +884,13 @@
                         <button class="mark-btn ${q.is_unfamiliar ? 'mark-unfamiliar' : ''}" onclick="toggleMark('unfamiliar','${q.id}')" title="${q.is_unfamiliar ? '取消"不熟"标记' : '标记为不熟（黄色）'}">不熟</button>
                         <button class="mark-btn ${q.is_dontknow ? 'mark-dontknow' : ''}" onclick="toggleMark('dontknow','${q.id}')" title="${q.is_dontknow ? '取消"不会"标记' : '标记为不会（红色）'}">不会</button>
                         ${(MODE === 'exam_review' || MODE === 'exam_wrong') && q.exam_user_answer && q.exam_user_answer === q.answer
-                            ? `<button class="mark-btn ${q.is_redo ? 'mark-redo' : ''}" onclick="toggleRedo('${q.id}')"
-                                    title="${q.is_redo ? '取消「7 天后重练」' : '这题做对了，但想 7 天后再确认一遍'}">${q.is_redo ? '✓ 已排重练' : '7 天后重练'}</button>
-                               <button class="mark-btn ${q.is_guessed ? 'mark-guessed' : ''}" onclick="toggleGuessed('${q.id}')"
-                                    title="${q.is_guessed ? '取消「猜对了」' : '这题是蒙对的 → 放回收藏池垫底层，下次还会抽到'}">${q.is_guessed ? '✓ 已放回' : '猜对了'}</button>`
+                            ? (q.is_mastered
+                                ? `<button class="mark-btn mark-mastered" onclick="toggle${q.mastered_kind === 'guessed' ? 'Guessed' : 'Redo'}('${q.id}')"
+                                        title="这题标记过、且已经做对过一次：留在池子里可回看，但不再被抽到。点一下移出池子">✓ 已掌握</button>`
+                                : `<button class="mark-btn ${q.is_redo ? 'mark-redo' : ''}" onclick="toggleRedo('${q.id}')"
+                                        title="${q.is_redo ? '取消「7 天后重练」' : '这题做对了，但想 7 天后再确认一遍'}">${q.is_redo ? '✓ 已排重练' : '7 天后重练'}</button>
+                                   <button class="mark-btn ${q.is_guessed ? 'mark-guessed' : ''}" onclick="toggleGuessed('${q.id}')"
+                                        title="${q.is_guessed ? '取消「猜对了」' : '这题是蒙对的 → 放回收藏池垫底层，下次还会抽到'}">${q.is_guessed ? '✓ 已放回' : '猜对了'}</button>`)
                             : ''}
                     </span>
                     <button class="btn-icon ${isFav ? 'favorited' : ''}" onclick="toggleFavorite('${q.id}')" title="${isFav ? '取消收藏' : '收藏'}">
@@ -1569,12 +1572,13 @@
             const q = questions[currentIndex];
             if (q.id === questionId) {
                 q.is_redo = !!result.is_redo;
+                q.is_mastered = false;   // 标记被移除后不再是「已掌握」
                 renderQuestion();
                 renderNumberPanel();
             }
             showTip(result.is_redo
-                ? `已排入 ${result.days} 天后的重练池（到期后模拟考会抽到）`
-                : '已取消「7 天后重练」');
+                ? `已加入「模拟考错题」池，${result.days} 天后到期开抽`
+                : '已移出池子');
         } catch (e) {
             showTip('操作失败：' + e.message);
         }
@@ -1589,12 +1593,13 @@
             const q = questions[currentIndex];
             if (q.id === questionId) {
                 q.is_guessed = !!result.is_guessed;
+                q.is_mastered = false;
                 renderQuestion();
                 renderNumberPanel();
             }
             showTip(result.is_guessed
-                ? '已放回收藏池（垫底层）· 下次模拟考会抽到'
-                : '已取消「猜对了」· 这题不再抽');
+                ? '已加入「模拟考错题」池 · 下次模拟考会抽到'
+                : '已移出池子');
         } catch (e) {
             showTip('操作失败：' + e.message);
         }

@@ -308,6 +308,39 @@ const DAY = 86400000;
   check('guessed 单独计数', poolG.guessed, 1);
   check('guessed 不计入重练池已到期', poolG.redo_due, 1);   // 仍是最初那条 cn_0005
 
+  console.log('\n--- 十、标记题并入「模拟考错题」池；做对后留池不抽 ---');
+  // 此时 cn_0002 有 guessed 标记（第九节末），cn_0006 有 fixture 里的 redo 标记（5 天后到期）
+  // 注意：用池子函数断言，不用「组卷结果」——池子不足时第三轮会从全库补题，结果带随机性
+  let poolFn = await w.examWrongPoolQids(false);
+  check('guessed 标记题进了模拟考错题池', poolFn.pending.includes('cn_0002'), true);
+  check('redo 标记题进了模拟考错题池', poolFn.pending.includes('cn_0006'), true);
+
+  let ex = await w.api('/api/exam/examwrong').then(r => r.json());
+  // fixture 里 cn_0005 也有 redo 标记（已到期）→ 池子共 3 题
+  check('API 可抽数 = 标记未掌握数（cn_0005/0006/0002）', ex.exam_wrong, 3);
+  check('API 已掌握 0', ex.marked_mastered, 0);
+
+  // 做对一次 → mastered：留在池子里，但不再抽
+  await w.applyAnswer('cn_0002', 'cn', 'A', true, null, false);
+  poolFn = await w.examWrongPoolQids(false);
+  check('做对后退出可抽池', poolFn.pending.includes('cn_0002'), false);
+  check('做对后留在池子（mastered 名单里）', poolFn.mastered.includes('cn_0002'), true);
+  check('其它标记题不受影响', poolFn.pending.includes('cn_0006'), true);
+
+  ex = await w.api('/api/exam/examwrong').then(r => r.json());
+  check('API 可抽数剩 2', ex.exam_wrong, 2);
+  check('API 已掌握 1', ex.marked_mastered, 1);
+
+  const poolM = await w.api('/api/exam/pool').then(r => r.json());
+  check('pool：标记未掌握 2', poolM.marked_pending, 2);
+  check('pool：标记已掌握 1', poolM.marked_mastered, 1);
+  check('pool：池子可抽数', poolM.exam_pool_total, 2);
+
+  // 再点一次「已掌握」按钮 → 记录删除、彻底移出池子
+  await w.api('/api/mark/guessed/cn_0002', { method: 'POST' }).then(r => r.json());
+  const poolR = await w.api('/api/exam/pool').then(r => r.json());
+  check('手动移出后已掌握计数归零', poolR.marked_mastered, 0);
+
   dom.window.close();
   console.log(`\n结果: ${pass} / ${pass + fail}` + (fail ? `，${fail} 项失败` : '，全部通过'));
   process.exit(fail ? 1 : 0);
