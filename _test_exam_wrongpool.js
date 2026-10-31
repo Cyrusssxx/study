@@ -142,15 +142,18 @@ const sleep = ms => new Promise(r => setTimeout(r, ms));
   const sel = w.document.getElementById('examMode');
   const opt = [...sel.options].find(o => o.value === 'examwrong');
   check('下拉有 examwrong 选项', !!opt, true);
-  check('选项文案（含两个标记来源）', opt ? opt.textContent.trim() : '', '仅模拟考错题（含「7 天后重练」「猜对了」标记）');
+  check('选项文案（含手动标记 + 留池规则）', opt ? opt.textContent.trim() : '', '仅模拟考错题（含手动标记 · 做对后留池不抽）');
   check('「仅错题」文案标注了来源范围',
     /仅错题（错题本全部来源）/.test(sel.innerHTML), true);
   check('MODE_NAMES 有 examwrong', /examwrong: '仅模拟考错题'/.test(EXAM_SRC), true);
   check('getExamTitle 有对应标题', /if \(mode === 'examwrong'\) return '模拟考错题考试';/.test(EXAM_SRC), true);
   check('空池有引导文案', /模拟考做错的题会自动进来；试卷回顾里点「7 天后重练」「猜对了」也会加进来/.test(EXAM_SRC), true);
-  check('组卷前提示口径（含标记题规则）', /模拟考仍错的题 \+ 「7 天后重练」「猜对了」标记题/.test(EXAM_SRC), true);
+  check('组卷前提示口径（含留池不抽规则）', /模拟考做错的题 \+ 手动标记题 · 做对一次后仍留在池子里/.test(EXAM_SRC), true);
 
   console.log('\n--- 五、源码口径 ---');
+  check('池子成员身份持久化（kind=examwrong）', /kind: 'examwrong'/.test(BACKEND_SRC), true);
+  check('池子 = 动态错题 ∪ 持久标记', /async function examWrongPoolQids/.test(BACKEND_SRC), true);
+  check('做错会清掉 mastered（重新可抽）', /rdWrong\.mastered = 0/.test(BACKEND_SRC), true);
   check('backend 有 examWrongQids', /async function examWrongQids\(calc\)/.test(BACKEND_SRC), true);
   check('只取已交卷会话', /filter\(e => e\.status === 'submitted'\)/.test(BACKEND_SRC), true);
   check('以最后一场为准（latest 覆盖）', /for \(const \[qid, isWrong\] of latest\) if \(isWrong\) out\.push\(qid\);/.test(BACKEND_SRC), true);

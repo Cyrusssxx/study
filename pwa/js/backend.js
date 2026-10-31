@@ -404,26 +404,35 @@ async function applyAnswer(qid, subject, userAnswer, isCorrect, ts, trackWrong =
     await dbPut('progress', { question_id: qid, subject, user_answer: userAnswer, is_correct: isCorrect ? 1 : 0, answered_at: ts });
     const w = await dbGet('wrong', qid);
     if (!isCorrect) {
-        if (!trackWrong) return; // 错题不入错题本（考试可选关闭）
-        if (w) {
-            w.wrong_count += 1; w.last_wrong_at = ts; w.is_resolved = 0; w.correct_streak = 0;
-            await dbPut('wrong', w);
-        } else {
-            await dbPut('wrong', { question_id: qid, subject, wrong_count: 1, last_wrong_at: ts, is_resolved: 0, correct_streak: 0 });
+        if (trackWrong) {          // 错题不入错题本（考试可选关闭）
+            if (w) {
+                w.wrong_count += 1; w.last_wrong_at = ts; w.is_resolved = 0; w.correct_streak = 0;
+                await dbPut('wrong', w);
+            } else {
+                await dbPut('wrong', { question_id: qid, subject, wrong_count: 1, last_wrong_at: ts, is_resolved: 0, correct_streak: 0 });
+            }
         }
-    } else if (w) {
-        // 答对：连对计数+1，连对满2次移出错题本（置已解决，保留记录）
-        w.correct_streak = (w.correct_streak || 0) + 1;
-        if (w.correct_streak >= 2) w.is_resolved = 1;
-        await dbPut('wrong', w);
-    }
-    // 答对即移出「不熟 / 不会」池（用户规则：答对 1 次就移出，池子只保留当前真正薄弱的题）。
-    // 与错题本"连对 2 次"不同 —— 不熟是主观标记，做对一次即可认为已过关。
-    if (isCorrect) {
+        // 池子成员又做错了 → 清掉 mastered，重新变成可抽（不论有没有记进错题本）
+        const rdWrong = await dbGet('redo', qid);
+        if (rdWrong && rdWrong.mastered) {
+            rdWrong.mastered = 0;
+            rdWrong.mastered_at = null;
+            await dbPut('redo', rdWrong);
+        }
+    } else {
+        if (w) {
+            // 答对：连对计数+1，连对满2次移出错题本（置已解决，保留记录）
+            w.correct_streak = (w.correct_streak || 0) + 1;
+            if (w.correct_streak >= 2) w.is_resolved = 1;
+            await dbPut('wrong', w);
+        }
+        // 答对即移出「不熟 / 不会」池（用户规则：答对 1 次就移出，池子只保留当前真正薄弱的题）。
+        // 与错题本"连对 2 次"不同 —— 不熟是主观标记，做对一次即可认为已过关。
         if (await dbGet('unfamiliar', qid)) await dbDelete('unfamiliar', qid);
         if (await dbGet('dontknow', qid)) await dbDelete('dontknow', qid);
-        // 「7 天后重练 / 猜对了」标记题：做对一次即置 mastered —— **记录保留**（还留在
-        // 模拟考错题池里能回看），只是之后不再被抽到。与上面两个标记不同：那两个直接删除。
+        // 池子成员（模拟考错题 / 7 天后重练 / 猜对了）：做对一次即置 mastered ——
+        // **记录保留**（还留在「模拟考错题」池里能回看），只是之后不再被抽到。
+        // 与上面两个标记不同：那两个直接删除，这个只改状态。
         const rd = await dbGet('redo', qid);
         if (rd && !rd.mastered) {
             rd.mastered = 1;
@@ -1457,19 +1466,40 @@ async function examWrongQids(calc) {
     return out;
 }
 
-// 「模拟考错题」模式的完整抽题池 = 模拟考仍错的题 ∪ 「7 天后重练 / 猜对了」标记题。
-// 标记题是**永久成员**：做对一次置 mastered 后仍留在池子里（可回看），只是不再被抽到。
+// 「模拟考错题」模式的完整抽题池 = 模拟考仍错的题 ∪ 标记题（7 天后重练 / 猜对了 / 历史模拟考错题）。
+// 池子成员身份**持久化**：一道题只要进过这个池子（模拟考做错过，或手动标记过），
+// 就永久是成员；做对一次置 mastered 后仍留在池子里（可回看），只是不再被抽到。
+// 只有「做错」会清掉 mastered，让它重新可抽。
 // 返回 { pending, mastered }：pending 进抽题池，mastered 只用于统计展示。
 async function examWrongPoolQids(calc) {
     const dynamic = await examWrongQids(calc);
+    const rows = await dbAll('redo').catch(() => []);
+    const byId = new Map(rows.map(r => [r.question_id, r]));
+    // 回填：历史模拟考错题没有持久记录 → 补一条 kind='examwrong'，从此成为永久成员
+    // （老数据也满足「做对一次后留池不抽」，不必等下一次交卷）
+    const backfill = [];
+    for (const qid of dynamic) {
+        if (byId.has(qid)) continue;
+        const row = {
+            question_id: qid,
+            subject: String(qid).split('_')[0],
+            kind: 'examwrong',
+            added_at: now(),
+            due_at: 0
+        };
+        backfill.push(row);
+        byId.set(qid, row);
+    }
+    if (backfill.length) {
+        for (const row of backfill) await dbPut('redo', row);
+    }
     const pending = new Set(dynamic);
     const mastered = new Set();
-    for (const r of await dbAll('redo').catch(() => [])) {
+    for (const r of byId.values()) {
         if (!r || !r.question_id) continue;
-        if (r.mastered) mastered.add(r.question_id);
+        if (r.mastered) { mastered.add(r.question_id); pending.delete(r.question_id); }
         else pending.add(r.question_id);
     }
-    // 同一题既在动态错题里、又被标 mastered（例如标记后又在模拟考做对了）→ 按 mastered 处理
     for (const qid of mastered) pending.delete(qid);
     return { pending: [...pending], mastered: [...mastered] };
 }
@@ -1578,6 +1608,7 @@ async function examApi(action, body, arg) {
                 if (!qid || dueRank.has(qid)) continue;
                 if (r.mastered) continue;                // 已做对过：留在池子里但不再抽
                 if (r.kind === 'guessed') continue;      // 猜对了标记：只影响垫底层，不进到期层
+                if (r.kind === 'examwrong') continue;    // 模拟考错题池成员：不参与收藏池排期
                 if ((r.due_at || 0) > nowMs) continue;   // 还没到 7 天
                 dueRank.set(qid, idx++);
             }
@@ -1776,11 +1807,12 @@ async function examApi(action, body, arg) {
         }
         // 「模拟考错题」池 = 模拟考仍错的题 ∪ 「7 天后重练 / 猜对了」标记题。
         // 标记题做对一次置 mastered：**留在池子里**（可回看）但不再抽。
-        let redoPending = 0, redoDue = 0, guessedCnt = 0, markedMastered = 0;
+        let redoPending = 0, redoDue = 0, guessedCnt = 0, markedMastered = 0, examMarked = 0;
         const markedIds = new Set(), masteredIds = new Set();
         try {
             for (const r of await dbAll('redo')) {
                 if (r.mastered) { markedMastered++; masteredIds.add(r.question_id); continue; }
+                if (r.kind === 'examwrong') { examMarked++; markedIds.add(r.question_id); continue; }
                 if (r.kind === 'guessed') { guessedCnt++; markedIds.add(r.question_id); continue; }
                 markedIds.add(r.question_id);
                 if ((r.due_at || 0) <= nowMs) redoDue++; else redoPending++;
@@ -1806,6 +1838,7 @@ async function examApi(action, body, arg) {
             exam_wrong_by_subject: examWrongBySub,
             marked_pending: markedIds.size,           // 标记题：还没做对的（会抽）
             marked_mastered: markedMastered,          // 标记题：已做对的（留池不抽）
+            exam_marked: examMarked,                  // 其中来自「模拟考错题」持久成员的数量
             exam_pool_total: examPoolSet.size,        // 「模拟考错题」模式实际可抽数
             redo_pending: redoPending,
             redo_due: redoDue,

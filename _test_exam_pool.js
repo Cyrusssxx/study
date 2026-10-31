@@ -341,6 +341,32 @@ const DAY = 86400000;
   const poolR = await w.api('/api/exam/pool').then(r => r.json());
   check('手动移出后已掌握计数归零', poolR.marked_mastered, 0);
 
+  console.log('\n--- 十一、模拟考错题：做对后同样留池不抽，做错再变回可抽 ---');
+  // 造一场模拟考，cn_0003 答错（正确答案 A，答 B）
+  await put('exams', [{
+    id: 100, mode: 'full', question_ids: ['cn_0003'], answers: { cn_0003: 'B' },
+    total_count: 1, correct_count: 0, score: 0, duration_sec: 3600,
+    status: 'submitted', started_at: '2026-10-29 10:00:00', submitted_at: '2026-10-29 10:50:00'
+  }]);
+  let p11 = await w.examWrongPoolQids(true);
+  check('模拟考做错的 cn_0003 进池', p11.pending.includes('cn_0003'), true);
+  const rec = await w.dbGet('redo', 'cn_0003');
+  check('池子成员身份已持久化（kind=examwrong）', rec && rec.kind, 'examwrong');
+
+  // 做对一次 → 留在池子里但不再抽
+  await w.applyAnswer('cn_0003', 'cn', 'A', true, null, false);
+  p11 = await w.examWrongPoolQids(false);
+  check('做对后退出可抽池', p11.pending.includes('cn_0003'), false);
+  check('做对后仍在池子里（mastered）', p11.mastered.includes('cn_0003'), true);
+  const rec2 = await w.dbGet('redo', 'cn_0003');
+  check('记录未被删除（只是置 mastered）', !!(rec2 && rec2.mastered === 1), true);
+
+  // 再做错 → 清掉 mastered，重新可抽
+  await w.applyAnswer('cn_0003', 'cn', 'B', false, null, false);
+  p11 = await w.examWrongPoolQids(false);
+  check('做错后重新变回可抽', p11.pending.includes('cn_0003'), true);
+  check('做错后不再算 mastered', p11.mastered.includes('cn_0003'), false);
+
   dom.window.close();
   console.log(`\n结果: ${pass} / ${pass + fail}` + (fail ? `，${fail} 项失败` : '，全部通过'));
   process.exit(fail ? 1 : 0);
