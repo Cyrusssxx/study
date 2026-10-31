@@ -80,8 +80,7 @@
                     <select id="examMode" onchange="onModeChange()">
                         <option value="favorites">仅收藏题（默认 · 按真题各科题量抽）</option>
                         <option value="examwrong">仅模拟考错题（含手动标记 · 做对后留池不抽）</option>
-                        <option value="unfamiliar">仅不熟题（下次练习池）</option>
-                        <option value="wrong">仅错题（错题本全部来源）</option>
+                        <option value="wrong">仅错题（含不熟/不会 · 全部来源）</option>
                         <option value="full">完整 408 模拟（数构11 · 组成11 · OS10 · 网络8）</option>
                         <option value="os">单科：操作系统</option>
                         <option value="co">单科：计算机组成原理</option>
@@ -97,6 +96,11 @@
                 <div class="setup-row" id="sourceInfo" style="display:none;">
                     <label>题目来源</label>
                     <span class="source-text" id="sourceText"></span>
+                </div>
+                <!-- 模拟考错题池：像刷题一样大批量练（不限 150 题、不计时、逐题看解析） -->
+                <div class="setup-row" id="bulkPracticeRow" style="display:none;">
+                    <label>刷题式练</label>
+                    <span class="source-text" id="bulkPracticeLinks"></span>
                 </div>
                 <div class="setup-row">
                     <label>考试时长</label>
@@ -226,13 +230,18 @@
             applyCountRange(cnt, 5, 150, 40);
             const HINTS = {
                 favorites: '按真题比例分配 · 到期错题（≤1/3）→ 做过的错题 → 没做过的 · 模拟考答对的题不再抽（可标「猜对了」放回）',
-                unfamiliar: '按真题比例分配 · 只抽标了「不熟/不会」的题，优先没做过的',
+                unfamiliar: '不熟池已并入错题池，这里只抽标了「不熟/不会」的子集',
                 examwrong: '按真题比例分配 · 模拟考做错的题 + 手动标记题 · 做对一次后仍留在池子里（可回看），只是不再抽',
                 wrong: '按真题比例分配，优先抽没做过的题'
             };
             document.getElementById('countHint').textContent = HINTS[mode] || '按真题比例分配';
             sourceInfo.style.display = 'flex';
             sourceText.textContent = '正在读取…';
+            // 「刷题式练」只对模拟考错题池有意义，其它模式先隐藏（examwrong 分支里再按科目显示）
+            {
+                const bulkRow0 = document.getElementById('bulkPracticeRow');
+                if (bulkRow0) bulkRow0.style.display = 'none';
+            }
             recordWrongRow.style.display = mode === 'wrong' ? 'none' : 'flex';
             try {
                 const names = { ds: '数构', co: '组成', os: 'OS', cn: '网络' };
@@ -251,6 +260,20 @@
                     sourceText.textContent = n
                         ? `模拟考错题 ${n} 题（${detail}）· 按真题比例抽，优先没做过`
                         : '还没有模拟考错题（先做一场模拟考，交卷后这里就有了）';
+                    // 刷题式批量练：按科目给出直达链接（刷题页是单科目加载）
+                    const bulkRow = document.getElementById('bulkPracticeRow');
+                    const bulkLinks = document.getElementById('bulkPracticeLinks');
+                    const subs = Object.keys(names).filter(k => by[k]);
+                    if (bulkRow && bulkLinks) {
+                        if (subs.length) {
+                            bulkLinks.innerHTML = subs.map(k =>
+                                `<a class="bulk-practice-link" href="quiz.html?subject=${k}&mode=examwrong" title="打开刷题页，把这个科目的模拟考错题一次刷完（不限题量、不计时）">${names[k]} ${by[k]} 题 →</a>`
+                            ).join(' ');
+                            bulkRow.style.display = 'flex';
+                        } else {
+                            bulkRow.style.display = 'none';
+                        }
+                    }
                 } else {
                     const url = mode === 'favorites' ? '/api/favorites'
                         : mode === 'unfamiliar' ? '/api/marks?kind=all'
@@ -975,7 +998,9 @@
     const ps = PS.get({ mode: '', count: '', minutes: '', resultWrongOnly: null });
     if (ps.mode) {
         const m = document.getElementById('examMode');
-        if ([...m.options].some(o => o.value === ps.mode)) m.value = ps.mode;
+        // 不熟池已并入错题池：老用户存的是 unfamiliar 时落到「仅错题」
+        const want = ps.mode === 'unfamiliar' ? 'wrong' : ps.mode;
+        if ([...m.options].some(o => o.value === want)) m.value = want;
     }
     if (ps.count) document.getElementById('examCount').value = ps.count;
     if (ps.minutes) {

@@ -672,8 +672,18 @@ async function api(url, opts = {}) {
                 // 代码专项：只出含代码块的题
                 qs = qs.filter(q => (q.content || '').includes('<pre class="code-block"'));
             } else if (mode === 'wrong') {
-                const wrongIds = new Set((await dbAll('wrong')).filter(w => w.subject === subject && !w.is_resolved).map(w => w.question_id));
-                qs = qs.filter(q => wrongIds.has(q.id));
+                // 错题池 = 错题本未了结 ∪ 不熟 ∪ 不会 ∪ 手动标记（不熟池已并入，不再单列）
+                const wrongIds = (await dbAll('wrong')).filter(w => !w.is_resolved).map(w => w.question_id);
+                const unfamIds = (await dbAll('unfamiliar')).map(w => w.question_id);
+                const dkIds = (await dbAll('dontknow')).map(w => w.question_id);
+                const markIds = (await dbAll('redo')).filter(r => !r.mastered).map(r => r.question_id);
+                const pool = new Set([...wrongIds, ...unfamIds, ...dkIds, ...markIds]);
+                qs = qs.filter(q => pool.has(q.id));
+            } else if (mode === 'examwrong') {
+                // 模拟考错题池（刷题式大批量练）：成员 = 模拟考做错 ∪ 手动标记，做对过的不再出
+                const pool = await examWrongPoolQids(false);
+                const set = new Set(pool.pending);
+                qs = qs.filter(q => set.has(q.id));
             } else if (mode === 'favorite') {
                 qs = qs.filter(q => favSet.has(q.id));
             } else if (mode === 'unfamiliar' || mode === 'dontknow') {
@@ -1556,17 +1566,23 @@ async function examApi(action, body, arg) {
         const poolBySub = {};
         for (const k of EXAM_SUBJECT_ORDER) poolBySub[k] = [];
         if (isSpecial) {
-            // 四个特殊池：收藏 / 未解决错题 / 不熟题（两个标记合并）/ 模拟考错题
+            // 特殊池：收藏 / 错题池（含不熟不会，已合并）/ 模拟考错题
             let qids;
             if (mode === 'favorites') {
                 qids = (await dbAll('favorites')).map(r => r.question_id);
             } else if (mode === 'unfamiliar') {
+                // 兼容旧入口：不熟池已并入错题池，这里保留为子集视图
                 qids = [...(await dbAll('unfamiliar')), ...(await dbAll('dontknow'))].map(r => r.question_id);
             } else if (mode === 'examwrong') {
                 // 模拟考仍错的题 + 「7 天后重练 / 猜对了」标记题（后者做对过就只留不抽）
                 qids = (await examWrongPoolQids(true)).pending;
             } else {
-                qids = (await dbAll('wrong')).filter(w => !w.is_resolved).map(r => r.question_id);
+                // 错题池 = 错题本未了结 ∪ 不熟 ∪ 不会 ∪ 手动标记（不熟池已并入，不再单列）
+                const wrongIds = (await dbAll('wrong')).filter(w => !w.is_resolved).map(r => r.question_id);
+                const unfamIds = (await dbAll('unfamiliar')).map(r => r.question_id);
+                const dkIds = (await dbAll('dontknow')).map(r => r.question_id);
+                const markIds = (await dbAll('redo')).filter(r => !r.mastered).map(r => r.question_id);
+                qids = [...new Set([...wrongIds, ...unfamIds, ...dkIds, ...markIds])];
             }
             for (const qid of qids) {
                 const subj = String(qid || '').split('_')[0];

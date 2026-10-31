@@ -142,7 +142,7 @@
     const SUBJECT = _params.get('subject') || 'os';
     const NOTES_SUBJECTS = ['os', 'co', 'ds', 'cn'];  // 已有考点笔记的科目，徽章白名单化防死链
     // 可在练习设置面板内热切换的模式（无需退出页面）
-    const SWITCHABLE_MODES = ['sequential', 'favorite', 'unfamiliar', 'real', 'fav_real'];
+    const SWITCHABLE_MODES = ['sequential', 'favorite', 'unfamiliar', 'examwrong', 'real', 'fav_real'];
     let MODE = _params.get('mode') || '';
     if (MODE === 'dontknow') MODE = 'unfamiliar'; // 兼容旧参数：原"不会模式"合并入"不熟/不会"
     let CHAPTER = _params.get('chapter') || '';
@@ -190,6 +190,7 @@
         'wrong': '错题模式',
         'favorite': '收藏模式',
         'unfamiliar': '不熟/不会',
+        'examwrong': '模拟考错题',
         'dontknow': '不熟/不会',
         'unanswered': '未做模式',
         'real': '真题模式',

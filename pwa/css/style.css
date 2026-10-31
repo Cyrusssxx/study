@@ -5440,6 +5440,24 @@ a.chapter-badge-link:hover {
     font-size: 0.95rem;
 }
 
+/* 「刷题式练」直达链接：按科目把模拟考错题池丢进刷题页（不限题量、不计时） */
+.bulk-practice-link {
+    display: inline-block;
+    margin: 0 6px 4px 0;
+    padding: 3px 10px;
+    border: 1px solid var(--primary);
+    border-radius: 12px;
+    color: var(--primary);
+    background: rgba(var(--card-rgb), var(--ui-alpha));
+    font-size: 0.85rem;
+    text-decoration: none;
+    white-space: nowrap;
+}
+.bulk-practice-link:hover {
+    background: var(--primary);
+    color: #fff;
+}
+
 /* 特殊考试模式提示 */
 .exam-mode-special {
     background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);

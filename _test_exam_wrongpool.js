@@ -127,8 +127,8 @@ const sleep = ms => new Promise(r => setTimeout(r, ms));
   check('答对过的 cn_0002 不在池内', ids.slice(0, 2).includes('cn_0002'), false);
   check('组卷结果不含答案', (g.questions || []).every(q => q.answer === undefined), true);
 
-  console.log('\n--- 三、与「仅错题」池子相互独立 ---');
-  // 错题本里有 cn_0001（刷题来源错），但它不在模拟考错题池
+  console.log('\n--- 三、错题池（含不熟/标记）与模拟考错题池的关系 ---');
+  // 错题本里有 cn_0001（刷题来源错），它进错题池但不进模拟考错题池
   await put('wrong', [{ question_id: 'cn_0001', subject: 'cn', wrong_count: 2, is_resolved: 0, last_wrong_at: '2026-10-19 09:00:00' }]);
   const pool2 = await w.api('/api/exam/pool').then(r => r.json());
   check('错题本有 1 题，模拟考错题仍是 2 题', pool2.exam_wrong, 2);
@@ -136,15 +136,16 @@ const sleep = ms => new Promise(r => setTimeout(r, ms));
     method: 'POST', headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ mode: 'wrong', count: 5 })
   }).then(r => r.json());
-  check('「仅错题」模式仍能抽到 cn_0001', (gw.questions || []).map(q => q.id).slice(0, 1), ['cn_0001']);
+  check('「仅错题」模式能抽到 cn_0001（错题本来源）', (gw.questions || []).map(q => q.id).includes('cn_0001'), true);
 
   console.log('\n--- 四、前端接线 ---');
   const sel = w.document.getElementById('examMode');
   const opt = [...sel.options].find(o => o.value === 'examwrong');
   check('下拉有 examwrong 选项', !!opt, true);
   check('选项文案（含手动标记 + 留池规则）', opt ? opt.textContent.trim() : '', '仅模拟考错题（含手动标记 · 做对后留池不抽）');
-  check('「仅错题」文案标注了来源范围',
-    /仅错题（错题本全部来源）/.test(sel.innerHTML), true);
+  check('「仅错题」文案标注了合并后的来源范围',
+    /仅错题（含不熟\/不会 · 全部来源）/.test(sel.innerHTML), true);
+  check('不熟池入口已从考试模式移除', /<option value="unfamiliar"/.test(EXAM_SRC), false);
   check('MODE_NAMES 有 examwrong', /examwrong: '仅模拟考错题'/.test(EXAM_SRC), true);
   check('getExamTitle 有对应标题', /if \(mode === 'examwrong'\) return '模拟考错题考试';/.test(EXAM_SRC), true);
   check('空池有引导文案', /模拟考做错的题会自动进来；试卷回顾里点「7 天后重练」「猜对了」也会加进来/.test(EXAM_SRC), true);

@@ -367,6 +367,29 @@ const DAY = 86400000;
   check('做错后重新变回可抽', p11.pending.includes('cn_0003'), true);
   check('做错后不再算 mastered', p11.mastered.includes('cn_0003'), false);
 
+  console.log('\n--- 十二、刷题页大批量练：mode=examwrong / mode=wrong ---');
+  // 刷题页的 examwrong 模式只出池内题（不限题量、不计时，与考试组卷互不影响）
+  const poolNow = await w.examWrongPoolQids(false);
+  const rEx = await w.api('/api/questions/cn?mode=examwrong&page=1&per_page=9999').then(r => r.json());
+  const exIds = (rEx.questions || []).map(q => q.id);
+  check('刷题 examwrong 只出池内题', exIds.every(id => poolNow.pending.includes(id)), true);
+  check('刷题 examwrong 数量与池一致', exIds.length, poolNow.pending.length);
+
+  // 错题池已并入不熟/不会：cn_0007 只有不熟标记、从未做错，也应出现在「错题模式」
+  const rWrong = await w.api('/api/questions/cn?mode=wrong&page=1&per_page=9999').then(r => r.json());
+  const wrongIds2 = (rWrong.questions || []).map(q => q.id);
+  check('错题模式包含不熟标记题（不熟池已并入）', wrongIds2.includes('cn_0007'), true);
+
+  console.log('\n--- 十三、前端接线：刷题页模式 + 考试页批量入口 ---');
+  check('刷题页 SWITCHABLE_MODES 含 examwrong',
+    /SWITCHABLE_MODES = \[[^\]]*'examwrong'/.test(QUIZ_SRC), true);
+  check('刷题页 modeNames 有 examwrong', /'examwrong': '模拟考错题'/.test(QUIZ_SRC), true);
+  check('backend /api/questions 有 examwrong 分支',
+    /mode === 'examwrong'\) \{[\s\S]{0,160}?examWrongPoolQids/.test(BACKEND_SRC), true);
+  check('考试页有「刷题式练」行', /id="bulkPracticeRow"/.test(EXAM_SRC), true);
+  check('考试页生成按科目的刷题链接',
+    /quiz\.html\?subject=\$\{k\}&mode=examwrong/.test(EXAM_SRC), true);
+
   dom.window.close();
   console.log(`\n结果: ${pass} / ${pass + fail}` + (fail ? `，${fail} 项失败` : '，全部通过'));
   process.exit(fail ? 1 : 0);
