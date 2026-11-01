@@ -80,7 +80,24 @@ if (q519) {
   check('os_0519 解析不再出现「23个」这种压平写法', /最多存储\s*23\s*个/.test(q519.explanation || ''), false);
 }
 
-console.log('\n--- 四、基础完整性 ---');
+console.log('\n--- 四、解析开头不能残留答案字母 / 标点 ---');
+// 数据导入时把答案字母拼到了解析前面：「、D尽管…」「、A、C、A深度优先…」「，A在带头结点…」
+const strayStart = [];
+const strayCirc = [];
+for (const k of BANKS) {
+  for (const q of bank[k].questions) {
+    const e = String(q.explanation || '').replace(/<[^>]+>/g, '').trim();
+    if (e && '、，,；;。'.includes(e[0])) strayStart.push(q.id);
+    // 圈码后又跟一个右括号：①）关中断
+    if (/[①-⑳]）/.test(q.explanation || '')) strayCirc.push(q.id);
+  }
+}
+check('解析不以标点/答案字母开头', strayStart, []);
+check('圈码后没有多余的右括号', strayCirc, []);
+check('co_0590 解析的序号已修正', /中断隐指令完成的工作有：①关中断/.test(qOf('co_0590').explanation), true);
+check('os_0108 不再以「A」开头', /^<p>C语言编写的程序/.test(qOf('os_0108').explanation), true);
+
+console.log('\n--- 五、基础完整性 ---');
 for (const k of BANKS) {
   const qs = bank[k].questions || [];
   const noAnswer = qs.filter(q => !q.answer).map(q => q.id);
