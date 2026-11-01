@@ -387,6 +387,13 @@ const DAY = 86400000;
   check('backend /api/questions 有 examwrong 分支',
     /mode === 'examwrong'\) \{[\s\S]{0,160}?examWrongPoolQids/.test(BACKEND_SRC), true);
   check('考试页有「刷题式练」行', /id="bulkPracticeRow"/.test(EXAM_SRC), true);
+  check('刷题页定义 hasKpOf（收藏 + 有考点分析）',
+    /const hasKpOf = q => !!\(q && q\.is_favorited && q\.kp_analysis\)/.test(QUIZ_SRC), true);
+  check('考点分析在 6 处切题路径都按题重算',
+    (QUIZ_SRC.match(/kpShown = hasKpOf\(/g) || []).length, 6);
+  check('切题时不再把考点分析硬置为收起',
+    /currentIndex[\s\S]{0,120}?kpShown = false/.test(QUIZ_SRC), false);
+
   check('考试页生成按科目的刷题链接',
     /quiz\.html\?subject=\$\{k\}&mode=examwrong/.test(EXAM_SRC), true);
 

@@ -181,6 +181,8 @@
         return t.length > 0;
     }
     const hasNoteOf = q => hasRealNote(q);   // 题目是否有笔记（文本或图片），无空气笔记
+    // 收藏题且已生成考点分析 → 默认展开（与「有笔记就默认展开笔记」同一套规则）
+    const hasKpOf = q => !!(q && q.is_favorited && q.kp_analysis);
     let optionOrder = {};  // {qid: [key,...]} 选项乱序开启时每题的显示顺序缓存
     let favWrongCount = 0; // 收藏题当前的错题记录条数（含已解决），给「清空收藏错题」按钮做计数与禁用
 
@@ -496,7 +498,7 @@
         }
         currentIndex = pi >= 0 ? pi : 0;
         explanationShown = false;
-        kpShown = false;
+        kpShown = hasKpOf(questions[currentIndex]);
         noteShown = hasNoteOf(questions[currentIndex]);
         renderQuestion();
     }
@@ -636,6 +638,7 @@
             }
 
             noteShown = hasNoteOf(questions[currentIndex]);  // 有笔记（文本或图片）的题默认展开笔记面板
+            kpShown = hasKpOf(questions[currentIndex]);      // 收藏题有考点分析也默认展开
             renderQuestion();
         } catch (e) {
             document.getElementById('questionArea').innerHTML = `<div class="error">加载失败: ${e.message}</div>`;
@@ -758,8 +761,8 @@
         if (idx >= 0) {
             currentIndex = idx;
             explanationShown = false;
-            kpShown = false;
-            noteShown = false;
+            kpShown = hasKpOf(questions[idx]);
+            noteShown = hasNoteOf(questions[idx]);
             renderQuestion();
         } else {
             // 当前筛选集（错题/收藏/年份等）不含该章节题：整页加载以拿到完整题集（等价原行为）
@@ -1135,7 +1138,7 @@
         flushNoteSave();
         currentIndex = i;
         explanationShown = false;
-        kpShown = false;
+        kpShown = hasKpOf(questions[i]);      // 收藏题有考点分析默认展开
         noteShown = hasNoteOf(questions[i]);  // 有笔记（文本或图片）默认展开，没有不展开
         renderQuestion();
     }
@@ -1500,6 +1503,7 @@
             flushNoteSave();   // 切题前冲刷未入库的笔记（须在 currentIndex 变更前，读的是当前题）
             currentIndex--;
             explanationShown = false;
+            kpShown = hasKpOf(questions[currentIndex]);
             noteShown = hasNoteOf(questions[currentIndex]);
             renderQuestion();
         }
@@ -1510,6 +1514,7 @@
             flushNoteSave();   // 切题前冲刷未入库的笔记（须在 currentIndex 变更前，读的是当前题）
             currentIndex++;
             explanationShown = false;
+            kpShown = hasKpOf(questions[currentIndex]);
             noteShown = hasNoteOf(questions[currentIndex]);
             renderQuestion();
         }
