@@ -192,11 +192,16 @@ const sleep = ms => new Promise(r => setTimeout(r, ms));
     const meta = w2.document.getElementById('examWrongMeta');
     const links = w2.document.getElementById('examWrongLinks');
     check('专项显示可抽题数', /可抽 7 题/.test(meta.textContent), true);
-    check('专项显示科目分布', /组成 3 · OS 4/.test(meta.textContent), true);
     check('专项显示已掌握数', /已掌握 2/.test(meta.textContent), true);
-    check('只给一个「全部科目」入口（不按科目拆）', links.querySelectorAll('a').length, 1);
-    check('入口指向 subject=all',
-      links.querySelector('a').getAttribute('href'), 'quiz.html?subject=all&mode=examwrong');
+    // 入口：全部科目（主）+ 分科目（次）
+    const anchors = [...links.querySelectorAll('a')];
+    check('入口数 = 全部科目 1 + 分科目 2', anchors.length, 3);
+    check('第一个是「全部科目」主入口',
+      anchors[0].getAttribute('href'), 'quiz.html?subject=all&mode=examwrong');
+    check('主入口有 is-primary 样式', anchors[0].classList.contains('is-primary'), true);
+    check('分科目入口 href 正确',
+      anchors.slice(1).map(a => a.getAttribute('href')).sort(),
+      ['quiz.html?subject=co&mode=examwrong', 'quiz.html?subject=os&mode=examwrong']);
     d2.window.close();
   }
 

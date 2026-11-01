@@ -5493,6 +5493,15 @@ a.chapter-badge-link:hover {
     background: var(--primary);
     color: #fff;
 }
+/* 主入口（全部科目）：实心，与分科目入口区分 */
+.bulk-practice-link.is-primary {
+    background: var(--primary);
+    color: #fff;
+    font-weight: 600;
+}
+.bulk-practice-link.is-primary:hover {
+    filter: brightness(1.08);
+}
 
 /* 特殊考试模式提示 */
 .exam-mode-special {

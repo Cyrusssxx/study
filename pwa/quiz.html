@@ -1112,10 +1112,11 @@
         if (!questions.length) { panel.innerHTML = ''; return; }
         const cur = questions[currentIndex];
         let html = '';
-        if (MODE === 'exam_wrong' || MODE === 'exam_review') {
-            // 试卷错题重刷/回顾：跨科目混合集，按章节分组只会看到当前章 1~2 题——
-            // 平铺汇总全部题号（与模拟考答题视图一致），标题带总数与当前筛选
-            const label = MODE === 'exam_review' ? (examFilter === 'all' ? '全部' : '本次错题') : '错题';
+        if (MODE === 'exam_wrong' || MODE === 'exam_review' || MODE === 'examwrong') {
+            // 试卷错题重刷/回顾 / 模拟考错题池：跨科目混合集，按章节分组只会看到当前章
+            // 1~2 题（跨科目时更只剩当前科的当前章）——平铺汇总全部题号，标题带总数。
+            const label = MODE === 'exam_review' ? (examFilter === 'all' ? '全部' : '本次错题')
+                : MODE === 'examwrong' ? '模拟考错题' : '错题';
             html = `<div class="num-group-title">${label} ${questions.length} 题</div><div class="num-grid">`
                 + questions.map((q, i) => numBtnHtml(i, i + 1)).join('') + '</div>';
         } else if (cur.chapter) {

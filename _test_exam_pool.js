@@ -402,6 +402,8 @@ const DAY = 86400000;
   check('切题时不再把考点分析硬置为收起',
     /currentIndex[\s\S]{0,120}?kpShown = false/.test(QUIZ_SRC), false);
 
+  check('题号面板在 examwrong 模式平铺（不按章节分组）',
+    /MODE === 'exam_wrong' \|\| MODE === 'exam_review' \|\| MODE === 'examwrong'/.test(QUIZ_SRC), true);
   check('考试页生成按科目的刷题链接',
     /quiz\.html\?subject=\$\{k\}&mode=examwrong/.test(EXAM_SRC), true);
 
