@@ -140,6 +140,7 @@
     // 原 Flask 版由 Jinja 注入，PWA 版改从 URL 参数读取
     const _params = new URLSearchParams(location.search);
     const SUBJECT = _params.get('subject') || 'os';
+    const IS_ALL = SUBJECT === 'all';   // 跨科目：只用于「模拟考错题」大批量刷
     const NOTES_SUBJECTS = ['os', 'co', 'ds', 'cn'];  // 已有考点笔记的科目，徽章白名单化防死链
     // 可在练习设置面板内热切换的模式（无需退出页面）
     const SWITCHABLE_MODES = ['sequential', 'favorite', 'unfamiliar', 'examwrong', 'real', 'fav_real'];
@@ -204,7 +205,7 @@
         'exam_review': '试卷回顾'
     };
 
-    const SUBJECT_NAME = (SUBJECTS[SUBJECT] || {}).name || SUBJECT;
+    const SUBJECT_NAME = IS_ALL ? '全部科目' : ((SUBJECTS[SUBJECT] || {}).name || SUBJECT);
     // 试卷错题重刷/试卷回顾：一张卷跨四科，标题不按单科显示
     const PAGE_TITLE = MODE === 'exam_wrong' ? '试卷错题重刷' : MODE === 'exam_review' ? '试卷回顾' : SUBJECT_NAME;
     document.title = `${PAGE_TITLE} - 刷题`;
@@ -215,7 +216,16 @@
     // 初始化
     async function init() {
         initQuizSidebars();
-        loadChapterTree();
+        // 跨科目模式没有"单科章节树"，直接隐藏左栏（否则会去请求 /api/chapters/all 而 404）
+        if (IS_ALL) {
+            const side = document.querySelector('.chapter-sidebar');
+            if (side) side.style.display = 'none';
+            const toggle = document.getElementById('chapterToggle');
+            if (toggle) toggle.style.display = 'none';
+            document.getElementById('quizLayout')?.classList.add('chapter-collapsed');
+        } else {
+            loadChapterTree();
+        }
         await loadQuizQuestions();
     }
 
@@ -533,7 +543,7 @@
                     _buildSecOrdinal(all.flatMap(d => d.questions || []));
                     if (questions[currentIndex]) renderQuestion();
                 }).catch(() => { });
-            } else if (MODE !== 'sequential') {
+            } else if (MODE !== 'sequential' && !IS_ALL) {
                 api(`/api/questions/${SUBJECT}?mode=sequential&page=1&per_page=9999`)
                     .then(r => r.json())
                     .then(full => { if (seq !== _loadSeq) return; _buildSecOrdinal(full.questions); if (questions[currentIndex]) renderQuestion(); })

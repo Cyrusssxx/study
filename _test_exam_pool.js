@@ -375,6 +375,14 @@ const DAY = 86400000;
   check('刷题 examwrong 只出池内题', exIds.every(id => poolNow.pending.includes(id)), true);
   check('刷题 examwrong 数量与池一致', exIds.length, poolNow.pending.length);
 
+  // 跨科目入口：subject=all 只服务 examwrong（错题本「全部科目」按钮用它）
+  const poolTrue = await w.examWrongPoolQids(true);
+  const rAll = await w.api('/api/questions/all?mode=examwrong&page=1&per_page=9999').then(r => r.json());
+  check('subject=all 返回跨科目池（数量与池一致）', (rAll.questions || []).length, poolTrue.pending.length);
+  check('subject=all 的题都来自池内', (rAll.questions || []).every(q => poolTrue.pending.includes(q.id)), true);
+  const rAllBad = await w.api('/api/questions/all?mode=sequential&page=1&per_page=9999').then(r => r.json());
+  check('subject=all 拒绝非 examwrong 模式', !!rAllBad.error, true);
+
   // 错题池已并入不熟/不会：cn_0007 只有不熟标记、从未做错，也应出现在「错题模式」
   const rWrong = await w.api('/api/questions/cn?mode=wrong&page=1&per_page=9999').then(r => r.json());
   const wrongIds2 = (rWrong.questions || []).map(q => q.id);

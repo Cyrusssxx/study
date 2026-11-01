@@ -587,15 +587,18 @@ async function api(url, opts = {}) {
         // ---------- 题目列表 ----------
         if (seg[1] === 'questions') {
             const subject = seg[2];
-            if (!SUBJECTS[subject]) return jsonResp({ error: '科目不存在' }, 404);
+            // subject='all'：跨科目取题，只用于「模拟考错题」刷题（其余模式仍按单科目）
+            const isAll = subject === 'all';
+            if (!isAll && !SUBJECTS[subject]) return jsonResp({ error: '科目不存在' }, 404);
             const mode = p.get('mode') || 'sequential';
+            if (isAll && mode !== 'examwrong') return jsonResp({ error: '该入口只支持模拟考错题模式' }, 400);
             const page = parseInt(p.get('page') || '1', 10);
             const perPage = parseInt(p.get('per_page') || '1', 10);
             const chapter = p.get('chapter') || '';
             const section = p.get('section') || '';
 
-            const data = await loadQuestions(subject);
-            let qs = data.questions;
+            const data = isAll ? null : await loadQuestions(subject);
+            let qs = isAll ? [] : data.questions;
 
             // 试卷错题重刷（exam_wrong）：从指定模拟考卷里筛出错题（含未作答，口径与成绩单一致），
             // 跨科目按卷面顺序返回，并带出该卷的时间/得分等元信息供刷题页展示。
@@ -650,7 +653,7 @@ async function api(url, opts = {}) {
                     duration_sec: exam.duration_sec, wrong_count: wrongCnt
                 };
             }
-            const mixed = mode === 'exam_wrong' || mode === 'exam_review';
+            const mixed = mode === 'exam_wrong' || mode === 'exam_review' || isAll;
 
             if (chapter) qs = qs.filter(q => q.chapter === chapter);
             if (section) qs = qs.filter(q => q.section === section);
@@ -680,10 +683,17 @@ async function api(url, opts = {}) {
                 const pool = new Set([...wrongIds, ...unfamIds, ...dkIds, ...markIds]);
                 qs = qs.filter(q => pool.has(q.id));
             } else if (mode === 'examwrong') {
-                // 模拟考错题池（刷题式大批量练）：成员 = 模拟考做错 ∪ 手动标记，做对过的不再出
-                const pool = await examWrongPoolQids(false);
+                // 模拟考错题池（刷题式大批量练）：成员 = 模拟考做错 ∪ 手动标记，做对过的不再出。
+                // calc=true：老会话缺 wrong_ids 时要补算，否则池子会比统计数字小（曾因此只出 3 题）
+                const pool = await examWrongPoolQids(true);
                 const set = new Set(pool.pending);
-                qs = qs.filter(q => set.has(q.id));
+                if (isAll) {
+                    for (const k of Object.keys(SUBJECTS)) {
+                        for (const q of (await loadQuestions(k)).questions) if (set.has(q.id)) qs.push(q);
+                    }
+                } else {
+                    qs = qs.filter(q => set.has(q.id));
+                }
             } else if (mode === 'favorite') {
                 qs = qs.filter(q => favSet.has(q.id));
             } else if (mode === 'unfamiliar' || mode === 'dontknow') {
@@ -742,7 +752,7 @@ async function api(url, opts = {}) {
                 note: notes[q.id] ? notes[q.id].content : '',
                 note_images: (notes[q.id] && notes[q.id].images) || []
             }));
-            const out = { subject: data.subject, total, page, per_page: perPage, questions: result };
+            const out = { subject: isAll ? '全部科目' : data.subject, total, page, per_page: perPage, questions: result };
             if (examMeta) out.exam_meta = examMeta;
             return jsonResp(out);
         }

@@ -192,11 +192,11 @@ const sleep = ms => new Promise(r => setTimeout(r, ms));
     const meta = w2.document.getElementById('examWrongMeta');
     const links = w2.document.getElementById('examWrongLinks');
     check('专项显示可抽题数', /可抽 7 题/.test(meta.textContent), true);
+    check('专项显示科目分布', /组成 3 · OS 4/.test(meta.textContent), true);
     check('专项显示已掌握数', /已掌握 2/.test(meta.textContent), true);
-    check('按科目生成 2 个链接', links.querySelectorAll('a').length, 2);
-    const hrefs = [...links.querySelectorAll('a')].map(a => a.getAttribute('href')).sort();
-    check('链接指向刷题页 examwrong 模式（按科目）', hrefs,
-      ['quiz.html?subject=co&mode=examwrong', 'quiz.html?subject=os&mode=examwrong']);
+    check('只给一个「全部科目」入口（不按科目拆）', links.querySelectorAll('a').length, 1);
+    check('入口指向 subject=all',
+      links.querySelector('a').getAttribute('href'), 'quiz.html?subject=all&mode=examwrong');
     d2.window.close();
   }
 

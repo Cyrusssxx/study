@@ -206,11 +206,12 @@
                 links.innerHTML = '';
                 return;
             }
-            meta.textContent = `可抽 ${n} 题` + (d.marked_mastered ? ` · 已掌握 ${d.marked_mastered}（留池不抽）` : '');
-            links.innerHTML = subs.map(k =>
-                `<a class="bulk-practice-link" href="quiz.html?subject=${k}&mode=examwrong"
-                    title="打开刷题页，把这个科目的模拟考错题一次刷完（不限题量、不计时、点选即判）">${names[k]} ${by[k]} 题 →</a>`
-            ).join('');
+            const detail = subs.map(k => `${names[k]} ${by[k]}`).join(' · ');
+            meta.textContent = `可抽 ${n} 题（${detail}）`
+                + (d.marked_mastered ? ` · 已掌握 ${d.marked_mastered}（留池不抽）` : '');
+            // 一个入口刷全部科目（subject=all）：题量不限、不计时、点选即判
+            links.innerHTML = `<a class="bulk-practice-link" href="quiz.html?subject=all&mode=examwrong"
+                title="把四个科目的模拟考错题混在一起刷（不限题量、不计时、点选即判）">全部科目 ${n} 题 →</a>`;
         } catch (e) {
             meta.textContent = '读取失败，刷新重试';
             links.innerHTML = '';
