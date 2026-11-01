@@ -167,6 +167,39 @@ const sleep = ms => new Promise(r => setTimeout(r, ms));
   check('组卷 isSpecial 含 examwrong',
     /const isSpecial = mode === 'favorites' \|\| mode === 'wrong' \|\| mode === 'unfamiliar' \|\| mode === 'examwrong';/.test(BACKEND_SRC), true);
 
+  console.log('\n--- 六、错题本里的「模拟考错题专项」 ---');
+  const WRONG_SRC = fs.readFileSync(path.join(ROOT, 'pwa/wrong.html'), 'utf8');
+  const CSS_SRC = fs.readFileSync(path.join(ROOT, 'pwa/css/style.css'), 'utf8');
+  check('错题本有专项卡片', /id="examWrongSpecial"/.test(WRONG_SRC), true);
+  check('专项卡片有计数位与链接位',
+    /id="examWrongMeta"/.test(WRONG_SRC) && /id="examWrongLinks"/.test(WRONG_SRC), true);
+  check('页面初始化会拉专项数据', /loadExamWrongSpecial\(\);/.test(WRONG_SRC), true);
+  check('专项样式已定义', /\.special-pool\s*\{/.test(CSS_SRC), true);
+
+  // 行为：给定池子数据，专项区要渲染出按科目的刷题链接
+  {
+    const fnSrc = WRONG_SRC.match(/async function loadExamWrongSpecial\(\)[\s\S]*?\n    \}/)[0];
+    const d2 = new JSDOM(
+      '<div class="special-pool"><span id="examWrongMeta"></span><div id="examWrongLinks"></div></div>',
+      { runScripts: 'outside-only' }
+    );
+    const w2 = d2.window;
+    w2.eval(
+      'const api = () => Promise.resolve({ json: async () => ({ exam_wrong: 7, exam_wrong_by_subject: { os: 4, co: 3 }, marked_mastered: 2 }) });\n' +
+      fnSrc + '\nwindow.loadExamWrongSpecial = loadExamWrongSpecial;'
+    );
+    await w2.loadExamWrongSpecial();
+    const meta = w2.document.getElementById('examWrongMeta');
+    const links = w2.document.getElementById('examWrongLinks');
+    check('专项显示可抽题数', /可抽 7 题/.test(meta.textContent), true);
+    check('专项显示已掌握数', /已掌握 2/.test(meta.textContent), true);
+    check('按科目生成 2 个链接', links.querySelectorAll('a').length, 2);
+    const hrefs = [...links.querySelectorAll('a')].map(a => a.getAttribute('href')).sort();
+    check('链接指向刷题页 examwrong 模式（按科目）', hrefs,
+      ['quiz.html?subject=co&mode=examwrong', 'quiz.html?subject=os&mode=examwrong']);
+    d2.window.close();
+  }
+
   dom.window.close();
   console.log(`\n结果: ${pass} / ${pass + fail}` + (fail ? `，${fail} 项失败` : '，全部通过'));
   process.exit(fail ? 1 : 0);

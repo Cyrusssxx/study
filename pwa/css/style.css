@@ -879,6 +879,39 @@ body {
     box-shadow: var(--shadow);
 }
 
+/* 错题本顶部「模拟考错题专项」卡片：直接跳刷题页大批量练 */
+.special-pool {
+    margin-bottom: 20px;
+    padding: 14px 16px;
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    border-left: 4px solid var(--primary);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+}
+.special-pool-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+.special-pool-title {
+    font-weight: 600;
+    font-size: 0.95rem;
+}
+.special-pool-meta {
+    color: var(--text-light);
+    font-size: 0.85rem;
+}
+.special-pool-links {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 10px;
+}
+.special-pool-links:empty { display: none; }
+
 .filter-bar select {
     padding: 8px 12px;
     border: 1px solid var(--border);

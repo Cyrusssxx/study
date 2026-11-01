@@ -52,6 +52,15 @@
             <p>记录你答错的题目，反复练习直到掌握</p>
         </div>
 
+        <!-- 专项：模拟考错题池（模拟考做错 ∪ 7天后重练 ∪ 猜对了；做对过留池不抽） -->
+        <div class="special-pool" id="examWrongSpecial">
+            <div class="special-pool-head">
+                <span class="special-pool-title">🎯 模拟考错题专项</span>
+                <span class="special-pool-meta" id="examWrongMeta">读取中…</span>
+            </div>
+            <div class="special-pool-links" id="examWrongLinks"></div>
+        </div>
+
         <!-- 筛选栏 -->
         <div class="filter-bar">
             <select id="subjectFilter" onchange="loadWrongQuestions()">
@@ -176,7 +185,37 @@
     }));
 
     loadWrongQuestions();
+    loadExamWrongSpecial();   // 模拟考错题专项（独立于下面的错题列表筛选）
     PS.restoreScroll();
+
+    /* ============ 模拟考错题专项：直接跳刷题页大批量练 ============
+       成员 = 模拟考做错 ∪ 「7 天后重练」「猜对了」标记，做对过留池不抽。
+       刷题页按科目加载，所以这里按科目给出直达链接。 */
+    async function loadExamWrongSpecial() {
+        const meta = document.getElementById('examWrongMeta');
+        const links = document.getElementById('examWrongLinks');
+        if (!meta || !links) return;
+        const names = { ds: '数构', co: '组成', os: 'OS', cn: '网络' };
+        try {
+            const d = await (await api('/api/exam/examwrong')).json();
+            const n = d.exam_wrong || 0;
+            const by = d.exam_wrong_by_subject || {};
+            const subs = Object.keys(names).filter(k => by[k]);
+            if (!n) {
+                meta.textContent = '池子是空的 · 模拟考做错的题会自动进来';
+                links.innerHTML = '';
+                return;
+            }
+            meta.textContent = `可抽 ${n} 题` + (d.marked_mastered ? ` · 已掌握 ${d.marked_mastered}（留池不抽）` : '');
+            links.innerHTML = subs.map(k =>
+                `<a class="bulk-practice-link" href="quiz.html?subject=${k}&mode=examwrong"
+                    title="打开刷题页，把这个科目的模拟考错题一次刷完（不限题量、不计时、点选即判）">${names[k]} ${by[k]} 题 →</a>`
+            ).join('');
+        } catch (e) {
+            meta.textContent = '读取失败，刷新重试';
+            links.innerHTML = '';
+        }
+    }
 
     /* ============ 错题导出（Markdown / JSON）============
        按当前筛选条件（科目/排序/只看真题/显示已解决）导出
