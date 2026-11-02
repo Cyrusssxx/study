@@ -343,6 +343,8 @@
             <div class="qs-legend">${legend}</div>
             <div class="qs-ctrl">
                 <button class="qs-btn run" data-qs-run>▶ 启动</button>
+                <button class="qs-btn step" data-qs-prev disabled title="回到上一帧（会暂停自动播放）">◀ 上一步</button>
+                <button class="qs-btn step" data-qs-next title="前进一帧（会暂停自动播放）">下一步 ▶</button>
                 <button class="qs-btn" data-qs-restart>↻ 重来</button>
                 <button class="qs-btn" data-qs-shuffle>↺ 换一组</button>
                 <span class="qs-spd">速度
@@ -489,12 +491,13 @@
             if (cls) bar.classList.add(cls);
             const h = Math.max(8, Math.round(v / max * 118));
             // 柱顶指针行（固定占位对齐）：被指针位指向的元素顶部显示彩色箭头
-            let tipTxt = '';
-            if (f.swp && (idx === f.swp[0] || idx === f.swp[1])) tipTxt = '⇄';
-            else if (idx === f.pi) tipTxt = '▾';
-            else if (idx === f.li) tipTxt = (idx === f.rj) ? '▾' : '▾i';
-            else if (idx === f.rj) tipTxt = '▾j';
-            bar.innerHTML = `<s class="qs-tip">${tipTxt}</s><b>${v}</b><i style="height:${h}px"></i>`;
+            let tipTxt = '', tipCls = '';
+            if (f.swp && (idx === f.swp[0] || idx === f.swp[1])) { tipTxt = '⇄'; tipCls = 'swp'; }
+            else if (idx === f.pi) { tipTxt = 'P'; tipCls = 'pivot'; }
+            else if (idx === f.li && idx === f.rj) { tipTxt = 'i j'; tipCls = 'both'; }
+            else if (idx === f.li) { tipTxt = 'i'; tipCls = 'li'; }
+            else if (idx === f.rj) { tipTxt = 'j'; tipCls = 'rj'; }
+            bar.innerHTML = `<s class="qs-tip${tipCls ? ' tip-' + tipCls : ''}">${tipTxt}</s><b>${v}</b><i style="height:${h}px"></i>`;
             stage.appendChild(bar);
         });
         const msg = dm.querySelector('[data-qs-msg]');
@@ -513,6 +516,8 @@
         const state = { cur: [], frames: [], idx: 0, timer: null, speed: 480, running: false };
         const runBtn = dm.querySelector('[data-qs-run]');
         const stage = dm.querySelector('[data-qs-stage]');
+        const prevBtn = dm.querySelector('[data-qs-prev]');
+        const nextBtn = dm.querySelector('[data-qs-next]');
 
         function fresh() {
             state.cur = [];
@@ -529,6 +534,7 @@
                 state.running = false;
                 runBtn.textContent = '▶ 重播';
                 runBtn.classList.add('run');
+                updateStepBtns();
                 dm.querySelector('[data-qs-msg]').innerHTML = '🎉 排序完成！可点「换一组」再来一轮，或「重播」再看一遍。';
                 return;
             }
@@ -537,6 +543,34 @@
             else { state.running = false; runBtn.textContent = '▶ 重播'; runBtn.classList.add('run'); dm.querySelector('[data-qs-msg]').innerHTML = '🎉 排序完成！可点「换一组」再来一轮，或「重播」再看一遍。'; }
         }
         function stopTimer() { if (state.timer) { clearTimeout(state.timer); state.timer = null; } }
+
+        /* 单步导航：state.idx = 下一个待渲染帧的下标（已渲染 0..idx-1） */
+        function updateStepBtns() {
+            if (prevBtn) prevBtn.disabled = state.idx <= 1;
+            if (nextBtn) nextBtn.disabled = state.idx >= state.frames.length;
+        }
+        function renderAt(i) {
+            if (i < 0 || i >= state.frames.length) return;
+            state.idx = i + 1;
+            qsRenderFrame(dm, state.frames[i]);
+            updateStepBtns();
+        }
+        function pauseAuto() {
+            stopTimer();
+            state.running = false;
+            runBtn.textContent = '▶ 继续';
+            runBtn.classList.add('run');
+        }
+        if (prevBtn) prevBtn.addEventListener('click', () => {
+            if (state.running) pauseAuto();          // 手动单步时先停下自动播放
+            if (state.idx <= 1) return;              // 已在第一帧
+            renderAt(state.idx - 2);                 // 回退一帧
+        });
+        if (nextBtn) nextBtn.addEventListener('click', () => {
+            if (state.running) pauseAuto();
+            if (state.idx >= state.frames.length) return;
+            renderAt(state.idx);                     // 前进一帧
+        });
 
         runBtn.addEventListener('click', () => {
             if (state.running) {                       // 运行中 → 暂停
@@ -547,10 +581,8 @@
                 return;
             }
             if (state.idx === 0 || state.idx >= state.frames.length) {   // 首帧或播完 → 从头/重播
-                state.idx = 0;
                 fresh();
-                state.idx = 0;
-                if (!stage.children.length) qsRenderFrame(dm, state.frames[0]);
+                renderAt(0);
             }
             stopTimer(); state.running = true;
             runBtn.textContent = '⏸ 暂停';
@@ -560,11 +592,10 @@
 
         dm.querySelector('[data-qs-restart]').addEventListener('click', () => {
             stopTimer(); state.running = false;
-            state.idx = 0;
             runBtn.textContent = '▶ 启动';
             runBtn.classList.add('run');
-            qsRenderFrame(dm, state.frames[0]);
-            dm.querySelector('[data-qs-msg]').innerHTML = '已重置到第一帧，点「▶ 启动」重新观看这一组。';
+            renderAt(0);
+            dm.querySelector('[data-qs-msg]').innerHTML = '已重置到第一帧，点「▶ 启动」自动播放，或用「上一步 / 下一步」单步看。';
         });
 
         dm.querySelector('[data-qs-shuffle]').addEventListener('click', () => {
@@ -572,8 +603,8 @@
             fresh();
             runBtn.textContent = '▶ 启动';
             runBtn.classList.add('run');
-            qsRenderFrame(dm, state.frames[0]);
-            dm.querySelector('[data-qs-msg]').innerHTML = '已生成一组新数据，点「▶ 启动」开始。';
+            renderAt(0);
+            dm.querySelector('[data-qs-msg]').innerHTML = '已生成一组新数据，点「▶ 启动」开始，或直接「下一步」单步看。';
         });
 
         dm.querySelectorAll('[data-qs-spd]').forEach(btn => {
@@ -586,8 +617,8 @@
         });
 
         fresh();
-        qsRenderFrame(dm, state.frames[0]);
-        dm.querySelector('[data-qs-msg]').innerHTML = '准备好，点「▶ 启动」开始。';
+        renderAt(0);
+        dm.querySelector('[data-qs-msg]').innerHTML = '准备好：点「▶ 启动」自动播放，或用「下一步 ▶」一帧一帧看。';
     }
 
     function initQsDemos() {
