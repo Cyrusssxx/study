@@ -4076,10 +4076,28 @@ h3.algo-h:first-child, h4.algo-h:first-child, h5.algo-h:first-child { margin-top
     background: rgba(128,128,128,.26);
     transition: height .12s ease, background .15s ease;
 }
-.ad-bar .pivot { position: absolute; top: -9px; font-size: .6rem; color: #b45309; font-weight: 700; }
-.ad-bar .pli { position: absolute; top: -14px; left: 50%; transform: translateX(-50%); font-size: .62rem; color: #4a7ab8; font-weight: 700; }
-.ad-bar .prj { position: absolute; top: -14px; left: 14%; font-size: .62rem; color: #0891b2; font-weight: 700; }
-.ad-bar.pk { position: absolute; top: -14px; right: 14%; font-size: .62rem; color: #7c3aed; font-weight: 700; }
+/* 指针徽标：固定占位一行 + 实心彩色圆角（原来是绝对定位的 .62rem 小字，和数值重叠看不清） */
+.ad-bar > s.ad-tip {
+    display: block; height: 17px; line-height: 17px;
+    min-width: 17px; padding: 0 4px; border-radius: 999px;
+    font-size: .66rem; font-weight: 800; letter-spacing: .2px;
+    text-align: center; white-space: nowrap;
+    color: transparent; background: transparent; position: relative;
+    transition: background .15s ease, color .15s ease;
+}
+.ad-bar > s.ad-tip::after {
+    content: ''; position: absolute; left: 50%; bottom: -3px;
+    transform: translateX(-50%);
+    border: 3px solid transparent; border-top-color: transparent;
+}
+.ad-bar > s.ad-tip.tip-i { color: #fff; background: #3b6fb5; }
+.ad-bar > s.ad-tip.tip-i::after { border-top-color: #3b6fb5; }
+.ad-bar > s.ad-tip.tip-j { color: #fff; background: #0e7490; }
+.ad-bar > s.ad-tip.tip-j::after { border-top-color: #0e7490; }
+.ad-bar > s.ad-tip.tip-k { color: #fff; background: #7c3aed; }
+.ad-bar > s.ad-tip.tip-k::after { border-top-color: #7c3aed; }
+.ad-bar > s.ad-tip.tip-both { color: #fff; background: #6d28d9; }
+.ad-bar > s.ad-tip.tip-both::after { border-top-color: #6d28d9; }
 .ad-bar.pivot > i { background: rgba(234,88,12,.85) !important; }
 .ad-bar.uli > i { background: rgba(74,122,184,.85) !important; }
 .ad-bar.urj > i { background: rgba(8,145,178,.85) !important; }

@@ -111,5 +111,67 @@ if (start < 0 || end < 0) {
   d2.window.close();
 }
 
+console.log('\n--- 五、code.html 演示（code_demo.js）同步改造 ---');
+const DEMO = fs.readFileSync(path.join(ROOT, 'pwa/js/code_demo.js'), 'utf8');
+check('控制条有 data-ad-prev', /data-ad-prev/.test(DEMO), true);
+check('控制条有 data-ad-next', /data-ad-next/.test(DEMO), true);
+check('初始「上一步」禁用', /data-ad-prev disabled/.test(DEMO), true);
+check('指针改为占位徽标 s.ad-tip', /<s class="ad-tip/.test(DEMO), true);
+check('CSS 有 ad-tip 徽标样式', /\.ad-bar > s\.ad-tip\.tip-i\s*\{[^}]*background/.test(CSS), true);
+
+{
+  const d3 = new JSDOM('<!doctype html><body></body>', { runScripts: 'outside-only' });
+  const w3 = d3.window;
+  try {
+    w3.eval(DEMO);
+    const mkFrame = (msg, i, j) => ({
+      rows: { A: { a: [30, 10, 20], cls: {}, done: new Set(), ptr: { i, j } } },
+      msg
+    });
+    const frames = [mkFrame('f0', 0, 2), mkFrame('f1', 1, 2), mkFrame('f2', 0, 1)];
+    w3.document.body.innerHTML = w3.AD.html('测试');
+    const box = w3.document.querySelector('[data-ad-demo]');
+    w3.AD.mount(box, { frames, speed: 10 });
+
+    const prev = box.querySelector('[data-ad-prev]');
+    const next = box.querySelector('[data-ad-next]');
+    const stage = box.querySelector('[data-ad-stage]');
+    const msg = () => box.querySelector('[data-ad-msg]').innerHTML;
+
+    // 初始化后 mount 会把消息覆盖成提示语，所以这里看提示 + 柱子（帧内容由下面的徽标断言覆盖）
+    check('code_demo 初始化后给出操作提示', /准备好/.test(msg()), true);
+    check('code_demo 初始「上一步」禁用', prev.disabled, true);
+    check('code_demo 初始「下一步」可用', next.disabled, false);
+
+    // 指针徽标
+    const bars = [...stage.querySelectorAll('.ad-bar')];
+    check('code_demo 渲染 3 根柱子', bars.length, 3);
+    check('code_demo i 位有 tip-i 徽标',
+      !!bars[0].querySelector('s.ad-tip.tip-i'), true);
+    check('code_demo j 位有 tip-j 徽标',
+      !!bars[2].querySelector('s.ad-tip.tip-j'), true);
+
+    next.click();
+    check('code_demo 下一步切到第 2 帧', /f1/.test(msg()), true);
+    check('code_demo 下一步后「上一步」可用', prev.disabled, false);
+
+    next.click();
+    check('code_demo 再下一步到第 3 帧', /f2/.test(msg()), true);
+
+    prev.click();
+    check('code_demo 上一步回到第 2 帧', /f1/.test(msg()), true);
+
+    prev.click();
+    check('code_demo 回到第 1 帧', /f0/.test(msg()), true);
+    check('code_demo 首帧「上一步」禁用', prev.disabled, true);
+
+    next.click(); next.click();
+    check('code_demo 末帧「下一步」禁用', next.disabled, true);
+  } catch (e) {
+    check('code_demo 播放器可运行', false, e.message);
+  }
+  d3.window.close();
+}
+
 console.log(`\n结果: ${pass} / ${pass + fail}` + (fail ? `，${fail} 项失败` : '，全部通过'));
 process.exit(fail ? 1 : 0);
