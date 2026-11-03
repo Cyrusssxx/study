@@ -1543,8 +1543,11 @@ async function examWrongPoolQids(calc) {
     }
     const pending = new Set(dynamic);
     const mastered = new Set();
+    const nowMs = Date.now();
     for (const r of byId.values()) {
         if (!r || !r.question_id) continue;
+        // 「7 天后重练」是时间排期：未到期不进池（否则点了按钮下一场就能抽到，7 天形同虚设）
+        if ((r.kind === 'redo' || !r.kind) && !r.mastered && (r.due_at || 0) > nowMs) continue;
         if (r.mastered) { mastered.add(r.question_id); pending.delete(r.question_id); }
         else pending.add(r.question_id);
     }
@@ -1880,8 +1883,10 @@ async function examApi(action, body, arg) {
                 if (r.kind === 'examwrong') { examMarked++; markedIds.add(r.question_id); continue; }
                 if (r.kind === 'ztwrong') { ztMarked++; markedIds.add(r.question_id); continue; }
                 if (r.kind === 'guessed') { guessedCnt++; markedIds.add(r.question_id); continue; }
+                // 「7 天后重练」未到期：只统计排期，不算进池子可抽数（与 examWrongPoolQids 同口径）
+                if ((r.due_at || 0) > nowMs) { redoPending++; continue; }
                 markedIds.add(r.question_id);
-                if ((r.due_at || 0) <= nowMs) redoDue++; else redoPending++;
+                redoDue++;
             }
         } catch (e) { /* 取不到就报 0 */ }
         // 池子实际可抽数（去重后）：模拟考仍错 + 标记未掌握
