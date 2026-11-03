@@ -128,9 +128,10 @@
             box-shadow: 0 6px 20px rgba(0,0,0,.16);
         }
         .dati-single-bar button:disabled { opacity: .45; cursor: not-allowed; }
-        .dati-single-bar .dati-step-key { font-size: .78rem; color: var(--text-light); font-weight: 400; }
+        .dati-single-bar .dati-step-key { font-size: .78rem; color: var(--text-light); font-weight: 400; margin-left: auto; }
         .dati-single-pos { font-size: .86rem; color: var(--text-light); font-variant-numeric: tabular-nums; }
-        /* 收起/展开底栏：收起后整条栏不渲染，仅在底部留一枚小把手（状态切题时保持） */
+        /* 收起/展开底栏：收起后整条栏不渲染，仅在底部留一枚小把手（状态切题时保持）
+           把手恒靠右（与展开态同一水平位置），收起/展开时不左右横跳 */
         .dati-bar-toggle {
             border: none; background: none; cursor: pointer;
             color: var(--text-light); font-size: .82rem; line-height: 1;
@@ -138,9 +139,9 @@
         }
         .dati-bar-toggle:hover { background: rgba(128,128,128,.16); color: var(--text); }
         .dati-single-bar.collapsed {
-            padding: 0; gap: 0; margin: 10px 0 0;
+            padding: 0 14px; gap: 0; margin: 10px 0 0;
             background: transparent; border-color: transparent; box-shadow: none;
-            justify-content: center;
+            justify-content: flex-end;   /* 与展开态的右内边距对齐 ⇒ 把手位置不跳 */
         }
         .dati-single-bar.collapsed .dati-bar-toggle {
             padding: 3px 12px; border-radius: 999px;
@@ -185,7 +186,7 @@
         <div class="dati-tabs" id="datiTabs"></div>
         <div class="dati-filters" id="datiFilters">
             <button class="dati-chip" id="fAll" onclick="setFilter('all')">全部 <span class="dati-count" id="cntAll"></span></button>
-            <button class="dati-chip" id="fReal" onclick="setFilter('real')">统考真题 <span class="dati-count" id="cntReal"></span></button>
+            <button class="dati-chip" id="fReal" onclick="setFilter('real')" title="统考真题：按年份倒序排列（最新年份优先），可在右侧下拉只看某一年">统考真题 <span class="dati-count" id="cntReal"></span></button>
             <button class="dati-chip" id="fFav" onclick="setFilter('fav')">★ 我的收藏 <span class="dati-count" id="cntFav"></span></button>
             <button class="dati-chip" id="fTodo" onclick="setFilter('todo')">○ 未练 <span class="dati-count" id="cntTodo"></span></button>
             <button class="dati-chip" id="fDone" onclick="setFilter('done')">✅ 已练 <span class="dati-count" id="cntDone"></span></button>
@@ -231,6 +232,8 @@
     let barCollapsed = localStorage.getItem('datiBarCollapsed') === '1';                 // 单题模式底栏是否收起（切题/刷新保持）
 
     // 当前科目 + 当前筛选下的有序题目（带章节/小节上下文）——单题模式与列表模式共用
+    // 「统考真题」筛选下改为**按年份倒序**（2025 → 2009），同年内保持章节顺序：
+    // 刷真题的主线是「最近年份优先」，按章节顺序会一年一年跳着出现。
     function flatItems() {
         const sub = DATI.find(s => s.key === activeSubject);
         if (!sub) return [];
@@ -239,7 +242,22 @@
             for (const sec of ch.sections)
                 for (const q of sec.questions)
                     if (passFilter(q)) out.push({ q, chName: ch.name, secName: sec.name });
+        if (filter === 'real') out.sort((a, b) => (Number(b.q.year) || 0) - (Number(a.q.year) || 0));
         return out;
+    }
+
+    // 真题按年份分组：[{ year, title, items:[{q,chName,secName}] }]，年份倒序。
+    // 列表模式与右侧导航共用，保证「排序」与「分组」口径一致。
+    function realGroups() {
+        const map = new Map();
+        for (const it of flatItems()) {
+            const y = it.q.year || '未知';
+            if (!map.has(y)) map.set(y, []);
+            map.get(y).push(it);
+        }
+        return [...map.keys()]
+            .sort((a, b) => (Number(b) || 0) - (Number(a) || 0))
+            .map(y => ({ year: y, title: `${y} 年统考真题`, items: map.get(y) }));
     }
 
     // 切题前把未保存的笔记落库（单题模式下切换/跳题前调用），避免输入内容丢失
@@ -480,7 +498,6 @@
                         title="${dontknowSet.has(qid) ? '取消「不会」标记' : '标记为不会（红）'}"
                         onclick="toggleMark('${qid}', 'dontknow')">🔴 不会</button>
             </div>
-            <div class="dati-abody" data-ans="${qid}"></div>
             <div class="note-panel dati-note-panel" data-note="${qid}" style="${noteOpen.has(qid) ? '' : 'display:none'}">
                 <div class="note-title">我的笔记</div>
                 ${noteToolbarHtml()}
@@ -495,6 +512,7 @@
                     <span class="note-hint" data-note-hint="${qid}"></span>
                 </div>
             </div>
+            <div class="dati-abody" data-ans="${qid}"></div>
         </div>`;
     }
 
@@ -560,9 +578,10 @@
         return `<div class="dati-single-bar" id="datiSingleBar">
             <button class="btn btn-secondary" onclick="singleStep(-1)" ${idx === 0 ? 'disabled' : ''}>◀ 上一题</button>
             <span class="dati-single-pos">第 ${idx + 1} / ${items.length} 题</span>
+            <button class="btn btn-primary" onclick="singleStep(1)" ${idx === items.length - 1 ? 'disabled' : ''}>下一题 ▶</button>
+            <span class="dati-view-sep"></span>
             <button class="btn btn-secondary dati-single-ans" onclick="singleToggleAnswer()">${ansOpen.has(qid) ? '🙈 收起答案' : '👁 看答案'}</button>
             <button class="btn btn-secondary dati-nav-open-btn" onclick="toggleNav()">☰ 选题</button>
-            <button class="btn btn-primary" onclick="singleStep(1)" ${idx === items.length - 1 ? 'disabled' : ''}>下一题 ▶</button>
             <span class="dati-step-key">← → 键切换</span>
             <button class="dati-bar-toggle" onclick="toggleSingleBar()" title="收起底栏（整条收起，切题时保持）">▾ 收起</button>
         </div>`;
@@ -680,6 +699,7 @@
         const root = document.getElementById('datiRoot');
         if (!sub) return;
         updateCounts();
+        if (filter === 'real') { renderRealList(root); afterRender(); return; }   // 真题：按年份分组
         const chaptersHtml = [];
         for (const ch of sub.chapters) {
             const secHtml = [];
@@ -707,26 +727,51 @@
         afterRender();
     }
 
+    // 真题列表模式：按年份分组（每年一个可折叠组，默认收起，展开才拉题图——与章节组同一套懒加载）
+    function renderRealList(root) {
+        const groups = realGroups();
+        if (!groups.length) {
+            root.innerHTML = `<div class="dati-none">该筛选条件下暂无题目</div>`;
+            return;
+        }
+        root.innerHTML = groups.map(g => {
+            const ckey = activeSubject + '::year::' + g.year;
+            const qcards = g.items.map(it => questionCard(activeSubject, it.secName, it.q, favSet.has(it.q.id))).join('');
+            return `<details class="daka-group"${openChapters.has(ckey) ? ' open' : ''} data-chkey="${ckey}">
+                <summary class="daka-group-title">${g.title}（${g.items.length} 题）</summary>
+                ${qcards}
+            </details>`;
+        }).join('');
+    }
+
     // ==================== 题目导航栏 ====================
 
     function renderNav() {
         const sub = DATI.find(s => s.key === activeSubject);
         const nav = document.getElementById('datiNav');
         if (!sub) return;
+        const chip = (q, tip) => {
+            const isCur = viewMode === 'single' && q.id === singleQid;
+            return `<button class="num-btn${doneSet.has(q.id) ? ' done' : ''}${isCur ? ' current' : ''}" data-jump="${q.id}" onclick="jumpTo('${q.id}')" title="${tip}${doneSet.has(q.id) ? ' · 已练' : ''}${isCur ? ' · 当前' : ''}">${doneSet.has(q.id) ? '✅' : ''}${q.num}</button>`;
+        };
         const body = [];
-        for (const ch of sub.chapters) {
-            const secs = [];
-            for (const sec of ch.sections) {
-                const qs = sec.questions.filter(q => passFilter(q));
-                if (!qs.length) continue;
-                const chips = qs.map(q => {
-                    const isCur = viewMode === 'single' && q.id === singleQid;
-                    return `<button class="num-btn${doneSet.has(q.id) ? ' done' : ''}${isCur ? ' current' : ''}" data-jump="${q.id}" onclick="jumpTo('${q.id}')" title="${sec.name}${doneSet.has(q.id) ? ' · 已练' : ''}${isCur ? ' · 当前' : ''}">${doneSet.has(q.id) ? '✅' : ''}${q.num}</button>`;
-                }).join('');
-                secs.push(`<div class="dati-nav-sec">${sec.name}<span class="dati-count">${qs.length}</span></div>
-                    <div class="num-grid">${chips}</div>`);
+        if (filter === 'real') {
+            // 真题：按年份分组出题号（与单题/列表的年份倒序口径一致）
+            for (const g of realGroups()) {
+                body.push(`<div class="num-group-title">${g.title}</div>
+                    <div class="num-grid">${g.items.map(({ q, secName }) => chip(q, secName)).join('')}</div>`);
             }
-            if (secs.length) body.push(`<div class="num-group-title">${ch.name}</div>${secs.join('')}`);
+        } else {
+            for (const ch of sub.chapters) {
+                const secs = [];
+                for (const sec of ch.sections) {
+                    const qs = sec.questions.filter(q => passFilter(q));
+                    if (!qs.length) continue;
+                    secs.push(`<div class="dati-nav-sec">${sec.name}<span class="dati-count">${qs.length}</span></div>
+                        <div class="num-grid">${qs.map(q => chip(q, sec.name)).join('')}</div>`);
+                }
+                if (secs.length) body.push(`<div class="num-group-title">${ch.name}</div>${secs.join('')}`);
+            }
         }
         nav.innerHTML = `<div class="dati-nav-head" onclick="toggleNav()">题目导航<span class="close-x">✕</span></div>
             <div class="dati-nav-body">${body.join('')}</div>`;
