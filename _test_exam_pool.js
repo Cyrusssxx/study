@@ -407,6 +407,26 @@ const DAY = 86400000;
   check('考试页生成按科目的刷题链接',
     /quiz\.html\?subject=\$\{k\}&mode=examwrong/.test(EXAM_SRC), true);
 
+  console.log('\n--- 十四、套卷「加入错题池」的 7 天冷却 ---');
+  // 6 道收藏题，其中 cn_0003 刚加入错题池（7 天冷却）
+  await put('favorites', ['cn_0001', 'cn_0002', 'cn_0003', 'cn_0004', 'cn_0005', 'cn_0006']
+    .map(id => ({ question_id: id, subject: 'cn', added_at: fmt(Date.now()) })));
+  await put('redo', [{ question_id: 'cn_0003', subject: 'cn', kind: 'ztwrong', added_at: fmt(Date.now()), due_at: Date.now() + 7 * DAY }]);
+
+  const gCool = await gen('favorites', 6);
+  check('冷却期内收藏池组卷不含该题', (gCool.questions || []).map(q => q.id).includes('cn_0003'), false);
+  check('其余收藏题照常抽出', (gCool.questions || []).length, 6);
+
+  // 到期后自动回到抽题（改成昨天到期）
+  await put('redo', [{ question_id: 'cn_0003', subject: 'cn', kind: 'ztwrong', added_at: fmt(Date.now()), due_at: Date.now() - DAY }]);
+  const gDue = await gen('favorites', 6);
+  check('7 天到期后重新进入抽题', (gDue.questions || []).map(q => q.id).includes('cn_0003'), true);
+
+  // 冷却题在「错题池」不受影响（专项重练随时可刷）
+  await put('redo', [{ question_id: 'cn_0003', subject: 'cn', kind: 'ztwrong', added_at: fmt(Date.now()), due_at: Date.now() + 7 * DAY }]);
+  const rw = await w.api('/api/questions/cn?mode=wrong&page=1&per_page=9999').then(r => r.json());
+  check('冷却期内「错题」刷题仍含该题', (rw.questions || []).map(q => q.id).includes('cn_0003'), true);
+
   dom.window.close();
   console.log(`\n结果: ${pass} / ${pass + fail}` + (fail ? `，${fail} 项失败` : '，全部通过'));
   process.exit(fail ? 1 : 0);

@@ -854,8 +854,11 @@ async function api(url, opts = {}) {
                     await dbDelete('redo', qid);
                     return jsonResp({ question_id: qid, in_pool: false, changed: true });
                 }
-                await dbPut('redo', { question_id: qid, subject, kind: 'ztwrong', added_at: now(), due_at: 0 });
-                return jsonResp({ question_id: qid, in_pool: true, kind: 'ztwrong', changed: true });
+                // 冷却：加入后 7 天内不参与「收藏池」的模拟考组卷（错题池刷题不受影响），
+                // 与「7 天后重练」同一套时长；到期后自动回到正常分层。
+                const dueAt = Date.now() + EXAM_REDO_COOLDOWN_MS;
+                await dbPut('redo', { question_id: qid, subject, kind: 'ztwrong', added_at: now(), due_at: dueAt });
+                return jsonResp({ question_id: qid, in_pool: true, kind: 'ztwrong', changed: true, due_at: dueAt, days: EXAM_REDO_COOLDOWN_DAYS });
             }
 
             // 「7 天后重练」：把题排进 7 天后的抽取池（试卷回顾里对做对的题手动加）。
@@ -1668,8 +1671,15 @@ async function examApi(action, body, arg) {
 
         // 收藏模式专用：模拟考答对过的题默认退出抽题；标了「猜对了」的放行到垫底层
         // （已 mastered 的不放行 —— 做对过一次就不再抽，与「模拟考错题」池规则一致）
+        // 另：刚「加入错题池」的题有 7 天冷却，期间整题不进收藏池（用户要求：别隔天又在模拟考里见到）
         let examRightSet = new Set(), guessedSet = new Set();
+        const ztCooling = new Set();
         if (mode === 'favorites') {
+            const tNow = Date.now();
+            for (const r of redoRows) {
+                if (r.kind !== 'ztwrong' || r.mastered) continue;
+                if ((r.due_at || 0) > tNow) ztCooling.add(r.question_id);
+            }
             try { examRightSet = new Set(await examCorrectQids(true)); } catch (e) { /* 取不到就不排除 */ }
             for (const r of redoRows) if (r.kind === 'guessed' && !r.mastered) guessedSet.add(r.question_id);
         }
@@ -1687,6 +1697,7 @@ async function examApi(action, body, arg) {
                 return !!(w && !w.is_resolved);
             };
             for (const q of pool) {
+                if (ztCooling.has(q.id)) continue;                 // 刚加入错题池的 7 天冷却：整题不进
                 const p = progMap.get(q.id);
                 if (!p) { fresh.push(q); continue; }               // 从没做过
                 if (dueRank.has(q.id)) { due.push(q); continue; }  // 到期错题
@@ -1780,8 +1791,10 @@ async function examApi(action, body, arg) {
                     const data = await loadQuestions(k);
                     for (const q of data.questions) {
                         if (!q.answer || pickedIds.has(q.id)) continue;
-                        // 与池内规则保持一致：只排除「模拟考答对且没标猜对了」的题
+                        // 与池内规则保持一致：排除「模拟考答对且没标猜对了」的题；
+                        // 以及「刚加入错题池、还在 7 天冷却」的题（否则会从全库把它又捞回来）
                         if (mode === 'favorites' && examRightSet.has(q.id) && !guessedSet.has(q.id)) continue;
+                        if (mode === 'favorites' && ztCooling.has(q.id)) continue;
                         rest.push(q);
                     }
                 }

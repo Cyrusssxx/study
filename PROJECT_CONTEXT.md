@@ -149,7 +149,7 @@ pwa/
 | `redo` | 试卷回顾点「7 天后重练」 | +7 天 | 时间排期 |
 | `guessed` | 试卷回顾点「猜对了」 | 0 | 放回收藏池垫底层 |
 | `examwrong` | `examWrongPoolQids()` 回填模拟考错题 | 0 | 池子成员 |
-| `ztwrong` | 真题套卷点「加入错题池」 | 0 | 池子成员 |
+| `ztwrong` | 真题套卷点「加入错题池」 | +7 天 | 池子成员（**冷却期内不进收藏池组卷**） |
 
 **共同规则**：`mastered = 1` 表示"做对过一次" → **留在池子里但不再抽**。
 由 `applyAnswer()` 统一维护：答对 → 置 mastered；答错 → 清 mastered。
@@ -262,8 +262,8 @@ examDueWrongIds()         // 收藏池的「到期错题」层（满 7 天才进
 2. **flex 子项默认 `min-width: auto`**：宽内容会把 flex 行撑破视口。必须显式 `min-width: 0`。
 3. **题头不换行**：徽标 + 多个按钮的横排必须 `flex-wrap: wrap`，否则窄屏溢出。
 4. **宽内容要有自己的滚动边界**：题干 `<pre>` 加 `overflow-x: auto`，宽表格包 `.q-table-wrap`。
-5. **`redo.due_at = 0` 会被"到期"判断误判**：`ztwrong` / `examwrong` / `guessed` 必须
-   在收藏池的到期层里 `continue` 跳过。
+5. **`redo.due_at = 0` 会被"到期"判断误判**：`ztwrong` / `examwrong` / `guessed` 必须在收藏池的到期层里 `continue` 跳过。
+   `ztwrong` 现在带 +7 天冷却：冷却期内**整题**不进收藏池，且第三轮「全库补题」也要过滤，否则会被捞回来。
 6. **`examWrongPoolQids(calc)` 参数不一致**：见 5.3。
 7. **同一池子两处读取要同源**：`/api/questions` 与 `/api/exam/pool` 必须用同一套成员计算。
 8. **合成 id 不能写标记表**：zhenti 的 `{sid}_zt{year}_{i}` 只在页面内有效。

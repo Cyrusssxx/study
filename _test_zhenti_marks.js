@@ -149,11 +149,19 @@ const OS_BANK = {
   await sleep(300);
   const rec = (await w.dbAll('redo')).find(r => r.question_id === 'os_0001');
   check('redo 表写入 kind=ztwrong', rec && rec.kind, 'ztwrong');
-  check('due_at 为 0（立即可抽）', rec && rec.due_at, 0);
+  const DAY = 86400000;
+  const inDays = rec ? (rec.due_at - Date.now()) / DAY : -99;
+  check('due_at = 加入后 7 天', inDays > 6.9 && inDays <= 7.01, true);
   check('按钮变为「已在错题池」', /已在错题池/.test(poolBtn().textContent), true);
 
   const poolNow = await w.examWrongPoolQids(false);
   check('该题进入模拟考错题池', poolNow.pending.includes('os_0001'), true);
+
+  // 冷却期内：错题池刷题仍可刷到，但收藏池组卷要排除
+  const rWrong = await w.api('/api/questions/os?mode=wrong&page=1&per_page=9999').then(r => r.json());
+  check('冷却期内「错题」刷题仍能刷到', (rWrong.questions || []).map(q => q.id).includes('os_0001'), true);
+  check('冷却逻辑：收藏池按 ztwrong.due_at 排除',
+    /ztCooling\.has\(q\.id\)/.test(fs.readFileSync(path.join(ROOT, 'pwa/js/backend.js'), 'utf8')), true);
 
   // 再做对一次 → 留池不抽（mastered）
   await w.applyAnswer('os_0001', 'os', 'A', true, null, false);

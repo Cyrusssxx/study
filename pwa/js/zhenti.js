@@ -223,7 +223,7 @@
         const label = inPool ? (rec.kind === 'ztwrong' ? '✓ 已在错题池' : '✓ 已在池中') : '加入错题池';
         const tip = inPool
             ? (rec.kind === 'ztwrong' ? '点一下从「模拟考错题池」移出' : `该题已通过「${rec.kind === 'redo' ? '7 天后重练' : '猜对了'}」在池中`)
-            : '加入「模拟考错题池」，之后可在错题本里集中刷';
+            : '加入「模拟考错题池」，之后可在错题本里集中刷；加入后 7 天内不参与模拟考组卷';
         return `<button class="btn-explanation pool-btn${inPool ? ' active' : ''}" onclick="togglePoolZt('${f.iid}')" title="${tip}">${label}</button>`;
     }
 
@@ -544,7 +544,9 @@
             if (j.in_pool) state.poolMap[iid] = { kind: 'ztwrong', mastered: false };
             else delete state.poolMap[iid];
             refreshCard(iid);
-            showZtTip(j.in_pool ? '已加入「模拟考错题池」，可在错题本里集中刷' : '已从错题池移出');
+            showZtTip(j.in_pool
+                ? `已加入「模拟考错题池」，${j.days || 7} 天内不参与模拟考组卷`
+                : '已从错题池移出');
         } catch (e) { showZtTip('操作失败，请重试'); }
     }
 
