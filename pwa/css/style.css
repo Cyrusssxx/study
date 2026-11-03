@@ -8253,58 +8253,18 @@ body.fc-toc-open .fc-toc-fab { display: none; }
     font-family: var(--font-q);
 }
 
-/* ==================== 笔记：流水线冒险卡片（5.6.4） ====================
-   三种冒险各一张：3px 左导轨 + 极淡底 + 彩色序号徽章 + 标签，
-   用来把"结构 / 数据 / 控制"三块在长文里一眼分开（间距也靠 margin 拉开）。 */
+/* ==================== 笔记：冒险分块（5.6.4） ====================
+   无色版：只用一条细灰线 + 字重分隔，不设底纹/彩色，避免干扰阅读。 */
 .notes-body .adv-card {
     margin: 24px 0;
-    padding: 14px 18px 10px;
-    border: 1px solid var(--border);
-    border-left: 3px solid var(--primary);
-    border-radius: 10px;
-    background: rgba(79, 70, 229, .035);
+    padding: 0 0 0 14px;
+    border-left: 2px solid var(--border);
 }
-.notes-body .adv-card.struct { border-left-color: #0f766e; background: rgba(15, 118, 110, .05); }
-.notes-body .adv-card.data   { border-left-color: #b45309; background: rgba(180, 83, 9, .05); }
-.notes-body .adv-card.ctrl   { border-left-color: #b91c1c; background: rgba(185, 28, 28, .05); }
-
 .notes-body .adv-card .adv-h {
-    display: flex; align-items: center; flex-wrap: wrap; gap: 8px;
-    margin: 0 0 10px; font-size: 1.04rem; font-weight: 700; line-height: 1.5;
+    margin: 0 0 7px;
+    font-size: 1.02rem; font-weight: 700; line-height: 1.5;
 }
-.notes-body .adv-card .adv-no {
-    display: inline-flex; align-items: center; justify-content: center;
-    width: 22px; height: 22px; border-radius: 50%;
-    background: var(--primary); color: #fff;
-    font-size: .8rem; font-weight: 700; flex: 0 0 auto;
-}
-.notes-body .adv-card.struct .adv-no { background: #0f766e; }
-.notes-body .adv-card.data .adv-no   { background: #b45309; }
-.notes-body .adv-card.ctrl .adv-no   { background: #b91c1c; }
-
-.notes-body .adv-card .adv-tag {
-    font-size: .74rem; font-weight: 600; line-height: 1.6;
-    padding: 1px 9px; border-radius: 999px;
-    border: 1px solid currentColor; opacity: .9;
-}
-.notes-body .adv-card.struct .adv-tag { color: #0f766e; }
-.notes-body .adv-card.data .adv-tag   { color: #b45309; }
-.notes-body .adv-card.ctrl .adv-tag   { color: #b91c1c; }
-
-/* 卡片内的段落与列表：要点之间留明显间距，避免三件事糊成一段 */
-.notes-body .adv-card p { margin: 8px 0; }
-.notes-body .adv-card ol, .notes-body .adv-card ul { margin: 6px 0 12px; padding-left: 22px; }
-.notes-body .adv-card li { margin: 10px 0; line-height: 1.88; }
-.notes-body .adv-card li > ul, .notes-body .adv-card li > ol { margin: 8px 0; }
-.notes-body .adv-card table { margin: 8px 0 14px; }
-
-.dark .notes-body .adv-card { background: rgba(255, 255, 255, .03); border-color: #3a3a4a; }
-.dark .notes-body .adv-card.struct { background: rgba(15, 118, 110, .14); border-left-color: #2dd4bf; }
-.dark .notes-body .adv-card.data   { background: rgba(180, 83, 9, .14); border-left-color: #fbbf24; }
-.dark .notes-body .adv-card.ctrl   { background: rgba(185, 28, 28, .14); border-left-color: #f87171; }
-.dark .notes-body .adv-card.struct .adv-tag { color: #5eead4; }
-.dark .notes-body .adv-card.data .adv-tag   { color: #fbbf24; }
-.dark .notes-body .adv-card.ctrl .adv-tag   { color: #fca5a5; }
-.dark .notes-body .adv-card.struct .adv-no { background: #0f766e; }
-.dark .notes-body .adv-card.data .adv-no   { background: #b45309; }
-.dark .notes-body .adv-card.ctrl .adv-no   { background: #b91c1c; }
+.notes-body .adv-card p { margin: 7px 0; }
+.notes-body .adv-card ol, .notes-body .adv-card ul { margin: 6px 0 10px; padding-left: 20px; }
+.notes-body .adv-card li { margin: 6px 0; line-height: 1.82; }
+.notes-body .adv-card table { margin: 6px 0 12px; }
