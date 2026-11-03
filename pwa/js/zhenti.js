@@ -21,6 +21,10 @@
         pending: {},             // 做题模式下的临时选择 iid -> 'A'
         sessionAnswered: new Set(), // 本次会话作答过的题（仅这些显示反馈/展开解析）
         favSet: new Set(),
+        unfamSet: new Set(),        // 不熟标记
+        dontknowSet: new Set(),     // 不会标记
+        kpOpen: new Set(JSON.parse(localStorage.getItem('zhentiKpOpen') || '[]')),  // 展开了考点分析的题
+        kpCache: {},                // iid -> 考点分析 HTML（按需拉取后缓存，避免反复请求）
         noteMap: {},
         noteImages: {},          // iid -> 已有图片数组（本页不编辑图片，保存时原样透传）
         dakaByReal: new Map(),   // "YYYY|题号" -> 打卡表卡片（DS 真题大题替换源）
@@ -51,7 +55,11 @@
         return state.papers[y];
     }
     async function loadStores() {
-        const [prog, favs, notes] = await Promise.all([dbAll('progress'), dbAll('favorites'), dbAll('notes')]);
+        const [prog, favs, notes, unfams, dks] = await Promise.all([
+            dbAll('progress'), dbAll('favorites'), dbAll('notes'), dbAll('unfamiliar'), dbAll('dontknow')
+        ]);
+        for (const u of unfams) state.unfamSet.add(u.question_id);
+        for (const d of dks) state.dontknowSet.add(d.question_id);
         for (const p of prog) state.progress[p.question_id] = p;
         for (const f of favs) state.favSet.add(f.question_id);
         for (const n of notes) {
@@ -94,6 +102,7 @@
             const f = {
                 ...it,
                 iid: it.qid || (it.sid + '_zt' + year + '_' + it.i),
+                mapped: !!it.qid,     // 有题库映射才支持 不熟/不会/考点分析（合成 id 写不进这些表）
                 group: it.t === 1 ? 'choice' : 'big',
             };
             // 算法题（= 打卡表真题卡且有讲义命中：2009-2012 在 42 题、2013 起在 41 题、2016 为 43）
@@ -187,6 +196,28 @@
      * 做题模式（默认）：白纸状态——不显示历史作答痕迹（结果条/选项色/预选）与笔记，
      *   本次选答仅暂存（picked），退出做题模式时统一判分。
      * 取消做题模式：显示历史作答记录（预选/对错色/结果条）与笔记，解析默认仍收起。 */
+    /* ---------- 不熟 / 不会 / 考点分析（与刷题页同一套接口与样式） ---------- */
+    function markBtnsHtml(f) {
+        if (!f.mapped) return '';
+        const un = state.unfamSet.has(f.iid), dk = state.dontknowSet.has(f.iid);
+        return `<span class="mark-btns">
+            <button class="mark-btn ${un ? 'mark-unfamiliar' : ''}" onclick="toggleMarkZt('unfamiliar','${f.iid}')"
+                title="${un ? '取消「不熟」标记' : '标记为不熟（黄色）'}">不熟</button>
+            <button class="mark-btn ${dk ? 'mark-dontknow' : ''}" onclick="toggleMarkZt('dontknow','${f.iid}')"
+                title="${dk ? '取消「不会」标记' : '标记为不会（红色）'}">不会</button>
+        </span>`;
+    }
+    function kpBtnHtml(f, isFav) {
+        if (!isFav || !f.mapped || state.examMode) return '';   // 考点分析含答案，做题模式不显示
+        const open = state.kpOpen.has(f.iid);
+        return `<button class="btn-explanation${open ? ' active' : ''}" onclick="toggleKpZt('${f.iid}')"
+            title="考点定位 + 该节笔记精华 + 个人数据 + 关联真题">考点分析 ${open ? '▴' : '▾'}</button>`;
+    }
+    function kpPanelHtml(f, isFav) {
+        if (!isFav || !f.mapped || state.examMode || !state.kpOpen.has(f.iid)) return '';
+        return `<div class="kp-panel">${state.kpCache[f.iid] || '<div class="kp-loading">正在加载考点分析…</div>'}</div>`;
+    }
+
     function choiceCard(f) {
         const st = state.progress[f.iid];
         const newly = state.sessionAnswered.has(f.iid);   // 本次会话作答过
@@ -233,6 +264,7 @@
                     <span class="question-number">第 ${f.i} 题</span>
                     <span class="zt-subj-badge">${SUBJ_NAME[f.sid] || ''}</span>
                 </div>
+                ${markBtnsHtml(f)}
                 <button class="btn-icon ${isFav ? 'favorited' : ''}" onclick="toggleFav('${f.iid}')" title="${isFav ? '取消收藏' : '收藏'}">${isFav ? '★' : '☆'}</button>
             </div>
             <div class="question-content">${f.q}</div>
@@ -241,6 +273,7 @@
             <div class="question-tools">
                 <button class="btn-explanation${ansOpen ? ' active' : ''}" onclick="toggleAns('${f.iid}')">答案与解析 ${ansOpen ? '▴' : '▾'}</button>
                 <button class="btn-explanation${noteOpen ? ' active' : ''}${hasNote ? ' has-note' : ''}" onclick="toggleNotePanel('${f.iid}')">笔记${hasNote ? ' ●' : ''} ${noteOpen ? '▴' : '▾'}</button>
+                ${kpBtnHtml(f, isFav)}
             </div>
             ${ansOpen ? `<div class="explanation-panel">
                 <div class="explanation-title">答案解析</div>
@@ -250,6 +283,7 @@
                 <div class="explanation-body">${f.an || '<div class="explanation-empty">该题暂无详细解析</div>'}</div>
             </div>` : ''}
             ${noteOpen ? notePanel(f.iid) : ''}
+            ${kpPanelHtml(f, isFav)}
         </div>`;
     }
 
@@ -268,18 +302,21 @@
                     <span class="zt-subj-badge">${SUBJ_NAME[f.sid] || ''} · 大题</span>
                     <span class="zt-score-badge">${f.s} 分</span>
                 </div>
+                ${markBtnsHtml(f)}
                 <button class="btn-icon ${isFav ? 'favorited' : ''}" onclick="toggleFav('${f.iid}')" title="${isFav ? '取消收藏' : '收藏'}">${isFav ? '★' : '☆'}</button>
             </div>
             <div class="question-content">${f.q}</div>
             <div class="question-tools">
                 <button class="btn-explanation${ansOpen ? ' active' : ''}" onclick="toggleAns('${f.iid}')">参考答案与解析 ${ansOpen ? '▴' : '▾'}</button>
                 <button class="btn-explanation${noteOpen ? ' active' : ''}${hasNote ? ' has-note' : ''}" onclick="toggleNotePanel('${f.iid}')">笔记${hasNote ? ' ●' : ''} ${noteOpen ? '▴' : '▾'}</button>
+                ${kpBtnHtml(f, isFav)}
             </div>
             ${ansOpen ? `<div class="explanation-panel">
                 <div class="explanation-title">参考答案与解析</div>
                 <div class="explanation-body">${f.an || '<div class="explanation-empty">暂无解析</div>'}</div>
             </div>` : ''}
             ${noteOpen ? notePanel(f.iid) : ''}
+            ${kpPanelHtml(f, isFav)}
         </div>`;
     }
 
@@ -314,18 +351,21 @@
                     <span class="zt-subj-badge">${SUBJ_NAME[f.sid] || ''} · 大题</span>
                     <span class="zt-score-badge">${f.s} 分</span>
                 </div>
+                ${markBtnsHtml(f)}
                 <button class="btn-icon ${isFav ? 'favorited' : ''}" onclick="toggleFav('${f.iid}')" title="${isFav ? '取消收藏' : '收藏'}">${isFav ? '★' : '☆'}</button>
             </div>
             <div class="question-content">${contentHtml || '（题目见教材原图）'}</div>
             <div class="question-tools">
                 <button class="btn-explanation${ansOpen ? ' active' : ''}" onclick="toggleAns('${f.iid}')">参考答案与解析 ${ansOpen ? '▴' : '▾'}</button>
                 <button class="btn-explanation${noteOpen ? ' active' : ''}${hasNote ? ' has-note' : ''}" onclick="toggleNotePanel('${f.iid}')">笔记${hasNote ? ' ●' : ''} ${noteOpen ? '▴' : '▾'}</button>
+                ${kpBtnHtml(f, isFav)}
             </div>
             ${ansOpen ? `<div class="explanation-panel">
                 <div class="explanation-title">参考答案与解析</div>
                 <div class="explanation-body">${answerHtml}</div>
             </div>` : ''}
             ${noteOpen ? notePanel(f.iid) : ''}
+            ${kpPanelHtml(f, isFav)}
         </div>`;
     }
 
@@ -460,6 +500,38 @@
         state.examMode = false;   // 对答案 = 判分 + 退出做题模式（显示记录与笔记）
         renderPaper();
         renderYearList();
+    }
+
+    async function toggleMarkZt(kind, iid) {
+        try {
+            const r = await api(`/api/mark/${kind}/${iid}`, { method: 'POST' });
+            const j = await r.json();
+            if (j.error) return;
+            const set = kind === 'unfamiliar' ? state.unfamSet : state.dontknowSet;
+            const on = kind === 'unfamiliar' ? j.is_unfamiliar : j.is_dontknow;
+            if (on) set.add(iid); else set.delete(iid);
+            refreshCard(iid);
+        } catch (e) { /* 静默：标记失败不影响看题 */ }
+    }
+
+    async function toggleKpZt(iid) {
+        if (state.kpOpen.has(iid)) {
+            state.kpOpen.delete(iid);
+            localStorage.setItem('zhentiKpOpen', JSON.stringify([...state.kpOpen]));
+            refreshCard(iid);
+            return;
+        }
+        state.kpOpen.add(iid);
+        localStorage.setItem('zhentiKpOpen', JSON.stringify([...state.kpOpen]));
+        refreshCard(iid);
+        if (state.kpCache[iid]) return;
+        try {
+            const d = await (await api('/api/kp/' + iid)).json();
+            state.kpCache[iid] = d.kp_analysis || '<div class="kp-loading">该题暂未生成考点分析（1312 道收藏题分批生成中）</div>';
+        } catch (e) {
+            state.kpCache[iid] = '<div class="kp-loading">考点分析加载失败，点按钮收起后重试</div>';
+        }
+        if (state.kpOpen.has(iid)) refreshCard(iid);
     }
 
     async function toggleFav(iid) {
@@ -986,6 +1058,7 @@
 
     Object.assign(window, {
         switchYear, pickOption, checkPending, toggleFav, toggleAns, toggleNotePanel,
+        toggleMarkZt, toggleKpZt,
         onNoteInput, toggleExamMode, toggleShowAll, toggleFavOnly, resetYear,
         gotoQ, toggleFq, toggleZtNav, expandZtNav, toggleAnsPop,
         pasteZtNoteImage, saveZtNoteNow, renderZtNoteImages, delZtNoteImage,

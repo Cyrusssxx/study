@@ -809,6 +809,15 @@ async function api(url, opts = {}) {
             return jsonResp({ question_id: qid, is_favorited: true });
         }
 
+        // ---------- 考点分析（收藏题）：取题库里的 kp_analysis ----------
+        // /api/kp/<qid>  真题套卷页按需拉取，避免把四科题库整本载入
+        if (seg[1] === 'kp') {
+            const qid = seg[2];
+            const q = await getQuestionById(qid);
+            if (!q) return jsonResp({ error: '题目不存在' }, 404);
+            return jsonResp({ question_id: qid, kp_analysis: q.kp_analysis || '' });
+        }
+
         // ---------- 不熟/不会 标记切换 ----------
         // /api/mark/<unfamiliar|dontknow>/<qid>
         if (seg[1] === 'mark') {
