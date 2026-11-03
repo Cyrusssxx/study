@@ -146,27 +146,26 @@ function realExpected(subKey) {
   check('笔记面板与答案面板都在题卡内', iNote > -1 && iAns > -1, true);
   check('笔记面板在答案面板之前', iNote < iAns, true);
 
-  console.log('\n--- 场景 6：底栏收起/展开把手恒靠右 ---');
-  const bar = doc.getElementById('datiSingleBar');
-  check('底栏存在', !!bar, true);
-  const btns = [...bar.querySelectorAll('button')];
-  check('把手是底栏最后一个按钮', btns[btns.length - 1].classList.contains('dati-bar-toggle'), true);
-  check('把手文案为「▾ 收起」', btns[btns.length - 1].textContent.trim(), '▾ 收起');
-  check('底栏顺序：上一题 → 进度 → 下一题', (() => {
-    const t = bar.textContent;
-    return t.indexOf('上一题') < t.indexOf('题') && bar.querySelectorAll('.dati-single-pos').length === 1;
-  })(), true);
-  check('步骤提示有 margin-left:auto（把右侧组推到右边）', /\.dati-single-bar \.dati-step-key[^}]*margin-left:\s*auto/.test(styleText), true);
-  check('收起态用 flex-end 对齐（与展开态同位置）', /\.dati-single-bar\.collapsed[^}]*justify-content:\s*flex-end/.test(styleText), true);
-  check('收起态右侧内边距与展开态一致（14px）', /\.dati-single-bar\.collapsed[^}]*padding:\s*0\s+14px/.test(styleText), true);
-
-  // 收起后：
-  w.toggleSingleBar();
+  console.log('\n--- 场景 6：底栏已弃用，改左右悬浮箭头 ---');
+  check('底栏整条不再渲染', doc.querySelectorAll('.dati-single-bar').length, 0);
+  const arrows = [...root().querySelectorAll('.dati-arrow')];
+  check('左右箭头各一枚', arrows.length, 2);
+  check('箭头顺序：prev 在前 next 在后', [arrows[0].classList.contains('prev'), arrows[1].classList.contains('next')], [true, true]);
+  check('箭头 fixed 定位 + 垂直居中', /\.dati-arrow\s*\{[^}]*position:\s*fixed[^}]*top:\s*50%/.test(styleText), true);
+  check('左箭头贴左 / 右箭头贴右', /\.dati-arrow\.prev\s*\{\s*left:/.test(styleText) && /\.dati-arrow\.next\s*\{\s*right:/.test(styleText), true);
+  check('箭头禁用态有降透明度', /\.dati-arrow:disabled\s*\{[^}]*opacity/.test(styleText), true);
+  check('窄屏媒体查询缩小箭头', /@media[^{]*900px[^{]*\{[^}]*\.dati-arrow/.test(styleText), true);
+  // 首/末题禁用要在「真题」筛选下判断（全部筛选里 realQ[0] 并不是第一题）
+  w.setFilter('real');
+  await sleep(150);
+  w.singleGoTo(realQ[0].id);
   await sleep(80);
-  const bar2 = doc.getElementById('datiSingleBar');
-  check('收起后只剩把手', bar2.querySelectorAll('button').length, 1);
-  check('收起后把手仍在（位置靠 CSS 保证）', bar2.querySelector('.dati-bar-toggle') !== null, true);
-  w.toggleSingleBar();
+  check('真题首题：左箭头禁用', doc.getElementById('datiArrowPrev').disabled, true);
+  check('真题首题：右箭头可用', doc.getElementById('datiArrowNext').disabled, false);
+  w.singleGoTo(realQ[realQ.length - 1].id);
+  await sleep(80);
+  check('真题末题：右箭头禁用', doc.getElementById('datiArrowNext').disabled, true);
+  check('真题末题：左箭头可用', doc.getElementById('datiArrowPrev').disabled, false);
 
   console.log(`\nPASS ${pass} / FAIL ${fail}`);
   process.exit(fail ? 1 : 0);

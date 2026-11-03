@@ -119,34 +119,31 @@
             margin-left: auto; font-weight: 700; color: var(--primary);
             font-variant-numeric: tabular-nums;
         }
-        /* 底栏用 sticky（在文档流内），避开右下角悬浮按钮，不与其争位 */
-        .dati-single-bar {
-            position: sticky; bottom: 10px; z-index: 50;
-            display: flex; align-items: center; justify-content: center; gap: 10px; flex-wrap: wrap;
-            margin: 14px 0 4px; padding: 10px 14px;
-            background: var(--card-bg); border: 1px solid var(--border); border-radius: 12px;
-            box-shadow: 0 6px 20px rgba(0,0,0,.16);
+        /* ============ 单题模式：左右悬浮箭头（原底部工具栏已弃用） ============ */
+        /* 固定两侧、垂直居中、滚动时恒在；窄屏缩小贴边，避免压住题干 */
+        .dati-arrow {
+            position: fixed; top: 50%; transform: translateY(-50%);
+            width: 40px; height: 40px; padding: 0 0 3px;   /* 3px 光学居中 ‹ › */
+            display: flex; align-items: center; justify-content: center;
+            border-radius: 50%; border: 1px solid var(--border);
+            background: var(--card-bg); color: var(--text-light);
+            font-size: 22px; line-height: 1; font-family: Georgia, serif;
+            cursor: pointer; z-index: 60;
+            box-shadow: 0 2px 10px rgba(0,0,0,.08);
+            transition: background .15s, color .15s, border-color .15s, box-shadow .15s, opacity .15s;
         }
-        .dati-single-bar button:disabled { opacity: .45; cursor: not-allowed; }
-        .dati-single-bar .dati-step-key { font-size: .78rem; color: var(--text-light); font-weight: 400; margin-left: auto; }
-        .dati-single-pos { font-size: .86rem; color: var(--text-light); font-variant-numeric: tabular-nums; }
-        /* 收起/展开底栏：收起后整条栏不渲染，仅在底部留一枚小把手（状态切题时保持）
-           把手恒靠右（与展开态同一水平位置），收起/展开时不左右横跳 */
-        .dati-bar-toggle {
-            border: none; background: none; cursor: pointer;
-            color: var(--text-light); font-size: .82rem; line-height: 1;
-            padding: 4px 6px; border-radius: 6px;
+        .dati-arrow:hover:not(:disabled) {
+            background: var(--primary); border-color: var(--primary); color: #fff;
+            box-shadow: 0 4px 14px rgba(79,70,229,.32);
         }
-        .dati-bar-toggle:hover { background: rgba(128,128,128,.16); color: var(--text); }
-        .dati-single-bar.collapsed {
-            padding: 0 14px; gap: 0; margin: 10px 0 0;
-            background: transparent; border-color: transparent; box-shadow: none;
-            justify-content: flex-end;   /* 与展开态的右内边距对齐 ⇒ 把手位置不跳 */
-        }
-        .dati-single-bar.collapsed .dati-bar-toggle {
-            padding: 3px 12px; border-radius: 999px;
-            background: var(--card-bg); border: 1px solid var(--border);
-            box-shadow: 0 2px 8px rgba(0,0,0,.12);
+        .dati-arrow:active:not(:disabled) { transform: translateY(-50%) scale(.94); }
+        .dati-arrow:disabled { opacity: .32; cursor: default; }
+        .dati-arrow.prev { left: 10px; }
+        .dati-arrow.next { right: 10px; }
+        @media (max-width: 900px) {
+            .dati-arrow { width: 34px; height: 34px; font-size: 19px; }
+            .dati-arrow.prev { left: 3px; }
+            .dati-arrow.next { right: 3px; }
         }
         .num-btn.current { background: var(--primary); color: #fff; border-color: var(--primary); font-weight: 700; }
     </style>
@@ -229,7 +226,7 @@
     let lastSeenQ = localStorage.getItem('datiLastSeenQ') || '';                         // 上次浏览/跳转的题（刷新后自动定位）
     let viewMode = localStorage.getItem('datiView') || 'single';                         // single（默认，一题一题做）| list（整章列表）
     let singleQid = localStorage.getItem('datiSingleQ') || '';                           // 单题模式当前题 id
-    let barCollapsed = localStorage.getItem('datiBarCollapsed') === '1';                 // 单题模式底栏是否收起（切题/刷新保持）
+    // 单题模式导航＝左右悬浮箭头（原底部工具栏已弃用，仅保留键盘 ← → 与箭头）
 
     // 当前科目 + 当前筛选下的有序题目（带章节/小节上下文）——单题模式与列表模式共用
     // 「统考真题」筛选下改为**按年份倒序**（2025 → 2009），同年内保持章节顺序：
@@ -525,7 +522,6 @@
             ansOpen.delete(qid);
             saveAnsOpen();
             if (btn) btn.textContent = '查看答案';
-            syncSingleBarAnsBtn();
             return;
         }
         if (!box.dataset.filled) {
@@ -537,54 +533,21 @@
         saveAnsOpen();
         if (btn) btn.textContent = '收起答案';
         box.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-        syncSingleBarAnsBtn();
     }
 
-    // 单题模式底栏的「看答案」入口：题目图很长时无需滚回题卡操作区
-    function singleToggleAnswer() {
-        if (!singleQid) return;
-        toggleAnswer(singleQid);
-    }
-
-    // 底栏答案按钮文案与答案区展开状态保持一致
-    function syncSingleBarAnsBtn() {
-        const b = document.querySelector('.dati-single-bar .dati-single-ans');
-        if (!b) return;
-        const box = document.querySelector(`.dati-abody[data-ans="${singleQid}"]`);
-        b.textContent = (box && box.classList.contains('open')) ? '🙈 收起答案' : '👁 看答案';
-    }
-
-    // 底栏收起 / 展开：收起后整条栏都不渲染（只留一枚小把手），不是隐藏部分按钮。
-    // 只替换底栏自身的 DOM（不重渲染整题——重渲染会让题干图重新挂载、白闪一次）。
-    // 状态写入 localStorage，切题时由 renderSingle 按 barCollapsed 重建，故收起后翻多少题都保持。
-    function toggleSingleBar() {
-        barCollapsed = !barCollapsed;
-        localStorage.setItem('datiBarCollapsed', barCollapsed ? '1' : '0');
-        const bar = document.getElementById('datiSingleBar');
-        if (bar) bar.outerHTML = singleBarHtml();
-    }
-
-    // 单题模式底栏 HTML（收起态只输出把手按钮）
-    function singleBarHtml() {
-        if (barCollapsed) {
-            return `<div class="dati-single-bar collapsed" id="datiSingleBar">
-                <button class="dati-bar-toggle" onclick="toggleSingleBar()" title="展开底栏（切题时保持）">▴ 展开底栏</button>
-            </div>`;
-        }
+    // 单题模式：左右两枚悬浮圆形箭头（垂直居中、两侧贴边、滚动恒在）。
+    // 原底部工具栏已弃用——它的「看答案」「选题」都有替代入口：题卡操作区「查看答案」
+    // 与右下角「☰ 导航」浮钮；进度在看板顶部 .dati-single-prog。
+    function singleArrowsHtml() {
         const items = flatItems();
         let idx = items.findIndex(it => it.q.id === singleQid);
         if (idx < 0) idx = 0;
-        const qid = singleQid;
-        return `<div class="dati-single-bar" id="datiSingleBar">
-            <button class="btn btn-secondary" onclick="singleStep(-1)" ${idx === 0 ? 'disabled' : ''}>◀ 上一题</button>
-            <span class="dati-single-pos">第 ${idx + 1} / ${items.length} 题</span>
-            <button class="btn btn-primary" onclick="singleStep(1)" ${idx === items.length - 1 ? 'disabled' : ''}>下一题 ▶</button>
-            <span class="dati-view-sep"></span>
-            <button class="btn btn-secondary dati-single-ans" onclick="singleToggleAnswer()">${ansOpen.has(qid) ? '🙈 收起答案' : '👁 看答案'}</button>
-            <button class="btn btn-secondary dati-nav-open-btn" onclick="toggleNav()">☰ 选题</button>
-            <span class="dati-step-key">← → 键切换</span>
-            <button class="dati-bar-toggle" onclick="toggleSingleBar()" title="收起底栏（整条收起，切题时保持）">▾ 收起</button>
-        </div>`;
+        const atFirst = idx === 0;
+        const atLast = idx === items.length - 1;
+        return `<button class="dati-arrow prev" id="datiArrowPrev" onclick="singleStep(-1)"${atFirst ? ' disabled' : ''}
+                    title="上一题（←）" aria-label="上一题">‹</button>
+                <button class="dati-arrow next" id="datiArrowNext" onclick="singleStep(1)"${atLast ? ' disabled' : ''}
+                    title="下一题（→）" aria-label="下一题">›</button>`;
     }
 
     // ==================== 渲染分派：单题（默认） / 列表 ====================
@@ -635,7 +598,7 @@
                 <span class="dati-single-prog">${idx + 1} / ${items.length}</span>
             </div>
             ${questionCard(activeSubject, cur.secName, q, favSet.has(q.id))}
-            ${singleBarHtml()}`;
+            ${singleArrowsHtml()}`;
         afterRender();
         activateChapterImgs(root);   // 题干图：本模式仅当前一题在 DOM 中，直接挂图
         primeAnswer(q.id);           // 答案图：与题干一并加载（节点已在 DOM、但不展开）

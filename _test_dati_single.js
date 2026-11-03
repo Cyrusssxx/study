@@ -27,6 +27,7 @@ const ROOT = __dirname;
 const DATI_PATH = path.resolve(ROOT, process.env.DATI_HTML || 'pwa/dati.html');
 const DATI_SRC = fs.readFileSync(DATI_PATH, 'utf8');
 const DATI_DATA = JSON.parse(fs.readFileSync(path.join(ROOT, 'pwa/data/dati.json'), 'utf8'));
+const styleText = (DATI_SRC.match(/<style>([\s\S]*?)<\/style>/) || ['', ''])[1];   // 断言 CSS 规则用
 
 let pass = 0, fail = 0;
 function check(name, got, want) {
@@ -153,22 +154,24 @@ function flat(subKey) {
   check('收起后 open 类移除', abox().classList.contains('open'), false);
   check('收起后填充状态保留（再次点开不重复注入）', abox().dataset.filled, '1');
 
-  console.log('\n--- 场景 3b：底栏「看答案」入口 ---');
+  console.log('\n--- 场景 3b：底栏已弃用 → 题卡「查看答案」+ 左右箭头 ---');
   const q2 = L[2].q;
   w.singleGoTo(q2.id);
   await sleep(60);
-  check('底栏存在答案按钮', !!root().querySelector('.dati-single-bar .dati-single-ans'), true);
-  check('新题底栏按钮文案为「看答案」', root().querySelector('.dati-single-bar .dati-single-ans').textContent.trim(), '👁 看答案');
+  check('底栏整条已移除', root().querySelectorAll('.dati-single-bar').length, 0);
+  check('左右箭头各一枚', root().querySelectorAll('.dati-arrow').length, 2);
+  check('箭头为 fixed 定位（滚动恒在两侧）', /\.dati-arrow\s*\{[^}]*position:\s*fixed/.test(styleText), true);
   check('新题答案图已就绪', root().querySelectorAll('img[src*="_a_"]').length, q2.a.length);
   check('新题答案区未展开', root().querySelector('.dati-abody').classList.contains('open'), false);
-  root().querySelector('.dati-single-bar .dati-single-ans').click();
+  const cardAnsBtn = () => root().querySelector('.dati-ans-btn');
+  check('题卡内保留「查看答案」按钮', !!cardAnsBtn(), true);
+  cardAnsBtn().click();
   await sleep(80);
-  check('底栏看答案后答案区展开', root().querySelector('.dati-abody').classList.contains('open'), true);
+  check('点题卡按钮后答案区展开', root().querySelector('.dati-abody').classList.contains('open'), true);
   check('展开后图片数量不变（未重复注入）', root().querySelectorAll('img[src*="_a_"]').length, q2.a.length);
-  check('底栏按钮文案切换为「收起答案」', root().querySelector('.dati-single-bar .dati-single-ans').textContent.trim(), '🙈 收起答案');
-  root().querySelector('.dati-single-bar .dati-single-ans').click();
+  cardAnsBtn().click();
   await sleep(80);
-  check('再点收起后文案复原', root().querySelector('.dati-single-bar .dati-single-ans').textContent.trim(), '👁 看答案');
+  check('再点收起后答案区关闭', root().querySelector('.dati-abody').classList.contains('open'), false);
 
   console.log('\n--- 场景 4：边界与键盘 ---');
   w.singleGoTo(L[0].q.id);           // 回第一题
@@ -234,7 +237,7 @@ function flat(subKey) {
   check('列表模式已持久化', w.localStorage.getItem('datiView'), 'list');
   check('列表模式渲染章节折叠', root().querySelectorAll('details.daka-group').length > 0, true);
   check('列表模式题干图走惰挂载', lazyImgs().length > 0, true);
-  check('列表模式无单题底栏', root().querySelectorAll('.dati-single-bar').length, 0);
+  check('列表模式无左右箭头', root().querySelectorAll('.dati-arrow').length, 0);
   check('「展开全部」恢复显示', doc.getElementById('datiExpandAll').style.display, '');
   check('列表胶囊高亮', doc.getElementById('fList').classList.contains('active'), true);
 
@@ -255,40 +258,31 @@ function flat(subKey) {
   w.setFilter('all');
   await sleep(60);
 
-  console.log('\n--- 场景 9：底栏整条收起 / 展开（切题时保持） ---');
-  const sbar = () => doc.getElementById('datiSingleBar');
-  const tbtn = () => root().querySelector('.dati-bar-toggle');
-  const barBtns = () => root().querySelectorAll('#datiSingleBar .btn').length;
-  const barAllBtns = () => root().querySelectorAll('#datiSingleBar button').length;
-  check('底栏默认展开（无 collapsed）', sbar().classList.contains('collapsed'), false);
-  check('展开态把手文案为「▾ 收起」', tbtn().textContent.trim(), '▾ 收起');
-  check('展开态底栏操作按钮齐全', barBtns(), 4);
-  check('展开态「看答案」「选题」在 DOM 中', root().querySelectorAll('.dati-single-bar .dati-single-ans, .dati-single-bar .dati-nav-open-btn').length, 2);
+  console.log('\n--- 场景 9：左右悬浮箭头（首题/末题禁用，切题后状态更新） ---');
+  const prevA = () => doc.getElementById('datiArrowPrev');
+  const nextA = () => doc.getElementById('datiArrowNext');
+  check('左右箭头各一枚', root().querySelectorAll('.dati-arrow').length, 2);
+  check('左箭头带 prev 类（贴左边）', prevA().classList.contains('prev'), true);
+  check('右箭头带 next 类（贴右边）', nextA().classList.contains('next'), true);
 
-  tbtn().click();
-  await sleep(40);
-  check('收起后整条栏的操作按钮全部移除', barBtns(), 0);
-  check('收起后底栏只剩 1 枚把手', barAllBtns(), 1);
-  check('收起后进度/切题文字也不在 DOM', root().querySelector('.dati-single-pos'), null);
-  check('收起态标记 .collapsed 在位', sbar().classList.contains('collapsed'), true);
-  check('收起状态已持久化', w.localStorage.getItem('datiBarCollapsed'), '1');
-  check('把手文案切换为「▴ 展开底栏」', tbtn().textContent.trim(), '▴ 展开底栏');
-
-  w.singleStep(1);
+  w.singleGoTo(L[0].q.id);
   await sleep(60);
-  check('切题后仍为整条收起（只有把手）', barAllBtns(), 1);
-  check('切题后把手文案不变', tbtn().textContent.trim(), '▴ 展开底栏');
-  check('切题后收起状态持久化不变', w.localStorage.getItem('datiBarCollapsed'), '1');
+  check('首题：上一题箭头禁用', prevA().disabled, true);
+  check('首题：下一题箭头可用', nextA().disabled, false);
 
-  w.singleStep(-1);
-  await sleep(60);
-  check('反向切题同样保持整条收起', barAllBtns(), 1);
+  nextA().click();
+  await sleep(80);
+  check('点右箭头切到第 2 题', curId(), L[1].q.id);
+  check('第 2 题：上一题箭头恢复可用', prevA().disabled, false);
 
-  tbtn().click();
+  prevA().click();
+  await sleep(80);
+  check('点左箭头切回第 1 题', curId(), L[0].q.id);
+
+  w.singleGoTo(L[L.length - 1].q.id);
   await sleep(60);
-  check('再点展开后操作按钮恢复', barBtns(), 4);
-  check('展开状态持久化', w.localStorage.getItem('datiBarCollapsed'), '0');
-  check('展开后把手文案回到「▾ 收起」', tbtn().textContent.trim(), '▾ 收起');
+  check('末题：下一题箭头禁用', nextA().disabled, true);
+  check('末题：上一题箭头可用', prevA().disabled, false);
 
   console.log(`\nPASS ${pass} / FAIL ${fail}`);
   dom.window.close();
