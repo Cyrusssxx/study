@@ -46,19 +46,7 @@ check('存在 syncExamModeBtn()', JS.includes('function syncExamModeBtn()'), tru
 check('renderPaper 渲染后调用同步', /renderFq\(\);[\s\S]{0,90}syncExamModeBtn\(\)/.test(JS), true);
 check('同步时按 examMode 切换文案', /state\.examMode \? '做题中' : '做题模式'/.test(JS), true);
 
-console.log('\n--- 4. 视频讲解外链（只在大题卡上） ---');
-check('zt-bili-btn 只出现 2 次（大题 + 算法题）', (JS.match(/zt-bili-btn/g) || []).length, 2);
-const seq = JS.match(/笔记\$\{hasNote[\s\S]{0,400}?zt-bili-btn/g) || [];
-check('两处都紧跟「笔记」按钮之后', seq.length, 2);
-check('选择题卡不带该按钮', JS.slice(JS.indexOf('function choiceCard'), JS.indexOf('function bigCard')).includes('zt-bili-btn'), false);
-check('外链新窗口 + 安全属性', (JS.match(/target="_blank" rel="noopener noreferrer"/g) || []).length >= 2, true);
-check('关键词含 Beokayy / 408 / 科目', /'Beokayy',\s*'408',\s*SUBJ_NAME/.test(JS), true);
-check('用 encodeURIComponent 编码', /encodeURIComponent\(kw\)/.test(JS), true);
-check('按钮文案为「🎬 视频讲解」', JS.includes('🎬 视频讲解'), true);
-
-console.log('\n--- 5. 样式 ---');
-check('外链去下划线样式存在', /\.question-tools \.zt-bili-btn\s*\{[^}]*text-decoration:\s*none/.test(CSS), true);
-check('沿用 btn-explanation 外观', JS.includes('class="btn-explanation zt-bili-btn"'), true);
+console.log('\n--- 4. 样式 ---');
 
 console.log(`\nPASS ${pass} / FAIL ${fail}`);
 process.exit(fail ? 1 : 0);

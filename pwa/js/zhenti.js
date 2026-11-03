@@ -205,14 +205,6 @@
             : '做题模式：隐藏答案、历史记录与笔记';
     }
 
-    // B站讲解：不存视频映射，跳到搜索。
-    // 关键词用「Beokayy 408 + 科目 + 真题」——命中该 UP 的《XX强化课 → 真题解构》分P
-    //（t=8883&p=6 那种精确时间点是他站点人工标注的私有数据，我们不抄）。
-    function biliUrl(f) {
-        const kw = ['Beokayy', '408', SUBJ_NAME[f.sid] || '', '真题'].filter(Boolean).join(' ');
-        return 'https://search.bilibili.com/all?keyword=' + encodeURIComponent(kw);
-    }
-
     /* ---------------- 卡片：选择题 ----------------
      * 做题模式（默认）：白纸状态——不显示历史作答痕迹（结果条/选项色/预选）与笔记，
      *   本次选答仅暂存（picked），退出做题模式时统一判分。
@@ -343,7 +335,6 @@
             <div class="question-tools">
                 <button class="btn-explanation${ansOpen ? ' active' : ''}" onclick="toggleAns('${f.iid}')">参考答案与解析 ${ansOpen ? '▴' : '▾'}</button>
                 <button class="btn-explanation${noteOpen ? ' active' : ''}${hasNote ? ' has-note' : ''}" onclick="toggleNotePanel('${f.iid}')">笔记${hasNote ? ' ●' : ''} ${noteOpen ? '▴' : '▾'}</button>
-                <a class="btn-explanation zt-bili-btn" href="${biliUrl(f)}" target="_blank" rel="noopener noreferrer" title="在 B 站搜索本题讲解（新窗口打开）">🎬 视频讲解</a>
                 ${kpBtnHtml(f, isFav)}
                 ${poolBtnHtml(f)}
             </div>
@@ -394,7 +385,6 @@
             <div class="question-tools">
                 <button class="btn-explanation${ansOpen ? ' active' : ''}" onclick="toggleAns('${f.iid}')">参考答案与解析 ${ansOpen ? '▴' : '▾'}</button>
                 <button class="btn-explanation${noteOpen ? ' active' : ''}${hasNote ? ' has-note' : ''}" onclick="toggleNotePanel('${f.iid}')">笔记${hasNote ? ' ●' : ''} ${noteOpen ? '▴' : '▾'}</button>
-                <a class="btn-explanation zt-bili-btn" href="${biliUrl(f)}" target="_blank" rel="noopener noreferrer" title="在 B 站搜索本题讲解（新窗口打开）">🎬 视频讲解</a>
                 ${kpBtnHtml(f, isFav)}
                 ${poolBtnHtml(f)}
             </div>

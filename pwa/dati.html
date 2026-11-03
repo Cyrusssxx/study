@@ -43,8 +43,6 @@
         }
         .dati-fav.on { color: #f59e0b; }
         .dati-actions { display: flex; align-items: center; gap: 8px; margin-top: 4px; flex-wrap: wrap; }
-        /* B 站讲解是外链 <a>，借用 .btn 外观时去掉下划线并保持与按钮同高 */
-        .dati-actions .dati-bili-btn { text-decoration: none; display: inline-flex; align-items: center; }
         .dati-done-btn { min-width: 84px; }
         .dati-done-btn.done { color: var(--primary); border-color: var(--primary); }
         .dati-note-btn.has-note { color: #8a6d1a; border-color: #e6d9a8; }
@@ -484,13 +482,6 @@
         renderNav();   // 其它筛选下题单不变，但导航的已练标识要刷新
     }
 
-    // B 站讲解：**不存任何视频映射**，按「年份 + 科目 + 大题」直接跳搜索。
-    // 好处：零维护、不受 UP 主充电专属限制、视频重传也不失效；也不搬别人整理的时间点。
-    function biliSearchUrl(q, subKey) {
-        const subName = (DATI.find(s => s.key === subKey) || {}).name || '';
-        const kw = [q.year || '', '408', subName, '大题', '讲解'].filter(Boolean).join(' ');
-        return 'https://search.bilibili.com/all?keyword=' + encodeURIComponent(kw);
-    }
 
     function questionCard(subKey, secName, q, isFav) {
         const qid = q.id;
@@ -519,8 +510,6 @@
                 <button class="btn btn-secondary dati-mark-btn dati-mark-d${dontknowSet.has(qid) ? ' on-dk' : ''}" data-qid="${qid}"
                         title="${dontknowSet.has(qid) ? '取消「不会」标记' : '标记为不会（红）'}"
                         onclick="toggleMark('${qid}', 'dontknow')">🔴 不会</button>
-                <a class="btn btn-secondary dati-bili-btn" href="${biliSearchUrl(q, subKey)}" target="_blank" rel="noopener noreferrer"
-                   title="在 B 站搜索 ${q.year || ''} 年本科目大题讲解（新窗口打开）">🎬 B站讲解</a>
             </div>
             <div class="note-panel dati-note-panel" data-note="${qid}" style="${noteOpen.has(qid) ? '' : 'display:none'}">
                 <div class="note-title">我的笔记</div>

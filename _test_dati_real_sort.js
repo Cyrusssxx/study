@@ -154,52 +154,7 @@ function yearOrdered(key) {
   check('笔记与答案都在题卡内', iNote > -1 && iAns > -1, true);
   check('笔记面板在答案面板之前', iNote < iAns, true);
 
-  console.log('\n--- 场景 6：B站讲解按钮（外链搜索，不存映射） ---');
-  const bili = root().querySelector('.dati-bili-btn');
-  check('题卡有 B站讲解 按钮', !!bili, true);
-  check('是新窗口外链', [bili.tagName, bili.getAttribute('target'), bili.getAttribute('rel')], ['A', '_blank', 'noopener noreferrer']);
-  const href = bili.getAttribute('href');
-  check('跳到 B 站搜索', href.startsWith('https://search.bilibili.com/all?keyword='), true);
-  const kw = decodeURIComponent(href.split('keyword=')[1] || '');
-  const curQ = w.eval('flatItems()[0].q');
-  check('关键词含年份', kw.includes(String(curQ.year)), true);
-  check('关键词含科目名', kw.includes(subData(subKey).name), true);
-  check('数据里不含 bvid（不搬视频映射）', JSON.stringify(DATI_DATA).includes('bvid'), false);
-
-  // 覆盖率：列表模式下所有题卡（含各章各节）都必须有按钮，且链接带自己的年份
-  w.setView('list');
-  await sleep(300);
-  const allCards = root().querySelectorAll('.dati-qcard').length;
-  const allBtns = root().querySelectorAll('.dati-qcard .dati-bili-btn').length;
-  check('列表模式：题卡数 = 该科题数', allCards, chapQ.length);
-  check('列表模式：每题都有 B站按钮', allBtns, allCards);
-  const badYear = [...root().querySelectorAll('.dati-qcard')].filter(c => {
-    const real = c.querySelector('.dati-real');
-    const btn = c.querySelector('.dati-bili-btn');
-    if (!real || !btn) return true;
-    const m = real.textContent.match(/(\d{4})/);
-    return m ? !decodeURIComponent(btn.getAttribute('href')).includes(m[1]) : true;
-  });
-  check('每题链接都带自己的年份', badYear.length, 0);
-
-  // 三科全覆盖（questionCard 是唯一渲染入口，这里实证一遍）
-  let covered = 0;
-  for (const k of ['co', 'os', 'cn']) {
-    w.switchSubject(k);
-    await sleep(280);
-    const n = root().querySelectorAll('.dati-qcard').length;
-    const b = root().querySelectorAll('.dati-qcard .dati-bili-btn').length;
-    const expect = chapterOrdered(k).length;
-    check(`${k} 科 ${expect} 题：题卡与按钮各多少`, [n, b], [expect, expect]);
-    covered += b;
-  }
-  check('三科合计按钮数 = 84', covered, 84);
-  w.switchSubject(subKey);
-  await sleep(200);
-  w.setView('single');
-  await sleep(150);
-
-  console.log('\n--- 场景 7：左右悬浮箭头 ---');  check('底栏整条不再渲染', doc.querySelectorAll('.dati-single-bar').length, 0);
+  console.log('\n--- 场景 6：左右悬浮箭头 ---');  check('底栏整条不再渲染', doc.querySelectorAll('.dati-single-bar').length, 0);
   check('左右箭头各一枚', root().querySelectorAll('.dati-arrow').length, 2);
   check('箭头 fixed 定位 + 垂直居中', /\.dati-arrow\s*\{[^}]*position:\s*fixed[^}]*top:\s*50%/.test(styleText), true);
   w.setMode('year');

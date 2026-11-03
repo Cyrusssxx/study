@@ -1550,15 +1550,6 @@ body {
     background: #eef5fd;
 }
 
-/* 「视频讲解」是外链 <a>：沿用按钮外观，去掉下划线并垂直居中 */
-.question-tools .zt-bili-btn {
-    text-decoration: none;
-    display: inline-flex;
-    align-items: center;
-    gap: 2px;
-    line-height: 1.4;
-}
-
 .btn-redo {
     background: none;
     border: 1px solid #c8cdd4;
