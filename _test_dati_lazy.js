@@ -181,12 +181,13 @@ function windowifyIdentifiers(code, names_) {
 }
 
 let code = sandbox;
-for (const n of ['visibleQuestionsOf', 'passFilter', 'updateCounts', 'toggleDone', 'questionCard', 'activateChapterImgs']) {
+for (const n of ['biliSearchUrl', 'visibleQuestionsOf', 'passFilter', 'updateCounts', 'toggleDone', 'questionCard', 'activateChapterImgs']) {
   const fn = extractFn(main, n);
   code += windowifyIdentifiers(fn);
 }
 // new Function 内函数声明不外泄 → 显式挂到 window
 code += `
+window.biliSearchUrl = biliSearchUrl;
 window.visibleQuestionsOf = visibleQuestionsOf;
 window.passFilter = passFilter;
 window.updateCounts = updateCounts;
