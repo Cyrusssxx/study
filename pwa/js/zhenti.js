@@ -158,7 +158,6 @@
             <div class="zt-title">${year} 年真题套卷<span class="zt-sub">选择题 ${state.index.choice_total} · 大题 ${state.index.big_total}</span></div>
             <div class="zt-tools">
                 <span class="zt-progress" id="ztProgress">${progTxt}</span>
-                <button class="zt-btn${state.examMode ? ' on' : ''}" onclick="toggleExamMode()" title="${state.examMode ? '取消做题模式：显示历史作答记录与笔记' : '做题模式：隐藏答案、历史记录与笔记'}">${state.examMode ? '做题中' : '做题模式'}</button>
                 ${state.examMode ? '<button class="zt-btn zt-btn-primary" onclick="checkPending()">对答案</button>' : ''}
                 <button class="zt-btn${state.showAll ? ' on' : ''}" onclick="toggleShowAll()">${state.showAll ? '收起全部答案' : '展开全部答案'}</button>
                 <button class="zt-btn zt-btn-primary" onclick="toggleAnsPop()">答案速查</button>
@@ -192,6 +191,24 @@
         injectSvgs();
         initNoteEditors($('ztMain'));
         renderFq();
+        syncExamModeBtn();   // 顶栏做题模式按钮（已从工具栏移出）
+    }
+
+    // 顶栏「做题中 / 做题模式」按钮的状态同步（按钮常驻 navbar，不再随工具栏重绘）
+    function syncExamModeBtn() {
+        const b = document.getElementById('ztExamModeBtn');
+        if (!b) return;
+        b.classList.toggle('on', state.examMode);
+        b.textContent = state.examMode ? '做题中' : '做题模式';
+        b.title = state.examMode
+            ? '取消做题模式：显示历史作答记录与笔记'
+            : '做题模式：隐藏答案、历史记录与笔记';
+    }
+
+    // B站讲解：与 dati 页同一策略——不存视频映射，按「年份 + 408 + 科目 + 真题讲解」跳搜索
+    function biliUrl(f) {
+        const kw = [state.year || '', '408', SUBJ_NAME[f.sid] || '', '真题', '讲解'].filter(Boolean).join(' ');
+        return 'https://search.bilibili.com/all?keyword=' + encodeURIComponent(kw);
     }
 
     /* ---------------- 卡片：选择题 ----------------
@@ -287,6 +304,7 @@
             <div class="question-tools">
                 <button class="btn-explanation${ansOpen ? ' active' : ''}" onclick="toggleAns('${f.iid}')">答案与解析 ${ansOpen ? '▴' : '▾'}</button>
                 <button class="btn-explanation${noteOpen ? ' active' : ''}${hasNote ? ' has-note' : ''}" onclick="toggleNotePanel('${f.iid}')">笔记${hasNote ? ' ●' : ''} ${noteOpen ? '▴' : '▾'}</button>
+                <a class="btn-explanation zt-bili-btn" href="${biliUrl(f)}" target="_blank" rel="noopener noreferrer" title="在 B 站搜索本题讲解（新窗口打开）">🎬 视频讲解</a>
                 ${kpBtnHtml(f, isFav)}
                 ${poolBtnHtml(f)}
             </div>
@@ -324,6 +342,7 @@
             <div class="question-tools">
                 <button class="btn-explanation${ansOpen ? ' active' : ''}" onclick="toggleAns('${f.iid}')">参考答案与解析 ${ansOpen ? '▴' : '▾'}</button>
                 <button class="btn-explanation${noteOpen ? ' active' : ''}${hasNote ? ' has-note' : ''}" onclick="toggleNotePanel('${f.iid}')">笔记${hasNote ? ' ●' : ''} ${noteOpen ? '▴' : '▾'}</button>
+                <a class="btn-explanation zt-bili-btn" href="${biliUrl(f)}" target="_blank" rel="noopener noreferrer" title="在 B 站搜索本题讲解（新窗口打开）">🎬 视频讲解</a>
                 ${kpBtnHtml(f, isFav)}
                 ${poolBtnHtml(f)}
             </div>
@@ -374,6 +393,7 @@
             <div class="question-tools">
                 <button class="btn-explanation${ansOpen ? ' active' : ''}" onclick="toggleAns('${f.iid}')">参考答案与解析 ${ansOpen ? '▴' : '▾'}</button>
                 <button class="btn-explanation${noteOpen ? ' active' : ''}${hasNote ? ' has-note' : ''}" onclick="toggleNotePanel('${f.iid}')">笔记${hasNote ? ' ●' : ''} ${noteOpen ? '▴' : '▾'}</button>
+                <a class="btn-explanation zt-bili-btn" href="${biliUrl(f)}" target="_blank" rel="noopener noreferrer" title="在 B 站搜索本题讲解（新窗口打开）">🎬 视频讲解</a>
                 ${kpBtnHtml(f, isFav)}
                 ${poolBtnHtml(f)}
             </div>

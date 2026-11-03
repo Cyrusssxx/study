@@ -32,6 +32,8 @@
                 <a href="search.html" class="nav-link">搜题</a>
             </div>
             <div class="nav-tools">
+                <!-- 做题模式开关：从套卷工具栏移到顶栏（状态由 js/zhenti.js 的 syncExamModeBtn 同步） -->
+                <button class="zt-btn on" id="ztExamModeBtn" onclick="toggleExamMode()" title="取消做题模式：显示历史作答记录与笔记">做题中</button>
                 <button class="nav-switch" id="darkSwitch" onclick="toggleDark()" title="夜间模式：深色主题护眼">
                     夜间 <span class="switch-state" id="darkState">关</span>
                 </button>
