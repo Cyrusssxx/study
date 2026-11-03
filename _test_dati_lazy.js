@@ -30,6 +30,7 @@ window.unfamSet = new Set();
 window.dontknowSet = new Set();
 window.DATI = null;
 window.filter = 'all';
+window.mode = 'chapter';   // 章节模式 / 真题模式（2026-11-03 新增）
 window.year = '';
 window.openChapters = new Set();
 window.lastSeenQ = '';
@@ -59,7 +60,7 @@ function extractFn(src, name) {
 // 模板字符串：字面部分不动，${...} 插值区是 JS 代码 → 递归 windowify（避免漏掉 ${q.year}/${fn => qimg(...)}）
 function windowifyIdentifiers(code, names_) {
   const names = names_ || ['doneSet', 'lastSeenQ', 'openChapters', 'ansTpl', 'noteMap', 'noteOpen',
-    'favSet', 'unfamSet', 'dontknowSet', 'DATI', 'filter', 'year', 'saveDoneSet', 'localStorage', 'qimg', 'aimg', 'activeSubject', 'renderNav', 'noteToolbarHtml'];
+    'favSet', 'unfamSet', 'dontknowSet', 'DATI', 'filter', 'mode', 'year', 'saveDoneSet', 'localStorage', 'qimg', 'aimg', 'activeSubject', 'renderNav', 'noteToolbarHtml'];
 
   function matchName(at) {
     for (const nm of names) {
@@ -262,7 +263,12 @@ window.DATI = [sub];
   assert(window.passFilter(q2) === true, 'todo 下其它未练题仍通过');
   // 原行为不变
   window.filter = 'all'; assert(window.passFilter(q1) === true, 'all 档不变');
-  window.filter = 'real'; assert(window.passFilter(q1) === true && window.passFilter(q2) === false, 'real 档不变(非真题过滤)');
+  // 「真题/年份」改为模式：章节模式不过滤年份；真题模式 + 选年才过滤
+  window.mode = 'chapter'; window.year = '2018';
+  assert(window.passFilter(q1) === true && window.passFilter(q2) === true, '章节模式下年份不参与过滤');
+  window.mode = 'year'; window.year = '2018';
+  assert(window.passFilter(q1) === true && window.passFilter(q2) === false, '真题模式+年份：只放行该年');
+  window.mode = 'chapter'; window.year = '';
   window.favSet.add('dati_os_002');
   window.filter = 'fav'; assert(window.passFilter(q2) === true && window.passFilter(q1) === false, 'fav 档不变');
   // done 档：只放行已练（与 todo 互补）
@@ -280,7 +286,7 @@ window.DATI = [sub];
   window.updateCounts();
   assert(document.getElementById('cntTodo').textContent === '1', '未练计数=1 (2题已练1)');
   assert(document.getElementById('cntDone').textContent === '1', '已练计数=1');
-  assert(document.getElementById('cntAll').textContent === '2', '全部计数=2');
+  // 「全部/统考真题」胶囊已随纯真题改造移除，不再有 cntAll/cntReal 计数
 }
 
 // 7) activateChapterImgs：data-src → src

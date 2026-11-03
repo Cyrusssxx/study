@@ -246,17 +246,14 @@ function flat(subKey) {
   check('切回单题模式只有 1 张题卡', cards().length, 1);
   check('切回单题模式无惰挂载图', lazyImgs().length, 0);
 
-  console.log('\n--- 场景 8：筛选切换后单题定位兜底 ---');
-  w.setFilter('real');
-  await sleep(80);
-  const realItems = items();
-  check('真题筛选下有题', realItems.length > 0, true);
-  check('单题定位到真题集合内', realItems.map(x => x.q.id).includes(curId()), true);
-  w.setFilter('all');
-  await sleep(60);
-
-  w.setFilter('all');
-  await sleep(60);
+  console.log('\n--- 场景 8：模式切换后单题定位兜底 ---');
+  w.setMode('year');                 // 真题模式：按年份倒序（原"统考真题"筛选已并入模式）
+  await sleep(120);
+  const yearItems = items();
+  check('真题模式下有题', yearItems.length > 0, true);
+  check('单题定位在年份集合内', yearItems.map(x => x.q.id).includes(curId()), true);
+  w.setMode('chapter');
+  await sleep(100);
 
   console.log('\n--- 场景 9：左右悬浮箭头（首题/末题禁用，切题后状态更新） ---');
   const prevA = () => doc.getElementById('datiArrowPrev');

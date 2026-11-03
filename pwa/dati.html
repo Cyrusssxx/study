@@ -182,8 +182,9 @@
 
         <div class="dati-tabs" id="datiTabs"></div>
         <div class="dati-filters" id="datiFilters">
-            <button class="dati-chip" id="fAll" onclick="setFilter('all')">全部 <span class="dati-count" id="cntAll"></span></button>
-            <button class="dati-chip" id="fReal" onclick="setFilter('real')" title="统考真题：按年份倒序排列（最新年份优先），可在右侧下拉只看某一年">统考真题 <span class="dati-count" id="cntReal"></span></button>
+            <button class="dati-chip" id="fModeChapter" onclick="setMode('chapter')" title="按章节顺序浏览真题（第 1 章 → 第 n 章）">📚 章节模式</button>
+            <button class="dati-chip" id="fModeYear" onclick="setMode('year')" title="按年份倒序浏览真题（最新年份优先），可只看某一年">📅 真题模式</button>
+            <span class="dati-view-sep"></span>
             <button class="dati-chip" id="fFav" onclick="setFilter('fav')">★ 我的收藏 <span class="dati-count" id="cntFav"></span></button>
             <button class="dati-chip" id="fTodo" onclick="setFilter('todo')">○ 未练 <span class="dati-count" id="cntTodo"></span></button>
             <button class="dati-chip" id="fDone" onclick="setFilter('done')">✅ 已练 <span class="dati-count" id="cntDone"></span></button>
@@ -212,8 +213,11 @@
     <script>
     let DATI = null;
     let activeSubject = localStorage.getItem('datiSubject') || 'os';
-    let filter = localStorage.getItem('datiFilter') || 'all';   // all | real | fav | todo | done
-    let year = localStorage.getItem('datiYear') || '';          // '' = 全部年份
+    let filter = localStorage.getItem('datiFilter') || 'all';   // all | fav | todo | done | unfam | dontknow
+    let mode = localStorage.getItem('datiMode') || 'chapter';   // chapter（按章节）| year（按年份倒序）
+    if (mode !== 'year') mode = 'chapter';
+    if (filter === 'real') filter = 'all';                      // 旧版"统考真题"筛选已并入模式，归一
+    let year = localStorage.getItem('datiYear') || '';          // '' = 全部年份（仅 year 模式生效）
     let favSet = new Set();      // 当前科目已收藏的题 id
     const ansTpl = {};           // 答案图片 HTML 模板，首次展开时注入
     let noteMap = {};            // qid -> {content, images}，dati 题笔记
@@ -239,13 +243,13 @@
             for (const sec of ch.sections)
                 for (const q of sec.questions)
                     if (passFilter(q)) out.push({ q, chName: ch.name, secName: sec.name });
-        if (filter === 'real') out.sort((a, b) => (Number(b.q.year) || 0) - (Number(a.q.year) || 0));
+        if (mode === 'year') out.sort((a, b) => (Number(b.q.year) || 0) - (Number(a.q.year) || 0));
         return out;
     }
 
-    // 真题按年份分组：[{ year, title, items:[{q,chName,secName}] }]，年份倒序。
+    // 真题模式按年份分组：[{ year, title, items:[{q,chName,secName}] }]，年份倒序。
     // 列表模式与右侧导航共用，保证「排序」与「分组」口径一致。
-    function realGroups() {
+    function yearGroups() {
         const map = new Map();
         for (const it of flatItems()) {
             const y = it.q.year || '未知';
@@ -402,16 +406,29 @@
             [...years].sort((a, b) => b - a).map(y => `<option value="${y}">${y}年</option>`).join('');
     }
 
-    // 筛选按钮/年份下拉的 UI 同步（初始化、切筛选、单题模式兜底改筛选时复用）
+    // 筛选按钮/年份下拉的 UI 同步（初始化、切筛选、切模式、单题模式兜底改筛选时复用）
     function syncFilterChips() {
-        document.getElementById('yearSel').style.display = filter === 'real' ? '' : 'none';
-        document.getElementById('fAll').classList.toggle('active', filter === 'all');
-        document.getElementById('fReal').classList.toggle('active', filter === 'real');
+        document.getElementById('yearSel').style.display = mode === 'year' ? '' : 'none';
+        document.getElementById('fModeChapter').classList.toggle('active', mode === 'chapter');
+        document.getElementById('fModeYear').classList.toggle('active', mode === 'year');
         document.getElementById('fFav').classList.toggle('active', filter === 'fav');
         document.getElementById('fTodo').classList.toggle('active', filter === 'todo');
         document.getElementById('fDone').classList.toggle('active', filter === 'done');
         document.getElementById('fUnfam').classList.toggle('active', filter === 'unfam');
         document.getElementById('fDontknow').classList.toggle('active', filter === 'dontknow');
+    }
+
+    // 章节模式 / 真题模式切换（只影响分组与排序，不影响题目集合）
+    function setMode(m) {
+        if (m !== 'chapter' && m !== 'year') return;
+        if (m === mode) return;
+        flushDatiNote();
+        mode = m;
+        localStorage.setItem('datiMode', m);
+        if (m === 'year' && filter === 'fav') filter = 'all';   // 进年份视图时退出收藏等状态筛选
+        syncFilterChips();
+        render();
+        window.scrollTo({ top: 0, behavior: 'auto' });
     }
 
     function setFilter(f) {
@@ -424,7 +441,7 @@
     function setYear(v) { year = v; localStorage.setItem('datiYear', v); render(); }
 
     function passFilter(q) {
-        if (filter === 'real') return q.real && (!year || String(q.year) === String(year));
+        if (mode === 'year' && year && String(q.year) !== String(year)) return false;   // 年份下拉只在真题模式生效
         if (filter === 'fav') return favSet.has(q.id);
         if (filter === 'todo') return !doneSet.has(q.id);
         if (filter === 'done') return doneSet.has(q.id);
@@ -443,8 +460,6 @@
     function updateCounts() {
         const sub = DATI.find(s => s.key === activeSubject);
         if (!sub) return;
-        document.getElementById('cntAll').textContent = visibleQuestionsOf(sub, () => true).length;
-        document.getElementById('cntReal').textContent = visibleQuestionsOf(sub, q => q.real).length;
         document.getElementById('cntFav').textContent = visibleQuestionsOf(sub, q => favSet.has(q.id)).length;
         document.getElementById('cntTodo').textContent = visibleQuestionsOf(sub, q => !doneSet.has(q.id)).length;
         document.getElementById('cntDone').textContent = visibleQuestionsOf(sub, q => doneSet.has(q.id)).length;
@@ -662,7 +677,7 @@
         const root = document.getElementById('datiRoot');
         if (!sub) return;
         updateCounts();
-        if (filter === 'real') { renderRealList(root); afterRender(); return; }   // 真题：按年份分组
+        if (mode === 'year') { renderYearList(root); afterRender(); return; }   // 真题模式：按年份分组
         const chaptersHtml = [];
         for (const ch of sub.chapters) {
             const secHtml = [];
@@ -690,9 +705,9 @@
         afterRender();
     }
 
-    // 真题列表模式：按年份分组（每年一个可折叠组，默认收起，展开才拉题图——与章节组同一套懒加载）
-    function renderRealList(root) {
-        const groups = realGroups();
+    // 真题模式（列表）：按年份分组（每年一个可折叠组，默认收起，展开才拉题图——与章节组同一套懒加载）
+    function renderYearList(root) {
+        const groups = yearGroups();
         if (!groups.length) {
             root.innerHTML = `<div class="dati-none">该筛选条件下暂无题目</div>`;
             return;
@@ -718,9 +733,9 @@
             return `<button class="num-btn${doneSet.has(q.id) ? ' done' : ''}${isCur ? ' current' : ''}" data-jump="${q.id}" onclick="jumpTo('${q.id}')" title="${tip}${doneSet.has(q.id) ? ' · 已练' : ''}${isCur ? ' · 当前' : ''}">${doneSet.has(q.id) ? '✅' : ''}${q.num}</button>`;
         };
         const body = [];
-        if (filter === 'real') {
-            // 真题：按年份分组出题号（与单题/列表的年份倒序口径一致）
-            for (const g of realGroups()) {
+        if (mode === 'year') {
+            // 真题模式：按年份分组出题号（与单题/列表的年份倒序口径一致）
+            for (const g of yearGroups()) {
                 body.push(`<div class="num-group-title">${g.title}</div>
                     <div class="num-grid">${g.items.map(({ q, secName }) => chip(q, secName)).join('')}</div>`);
             }
