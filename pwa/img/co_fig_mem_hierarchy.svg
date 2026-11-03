@@ -1,0 +1,48 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 400" width="720" height="400" font-family="-apple-system,BlinkMacSystemFont,'Segoe UI','Microsoft YaHei',sans-serif">
+  <defs>
+    <marker id="up" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#64748b"/>
+    </marker>
+    <marker id="dn" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#64748b"/>
+    </marker>
+  </defs>
+
+  <rect x="0" y="0" width="720" height="400" fill="#ffffff"/>
+
+  <!-- 左侧：速度 / 位价 -->
+  <line x1="48" y1="344" x2="48" y2="34" stroke="#64748b" stroke-width="1.6" marker-end="url(#up)"/>
+  <text x="34" y="200" font-size="12" fill="#64748b" text-anchor="middle" transform="rotate(-90 34 200)">速度更快 · 位价更高</text>
+
+  <!-- 右侧：容量 -->
+  <line x1="672" y1="30" x2="672" y2="348" stroke="#64748b" stroke-width="1.6" marker-end="url(#dn)"/>
+  <text x="690" y="196" font-size="12" fill="#64748b" text-anchor="middle" transform="rotate(90 690 196)">容量更大 · 位价更低</text>
+
+  <!-- 五层金字塔（底边最宽 560，两侧留给箭头） -->
+  <g stroke="#ffffff" stroke-width="1">
+    <polygon points="280,30 440,30 480,88 240,88" fill="#4f46e5"/>
+    <polygon points="240,94 480,94 520,152 200,152" fill="#6366f1"/>
+    <polygon points="200,158 520,158 560,216 160,216" fill="#818cf8"/>
+    <polygon points="160,222 560,222 600,280 120,280" fill="#a5b4fc"/>
+    <polygon points="120,286 600,286 640,344 80,344" fill="#c7d2fe"/>
+  </g>
+
+  <g text-anchor="middle">
+    <text x="360" y="56" font-size="16" font-weight="700" fill="#ffffff">寄存器</text>
+    <text x="360" y="74" font-size="11" fill="#e0e7ff">CPU 内部 · 与运算速度同量级</text>
+
+    <text x="360" y="122" font-size="16" font-weight="700" fill="#ffffff">Cache（SRAM）</text>
+    <text x="360" y="140" font-size="11" fill="#e0e7ff">由硬件自动管理 · 对程序员透明</text>
+
+    <text x="360" y="186" font-size="16" font-weight="700" fill="#ffffff">主存（DRAM）</text>
+    <text x="360" y="204" font-size="11" fill="#eef2ff">程序运行时的存放地 · 按地址随机访问</text>
+
+    <text x="360" y="250" font-size="16" font-weight="700" fill="#312e81">磁盘（辅存）</text>
+    <text x="360" y="268" font-size="11" fill="#3730a3">非易失 · 由 OS 与文件系统管理</text>
+
+    <text x="360" y="314" font-size="16" font-weight="700" fill="#312e81">磁带 / 光盘</text>
+    <text x="360" y="332" font-size="11" fill="#3730a3">海量备份 · 顺序访问为主</text>
+  </g>
+
+  <text x="360" y="378" font-size="12" fill="#64748b" text-anchor="middle">Cache—主存 的层次由硬件完成；主存—辅存 的层次由操作系统 + 硬件共同完成</text>
+</svg>

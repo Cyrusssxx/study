@@ -1,0 +1,76 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 400" width="720" height="400" font-family="-apple-system,BlinkMacSystemFont,'Segoe UI','Microsoft YaHei',sans-serif">
+  <rect x="0" y="0" width="720" height="400" fill="#ffffff"/>
+
+  <text x="360" y="26" font-size="15" font-weight="700" fill="#312e81" text-anchor="middle">五段流水线时空图（k = 5，n = 5）</text>
+
+  <!-- 表头：时钟周期 -->
+  <g font-size="12" fill="#64748b" text-anchor="middle">
+    <text x="158" y="66">1</text><text x="214" y="66">2</text><text x="270" y="66">3</text>
+    <text x="326" y="66">4</text><text x="382" y="66">5</text><text x="438" y="66">6</text>
+    <text x="494" y="66">7</text><text x="550" y="66">8</text><text x="606" y="66">9</text>
+  </g>
+  <text x="96" y="66" font-size="11" fill="#64748b" text-anchor="middle">指令 \ 周期</text>
+
+  <!-- 行标签 -->
+  <g font-size="12" font-weight="600" fill="#334155" text-anchor="middle">
+    <text x="96" y="102">I1</text>
+    <text x="96" y="140">I2</text>
+    <text x="96" y="178">I3</text>
+    <text x="96" y="216">I4</text>
+    <text x="96" y="254">I5</text>
+  </g>
+
+  <!-- 网格单元：x = 130 + (c-1)*56, y = 78 + (r-1)*38, w=54 h=34 -->
+  <g stroke="#ffffff" stroke-width="1">
+    <!-- I1 -->
+    <rect x="131" y="78" width="54" height="34" rx="3" fill="#dbeafe"/><text x="158" y="100" font-size="12" fill="#1e40af" text-anchor="middle">IF</text>
+    <rect x="187" y="78" width="54" height="34" rx="3" fill="#e0e7ff"/><text x="214" y="100" font-size="12" fill="#3730a3" text-anchor="middle">ID</text>
+    <rect x="243" y="78" width="54" height="34" rx="3" fill="#fef3c7"/><text x="270" y="100" font-size="12" fill="#92400e" text-anchor="middle">EX</text>
+    <rect x="299" y="78" width="54" height="34" rx="3" fill="#dcfce7"/><text x="326" y="100" font-size="12" fill="#166534" text-anchor="middle">MEM</text>
+    <rect x="355" y="78" width="54" height="34" rx="3" fill="#fce7f3"/><text x="382" y="100" font-size="12" fill="#9d174d" text-anchor="middle">WB</text>
+
+    <!-- I2 -->
+    <rect x="187" y="116" width="54" height="34" rx="3" fill="#dbeafe"/><text x="214" y="138" font-size="12" fill="#1e40af" text-anchor="middle">IF</text>
+    <rect x="243" y="116" width="54" height="34" rx="3" fill="#e0e7ff"/><text x="270" y="138" font-size="12" fill="#3730a3" text-anchor="middle">ID</text>
+    <rect x="299" y="116" width="54" height="34" rx="3" fill="#fef3c7"/><text x="326" y="138" font-size="12" fill="#92400e" text-anchor="middle">EX</text>
+    <rect x="355" y="116" width="54" height="34" rx="3" fill="#dcfce7"/><text x="382" y="138" font-size="12" fill="#166534" text-anchor="middle">MEM</text>
+    <rect x="411" y="116" width="54" height="34" rx="3" fill="#fce7f3"/><text x="438" y="138" font-size="12" fill="#9d174d" text-anchor="middle">WB</text>
+
+    <!-- I3 -->
+    <rect x="243" y="154" width="54" height="34" rx="3" fill="#dbeafe"/><text x="270" y="176" font-size="12" fill="#1e40af" text-anchor="middle">IF</text>
+    <rect x="299" y="154" width="54" height="34" rx="3" fill="#e0e7ff"/><text x="326" y="176" font-size="12" fill="#3730a3" text-anchor="middle">ID</text>
+    <rect x="355" y="154" width="54" height="34" rx="3" fill="#fef3c7"/><text x="382" y="176" font-size="12" fill="#92400e" text-anchor="middle">EX</text>
+    <rect x="411" y="154" width="54" height="34" rx="3" fill="#dcfce7"/><text x="438" y="176" font-size="12" fill="#166534" text-anchor="middle">MEM</text>
+    <rect x="467" y="154" width="54" height="34" rx="3" fill="#fce7f3"/><text x="494" y="176" font-size="12" fill="#9d174d" text-anchor="middle">WB</text>
+
+    <!-- I4 -->
+    <rect x="299" y="192" width="54" height="34" rx="3" fill="#dbeafe"/><text x="326" y="214" font-size="12" fill="#1e40af" text-anchor="middle">IF</text>
+    <rect x="355" y="192" width="54" height="34" rx="3" fill="#e0e7ff"/><text x="382" y="214" font-size="12" fill="#3730a3" text-anchor="middle">ID</text>
+    <rect x="411" y="192" width="54" height="34" rx="3" fill="#fef3c7"/><text x="438" y="214" font-size="12" fill="#92400e" text-anchor="middle">EX</text>
+    <rect x="467" y="192" width="54" height="34" rx="3" fill="#dcfce7"/><text x="494" y="214" font-size="12" fill="#166534" text-anchor="middle">MEM</text>
+    <rect x="523" y="192" width="54" height="34" rx="3" fill="#fce7f3"/><text x="550" y="214" font-size="12" fill="#9d174d" text-anchor="middle">WB</text>
+
+    <!-- I5 -->
+    <rect x="355" y="230" width="54" height="34" rx="3" fill="#dbeafe"/><text x="382" y="252" font-size="12" fill="#1e40af" text-anchor="middle">IF</text>
+    <rect x="411" y="230" width="54" height="34" rx="3" fill="#e0e7ff"/><text x="438" y="252" font-size="12" fill="#3730a3" text-anchor="middle">ID</text>
+    <rect x="467" y="230" width="54" height="34" rx="3" fill="#fef3c7"/><text x="494" y="252" font-size="12" fill="#92400e" text-anchor="middle">EX</text>
+    <rect x="523" y="230" width="54" height="34" rx="3" fill="#dcfce7"/><text x="550" y="252" font-size="12" fill="#166534" text-anchor="middle">MEM</text>
+    <rect x="579" y="230" width="54" height="34" rx="3" fill="#fce7f3"/><text x="606" y="252" font-size="12" fill="#9d174d" text-anchor="middle">WB</text>
+  </g>
+
+  <!-- 图例 -->
+  <g font-size="11" fill="#475569">
+    <rect x="40" y="296" width="14" height="14" rx="2" fill="#dbeafe"/><text x="60" y="307">IF 取指</text>
+    <rect x="130" y="296" width="14" height="14" rx="2" fill="#e0e7ff"/><text x="150" y="307">ID 译码/读寄存器</text>
+    <rect x="290" y="296" width="14" height="14" rx="2" fill="#fef3c7"/><text x="310" y="307">EX 执行</text>
+    <rect x="390" y="296" width="14" height="14" rx="2" fill="#dcfce7"/><text x="410" y="307">MEM 访存</text>
+    <rect x="500" y="296" width="14" height="14" rx="2" fill="#fce7f3"/><text x="520" y="307">WB 写回</text>
+  </g>
+
+  <!-- 结论 -->
+  <g font-size="12" fill="#334155">
+    <text x="40" y="340">装满需要 k = 5 个周期；之后每个周期完成 1 条指令，共 n 条 → 总周期 = k + (n − 1) = 5 + 4 = 9</text>
+    <text x="40" y="362">吞吐率 TP = n / (k + n − 1) 个周期；加速比 S = n·k / (k + n − 1) = 25/9 ≈ 2.78</text>
+    <text x="40" y="384" font-size="11" fill="#64748b">注意：这是理想情况（无结构冒险 / 数据冒险 / 控制冒险）。一旦有冒险需插入气泡，时空图会出现空白格。</text>
+  </g>
+</svg>

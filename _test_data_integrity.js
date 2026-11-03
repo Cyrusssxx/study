@@ -131,7 +131,30 @@ console.log('\n--- 五、笔记插图必须落在小节内 ---');
   check('SPOOLing 图在 SPOOLing 小节里', /SPOOLing/.test(hit || ''), true);
 }
 
-console.log('\n--- 六、基础完整性 ---');
+console.log('\n--- 六、笔记引用的图片都存在（防死链） ---');
+{
+  const missing = [];
+  for (const k of BANKS) {
+    const p2 = path.join(ROOT, `pwa/data/notes/${k}_notes.json`);
+    const d = JSON.parse(fs.readFileSync(p2, 'utf8'));
+    for (const ch of d.chapters || []) for (const sec of ch.sections || []) {
+      const blobs = [sec.html || '', ...(sec.subsections || []).map(s => s.html || '')];
+      for (const h of blobs) {
+        for (const m of h.matchAll(/src="(img\/[^"]+)"/g)) {
+          if (!fs.existsSync(path.join(ROOT, 'pwa', m[1]))) missing.push(`${k}:${m[1]}`);
+        }
+      }
+    }
+  }
+  check('笔记图片无死链', missing, []);
+  const coFigs = ['co_fig_von_neumann.svg', 'co_fig_mem_hierarchy.svg', 'co_fig_cache_map.svg', 'co_fig_pipeline.svg'];
+  check('组成原理四张自绘图已就位', coFigs.filter(f => !fs.existsSync(path.join(ROOT, 'pwa/img', f))), []);
+  check('四张图都被笔记引用', coFigs.filter(f =>
+    !['os', 'co', 'ds', 'cn'].some(k => fs.readFileSync(path.join(ROOT, `pwa/data/notes/${k}_notes.json`), 'utf8').includes(f))
+  ), []);
+}
+
+console.log('\n--- 七、基础完整性 ---');
 for (const k of BANKS) {
   const qs = bank[k].questions || [];
   const noAnswer = qs.filter(q => !q.answer).map(q => q.id);

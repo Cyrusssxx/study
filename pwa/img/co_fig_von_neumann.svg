@@ -1,0 +1,67 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 440" width="720" height="440" font-family="-apple-system,BlinkMacSystemFont,'Segoe UI','Microsoft YaHei',sans-serif">
+  <defs>
+    <marker id="arData" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#4f46e5"/>
+    </marker>
+    <marker id="arCtrl" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#b45309"/>
+    </marker>
+  </defs>
+
+  <rect x="0" y="0" width="720" height="440" fill="#ffffff"/>
+
+  <!-- 部件 -->
+  <g stroke-width="2">
+    <rect x="40" y="70" width="140" height="64" rx="10" fill="#eef2ff" stroke="#4f46e5"/>
+    <text x="110" y="108" font-size="17" font-weight="700" fill="#312e81" text-anchor="middle">输入设备</text>
+
+    <rect x="290" y="50" width="140" height="84" rx="10" fill="#e0e7ff" stroke="#4f46e5"/>
+    <text x="360" y="88" font-size="17" font-weight="700" fill="#312e81" text-anchor="middle">存储器</text>
+    <text x="360" y="112" font-size="12" fill="#4f46e5" text-anchor="middle">主存（存放程序与数据）</text>
+
+    <rect x="540" y="70" width="140" height="64" rx="10" fill="#eef2ff" stroke="#4f46e5"/>
+    <text x="610" y="108" font-size="17" font-weight="700" fill="#312e81" text-anchor="middle">输出设备</text>
+
+    <rect x="270" y="230" width="180" height="62" rx="10" fill="#eef2ff" stroke="#4f46e5"/>
+    <text x="360" y="268" font-size="17" font-weight="700" fill="#312e81" text-anchor="middle">运算器</text>
+
+    <rect x="270" y="330" width="180" height="62" rx="10" fill="#fff7ed" stroke="#b45309"/>
+    <text x="360" y="368" font-size="17" font-weight="700" fill="#7c2d12" text-anchor="middle">控制器</text>
+  </g>
+
+  <!-- CPU 虚线框 -->
+  <rect x="240" y="208" width="240" height="204" rx="12" fill="none" stroke="#94a3b8" stroke-width="1.5" stroke-dasharray="6 5"/>
+  <text x="252" y="228" font-size="12" fill="#64748b">CPU</text>
+
+  <!-- 数据流（实线） -->
+  <g stroke="#4f46e5" stroke-width="2" fill="none">
+    <line x1="182" y1="102" x2="286" y2="102" marker-end="url(#arData)"/>
+    <line x1="434" y1="102" x2="536" y2="102" marker-end="url(#arData)"/>
+    <line x1="360" y1="138" x2="360" y2="226" marker-start="url(#arData)" marker-end="url(#arData)"/>
+  </g>
+  <text x="234" y="94" font-size="12" fill="#4f46e5" text-anchor="middle">数据</text>
+  <text x="486" y="94" font-size="12" fill="#4f46e5" text-anchor="middle">数据</text>
+  <text x="372" y="186" font-size="12" fill="#4f46e5">数据 / 地址</text>
+
+  <!-- 控制流（虚线） -->
+  <g stroke="#b45309" stroke-width="1.8" fill="none" stroke-dasharray="6 4">
+    <!-- 控制器 → 运算器 -->
+    <line x1="360" y1="328" x2="360" y2="296" marker-end="url(#arCtrl)"/>
+    <!-- 控制器 → 存储器（沿左侧上行） -->
+    <polyline points="268,348 220,348 220,60 286,60" marker-end="url(#arCtrl)"/>
+    <!-- 控制器 → 输入设备 -->
+    <polyline points="268,376 110,376 110,138" marker-end="url(#arCtrl)"/>
+    <!-- 控制器 → 输出设备 -->
+    <polyline points="452,376 610,376 610,138" marker-end="url(#arCtrl)"/>
+  </g>
+  <text x="360" y="316" font-size="12" fill="#b45309" text-anchor="middle">控制信号</text>
+
+  <!-- 图例 -->
+  <g transform="translate(40,410)">
+    <line x1="0" y1="0" x2="34" y2="0" stroke="#4f46e5" stroke-width="2" marker-end="url(#arData)"/>
+    <text x="42" y="4" font-size="12" fill="#475569">数据流</text>
+    <line x1="120" y1="0" x2="154" y2="0" stroke="#b45309" stroke-width="1.8" stroke-dasharray="6 4" marker-end="url(#arCtrl)"/>
+    <text x="162" y="4" font-size="12" fill="#475569">控制流</text>
+    <text x="260" y="4" font-size="12" fill="#64748b">冯·诺依曼机：以「存储程序」为核心，指令与数据同存于主存，CPU 按地址顺序取指执行</text>
+  </g>
+</svg>
