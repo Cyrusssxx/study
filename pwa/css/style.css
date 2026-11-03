@@ -8266,3 +8266,10 @@ body.fc-toc-open .fc-toc-fab { display: none; }
 .notes-body .adv-card ol, .notes-body .adv-card ul { margin: 6px 0 10px; padding-left: 20px; }
 .notes-body .adv-card li { margin: 6px 0; line-height: 1.82; }
 .notes-body .adv-card table { margin: 6px 0 12px; }
+/* 冒险表里的关键格子（仅 5.6.4 用）：淡绿底标出"冲突的写点"与"错开后读/取的位置" */
+.notes-body table td.tcell-hl {
+    background: rgba(16, 185, 129, .15);
+    color: inherit;
+    font-weight: 700;
+}
+.dark .notes-body table td.tcell-hl { background: rgba(52, 211, 153, .2); }
