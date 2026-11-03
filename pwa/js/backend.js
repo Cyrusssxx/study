@@ -823,7 +823,7 @@ async function api(url, opts = {}) {
         if (seg[1] === 'mark') {
             const kind = seg[2];
             const qid = seg[3];
-            if (kind !== 'unfamiliar' && kind !== 'dontknow' && kind !== 'redo' && kind !== 'guessed') {
+            if (kind !== 'unfamiliar' && kind !== 'dontknow' && kind !== 'redo' && kind !== 'guessed' && kind !== 'ztwrong') {
                 return jsonResp({ error: '无效的标记类型' }, 400);
             }
             const subject = qid.split('_')[0];
@@ -840,6 +840,22 @@ async function api(url, opts = {}) {
                 }
                 await dbPut('redo', { question_id: qid, subject, kind: 'guessed', added_at: now(), due_at: 0 });
                 return jsonResp({ question_id: qid, is_guessed: true });
+            }
+
+            // 「加入错题池」：真题套卷里手动把某题放进「模拟考错题池」（due_at=0，立即可抽）。
+            // 只管理自己这一类记录：若该题已因「7 天后重练 / 猜对了」在池中，不删除别人的记录，
+            // 只回报当前来源，避免误删时间排期。
+            if (kind === 'ztwrong') {
+                const existing = await dbGet('redo', qid);
+                if (existing) {
+                    if (existing.kind && existing.kind !== 'ztwrong') {
+                        return jsonResp({ question_id: qid, in_pool: true, kind: existing.kind, changed: false });
+                    }
+                    await dbDelete('redo', qid);
+                    return jsonResp({ question_id: qid, in_pool: false, changed: true });
+                }
+                await dbPut('redo', { question_id: qid, subject, kind: 'ztwrong', added_at: now(), due_at: 0 });
+                return jsonResp({ question_id: qid, in_pool: true, kind: 'ztwrong', changed: true });
             }
 
             // 「7 天后重练」：把题排进 7 天后的抽取池（试卷回顾里对做对的题手动加）。
@@ -1644,6 +1660,7 @@ async function examApi(action, body, arg) {
                 if (r.mastered) continue;                // 已做对过：留在池子里但不再抽
                 if (r.kind === 'guessed') continue;      // 猜对了标记：只影响垫底层，不进到期层
                 if (r.kind === 'examwrong') continue;    // 模拟考错题池成员：不参与收藏池排期
+                if (r.kind === 'ztwrong') continue;      // 套卷手动入池的题：同上，不进到期层
                 if ((r.due_at || 0) > nowMs) continue;   // 还没到 7 天
                 dueRank.set(qid, idx++);
             }
@@ -1842,12 +1859,13 @@ async function examApi(action, body, arg) {
         }
         // 「模拟考错题」池 = 模拟考仍错的题 ∪ 「7 天后重练 / 猜对了」标记题。
         // 标记题做对一次置 mastered：**留在池子里**（可回看）但不再抽。
-        let redoPending = 0, redoDue = 0, guessedCnt = 0, markedMastered = 0, examMarked = 0;
+        let redoPending = 0, redoDue = 0, guessedCnt = 0, markedMastered = 0, examMarked = 0, ztMarked = 0;
         const markedIds = new Set(), masteredIds = new Set();
         try {
             for (const r of await dbAll('redo')) {
                 if (r.mastered) { markedMastered++; masteredIds.add(r.question_id); continue; }
                 if (r.kind === 'examwrong') { examMarked++; markedIds.add(r.question_id); continue; }
+                if (r.kind === 'ztwrong') { ztMarked++; markedIds.add(r.question_id); continue; }
                 if (r.kind === 'guessed') { guessedCnt++; markedIds.add(r.question_id); continue; }
                 markedIds.add(r.question_id);
                 if ((r.due_at || 0) <= nowMs) redoDue++; else redoPending++;
@@ -1874,6 +1892,7 @@ async function examApi(action, body, arg) {
             marked_pending: markedIds.size,           // 标记题：还没做对的（会抽）
             marked_mastered: markedMastered,          // 标记题：已做对的（留池不抽）
             exam_marked: examMarked,                  // 其中来自「模拟考错题」持久成员的数量
+            zt_marked: ztMarked,                      // 其中来自真题套卷手动入池的数量
             exam_pool_total: examPoolSet.size,        // 「模拟考错题」模式实际可抽数
             redo_pending: redoPending,
             redo_due: redoDue,

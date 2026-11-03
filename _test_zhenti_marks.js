@@ -139,6 +139,35 @@ const OS_BANK = {
   await sleep(150);
   check('再点一次收起面板', !!card('os_0001').querySelector('.kp-panel'), false);
 
+  console.log('\n--- 六、加入错题池（手动入池，与「7 天后重练」同一张 redo 表） ---');
+  const poolBtn = () => card('os_0001').querySelector('.pool-btn');
+  check('映射题有「加入错题池」按钮', !!poolBtn(), true);
+  check('无映射题没有该按钮', !!card('os_zt2020_2').querySelector('.pool-btn'), false);
+  check('初始文案', /加入错题池/.test(poolBtn().textContent), true);
+
+  poolBtn().click();
+  await sleep(300);
+  const rec = (await w.dbAll('redo')).find(r => r.question_id === 'os_0001');
+  check('redo 表写入 kind=ztwrong', rec && rec.kind, 'ztwrong');
+  check('due_at 为 0（立即可抽）', rec && rec.due_at, 0);
+  check('按钮变为「已在错题池」', /已在错题池/.test(poolBtn().textContent), true);
+
+  const poolNow = await w.examWrongPoolQids(false);
+  check('该题进入模拟考错题池', poolNow.pending.includes('os_0001'), true);
+
+  // 再做对一次 → 留池不抽（mastered）
+  await w.applyAnswer('os_0001', 'os', 'A', true, null, false);
+  const poolAfter = await w.examWrongPoolQids(false);
+  check('做对后退出可抽池', poolAfter.pending.includes('os_0001'), false);
+  check('做对后仍留在池里（mastered）', poolAfter.mastered.includes('os_0001'), true);
+
+  // 清掉 mastered 后点按钮移出
+  await w.dbPut('redo', Object.assign({}, rec, { mastered: 0 }));
+  await sleep(100);
+  poolBtn().click();
+  await sleep(300);
+  check('再点一次移出 redo 表', (await w.dbAll('redo')).some(r => r.question_id === 'os_0001'), false);
+
   console.log(`\n结果: ${pass} / ${pass + fail}` + (fail ? `，${fail} 项失败` : '，全部通过'));
   dom.window.close();
   process.exit(fail ? 1 : 0);

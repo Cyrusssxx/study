@@ -25,6 +25,7 @@
         dontknowSet: new Set(),     // 不会标记
         kpOpen: new Set(JSON.parse(localStorage.getItem('zhentiKpOpen') || '[]')),  // 展开了考点分析的题
         kpCache: {},                // iid -> 考点分析 HTML（按需拉取后缓存，避免反复请求）
+        poolMap: {},                // iid -> { kind, mastered } 错题池成员（redo 表）
         noteMap: {},
         noteImages: {},          // iid -> 已有图片数组（本页不编辑图片，保存时原样透传）
         dakaByReal: new Map(),   // "YYYY|题号" -> 打卡表卡片（DS 真题大题替换源）
@@ -55,9 +56,10 @@
         return state.papers[y];
     }
     async function loadStores() {
-        const [prog, favs, notes, unfams, dks] = await Promise.all([
-            dbAll('progress'), dbAll('favorites'), dbAll('notes'), dbAll('unfamiliar'), dbAll('dontknow')
+        const [prog, favs, notes, unfams, dks, redos] = await Promise.all([
+            dbAll('progress'), dbAll('favorites'), dbAll('notes'), dbAll('unfamiliar'), dbAll('dontknow'), dbAll('redo')
         ]);
+        for (const r of redos) state.poolMap[r.question_id] = { kind: r.kind || 'redo', mastered: !!r.mastered };
         for (const u of unfams) state.unfamSet.add(u.question_id);
         for (const d of dks) state.dontknowSet.add(d.question_id);
         for (const p of prog) state.progress[p.question_id] = p;
@@ -213,6 +215,18 @@
         return `<button class="btn-explanation${open ? ' active' : ''}" onclick="toggleKpZt('${f.iid}')"
             title="考点定位 + 该节笔记精华 + 个人数据 + 关联真题">考点分析 ${open ? '▴' : '▾'}</button>`;
     }
+    // 「加入错题池」：写 redo(kind='ztwrong')，与「7 天后重练」同一条路子，只是来源不同
+    function poolBtnHtml(f) {
+        if (!f.mapped) return '';
+        const rec = state.poolMap[f.iid];
+        const inPool = !!rec && !rec.mastered;
+        const label = inPool ? (rec.kind === 'ztwrong' ? '✓ 已在错题池' : '✓ 已在池中') : '加入错题池';
+        const tip = inPool
+            ? (rec.kind === 'ztwrong' ? '点一下从「模拟考错题池」移出' : `该题已通过「${rec.kind === 'redo' ? '7 天后重练' : '猜对了'}」在池中`)
+            : '加入「模拟考错题池」，之后可在错题本里集中刷';
+        return `<button class="btn-explanation pool-btn${inPool ? ' active' : ''}" onclick="togglePoolZt('${f.iid}')" title="${tip}">${label}</button>`;
+    }
+
     function kpPanelHtml(f, isFav) {
         if (!isFav || !f.mapped || state.examMode || !state.kpOpen.has(f.iid)) return '';
         return `<div class="kp-panel">${state.kpCache[f.iid] || '<div class="kp-loading">正在加载考点分析…</div>'}</div>`;
@@ -274,6 +288,7 @@
                 <button class="btn-explanation${ansOpen ? ' active' : ''}" onclick="toggleAns('${f.iid}')">答案与解析 ${ansOpen ? '▴' : '▾'}</button>
                 <button class="btn-explanation${noteOpen ? ' active' : ''}${hasNote ? ' has-note' : ''}" onclick="toggleNotePanel('${f.iid}')">笔记${hasNote ? ' ●' : ''} ${noteOpen ? '▴' : '▾'}</button>
                 ${kpBtnHtml(f, isFav)}
+                ${poolBtnHtml(f)}
             </div>
             ${ansOpen ? `<div class="explanation-panel">
                 <div class="explanation-title">答案解析</div>
@@ -310,6 +325,7 @@
                 <button class="btn-explanation${ansOpen ? ' active' : ''}" onclick="toggleAns('${f.iid}')">参考答案与解析 ${ansOpen ? '▴' : '▾'}</button>
                 <button class="btn-explanation${noteOpen ? ' active' : ''}${hasNote ? ' has-note' : ''}" onclick="toggleNotePanel('${f.iid}')">笔记${hasNote ? ' ●' : ''} ${noteOpen ? '▴' : '▾'}</button>
                 ${kpBtnHtml(f, isFav)}
+                ${poolBtnHtml(f)}
             </div>
             ${ansOpen ? `<div class="explanation-panel">
                 <div class="explanation-title">参考答案与解析</div>
@@ -359,6 +375,7 @@
                 <button class="btn-explanation${ansOpen ? ' active' : ''}" onclick="toggleAns('${f.iid}')">参考答案与解析 ${ansOpen ? '▴' : '▾'}</button>
                 <button class="btn-explanation${noteOpen ? ' active' : ''}${hasNote ? ' has-note' : ''}" onclick="toggleNotePanel('${f.iid}')">笔记${hasNote ? ' ●' : ''} ${noteOpen ? '▴' : '▾'}</button>
                 ${kpBtnHtml(f, isFav)}
+                ${poolBtnHtml(f)}
             </div>
             ${ansOpen ? `<div class="explanation-panel">
                 <div class="explanation-title">参考答案与解析</div>
@@ -512,6 +529,34 @@
             if (on) set.add(iid); else set.delete(iid);
             refreshCard(iid);
         } catch (e) { /* 静默：标记失败不影响看题 */ }
+    }
+
+    async function togglePoolZt(iid) {
+        try {
+            const r = await api(`/api/mark/ztwrong/${iid}`, { method: 'POST' });
+            const j = await r.json();
+            if (j.error) return;
+            if (j.changed === false) {
+                // 已因其它来源在池中：不删别人的记录，只提示
+                showZtTip(`该题已在池中（来源：${j.kind === 'redo' ? '7 天后重练' : '猜对了'}）`);
+                return;
+            }
+            if (j.in_pool) state.poolMap[iid] = { kind: 'ztwrong', mastered: false };
+            else delete state.poolMap[iid];
+            refreshCard(iid);
+            showZtTip(j.in_pool ? '已加入「模拟考错题池」，可在错题本里集中刷' : '已从错题池移出');
+        } catch (e) { showZtTip('操作失败，请重试'); }
+    }
+
+    // 轻提示：复用页面已有的 toast（没有就静默）
+    function showZtTip(text) {
+        if (typeof window.showTip === 'function') { window.showTip(text); return; }
+        const el = document.getElementById('ztTip');
+        if (!el) return;
+        el.textContent = text;
+        el.classList.add('show');
+        clearTimeout(showZtTip._t);
+        showZtTip._t = setTimeout(() => el.classList.remove('show'), 1800);
     }
 
     async function toggleKpZt(iid) {
@@ -1058,7 +1103,7 @@
 
     Object.assign(window, {
         switchYear, pickOption, checkPending, toggleFav, toggleAns, toggleNotePanel,
-        toggleMarkZt, toggleKpZt,
+        toggleMarkZt, toggleKpZt, togglePoolZt,
         onNoteInput, toggleExamMode, toggleShowAll, toggleFavOnly, resetYear,
         gotoQ, toggleFq, toggleZtNav, expandZtNav, toggleAnsPop,
         pasteZtNoteImage, saveZtNoteNow, renderZtNoteImages, delZtNoteImage,
