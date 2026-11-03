@@ -154,8 +154,19 @@ function yearOrdered(key) {
   check('笔记与答案都在题卡内', iNote > -1 && iAns > -1, true);
   check('笔记面板在答案面板之前', iNote < iAns, true);
 
-  console.log('\n--- 场景 6：左右悬浮箭头 ---');
-  check('底栏整条不再渲染', doc.querySelectorAll('.dati-single-bar').length, 0);
+  console.log('\n--- 场景 6：B站讲解按钮（外链搜索，不存映射） ---');
+  const bili = root().querySelector('.dati-bili-btn');
+  check('题卡有 B站讲解 按钮', !!bili, true);
+  check('是新窗口外链', [bili.tagName, bili.getAttribute('target'), bili.getAttribute('rel')], ['A', '_blank', 'noopener noreferrer']);
+  const href = bili.getAttribute('href');
+  check('跳到 B 站搜索', href.startsWith('https://search.bilibili.com/all?keyword='), true);
+  const kw = decodeURIComponent(href.split('keyword=')[1] || '');
+  const curQ = w.eval('flatItems()[0].q');
+  check('关键词含年份', kw.includes(String(curQ.year)), true);
+  check('关键词含科目名', kw.includes(subData(subKey).name), true);
+  check('数据里不含 bvid（不搬视频映射）', JSON.stringify(DATI_DATA).includes('bvid'), false);
+
+  console.log('\n--- 场景 7：左右悬浮箭头 ---');  check('底栏整条不再渲染', doc.querySelectorAll('.dati-single-bar').length, 0);
   check('左右箭头各一枚', root().querySelectorAll('.dati-arrow').length, 2);
   check('箭头 fixed 定位 + 垂直居中', /\.dati-arrow\s*\{[^}]*position:\s*fixed[^}]*top:\s*50%/.test(styleText), true);
   w.setMode('year');
