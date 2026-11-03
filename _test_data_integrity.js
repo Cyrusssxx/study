@@ -97,7 +97,41 @@ check('圈码后没有多余的右括号', strayCirc, []);
 check('co_0590 解析的序号已修正', /中断隐指令完成的工作有：①关中断/.test(qOf('co_0590').explanation), true);
 check('os_0108 不再以「A」开头', /^<p>C语言编写的程序/.test(qOf('os_0108').explanation), true);
 
-console.log('\n--- 五、基础完整性 ---');
+console.log('\n--- 五、笔记插图必须落在小节内 ---');
+// 渲染顺序是「小节在前、节级 html 在后」，图放节级会被推到整节末尾，
+// 与正文隔着好几屏（2026-11-03 修过：OS 21 张图原本全在节级）。
+{
+  const notesDir = path.join(ROOT, 'pwa/data/notes');
+  const figCount = {};
+  for (const k of BANKS) {
+    const p = path.join(notesDir, `${k}_notes.json`);
+    if (!fs.existsSync(p)) { check(`${k} 笔记文件存在`, false, true); continue; }
+    const d = JSON.parse(fs.readFileSync(p, 'utf8'));
+    const bad = [];
+    let inSub = 0;
+    for (const ch of d.chapters || []) {
+      for (const sec of ch.sections || []) {
+        if (/<img/i.test(sec.html || '')) bad.push(sec.section);
+        for (const sub of sec.subsections || []) inSub += ((sub.html || '').match(/<img/gi) || []).length;
+      }
+    }
+    figCount[k] = inSub;
+    check(`${k} 节级 html 不含插图`, bad, []);
+  }
+  check('OS 21 张图全部在小节内', figCount.os, 21);
+  // SPOOLing 那张图必须落在「九、SPOOLing技术」小节
+  const osd = JSON.parse(fs.readFileSync(path.join(notesDir, 'os_notes.json'), 'utf8'));
+  let hit = null;
+  for (const ch of osd.chapters || []) for (const sec of ch.sections || [])
+    for (const sub of sec.subsections || []) {
+      const h = sub.html || '';
+      if (!/<img/i.test(h) || !/spool/i.test(h)) continue;   // 只认"图在这块里"的小节
+      hit = h.slice(0, 40).replace(/<[^>]+>/g, '');
+    }
+  check('SPOOLing 图在 SPOOLing 小节里', /SPOOLing/.test(hit || ''), true);
+}
+
+console.log('\n--- 六、基础完整性 ---');
 for (const k of BANKS) {
   const qs = bank[k].questions || [];
   const noAnswer = qs.filter(q => !q.answer).map(q => q.id);
