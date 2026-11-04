@@ -56,6 +56,16 @@ const html = RAW.replace(/<script src="([^"]+)"[^>]*><\/script>/g, (m, src) =>
   check('logo 仍指向首页', brand && brand.getAttribute('href'), 'index.html');
   check('顶栏已无「首页」链接',
     [...doc.querySelectorAll('.nav-links .nav-link')].some(a => /首页/.test(a.textContent)), false);
+  check('触发项文案为「知识点」', /知识点 <span class="nav-dd-arrow">/.test(RAW), true);
+
+  console.log('\n--- 一·半、裁剪：展开态不能把浮层裁掉 ---');
+  const CSS = fs.readFileSync(path.join(ROOT, 'pwa/css/style.css'), 'utf8');
+  // 折叠动画曾在 .nav-container 上长期挂着 overflow:hidden，导致下拉面板一点都看不见
+  check('展开态 .nav-container 无 overflow:hidden',
+    /\.navbar \.nav-container \{[^}]*overflow:\s*hidden/.test(CSS), false);
+  check('折叠态才裁剪（is-collapsed 内 overflow:hidden）',
+    /\.navbar\.is-collapsed \.nav-container \{[^}]*overflow:\s*hidden/.test(CSS), true);
+  check('下拉浮层 z-index 高于顶栏基线', /\.nav-dd-menu \{[^}]*z-index:\s*1[0-9]{2}/.test(CSS), true);
 
   console.log('\n--- 二、四科入口 ---');
   const links = [...doc.querySelectorAll('.nav-dd-menu a')];

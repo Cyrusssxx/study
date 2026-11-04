@@ -6657,9 +6657,10 @@ a.chapter-badge-link:hover {
 
 /* 收起时顶栏 nav-container 折叠；按钮位置保持原处 */
 /* 用 height 过渡：max-height 在 .nav-container 上无效（它 height: 60px 是定值） */
+/* 注意：展开态**不能**加 overflow:hidden —— 会把 .nav-dd 的下拉浮层一起裁掉，
+   表现为「点『知识点』菜单弹不出来/被吞」。裁剪只在折叠态需要（收起动画期间防溢出）。 */
 .navbar .nav-container {
     transition: height 0.28s ease, opacity 0.2s ease;
-    overflow: hidden;
 }
 .navbar.is-collapsed .nav-container {
     height: 0 !important;
@@ -6667,6 +6668,7 @@ a.chapter-badge-link:hover {
     pointer-events: none;
     padding-top: 0;
     padding-bottom: 0;
+    overflow: hidden;
 }
 .navbar.is-collapsed {
     border-bottom-color: transparent;

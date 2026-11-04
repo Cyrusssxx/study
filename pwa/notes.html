@@ -16,7 +16,7 @@
         <div class="nav-container">
             <a href="index.html" class="nav-brand">408刷题</a>
             <details class="nav-dd">
-                <summary class="nav-link nav-dd-sum" title="下拉选择科目，跳转该科知识点笔记">知识点笔记 <span class="nav-dd-arrow">▾</span></summary>
+                <summary class="nav-link nav-dd-sum" title="知识点笔记：下拉选择科目，直达该科考点">知识点 <span class="nav-dd-arrow">▾</span></summary>
                 <div class="nav-dd-menu">
                     <a href="notes.html?subject=ds">数据结构</a>
                     <a href="notes.html?subject=co">计算机组成原理</a>
@@ -896,14 +896,23 @@
         // 且不含 SVG 排除（搜索本来就该能搜到示意图里的文字）。
         function indexSection(section) {
             const sec = section.dataset.sec;
-            const t = section.querySelector('.notes-sec-title');
-            if (t) {
+            // 节标题 + 小节标题都进索引。原来只索引 .notes-sec-title，
+            // 于是搜「4.2.6 文件的物理结构」这类小节名搜不到（小节标题挂了 h4）。
+            section.querySelectorAll('.notes-sec-title, .notes-sub-title').forEach(t => {
                 const txt = t.textContent.trim();
-                if (txt) {
-                    noteIndex.push({ text: txt, path: '节', sec, w: 1, r: 0, order: noteOrder++ });
-                    addToInverted(txt, noteIndex[noteIndex.length - 1]);
-                }
-            }
+                if (!txt) return;
+                const isSub = t.classList.contains('notes-sub-title');
+                const subEl = isSub ? t.closest('.notes-sub') : null;
+                const targetSec = (subEl && subEl.dataset.sec) || sec;
+                noteIndex.push({ text: txt, path: isSub ? sec : '节', sec: targetSec, w: 1, r: 0, order: noteOrder++ });   // 小节标题的标签显示父节名，比只写「小节」有用
+                addToInverted(txt, noteIndex[noteIndex.length - 1]);
+            });
+            // 命中的行/表格若位于某个小节内，路径与跳转目标都细化到该小节
+            // （否则搜「隐式链接」只显示「4.2 目录与文件」，看不出是 4.2.6 讲的内容）
+            const subSecOf = el => {
+                const sub = el.closest('.notes-sub');
+                return (sub && sub.dataset.sec) || '';
+            };
             let line = 0;
             section.querySelectorAll('.notes-body li, .notes-body p').forEach(el => {
                 // 行号标注就地完成（原在 initAnnoAndHl 里整页遍历）
@@ -911,9 +920,19 @@
                 el.dataset.line = line++;
                 const txt = (el.textContent || '').replace(/\s+/g, ' ').trim();
                 if (txt) {
-                    noteIndex.push({ text: txt, path: sec, sec, w: 2, r: 0, order: noteOrder++ });
+                    const at = subSecOf(el) || sec;
+                    noteIndex.push({ text: txt, path: at, sec: at, w: 2, r: 0, order: noteOrder++ });
                     addToInverted(txt, noteIndex[noteOrder - 1]);
                 }
+            });
+            // 表格单元格：只进搜索索引，**不加 anno-line**（避免破坏行号与行级批注体系）。
+            // 原来完全不索引表格，而 OS 的「隐式链接 / 显式链接(FAT)」这类对比表恰恰全在表里。
+            section.querySelectorAll('.notes-body th, .notes-body td').forEach(el => {
+                const txt = (el.textContent || '').replace(/\s+/g, ' ').trim();
+                if (!txt || txt.length < 2) return;
+                const at2 = subSecOf(el) || sec;
+                noteIndex.push({ text: txt, path: at2 + ' · 表格', sec: at2, w: 3, r: 0, order: noteOrder++ });
+                addToInverted(txt, noteIndex[noteIndex.length - 1]);
             });
         }
 
@@ -944,21 +963,17 @@
                     }
                 }
             });
-            // 倒排索引命中 + 回退子串匹配（兼顾模糊）
-            const candidates = invertedIndex.get(q);
-            if (candidates) {
-                candidates.forEach(it => {
-                    const key = it.order;
-                    if (!seen.has(key)) { hits.push(it); seen.add(key); }
-                });
-            } else {
-                noteIndex.forEach(it => {
-                    if (it.text.toLowerCase().includes(q)) {
-                        const key = it.order;
-                        if (!seen.has(key)) { hits.push(it); seen.add(key); }
-                    }
-                });
-            }
+            // 倒排精确命中 + 子串回退，两者**必须合并**。
+            // 原来是 if/else：一旦某个词项精确命中，就丢掉所有"包含同一子串但词项更长"的行，
+            // 表现为搜「隐式链接」只出来两三行，4.2.6 里讲过它的段落/表格行全不见。
+            (invertedIndex.get(q) || []).forEach(it => {
+                if (!seen.has(it.order)) { hits.push(it); seen.add(it.order); }
+            });
+            noteIndex.forEach(it => {
+                if (it.text.toLowerCase().includes(q) && !seen.has(it.order)) {
+                    hits.push(it); seen.add(it.order);
+                }
+            });
             // 排序：批注在前 → 章/节/正文 → 原文顺序，取前 40 条
             hits.sort((a, b) => a.r - b.r || a.w - b.w || a.order - b.order);
             const top = hits.slice(0, 40);

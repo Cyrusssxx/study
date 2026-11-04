@@ -113,6 +113,9 @@ async function run() {
   const navLinks = [...rawHtml.matchAll(/<a href="([\w.]+)\.html" class="nav-link[^"]*">([^<]+)<\/a>/g)].map(m => m[1]);
   // 96da760 起：原「首页」链接改为四科知识点笔记下拉（logo 本身可跳首页），13 项→12 项
   check('顶栏链接 12 项且含真题套卷（active）', navLinks.length === 12 && /zhenti\.html" class="nav-link active"/.test(rawHtml), navLinks.join(','));
+  // 首点失效：首次进页时 common.js 的滚动恢复还在追滚（约 1s），会把刚跳到的位置拽回旧存档
+  check('题号跳转前先取消滚动恢复（修「第一次点没反应」）',
+    /function gotoQ\(iid\) \{[\s\S]{0,700}?__psCancelRestore/.test(js), true);
 
   // 数据完整性
   const idx = JSON.parse(fs.readFileSync(path.join(ROOT, 'pwa/data/zt/index.json'), 'utf8'));

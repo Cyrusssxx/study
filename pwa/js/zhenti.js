@@ -1153,6 +1153,10 @@
         if (iid === lastGoto.iid && now - lastGoto.t < 300) return;
         lastGoto = { iid: iid, t: now };
         try { flushNote(); } catch (e) { console.error(e); }   // 笔记落库失败不拖垮跳转
+        // 首次进页时 common.js 的滚动位置恢复还在追滚（约 1s 内多次把页面拽回旧存档），
+        // 会把刚跳到的题卡位置覆盖掉 —— 表现就是「第一次点右边题号没反应，第二次才成功」。
+        // 跳转前先取消恢复，避免与追滚补偿抢滚动位置。
+        if (typeof window.__psCancelRestore === 'function') window.__psCancelRestore();
         el.scrollIntoView({ behavior: 'smooth', block: 'start' });
     }
 
