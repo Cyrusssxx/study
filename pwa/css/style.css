@@ -8310,3 +8310,15 @@ body.fc-toc-open .fc-toc-fab { display: none; }
 @media (max-width: 768px) {
     .nav-dd { margin-left: 0; }
 }
+
+/* ==================== 笔记配图块（data-fig） ====================
+   配图不再统一堆到小节末尾，而是插在它所讲的知识点段落之后；
+   落点若在 <li> 里（当前无此情况，留作兜底），需抵消列表的 24px 左内边距，
+   让图片与正文段落左缘对齐、宽度不被压窄。 */
+.notes-body li > p[data-fig] {
+    margin-left: -24px;
+}
+/* 图题与图片之间不留多余空隙 */
+.notes-body p[data-fig] + p[data-fig] {
+    margin-top: 0;
+}

@@ -915,6 +915,9 @@
             };
             let line = 0;
             section.querySelectorAll('.notes-body li, .notes-body p').forEach(el => {
+                // 图块（data-fig）不参与行号：图题与图不是可批注的正文行，
+                // 且它们的父级 <li> 已占了行号，再算一次会让整节行号后移、已存批注全部错位。
+                if (el.hasAttribute('data-fig') || el.closest('[data-fig]')) return;
                 // 行号标注就地完成（原在 initAnnoAndHl 里整页遍历）
                 el.classList.add('anno-line');
                 el.dataset.line = line++;
