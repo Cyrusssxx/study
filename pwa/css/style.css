@@ -2091,8 +2091,22 @@ mark {
     border-color: var(--primary);
 }
 /* 富文本元素基线 */
-.note-input h1 { font-size: 1.3rem; font-weight: 700; margin: 0.4em 0 0.2em; }
-.note-input h2 { font-size: 1.1rem; font-weight: 700; margin: 0.4em 0 0.2em; }
+/* 笔记内标题：只用字号 + 细线分层，不加颜色（用户明确不要彩色） */
+.note-input h1 {
+    font-size: 1.2rem; font-weight: 700; line-height: 1.45;
+    margin: 0.9em 0 0.45em; padding-bottom: 0.18em;
+    border-bottom: 1px solid var(--border);
+}
+.note-input h2 {
+    font-size: 1.05rem; font-weight: 700; line-height: 1.5;
+    margin: 0.75em 0 0.35em; padding-left: 8px;
+    border-left: 3px solid var(--border);
+}
+.note-input h1:first-child, .note-input h2:first-child { margin-top: 0; }
+
+/* 笔记保存态：已保存＝浅灰，未保存＝深色加粗（无色也能分辨） */
+.note-state { font-size: .78rem; color: var(--text-light); margin-left: 2px; white-space: nowrap; }
+.note-state.dirty { color: var(--text); font-weight: 600; }
 .note-input p  { margin: 0.2em 0; }
 .note-input blockquote { border-left: 3px solid var(--border); margin: 0.3em 0; padding-left: 8px; color: var(--text-light); }
 

@@ -59,5 +59,24 @@ check('大题仍保留不熟/不会标记', segBig.includes('markBtnsHtml(f)'), 
 
 console.log('\n--- 5. 样式 ---');
 
+console.log('\n--- 6. 笔记层级 / 保存态 / 点击逻辑 / 跨页别名 ---');
+// 三张卡的笔记面板必须排在答案解析之前
+for (const fn of ['choiceCard', 'bigCard', 'dakaBigCard']) {
+  const start = JS.indexOf('function ' + fn);
+  const nextFn = JS.indexOf('function ', start + 10);
+  const seg = JS.slice(start, nextFn > 0 ? nextFn : undefined);
+  check(fn + '：笔记在答案之前', seg.indexOf('notePanel(f.iid)') < seg.indexOf('explanation-panel'), true);
+}
+check('笔记面板含保存态节点', JS.includes('data-zt-state='), true);
+check('输入时置「未保存」', /markNoteState\(qid, 'dirty'\)/.test(JS), true);
+check('保存成功置「已保存」（自动保存也生效）', /markNoteState\(qid, 'saved'\)/.test(JS), true);
+check('展开笔记后滚动到面板', /panel\.scrollIntoView/.test(JS), true);
+check('展开笔记后聚焦编辑器末尾', /focus\(\{ preventScroll: true \}\)/.test(JS), true);
+check('保存写规范键（跨页共享）', /api\('\/api\/note\/' \+ encodeURIComponent\(noteKeyOf\(qid\)\)/.test(JS), true);
+check('加载别名并回填', /applyNoteAlias\(byKey\)/.test(JS) && /loadNoteAlias\(\)/.test(JS), true);
+check('H1 用下边框分层', /\.note-input h1 \{[^}]*border-bottom/.test(CSS), true);
+check('H2 用左导轨分层', /\.note-input h2 \{[^}]*border-left/.test(CSS), true);
+check('保存态未保存样式存在', /\.note-state\.dirty/.test(CSS), true);
+
 console.log(`\nPASS ${pass} / FAIL ${fail}`);
 process.exit(fail ? 1 : 0);

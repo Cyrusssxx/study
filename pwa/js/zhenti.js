@@ -45,6 +45,34 @@
         rendering: false,
     };
 
+    /* ---------------- 跨页笔记别名 ----------------
+     * 同一道大题在三个页面各有各的本地 id：zhenti 用 qid / {sid}_zt{年}_{题号}，
+     * 大题专项用 dati_*，打卡表用 ds_daka_*。data/note_alias.json 把它们统一映射到
+     * 规范键 zt{年}_{卷面题号}，于是「在真题页写的笔记，大题专项里能看到」。
+     * 策略：保存写规范键；读取规范键优先、本地键兜底；本地键有内容而规范键为空时静默迁移一次。 */
+    let NOTE_ALIAS = {};
+    const noteKeyOf = k => NOTE_ALIAS[k] || k;
+
+    async function loadNoteAlias() {
+        try { NOTE_ALIAS = await fetch('data/note_alias.json').then(r => r.json()); } catch (e) { NOTE_ALIAS = {}; }
+    }
+
+    function applyNoteAlias(byKey) {
+        const todo = [];
+        for (const local in NOTE_ALIAS) {
+            const spec = NOTE_ALIAS[local];
+            if (!spec || spec === local) continue;
+            if (byKey[spec]) { if (!byKey[local]) byKey[local] = byKey[spec]; continue; }
+            if (byKey[local]) todo.push([spec, byKey[local]]);
+        }
+        todo.forEach(([spec, rec]) => {
+            api('/api/note/' + encodeURIComponent(spec), {
+                method: 'POST',
+                body: JSON.stringify({ content: rec.content || '', images: rec.images || [] })
+            }).catch(() => { });
+        });
+    }
+
     /* ---------------- 数据加载 ---------------- */
     async function loadIndex() {
         state.index = await fetch('data/zt/index.json').then(r => r.json());
@@ -64,9 +92,12 @@
         for (const d of dks) state.dontknowSet.add(d.question_id);
         for (const p of prog) state.progress[p.question_id] = p;
         for (const f of favs) state.favSet.add(f.question_id);
-        for (const n of notes) {
-            state.noteMap[n.question_id] = n.content || '';
-            state.noteImages[n.question_id] = n.images || [];
+        const byKey = {};
+        for (const n of notes) byKey[n.question_id] = { content: n.content || '', images: n.images || [] };
+        applyNoteAlias(byKey);
+        for (const k in byKey) {
+            state.noteMap[k] = byKey[k].content || '';
+            state.noteImages[k] = byKey[k].images || [];
         }
     }
 
@@ -301,6 +332,7 @@
                 ${kpBtnHtml(f, isFav)}
                 ${poolBtnHtml(f)}
             </div>
+            ${noteOpen ? notePanel(f.iid) : ''}
             ${ansOpen ? `<div class="explanation-panel">
                 <div class="explanation-title">答案解析</div>
                 <div class="explanation-meta">
@@ -308,7 +340,6 @@
                 </div>
                 <div class="explanation-body">${f.an || '<div class="explanation-empty">该题暂无详细解析</div>'}</div>
             </div>` : ''}
-            ${noteOpen ? notePanel(f.iid) : ''}
             ${kpPanelHtml(f, isFav)}
         </div>`;
     }
@@ -337,11 +368,11 @@
                 <button class="btn-explanation${noteOpen ? ' active' : ''}${hasNote ? ' has-note' : ''}" onclick="toggleNotePanel('${f.iid}')">笔记${hasNote ? ' ●' : ''} ${noteOpen ? '▴' : '▾'}</button>
                 ${kpBtnHtml(f, isFav)}
             </div>
+            ${noteOpen ? notePanel(f.iid) : ''}
             ${ansOpen ? `<div class="explanation-panel">
                 <div class="explanation-title">参考答案与解析</div>
                 <div class="explanation-body">${f.an || '<div class="explanation-empty">暂无解析</div>'}</div>
             </div>` : ''}
-            ${noteOpen ? notePanel(f.iid) : ''}
             ${kpPanelHtml(f, isFav)}
         </div>`;
     }
@@ -386,11 +417,11 @@
                 <button class="btn-explanation${noteOpen ? ' active' : ''}${hasNote ? ' has-note' : ''}" onclick="toggleNotePanel('${f.iid}')">笔记${hasNote ? ' ●' : ''} ${noteOpen ? '▴' : '▾'}</button>
                 ${kpBtnHtml(f, isFav)}
             </div>
+            ${noteOpen ? notePanel(f.iid) : ''}
             ${ansOpen ? `<div class="explanation-panel">
                 <div class="explanation-title">参考答案与解析</div>
                 <div class="explanation-body">${answerHtml}</div>
             </div>` : ''}
-            ${noteOpen ? notePanel(f.iid) : ''}
             ${kpPanelHtml(f, isFav)}
         </div>`;
     }
@@ -446,6 +477,7 @@
             <div class="note-images" data-zt-note-imgs="${qid}"></div>
             <div class="note-actions">
                 <button class="btn btn-primary btn-sm note-save-btn" data-zt-save="${qid}" onclick="saveZtNoteNow('${qid}')">保存笔记</button>
+                <span class="note-state" data-zt-state="${qid}">${(state.noteMap[qid] || (state.noteImages[qid] || []).length) ? '✓ 已保存' : ''}</span>
                 <button class="btn btn-sm btn-note-addimg" onclick="document.getElementById('ztNoteFile-${qid}').click()" title="从本地选择图片（支持多选），比剪贴板更可靠">+ 图片</button>
                 <input type="file" id="ztNoteFile-${qid}" accept="image/*" multiple hidden onchange="onZtNoteFilePick('${qid}', this)">
                 <span class="note-hint" data-zt-hint="${qid}"></span>
@@ -627,9 +659,25 @@
             return;
         }
         flushNote();
-        if (state.noteOpen.has(iid)) state.noteOpen.delete(iid); else state.noteOpen.add(iid);
+        const opening = !state.noteOpen.has(iid);
+        if (opening) state.noteOpen.add(iid); else state.noteOpen.delete(iid);
         localStorage.setItem('zhentiNoteOpen2', JSON.stringify([...state.noteOpen]));
+        flushNote();
         refreshCard(iid);
+        if (!opening) return;
+        // 展开后把面板带到视野内并聚焦到正文末尾——否则题图很长时点了像没反应
+        const card = document.getElementById('card-' + iid);
+        const panel = card && card.querySelector('.zt-note-panel');
+        if (!panel) return;
+        panel.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        const ed = panel.querySelector('.note-input');
+        if (ed) setTimeout(() => {
+            ed.focus({ preventScroll: true });
+            const r = document.createRange();
+            r.selectNodeContents(ed); r.collapse(false);
+            const sel = window.getSelection();
+            sel.removeAllRanges(); sel.addRange(r);
+        }, 160);
     }
 
     // 输入（含工具条/快捷键改动）：刷新占位符 + 停顿自动保存
@@ -639,16 +687,18 @@
         if (!el || !el.dataset || !el.dataset.qid) return;
         updateNotePlaceholder(el);
         const qid = el.dataset.qid;
+        markNoteState(qid, 'dirty');
         clearTimeout(state.noteTimer[qid]);
         state.noteTimer[qid] = setTimeout(() => saveNote(qid, serializeNote(el)), 700);
     }
 
     async function saveNote(qid, content) {
         state.noteMap[qid] = content;
-        await api('/api/note/' + qid, {
+        await api('/api/note/' + encodeURIComponent(noteKeyOf(qid)), {
             method: 'POST',
             body: JSON.stringify({ content: content, images: state.noteImages[qid] || [] }),
         });
+        markNoteState(qid, 'saved');
         // 保存后同步该题的「笔记 ●」状态（删除笔记时圆点消失）
         const card = document.getElementById('card-' + qid);
         const btn = card && card.querySelector('.btn-explanation[onclick*="toggleNotePanel"]');
@@ -661,6 +711,14 @@
     function ztNoteEditor(qid) {
         const card = document.getElementById('card-' + qid);
         return card ? card.querySelector('.note-editor .note-input[data-qid="' + qid + '"]') : null;
+    }
+
+    // 笔记保存态：dirty（有改动未入库）/ saved（已入库）
+    function markNoteState(qid, st) {
+        document.querySelectorAll('[data-zt-state="' + qid + '"]').forEach(el => {
+            el.classList.toggle('dirty', st === 'dirty');
+            el.textContent = st === 'dirty' ? '● 未保存' : '✓ 已保存';
+        });
     }
 
     function setZtNoteHint(qid, text, ms) {
@@ -1093,6 +1151,7 @@
     async function init() {
         try {
             $('ztMain').innerHTML = '<div class="loading">加载中…</div>';
+            await loadNoteAlias();
             await Promise.all([loadIndex(), loadStores(), loadDaka()]);
             const remembered = +(localStorage.getItem('zhentiYear') || 0);
             state.year = (remembered && state.index.years.includes(remembered))

@@ -298,6 +298,7 @@
             const resp = await fetch('data/dati.json');
             DATI = (await resp.json()).subjects;
             await loadFavs();
+            await loadNoteAlias();   // 先取跨页笔记映射，loadNotes 才能把规范键回填到本地键
             await loadNotes();
             await loadMarks();
             renderTabs();
@@ -318,12 +319,32 @@
         favSet = new Set(rows.filter(r => (r.question_id || '').startsWith('dati_')).map(r => r.question_id));
     }
 
+    // 跨页笔记：与 zhenti/daka 共用规范键 zt{年}_{卷面题号}（data/note_alias.json）
+    let NOTE_ALIAS = {};
+    const noteKeyOf = k => NOTE_ALIAS[k] || k;
+    async function loadNoteAlias() {
+        try { NOTE_ALIAS = await fetch('data/note_alias.json').then(r => r.json()); } catch (e) { NOTE_ALIAS = {}; }
+    }
+
     async function loadNotes() {
         const rows = await dbAll('notes');
         noteMap = {};
-        for (const n of rows) if ((n.question_id || '').startsWith('dati_')) {
-            noteMap[n.question_id] = { content: n.content || '', images: n.images || [] };
+        const byKey = {};
+        for (const n of rows) byKey[n.question_id] = { content: n.content || '', images: n.images || [] };
+        // 规范键（真题页/打卡表写的）回填到本题的 dati_* 键；dati_* 独有内容静默迁移到规范键
+        const todo = [];
+        for (const local in NOTE_ALIAS) {
+            if (!local.startsWith('dati_')) continue;
+            const spec = NOTE_ALIAS[local];
+            if (!spec || spec === local) continue;
+            if (byKey[spec]) { if (!byKey[local]) byKey[local] = byKey[spec]; continue; }
+            if (byKey[local]) todo.push([spec, byKey[local]]);
         }
+        for (const [spec, rec] of todo) {
+            dbPut('notes', { question_id: spec, subject: 'dati', content: rec.content || '', images: rec.images || [], updated_at: now() })
+                .catch(() => { });
+        }
+        for (const k in byKey) if (k.startsWith('dati_')) noteMap[k] = byKey[k];
     }
 
     // 不熟 / 不会：复用后端 unfamiliar / dontknow 库（与刷题页同一套数据），只取大题（dati_ 前缀）
@@ -940,10 +961,10 @@
         const hadNote = !!(cur.content || images.length);
         try {
             if (content || images.length) {
-                await dbPut('notes', { question_id: qid, subject: 'dati', content, images, updated_at: now() });
+                await dbPut('notes', { question_id: noteKeyOf(qid), subject: 'dati', content, images, updated_at: now() });
                 noteMap[qid] = { content, images };
             } else {
-                await dbDelete('notes', qid);
+                await dbDelete('notes', noteKeyOf(qid));
                 delete noteMap[qid];
             }
             const hasNote = !!(content || images.length);
