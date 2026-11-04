@@ -91,7 +91,7 @@ function yearOrdered(key) {
   console.log('\n--- 场景 1：数据只剩真题 ---');
   const allReal = DATI_DATA.subjects.every(s => s.chapters.every(c => c.sections.every(sec => sec.questions.every(q => q.real))));
   check('全部题目均为统考真题', allReal, true);
-  check('总题数 = 84', DATI_DATA.subjects.reduce((n, s) => n + s.chapters.reduce((m, c) => m + c.sections.reduce((k, sec) => k + sec.questions.length, 0), 0), 0), 84);
+  check('总题数 = 89', DATI_DATA.subjects.reduce((n, s) => n + s.chapters.reduce((m, c) => m + c.sections.reduce((k, sec) => k + sec.questions.length, 0), 0), 0), 89);
   check('每节 num 从 1 连续', DATI_DATA.subjects.every(s => s.chapters.every(c => c.sections.every(sec => sec.questions.every((q, i) => q.num === i + 1)))), true);
   check('旧的「全部/统考真题」胶囊已移除', [!!doc.getElementById('fAll'), !!doc.getElementById('fReal')], [false, false]);
   check('章节/真题两个模式胶囊存在', [!!doc.getElementById('fModeChapter'), !!doc.getElementById('fModeYear')], [true, true]);

@@ -1,7 +1,7 @@
 {
   "subject": "ds_daka",
   "name": "数据结构强化打卡",
-  "total": 65,
+  "total": 67,
   "questions": [
     {
       "id": "ds_daka_6_4_6_8",
@@ -347,6 +347,48 @@
           "ds_daka_7_5_5_7_a_1.jpg"
         ]
       }
+    },
+    {
+      "id": "ds_daka_zhenti_2025_42",
+      "priority": 0,
+      "priority_label": "必做",
+      "module": "真题训练",
+      "kaodian": "应用题",
+      "source": "2025年408真题第42题",
+      "real": "2025年408真题第42题",
+      "sheet": "应用题",
+      "figs": {
+        "content": [
+          "ds_daka_zhenti_2025_42_q_0.jpg"
+        ],
+        "answer": [
+          "ds_daka_zhenti_2025_42_a_0.jpg"
+        ]
+      },
+      "tasks": [
+        "做408真题_2025_42题"
+      ]
+    },
+    {
+      "id": "ds_daka_zhenti_2026_42",
+      "priority": 0,
+      "priority_label": "必做",
+      "module": "真题训练",
+      "kaodian": "应用题",
+      "source": "2026年408真题第42题",
+      "real": "2026年408真题第42题",
+      "sheet": "应用题",
+      "figs": {
+        "content": [
+          "ds_daka_zhenti_2026_42_q_0.jpg"
+        ],
+        "answer": [
+          "ds_daka_zhenti_2026_42_a_0.jpg"
+        ]
+      },
+      "tasks": [
+        "做408真题_2026_42题"
+      ]
     },
     {
       "id": "ds_daka_2_2_3_10",

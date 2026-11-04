@@ -214,7 +214,20 @@
      "sections": [
       {
        "name": "4.1 指令系统",
-       "questions": []
+       "questions": [
+        {
+         "id": "dati_co_4_1_01",
+         "num": 1,
+         "real": true,
+         "year": 2026,
+         "q": [
+          "dati_co_4_1_01_q_01.jpg"
+         ],
+         "a": [
+          "dati_co_4_1_01_a_01.jpg"
+         ]
+        }
+       ]
       },
       {
        "name": "4.2 寻址方式",
@@ -403,6 +416,18 @@
           "dati_co_5_3_10_a_01.jpg",
           "dati_co_5_3_10_a_02.jpg"
          ]
+        },
+        {
+         "id": "dati_co_5_3_05",
+         "num": 5,
+         "real": true,
+         "year": 2026,
+         "q": [
+          "dati_co_5_3_05_q_01.jpg"
+         ],
+         "a": [
+          "dati_co_5_3_05_a_01.jpg"
+         ]
         }
        ]
       },
@@ -590,6 +615,18 @@
          "a": [
           "dati_os_2_2_10_a_01.jpg",
           "dati_os_2_2_10_a_02.jpg"
+         ]
+        },
+        {
+         "id": "dati_os_2_2_02",
+         "num": 2,
+         "real": true,
+         "year": 2026,
+         "q": [
+          "dati_os_2_2_02_q_01.jpg"
+         ],
+         "a": [
+          "dati_os_2_2_02_a_01.jpg"
          ]
         }
        ]
@@ -987,7 +1024,20 @@
       },
       {
        "name": "4.3 文件系统",
-       "questions": []
+       "questions": [
+        {
+         "id": "dati_os_4_3_01",
+         "num": 1,
+         "real": true,
+         "year": 2026,
+         "q": [
+          "dati_os_4_3_01_q_01.jpg"
+         ],
+         "a": [
+          "dati_os_4_3_01_a_01.jpg"
+         ]
+        }
+       ]
       }
      ]
     },
@@ -1328,6 +1378,18 @@
          "a": [
           "dati_cn_5_3_14_a_01.jpg",
           "dati_cn_5_3_14_a_02.jpg"
+         ]
+        },
+        {
+         "id": "dati_cn_5_3_03",
+         "num": 3,
+         "real": true,
+         "year": 2026,
+         "q": [
+          "dati_cn_5_3_03_q_01.jpg"
+         ],
+         "a": [
+          "dati_cn_5_3_03_a_01.jpg"
          ]
         }
        ]

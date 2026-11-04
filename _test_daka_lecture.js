@@ -39,10 +39,10 @@ const EXTRA = fs.readFileSync(path.resolve(__dirname, 'pwa/data/ds_code_extra.js
 
   // 卡片总数（默认显示全部）
   const cards = d.querySelectorAll('.daka-card');
-  check('卡片渲染数 = 65（62 + 新增 2024/2025/2026 代码题）', cards.length, 65);
+  check('卡片渲染数 = 67（62 + 2024/25/26 代码题 3 + 套卷补 2025/26 第42题 2）', cards.length, 67);
   // 讲义折叠面板出现（summary 文案）；用直接子级选择器，避免把内层解法折叠 .sol-fold 计入
   const lectures = d.querySelectorAll('details.daka-answer > summary');
-  check('讲义折叠面板总数 = 65（每卡一个）', lectures.length, 65);
+  check('讲义折叠面板总数 = 67（每卡一个）', lectures.length, 67);
   const lectureHeads = [...lectures].filter(s => s.textContent.indexOf('考点分析 · 易错点 · 讲义解法') > -1);
   check('升级为完整讲义的折叠面板 = 49（15 真题 + 31 教材习题 + 新增 2024/2025/2026 代码题）', lectureHeads.length, 49);
   // 讲义内容关卡：解法条目与代码块存在于页面
@@ -112,9 +112,9 @@ const EXTRA = fs.readFileSync(path.resolve(__dirname, 'pwa/data/ds_code_extra.js
     check('再点击后收起', d.getElementById('ansfig-ds_daka_6_4_6_8').hidden, true);
   }
   // 批注：卡片级块锚点 + 顶部笔记区 + 「📝 批注」按钮（与解答原图按钮并排）
-  check('卡片全部带块锚点 data-blk', d.querySelectorAll('.daka-card[data-blk]').length, 65);
-  check('每卡都有笔记区 .daka-notes', d.querySelectorAll('.daka-notes').length, 65);
-  check('「📝 批注」按钮数 = 卡片数', d.querySelectorAll('summary button.anno-toggle').length, 65);
+  check('卡片全部带块锚点 data-blk', d.querySelectorAll('.daka-card[data-blk]').length, 67);
+  check('每卡都有笔记区 .daka-notes', d.querySelectorAll('.daka-notes').length, 67);
+  check('「📝 批注」按钮数 = 卡片数', d.querySelectorAll('summary button.anno-toggle').length, 67);
   check('批注按钮不在卡片头部', d.querySelectorAll('.daka-card-header button.anno-toggle').length, 0);
   check('笔记区位于折叠标题上方', [...d.querySelectorAll('.daka-card')].every(c => {
     const box = c.querySelector('.daka-notes'), det = c.querySelector('details.daka-answer');
