@@ -8242,3 +8242,69 @@ body.fc-toc-open .fc-toc-fab { display: none; }
     font-weight: 700;
 }
 .dark .notes-body table td.tcell-hl { background: rgba(52, 211, 153, .2); }
+
+/* ==================== 真题套卷：知识点跳转入口 ====================
+   与「答案与解析 / 笔记 / 考点分析」同排同尺寸的链接按钮。语义色遵循站点约定：
+   主色边框（#4a7ab8）表示"可跳转"，不加底色，避免与 active 态混淆。 */
+.zt-kp-link {
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
+    white-space: nowrap;
+}
+.zt-kp-link:hover { background: #eef5fd; }
+.dark .zt-kp-link:hover { background: #1d3350; }
+
+/* ==================== 顶栏「知识点笔记」下拉 ====================
+   logo「408刷题」已可跳首页，原「首页」链接改为四科笔记入口。
+   <details> 放在 .nav-links **之外**：.nav-links 有 overflow-x:auto，浮层放里面会被裁掉；
+   放在 .nav-container 内则没有 overflow 祖先，absolute 菜单可完整展开。 */
+.nav-dd {
+    position: relative;
+    flex: 0 0 auto;
+    margin-left: 26px;   /* 与原「首页」位置对齐：brand 与链接组的间距 */
+}
+.nav-dd-sum {
+    cursor: pointer;
+    list-style: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    user-select: none;
+}
+.nav-dd-sum::-webkit-details-marker { display: none; }
+.nav-dd-sum::marker { content: ''; }
+.nav-dd-arrow { display: inline-block; font-size: .7em; transition: transform .15s; }
+.nav-dd[open] .nav-dd-arrow { transform: rotate(180deg); }
+.nav-dd[open] .nav-dd-sum { color: var(--primary); }
+.nav-dd-menu {
+    position: absolute;
+    top: calc(100% + 6px);
+    left: 0;
+    min-width: 168px;
+    padding: 6px;
+    background: rgba(var(--card-rgb), var(--ui-alpha));
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    z-index: 110;
+}
+.nav-dd-menu a {
+    color: var(--text);
+    text-decoration: none;
+    font-size: .86rem;
+    padding: 7px 10px;
+    border-radius: 6px;
+    white-space: nowrap;
+}
+.nav-dd-menu a:hover { background: #eef5fd; color: var(--primary); }
+.dark .nav-dd-menu a:hover { background: #1d3350; }
+
+/* 顶栏下拉：窄屏容器已有列间距，去掉桌面端为 logo 留的 26px 外边距 */
+@media (max-width: 768px) {
+    .nav-dd { margin-left: 0; }
+}

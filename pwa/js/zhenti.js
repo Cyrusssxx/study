@@ -223,6 +223,17 @@
         initNoteEditors($('ztMain'));
         renderFq();
         syncExamModeBtn();   // 顶栏做题模式按钮（已从工具栏移出）
+        warmKpLinks();       // 知识点入口：题库按科目按需加载后就地补渲染
+    }
+
+    // 选择题的知识点入口需要题库里的 section/subsection。按本卷出现的科目并行加载，
+    // 加载完只往已有卡片里补 <a>，不整卡重绘（避免把展开的笔记/解析状态冲掉）。
+    async function warmKpLinks() {
+        const subs = [...new Set(state.flat.filter(f => f.group === 'choice' && f.mapped).map(f => f.sid))];
+        const year = state.year;
+        await Promise.all(subs.map(s => ensureBank(s)));
+        if (state.year !== year || !state.flat.length) return;   // 加载期间切了年份，放弃
+        subs.forEach(s => refreshKpLinks(s));
     }
 
     // 顶栏「做题中 / 做题模式」按钮的状态同步（按钮常驻 navbar，不再随工具栏重绘）
@@ -240,7 +251,84 @@
      * 做题模式（默认）：白纸状态——不显示历史作答痕迹（结果条/选项色/预选）与笔记，
      *   本次选答仅暂存（picked），退出做题模式时统一判分。
      * 取消做题模式：显示历史作答记录（预选/对错色/结果条）与笔记，解析默认仍收起。 */
-    /* ---------- 不熟 / 不会 / 考点分析（与刷题页同一套接口与样式） ---------- */
+    /* ---------------- 知识点跳转 ----------------
+     * 每道题都给出「→ 该知识点笔记」入口，直达 notes.html?subject=&goto=（同一跳转契约，
+     * 与刷题页的 📖 徽章一致：goto 支持节名/小节名/纯编号前缀/关键词）。
+     *
+     * 锚点来源两档：
+     *   ① 选择题 —— 复用刷题页口径：题库映射题的 section/subsection 由题库现取；
+     *      未映射的选择题没有章节信息，不显示入口（不做猜测）。
+     *   ② 大题 —— 题库里根本没有这些题，走 data/zt_bigq_kp.json：
+     *      DS 算法题取王道书号 → 节级锚点；其余按 sid 落科目级（跳该科笔记首页）。
+     * 数据文件由 tools/build_zt_bigq_kp.py 生成。 */
+    let KP_TABLE = {};       // year -> {题号: {sub, goto, mode}}
+    let BANK_SEC = {};       // qid -> {sub, sec, sub_sec}  按需从题库补
+    const bankLoaded = new Set();
+
+    async function loadKpTable() {
+        try { KP_TABLE = await fetch('data/zt_bigq_kp.json').then(r => r.json()); } catch (e) { KP_TABLE = {}; }
+    }
+
+    // 选择题：取题库里的章节锚点（一个小科目只加载一次）
+    async function ensureBank(sub) {
+        if (bankLoaded.has(sub)) return;
+        bankLoaded.add(sub);
+        try {
+            const d = await fetch('data/' + sub + '.json').then(r => r.json());
+            for (const q of (d.questions || [])) {
+                BANK_SEC[q.id] = { sub, sec: q.section || '', sub_sec: q.subsection || '', chapter: q.chapter || '' };
+            }
+        } catch (e) { /* 题库拉取失败：该科知识点入口静默降级为科目首页 */ }
+    }
+
+    // 解析一道题的跳转目标：{sub, goto, mode:'sec'|'kw'|'sub'}
+    function kpTarget(f) {
+        if (f.group === 'choice') {
+            if (!f.mapped) return null;                       // 无映射 → 无章节信息，不显示
+            const rec = BANK_SEC[f.iid];
+            if (!rec) return null;                            // 题库还没加载完 → 先不显示，加载后重渲染
+            const goto = rec.sub_sec || rec.sec;
+            return goto ? { sub: rec.sub, goto, mode: 'sec' } : { sub: f.sid, goto: '', mode: 'sub' };
+        }
+        const rec = (KP_TABLE[state.year] || {})[String(f.i)];   // 大题用**卷面题号**索引（非 iid）
+        if (!rec) return null;
+        return { sub: rec.sub, goto: rec.goto || '', mode: rec.mode };
+    }
+
+    function kpHref(t) {
+        const q = t.mode === 'sec' && t.goto ? '&goto=' + encodeURIComponent(t.goto) : '';
+        return `notes.html?subject=${t.sub}${q}`;
+    }
+
+    // 入口标题：节级显示 "第N章 · 节名" 不现实（题库只给节名），直接显示锚点，够用且不编造
+    function kpTitle(t) {
+        return t.mode === 'sub'
+            ? `${SUBJ_NAME[t.sub] || ''} · 本科笔记（未收录精确考点）`
+            : `查看「${esc(t.goto)}」的考点笔记`;
+    }
+
+    function kpLinkHtml(f) {
+        const t = kpTarget(f);
+        if (!t) return '';
+        const label = t.mode === 'sub' ? '知识点笔记' : '知识点';
+        return `<a class="btn-explanation zt-kp-link" href="${kpHref(t)}" target="_blank" rel="noopener noreferrer"
+            title="${kpTitle(t)}">${label} 📖</a>`;
+    }
+
+    // 题库异步就绪后，把选择题的入口补渲染进去（不整卡重绘，避免丢失笔记/展开态）
+    function refreshKpLinks(sub) {
+        const table = state.flat;
+        for (const f of table) {
+            if (f.group !== 'choice' || f.sid !== sub) continue;
+            if (document.querySelector(`#card-${f.iid} .zt-kp-link`)) continue;
+            const tools = document.querySelector(`#card-${f.iid} .question-tools`);
+            if (!tools) continue;
+            const html = kpLinkHtml(f);
+            if (html) tools.insertAdjacentHTML('beforeend', html);
+        }
+    }
+
+    /* ---------------- 不熟 / 不会 / 考点分析（与刷题页同一套接口与样式） ---------------- */
     function markBtnsHtml(f) {
         if (!f.mapped) return '';
         const un = state.unfamSet.has(f.iid), dk = state.dontknowSet.has(f.iid);
@@ -329,6 +417,7 @@
             <div class="question-tools">
                 <button class="btn-explanation${ansOpen ? ' active' : ''}" onclick="toggleAns('${f.iid}')">答案与解析 ${ansOpen ? '▴' : '▾'}</button>
                 <button class="btn-explanation${noteOpen ? ' active' : ''}${hasNote ? ' has-note' : ''}" onclick="toggleNotePanel('${f.iid}')">笔记${hasNote ? ' ●' : ''} ${noteOpen ? '▴' : '▾'}</button>
+                ${kpLinkHtml(f)}
                 ${kpBtnHtml(f, isFav)}
                 ${poolBtnHtml(f)}
             </div>
@@ -366,6 +455,7 @@
             <div class="question-tools">
                 <button class="btn-explanation${ansOpen ? ' active' : ''}" onclick="toggleAns('${f.iid}')">参考答案与解析 ${ansOpen ? '▴' : '▾'}</button>
                 <button class="btn-explanation${noteOpen ? ' active' : ''}${hasNote ? ' has-note' : ''}" onclick="toggleNotePanel('${f.iid}')">笔记${hasNote ? ' ●' : ''} ${noteOpen ? '▴' : '▾'}</button>
+                ${kpLinkHtml(f)}
                 ${kpBtnHtml(f, isFav)}
             </div>
             ${noteOpen ? notePanel(f.iid) : ''}
@@ -415,6 +505,7 @@
             <div class="question-tools">
                 <button class="btn-explanation${ansOpen ? ' active' : ''}" onclick="toggleAns('${f.iid}')">参考答案与解析 ${ansOpen ? '▴' : '▾'}</button>
                 <button class="btn-explanation${noteOpen ? ' active' : ''}${hasNote ? ' has-note' : ''}" onclick="toggleNotePanel('${f.iid}')">笔记${hasNote ? ' ●' : ''} ${noteOpen ? '▴' : '▾'}</button>
+                ${kpLinkHtml(f)}
                 ${kpBtnHtml(f, isFav)}
             </div>
             ${noteOpen ? notePanel(f.iid) : ''}
@@ -1152,7 +1243,7 @@
         try {
             $('ztMain').innerHTML = '<div class="loading">加载中…</div>';
             await loadNoteAlias();
-            await Promise.all([loadIndex(), loadStores(), loadDaka()]);
+            await Promise.all([loadIndex(), loadStores(), loadDaka(), loadKpTable()]);
             const remembered = +(localStorage.getItem('zhentiYear') || 0);
             state.year = (remembered && state.index.years.includes(remembered))
                 ? remembered : state.index.years[state.index.years.length - 1];

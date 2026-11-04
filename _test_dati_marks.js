@@ -6,7 +6,7 @@
 //   3) 点「不会」→ 与「不熟」互斥（旧标记被清）；再点一次取消
 //   4) 筛选 chip 计数（cntUnfam / cntDontknow）与筛选生效（unfam / dontknow）
 //   5) 在「不熟」筛选下取消标记 → 该题移出列表（重渲染）；筛选状态持久化
-//   6) 全站 17 页顶栏链接集合与顺序完全一致（13 项），当前页带 active
+//   6) 全站 17 页顶栏链接集合与顺序完全一致（12 项）+ 知识点笔记下拉四科一致
 //
 // 用法：NODE_PATH=<workspace>/node_modules node _test_dati_marks.js
 const fs = require('fs');
@@ -172,12 +172,16 @@ function flat(subKey) {
   w.setView('single');
   await sleep(80);
 
-  console.log('\n--- 8) 全站顶栏统一（17 页 13 项、顺序一致） ---');
-  const EXPECT = ['首页|index.html', '刷题|quiz.html', '真题套卷|zhenti.html', '每日一题|daily.html', '记忆卡|cards.html',
+  console.log('\n--- 8) 全站顶栏统一（17 页 12 项 + 知识点笔记下拉） ---');
+  // 「首页」链接已移除：logo「408刷题」本身就能跳首页，原位置改为四科知识点笔记下拉。
+  const EXPECT = ['刷题|quiz.html', '真题套卷|zhenti.html', '每日一题|daily.html', '记忆卡|cards.html',
     '打卡表|daka.html', '大题专项|dati.html', '算法讲义|algo.html',
     '错题本|wrong.html', '收藏夹|favorites.html', '模拟考试|exam.html', '学习统计|stats.html', '搜题|search.html'];
+  // 下拉顺序 = 408 卷面科目顺序（41-42 DS、43-44 CO、45-46 OS、47 CN）
+  const DD_EXPECT = ['notes.html?subject=ds|数据结构', 'notes.html?subject=co|计算机组成原理',
+    'notes.html?subject=os|操作系统', 'notes.html?subject=cn|计算机网络'];
   const pages = fs.readdirSync(path.join(ROOT, 'pwa')).filter(f => f.endsWith('.html'));
-  const bad = [];
+  const bad = [], ddBad = [];
   let checked = 0;
   for (const f of pages) {
     const src = fs.readFileSync(path.join(ROOT, 'pwa', f), 'utf8');
@@ -187,11 +191,20 @@ function flat(subKey) {
     const got = [...m[1].matchAll(/<a href="([^"]+)" class="nav-link[^"]*">([^<]+)<\/a>/g)]
       .map(x => `${x[2].trim()}|${x[1]}`);
     if (JSON.stringify(got) !== JSON.stringify(EXPECT)) bad.push(f);
+    // 下拉在 nav-links 之外（避开 overflow-x:auto 裁剪），单独校验 17 页一致
+    const dd = [...src.matchAll(/<a href="(notes\.html\?subject=[a-z]+)">([^<]+)<\/a>/g)]
+      .map(x => `${x[1]}|${x[2].trim()}`);
+    if (JSON.stringify(dd) !== JSON.stringify(DD_EXPECT)) ddBad.push(f + '(四科)');
+    if (!/class="nav-dd"/.test(src)) ddBad.push(f + '(缺 details)');
   }
   check('含顶栏的页面数 = 17', checked, 17);
-  check('全部页面链接集合与顺序一致', bad, []);
+  check('全部页面链接集合与顺序一致（12 项）', bad, []);
+  check('17 页下拉四科及顺序一致', ddBad, []);
   const idx = fs.readFileSync(path.join(ROOT, 'pwa/index.html'), 'utf8');
-  check('当前页高亮（首页 active）', /<a href="index.html" class="nav-link active">首页<\/a>/.test(idx), true);
+  check('logo「408刷题」仍可跳首页', /<a href="index\.html" class="nav-brand">408刷题<\/a>/.test(idx), true);
+  check('顶栏不再有冗余「首页」链接', /<a href="index\.html" class="nav-link[^"]*">首页<\/a>/.test(idx), false);
+  check('下拉在 nav-links 之外（浮层不被 overflow 裁剪）',
+    /<\/details>\s*<div class="nav-links">/.test(idx), true);
   const css = fs.readFileSync(path.join(ROOT, 'pwa/css/style.css'), 'utf8');
   const datiSrc = fs.readFileSync(path.join(ROOT, 'pwa/dati.html'), 'utf8');
   check('链接组靠左（flex-start）', /\.nav-links\s*\{[^}]*justify-content:\s*flex-start/.test(css), true);
@@ -201,6 +214,10 @@ function flat(subKey) {
   check('移动端容器也给折叠钮留位', /@media \(max-width: 768px\)[\s\S]*?\.nav-container\s*\{[^}]*padding:\s*8px 48px 8px 12px/.test(css), true);
   check('标记态自带 hover（不落到 btn-secondary 灰底）', /\.dati-mark-btn\.on-unfam:hover\s*\{[^}]*background:/.test(datiSrc), true);
   check('active 高亮样式存在', /\.nav-link\.active\s*\{[^}]*color:\s*var\(--primary\)/.test(css), true);
+  check('下拉菜单为 absolute 浮层', /\.nav-dd-menu\s*\{[^}]*position:\s*absolute/.test(css), true);
+  check('details 建立定位上下文', /\.nav-dd\s*\{[^}]*position:\s*relative/.test(css), true);
+  const commonJs = fs.readFileSync(path.join(ROOT, 'pwa/js/common.js'), 'utf8');
+  check('点外部 / Esc 收起逻辑存在', /nav-dd\[open\]/.test(commonJs) && /Escape/.test(commonJs), true);
 
   console.log(`\nPASS ${pass} / FAIL ${fail}`);
   dom.window.close();

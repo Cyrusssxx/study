@@ -404,3 +404,23 @@ window.addEventListener('load', () => {
         try { new ResizeObserver(syncSbw).observe(root); } catch (e) { /* 老浏览器忽略 */ }
     }
 })();
+
+
+// ============ 顶栏「知识点笔记」下拉：点外部 / Esc 收起 ============
+// 用 <details> 原生展开（无需逐页绑事件），但原生不会自动收起，这里统一补上。
+// 事件挂在 document 上，DOM 未解析完也能绑定；查询在事件触发时才执行。
+// 注意：浏览器在 click 派发之后才 toggle details，所以点 summary 时查询到的仍是
+// 旧状态 —— 展开时 open=null（不干预），收起时 contains(target)=true（不干预），
+// 两种情况都交给原生默认行为，只有点外部才主动收起。
+(function () {
+    document.addEventListener('click', e => {
+        const open = document.querySelector('.nav-dd[open]');
+        if (open && !open.contains(e.target)) open.removeAttribute('open');
+    });
+    document.addEventListener('keydown', e => {
+        if (e.key === 'Escape') {
+            const open = document.querySelector('.nav-dd[open]');
+            if (open) open.removeAttribute('open');
+        }
+    });
+})();
