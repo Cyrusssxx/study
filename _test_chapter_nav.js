@@ -72,7 +72,11 @@ Object.defineProperty(stubLocation, 'href', {
     set(v) { navTarget = v; },
     configurable: true
 });
-const S = new Function('CHAPTER', 'SECTION', 'SUBJECT', 'questions', 'currentIndex', 'renderQuestion', 'chapterLink', 'navigated', 'document', 'window', 'location', 'CSS', 'MODE',
+// hasKpOf / hasNoteOf 是 quiz.html 里的模块级 const（考点分析可见性、笔记可见性判断），
+// goChapter 会引用；单独提取函数到沙箱执行时必须补上，否则 ReferenceError 中断整段测试。
+const hasKpOf = q => !!(q && q.is_favorited && q.kp_analysis);
+const hasNoteOf = q => !!(q && (q.note || (q.note_images || []).length));
+const S = new Function('CHAPTER', 'SECTION', 'SUBJECT', 'questions', 'currentIndex', 'renderQuestion', 'chapterLink', 'navigated', 'document', 'window', 'location', 'CSS', 'MODE', 'hasKpOf', 'hasNoteOf',
     code + `
     return {
         goChapter, syncChapterTree, bindChapterTreeNav,
@@ -82,7 +86,7 @@ const S = new Function('CHAPTER', 'SECTION', 'SUBJECT', 'questions', 'currentInd
         get navigated(){return navigated}, set navigated(v){navigated=v}
     };
 `)(
-    CHAPTER, SECTION, SUBJECT, questions, currentIndex, renderQuestion, chapterLink, null, document, window, stubLocation, window.CSS, 'sequential'
+    CHAPTER, SECTION, SUBJECT, questions, currentIndex, renderQuestion, chapterLink, null, document, window, stubLocation, window.CSS, 'sequential', hasKpOf, hasNoteOf
 );
 
 let pass = 0, fail = 0;

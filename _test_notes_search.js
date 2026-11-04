@@ -73,6 +73,10 @@ async function waitFor(fn, tries = 80, step = 100) {
   const box = () => d.getElementById('notesSearchResults');
   const sb = d.getElementById('notesSearchBox');
 
+  // 搜索框由 initAnnoAndHl 显示，而它在 finishNotes（所有节分片渲染完）里才跑。
+  // 上面只等到"第一节渲染出来"，早于 finishNotes → sb.hidden 仍为 true 会误判为回归。
+  await waitFor(() => d.getElementById('notesSearchBox') && d.getElementById('notesSearchBox').hidden === false);
+
   console.log('\n--- 场景 1：进入页面不自动弹出（旧 PS.q 不再重放） ---');
   check('搜索框已显示', sb.hidden, false);
   check('输入框为空（不恢复旧词「链路」）', si().value, '');

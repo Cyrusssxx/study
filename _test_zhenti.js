@@ -111,7 +111,8 @@ async function run() {
     fs.readFileSync(path.join(ROOT, 'pwa/js/note_richtext.js'), 'utf8')));
   check('答案速查 toggleAnsPop 已导出', /function toggleAnsPop/.test(js) && /toggleAnsPop,/.test(js));
   const navLinks = [...rawHtml.matchAll(/<a href="([\w.]+)\.html" class="nav-link[^"]*">([^<]+)<\/a>/g)].map(m => m[1]);
-  check('顶栏链接 13 项且含真题套卷（active）', navLinks.length === 13 && /zhenti\.html" class="nav-link active"/.test(rawHtml), navLinks.join(','));
+  // 96da760 起：原「首页」链接改为四科知识点笔记下拉（logo 本身可跳首页），13 项→12 项
+  check('顶栏链接 12 项且含真题套卷（active）', navLinks.length === 12 && /zhenti\.html" class="nav-link active"/.test(rawHtml), navLinks.join(','));
 
   // 数据完整性
   const idx = JSON.parse(fs.readFileSync(path.join(ROOT, 'pwa/data/zt/index.json'), 'utf8'));
@@ -165,6 +166,8 @@ async function run() {
       w.alert = () => {};
       w.confirm = () => true;
       w.CSS = { escape: s => String(s).replace(/[^\w-]/g, c => '\\' + c) };
+      // jsdom 不实现 scrollIntoView；展开笔记面板时页面会调用它（否则 TypeError 直接崩测试）
+      w.Element.prototype.scrollIntoView = function () { };
       w.requestAnimationFrame = cb => setTimeout(cb, 0);
       w.fetch = async (u) => {
         const s = String(u);
@@ -173,7 +176,15 @@ async function run() {
           const rel = m[0];
           try {
             const t = readFile(rel);
-            return { ok: true, status: 200, text: async () => t, json: async () => JSON.parse(t) };
+            // jsdom 的 dom-selector 求 baseURL 时会崩，而真题 SVG 带 style="color-scheme: …"
+            // 正好踩中该依赖 bug（Cannot create property 'color-scheme' on string）。
+            // 测试只校验 SVG 引用与文件齐全，读取时剥掉该属性即可绕开，不影响断言语义。
+            const isSvg = /\.svg$/.test(rel);
+            return {
+              ok: true, status: 200,
+              text: async () => isSvg ? t.replace(/\s*color-scheme:\s*[^;"']*/g, '') : t,
+              json: async () => JSON.parse(t)
+            };
           } catch (e) {
             return { ok: false, status: 404, text: async () => '', json: async () => ({}) };
           }
@@ -207,8 +218,9 @@ async function run() {
   check('题号编排：第 1 题与第 41 题', /第 1 题/.test(d.querySelector('#ztMain').textContent) &&
     /第 41 题/.test(d.querySelector('#ztMain').textContent));
   // v6：默认进入做题模式（白纸）——年份完成度、历史痕迹全部隐藏
-  check('默认进入做题模式：工具栏「做题中」+「对答案」',
-    /做题中/.test(d.querySelector('#ztMain').textContent) && /对答案/.test(d.querySelector('#ztMain').textContent));
+  // 96da760 起：做题模式开关已从工具栏移到顶栏常驻按钮 #ztExamModeBtn
+  check('默认进入做题模式：顶栏「做题中」+ 工具栏「对答案」',
+    /做题中/.test((d.getElementById('ztExamModeBtn') || {}).textContent || '') && /对答案/.test(d.querySelector('#ztMain').textContent));
   check('做题模式：年份列表不显示完成度', !/\/40/.test(d.querySelector('#yearList').textContent));
   check('做题模式：进度显示「已选 0/40」', /已选 0\/40/.test(d.querySelector('#ztMain').textContent));
   // v3 白纸：初始无结果条/无预选/解析收起
@@ -463,8 +475,8 @@ async function run() {
   for (let i = 0; i < 60; i++) { await sleep(100); y2 = d2.querySelectorAll('#yearList .ol-nav-item').length; if (y2) break; }
   await sleep(300);
 
-  check('重开：默认进入做题模式（做题中 + 已选 0/40）',
-    /做题中/.test(d2.querySelector('#ztMain').textContent) && /已选 0\/40/.test(d2.querySelector('#ztMain').textContent));
+  check('重开：默认进入做题模式（顶栏做题中 + 已选 0/40）',
+    /做题中/.test((d2.getElementById('ztExamModeBtn') || {}).textContent || '') && /已选 0\/40/.test(d2.querySelector('#ztMain').textContent));
   check('重开：年份完成度隐藏（尽管库中已有历史作答）', !/\/40/.test(d2.querySelector('#yearList').textContent));
 
   const card2 = d2.querySelector('#ztMain .question-card');

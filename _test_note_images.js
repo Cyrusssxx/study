@@ -27,6 +27,8 @@ const ROOT = __dirname;
 const QUIZ_PATH = path.resolve(ROOT, process.env.QUIZ_HTML || 'pwa/quiz.html');
 const QUIZ_SRC = fs.readFileSync(QUIZ_PATH, 'utf8');
 const BACKEND_SRC = fs.readFileSync(path.join(ROOT, 'pwa/js/backend.js'), 'utf8');
+// 库版本跟随 backend：页面加载后库会被升级到 DB_VER，测试再用旧版本号打开 → VersionError
+const DB_VER = Number((BACKEND_SRC.match(/const DB_VER = (\d+)/) || [])[1] || 4);
 
 const FIXTURE = {
   subject: 'cn',
@@ -113,7 +115,7 @@ async function waitFor(fn, ms = 5000) {
 
   const noteImgCount = () => w.document.querySelectorAll('.note-img-item').length;
   const dbNotes = () => new Promise((res, rej) => {
-    const req = w.indexedDB.open('quiz408', 3);
+    const req = w.indexedDB.open('quiz408', DB_VER);
     req.onsuccess = () => {
       const db = req.result;
       const tx = db.transaction('notes').objectStore('notes').getAll();

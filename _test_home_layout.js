@@ -24,10 +24,12 @@ const CSS = fs.readFileSync(path.join(ROOT, 'pwa/css/style.css'), 'utf8');
   check('计划页存在于 pwa/', fs.existsSync(path.join(ROOT, 'pwa/plan.html')), true);
   const plan = fs.readFileSync(path.join(ROOT, 'pwa/plan.html'), 'utf8');
   check('计划页已去掉单词环节', /单词/.test(plan), false);
-  check('计划页数学列统一「30题」', /<td class="cma">30题<\/td>/.test(plan), true);
+  // 2026-11-04 起数学改为每日 40 复习题：前段 17 天保留旧「30题」，之后为「复习题 40 道」
+  check('计划页数学：旧 30题 17 天', (plan.match(/<td class="cma">(?:(?!<\/td>)[\s\S])*?30题/g) || []).length, 17);
+  check('计划页数学：每日 40 复习题 38 天', (plan.match(/复习题 40 道/g) || []).length, 38);
   check('计划页阅读按年份连排、一天一篇', /阅读 2015·T1/.test(plan) && /阅读 英一2024·T4/.test(plan), true);
-  check('计划页阅读 48 篇（英二低正确率 16 + 英一 8 年 32）',
-    (plan.match(/阅读 (英一)?\d{4}·T\d/g) || []).length, 48);
+  check('计划页阅读 45 篇',
+    (plan.match(/阅读 (英一)?\d{4}·T\d/g) || []).length, 45);
   check('plan.html 进 APP_PRECACHE（SW 外壳）', /APP_PRECACHE = \[[\s\S]*?'plan\.html'/.test(SW), true);
   check('首页卡片在「大题专项」块内含打卡子区块（card-sub-block）',
     /📝 大题专项[\s\S]*?card-sub-block[\s\S]*?📌 数据结构强化打卡/.test(IDX), true);

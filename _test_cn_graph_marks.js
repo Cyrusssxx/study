@@ -85,18 +85,20 @@ const sleep = ms => new Promise(r => setTimeout(r, ms));
   check('题注 b 仍是红字', cs(pick('.cg-cap b')).color, 'var(--danger)');
   check('表格 b 仍是主题色', cs(pick('.cg-tb td b')).color, 'var(--c)');
 
+  // jsdom 30 的 getComputedStyle 改为返回计算值（rem → px，根字号 16px），
+  // 因此字号断言用 px；行高/内边距无单位换算，保持原样。
   console.log('\n--- 场景 6：字号 / 行距放大 ---');
   const li = pick('.cg-pts > li');
-  check('要点字号 .93rem', cs(li).fontSize, '0.93rem');
+  check('要点字号 .93rem', cs(li).fontSize, '14.88px');
   check('要点行高 1.8', cs(li).lineHeight, '1.8');
   check('要点上下内边距 7px', cs(li).paddingTop, '7px');
-  check('块标题字号 1.04rem', cs(pick('.cg-block > h3')).fontSize, '1.04rem');
-  check('题注字号 .81rem', cs(pick('.cg-cap')).fontSize, '0.81rem');
+  check('块标题字号 1.04rem', cs(pick('.cg-block > h3')).fontSize, '16.64px');
+  check('题注字号 .81rem', cs(pick('.cg-cap')).fontSize, '12.96px');
   check('题注行高 1.7', cs(pick('.cg-cap')).lineHeight, '1.7');
-  check('表格字号 .87rem', cs(pick('.cg-tb')).fontSize, '0.87rem');
-  check('提示块字号 .9rem', cs(pick('.cg-tip')).fontSize, '0.9rem');
+  check('表格字号 .87rem', cs(pick('.cg-tb')).fontSize, '13.92px');
+  check('提示块字号 .9rem', cs(pick('.cg-tip')).fontSize, '14.4px');
   check('提示块行高 1.78', cs(pick('.cg-tip')).lineHeight, '1.78');
-  check('字段名字号 .8rem', cs(pick('.cg-f b')).fontSize, '0.8rem');
+  check('字段名字号 .8rem', cs(pick('.cg-f b')).fontSize, '12.8px');
 
   console.log('\n--- 场景 7：源码层面留痕（防止后续改样式把 reset 又写回前面）---');
   const styleBlock = SRC.slice(SRC.indexOf('<style'), SRC.indexOf('</style>'));

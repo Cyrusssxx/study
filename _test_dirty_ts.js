@@ -20,10 +20,15 @@ const sleep = ms => new Promise(r => setTimeout(r, ms));
 
 const DIRTY_MS = 1791792848553;   // 备份里的真实坏值（ds_0143 / ds_zt2009_4 同款数字时间戳）
 
-// 用与 backend 相同的库结构（quiz408 v3）预置脏数据
+// 库版本必须跟随 backend 的 DB_VER：预置用旧版本号建库后，页面会把它升级到 DB_VER，
+// 之后测试再用旧版本号打开就会抛 VersionError（DB_VER 每升一次都会踩到，故动态读取）。
+const DB_VER = Number((fs.readFileSync(path.join(ROOT, 'pwa/js/backend.js'), 'utf8')
+  .match(/const DB_VER = (\d+)/) || [])[1] || 4);
+
+// 用与 backend 相同的库结构（quiz408，版本=DB_VER）预置脏数据
 function seed(factory) {
   return new Promise((resolve, reject) => {
-    const req = factory.open('quiz408', 3);
+    const req = factory.open('quiz408', DB_VER);
     req.onupgradeneeded = () => {
       const db = req.result;
       if (!db.objectStoreNames.contains('progress')) {
@@ -58,7 +63,7 @@ function seed(factory) {
 
 function readStore(factory, store) {
   return new Promise((resolve, reject) => {
-    const req = factory.open('quiz408', 3);
+    const req = factory.open('quiz408', DB_VER);
     req.onsuccess = () => {
       const db = req.result;
       const r = db.transaction(store).objectStore(store).getAll();

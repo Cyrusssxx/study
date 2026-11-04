@@ -55,20 +55,10 @@ async function run() {
       w.HTMLCanvasElement.prototype.toDataURL = () => 'data:image/jpeg;base64,X';
       w.getSelection = () => ({ isCollapsed: true, rangeCount: 0, removeAllRanges() {}, toString: () => '' });
       w.NodeFilter = { FILTER_ACCEPT: 1, FILTER_REJECT: 2, SHOW_TEXT: 4, SHOW_ELEMENT: 1 };
-      w.Document.prototype.createTreeWalker = function (root, what, filter) {
-        // 极简 walker：只遍历 root 下直接文本节点（jsdom 无 TreeWalker，测逻辑用序列化路径替代）
-        const nodes = [];
-        (function collect(n) {
-          if (n.nodeType === 3) nodes.push(n);
-          n.childNodes && [...n.childNodes].forEach(collect);
-        })(root);
-        let i = -1;
-        return {
-          currentNode: null,
-          nextNode() { i++; return i < nodes.length ? nodes[i] : null; },
-          get _list() { return nodes; }
-        };
-      };
+      // 原来这里覆盖 Document.prototype.createTreeWalker，返回 currentNode:null 的极简 walker；
+      // 但 querySelector 内部（dom-selector）同样走 createTreeWalker，拿到残缺 walker 会崩
+      // （Cannot read properties of null (reading 'contains')），页面初始化直接中断。
+      // jsdom 30 已原生支持 TreeWalker + NodeFilter，删掉覆盖即可。
     }
   });
   const w = dom.window;

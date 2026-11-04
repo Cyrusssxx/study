@@ -13,7 +13,7 @@
 //       5) 重复 pause 幂等（不重置 paused_at）
 //       6) 交卷：used_sec 扣除暂停，且已提交会话不能再 pause
 //   二、前端接线
-//       7) 顶栏暂停按钮 / 遮罩 / 三个函数存在
+//       7) 顶栏暂停按钮 / 暂停提示（无遮罩） / 三个函数存在
 //       8) 暂停时清 interval、冻结文案、按钮变「继续」
 //       9) 暂停时翻题被拦截（键盘/侧键都走 examPrev/examNext）
 //      10) 交卷前自动 resume，成绩单「时长」优先用 used_sec
@@ -190,8 +190,10 @@ function inline(src) {
   console.log('\n--- 二、前端接线 ---');
   check('顶栏有暂停按钮', !!doc.getElementById('examPauseBtn'), true);
   check('暂停按钮文案「⏸ 暂停」', doc.getElementById('examPauseBtn').textContent.trim(), '⏸ 暂停');
-  check('有全屏遮罩', !!doc.getElementById('examPauseMask'), true);
-  check('遮罩内有「继续考试」', /继续考试/.test(doc.getElementById('examPauseMask').textContent), true);
+  // 2026-11 改：暂停只冻结计时 —— 不再弹全屏遮罩、不再模糊背景（用户明确要求），
+  // 改为顶栏计时器变「⏸ 暂停中」+ #examPauseHint 显示累计暂停时长，页面照常可见。
+  check('不再有全屏遮罩（只冻结计时）', !!doc.getElementById('examPauseMask'), false);
+  check('顶栏有暂停提示元素 #examPauseHint', !!doc.getElementById('examPauseHint'), true);
   for (const fn of ['togglePause', 'pauseExam', 'resumeExam', 'setPaused', 'persistAnswers']) {
     check(`函数 ${fn} 已定义`, typeof w[fn], 'function');
   }
@@ -203,19 +205,19 @@ function inline(src) {
   w.setPaused(true, 0);
   await sleep(300);
   check('暂停后计时文案冻结为「⏸ 暂停中」', timerEl.textContent, '⏸ 暂停中');
-  check('暂停后遮罩可见', doc.getElementById('examPauseMask').style.display, 'flex');
+  check('暂停后顶栏显示暂停提示', doc.getElementById('examPauseHint').style.display, '');
   check('暂停后按钮变「▶ 继续」', doc.getElementById('examPauseBtn').textContent.trim(), '▶ 继续');
   check('暂停后计时器挂 timer-paused 类', timerEl.classList.contains('timer-paused'), true);
-  check('遮罩提示：本场尚未累计暂停', doc.getElementById('examPauseHint').textContent.trim(), '本场尚未累计暂停时长');
-  check('遮罩挡住答题区（z-index 低于导航栏，仍可从导航离开）',
-    /\.exam-pause-mask\s*\{[^}]*position:\s*fixed/.test(CSS), true);
+  check('提示文案：本场尚未累计暂停', doc.getElementById('examPauseHint').textContent.trim(), '已暂停 · 计时已停');
+  check('页面不再有全屏遮罩规则（2026-11 改：只冻结计时，不遮不糊）',
+    /\.exam-pause-mask\s*\{/.test(CSS), false);
 
   w.setPaused(true, 300);
-  check('累计暂停 300s 显示「5 分 0 秒」', doc.getElementById('examPauseHint').textContent.trim(), '本场已累计暂停 5 分 0 秒');
+  check('累计暂停 300s 显示「5 分 0 秒」', doc.getElementById('examPauseHint').textContent.trim(), '已暂停 5 分 0 秒');
 
   w.setPaused(false);
   await sleep(50);
-  check('恢复后遮罩隐藏', doc.getElementById('examPauseMask').style.display, 'none');
+  check('恢复后提示隐藏', doc.getElementById('examPauseHint').style.display, 'none');
   check('恢复后按钮变回「⏸ 暂停」', doc.getElementById('examPauseBtn').textContent.trim(), '⏸ 暂停');
   check('恢复后计时器摘掉 timer-paused 类', timerEl.classList.contains('timer-paused'), false);
   check('恢复后不再是暂停文案', timerEl.textContent.includes('暂停中'), false);
@@ -230,8 +232,7 @@ function inline(src) {
   check('history 优先用 used_sec', /let durSec = rec\.used_sec \|\| 0/.test(SRC), true);
   check('startTimer 支持 keepState（恢复时不清超时提示）', /function startTimer\(keepState\)/.test(SRC), true);
   check('恢复会话时带 paused 参数', /enterExam\(a\.exam_id[^)]*a\.paused/.test(SRC), true);
-  check('CSS 有暂停遮罩样式', /\.exam-pause-mask\s*\{/.test(CSS), true);
-  check('遮罩 z-index 低于导航栏（90 < 100）', /\.exam-pause-mask\s*\{[^}]*z-index:\s*90/.test(CSS), true);
+  check('已无暂停遮罩样式（不再全屏遮挡）', /\.exam-pause-mask\s*\{/.test(CSS), false);
   check('暂停中计时器有独立配色', /\.exam-timer\.timer-paused\s*\{/.test(CSS), true);
 
   dom.window.close();

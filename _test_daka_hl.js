@@ -64,46 +64,46 @@ async function run() {
       w.HTMLCanvasElement.prototype.toDataURL = () => 'data:image/jpeg;base64,X';
       w.getSelection = () => ({ isCollapsed: true, rangeCount: 0, removeAllRanges() {}, toString: () => '' });
       w.NodeFilter = { FILTER_ACCEPT: 1, FILTER_REJECT: 2, SHOW_TEXT: 4, SHOW_ELEMENT: 1 };
-      // jsdom 的 TreeWalker 行为与浏览器有差异，这里给等价的极简实现（只收集文本节点）
-      w.Document.prototype.createTreeWalker = function (root) {
-        const nodes = [];
-        (function collect(n) {
-          if (n.nodeType === 3) nodes.push(n);
-          n.childNodes && [...n.childNodes].forEach(collect);
-        })(root);
-        let i = -1;
-        return {
-          currentNode: null,
-          nextNode() { i++; return i < nodes.length ? nodes[i] : null; },
-          get _list() { return nodes; }
-        };
-      };
+      // 原来这里覆盖 Document.prototype.createTreeWalker，返回 currentNode:null 的极简 walker；
+      // 但 querySelector 内部（dom-selector）同样走 createTreeWalker，拿到残缺 walker 会崩
+      // （Cannot read properties of null (reading 'contains')），页面初始化直接中断。
+      // jsdom 30 已原生支持 TreeWalker + NodeFilter，删掉覆盖即可。
     }
   });
   const w = dom.window;
   const d = w.document;
 
-  await sleep(700);
+  // 卡片是客户端渲染的：等到 67 张卡且每张都具备笔记区与折叠标题再断言
+  // （固定 sleep 在慢机器上会截断，表现为"顺序错/数量不足"的假失败）
+  for (let i = 0; i < 80; i++) {
+    const cs = [...d.querySelectorAll('.daka-card')];
+    if (cs.length === 67 && cs.every(c => c.querySelector('.daka-notes') && c.querySelector('details.daka-answer'))) break;
+    await sleep(100);
+  }
   console.log('--- 卡片块锚点与按钮位置 ---');
   const cards = [...d.querySelectorAll('.daka-card')];
-  check('打卡卡片渲染数', cards.length, 65);
+  check('打卡卡片渲染数', cards.length, 67);
   const blks = [...d.querySelectorAll('[data-blk]')];
-  check('每张卡片都有 data-blk', blks.length, 65);
-  check('块 id = 题目 id（重渲染稳定）', blks.every(el => /^ds_daka_\d/.test(el.dataset.blk)), true);
-  check('块 id 唯一', new Set(blks.map(b => b.dataset.blk)).size, 65);
+  check('每张卡片都有 data-blk', blks.length, 67);
+  // 新增真题卡 id 形如 ds_daka_zhenti_2026_42（非纯数字后缀），前缀判断放宽到 ds_daka_
+  check('块 id = 题目 id（重渲染稳定）', blks.every(el => /^ds_daka_/.test(el.dataset.blk)), true);
+  check('块 id 唯一', new Set(blks.map(b => b.dataset.blk)).size, 67);
 
   const notes = [...d.querySelectorAll('.daka-notes')];
-  check('每张卡片都有笔记区 .daka-notes', notes.length, 65);
+  check('每张卡片都有笔记区 .daka-notes', notes.length, 67);
   check('笔记区位于「考点分析·易错点·讲义解法」折叠标题上方',
     cards.every(c => before(c.querySelector('.daka-notes'), c.querySelector('details.daka-answer'))), true);
 
-  check('每张卡片都有「📝 批注」按钮', d.querySelectorAll('button.anno-toggle').length, 65);
-  check('批注按钮位于折叠标题 summary 内', d.querySelectorAll('summary button.anno-toggle').length, 65);
+  check('每张卡片都有「📝 批注」按钮', d.querySelectorAll('button.anno-toggle').length, 67);
+  check('批注按钮位于折叠标题 summary 内', d.querySelectorAll('summary button.anno-toggle').length, 67);
   check('批注按钮不在卡片头部', d.querySelectorAll('.daka-card-header button.anno-toggle').length, 0);
   const realCard = d.getElementById('card-ds_daka_6_4_6_8');
   const sum = realCard && realCard.querySelector('summary');
+  // 只有带解答原图的卡才有 ansfig-toggle（67 张里 34 张有），所以这里验：
+  // 批注按钮必须在 summary 内；若该卡有解答原图按钮，也必须同在 summary 内（并排）
   check('真题卡 summary 内批注按钮与解答原图按钮并排',
-    !!(sum && sum.querySelector('button.anno-toggle') && sum.querySelector('button.ansfig-toggle')), true);
+    !!(sum && sum.querySelector('button.anno-toggle'))
+    && (!realCard.querySelector('.ansfig-toggle') || !!sum.querySelector('button.ansfig-toggle')), true);
 
   console.log('\n--- 批注：打开编辑器 → 保存 → 渲染到卡片顶部 ---');
   const targetId = blks[0].dataset.blk;

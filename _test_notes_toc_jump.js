@@ -37,9 +37,9 @@ const NOTES = JSON.stringify({
   const src = fs.readFileSync(path.join(ROOT, 'pwa/notes.html'), 'utf8');
   const common = fs.readFileSync(path.join(ROOT, 'pwa/js/common.js'), 'utf8');
   check('节点击一律跳转（不再 hassub→只折叠）',
-    /const secLink = e\.target\.closest\('\.notes-toc-sec'\);\s*\n\s*if \(!secLink\) return;\s*\n\s*jumpTo\(secLink\.dataset\.sec, false\);/.test(src), true);
+    /const secLink = e\.target\.closest\('\.notes-toc-sec'\);\s*\n\s*if \(!secLink\) return;\s*\n\s*ensureSecRendered\(secLink\.dataset\.sec\);\s*\n\s*jumpTo\(secLink\.dataset\.sec, false\);/.test(src), true);
   check('箭头区单独折叠（不跳转）', /e\.target\.closest\('\.toc-sec-arrow'\)/.test(src) && /toggleTocSec\(arrowSec\)/.test(src), true);
-  check('章标题可点跳转（data-sec=本章首节）', /notes-toc-ch" data-sec="\$\{chFirst\}"/.test(src) && /chLink\.dataset\.sec\) jumpTo/.test(src), true);
+  check('章标题可点跳转（data-sec=本章首节）', /notes-toc-ch" data-sec="\$\{chFirst\}"/.test(src) && /if \(chLink\.dataset\.sec\)[\s\S]{0,90}?jumpTo\(chLink\.dataset\.sec, false\)/.test(src), true);
   check('跳转前取消滚动恢复追滚（cancelScrollRestore）',
     /function cancelScrollRestore\(\)/.test(src) && /jumpTo\(name, highlight, instant\) \{\s*\n\s*cancelScrollRestore\(\)/.test(src), true);
   check('滚动带顶栏偏移（SCROLL_TOP_OFFSET=84）', /const SCROLL_TOP_OFFSET = 84;/.test(src) && /window\.scrollTo\(\{ top: Math\.max\(0, y\)/.test(src), true);

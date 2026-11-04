@@ -51,7 +51,8 @@ function check(name, got, want) {
   check('渲染 7 根柱子', d.querySelectorAll('.qs-bar').length, 7);
   check('每根柱子顶部都有指针占位行', d.querySelectorAll('.qs-bar s.qs-tip').length, 7);
   check('第一根柱子高亮为基准(pivot)', d.querySelectorAll('.qs-bar.pivot').length, 1);
-  check('基准柱子顶部显示箭头 ▾', d.querySelector('.qs-bar.pivot s.qs-tip').textContent, '▾');
+  // 4746cc5 起：柱顶指针改为实心彩色徽标（字母 P/i/j + ▸ 三角），不再用 ▾ 箭头
+  check('基准柱子顶部显示徽标 P', d.querySelector('.qs-bar.pivot s.qs-tip').textContent, 'P');
   // 速度三档已放慢 2 倍（快档 400ms 起步）
   check('速度档已放慢(快=400)', demoHtml.indexOf('data-qs-spd="400"') > -1, true);
   check('默认档为慢(1800)', demoHtml.indexOf('data-qs-spd="1800" class="on"') > -1, true);

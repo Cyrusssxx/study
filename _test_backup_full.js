@@ -19,6 +19,8 @@ function check(name, actual, expect) {
 const sleep = ms => new Promise(r => setTimeout(r, ms));
 
 const BE = fs.readFileSync(path.join(ROOT, 'pwa/js/backend.js'), 'utf8');
+// 库版本跟随 backend：页面加载后库会被升级到 DB_VER，测试再用旧版本号打开 → VersionError
+const DB_VER = Number((BE.match(/const DB_VER = (\d+)/) || [])[1] || 4);
 
 // 预置 localStorage：内容/进度类 + UI 偏好类（含中文与 JSON 字符串）
 const LS = {
@@ -43,7 +45,7 @@ const LS_N = Object.keys(LS).length;
 // 预置 IndexedDB（与 backend 相同的 quiz408 v3 结构）
 function seedDB(factory) {
   return new Promise((resolve, reject) => {
-    const req = factory.open('quiz408', 3);
+    const req = factory.open('quiz408', DB_VER);
     req.onupgradeneeded = () => {
       const db = req.result;
       if (!db.objectStoreNames.contains('progress')) {
@@ -78,7 +80,7 @@ function seedDB(factory) {
 
 function readStore(factory, store) {
   return new Promise((resolve, reject) => {
-    const req = factory.open('quiz408', 3);
+    const req = factory.open('quiz408', DB_VER);
     req.onsuccess = () => {
       const db = req.result;
       const r = db.transaction(store).objectStore(store).getAll();

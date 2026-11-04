@@ -1,5 +1,5 @@
 // 笔记重点标记回归测试（全科目生效版）：
-//   教材重点（mark/b）→ 荧光笔半高亮 / 红下边线
+//   教材重点（mark）→ 荧光笔半高亮；b/strong 只负责字重（2026-11-03 用户要求「加粗≠高亮」）
 //   我的批注（hl-* 与 note-hl-*）→ 底部实线下划线 + 极淡底
 const fs = require('fs');
 const path = require('path');
@@ -20,14 +20,15 @@ check('已无 .subj-ds 灰度限定', !/\.subj-ds/.test(css));
 check('mark 用半高亮渐变', /\.notes-body mark\s*\{[^}]*linear-gradient\(transparent 5\d%/.test(css));
 check('mark 荧光色为黄', /rgba\(250,\s*204,\s*21,\s*\.6/.test(css));
 check('换行不断裂', /\.notes-body mark[\s\S]{0,200}box-decoration-break:\s*clone/.test(css));
-check('作者加粗 b 用红色荧光', /\.notes-body b,[\s\S]{0,220}linear-gradient\(transparent 6\d%,\s*rgba\(226,\s*75,\s*74/.test(css));
-check('b 有 2px 红下边线', /\.notes-body b,[\s\S]{0,320}border-bottom:\s*2px solid rgba\(226,\s*75,\s*74/.test(css));
+// 2026-11-03 用户要求「加粗≠高亮」：b/strong 只负责字重，必须去掉荧光底与红下边线
+check('加粗不带荧光底（加粗≠高亮）', /\.notes-body b,[\s\S]{0,220}background:\s*none/.test(css));
+check('加粗无下边线（加粗≠高亮）', /\.notes-body b,[\s\S]{0,320}border-bottom:\s*none/.test(css));
 check('b 不改变文字颜色（color: inherit）', /\.notes-body b,[\s\S]{0,160}color:\s*inherit/.test(css));
 check('b 字重保持 700（不变细）', /\.notes-body b,[\s\S]{0,220}font-weight:\s*700/.test(css));
 check('b 不再整体染红（无 #a32d2d）', !/#a32d2d/.test(css));
 check('旧的 b 染色规则已删除', !/\.notes-body b\s*\{\s*color:\s*var\(--primary-dark\)/.test(css));
 check('callout 内 b 保留橙色', /\.notes-body \.key-callout b,[\s\S]{0,120}color:\s*#d48806/.test(css));
-check('深色模式 mark 降透明度', /\.dark \.notes-body mark\s*\{[^}]*rgba\(250,\s*204,\s*21,\s*\.4/.test(css));
+check('深色模式 mark 降亮度（橙色半透明，非亮黄）', /\.dark \.notes-body mark\s*\{[^}]*rgba\(251,\s*146,\s*60,\s*\.38/.test(css));
 check('深色模式 b 也不改文字色', /\.dark \.notes-body b,[\s\S]{0,200}color:\s*inherit/.test(css));
 
 console.log('▸ 我的批注：下划线语言（与教材重点区分）');

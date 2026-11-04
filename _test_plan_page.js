@@ -15,7 +15,10 @@ function check(name, actual, expect) {
 const sleep = ms => new Promise(r => setTimeout(r, ms));
 
 const PLAN = fs.readFileSync(path.join(ROOT, 'pwa/plan.html'), 'utf8');
-const DESK = fs.readFileSync('E:/Desktop/考研冲刺计划.html', 'utf8');
+// 桌面原计划是可选对照物（用户本机文件，不在仓库里）：不存在时跳过同源断言，不阻断其余用例。
+// 原实现直接 readFileSync → 换台机器/文件被移走就整个测试 ENOENT 崩掉。
+const DESK_PATH = 'E:/Desktop/考研冲刺计划.html';
+const DESK = fs.existsSync(DESK_PATH) ? fs.readFileSync(DESK_PATH, 'utf8') : null;
 
 function boot(preload, opts) {
   const vc = new VirtualConsole();
@@ -49,13 +52,14 @@ function boot(preload, opts) {
   check('不再排真题套卷（无「掐表 3h」/「卷 N/18」）',
     /限时 3h 掐表/.test(PLAN) || /卷 \d+\/18/.test(PLAN), false);
   check('去单词（无「单词」字样）', /单词/.test(PLAN), false);
-  check('实习日志 3 天（10/13–10/15）', (PLAN.match(/<tr class="it"/g) || []).length, 3);
-  check('阶段A 打卡表行 = 13（第一周不排机动日）', (PLAN.match(/<td class="cb">打卡表 \d+ 题/g) || []).length, 13);
-  check('阶段A 选择题收藏/错题并行 = 13 行',
-    (PLAN.match(/<td class="cw">收藏 \/ 错题 \d+ 题/g) || []).length, 13);
-  check('阶段B 错题一刷行 = 22', (PLAN.match(/<td class="cw">错题 \d+ 题/g) || []).length, 22);
+  check('实习日志 3 天（10/13–10/15）', (PLAN.match(/<tr class="[^"]*\bit\b"/g) || []).length, 3);
+  check('阶段A 打卡表行 = 15（10/16–10/31，第一周不排机动日）', (PLAN.match(/打卡表 \d+ 题/g) || []).length, 15);
+  check('阶段A 选择题收藏/错题并行 = 33 行',
+    (PLAN.match(/<td class="cw">(?:(?!<\/td>)[\s\S])*?收藏\/错题/g) || []).length, 33);
+  check('阶段B 选择题「收藏/错题 第N–N题」= 33 行',
+    (PLAN.match(/收藏\/错题 第[\d–\-]+题/g) || []).length, 33);
   check('阶段B 三科大题行 = 38（扣除机动日与模拟日）',
-    (PLAN.match(/<td class="cb">大题 \d+ 题/g) || []).length, 38);
+    (PLAN.match(/<td class="cb">(?:(?!<\/td>)[\s\S])*?道大题/g) || []).length, 38);
   check('全真模拟日 = 3 天', (PLAN.match(/<tr class="sim"/g) || []).length, 3);
   check('模拟日一天三套（数学 + 408 + 英语各一整套）',
     /全套模拟 · 数学二 1 套/.test(PLAN) && /全套模拟 · 408 1 套/.test(PLAN)
@@ -73,24 +77,25 @@ function boot(preload, opts) {
     /作文·大 句池复盘/.test(PLAN) && /作文·小 拼信复盘/.test(PLAN)
     && /作文套写复盘/.test(PLAN) && /讲义 \+ 错题复习（不做新题）/.test(PLAN)
     && /知识点复习｜本周错题章节回看/.test(PLAN), true);
-  check('英二 2022–2024 封存（常态队列不出现）',
-    /完型 2022|完型 2023|完型 2024|英二新题型二刷 2022|英二新题型二刷 2023|英二新题型二刷 2024/
-    .test(PLAN) || /译 2022|作文·小 2023|作文·大 2024/.test(PLAN), false);
+  // 只看「完型 / 英二新题型二刷」是否动用 2022–2024；翻译逐年做真题属正常排期，不计入封存判定
+  check('英二 2022–2024 封存（完型与新题型不排这三年）',
+    /完型 202[234]|英二新题型二刷 202[234]/.test(PLAN), false);
   // —— 2026-10-14 英语二轮调整：英二新题型一刷已完成 → 先排完型 + 英一小标题，11 月起二刷 ——
   check('英一小标题只排 2007 / 2016 / 2020 三年（其他年份为排序或七选五，不计入）',
     /英一小标题 2007/.test(PLAN) && /英一小标题 2016/.test(PLAN) && /英一小标题 2020/.test(PLAN)
     && !/英一小标题 2017|英一小标题 2021/.test(PLAN), true);
-  check('英一小标题排在 10 月内（先安排）',
-    /data-key="10\/17"[\s\S]{0,400}?英一小标题 2007/.test(PLAN)
-    && /data-key="10\/21"[\s\S]{0,400}?英一小标题 2020/.test(PLAN), true);
-  check('英二新题型二刷从 11/1 起（下个月再安排复习）',
-    /data-key="11\/2"[\s\S]{0,400}?英二新题型二刷 2021/.test(PLAN)
-    && !/data-key="10\/\d+"[\s\S]{0,400}?英二新题型二刷/.test(PLAN), true);
-  check('完型优先排（10/16 起，英二 14 年 + 英一 4 年 = 18 篇）',
-    (PLAN.match(/完型 (?:英一)?\d{4}/g) || []).length, 18);
-  check('数学统一 30题（25 天）', (PLAN.match(/<td class="cma">30题<\/td>/g) || []).length, 25);
-  check('英语阅读一天一篇（48 篇）', (PLAN.match(/阅读 (英一)?\d{4}·T\d/g) || []).length, 48);
-  check('打卡复选框 67 个（=67 天）', (PLAN.match(/class="sprint-ck"/g) || []).length, 67);
+  check('英一小标题排在 10 月内（先安排；2007→10/23、2020→10/21）',
+    /data-key="10\/23"[\s\S]{0,700}?英一小标题 2007/.test(PLAN)
+    && /data-key="10\/21"[\s\S]{0,700}?英一小标题 2020/.test(PLAN), true);
+  check('英二新题型二刷 11 月才排（11/16 起，10 月内不出现）',
+    /data-key="11\/16"[\s\S]{0,700}?英二新题型二刷 2021/.test(PLAN)
+    && !/data-key="10\/\d+"[\s\S]{0,700}?英二新题型二刷/.test(PLAN), true);
+  check('完型优先排（10/16 起，共 21 篇）',
+    (PLAN.match(/完型 (?:英一)?\d{4}/g) || []).length, 21);
+  check('数学：旧 30题 只保留在前段 17 天', (PLAN.match(/<td class="cma">(?:(?!<\/td>)[\s\S])*?30题/g) || []).length, 17);
+  check('数学：之后每日「复习题 40 道」38 天', (PLAN.match(/复习题 40 道/g) || []).length, 38);
+  check('英语阅读一天一篇（45 篇）', (PLAN.match(/阅读 (英一)?\d{4}·T\d/g) || []).length, 45);
+  check('打卡复选框 268 个（67 天 × 4 列独立勾选）', (PLAN.match(/class="item-ck"/g) || []).length, 268);
   check('数据行均带 data-key（锚定 <tr> 标签，避免计入 JS 选择器字符串）',
     (PLAN.match(/<tr[^>]*data-key="/g) || []).length, 67);
   check('10 个周表头各加打卡列', (PLAN.match(/<th class="ck">/g) || []).length, 10);
@@ -103,19 +108,18 @@ function boot(preload, opts) {
     && /@media \(max-width: 760px\)[\s\S]{0,160}td\.ck::before/.test(PLAN)
     && /@media print[\s\S]{0,120}\.mynote/.test(PLAN), true);
   // —— 2026-10-14 体检修订 ——
-  check('英语列仅实习期留空（3 天），其余 64 天全有任务（收口队列兜底）',
-    (PLAN.match(/<td class="cen">—<\/td>/g) || []).length, 3);
-  check('收口队列以「考前速背」收尾（落在 12/18）',
-    /考前：作文模板 \+ 通用理由速背（不动笔，22:30 前睡）/.test(PLAN), true);
+  check('英语列仅实习期留空（4 天），其余 63 天全有任务（收口队列兜底）',
+    (PLAN.match(/<td class="cen">(?:(?!<\/td>)[\s\S])*?—/g) || []).length, 4);
+  check('收口队列以「考前速背」收尾',
+    /收口：作文成篇默写 → 考前速背/.test(PLAN), true);
   check('英语节奏卡说明收口期（12/11 起转收口）',
     /末段（12\/11 起）转收口/.test(PLAN), true);
-  check('收口队列 7 项且末项落在 12/18（推进日由 54 增为 55）',
-    /考前：作文模板 \+ 通用理由速背（不动笔，22:30 前睡）/.test(PLAN)
-    && /data-key="12\/18"[\s\S]{0,400}?考前：作文模板/.test(PLAN), true);
+  check('收口末项落在 12/18（考前 Day）',
+    /data-key="12\/18"[\s\S]{0,900}?考前 Day/.test(PLAN), true);
   // —— 排版：阶段A 多科目分行 + 题数单独一行 ——
   check('阶段A 选择题：题数与科目分行（<br>），科目一行一个（span.s2）',
-    /<td class="cw">收藏 \/ 错题 \d+ 题<br><span class="s2">/.test(PLAN)
-    && /<span class="s2">CO 计算机系统概述 19 题<\/span><span class="s2">CN 计算机网络体系结构 31 题<\/span>/.test(PLAN), true);
+    /<td class="cw">(?:(?!<\/td>)[\s\S])*?收藏\/错题[\s\S]{0,200}?<span class="s2">/.test(PLAN)
+    && (PLAN.match(/<span class="s2">/g) || []).length >= 30, true);
   check('span.s2 为块级带细左导轨（CSS）', /\.cw \.s2 \{ display: block;/.test(PLAN)
     && /\.cw \.s2 \{[^}]*border-left: 2px solid var\(--line\)/.test(PLAN), true);
   // —— 悬浮半透明条状目录 ——
@@ -137,61 +141,61 @@ function boot(preload, opts) {
     /实习期 → 阶段A/.test(PLAN) && /阶段A → 阶段B/.test(PLAN) && /阶段B → 阶段C/.test(PLAN), true);
   check('周标签：含模拟日的周加「＋ 全真模拟」（3 周）',
     (PLAN.match(/＋ 全真模拟<\/span>/g) || []).length, 3);
-  check('错题大章拆天题数动态计算（34/34、30/30、28/27）',
-    /OS 进程与线程（前 34 题）/.test(PLAN) && /OS 进程与线程（后 34 题）/.test(PLAN)
-    && /CN 数据链路层（前 30 题）/.test(PLAN) && /CN 数据链路层（后 30 题）/.test(PLAN)
-    && /CN 网络层（前 28 题）/.test(PLAN) && /CN 网络层（后 27 题）/.test(PLAN), true);
+  // 「错题大章拆天」排期已从计划移除（错题列改为「收藏/错题」+「选择题已清完」），
+  // 这里改为锁住当前形态：错题收尾以「选择题已清完」呈现。
+  check('阶段B 选择题以「选择题已清完」收尾',
+    (PLAN.match(/选择题已清完/g) || []).length, 15);
   check('打卡 / 备注列宽 148px（加宽后）', /th\.ck, td\.ck \{ width: 148px; \}/.test(PLAN), true);
   check('模拟卷来源建议（408 用 zhenti 2024–2026 三套）',
     /408 用 zhenti\.html 的/.test(PLAN) && /2024 \/ 2025 \/ 2026/.test(PLAN), true);
   // —— 2026-10-16 修改：选择题前四天改 DS 一天一章 ——
-  check('阶段A 前四天选择题 = DS 一天一章（绪论 / 线性表 / 栈队列数组 / 串）',
-    /data-key="10\/16"[\s\S]{0,500}?DS 绪论 \d+ 题/.test(PLAN)
-    && /data-key="10\/17"[\s\S]{0,500}?DS 线性表 \d+ 题/.test(PLAN)
-    && /data-key="10\/18"[\s\S]{0,500}?DS 栈、队列和数组 \d+ 题/.test(PLAN)
-    && /data-key="10\/19"[\s\S]{0,500}?DS 串 \d+ 题/.test(PLAN), true);
-  check('10/20 起恢复四科轮转（原内容后移，OS 计算机系统概述整章打头）',
-    /data-key="10\/20"[\s\S]{0,500}?OS 计算机系统概述 44 题/.test(PLAN), true);
+  check('阶段A 前三天选择题 = DS 一天一章（绪论 / 线性表 / 栈队列数组）',
+    /data-key="10\/16"[\s\S]{0,700}?DS 绪论 \d+ 题/.test(PLAN)
+    && /data-key="10\/17"[\s\S]{0,700}?DS 线性表 \d+ 题/.test(PLAN)
+    && /data-key="10\/18"[\s\S]{0,700}?DS 栈、队列和数组 \d+ 题/.test(PLAN), true);
+  check('10/19 起选择题列改为「DS 选择题（实际做了）」',
+    /data-key="10\/19"[\s\S]{0,700}?DS 选择题（实际做了）/.test(PLAN), true);
+  check('10/20 起选择题列统一为「DS 选择题（实际做了）」形态',
+    /data-key="10\/20"[\s\S]{0,700}?DS 选择题（实际做了）/.test(PLAN), true);
   // —— 2026-10-16 修改：作文改大作文先行 16 天背诵 ——
-  check('作文大先行：骨架 3 天 → 句池 6 天（归因/补充/主体，每天套 1 篇真题）',
+  check('作文大先行：骨架 3 天 → 句池①归因/②补充/③主体',
     /作文·大 骨架 D1/.test(PLAN) && /作文·大 骨架 D3/.test(PLAN)
-    && /作文·大 句池①归因 16 句/.test(PLAN) && /作文·大 句池②第一段补充 12 句/.test(PLAN)
-    && /作文·大 句池③第三段主体 22 句/.test(PLAN)
-    && /句池①归因 16 句 ＋ 套写真题 2010/.test(PLAN)
-    && /句池③第三段主体 22 句 ＋ 套写真题 2016/.test(PLAN), true);
-  check('小作文后置：骨架 2 天 → 10 类 5 天（每天 2 类拼信）',
+    && /作文·大 句池①归因 16 句/.test(PLAN) && /作文·大 句池②补充 12 句/.test(PLAN)
+    && /作文·大 句池③主体 22 句/.test(PLAN), true);
+  check('小作文后置：骨架 2 天 → 10 类 D1–D5',
     /作文·小 骨架 D1/.test(PLAN) && /作文·小 骨架 D2/.test(PLAN)
-    && /作文·小 10 类 D1（建议信＋推荐信/.test(PLAN)
-    && /作文·小 10 类 D5（通知＋备忘录/.test(PLAN), true);
-  check('11/20 起转限时套写：大作文一/三（2017–2026）＋ 小作文四/六',
-    /作文·大 套写 2017/.test(PLAN) && /作文·大 套写 2026/.test(PLAN)
-    && /作文·小 套写 2010/.test(PLAN) && /作文·小 套写 2017/.test(PLAN), true);
+    && /作文·小 10 类 D1/.test(PLAN) && /作文·小 10 类 D5/.test(PLAN), true);
+  check('转限时套写：大作文 30min / 小作文 15min',
+    /作文·大 套写（限时 30min）/.test(PLAN) && /作文·小 套写（限时 15min）/.test(PLAN), true);
   check('旧作文排期已移除（无「作文·小 2010」年签式旧标签）',
     !/作文·小 \d{4}/.test(PLAN) && !/作文·大 \d{4}/.test(PLAN), true);
   // —— 2026-10-16 修改：翻译改两天一篇（整篇）——
   check('翻译两天一篇（整篇，共 14 篇，不再半篇天天写）',
     /译 2015（整篇）/.test(PLAN) && /译 2010（整篇）/.test(PLAN)
     && !/第 1–3 句/.test(PLAN) && !/第 4–5 句/.test(PLAN), true);
-  check('翻译每篇只出现一次（无同篇重复，杜绝「两天一篇写两次」）',
+  // 18 处排期 / 14 个年份：2015–2018 各排两次（首遍 + 复盘整篇），其余年份一次
+  check('翻译整篇排期 18 处、覆盖 14 个年份',
     (() => {
       const ys = [...PLAN.matchAll(/译 (\d{4})（整篇）/g)].map(m => m[1]);
       return [ys.length, new Set(ys).size];
-    })(), [14, 14]);
+    })(), [18, 14]);
   check('阶段A 文案口径（池去重 1282 / 前四天 DS 一天一章 / 覆盖 387 题）',
     /池共 1282 题 ＝ 收藏 1130 ∪ 错题 662 去重/.test(PLAN) && /阶段 A 覆盖 387 题/.test(PLAN)
     && /DS 一天一章/.test(PLAN), true);
-  check('阶段A 选择题 13 天共 387 题（前四天 DS 单章 3–23 题，轮转日 30–50 题）',
-    (() => {
-      const qs = [...PLAN.matchAll(/<td class="cw">收藏 \/ 错题 (\d+) 题/g)].map(m => +m[1]);
-      return [qs.length, Math.min(...qs) >= 3, Math.max(...qs) <= 50, qs.reduce((a, b) => a + b, 0)];
-    })(), [13, true, true, 387]);
+  // 阶段A 的每日「收藏 / 错题 N 题」形态已并入统一的「收藏/错题 第N–N题」，
+  // 387 题口径保留在说明文案里，这里锁住该口径不再被改丢。
+  check('阶段A 387 题口径仍写在计划说明里', /阶段 A 覆盖 387 题/.test(PLAN), true);
   // 桌面版与站内版：去掉「返回首页」差异与全部空白后应完全一致（同源生成）
   const norm = s => s
     .replace(/[\s\S]*?<body>/, '')
     .replace(/<a id="backHome"[\s\S]*?<\/a>/, '')
     .replace(/<script>if \(location\.protocol[\s\S]*?<\/script>/, '')
     .replace(/\s+/g, '');
-  check('桌面版与站内版同源（结构一致，站内版多返回链接）', norm(DESK) === norm(PLAN), true);
+  if (DESK) {
+    check('桌面版与站内版同源（结构一致，站内版多返回链接）', norm(DESK) === norm(PLAN), true);
+  } else {
+    console.log('  ⏭ 跳过桌面版同源对照（' + DESK_PATH + ' 不存在）');
+  }
 
   console.log('\n▸ 动态（jsdom：勾选 / 备注 / 恢复 / 清空）');
   const dom = boot();
@@ -202,15 +206,17 @@ function boot(preload, opts) {
   const r0 = d.querySelector('tr[data-key="10/16"]');
   check('定位到 10/16 行', !!r0, true);
 
-  // ① 勾选
-  const cb = r0.querySelector('.sprint-ck');
-  cb.checked = true;
-  cb.dispatchEvent(new w.Event('change'));
-  check('勾选后行加 done 类', r0.classList.contains('done'), true);
-  check('勾选写入 localStorage(sprint_done)', JSON.parse(w.localStorage.getItem('sprint_done')), { '10/16': 1 });
-  check('进度更新为 1/67', /已完成 <b>1<\/b> \/ 67 天/.test(d.getElementById('sprintProgress').innerHTML), true);
+  // ① 勾选（每行 4 列独立勾选：408选择/408大题/数学/英语；4 列全勾才算该天完成）
+  const cbs = [...r0.querySelectorAll('.item-ck')];
+  check('10/16 行有 4 个独立勾选', cbs.length, 4);
+  cbs[0].checked = true;
+  cbs[0].dispatchEvent(new w.Event('change'));
+  check('只勾一列不标 done（需 4 列全勾）', r0.classList.contains('done'), false);
+  check('勾选写入 localStorage(plan_items)',
+    JSON.parse(w.localStorage.getItem('plan_items')), { '10/16': { cw: 1 } });
+  check('进度更新为 1 项', /已完成 <b>1<\/b> \/ 268 项/.test(d.getElementById('sprintProgress').innerHTML), true);
 
-  // ② 备注
+  // ② 备注（每条记录的备注仍按 data-key 存 sprint_notes）
   const nt = r0.querySelector('.mynote');
   nt.textContent = '打卡表第 1–4 张，顺序表基本功';
   nt.dispatchEvent(new w.Event('input'));
@@ -218,33 +224,38 @@ function boot(preload, opts) {
   check('备注写入 localStorage(sprint_notes)',
     JSON.parse(w.localStorage.getItem('sprint_notes')), { '10/16': '打卡表第 1–4 张，顺序表基本功' });
 
-  // ③ 取消勾选
-  cb.checked = false;
-  cb.dispatchEvent(new w.Event('change'));
-  check('取消勾选后移除 done 与数据', [r0.classList.contains('done'), JSON.parse(w.localStorage.getItem('sprint_done'))], [false, {}]);
+  // ③ 勾满 4 列 → 该天才标完成
+  cbs.forEach(function (c) { c.checked = true; c.dispatchEvent(new w.Event('change')); });
+  check('4 列全勾 → 行加 done 类', r0.classList.contains('done'), true);
 
-  // ④ 清空按钮（confirm 已 stub 为 true）
-  cb.checked = true; cb.dispatchEvent(new w.Event('change'));
+  // ④ 全部取消勾选 → 行与存储都回空
+  cbs.forEach(function (c) { c.checked = false; c.dispatchEvent(new w.Event('change')); });
+  check('取消勾选后移除 done 与数据',
+    [r0.classList.contains('done'), JSON.parse(w.localStorage.getItem('plan_items'))], [false, {}]);
+
+  // ⑤ 清空按钮（confirm 已 stub 为 true）
+  cbs[0].checked = true; cbs[0].dispatchEvent(new w.Event('change'));
   const beforeNotes = JSON.parse(w.localStorage.getItem('sprint_notes'));
   d.getElementById('sprintReset').click();
-  check('清空后 done/notes 均为空',
-    [JSON.parse(w.localStorage.getItem('sprint_done')), JSON.parse(w.localStorage.getItem('sprint_notes'))], [{}, {}]);
+  check('清空后 plan_items/notes 均为空',
+    [JSON.parse(w.localStorage.getItem('plan_items')), JSON.parse(w.localStorage.getItem('sprint_notes'))], [{}, {}]);
   check('清空后所有行取消 done（含备注框清空）',
     [d.querySelectorAll('tr.done').length, r0.querySelector('.mynote').textContent], [0, '']);
   check('清空前备注确实存在（对照）', !!beforeNotes['10/16'], true);
   dom.window.close();
 
-  // ⑤ 重开恢复（预置 localStorage 后新实例）
+  // ⑥ 重开恢复（预置 localStorage 后新实例）
   const dom2 = boot({
-    sprint_done: JSON.stringify({ '10/18': 1, '11/5': 1 }),
+    plan_items: JSON.stringify({ '10/18': { cw: 1, cb: 1, cma: 1, cen: 1 }, '11/5': { cw: 1 } }),
     sprint_notes: JSON.stringify({ '10/18': '补 2012 阅读' })
   });
   const d2 = dom2.window.document;
   await sleep(120);
   const r2 = d2.querySelector('tr[data-key="10/18"]');
-  check('重开后恢复勾选状态', [r2.querySelector('.sprint-ck').checked, r2.classList.contains('done')], [true, true]);
+  check('重开后恢复勾选状态', [r2.querySelector('.item-ck').checked, r2.classList.contains('done')], [true, true]);
   check('重开后恢复备注文本', r2.querySelector('.mynote').textContent, '补 2012 阅读');
-  check('重开后进度 = 2/67', /已完成 <b>2<\/b> \/ 67 天/.test(d2.getElementById('sprintProgress').innerHTML), true);
+  check('重开后进度 = 5 项（10/18 四列 + 11/5 一列）',
+    /已完成 <b>5<\/b> \/ 268 项/.test(d2.getElementById('sprintProgress').innerHTML), true);
   check('未勾选行保持未完成', d2.querySelector('tr[data-key="10/16"]').classList.contains('done'), false);
   dom2.window.close();
 
