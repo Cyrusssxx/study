@@ -143,6 +143,7 @@
         <div id="examView" style="display:none">
             <div class="exam-topbar">
                 <span class="exam-timer" id="examTimer">--:--</span>
+                <span class="exam-pause-hint" id="examPauseHint" style="display:none;"></span>
                 <button class="btn btn-sm btn-secondary" id="examPauseBtn" onclick="togglePause()"
                     title="暂停计时：暂停期间时间不走，可离开去喝水/上厕所，回来继续">⏸ 暂停</button>
                 <span class="exam-overtime" id="examOvertime" style="display:none;">时间到 · 可继续作答</span>
@@ -160,16 +161,6 @@
                 <button class="btn btn-secondary" onclick="examNext()">下一题 →</button>
             </div>
 
-            <!-- 暂停遮罩：全屏挡住题目，防止暂停期间偷看/误操作 -->
-            <div class="exam-pause-mask" id="examPauseMask" style="display:none;">
-                <div class="exam-pause-card">
-                    <div class="exam-pause-ico">⏸</div>
-                    <h3>计时已暂停</h3>
-                    <p>这段时间不计入考试用时，可以放心离开。<br>回来点下面的按钮继续作答。</p>
-                    <button class="btn btn-primary" onclick="togglePause()">▶ 继续考试</button>
-                    <div class="exam-pause-hint" id="examPauseHint"></div>
-                </div>
-            </div>
         </div>
 
         <!-- 成绩单 / 历史试卷回顾视图 -->
@@ -398,6 +389,12 @@
         enterExam(data.exam_id, data.questions, {}, data.duration_sec, mode, data.duration_sec);
     }
 
+    // 「X 分 Y 秒」：floor 取分、余数取秒，59 分 1 秒不会再显示成 60 分钟
+    function fmtDur(sec) {
+        const t = Math.max(0, Math.floor(sec));
+        return Math.floor(t / 60) + ' 分 ' + (t % 60) + ' 秒';
+    }
+
     async function checkActive() {
         let data;
         try {
@@ -417,7 +414,7 @@
         }
         if (data.active) {
             const a = data.active;
-            if (confirm(`检测到未完成的考试（${MODE_NAMES[a.mode] || a.mode}，${a.remaining_sec > 0 ? '剩余 ' + Math.ceil(a.remaining_sec / 60) + ' 分钟' : '已超时 ' + Math.ceil(-a.remaining_sec / 60) + ' 分钟'}${a.paused ? '，当前为暂停状态' : ''}），是否继续？\n取消将放弃该场考试。`)) {
+            if (confirm(`检测到未完成的考试（${MODE_NAMES[a.mode] || a.mode}，${a.remaining_sec > 0 ? '剩余 ' + fmtDur(a.remaining_sec) : '已超时 ' + fmtDur(-a.remaining_sec)}${a.paused ? '，当前为暂停状态' : ''}），是否继续？\n取消将放弃该场考试。`)) {
                 enterExam(a.exam_id, a.questions, a.answers || {}, a.remaining_sec, a.mode, a.duration_sec, a.paused, a.paused_sec || 0);
                 return;
             }
@@ -500,11 +497,12 @@
         startTimer(true);   // keepState：暂停前已超时的提示不要被清掉
     }
 
+    // 暂停 = 只冻结计时：不再弹全屏遮罩、不再模糊背景（2026-11 改），
+    // 顶栏计时器变「⏸ 暂停中」，旁边提示累计暂停时长，页面照常可见。
     function setPaused(p, pausedSec) {
-        isPaused = !!p;
+        isPaused = p;
         const timerEl = document.getElementById('examTimer');
         const btn = document.getElementById('examPauseBtn');
-        const mask = document.getElementById('examPauseMask');
         const hint = document.getElementById('examPauseHint');
         if (p) {
             clearInterval(timerHandle);
@@ -514,35 +512,39 @@
             btn.textContent = '▶ 继续';
             btn.classList.remove('btn-secondary');
             btn.classList.add('btn-primary');
-            mask.style.display = 'flex';
             const done = Math.floor(pausedSec || 0);
             hint.textContent = done >= 60
-                ? `本场已累计暂停 ${Math.floor(done / 60)} 分 ${done % 60} 秒`
-                : '本场尚未累计暂停时长';
+                ? `已暂停 ${Math.floor(done / 60)} 分 ${done % 60} 秒`
+                : '已暂停 · 计时已停';
+            hint.style.display = '';
         } else {
             timerEl.classList.remove('timer-paused');
             btn.textContent = '⏸ 暂停';
             btn.classList.add('btn-secondary');
             btn.classList.remove('btn-primary');
-            mask.style.display = 'none';
+            hint.style.display = 'none';
             updateTimerText();
         }
     }
 
     function updateTimerText() {
         const el = document.getElementById('examTimer');
+        // 分/秒都用取整后的整数计算：直接拿浮点去 % 60 会得到 59.999… 这类串，
+        // 这里统一先取整，保证 mm:ss 永远是两位整数。
+        const fmt = (sec) => {
+            const t = Math.max(0, Math.floor(sec));
+            const mm = String(Math.floor(t / 60)).padStart(2, '0');
+            const ss = String(t % 60).padStart(2, '0');
+            return mm + ':' + ss;
+        };
         // 连续计时：限时内显示剩余倒计时；到时后不归零重计，直接延续显示总用时
         // （限时 60 分钟用时 70 分钟就显示 ⏰ 70:00），最后几分钟不闪烁
         if (remainingSec > 0) {
-            const mm = String(Math.floor(remainingSec / 60)).padStart(2, '0');
-            const ss = String(remainingSec % 60).padStart(2, '0');
-            el.textContent = `⏳ ${mm}:${ss}`;
+            el.textContent = '⏳ ' + fmt(remainingSec);
             el.classList.remove('timer-overtime');
         } else {
             const elapsed = Math.max(0, examDurationSec - remainingSec);
-            const mm = String(Math.floor(elapsed / 60)).padStart(2, '0');
-            const ss = String(elapsed % 60).padStart(2, '0');
-            el.textContent = `⏰ ${mm}:${ss}`;
+            el.textContent = '⏰ ' + fmt(elapsed);
             el.classList.add('timer-overtime');
         }
     }
@@ -676,7 +678,6 @@
                 });
             } catch (e) { }
             isPaused = false;
-            document.getElementById('examPauseMask').style.display = 'none';
         }
         const resp = await api('/api/exam/submit', {
             method: 'POST',
@@ -849,7 +850,7 @@
                 <td>${MODE_NAMES[rec.mode] || rec.mode}</td>
                 <td class="score-cell">${rec.correct_count * 2}</td>
                 <td>${rec.correct_count}/${rec.total_count}</td>
-                <td>${Math.max(1, Math.round(durSec / 60))} 分钟</td>
+                <td>${fmtDur(durSec)}</td>
                 <td><a class="btn btn-sm btn-secondary" href="quiz.html?mode=exam_review&exam_id=${rec.id}&fresh=1" title="进入试卷回顾（刷题界面）：默认只看本次错题，可切全部（笔记随题带出）">查看</a></td>
             </tr>`;
         }

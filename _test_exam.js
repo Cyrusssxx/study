@@ -204,7 +204,11 @@ ok('横幅样式（亮/暗）', /\.exam-replay-banner\s*\{/.test(CSS) && /\.dark
 console.log('--- 考试计时：连续计时不闪烁 + 实际用时 ---');
 // 签名后面追加了 paused / pausedSec（暂停器），老断言只认到 durationSec
 ok('enterExam 接收限时秒数', /function enterExam\(id, questions, answers, remaining, mode, durationSec[,)]/.test(EXAM_HTML) && /examDurationSec = durationSec \|\| remaining;/.test(EXAM_HTML));
-ok('超时显示总用时（不归零重计）', /⏰ \$\{mm}:\$\{ss}/.test(EXAM_HTML) && /examDurationSec - remainingSec/.test(EXAM_HTML) && !/\+\$\{mm}:\$\{ss}/.test(EXAM_HTML));
+ok('超时显示总用时（不归零重计）', /el\.textContent = '⏰ ' \+ fmt\(elapsed\)/.test(EXAM_HTML) && /examDurationSec - remainingSec/.test(EXAM_HTML));
+ok('计时格式先取整再分秒（杜绝 59.999/伪 60）', /const t = Math\.max\(0, Math\.floor\(sec\)\);/.test(EXAM_HTML) && /Math\.floor\(t % 60\)|t % 60/.test(EXAM_HTML));
+ok('剩余/用时按「X 分 Y 秒」而非 ceil 整分钟', /function fmtDur\(sec\)/.test(EXAM_HTML) && !/Math\.ceil\(a\.remaining_sec/.test(EXAM_HTML));
+ok('暂停不再有全屏遮罩与模糊', !/examPauseMask/.test(EXAM_HTML) && !/exam-pause-mask/.test(CSS));
+ok('暂停时长提示挂在顶栏计时器旁', /id="examPauseHint"[^>]*style="display:none/.test(EXAM_HTML) && /已暂停/.test(EXAM_HTML));
 ok('最后几分钟不再闪烁', !/timer-warning/.test(EXAM_HTML));
 // 实际用时口径：优先后端结算的 used_sec（扣掉暂停），旧记录退回墙钟 t1 - t0
 ok('历史时长显示实际用时（优先 used_sec，扣除暂停）',
