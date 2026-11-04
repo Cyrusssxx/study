@@ -88,7 +88,24 @@
         }
     }
 
+    // 把「收藏里缺考点分析」的题号复制出来（发给 AI 批量补写用）
+    function copyMissKp() {
+        const miss = (window.__FAVS || []).filter(q => !q.kp_analysis)
+            .map(q => ({ id: q.id, subject: q.subject, number: q.number }));
+        const text = JSON.stringify(miss);
+        const done = () => alert(`已复制 ${miss.length} 条缺口题号，可直接粘贴发给 AI 补写考点分析`);
+        if (navigator.clipboard) navigator.clipboard.writeText(text).then(done).catch(fallback);
+        else fallback();
+        function fallback() {
+            const a = document.createElement('a');
+            a.href = URL.createObjectURL(new Blob([text], { type: 'application/json' }));
+            a.download = 'fav_missing_kp.json';
+            a.click();
+        }
+    }
+
     function renderFavList(questions) {
+        window.__FAVS = questions;
         const container = document.getElementById('favList');
 
         if (questions.length === 0) {
@@ -101,7 +118,19 @@
             return;
         }
 
-        let html = `<div class="list-header"><span>共 ${questions.length} 道收藏</span></div>`;
+        // 考点分析缺口统计：收藏题里点了「考点分析」是空的那些（题目对象已带 kp_analysis）
+        const missKp = questions.filter(q => !q.kp_analysis);
+        const missBySub = {};
+        missKp.forEach(q => { missBySub[q.subject] = (missBySub[q.subject] || 0) + 1; });
+        const SUBNAME = { co: '计组', os: '操作系统', cn: '计网', ds: '数据结构' };
+        const detail = Object.keys(missBySub).map(k => `${SUBNAME[k] || k} ${missBySub[k]}`).join(' · ');
+        let html = `<div class="list-header"><span>共 ${questions.length} 道收藏`
+            + (missKp.length
+                ? ` · <b style="color:#b45309">缺考点分析 ${missKp.length} 道</b>${detail ? `（${detail}）` : ''}`
+                : ` · <b style="color:#059669">考点分析已齐</b>`)
+            + `</span>`
+            + (missKp.length ? `<button class="btn btn-sm btn-secondary" onclick="copyMissKp()">复制缺口清单</button>` : '')
+            + `</div>`;
 
         for (const q of questions) {
             const subjectName = q.subject === 'os' ? '操作系统' :
