@@ -336,7 +336,6 @@
                 <button class="btn-explanation${ansOpen ? ' active' : ''}" onclick="toggleAns('${f.iid}')">参考答案与解析 ${ansOpen ? '▴' : '▾'}</button>
                 <button class="btn-explanation${noteOpen ? ' active' : ''}${hasNote ? ' has-note' : ''}" onclick="toggleNotePanel('${f.iid}')">笔记${hasNote ? ' ●' : ''} ${noteOpen ? '▴' : '▾'}</button>
                 ${kpBtnHtml(f, isFav)}
-                ${poolBtnHtml(f)}
             </div>
             ${ansOpen ? `<div class="explanation-panel">
                 <div class="explanation-title">参考答案与解析</div>
@@ -386,7 +385,6 @@
                 <button class="btn-explanation${ansOpen ? ' active' : ''}" onclick="toggleAns('${f.iid}')">参考答案与解析 ${ansOpen ? '▴' : '▾'}</button>
                 <button class="btn-explanation${noteOpen ? ' active' : ''}${hasNote ? ' has-note' : ''}" onclick="toggleNotePanel('${f.iid}')">笔记${hasNote ? ' ●' : ''} ${noteOpen ? '▴' : '▾'}</button>
                 ${kpBtnHtml(f, isFav)}
-                ${poolBtnHtml(f)}
             </div>
             ${ansOpen ? `<div class="explanation-panel">
                 <div class="explanation-title">参考答案与解析</div>

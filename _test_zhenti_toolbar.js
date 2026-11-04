@@ -46,7 +46,18 @@ check('存在 syncExamModeBtn()', JS.includes('function syncExamModeBtn()'), tru
 check('renderPaper 渲染后调用同步', /renderFq\(\);[\s\S]{0,90}syncExamModeBtn\(\)/.test(JS), true);
 check('同步时按 examMode 切换文案', /state\.examMode \? '做题中' : '做题模式'/.test(JS), true);
 
-console.log('\n--- 4. 样式 ---');
+console.log('\n--- 4. 错题池按钮只保留在选择题卡 ---');
+const poolCall = '${poolBtnHtml(f)}';
+const segChoice = JS.slice(JS.indexOf('function choiceCard'), JS.indexOf('function bigCard'));
+const segBig = JS.slice(JS.indexOf('function bigCard'), JS.indexOf('function dakaBigCard'));
+const segDaka = JS.slice(JS.indexOf('function dakaBigCard'), JS.indexOf('function refreshCard'));
+check('poolBtnHtml 调用总数 = 1', (JS.split(poolCall).length - 1), 1);
+check('选择题卡保留错题池按钮', segChoice.includes(poolCall), true);
+check('大题卡不含错题池按钮', segBig.includes(poolCall), false);
+check('算法题卡不含错题池按钮', segDaka.includes(poolCall), false);
+check('大题仍保留不熟/不会标记', segBig.includes('markBtnsHtml(f)'), true);
+
+console.log('\n--- 5. 样式 ---');
 
 console.log(`\nPASS ${pass} / FAIL ${fail}`);
 process.exit(fail ? 1 : 0);
