@@ -362,6 +362,164 @@
         return `<div class="kp-panel">${state.kpCache[f.iid] || '<div class="kp-loading">正在加载考点分析…</div>'}</div>`;
     }
 
+    /* ---------------- 一键复制（题干 + 选项 + 答案 + 解析） ----------------
+     * 与刷题页 copyQuestion 同源思路，但本文件是独立脚本，这里单列一份实现。
+     * 做题模式下只复制题干与选项：答案/解析里含答案，复制出去等于泄题。 */
+    function ztPlain(html) {
+        const box = document.createElement('div');
+        box.innerHTML = html || '';
+        // KaTeX 可能同时带 .katex-mathml（给屏幕阅读器的隐藏副本）与 .katex-html（可见排版），
+        // 直接取文本会把同一个公式抄两遍。有 annotation 时优先还原成 $LaTeX$（贴到 AI/markdown 更好用），
+        // 否则只保留可见排版、删掉隐藏副本。当前 zt 数据两者都没有，这里只是防御。
+        box.querySelectorAll('.katex').forEach(k => {
+            const tex = k.querySelector('annotation[encoding="application/x-tex"]');
+            if (tex && tex.textContent.trim()) { k.replaceWith('$' + tex.textContent.trim() + '$'); return; }
+            k.querySelectorAll('.katex-mathml').forEach(m => m.remove());
+        });
+        // 题干里的插图（含外置 SVG，注入后是 .zt-svgholder 内的 <svg>）统一折叠为占位符，
+        // 否则 innerText 会把 SVG 里的文字标签当正文拼进来，复制结果一团乱。
+        box.querySelectorAll('img, .zt-svgholder').forEach(n => n.replaceWith('【图】'));
+        box.querySelectorAll('svg').forEach(n => n.replaceWith('【图】'));
+        return (box.innerText || box.textContent || '')
+            .replace(/[ \t]+\n/g, '\n').replace(/\n{3,}/g, '\n\n').trim();
+    }
+
+    // DS 算法大题走打卡表版本（题目/答案都已替换），复制要取它实际显示的内容
+    function ztDakaAnswerText(f) {
+        const { card, lecture } = f.daka;
+        const parts = [];
+        if (lecture && lecture.analysis) parts.push(String(lecture.analysis).trim());
+        const s = (lecture && lecture.solutions) || {};
+        const list = s.list || [];
+        if (list.length) {
+            if (s.source) parts.push('来源：' + s.source);
+            list.forEach((x, i) => {
+                // tag 本身常已写作「解法1」，只在缺失时才补序号，避免「解法1 · 解法1」
+                const head = [x.tag || `解法${i + 1}`, x.kind, x.name].filter(Boolean).join(' · ');
+                const seg = [`【${head}】`];
+                if (x.analysis) seg.push('解析：' + x.analysis);
+                if (x.thought) seg.push('基本设计思想：' + x.thought);
+                if (x.code) seg.push('代码：\n' + x.code);
+                if (x.complexity) seg.push(x.complexity);
+                if (x.note) seg.push(x.note);
+                parts.push(seg.join('\n'));
+            });
+        } else {
+            const b = (lecture && lecture.brute) || s.brute;
+            if (b) {
+                parts.push([`【${b.method || '暴力解'}】`,
+                    b.idea ? '基本设计思想：' + b.idea : '',
+                    b.code ? '代码：\n' + b.code : ''].filter(Boolean).join('\n'));
+            }
+        }
+        const ansFigs = (card.figs || {}).answer || [];
+        if (ansFigs.length) parts.push(`【解答原图】共 ${ansFigs.length} 张（见页面）`);
+        return parts.join('\n\n');
+    }
+
+    function ztCopyPayload(f) {
+        const head = [`第 ${f.i} 题`, SUBJ_NAME[f.sid] || ''];
+        if (f.group === 'big') head.push(`大题 ${f.s} 分`);
+        const out = [head.filter(Boolean).join(' · '), ''];
+
+        if (f.daka) {
+            out.push(ztPlain(f.daka.card.content) || '（题目见教材原图）');
+            const cf = (f.daka.card.figs || {}).content || [];
+            if (cf.length) out.push('', `【题目原图】共 ${cf.length} 张（见页面）`);
+        } else {
+            out.push(ztPlain(f.q));
+        }
+
+        if (f.group === 'choice' && Array.isArray(f.o)) {
+            LETTERS.forEach((k, idx) => {
+                const raw = f.o[idx];
+                if (raw == null || raw === '') return;
+                out.push('', `${k}. ${ztPlain(raw)}`);
+            });
+        }
+
+        if (!state.examMode) {
+            if (f.group === 'choice') {
+                if (f.a) out.push('', `【答案】${f.a}`);
+                if (f.an) out.push('', `【解析】${ztPlain(f.an)}`);
+            } else {
+                const body = f.daka ? ztDakaAnswerText(f) : (f.an ? ztPlain(f.an) : '');
+                if (body) out.push('', '【参考答案与解析】', '', body);
+            }
+        }
+        return out.join('\n').replace(/\n{3,}/g, '\n\n').trim();
+    }
+
+    function copyBtnHtml(f) {
+        const tip = state.examMode
+            ? '复制题干与选项（做题模式下不含答案，避免泄题）'
+            : (f.group === 'choice' ? '一键复制：题干 + 选项 + 答案 + 解析' : '一键复制：题干 + 参考答案与解析');
+        return `<button class="btn-explanation zt-copy-btn" onclick="copyZtCard('${f.iid}', this)" title="${tip}">复制</button>`;
+    }
+
+    function copyZtCard(iid, btn) {
+        const f = state.flat.find(x => x.iid === iid);
+        if (!f) return;
+        const text = ztCopyPayload(f);
+        // ① 同步路径优先：隐藏 textarea + execCommand，在点击手势内完成并校验返回值，
+        //    规避 clipboard.writeText 在文档失焦时挂起不落盘的静默失败（粘贴出旧内容）
+        let done = false;
+        try {
+            const ta = document.createElement('textarea');
+            ta.value = text;
+            ta.style.cssText = 'position:fixed;left:-999px;top:0;opacity:0';
+            document.body.appendChild(ta);
+            ta.focus(); ta.select();
+            done = document.execCommand('copy');
+            ta.remove();
+        } catch (e) { done = false; }
+        if (done) { ztCopyFlash(btn); return; }
+        // ② 剪贴板 API（同步路径不可用的浏览器）
+        if (navigator.clipboard && window.isSecureContext) {
+            navigator.clipboard.writeText(text).then(() => ztCopyFlash(btn)).catch(() => ztCopyFallback(text));
+            return;
+        }
+        // ③ 终极兜底：浮层可全选，让用户手动复制
+        ztCopyFallback(text);
+    }
+
+    function ztCopyFlash(btn) {
+        if (!btn) return;
+        // 连续点击时按钮可能还停在「已复制 ✓」，直接取 textContent 当原值会把它固定成提示语，
+        // 所以原值只记一次（data-label），并清掉上一个 timer 防止交叉回写。
+        if (!btn.dataset.label) btn.dataset.label = btn.textContent;
+        clearTimeout(btn._copyTimer);
+        btn.textContent = '已复制 ✓';
+        btn.classList.add('active');
+        btn._copyTimer = setTimeout(() => {
+            btn.textContent = btn.dataset.label;
+            btn.classList.remove('active');
+        }, 1200);
+    }
+
+    function ztCopyFallback(text) {
+        const old = document.getElementById('ztCopyFallbackBox');
+        if (old) old.remove();
+        const box = document.createElement('div');
+        box.id = 'ztCopyFallbackBox';
+        box.style.cssText = 'position:fixed;left:50%;top:16%;transform:translateX(-50%);z-index:9999;background:var(--card,#fff);color:inherit;border:1px solid #ccc;border-radius:10px;padding:12px;box-shadow:0 8px 30px rgba(0,0,0,.25);width:min(92vw,560px)';
+        box.innerHTML = '<div style="font-weight:600;margin-bottom:6px">自动复制失败，请手动复制（已全选，Ctrl+C / 长按复制）</div>';
+        const ta = document.createElement('textarea');
+        ta.value = text;
+        ta.style.cssText = 'width:100%;height:180px;font-size:12px;line-height:1.5';
+        box.appendChild(ta);
+        const row = document.createElement('div');
+        row.style.cssText = 'text-align:right;margin-top:8px';
+        const close = document.createElement('button');
+        close.className = 'btn btn-sm btn-primary';
+        close.textContent = '关闭';
+        close.onclick = () => box.remove();
+        row.appendChild(close);
+        box.appendChild(row);
+        document.body.appendChild(box);
+        ta.focus(); ta.select();
+    }
+
     function choiceCard(f) {
         const st = state.progress[f.iid];
         const newly = state.sessionAnswered.has(f.iid);   // 本次会话作答过
@@ -415,6 +573,7 @@
             <div class="options-list">${opts}</div>
             ${result}
             <div class="question-tools">
+                ${copyBtnHtml(f)}
                 <button class="btn-explanation${ansOpen ? ' active' : ''}" onclick="toggleAns('${f.iid}')">答案与解析 ${ansOpen ? '▴' : '▾'}</button>
                 <button class="btn-explanation${noteOpen ? ' active' : ''}${hasNote ? ' has-note' : ''}" onclick="toggleNotePanel('${f.iid}')">笔记${hasNote ? ' ●' : ''} ${noteOpen ? '▴' : '▾'}</button>
                 ${kpLinkHtml(f)}
@@ -453,6 +612,7 @@
             </div>
             <div class="question-content">${f.q}</div>
             <div class="question-tools">
+                ${copyBtnHtml(f)}
                 <button class="btn-explanation${ansOpen ? ' active' : ''}" onclick="toggleAns('${f.iid}')">参考答案与解析 ${ansOpen ? '▴' : '▾'}</button>
                 <button class="btn-explanation${noteOpen ? ' active' : ''}${hasNote ? ' has-note' : ''}" onclick="toggleNotePanel('${f.iid}')">笔记${hasNote ? ' ●' : ''} ${noteOpen ? '▴' : '▾'}</button>
                 ${kpLinkHtml(f)}
@@ -503,6 +663,7 @@
             </div>
             <div class="question-content">${contentHtml || '（题目见教材原图）'}</div>
             <div class="question-tools">
+                ${copyBtnHtml(f)}
                 <button class="btn-explanation${ansOpen ? ' active' : ''}" onclick="toggleAns('${f.iid}')">参考答案与解析 ${ansOpen ? '▴' : '▾'}</button>
                 <button class="btn-explanation${noteOpen ? ' active' : ''}${hasNote ? ' has-note' : ''}" onclick="toggleNotePanel('${f.iid}')">笔记${hasNote ? ' ●' : ''} ${noteOpen ? '▴' : '▾'}</button>
                 ${kpLinkHtml(f)}
@@ -1272,7 +1433,7 @@
         onNoteInput, toggleExamMode, toggleShowAll, toggleFavOnly, resetYear,
         gotoQ, toggleFq, toggleZtNav, expandZtNav, toggleAnsPop,
         pasteZtNoteImage, saveZtNoteNow, renderZtNoteImages, delZtNoteImage,
-        viewZtNoteImage, onZtNoteFilePick,
+        viewZtNoteImage, onZtNoteFilePick, copyZtCard,
     });
 
     if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init, { once: true });

@@ -41,8 +41,12 @@ async function run() {
   check('题号导航竖排横条样式（含 .cur 跟随高亮）', /\.zt-fq-i\.cur \{/.test(css) && !/\.zt-fq-grid \{/.test(css));
   // v4：笔记富文本形态 + 题号放大 + 年份收起箭头钉中线
   check('zhenti.html 引入 note_richtext.js（富文本笔记）', /<script src="js\/note_richtext\.js">/.test(rawHtml));
+  // 笔记编辑器必须是 contenteditable（不是 textarea）。
+  // 注意：复制兜底会临时创建 textarea 取值，所以这里只约束 notePanel 函数体，
+  // 不能用「整个 js 里没有 textarea」这种粗判据。
   check('笔记面板：contenteditable + 工具条（与刷题页同源）',
-    /noteToolbarHtml\(\)/.test(js) && /contenteditable="true"/.test(js) && /bindNoteToolbar\(el\)/.test(js) && !/textarea/.test(js));
+    /noteToolbarHtml\(\)/.test(js) && /contenteditable="true"/.test(js) && /bindNoteToolbar\(el\)/.test(js) &&
+    !/textarea/i.test((js.match(/function notePanel\([\s\S]*?\n    \}/) || [''])[0]));
   check('笔记：装载/序列化走 note_richtext（保留加粗/颜色形态）',
     /loadNoteIntoEditor\(el,/.test(js) && /serializeNote\(el\)/.test(js));
   check('笔记：保存时原图片数组透传（不误清 quiz 页图片）', /images:\s*state\.noteImages\[qid\] \|\| \[\]/.test(js));
