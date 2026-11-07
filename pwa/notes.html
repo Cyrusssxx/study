@@ -721,15 +721,23 @@
             }
 
             // 目标节（?goto=）优先渲染：点「知识点」进来时先看到它，不必等全文
-            // 纯编号锚点（真题套卷传 "2.3" 这种只有编号、没有标题）先改写成真实节名：
+            // 纯编号锚点（真题套卷传 "2.3" / "6.4.2" / "4" 这类只有编号、没有标题）先改写成真实节名：
             // 必须基于 flat 数据匹配——此刻正文只有骨架占位，DOM 里还没有 .notes-section，
             // 查 DOM 永远解析不到，会导致目标节没被优先渲染、跳转落空。
+            // 三级粒度：章号 X → 该章第一节；节号 X.Y → 该节；小节号 X.Y.Z → 对应小节。
             if (/^\d+(\.\d+)*$/.test(GOTO || '')) {
-                const hit = flat.find(t => {
-                    const m = /^\d+(\.\d+)*/.exec(t.sec.section || '');
-                    return m && m[0] === GOTO;
-                });
-                if (hit) GOTO = hit.sec.section;
+                const numOf = s => (/^\d+(\.\d+)*/.exec(s || '') || [''])[0];
+                const isChap = !GOTO.includes('.');                 // 无小数点＝章号，落本章首节
+                const match = n => isChap ? n.startsWith(GOTO + '.') : n === GOTO;
+                const hit = flat.find(t => match(numOf(t.sec.section || '')));
+                let name = hit ? hit.sec.section : '';
+                if (!name) {                                          // 节级没命中 → 找 X.Y.Z 小节
+                    for (const t of flat) {
+                        const sub = (t.sec.subsections || []).find(s => match(numOf(s.section || '')));
+                        if (sub) { name = sub.section; break; }
+                    }
+                }
+                if (name) GOTO = name;   // 解析不出就原样交给 jumpTo 的关键词兜底，不丢目标
             }
             const findSecIdx = name => flat.findIndex(t =>
                 t.sec.section === name || (t.sec.subsections || []).some(s => s.section === name));

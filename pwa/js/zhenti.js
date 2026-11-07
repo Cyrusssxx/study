@@ -342,7 +342,7 @@
     function kpBtnHtml(f, isFav) {
         if (!isFav || !f.mapped || state.examMode) return '';   // 考点分析含答案，做题模式不显示
         const open = state.kpOpen.has(f.iid);
-        return `<button class="btn-explanation${open ? ' active' : ''}" onclick="toggleKpZt('${f.iid}')"
+        return `<button class="btn-explanation${open ? ' active' : ''}" data-toggle="kp" onclick="toggleKpZt('${f.iid}')"
             title="考点定位 + 该节笔记精华 + 个人数据 + 关联真题">考点分析 ${open ? '▴' : '▾'}</button>`;
     }
     // 「加入错题池」：写 redo(kind='ztwrong')，与「7 天后重练」同一条路子，只是来源不同
@@ -574,8 +574,8 @@
             ${result}
             <div class="question-tools">
                 ${copyBtnHtml(f)}
-                <button class="btn-explanation${ansOpen ? ' active' : ''}" onclick="toggleAns('${f.iid}')">答案与解析 ${ansOpen ? '▴' : '▾'}</button>
-                <button class="btn-explanation${noteOpen ? ' active' : ''}${hasNote ? ' has-note' : ''}" onclick="toggleNotePanel('${f.iid}')">笔记${hasNote ? ' ●' : ''} ${noteOpen ? '▴' : '▾'}</button>
+                <button class="btn-explanation${ansOpen ? ' active' : ''}" data-toggle="ans" onclick="toggleAns('${f.iid}')">答案与解析 ${ansOpen ? '▴' : '▾'}</button>
+                <button class="btn-explanation${noteOpen ? ' active' : ''}${hasNote ? ' has-note' : ''}" data-toggle="note" onclick="toggleNotePanel('${f.iid}')">笔记${hasNote ? ' ●' : ''} ${noteOpen ? '▴' : '▾'}</button>
                 ${kpLinkHtml(f)}
                 ${kpBtnHtml(f, isFav)}
                 ${poolBtnHtml(f)}
@@ -613,8 +613,8 @@
             <div class="question-content">${f.q}</div>
             <div class="question-tools">
                 ${copyBtnHtml(f)}
-                <button class="btn-explanation${ansOpen ? ' active' : ''}" onclick="toggleAns('${f.iid}')">参考答案与解析 ${ansOpen ? '▴' : '▾'}</button>
-                <button class="btn-explanation${noteOpen ? ' active' : ''}${hasNote ? ' has-note' : ''}" onclick="toggleNotePanel('${f.iid}')">笔记${hasNote ? ' ●' : ''} ${noteOpen ? '▴' : '▾'}</button>
+                <button class="btn-explanation${ansOpen ? ' active' : ''}" data-toggle="ans" onclick="toggleAns('${f.iid}')">参考答案与解析 ${ansOpen ? '▴' : '▾'}</button>
+                <button class="btn-explanation${noteOpen ? ' active' : ''}${hasNote ? ' has-note' : ''}" data-toggle="note" onclick="toggleNotePanel('${f.iid}')">笔记${hasNote ? ' ●' : ''} ${noteOpen ? '▴' : '▾'}</button>
                 ${kpLinkHtml(f)}
                 ${kpBtnHtml(f, isFav)}
             </div>
@@ -664,8 +664,8 @@
             <div class="question-content">${contentHtml || '（题目见教材原图）'}</div>
             <div class="question-tools">
                 ${copyBtnHtml(f)}
-                <button class="btn-explanation${ansOpen ? ' active' : ''}" onclick="toggleAns('${f.iid}')">参考答案与解析 ${ansOpen ? '▴' : '▾'}</button>
-                <button class="btn-explanation${noteOpen ? ' active' : ''}${hasNote ? ' has-note' : ''}" onclick="toggleNotePanel('${f.iid}')">笔记${hasNote ? ' ●' : ''} ${noteOpen ? '▴' : '▾'}</button>
+                <button class="btn-explanation${ansOpen ? ' active' : ''}" data-toggle="ans" onclick="toggleAns('${f.iid}')">参考答案与解析 ${ansOpen ? '▴' : '▾'}</button>
+                <button class="btn-explanation${noteOpen ? ' active' : ''}${hasNote ? ' has-note' : ''}" data-toggle="note" onclick="toggleNotePanel('${f.iid}')">笔记${hasNote ? ' ●' : ''} ${noteOpen ? '▴' : '▾'}</button>
                 ${kpLinkHtml(f)}
                 ${kpBtnHtml(f, isFav)}
             </div>
@@ -864,6 +864,7 @@
         state.kpOpen.add(iid);
         localStorage.setItem('zhentiKpOpen', JSON.stringify([...state.kpOpen]));
         refreshCard(iid);
+        revealCardPanel(iid, 'kp', '.kp-panel');
         if (state.kpCache[iid]) return;
         try {
             const d = await (await api('/api/kp/' + iid)).json();
@@ -895,14 +896,36 @@
         renderFq();
     }
 
+    /* ---------------- 展开面板：统一「向下展开」 ----------------
+     * 旧行为用「就近对齐」的 scrollIntoView：为了把整块面板塞进视口，
+     * 浏览器可能向上滚动，把刚点的按钮顶出屏幕，看起来像面板「往上弹」。
+     * 现在：把按钮带到视口上部（约 30% 高度、避开 60px 顶栏），展开内容从按钮
+     * 下方一路向下铺开；只允许页面向下滚（scrollBy 正值），绝不向上滚。
+     * 收起时完全不滚。答案 / 笔记 / 考点分析三个按钮走同一套逻辑。 */
+    function revealBelow(btn, panel) {
+        if (!btn || !panel) return;
+        const vh = window.innerHeight || document.documentElement.clientHeight;
+        const top = btn.getBoundingClientRect().top;
+        const wantTop = Math.max(84, Math.min(vh * 0.3, 220));
+        const delta = top - wantTop;
+        if (delta > 2) window.scrollBy({ top: delta, behavior: 'smooth' });
+    }
+    function revealCardPanel(iid, kind, sel) {
+        const card = document.getElementById('card-' + iid);
+        if (!card) return;
+        revealBelow(card.querySelector(`[data-toggle="${kind}"]`), card.querySelector(sel));
+    }
+
     function toggleAns(iid) {
         if (state.examMode) {
             alert('做题模式下不显示答案。做完点「对答案」后即可查看。');
             return;
         }
-        if (state.ansOpen.has(iid)) state.ansOpen.delete(iid); else state.ansOpen.add(iid);
+        const opening = !state.ansOpen.has(iid);
+        if (opening) state.ansOpen.add(iid); else state.ansOpen.delete(iid);
         localStorage.setItem('zhentiAnsOpen2', JSON.stringify([...state.ansOpen]));
         refreshCard(iid);
+        if (opening) revealCardPanel(iid, 'ans', '.explanation-panel');
     }
 
     function toggleNotePanel(iid) {
@@ -917,11 +940,11 @@
         flushNote();
         refreshCard(iid);
         if (!opening) return;
-        // 展开后把面板带到视野内并聚焦到正文末尾——否则题图很长时点了像没反应
+        // 展开后统一「向下展开」：按钮留在视口上部，面板从按钮下方铺开，绝不向上滚
+        revealCardPanel(iid, 'note', '.zt-note-panel');
         const card = document.getElementById('card-' + iid);
         const panel = card && card.querySelector('.zt-note-panel');
         if (!panel) return;
-        panel.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
         const ed = panel.querySelector('.note-input');
         if (ed) setTimeout(() => {
             ed.focus({ preventScroll: true });

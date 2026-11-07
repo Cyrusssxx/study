@@ -70,7 +70,16 @@ for (const fn of ['choiceCard', 'bigCard', 'dakaBigCard']) {
 check('笔记面板含保存态节点', JS.includes('data-zt-state='), true);
 check('输入时置「未保存」', /markNoteState\(qid, 'dirty'\)/.test(JS), true);
 check('保存成功置「已保存」（自动保存也生效）', /markNoteState\(qid, 'saved'\)/.test(JS), true);
-check('展开笔记后滚动到面板', /panel\.scrollIntoView/.test(JS), true);
+// 2026-11-07：展开统一为「向下展开」——按钮留在视口上部、内容从按钮下方铺开，
+// 只允许向下滚；旧 scrollIntoView({block:'nearest'}) 会向上滚把按钮顶出视口。
+check('展开走统一的 revealBelow（不再 scrollIntoView nearest）',
+  /function revealBelow\(btn, panel\)/.test(JS) && !/panel\.scrollIntoView|box\.scrollIntoView/.test(JS), true);
+check('三类按钮都带 data-toggle 标记',
+  ['ans', 'note', 'kp'].every(k => JS.includes(`data-toggle="${k}"`)), true);
+check('答案 / 笔记 / 考点分析展开都调用 revealCardPanel',
+  (JS.match(/revealCardPanel\(iid, '(ans|note|kp)'/g) || []).length, 3);
+check('只向下滚（scrollBy 正值 + 收起不滚）',
+  /if \(delta > 2\) window\.scrollBy/.test(JS) && /if \(opening\) revealCardPanel/.test(JS), true);
 check('展开笔记后聚焦编辑器末尾', /focus\(\{ preventScroll: true \}\)/.test(JS), true);
 check('保存写规范键（跨页共享）', /api\('\/api\/note\/' \+ encodeURIComponent\(noteKeyOf\(qid\)\)/.test(JS), true);
 check('加载别名并回填', /applyNoteAlias\(byKey\)/.test(JS) && /loadNoteAlias\(\)/.test(JS), true);

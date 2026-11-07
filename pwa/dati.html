@@ -558,6 +558,18 @@
         </div>`;
     }
 
+    // 展开面板统一「向下展开」（与真题套卷页同源）：
+    // 旧行为用「就近对齐」的 scrollIntoView，会为了塞下整块面板而向上滚、把按钮顶出视口。
+    // 现在把按钮带到视口上部，展开内容从按钮下方一路向下铺开；只允许向下滚，收起时不滚。
+    function revealBelow(btn, panel) {
+        if (!btn || !panel) return;
+        const vh = window.innerHeight || document.documentElement.clientHeight;
+        const top = btn.getBoundingClientRect().top;
+        const wantTop = Math.max(84, Math.min(vh * 0.3, 220));
+        const delta = top - wantTop;
+        if (delta > 2) window.scrollBy({ top: delta, behavior: 'smooth' });
+    }
+
     function toggleAnswer(qid) {
         const box = document.querySelector(`.dati-abody[data-ans="${qid}"]`);
         const btn = document.querySelector(`.dati-ans-btn[data-qid="${qid}"]`);
@@ -577,7 +589,7 @@
         ansOpen.add(qid);
         saveAnsOpen();
         if (btn) btn.textContent = '收起答案';
-        box.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        revealBelow(btn, box);
     }
 
     // 单题模式：左右两枚悬浮圆形箭头（垂直居中、两侧贴边、滚动恒在）。
@@ -933,7 +945,8 @@
             saveNoteOpen();
             if (btn) btn.classList.add('active');
             const el = initDatiNoteEditor(p);
-            if (el) el.focus();
+            if (el) el.focus({ preventScroll: true });
+            revealBelow(btn, p);
         } else {
             p.style.display = 'none';
             noteOpen.delete(qid);

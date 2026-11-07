@@ -4,17 +4,20 @@
 为什么大题要单独做：
   选择题里有 637/720 映射到题库（qid），可直接从题库取 section/subsection 得到精确锚点；
   大题则**基本没有映射**（每年 7 道里只有 1 道 DS 算法题映射，co/os/cn 全部未映射），
-  题库里也没有这些题目，无法靠映射找节。本表用现有教材资料反查：
+  题库里也没有这些题目，无法靠映射找节。
 
-  ① DS 算法题：note_alias.json 找回标准题 id → ds_code / ds_code_extra 的 source
-     形如「王道书 2.3.7_大题_18」，取书号 X.Y 作为节锚点（notes.html 按编号前缀匹配，
-     唯一命中「2.3 xxx」即落到该节，多命中时再用标题关键词二次打分）。
-     2024-2026 三道新题没有书号，退到打卡表卡片的模块名做关键词跳转。
-  ② CO/OS/CN 大题：科目一律取题目自带 sid（**不能**用题号区间硬判：2014 年 43 题是
-     计网、45 题是计组；2016 年 43 题是计组），给出科目级入口，由页面跳该科笔记首页。
+现在的做法（2026-11-07 起）：
+  ① 全部 126 道大题按题干内容人工审定，落在 notes/{科目}_notes.json 的
+     **节(X.Y) / 小节(X.Y.Z) / 章(X)** 编号上，源表见 tools/bigq_kp_manual.json。
+     编号由 notes.html 在 loadNotes 里改写成真实节/小节名，再走精确落位。
+     源表里的 subject 可覆盖 zt 原始 sid：例如 2014-42 题干是 OSPF 路由协议，
+     原始数据标成 ds，实际属计网 cn（4.4.4 OSPF）。
+  ② 选择题仍走题库现取（不重复存一份）。
+  ③ 源表缺项时才退回旧逻辑：DS 算法题由 note_alias + 王道书号取节级锚点、
+     新题退打卡表模块关键词，其余落科目级。
 
 输出：pwa/data/zt_bigq_kp.json（indent=1、LF、无尾换行）
-      { "年份": { "题号": { "sub":"co", "goto":"", "mode":"sub"|"kw"|"sec" } } }
+      { "年份": { "题号": { "sub":"co", "goto":"", "mode":"bank"|"sec"|"kw"|"sub" } } }
 
 用法：python tools/build_zt_bigq_kp.py
 """
@@ -73,9 +76,13 @@ def main():
     for local, canon in alias.items():
         canon2local.setdefault(canon, []).append(local)
 
+    with io.open(os.path.join(ROOT, 'tools', 'bigq_kp_manual.json'), encoding='utf-8') as f:
+        manual = json.load(f)
+
     zt_dir = os.path.join(DATA, 'zt')
     years = sorted(int(f[3:-5]) for f in os.listdir(zt_dir) if re.match(r'^zt_\d{4}\.json$', f))
-    out, stat = {}, {'sec': 0, 'kw': 0, 'sub': 0, 'choice': 0}
+    out, stat = {}, {'manual': 0, 'sec': 0, 'kw': 0, 'sub': 0, 'choice': 0}
+    missing = []
 
     for y in years:
         table = {}
@@ -88,6 +95,17 @@ def main():
                     table[str(i)] = {'sub': sid, 'goto': '', 'mode': 'bank'}
                     stat['choice'] += 1
                 continue
+
+            # ① 人工审定的章节锚点优先（覆盖全部 126 道大题）
+            mrec = (manual.get(str(y)) or {}).get(str(i))
+            if mrec:
+                sub, goto = mrec.split(':', 1)
+                table[str(i)] = {'sub': sub, 'goto': goto, 'mode': 'sec'}
+                stat['manual'] += 1
+                continue
+
+            # ② 源表缺项才退回旧逻辑，并把缺口报出来，避免静默退化成科目首页
+            missing.append('%d-%d(%s)' % (y, i, sid))
             rec = None
             for local in canon2local.get('zt%d_%d' % (y, i), []):
                 if local in code_sec:
@@ -99,8 +117,7 @@ def main():
                     stat['kw'] += 1
                     break
             if rec is None:
-                sub = sid if sid in SUBJECTS else 'ds'
-                rec = {'sub': sub, 'goto': '', 'mode': 'sub'}
+                rec = {'sub': sid if sid in SUBJECTS else 'ds', 'goto': '', 'mode': 'sub'}
                 stat['sub'] += 1
             table[str(i)] = rec
         out[str(y)] = table
@@ -111,7 +128,9 @@ def main():
 
     n = sum(len(v) for v in out.values())
     print('写出 %s：%d 年 / %d 条（含选择题 %d）' % (p, len(out), n, stat['choice']))
-    print('大题来源：节级锚点 %(sec)d ｜ 模块关键词 %(kw)d ｜ 科目级 %(sub)d' % stat)
+    print('大题来源：人工章节锚点 %(manual)d ｜ 旧书号 %(sec)d ｜ 模块关键词 %(kw)d ｜ 科目级 %(sub)d' % stat)
+    if missing:
+        print('⚠ 人工表缺 %d 题：%s' % (len(missing), ', '.join(missing)))
 
 
 if __name__ == '__main__':
