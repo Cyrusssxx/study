@@ -11,32 +11,70 @@
     <script>if (localStorage.getItem('darkMode') === '1') document.documentElement.classList.add('dark');</script>
     <link rel="stylesheet" href="css/style.css">
     <style>
-        .dati-tabs { display: flex; gap: 8px; flex-wrap: wrap; margin: 12px 0 16px; }
+        .dati-tabs { display: flex; gap: 8px; flex-wrap: wrap; margin: 12px 0 14px; }
         .dati-tab { flex: 1; min-width: 120px; }
-        .dati-tab.active { background: #4f46e5; color: #fff; }
+        .dati-tab.active { background: var(--primary); color: #fff; border-color: var(--primary); }
         .dati-subject { display: none; }
         .dati-subject.active { display: block; }
-        .dati-filters { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-bottom: 18px; }
+        /* 控制区分两层：排序+显示 / 状态筛选。分组靠标签与 1px 细线，不再把 13 个控件挤成一行 */
+        .dati-filters {
+            display: flex; flex-direction: column; gap: 8px;
+            margin-bottom: 18px; padding: 10px 12px;
+            background: rgba(74, 122, 184, .045);
+            border: 1px solid var(--border); border-radius: var(--radius);
+        }
+        .dati-bar { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+        .dati-bar-filter { padding-top: 8px; border-top: 1px solid var(--border); }
+        .dati-bar-label {
+            flex: 0 0 auto; min-width: 30px; font-size: .78rem; font-weight: 600;
+            color: var(--text-light); letter-spacing: .05em;
+        }
         .dati-chip {
-            padding: 6px 14px; border-radius: 999px; border: 1px solid #ccc; cursor: pointer;
-            background: #fff; color: #444; font-size: 13px; line-height: 1.4;
+            padding: 6px 13px; border-radius: 999px; border: 1px solid var(--border); cursor: pointer;
+            background: var(--card-bg); color: var(--text); font-size: 13px; line-height: 1.4;
+            transition: background .15s, border-color .15s, color .15s;
         }
-        .dark .dati-chip { background: #1e1e2e; border-color: #444; color: #ccc; }
-        .dati-chip.active { background: #4f46e5; border-color: #4f46e5; color: #fff; }
+        .dati-chip:hover:not(.active) { border-color: var(--primary); }
+        .dati-chip.active { background: var(--primary); border-color: var(--primary); color: #fff; }
         .dati-chip .dati-count { font-size: 11px; opacity: .8; margin-left: 2px; }
-        .dati-year { padding: 6px 10px; border-radius: 8px; border: 1px solid #ccc; font-size: 13px; }
-        .dark .dati-year { background: #1e1e2e; border-color: #444; color: #ccc; }
-        .dati-qcard {
-            border: 1px solid #eee; border-radius: 10px; padding: 12px; margin-bottom: 14px;
-            background: #fff;
+        .dati-chip .dati-count.zero { opacity: .4; }
+        .dati-year {
+            padding: 6px 10px; border-radius: 8px; border: 1px solid var(--border); font-size: 13px;
+            background: var(--card-bg); color: var(--text);
         }
-        .dark .dati-qcard { background: #1e1e2e; border-color: #333; }
-        .dati-qhead { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; flex-wrap: wrap; }
+        .dati-overview {
+            margin-left: auto; font-size: .82rem; color: var(--text-light);
+            font-variant-numeric: tabular-nums; white-space: nowrap;
+        }
+        .dati-overview b { color: var(--primary); font-weight: 700; }
+        .dati-qcard {
+            border: 1px solid var(--border); border-left: 3px solid var(--primary);
+            border-radius: 10px; padding: 12px 14px; margin-bottom: 14px;
+            background: var(--card-bg);
+        }
+        .dati-qhead { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; flex-wrap: wrap; }
         .dati-qnum { font-weight: 700; }
+        /* 题卡头部：把原来传进来却从未使用的 secName 显示出来，长列表里能看出题目归属 */
+        .dati-qsec {
+            font-size: .8rem; color: var(--text-light);
+            max-width: 46%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+        }
+        .dati-state { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; margin: 0 0 8px; }
+        .dati-state:empty { display: none; }
+        .dati-state-i {
+            font-size: .74rem; line-height: 1.5; padding: 1px 8px; border-radius: 999px;
+            border: 1px solid var(--border); color: var(--text-light); background: transparent;
+        }
+        .dati-state-i.is-done { color: var(--primary); border-color: var(--primary); background: rgba(74,122,184,.08); }
+        .dati-state-i.is-unfam { color: #a68a1a; border-color: #d4af37; background: rgba(212,175,55,.14); }
+        .dati-state-i.is-dk { color: #c82333; border-color: #dc3545; background: rgba(220,53,69,.12); }
+        .dati-state-i.is-note { color: #8a6d1a; border-color: #e6d9a8; }
         .dati-real {
             background: #fde68a; color: #92400e; border-radius: 6px; padding: 2px 8px; font-size: 12px; font-weight: 600;
         }
         .dark .dati-real { background: #4d3800; color: #fde68a; }
+        .dark .dati-state-i.is-unfam { color: #e6c74f; border-color: #e6c74f; }
+        .dark .dati-state-i.is-dk { color: #ff6b6b; border-color: #ff6b6b; }
         .dati-fav {
             margin-left: auto; border: none; background: none; font-size: 20px; cursor: pointer; color: #cbd5e1;
             line-height: 1; padding: 2px 6px;
@@ -59,8 +97,13 @@
         .dark .dati-mark-btn.on-dk:hover { background: rgba(255, 107, 107, .26); }
         .dati-qbody img, .dati-abody img { max-width: 100%; height: auto; display: block; margin-bottom: 6px; border-radius: 6px; }
         .dati-ans-btn { margin-top: 4px; }
-        .dati-abody { margin-top: 10px; border-top: 1px dashed #ddd; padding-top: 10px; display: none; }
-        .dark .dati-abody { border-color: #444; }
+        /* 答案面板：淡底 + 细边框 + 圆角，与笔记面板同一层级语言（原来是光秃秃一条虚线） */
+        .dati-abody {
+            margin-top: 10px; padding: 10px 12px; display: none;
+            background: rgba(74, 122, 184, .05);
+            border: 1px solid var(--border); border-radius: 8px;
+        }
+        .dark .dati-abody { background: rgba(74, 122, 184, .10); }
         .dati-abody.open { display: block; }
         .dati-none { color: #888; padding: 20px 0; text-align: center; }
         .dark .dati-none { color: #999; }
@@ -134,7 +177,7 @@
         }
         .dati-arrow:hover:not(:disabled) {
             background: var(--primary); border-color: var(--primary); color: #fff;
-            box-shadow: 0 4px 14px rgba(79,70,229,.32);
+            box-shadow: 0 4px 14px rgba(74, 122, 184, .32);
         }
         .dati-arrow:active:not(:disabled) { transform: translateY(-50%) scale(.94); }
         .dati-arrow:disabled { opacity: .32; cursor: default; }
@@ -185,24 +228,33 @@
     <main class="container">
         <div class="page-header">
             <h1>📝 大题专项</h1>
-            <p>王道综合应用题真题截图（操作系统 / 计算机组成原理 / 计算机网络）。默认<b>单题模式</b>：一次一题、图片逐题加载，左右键或底栏切换；也可切「列表模式」按章节浏览。</p>
+            <p>统考综合应用题真题截图（操作系统 / 计算机组成原理 / 计算机网络）。上排选<b>排序方式</b>与<b>显示方式</b>，下排按<b>练习状态</b>筛选；默认单题模式，一次一题、图片逐题加载，左右键或两侧箭头切换。</p>
         </div>
 
         <div class="dati-tabs" id="datiTabs"></div>
         <div class="dati-filters" id="datiFilters">
-            <button class="dati-chip" id="fModeChapter" onclick="setMode('chapter')" title="按章节顺序浏览真题（第 1 章 → 第 n 章）">📚 章节模式</button>
-            <button class="dati-chip" id="fModeYear" onclick="setMode('year')" title="按年份倒序浏览真题（最新年份优先），可只看某一年">📅 真题模式</button>
-            <span class="dati-view-sep"></span>
-            <button class="dati-chip" id="fFav" onclick="setFilter('fav')">★ 我的收藏 <span class="dati-count" id="cntFav"></span></button>
-            <button class="dati-chip" id="fTodo" onclick="setFilter('todo')">○ 未练 <span class="dati-count" id="cntTodo"></span></button>
-            <button class="dati-chip" id="fDone" onclick="setFilter('done')">✅ 已练 <span class="dati-count" id="cntDone"></span></button>
-            <button class="dati-chip" id="fUnfam" onclick="setFilter('unfam')">🟡 不熟 <span class="dati-count" id="cntUnfam"></span></button>
-            <button class="dati-chip" id="fDontknow" onclick="setFilter('dontknow')">🔴 不会 <span class="dati-count" id="cntDontknow"></span></button>
-            <button class="dati-chip" id="datiExpandAll" onclick="toggleAllChapters()">展开全部</button>
-            <select class="dati-year" id="yearSel" onchange="setYear(this.value)" style="display:none"></select>
-            <span class="dati-view-sep"></span>
-            <button class="dati-chip dati-view-chip" id="fSingle" onclick="setView('single')" title="一次只做一道题，题目图逐题加载（省流量）">📄 单题模式</button>
-            <button class="dati-chip dati-view-chip" id="fList" onclick="setView('list')" title="整章列表浏览，章节折叠展开">📃 列表模式</button>
+            <div class="dati-bar">
+                <span class="dati-bar-label">排序</span>
+                <button class="dati-chip" id="fModeChapter" onclick="setMode('chapter')" title="按章节顺序浏览（第 1 章 → 第 n 章）">📚 按章节</button>
+                <button class="dati-chip" id="fModeYear" onclick="setMode('year')" title="按年份倒序浏览（最新年份优先），可只看某一年">📅 按年份</button>
+                <select class="dati-year" id="yearSel" onchange="setYear(this.value)" style="display:none" title="只看某一年（仅「按年份」排序时生效）"></select>
+                <select class="dati-year" id="chapterSel" onchange="setChapter(this.value)" style="display:none" title="只做某一章（仅「按章节」排序时生效）"></select>
+                <span class="dati-view-sep"></span>
+                <span class="dati-bar-label">显示</span>
+                <button class="dati-chip dati-view-chip" id="fSingle" onclick="setView('single')" title="一次只做一道题，题目图逐题加载（省流量）">📄 单题</button>
+                <button class="dati-chip dati-view-chip" id="fList" onclick="setView('list')" title="整章列表浏览，章节折叠展开">📃 列表</button>
+                <button class="dati-chip" id="datiExpandAll" onclick="toggleAllChapters()" title="展开 / 收起全部分组">展开全部</button>
+            </div>
+            <div class="dati-bar dati-bar-filter">
+                <span class="dati-bar-label">筛选</span>
+                <button class="dati-chip" id="fStatusAll" onclick="setFilter('all')" title="清除状态筛选，显示全部题目">全部</button>
+                <button class="dati-chip" id="fFav" onclick="setFilter('fav')">★ 我的收藏 <span class="dati-count" id="cntFav"></span></button>
+                <button class="dati-chip" id="fTodo" onclick="setFilter('todo')">○ 未练 <span class="dati-count" id="cntTodo"></span></button>
+                <button class="dati-chip" id="fDone" onclick="setFilter('done')">✅ 已练 <span class="dati-count" id="cntDone"></span></button>
+                <button class="dati-chip" id="fUnfam" onclick="setFilter('unfam')">🟡 不熟 <span class="dati-count" id="cntUnfam"></span></button>
+                <button class="dati-chip" id="fDontknow" onclick="setFilter('dontknow')">🔴 不会 <span class="dati-count" id="cntDontknow"></span></button>
+                <span class="dati-overview" id="datiOverview"></span>
+            </div>
         </div>
         <div class="dati-layout">
             <div id="datiRoot">
@@ -226,6 +278,8 @@
     if (mode !== 'year') mode = 'chapter';
     if (filter === 'real') filter = 'all';                      // 旧版"统考真题"筛选已并入模式，归一
     let year = localStorage.getItem('datiYear') || '';          // '' = 全部年份（仅 year 模式生效）
+    let chapter = localStorage.getItem('datiChapter') || '';    // '' = 全部章节（仅 chapter 模式生效）
+    let chapterIds = null;   // 选中章的题目 id 集合；null = 不限章（passFilter / 计数 / 总览共用）
     let favSet = new Set();      // 当前科目已收藏的题 id
     const ansTpl = {};           // 答案图片 HTML 模板，首次展开时注入
     let noteMap = {};            // qid -> {content, images}，dati 题笔记
@@ -311,7 +365,8 @@
             await loadMarks();
             renderTabs();
             renderYearOptions();
-            // 恢复上次的筛选/年份/视图模式 UI 状态
+            renderChapterOptions();
+            // 恢复上次的筛选 / 年份 / 章节 / 视图模式 UI 状态
             syncFilterChips();
             document.getElementById('yearSel').value = year;
             syncViewChips();
@@ -380,6 +435,7 @@
             set.add(qid);
         }
         syncMarkBtns(qid);
+        if (typeof syncStateRow === 'function') syncStateRow(qid);
         updateCounts();
         // 当前就在「不熟 / 不会」筛选下 → 取消标记后该题要移出列表，整体重渲染
         if (filter === 'unfam' || filter === 'dontknow') { render(); return; }
@@ -408,6 +464,7 @@
             btn.textContent = favSet.has(qid) ? '★' : '☆';
             btn.classList.toggle('on', favSet.has(qid));
         }
+        if (typeof syncStateRow === 'function') syncStateRow(qid);
         updateCounts();
         if (filter === 'fav') render();
     }
@@ -422,6 +479,9 @@
     function switchSubject(key) {
         activeSubject = key;
         localStorage.setItem('datiSubject', key);
+        chapter = '';                                   // 不同科目章名不同，旧选择必须作废
+        localStorage.setItem('datiChapter', '');
+        renderChapterOptions();
         renderTabs();
         loadFavs().then(() => { updateCounts(); render(); });
     }
@@ -435,11 +495,48 @@
             [...years].sort((a, b) => b - a).map(y => `<option value="${y}">${y}年</option>`).join('');
     }
 
+    // 「只做某一章」：下拉按当前科目的章名生成，选中后单题进度 / 列表分组 /
+    // 题号导航 / 状态计数 / 顶部总览全部只在该章内（passFilter 用 chapterIds 统一门控）。
+    function renderChapterOptions() {
+        const sub = DATI.find(s => s.key === activeSubject);
+        const sel = document.getElementById('chapterSel');
+        if (!sel || !sub) return;
+        const opts = sub.chapters
+            .map(ch => ({ name: ch.name, n: ch.sections.reduce((k, sec) => k + sec.questions.length, 0) }))
+            .filter(x => x.n > 0);                  // 0 题的骨架章不列，避免选完一片空白
+        sel.innerHTML = `<option value="">全部章节</option>` +
+            opts.map(x => `<option value="${x.name}">${x.name}（${x.n} 题）</option>`).join('');
+        if (![...sel.options].some(o => o.value === chapter)) chapter = '';   // 切科目后旧章名失效
+        sel.value = chapter;
+        syncChapterIds();
+    }
+
+    function syncChapterIds() {
+        const sub = DATI.find(s => s.key === activeSubject);
+        chapterIds = null;
+        if (!chapter || !sub) return;
+        const hit = sub.chapters.find(ch => ch.name === chapter);
+        if (!hit) { chapter = ''; return; }
+        chapterIds = new Set();
+        for (const sec of hit.sections) for (const q of sec.questions) chapterIds.add(q.id);
+    }
+
+    function setChapter(v) {
+        flushDatiNote();
+        chapter = v;
+        localStorage.setItem('datiChapter', v);
+        syncChapterIds();
+        render();
+        window.scrollTo({ top: 0, behavior: 'auto' });
+    }
+
     // 筛选按钮/年份下拉的 UI 同步（初始化、切筛选、切模式、单题模式兜底改筛选时复用）
     function syncFilterChips() {
         document.getElementById('yearSel').style.display = mode === 'year' ? '' : 'none';
+        document.getElementById('chapterSel').style.display = mode === 'chapter' ? '' : 'none';
         document.getElementById('fModeChapter').classList.toggle('active', mode === 'chapter');
         document.getElementById('fModeYear').classList.toggle('active', mode === 'year');
+        document.getElementById('fStatusAll').classList.toggle('active', filter === 'all');
         document.getElementById('fFav').classList.toggle('active', filter === 'fav');
         document.getElementById('fTodo').classList.toggle('active', filter === 'todo');
         document.getElementById('fDone').classList.toggle('active', filter === 'done');
@@ -461,6 +558,9 @@
     }
 
     function setFilter(f) {
+        // 再点一次已选中的状态即回到「全部」——原来点进「收藏/未练/不熟」后没有任何出口，
+        // 只能刷新页面或靠切到年份模式兜底重置。现在「全部」胶囊与 toggle 双保险。
+        if (f !== 'all' && f === filter) f = 'all';
         filter = f;
         localStorage.setItem('datiFilter', f);
         syncFilterChips();
@@ -470,6 +570,8 @@
     function setYear(v) { year = v; localStorage.setItem('datiYear', v); render(); }
 
     function passFilter(q) {
+        // 章节下拉只在「按章节」排序时生效；typeof 守卫兼容把本函数抽到沙箱单测的 harness
+        if (mode === 'chapter' && typeof chapterIds !== 'undefined' && chapterIds && !chapterIds.has(q.id)) return false;
         if (mode === 'year' && year && String(q.year) !== String(year)) return false;   // 年份下拉只在真题模式生效
         if (filter === 'fav') return favSet.has(q.id);
         if (filter === 'todo') return !doneSet.has(q.id);
@@ -489,11 +591,37 @@
     function updateCounts() {
         const sub = DATI.find(s => s.key === activeSubject);
         if (!sub) return;
-        document.getElementById('cntFav').textContent = visibleQuestionsOf(sub, q => favSet.has(q.id)).length;
-        document.getElementById('cntTodo').textContent = visibleQuestionsOf(sub, q => !doneSet.has(q.id)).length;
-        document.getElementById('cntDone').textContent = visibleQuestionsOf(sub, q => doneSet.has(q.id)).length;
-        document.getElementById('cntUnfam').textContent = visibleQuestionsOf(sub, q => unfamSet.has(q.id)).length;
-        document.getElementById('cntDontknow').textContent = visibleQuestionsOf(sub, q => dontknowSet.has(q.id)).length;
+        // 计数口径跟随当前排序范围：按年份且选定某年、或按章节且选定某章时只统计该范围，
+        // 否则徽标显示全科全年份的数字、与列表实际条数对不上。
+        const inScope = q => {
+            if (mode === 'year' && year && String(q.year) !== String(year)) return false;
+            if (mode === 'chapter' && typeof chapterIds !== 'undefined' && chapterIds && !chapterIds.has(q.id)) return false;
+            return true;
+        };
+        const n = pred => visibleQuestionsOf(sub, q => inScope(q) && pred(q)).length;
+        document.getElementById('cntFav').textContent = n(q => favSet.has(q.id));
+        document.getElementById('cntTodo').textContent = n(q => !doneSet.has(q.id));
+        document.getElementById('cntDone').textContent = n(q => doneSet.has(q.id));
+        document.getElementById('cntUnfam').textContent = n(q => unfamSet.has(q.id));
+        document.getElementById('cntDontknow').textContent = n(q => dontknowSet.has(q.id));
+        ['cntFav', 'cntTodo', 'cntDone', 'cntUnfam', 'cntDontknow'].forEach(id => {
+            const el = document.getElementById(id);
+            if (el) el.classList.toggle('zero', el.textContent === '0');
+        });
+    }
+
+    // 顶部总览：当前筛选实际显示几题 / 当前排序范围共几题（随筛选实时更新）
+    function updateOverview() {
+        const el = document.getElementById('datiOverview');
+        const sub = DATI && DATI.find(s => s.key === activeSubject);
+        if (!el || !sub) return;
+        const inScope = q => {
+            if (mode === 'year' && year && String(q.year) !== String(year)) return false;
+            if (mode === 'chapter' && typeof chapterIds !== 'undefined' && chapterIds && !chapterIds.has(q.id)) return false;
+            return true;
+        };
+        const total = visibleQuestionsOf(sub, inScope).length;
+        el.innerHTML = `当前 <b>${flatItems().length}</b> 题 · 范围共 ${total} 题`;
     }
 
     // ==================== 已练标记（P3：只看未练） ====================
@@ -506,6 +634,7 @@
             btn.textContent = done ? '✅ 已练' : '○ 未练';
             btn.classList.toggle('done', done);
         }
+        if (typeof syncStateRow === 'function') syncStateRow(qid);
         updateCounts();
         if (filter === 'todo' || filter === 'done') { render(); return; }
         renderNav();   // 其它筛选下题单不变，但导航的已练标识要刷新
@@ -522,10 +651,12 @@
         <div class="dati-qcard" id="q${qid}">
             <div class="dati-qhead">
                 <span class="dati-qnum">第 ${q.num} 题</span>
-                ${q.real ? `<span class="dati-real">【${q.year}统考真题】</span>` : ''}
+                <span class="dati-qsec" title="${secName}">${secName}</span>
+                ${q.real ? `<span class="dati-real">${q.year} 统考真题</span>` : ''}
                 <button class="dati-fav${isFav ? ' on' : ''}" data-qid="${qid}" title="收藏本题"
                         onclick="toggleFav('${qid}', '${subKey}')">${isFav ? '★' : '☆'}</button>
             </div>
+            <div class="dati-state" data-state="${qid}"></div>
             <div class="dati-qbody">${q.q.map(fn => qimg(subKey, fn)).join('')}</div>
             <div class="dati-actions">
                 <button class="btn btn-secondary dati-done-btn${done ? ' done' : ''}" data-qid="${qid}" title="标记是否已练过本题"
@@ -609,7 +740,8 @@
 
     // ==================== 渲染分派：单题（默认） / 列表 ====================
     function render() {
-        updateCounts();   // 两种模式共用筛选条计数（单题模式无列表渲染，不能漏）
+        updateCounts();     // 两种模式共用筛选条计数（单题模式无列表渲染，不能漏）
+        updateOverview();   // 顶部「当前 N / 范围共 M 题」总览
         if (viewMode === 'single') renderSingle(); else renderList();
         renderNav();
     }
@@ -702,10 +834,13 @@
     function singleGoTo(qid) {
         const items = flatItems();
         if (!items.some(it => it.q.id === qid)) {
-            // 该题不在当前筛选集内：退回「全部」筛选后再定位，避免点了没反应
+            // 该题不在当前筛选集内：退回「全部」状态筛选 + 全部章节后再定位，避免点了没反应
             flushDatiNote();
             filter = 'all';
             localStorage.setItem('datiFilter', 'all');
+            chapter = '';
+            localStorage.setItem('datiChapter', '');
+            renderChapterOptions();
             syncFilterChips();
         }
         flushDatiNote();
@@ -865,11 +1000,29 @@
 
     function closeNavMobile() { setNav(false); }
 
+    // ==================== 题卡状态条 ====================
+    // 已练 / 不熟 / 不会 / 有笔记 / 已收藏 汇总在题头，长列表里不必逐个看按钮高亮。
+    // 只改这一行的 innerHTML，不整卡重绘，避免列表滚动位置跳动。
+    function syncStateRow(qid) {
+        const row = document.querySelector(`#q${qid} .dati-state`);
+        if (!row) return;
+        const note = noteMap[qid] || {};
+        const hasNote = !!(note.content || (note.images || []).length);
+        row.innerHTML = [
+            doneSet.has(qid) ? '<span class="dati-state-i is-done">✅ 已练</span>' : '',
+            unfamSet.has(qid) ? '<span class="dati-state-i is-unfam">🟡 不熟</span>' : '',
+            dontknowSet.has(qid) ? '<span class="dati-state-i is-dk">🔴 不会</span>' : '',
+            hasNote ? '<span class="dati-state-i is-note">📝 有笔记</span>' : '',
+            favSet.has(qid) ? '<span class="dati-state-i">★ 已收藏</span>' : '',
+        ].filter(Boolean).join('');
+    }
+
     // ==================== 笔记功能（与刷题页同款：文本框 + Ctrl+V 贴图 + 保存） ====================
 
     // 渲染后回填各笔记面板的文本与图片、恢复展开状态
     function afterRender() {
         const root = document.getElementById('datiRoot');
+        root.querySelectorAll('.dati-state[data-state]').forEach(row => syncStateRow(row.dataset.state));
         root.querySelectorAll('.dati-note-panel').forEach(p => {
             const qid = p.dataset.note;
             initDatiNoteEditor(p);
@@ -1001,6 +1154,7 @@
                 nbtn.classList.toggle('has-note', hasNote);
                 nbtn.textContent = '📝 笔记' + (hasNote ? ' ●' : '');
             }
+            if (typeof syncStateRow === 'function') syncStateRow(qid);   // 同步「📝 有笔记」状态徽标
         } catch (e) {
             alert('笔记保存失败: ' + e.message);
         }
