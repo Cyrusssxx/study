@@ -67,6 +67,28 @@
         </div>
     </main>
 
+    <!-- 本卷备注：工具栏小按钮 → 悬浮窗编辑；保存后直接显示在试卷最上方 -->
+    <div class="zt-pn-mask" id="ztPnMask" hidden onclick="if(event.target===this) closePaperNote()"></div>
+    <div class="zt-pn-modal" id="ztPnModal" role="dialog" aria-modal="true" aria-labelledby="ztPnTitle" hidden>
+        <div class="zt-pn-head">
+            <h3 id="ztPnTitle">📝 本卷备注</h3>
+            <span class="zt-pn-year" id="ztPnYear"></span>
+        </div>
+        <p class="zt-pn-desc">写这卷的失分点、时间分配、下次注意什么。可选中文字后设字色 / 高亮 / 粗斜 / 标题。</p>
+        <div class="note-editor zt-pn-editor" id="ztPnEditor">
+            <div id="ztPnToolbarSlot"></div>
+            <div class="note-input zt-pn-input" id="ztPnInput" contenteditable="true" spellcheck="false"
+                data-placeholder="点这里开始写：这卷的失分点、时间分配、下次注意什么…"></div>
+        </div>
+        <div class="zt-pn-foot">
+            <span class="zt-pn-hint">存在本机，跟着「⬇ 导出数据」一起备份</span>
+            <div class="zt-pn-btns">
+                <button class="btn btn-sm" onclick="closePaperNote()">取消</button>
+                <button class="btn btn-sm btn-primary" onclick="savePaperNote()">保存</button>
+            </div>
+        </div>
+    </div>
+
     <!-- 右：悬浮题号导航（照试卷题号 1..N） -->
     <div class="zt-fq" id="ztFq">
         <div class="zt-fq-head" onclick="toggleFq()">

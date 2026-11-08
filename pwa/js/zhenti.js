@@ -157,6 +157,77 @@
         return ids.filter(id => state.progress[id]).length;
     }
 
+    /* ---------------- 本卷备注（按年份存 localStorage） ----------------
+     * 小按钮 → 悬浮窗富文本编辑 → 保存后横幅显示在试卷最上方。
+     * 备份接口 /api/backup/export 会用 collectLocalStorage() 收集当前 origin 全部键，
+     * 所以备注天然「跟着导出数据一起备份」，不需要新开 IndexedDB store，也不必升 DB_VER。
+     * 富文本复用 note_richtext.js（工具条 / 装填 / 序列化 / 消毒），与题目笔记同一套形态。 */
+    function paperNoteKey(y) { return 'zhentiPaperNote_' + y; }
+    function paperNoteOf(y) {
+        const raw = localStorage.getItem(paperNoteKey(y)) || '';
+        if (!raw) return '';
+        const probe = document.createElement('div');
+        probe.innerHTML = raw;
+        // 只剩空标签 / 空白不算有备注（避免清内容后仍挂一条空横幅）
+        if (!(probe.textContent || '').trim() && !probe.querySelector('img')) return '';
+        return raw;
+    }
+    function paperNoteBarHtml() {
+        const raw = paperNoteOf(state.year);
+        if (!raw) return '';
+        const safe = typeof sanitizeNoteHtml === 'function' ? sanitizeNoteHtml(raw) : raw;
+        return `<div class="zt-pn-bar" id="ztPnBar" onclick="openPaperNote()" title="点击编辑本卷备注">
+            <span class="zt-pn-bar-icon">📝</span>
+            <div class="zt-pn-bar-text">${safe}</div>
+            <button class="zt-pn-bar-edit" onclick="event.stopPropagation(); openPaperNote()" title="编辑本卷备注">编辑</button>
+        </div>`;
+    }
+    function openPaperNote() {
+        const modal = $('ztPnModal'), mask = $('ztPnMask'), ed = $('ztPnInput');
+        if (!modal || !mask || !ed) return;
+        // 工具条只注入一次，避免重复 id（题目笔记面板各自也有 #noteToolbar）
+        const slot = $('ztPnToolbarSlot');
+        if (slot && !slot.dataset.ready) {
+            slot.innerHTML = (typeof noteToolbarHtml === 'function' ? noteToolbarHtml() : '')
+                .replace('id="noteToolbar"', 'id="ztPnToolbar"');
+            slot.dataset.ready = '1';
+        }
+        $('ztPnYear').textContent = state.year + ' 年真题';
+        loadNoteIntoEditor(ed, paperNoteOf(state.year));
+        bindNoteToolbar(ed);
+        modal.hidden = false;
+        mask.hidden = false;
+        setTimeout(() => { try { ed.focus(); } catch (e) { } }, 30);
+    }
+    function closePaperNote() {
+        const modal = $('ztPnModal'), mask = $('ztPnMask');
+        if (modal) modal.hidden = true;
+        if (mask) mask.hidden = true;
+    }
+    function savePaperNote() {
+        const ed = $('ztPnInput');
+        if (!ed) return;
+        const html = typeof serializeNote === 'function' ? serializeNote(ed) : ed.innerHTML;
+        const probe = document.createElement('div');
+        probe.innerHTML = html;
+        const empty = !(probe.textContent || '').trim() && !probe.querySelector('img');
+        const key = paperNoteKey(state.year);
+        if (empty) localStorage.removeItem(key); else localStorage.setItem(key, html);
+        closePaperNote();
+        syncPaperNoteUi();
+    }
+    // 局部刷新：只换横幅与按钮文案，不重绘整卷（避免丢掉已展开的笔记/答案与滚动位置）
+    function syncPaperNoteUi() {
+        const main = $('ztMain');
+        if (!main) return;
+        const old = $('ztPnBar');
+        if (old) old.remove();
+        const bar = paperNoteBarHtml();
+        if (bar) main.insertAdjacentHTML('afterbegin', bar);
+        const btn = $('ztPnBtn');
+        if (btn) btn.textContent = bar ? '📝 编辑备注' : '📝 本卷备注';
+    }
+
     /* ---------------- 渲染：年份列表 ---------------- */
     function renderYearList() {
         const years = [...state.index.years].reverse();
@@ -185,7 +256,8 @@
         const progTxt = state.examMode
             ? `已选 ${Object.keys(state.pending).length}/${state.index.choice_total}`
             : `已做 ${doneCount(year)}/${state.index.choice_total}`;
-        let html = `<div class="zt-toolbar">
+        // 本卷备注：保存后以横幅显示在整份试卷最上方（工具栏之前）
+        let html = `${paperNoteBarHtml()}<div class="zt-toolbar">
             <div class="zt-title">${year} 年真题套卷<span class="zt-sub">选择题 ${state.index.choice_total} · 大题 ${state.index.big_total}</span></div>
             <div class="zt-tools">
                 <span class="zt-progress" id="ztProgress">${progTxt}</span>
@@ -194,6 +266,7 @@
                 <button class="zt-btn zt-btn-primary" onclick="toggleAnsPop()">答案速查</button>
                 <button class="zt-btn${state.favOnly ? ' on' : ''}" onclick="toggleFavOnly()">${state.favOnly ? '显示全部' : '只看收藏'}</button>
                 <button class="zt-btn" onclick="resetYear()" title="清空本年作答记录重新做（错题本保留）">重做本年 ↺</button>
+                <button class="zt-btn" id="ztPnBtn" onclick="openPaperNote()" title="给本卷写备注：失分点、时间分配、下次注意什么">${paperNoteOf(year) ? '📝 编辑备注' : '📝 本卷备注'}</button>
             </div>
         </div>`;
 
@@ -1227,6 +1300,7 @@
     function switchYear(y) {
         if (y === state.year) return;
         flushNote();
+        closePaperNote();                  // 弹窗开着切年份：直接收起，避免写到新年份上
         if (state.ansPopOpen) toggleAnsPop();   // 关闭答案速查
         state.year = y;
         state.pending = {};                     // 未判分的本次暂选不跨年
@@ -1457,6 +1531,14 @@
         gotoQ, toggleFq, toggleZtNav, expandZtNav, toggleAnsPop,
         pasteZtNoteImage, saveZtNoteNow, renderZtNoteImages, delZtNoteImage,
         viewZtNoteImage, onZtNoteFilePick, copyZtCard,
+        openPaperNote, closePaperNote, savePaperNote,
+    });
+
+    // 本卷备注弹窗：Esc 收起（取消，不保存）。common.js 的下拉 Esc 处理互不影响。
+    document.addEventListener('keydown', e => {
+        if (e.key !== 'Escape') return;
+        const modal = document.getElementById('ztPnModal');
+        if (modal && !modal.hidden) closePaperNote();
     });
 
     if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init, { once: true });

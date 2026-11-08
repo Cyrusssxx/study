@@ -8322,3 +8322,65 @@ body.fc-toc-open .fc-toc-fab { display: none; }
 .notes-body p[data-fig] + p[data-fig] {
     margin-top: 0;
 }
+
+/* ==================== 真题套卷 · 本卷备注 ====================
+   工具栏小按钮 → 悬浮窗富文本编辑 → 保存后以横幅显示在试卷最上方。
+   横幅与弹窗都用站点语义变量，深色模式随 .dark 自动切换。 */
+.zt-pn-mask {
+    position: fixed; inset: 0;
+    background: rgba(15, 23, 42, .42);
+    z-index: 900;
+}
+.zt-pn-mask[hidden], .zt-pn-modal[hidden] { display: none; }
+.zt-pn-modal {
+    position: fixed; left: 50%; top: 50%; transform: translate(-50%, -50%);
+    width: min(92vw, 720px); max-height: 88vh; overflow: auto;
+    background: var(--card-bg); color: var(--text);
+    border: 1px solid var(--border); border-radius: 14px;
+    box-shadow: 0 18px 50px rgba(0, 0, 0, .22);
+    padding: 22px 24px 18px; z-index: 901;
+}
+.zt-pn-head { display: flex; align-items: baseline; gap: 12px; }
+.zt-pn-head h3 { font-size: 1.08rem; font-weight: 700; margin: 0; }
+.zt-pn-year { font-size: .82rem; color: var(--text-light); }
+.zt-pn-desc { font-size: .86rem; color: var(--text-light); margin: 8px 0 14px; }
+.zt-pn-editor { border: 1px solid var(--border); border-radius: 10px; overflow: hidden; }
+.zt-pn-editor .note-toolbar { border-bottom: 1px solid var(--border); }
+.zt-pn-input {
+    min-height: 170px; max-height: 46vh; overflow: auto;
+    padding: 14px 16px; font-size: .94rem; line-height: 1.75;
+    background: var(--card-bg); color: var(--text);
+}
+.zt-pn-foot {
+    display: flex; align-items: center; justify-content: space-between;
+    gap: 12px; margin-top: 14px; flex-wrap: wrap;
+}
+.zt-pn-hint { font-size: .8rem; color: var(--text-light); }
+.zt-pn-btns { display: flex; gap: 10px; }
+
+/* 保存后的横幅：紧贴试卷最上方，在工具栏之前 */
+.zt-pn-bar {
+    display: flex; align-items: flex-start; gap: 10px;
+    margin: 0 0 14px; padding: 10px 12px;
+    background: rgba(74, 144, 217, .06);
+    border: 1px solid var(--border); border-left: 3px solid var(--primary);
+    border-radius: var(--radius);
+    cursor: pointer;
+}
+.zt-pn-bar:hover { background: rgba(74, 144, 217, .10); }
+.zt-pn-bar-icon { flex: 0 0 auto; font-size: 1rem; line-height: 1.6; }
+.zt-pn-bar-text {
+    flex: 1 1 auto; min-width: 0; font-size: .9rem; line-height: 1.7;
+    color: var(--text); word-break: break-word;
+}
+.zt-pn-bar-text p, .zt-pn-bar-text h1, .zt-pn-bar-text h2 { margin: 0 0 .2em; }
+.zt-pn-bar-text h1 { font-size: 1.05rem; }
+.zt-pn-bar-text h2 { font-size: .98rem; }
+.zt-pn-bar-edit {
+    flex: 0 0 auto; font-size: .78rem; padding: 3px 9px;
+    color: var(--primary); background: transparent;
+    border: 1px solid var(--border); border-radius: 6px; cursor: pointer;
+}
+.zt-pn-bar-edit:hover { border-color: var(--primary); }
+.dark .zt-pn-bar { background: rgba(74, 144, 217, .10); }
+.dark .zt-pn-bar:hover { background: rgba(74, 144, 217, .16); }
