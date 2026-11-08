@@ -3,7 +3,7 @@
 // 需求：套卷模式的每道题都要能一键复制，选择题与大题（含 DS 打卡表版本）都要有。
 //
 // 约定：
-//   · 做题模式（默认，白纸状态）只复制题干与选项——答案/解析里含答案，复制出去等于泄题；
+//   · 做题模式（白纸状态，需手动开启）只复制题干与选项——答案/解析里含答案，复制出去等于泄题；
 //   · 非做题模式复制完整内容（题干 + 选项 + 答案 + 解析 / 参考答案与解析）；
 //   · DS 算法大题在套卷里显示的是打卡表版本，复制要取它实际显示的内容（讲义解法 + 代码），
 //     而不是 408os 原版解析；
@@ -122,6 +122,11 @@ dom = new JSDOM(html, {
   check('DS 打卡表大题卡片有复制按钮', !!pickDaka().querySelector('.zt-copy-btn'), true);
   check('复制按钮在工具栏内（与答案/笔记并排）',
     !!pickChoice().querySelector('.question-tools .zt-copy-btn'), true);
+
+  console.log('\n--- 二·补：默认已取消做题模式，手动开启以验证白纸复制 ---');
+  check('默认浏览态：复制内容含答案', copyOf(pickChoice()).includes('【答案】'), true);
+  await w.toggleExamMode();
+  await sleep(400);
 
   console.log('\n--- 三、做题模式：只复制题干 + 选项，不含答案 ---');
   {

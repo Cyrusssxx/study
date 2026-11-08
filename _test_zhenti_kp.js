@@ -132,12 +132,16 @@ const KP_TABLE = {
   check('CO 大题不带 goto（科目级，不冒充精确考点）', /goto=/.test(b43.getAttribute('href')), false);
   check('CO 大题文案为「知识点笔记」', /知识点笔记/.test(b43.textContent), true);
 
-  console.log('\n--- 四、做题模式下入口照常可见（跳笔记不泄答案） ---');
-  // state 在 zhenti.js 的 IIFE 内，外部取不到；改为观察做题模式的 DOM 特征：
-  // 做题模式下卡片不显示历史作答结果条（.result-correct / .result-wrong）
-  check('默认未显示历史作答结果条（在做题模式）',
-    doc.querySelectorAll('#ztMain .result-correct, #ztMain .result-wrong').length, 0);
+  console.log('\n--- 四、默认浏览态与做题模式下入口都可见（跳笔记不泄答案） ---');
+  // 2026-11-08 起默认已取消做题模式：两种状态下知识点入口都必须常驻
+  check('默认浏览态：顶栏按钮为「做题模式」',
+    /做题模式/.test((doc.getElementById('ztExamModeBtn') || {}).textContent || ''), true);
+  check('默认浏览态：映射选择题有入口', !!kp('os_0001'), true);
+  await w.toggleExamMode();
+  await sleep(400);
   check('做题模式下映射选择题仍有入口', !!kp('os_0001'), true);
+  await w.toggleExamMode();
+  await sleep(400);
 
   console.log('\n--- 五、入口不重复（重复渲染不叠加） ---');
   w.renderPaper && (await w.renderPaper());

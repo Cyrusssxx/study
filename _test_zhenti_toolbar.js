@@ -31,15 +31,15 @@ console.log('\n--- 1. 做题模式按钮在顶栏 ---');
 const doc = new JSDOM(HTML).window.document;
 const btn = doc.querySelector('nav .nav-tools #ztExamModeBtn');
 check('按钮位于 nav .nav-tools 内', !!btn, true);
-check('初始文案为「做题中」', btn && btn.textContent.trim(), '做题中');
+check('初始文案为「做题模式」', btn && btn.textContent.trim(), '做题模式');
 check('onclick 指向 toggleExamMode()', btn && btn.getAttribute('onclick'), 'toggleExamMode()');
-check('初始带 on 类', btn && btn.classList.contains('on'), true);
+check('初始不带 on 类（默认已取消做题模式）', btn && btn.classList.contains('on'), false);
 check('与夜间开关同处一个容器', btn && btn.parentElement.id === '' && btn.parentElement.className, 'nav-tools');
 
 console.log('\n--- 2. 工具栏不再重复渲染 ---');
 const toolbarBlock = JS.slice(JS.indexOf('class="zt-toolbar"'), JS.indexOf('class="zt-toolbar"') + 1400);
 check('工具栏 HTML 里无 toggleExamMode', toolbarBlock.includes('toggleExamMode'), false);
-check('工具栏仍有「对答案」（做题模式）', toolbarBlock.includes('checkPending()'), true);
+check('工具栏保留「对答案」条件渲染（做题模式时出现）', toolbarBlock.includes('checkPending()'), true);
 
 console.log('\n--- 3. 状态同步 ---');
 check('存在 syncExamModeBtn()', JS.includes('function syncExamModeBtn()'), true);

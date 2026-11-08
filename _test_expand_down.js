@@ -104,7 +104,7 @@ if (!JSDOM || !IDBFactory) {
   for (let i = 0; i < 60; i++) { await sleep(100); if (doc.querySelectorAll('#yearList .ol-nav-item').length) break; }
   await sleep(500);
 
-  w.toggleExamMode();                  // 退出做题模式，答案按钮才可展开
+  // 默认已取消做题模式，答案按钮可直接展开（无需再切换）
   await sleep(500);
   const clickAns = () => {
     const b = doc.querySelector('.question-card [data-toggle="ans"]');

@@ -69,8 +69,8 @@ async function run() {
   check('默认白纸：无「做过自动展开」逻辑', !/\(!!st && !state\.examMode\)/.test(js));
   check('本次会话作答机制（sessionAnswered）', /sessionAnswered/.test(js));
   check('做题模式下拦截查看答案（toggleAns）', /做题模式下不显示答案/.test(js));
-  // v6：默认进入做题模式；取消时判分并显示历史记录与笔记
-  check('默认进入做题模式（examMode 初始 true，无持久化）', /examMode:\s*true/.test(js) && !/localStorage\.getItem\('zhentiMode'\)/.test(js));
+  // 2026-11-08：默认取消做题模式（浏览态）；想白纸练手再点顶栏「做题模式」开启
+  check('默认已取消做题模式（examMode 初始 false，无持久化）', /examMode:\s*false/.test(js) && !/localStorage\.getItem\('zhentiMode'\)/.test(js));
   check('取消做题模式先判分（gradePending 共用「对答案」与切换两入口）',
     /async function gradePending/.test(js) && (js.match(/await gradePending\(\)/g) || []).length >= 2);
   check('非做题模式显示历史记录（showHist 门控选项色/预选/结果条）', /const showHist = !state\.examMode/.test(js));
@@ -224,14 +224,14 @@ async function run() {
   check('题号导航头部有进度', !!d.querySelector('#fqProg'));
   check('题号编排：第 1 题与第 41 题', /第 1 题/.test(d.querySelector('#ztMain').textContent) &&
     /第 41 题/.test(d.querySelector('#ztMain').textContent));
-  // v6：默认进入做题模式（白纸）——年份完成度、历史痕迹全部隐藏
+  // 2026-11-08：默认已取消做题模式 —— 顶栏显示「做题模式」，历史完成度与进度直接可见
   // 96da760 起：做题模式开关已从工具栏移到顶栏常驻按钮 #ztExamModeBtn
-  check('默认进入做题模式：顶栏「做题中」+ 工具栏「对答案」',
-    /做题中/.test((d.getElementById('ztExamModeBtn') || {}).textContent || '') && /对答案/.test(d.querySelector('#ztMain').textContent));
-  check('做题模式：年份列表不显示完成度', !/\/40/.test(d.querySelector('#yearList').textContent));
-  check('做题模式：进度显示「已选 0/40」', /已选 0\/40/.test(d.querySelector('#ztMain').textContent));
-  // v3 白纸：初始无结果条/无预选/解析收起
-  check('初始白纸：无结果条、无预选、解析全部收起',
+  check('默认已取消做题模式：顶栏「做题模式」+ 工具栏无「对答案」',
+    /做题模式/.test((d.getElementById('ztExamModeBtn') || {}).textContent || '') && !/对答案/.test(d.querySelector('#ztMain').textContent));
+  check('默认浏览态：年份列表显示完成度', /\/40/.test(d.querySelector('#yearList').textContent));
+  check('默认浏览态：进度显示「已做 0/40」', /已做 0\/40/.test(d.querySelector('#ztMain').textContent));
+  // 全新库下仍无结果条/无预选/解析收起（答案按需展开，不自动泄题）
+  check('初始浏览态：无结果条、无预选、解析全部收起',
     d.querySelectorAll('#ztMain .result-correct, #ztMain .result-wrong').length === 0 &&
     d.querySelectorAll('#ztMain .option-item input:checked').length === 0 &&
     d.querySelectorAll('#ztMain .explanation-panel').length === 0,
@@ -254,6 +254,11 @@ async function run() {
 
   // ---------- 交互：做题模式选答 → 取消判分显示记录 ----------
   console.log('▸ 交互：做题模式选答 → 取消后判分显示记录');
+  // 默认已取消做题模式；本节专门验证做题模式链路，先手动开启（后续每处 toggle 与旧流程对齐）
+  await w.toggleExamMode();
+  await sleep(300);
+  check('手动开启做题模式：顶栏「做题中」+ 工具栏「对答案」',
+    /做题中/.test((d.getElementById('ztExamModeBtn') || {}).textContent || '') && /对答案/.test(d.querySelector('#ztMain').textContent));
   const firstCard = d.querySelector('#ztMain .question-card');
   const iid = firstCard.dataset.iid;
   check('2026 第一题 iid 为新格式（{sid}_zt2026_1）', /^[a-z]{2}_zt2026_\d+$/.test(iid), iid);
@@ -446,7 +451,7 @@ async function run() {
   check('2009|41（最短路径应用题）不替换（保留原版）', !!c41 && !c41.classList.contains('zt-daka-card'), true);
   check('2009|43（计组）不替换', !!c43 && !c43.classList.contains('zt-daka-card'), true);
   check('2009 年卷仅 42 一处替换（只动算法题）', d.querySelectorAll('#ztMain .zt-daka-card').length, 1);
-  // 展开全部答案（不经 toggleAns——当前处于做题模式会被拦截；同时覆盖 showAll 分支）
+  // 展开全部答案（直接走 showAll 分支；做题模式下 toggleAns 会被拦截）
   w.toggleShowAll();
   await sleep(350);
   const c42x = cardByI(42);
@@ -473,7 +478,7 @@ async function run() {
   check('2024|42（打卡表无讲义）不替换', !!x42 && !x42.classList.contains('zt-daka-card'), true);
 
   // ---------- 第二个页面实例：模拟「重开页面」（IndexedDB 共享，localStorage 全新） ----------
-  console.log('\n▸ 重开页面：默认做题模式仍隐藏既有记录与笔记');
+  console.log('\n▸ 重开页面：默认已取消做题模式，历史作答与笔记直接可见');
   w.close();
   const dom2 = new JSDOM(html, mkOptions());
   const w2 = dom2.window;
@@ -482,48 +487,56 @@ async function run() {
   for (let i = 0; i < 60; i++) { await sleep(100); y2 = d2.querySelectorAll('#yearList .ol-nav-item').length; if (y2) break; }
   await sleep(300);
 
-  check('重开：默认进入做题模式（顶栏做题中 + 已选 0/40）',
-    /做题中/.test((d2.getElementById('ztExamModeBtn') || {}).textContent || '') && /已选 0\/40/.test(d2.querySelector('#ztMain').textContent));
-  check('重开：年份完成度隐藏（尽管库中已有历史作答）', !/\/40/.test(d2.querySelector('#yearList').textContent));
+  check('重开：默认已取消做题模式（顶栏「做题模式」+ 进度「已做 N/40」）',
+    /做题模式/.test((d2.getElementById('ztExamModeBtn') || {}).textContent || '') &&
+    /已做 \d+\/40/.test(d2.querySelector('#ztMain').textContent));
+  check('重开：年份完成度直接显示', /\/40/.test(d2.querySelector('#yearList').textContent));
 
   const card2 = d2.querySelector('#ztMain .question-card');
   const iid3 = card2.dataset.iid;
   check('重开：同题同 id（交互互通）', iid3 === iid, iid3);
-  check('重开：做题模式下历史作答不显示（无预选/无结果条/无选项色/无解析）',
-    !card2.querySelector('.option-item input:checked') &&
-    !card2.querySelector('.result-correct,.result-wrong') &&
-    !card2.querySelector('.option-item.correct,.option-item.wrong') &&
-    !card2.querySelector('.explanation-panel'));
-  check('重开：题号导航无历史色点', !d2.querySelector('#fqList .zt-fq-i.ok, #fqList .zt-fq-i.bad'));
+  check('重开：2026 历史作答直接显示（预选 + 错误条）',
+    !!card2.querySelector('.option-item input:checked') &&
+    !!card2.querySelector('.result-wrong'));
+  check('重开：题号导航显示历史色点', !!d2.querySelector('#fqList .zt-fq-i.bad'));
 
-  // 切到 2024（仍在做题模式）：笔记与历史记录同样隐藏
+  // 切到 2024（仍浏览态）：笔记与历史记录同样直接可见
   w2.switchYear(2024);
   await sleep(500);
   const findCard2 = id => [...d2.querySelectorAll('#ztMain .question-card')].find(c => c.dataset.iid === id);
   const nc0 = findCard2(iid2);
-  check('重开：做题模式下笔记 ● 与面板均隐藏',
-    !!nc0 && !nc0.querySelector('.btn-explanation.has-note') && !nc0.querySelector('.zt-note-panel'));
-  check('重开：做题模式下 2024 历史作答也不显示',
-    !!nc0 && !nc0.querySelector('.option-item input:checked') && !nc0.querySelector('.result-correct,.result-wrong'));
+  check('重开：浏览态下笔记 ● 提示出现', !!nc0 && !!nc0.querySelector('.btn-explanation.has-note'));
+  check('重开：浏览态下 2024 历史作答直接显示',
+    !!nc0 && !!nc0.querySelector('.option-item input:checked') && !!nc0.querySelector('.result-correct,.result-wrong'));
 
-  // 取消做题模式 → 历史记录 + 笔记全部恢复
+  // 手动开启做题模式 → 历史记录、笔记、完成度全部隐藏
+  await w2.toggleExamMode();
+  await sleep(400);
+  const ncm = findCard2(iid2);
+  check('重开+开启做题模式：历史作答隐藏',
+    !!ncm && !ncm.querySelector('.option-item input:checked') && !ncm.querySelector('.result-correct,.result-wrong'));
+  check('重开+开启做题模式：笔记 ● 与面板均隐藏',
+    !!ncm && !ncm.querySelector('.btn-explanation.has-note') && !ncm.querySelector('.zt-note-panel'));
+  check('重开+开启做题模式：年份完成度隐藏', !/\/40/.test(d2.querySelector('#yearList').textContent));
+
+  // 再取消 → 历史记录 + 笔记全部恢复
   await w2.toggleExamMode();
   await sleep(400);
   const nc1 = findCard2(iid2);
-  check('重开+取消：历史作答恢复（预选 + 结果条）',
+  check('重开+再取消：历史作答恢复（预选 + 结果条）',
     !!nc1 && !!nc1.querySelector('.option-item input:checked') && !!nc1.querySelector('.result-correct,.result-wrong'));
-  check('重开+取消：笔记 ● 提示出现', !!nc1 && !!nc1.querySelector('.btn-explanation.has-note'));
+  check('重开+再取消：笔记 ● 提示出现', !!nc1 && !!nc1.querySelector('.btn-explanation.has-note'));
   w2.toggleNotePanel(iid2);
   await sleep(300);
   const np3 = d2.querySelector('#card-' + iid2 + ' .zt-note-panel');
-  check('重开+取消：笔记面板可打开且内容保留',
+  check('重开+再取消：笔记面板可打开且内容保留',
     !!np3 && /<b>测试<\/b>/.test((np3.querySelector('.note-input') || {}).innerHTML || ''));
 
-  // 2026 历史记录（答错演示）在取消后同样恢复
+  // 2026 历史记录（答错演示）在浏览态同样直接可见
   w2.switchYear(2026);
   await sleep(500);
   const ncc = d2.querySelector('#card-' + iid3);
-  check('重开+取消：2026 历史作答恢复（预选 + 错误条）',
+  check('重开+浏览态：2026 历史作答（预选 + 错误条）直接显示',
     !!ncc && !!ncc.querySelector('.option-item input:checked') && !!ncc.querySelector('.result-wrong'));
 
   w2.close();

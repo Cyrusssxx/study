@@ -32,7 +32,8 @@
         lectureBySource: new Map(), // daka 卡 source -> ds_code/extra 讲义条目
         svgCache: {},            // name -> svg 文本
         year: 0,
-        examMode: true,          // 默认进入做题模式：白纸状态，不显示历史作答记录与笔记
+        examMode: false,         // 默认取消做题模式：直接显示历史作答记录、笔记与答案入口；
+                                 // 想白纸练手再点顶栏「做题模式」开启（状态不持久化，每次进页都是浏览态）
         showAll: false,
         favOnly: false,
         ansOpen: new Set(JSON.parse(localStorage.getItem('zhentiAnsOpen2') || '[]')),
@@ -234,7 +235,7 @@
         $('yearList').innerHTML = years.map(y => {
             const done = doneCount(y);
             const active = y === state.year;
-            // 做题模式（默认）不显示各年完成度（属历史记录，取消后恢复）
+            // 做题模式不显示各年完成度（属历史记录，退出做题模式后恢复）
             const doneHtml = state.examMode ? '' : `<span class="zt-year-done">${done}/${state.index.choice_total}</span>`;
             return `<a class="ol-nav-item root${active ? ' zt-year-active' : ''}" data-year="${y}"
                 onclick="switchYear(${y})" title="${y} 年真题（选择 40 + 大题 7）">
@@ -321,7 +322,7 @@
     }
 
     /* ---------------- 卡片：选择题 ----------------
-     * 做题模式（默认）：白纸状态——不显示历史作答痕迹（结果条/选项色/预选）与笔记，
+     * 做题模式：白纸状态——不显示历史作答痕迹（结果条/选项色/预选）与笔记，
      *   本次选答仅暂存（picked），退出做题模式时统一判分。
      * 取消做题模式：显示历史作答记录（预选/对错色/结果条）与笔记，解析默认仍收起。 */
     /* ---------------- 知识点跳转 ----------------
@@ -1259,7 +1260,7 @@
         return true;
     }
 
-    // 切换做题模式：默认进入（白纸）；取消时先把本次暂选的答案判分，再显示历史记录与笔记
+    // 切换做题模式：默认关闭（浏览态）；进入时切白纸，退出时先把暂选答案判分再显示历史记录与笔记
     async function toggleExamMode() {
         flushNote();
         if (state.examMode) {

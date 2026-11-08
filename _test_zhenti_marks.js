@@ -102,11 +102,12 @@ const OS_BANK = {
 
   console.log('\n--- 三、考点分析：做题模式下隐藏（含答案） ---');
   const kpBtn = c => [...c.querySelectorAll('.btn-explanation')].find(b => /考点分析/.test(b.textContent));
-  check('做题模式下无「考点分析」按钮', !!kpBtn(c1), false);
-
-  // 退出做题模式（对答案），再收藏第 1 题
-  w.toggleExamMode();
-  await sleep(200);
+  // 默认已取消做题模式；先手动开启做题模式验证「考点分析」被隐藏，再退出继续收藏流程
+  await w.toggleExamMode();
+  await sleep(250);
+  check('做题模式下无「考点分析」按钮', !!kpBtn(card('os_0001')), false);
+  await w.toggleExamMode();
+  await sleep(250);
   check('未收藏时仍无「考点分析」按钮（只有收藏题才有）', !!kpBtn(card('os_0001')), false);
 
   const star = card('os_0001').querySelector('.btn-icon');
