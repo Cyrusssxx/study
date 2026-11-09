@@ -143,7 +143,18 @@ def extract_svgs(text, tag, out_files):
             fh.write(text[start:end])
         out_files.append(name)
         res.append(text[i:start])
-        res.append('<div class="zt-svgholder" data-svg="%s"></div>' % name)
+        # KaTeX 的 \left[ / \right] 等可拉伸定界符是**内联 SVG**：宽高用 em、
+        # viewbox 小写（源站特征）。它必须留在 <span style="width:.667em;height:6em">
+        # 里参与行盒排版；若和题图一样外置成块级 div（.zt-svgholder 是 flex +
+        # min-height:56px，注入后又包 .zt-svg-wrap 的 display:block/height:auto），
+        # 会把矩阵撑散、括号跑到正文里 —— 2015-42 答案的 A / A² 就是这种现象。
+        head = text[start:text.find('>', start) + 1]
+        inline = ('viewbox=' in head.lower()
+                  and re.search(r'(?:width|height)="[^"]*em"', head, re.I))
+        if inline:
+            res.append('<span class="zt-svgholder zt-svg-inline" data-svg="%s"></span>' % name)
+        else:
+            res.append('<div class="zt-svgholder" data-svg="%s"></div>' % name)
         i = end
     res.append(text[i:])
     return ''.join(res)
@@ -188,6 +199,12 @@ def clean_html(body):
     body = re.sub(r"(href|src)\s*=\s*'javascript:[^']*'", '', body, flags=re.I)
     # 引用的水印 pattern 清理（defs 里的 watermark-pattern + 使用处保留）
     body = WATERMARK.sub('', body)
+    # 源站部分题图容器写了 width:120%（如 2015-43 的 CPU 结构图），会顶破题目卡片右边界。
+    # 只把 >100% 的收敛到 100%；50% / 80% 等合理缩放原样保留。
+    def _cap_width(m):
+        v = float(m.group(1))
+        return 'width:%s%%' % ('100' if v > 100 else m.group(1))
+    body = re.sub(r'width:\s*(\d+(?:\.\d+)?)%', _cap_width, body)
     body = body.strip()
     return clean_code_layout(body)
 

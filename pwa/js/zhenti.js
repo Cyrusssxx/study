@@ -842,15 +842,21 @@
         for (const h of holders) {
             if (h.dataset.done) continue;
             h.dataset.done = '1';
+            // KaTeX 可拉伸括号（\left[ \right] 等）是内联 SVG，必须留在原来的
+            // <span style="width:.667em;height:6em"> 里参与行盒排版。
+            // 题图才包 .zt-svg-wrap（块级 + max-width:100% + height:auto）；
+            // 给括号套上会把矩阵撑散、括号跑到正文里（2015-42 答案）。
+            const inline = h.classList.contains('zt-svg-inline');
             fetchSvg(h.dataset.svg).then(t => {
-                if (t) {
-                    const wrap = document.createElement('div');
-                    wrap.className = 'zt-svg-wrap';
-                    wrap.innerHTML = t;
-                    h.replaceWith(wrap);
-                } else {
+                if (!t) {
                     h.innerHTML = '<span class="zt-svg-fail">[图加载失败，可刷新重试]</span>';
+                    return;
                 }
+                if (inline) { h.innerHTML = t; return; }
+                const wrap = document.createElement('div');
+                wrap.className = 'zt-svg-wrap';
+                wrap.innerHTML = t;
+                h.replaceWith(wrap);
             });
         }
     }

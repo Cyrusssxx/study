@@ -8102,9 +8102,19 @@ body.fc-toc-open .fc-toc-fab { display: none; }
 /* SVG 占位与注入容器 */
 .zt-svgholder { min-height: 56px; display: flex; align-items: center; justify-content: center; }
 .zt-svgholder::before { content: '图加载中…'; color: var(--text-light); font-size: .78rem; }
+/* KaTeX 的 \left[ / \right] 等可拉伸括号是内联 SVG，必须留在原来的
+   <span style="width:.667em;height:6em"> 里参与行盒排版。
+   .zt-svgholder 默认 flex + min-height:56px 会把矩阵撑散、括号挤进正文
+   （2015-42 答案 A / A² 的排版错乱就是这么来的）。 */
+.zt-svgholder.zt-svg-inline { display: inline-block; min-height: 0; vertical-align: middle; line-height: 1; }
+.zt-svgholder.zt-svg-inline::before { content: none; }
 .zt-svg-wrap { margin: 10px 0; overflow-x: auto; }
 .zt-svg-wrap svg { max-width: 100%; height: auto; display: block; margin: 0 auto; }
 .zt-svg-fail { color: var(--text-light); font-size: .78rem; }
+/* 源站部分题图容器带内联 width:120%（如 2015-43 的 CPU 结构图），会顶破卡片右边界。
+   构建期已收敛到 100%，这条给尚未更新的本地缓存兜底（不影响 50%/80% 等合理缩放）。 */
+.question-content .svg-wrapper, .explanation-body .svg-wrapper,
+.question-content .svg-container, .explanation-body .svg-container { max-width: 100%; }
 .zt-score-badge { font-size: .72rem; color: var(--text-light); border: 1px solid var(--border); border-radius: 10px; padding: 1px 8px; }
 
 /* 题干/解析/选项内的网站内容格式适配 */

@@ -94,7 +94,7 @@
     "I 和 III",
     "I、II 和 III"
    ],
-   "an": "<div class=\"analysis-content\"><br><p>森林与二叉树的 转换规则 为“左孩子右兄弟”。在最后生成的二叉树中，父子关系在对应森林关系中可能是兄弟关系或原本就是父子关系。</p><p>情形 I：若结点 V 是结点 u 的第二个孩子结点，在转换时，结点 V 就变成结点 u 第一个孩子的右孩子，符合要求。</p><p>情形 II：结点 u 和 V 是兄弟结点的关系，但二者之中还有一个兄弟结点 k, 则转换后，结点 V 就变为结点 k 的右孩子，而结点 k 则是结点 u 的右孩子，符合要求。</p><div class=\"svg-wrapper\"><div class=\"svg-container\" style=\"height:auto;width:120%\">\n\n<div class=\"zt-svgholder\" data-svg=\"zt_2009_6_an_1\"></div></div></div><p>情形 III: 若结点 u 的父结点与 v 的父结点是兄弟关系，则转换后，结点 u 和 v 分别在两者最左父结点的两棵子树中，不可能出现在同 一条路径中。</p><div class=\"svg-wrapper\"><div class=\"svg-container\" style=\"height:auto;width:60%\">\n\n<div class=\"zt-svgholder\" data-svg=\"zt_2009_6_an_2\"></div></div></div><p>【逆向法】由题意可知 u 是 v 的父结点的父结点，如下图所示有 4 种情况：</p><div class=\"svg-wrapper\"><div class=\"svg-container\" style=\"height:auto;width:60%\">\n\n<div class=\"zt-svgholder\" data-svg=\"zt_2009_6_an_3\"></div></div></div><p>根据树与二叉树的转换规则，将这 4 种情况转换成树种结点的关系。(1) 在原来的树中 u 是 v 的父结点的父结点； (2) 在树中 u 是 v 的父结点； (3) 在树中 u 是 v 的父结点的兄弟； (4) 在树中 u 与 v 是兄弟关系。由此可知 I 和 II 正确。</p></div>",
+   "an": "<div class=\"analysis-content\"><br><p>森林与二叉树的 转换规则 为“左孩子右兄弟”。在最后生成的二叉树中，父子关系在对应森林关系中可能是兄弟关系或原本就是父子关系。</p><p>情形 I：若结点 V 是结点 u 的第二个孩子结点，在转换时，结点 V 就变成结点 u 第一个孩子的右孩子，符合要求。</p><p>情形 II：结点 u 和 V 是兄弟结点的关系，但二者之中还有一个兄弟结点 k, 则转换后，结点 V 就变为结点 k 的右孩子，而结点 k 则是结点 u 的右孩子，符合要求。</p><div class=\"svg-wrapper\"><div class=\"svg-container\" style=\"height:auto;width:100%\">\n\n<div class=\"zt-svgholder\" data-svg=\"zt_2009_6_an_1\"></div></div></div><p>情形 III: 若结点 u 的父结点与 v 的父结点是兄弟关系，则转换后，结点 u 和 v 分别在两者最左父结点的两棵子树中，不可能出现在同 一条路径中。</p><div class=\"svg-wrapper\"><div class=\"svg-container\" style=\"height:auto;width:60%\">\n\n<div class=\"zt-svgholder\" data-svg=\"zt_2009_6_an_2\"></div></div></div><p>【逆向法】由题意可知 u 是 v 的父结点的父结点，如下图所示有 4 种情况：</p><div class=\"svg-wrapper\"><div class=\"svg-container\" style=\"height:auto;width:60%\">\n\n<div class=\"zt-svgholder\" data-svg=\"zt_2009_6_an_3\"></div></div></div><p>根据树与二叉树的转换规则，将这 4 种情况转换成树种结点的关系。(1) 在原来的树中 u 是 v 的父结点的父结点； (2) 在树中 u 是 v 的父结点； (3) 在树中 u 是 v 的父结点的兄弟； (4) 在树中 u 与 v 是兄弟关系。由此可知 I 和 II 正确。</p></div>",
    "qid": "ds_0276"
   },
   {
@@ -142,7 +142,7 @@
     "3，8，12，5，20，15，22，28，19",
     "3，12，5，8，28，20，15，22，19"
    ],
-   "an": "<div class=\"analysis-content\"><br/><p>根据关键字序列得到的 小根堆 的二叉树形式如下图所示。</p><div class=\"svg-wrapper\"><div class=\"svg-container\" style=\"height:auto;width:120%\">\n\n<div class=\"zt-svgholder\" data-svg=\"zt_2009_9_an_1\"></div></div></div><p>插入关键字 3 时，先将其放在小顶堆的末端，如图 (2) 所示。再将该关键字向上进行调整，得到的结果如图 (3) 所示。所以，调整后的小顶堆序列为 3, 5, 12, 8, 28, 20, 15, 22, 19。</p></div>",
+   "an": "<div class=\"analysis-content\"><br/><p>根据关键字序列得到的 小根堆 的二叉树形式如下图所示。</p><div class=\"svg-wrapper\"><div class=\"svg-container\" style=\"height:auto;width:100%\">\n\n<div class=\"zt-svgholder\" data-svg=\"zt_2009_9_an_1\"></div></div></div><p>插入关键字 3 时，先将其放在小顶堆的末端，如图 (2) 所示。再将该关键字向上进行调整，得到的结果如图 (3) 所示。所以，调整后的小顶堆序列为 3, 5, 12, 8, 28, 20, 15, 22, 19。</p></div>",
    "qid": "ds_0568"
   },
   {

@@ -79,7 +79,7 @@
     "cabefd",
     "dfebac"
    ],
-   "an": "<div class=\"analysis-content\"><br/><p>如下图所示。对于后序序列 fdbeca，a 为树节点的根，因此在序号 1 中，a 首先进行绘制。同时，a 节点的左子树有 4 个节点，右子树有 1 个节点，因此 fdbe 属于左子树，c 节点属于右子树，所以我们在序号 2 的树中，填充 c。a 结点左子树的后序遍历序列为 fdbe，代表 e 为左子树的根节点，因此在序号 3 的树中，填充 e。同理 e 节点的左子树有两个节点，右子树有一个节点，因此 fdb 属于左子树，e 属于右子树，在序号 4 的树中，我们填写 b。e 的左子树的后序遍历序列为 fd，则 d 为子树的根节点，因此在序号 5 的树中，我们填充 d，最后在序号 6 的图中，填充 f。先序序列为 a，e，d，f，b，c。本题答案选 A。</p><div class=\"svg-wrapper\"><div class=\"svg-container\" style=\"height:auto;width:120%\">\n\n<div class=\"zt-svgholder\" data-svg=\"zt_2023_5_an_1\"></div></div></div></div>",
+   "an": "<div class=\"analysis-content\"><br/><p>如下图所示。对于后序序列 fdbeca，a 为树节点的根，因此在序号 1 中，a 首先进行绘制。同时，a 节点的左子树有 4 个节点，右子树有 1 个节点，因此 fdbe 属于左子树，c 节点属于右子树，所以我们在序号 2 的树中，填充 c。a 结点左子树的后序遍历序列为 fdbe，代表 e 为左子树的根节点，因此在序号 3 的树中，填充 e。同理 e 节点的左子树有两个节点，右子树有一个节点，因此 fdb 属于左子树，e 属于右子树，在序号 4 的树中，我们填写 b。e 的左子树的后序遍历序列为 fd，则 d 为子树的根节点，因此在序号 5 的树中，我们填充 d，最后在序号 6 的图中，填充 f。先序序列为 a，e，d，f，b，c。本题答案选 A。</p><div class=\"svg-wrapper\"><div class=\"svg-container\" style=\"height:auto;width:100%\">\n\n<div class=\"zt-svgholder\" data-svg=\"zt_2023_5_an_1\"></div></div></div></div>",
    "qid": null
   },
   {

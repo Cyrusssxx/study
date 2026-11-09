@@ -40,7 +40,7 @@
    "s": 2,
    "a": "D",
    "sid": "ds",
-   "q": "<p>下列线索二叉树中（用虚线表示线索），符合后序线索树定义的是（ ）。</p>\n<div class=\"svg-wrapper\"><div class=\"svg-container\" style=\"height:auto;width:120%\">\n\n<div class=\"zt-svgholder\" data-svg=\"zt_2010_3_1\"></div></div></div></div>\n</div></div>",
+   "q": "<p>下列线索二叉树中（用虚线表示线索），符合后序线索树定义的是（ ）。</p>\n<div class=\"svg-wrapper\"><div class=\"svg-container\" style=\"height:auto;width:100%\">\n\n<div class=\"zt-svgholder\" data-svg=\"zt_2010_3_1\"></div></div></div></div>\n</div></div>",
    "o": [
     "A",
     "B",
@@ -63,7 +63,7 @@
     "24, 53",
     "24, 90"
    ],
-   "an": "<div class=\"analysis-content\"><br/><p>插入 48 以后，该 AVL 根结点的平衡因子由 -1 变为 -2, 在最小不平衡子树根结点的右子树 (R) 的左子树 (L) 中插入新结点引起的不平衡属于 RL 型平衡旋转，需要做两次旋转操作（先右旋后左旋）。</p><div class=\"svg-wrapper\"><div class=\"svg-container\" style=\"height:auto;width:120%\">\n\n<div class=\"zt-svgholder\" data-svg=\"zt_2010_4_an_1\"></div></div></div><p>调整后，关键字 37 所在结点的左、右子结点中保存的关键字分别是 24、53。</p></div>",
+   "an": "<div class=\"analysis-content\"><br/><p>插入 48 以后，该 AVL 根结点的平衡因子由 -1 变为 -2, 在最小不平衡子树根结点的右子树 (R) 的左子树 (L) 中插入新结点引起的不平衡属于 RL 型平衡旋转，需要做两次旋转操作（先右旋后左旋）。</p><div class=\"svg-wrapper\"><div class=\"svg-container\" style=\"height:auto;width:100%\">\n\n<div class=\"zt-svgholder\" data-svg=\"zt_2010_4_an_1\"></div></div></div><p>调整后，关键字 37 所在结点的左、右子结点中保存的关键字分别是 24、53。</p></div>",
    "qid": "ds_0452"
   },
   {
@@ -127,7 +127,7 @@
     "2",
     "1"
    ],
-   "an": "<div class=\"analysis-content\"><br/><p>拓扑排序 的过程如下图所示：</p><div class=\"svg-wrapper\"><div class=\"svg-container\" style=\"height:auto;width:120%\">\n\n<div class=\"zt-svgholder\" data-svg=\"zt_2010_8_an_1\"></div></div></div><p>可以得到 3 个不同的拓扑序列，分别为 abced、abecd、aebcd。</p></div>",
+   "an": "<div class=\"analysis-content\"><br/><p>拓扑排序 的过程如下图所示：</p><div class=\"svg-wrapper\"><div class=\"svg-container\" style=\"height:auto;width:100%\">\n\n<div class=\"zt-svgholder\" data-svg=\"zt_2010_8_an_1\"></div></div></div><p>可以得到 3 个不同的拓扑序列，分别为 abced、abecd、aebcd。</p></div>",
    "qid": "ds_0386"
   },
   {
