@@ -1,0 +1,53 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 780 430" width="780" height="430" font-family="Microsoft YaHei, PingFang SC, sans-serif">
+  <defs>
+    <marker id="arwO" markerWidth="9" markerHeight="9" refX="8" refY="4.5" orient="auto"><path d="M0,0 L9,4.5 L0,9 z" fill="#d98b1f"/></marker>
+    <marker id="arwB" markerWidth="9" markerHeight="9" refX="8" refY="4.5" orient="auto"><path d="M0,0 L9,4.5 L0,9 z" fill="#4a7ab8"/></marker>
+  </defs>
+  <rect width="780" height="430" fill="#fbfcfe"/>
+  <rect x="0" y="0" width="780" height="36" fill="#4a7ab8"/>
+  <text x="16" y="24" fill="#ffffff" font-size="15" font-weight="700">ARP 由 IP 找 MAC：同网段广播请求 / 跨网段只找默认网关</text>
+
+  <rect x="16" y="48" width="368" height="330" rx="8" fill="#ffffff" stroke="#c9d9ec"/>
+  <text x="30" y="70" fill="#2c4a6b" font-size="13" font-weight="700">A　同网段：H1 要发给 H2</text>
+  <rect x="34" y="84" width="120" height="30" rx="5" fill="#e8f0fa" stroke="#4a7ab8"/>
+  <text x="94" y="104" text-anchor="middle" fill="#2c4a6b" font-size="12">H1　192.168.1.10</text>
+  <rect x="246" y="84" width="120" height="30" rx="5" fill="#e8f0fa" stroke="#4a7ab8"/>
+  <text x="306" y="104" text-anchor="middle" fill="#2c4a6b" font-size="12">H2　192.168.1.20</text>
+  <g font-size="11.5" fill="#4a5568">
+    <text x="34" y="136" fill="#33618f" font-weight="700">① 先查本机 ARP 缓存，未命中才发请求</text>
+    <text x="34" y="160" fill="#b06a12" font-weight="700">② 广播 ARP 请求</text>
+    <line x1="94" y1="168" x2="300" y2="168" stroke="#d98b1f" stroke-width="2" marker-end="url(#arwO)"/>
+    <text x="34" y="187">帧：源 MAC = H1-MAC，目的 MAC = FF-FF-FF-FF-FF-FF</text>
+    <text x="34" y="205">ARP 报文：「谁有 192.168.1.20？请告诉 192.168.1.10」</text>
+    <text x="34" y="223">本网段所有主机都收到，只有 IP 匹配者应答</text>
+    <text x="34" y="247" fill="#33618f" font-weight="700">③ H2 单播 ARP 应答</text>
+    <line x1="306" y1="255" x2="100" y2="255" stroke="#4a7ab8" stroke-width="2" marker-end="url(#arwB)"/>
+    <text x="34" y="274">帧：源 MAC = H2-MAC，目的 MAC = H1-MAC（已知）</text>
+    <text x="34" y="292">ARP 报文：「192.168.1.20 对应 H2-MAC」</text>
+    <text x="34" y="316" fill="#33618f" font-weight="700">④ 双方把映射写入 ARP 缓存（动态项有 TTL）</text>
+    <text x="34" y="338">随后才把 IP 分组封装成以太网帧发给 H2-MAC</text>
+  </g>
+
+  <rect x="396" y="48" width="368" height="330" rx="8" fill="#ffffff" stroke="#c9d9ec"/>
+  <text x="410" y="70" fill="#2c4a6b" font-size="13" font-weight="700">B　跨网段：H1 要发给远端主机</text>
+  <rect x="414" y="84" width="120" height="30" rx="5" fill="#e8f0fa" stroke="#4a7ab8"/>
+  <text x="474" y="104" text-anchor="middle" fill="#2c4a6b" font-size="12">H1　192.168.1.10</text>
+  <rect x="626" y="84" width="120" height="30" rx="5" fill="#fff4e2" stroke="#d98b1f"/>
+  <text x="686" y="104" text-anchor="middle" fill="#8a6a2a" font-size="12">默认网关 R</text>
+  <g font-size="11.5" fill="#4a5568">
+    <text x="410" y="136">目的 IP 与本机掩码「与」后不等于本网段前缀</text>
+    <text x="410" y="158" fill="#b06a12" font-weight="700">→ 走间接交付，先把帧交给默认网关</text>
+    <text x="410" y="184" fill="#33618f" font-weight="700">ARP 解析的是网关的 MAC，不是远端主机的 MAC</text>
+    <line x1="474" y1="196" x2="680" y2="196" stroke="#d98b1f" stroke-width="2" marker-end="url(#arwO)"/>
+    <text x="410" y="216">广播请求：「谁有 192.168.1.1（网关）？」</text>
+    <line x1="686" y1="232" x2="480" y2="232" stroke="#4a7ab8" stroke-width="2" marker-end="url(#arwB)"/>
+    <text x="410" y="252">网关单播回答自己的接口 MAC</text>
+    <text x="410" y="280" fill="#c0392b" font-weight="700">帧：目的 MAC = 网关接口 MAC</text>
+    <text x="410" y="300">IP 首部：目的 IP 仍是远端主机（全程不变）</text>
+    <text x="410" y="324">路由器解封装后，在下一网段重新 ARP 找下一跳 MAC</text>
+    <text x="410" y="348" fill="#8a6a2a">结论：ARP 只在一个广播域内有效，不跨路由器。</text>
+  </g>
+
+  <rect x="16" y="390" width="748" height="30" rx="6" fill="#fff8e8" stroke="#e8d3a0"/>
+  <text x="30" y="410" fill="#8a6a2a" font-size="12" font-weight="700">易错：ARP 报文直接封装在以太网帧里（不是 IP 数据报）；考题按「网络层协议」判，OSI 体系则归入数据链路层。</text>
+</svg>

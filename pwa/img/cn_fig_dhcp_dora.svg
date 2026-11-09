@@ -1,0 +1,51 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 780 486" width="780" height="486" font-family="Microsoft YaHei, PingFang SC, sans-serif">
+  <defs>
+    <marker id="arwOrange" markerWidth="9" markerHeight="9" refX="8" refY="4.5" orient="auto"><path d="M0,0 L9,4.5 L0,9 z" fill="#d98b1f"/></marker>
+    <marker id="arwBlue" markerWidth="9" markerHeight="9" refX="8" refY="4.5" orient="auto"><path d="M0,0 L9,4.5 L0,9 z" fill="#4a7ab8"/></marker>
+  </defs>
+  <rect width="780" height="486" fill="#fbfcfe"/>
+  <rect x="0" y="0" width="780" height="36" fill="#4a7ab8"/>
+  <text x="16" y="24" fill="#ffffff" font-size="15" font-weight="700">DHCP 四步交换 DORA：每一步的源/目的地址与端口</text>
+
+  <rect x="46" y="50" width="178" height="32" rx="6" fill="#e8f0fa" stroke="#4a7ab8"/>
+  <text x="135" y="71" text-anchor="middle" fill="#2c4a6b" font-size="13" font-weight="700">DHCP 客户（尚无 IP）</text>
+  <rect x="556" y="50" width="178" height="32" rx="6" fill="#e8f0fa" stroke="#4a7ab8"/>
+  <text x="645" y="71" text-anchor="middle" fill="#2c4a6b" font-size="13" font-weight="700">DHCP 服务器（UDP 67）</text>
+  <line x1="135" y1="82" x2="135" y2="326" stroke="#a9c2de" stroke-width="1.5" stroke-dasharray="5 4"/>
+  <line x1="645" y1="82" x2="645" y2="326" stroke="#a9c2de" stroke-width="1.5" stroke-dasharray="5 4"/>
+
+  <g font-size="12.5">
+    <text x="390" y="102" text-anchor="middle" fill="#b06a12" font-weight="700">① DHCP Discover（发现 · 广播）</text>
+    <line x1="135" y1="110" x2="638" y2="110" stroke="#d98b1f" stroke-width="2" marker-end="url(#arwOrange)"/>
+    <text x="390" y="127" text-anchor="middle" fill="#4a5568">源 0.0.0.0:68 → 目的 255.255.255.255:67　帧目的 MAC = 全 F</text>
+    <text x="390" y="143" text-anchor="middle" fill="#8a6a2a" font-size="11.5">客户无 IP、也不知服务器在哪；只有 DHCP 服务器响应</text>
+
+    <text x="390" y="169" text-anchor="middle" fill="#33618f" font-weight="700">② DHCP Offer（提供 · 广播或单播）</text>
+    <line x1="645" y1="177" x2="142" y2="177" stroke="#4a7ab8" stroke-width="2" marker-end="url(#arwBlue)"/>
+    <text x="390" y="194" text-anchor="middle" fill="#4a5568">源 服务器IP:67 → 目的 255.255.255.255:68（或单播给客户）</text>
+    <text x="390" y="210" text-anchor="middle" fill="#33618f" font-size="11.5">从地址池预选 IP 写入 yiaddr，附掩码 / 网关 / DNS / 租期</text>
+
+    <text x="390" y="236" text-anchor="middle" fill="#b06a12" font-weight="700">③ DHCP Request（请求 · 广播）</text>
+    <line x1="135" y1="244" x2="638" y2="244" stroke="#d98b1f" stroke-width="2" marker-end="url(#arwOrange)"/>
+    <text x="390" y="261" text-anchor="middle" fill="#4a5568">源 0.0.0.0:68 → 目的 255.255.255.255:67　帧目的 MAC = 全 F</text>
+    <text x="390" y="277" text-anchor="middle" fill="#8a6a2a" font-size="11.5">广播告知「我选了哪台服务器」，让其它服务器收回 Offer</text>
+
+    <text x="390" y="303" text-anchor="middle" fill="#33618f" font-weight="700">④ DHCP ACK（确认 · 广播或单播）</text>
+    <line x1="645" y1="311" x2="142" y2="311" stroke="#4a7ab8" stroke-width="2" marker-end="url(#arwBlue)"/>
+    <text x="390" y="328" text-anchor="middle" fill="#4a5568">源 服务器IP:67 → 目的 255.255.255.255:68（或单播）；客户此时才正式启用该 IP</text>
+  </g>
+
+  <rect x="46" y="346" width="688" height="124" rx="8" fill="#eef4fb" stroke="#c9d9ec"/>
+  <text x="60" y="368" fill="#2c4a6b" font-size="13" font-weight="700">租期时间轴（地址是「租」来的，不是永久分配）</text>
+  <line x1="86" y1="406" x2="700" y2="406" stroke="#4a7ab8" stroke-width="2"/>
+  <g font-size="11.5" fill="#2c4a6b" text-anchor="middle">
+    <circle cx="96" cy="406" r="4" fill="#4a7ab8"/><text x="96" y="426">T0 获得 IP</text>
+    <circle cx="346" cy="406" r="4" fill="#4a7ab8"/><text x="346" y="426">T1 = 租期 50%</text>
+    <circle cx="546" cy="406" r="4" fill="#d98b1f"/><text x="546" y="426">T2 = 租期 87.5%</text>
+    <circle cx="690" cy="406" r="4" fill="#c0392b"/><text x="690" y="426">租期到期</text>
+    <text x="346" y="444" fill="#33618f">单播 DHCP Request 续租（RENEW）</text>
+    <text x="546" y="444" fill="#b06a12">广播重绑定（REBIND），换服务器也行</text>
+    <text x="690" y="444" fill="#c0392b">停用 IP，重新 Discover</text>
+  </g>
+  <text x="60" y="464" fill="#8a6a2a" font-size="11.5">跨网段时广播不能穿路由器 → 由 DHCP 中继代理（Relay）转发，报文中 giaddr 填中继接口地址，服务器据此选地址池。</text>
+</svg>
