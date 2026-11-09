@@ -187,22 +187,43 @@ const DAY = 86400000;
   const pool3 = await w.api('/api/exam/pool').then(r => r.json());
   check('重练池待到期回到 1', pool3.redo_pending, 1);
 
-  console.log('\n--- 四半、不熟/不会：答对 1 次自动移出 ---');
-  // 用户规则：标记池只保留「当前真正薄弱」的题，做对一次即过关（错题本是连对 2 次）
+  console.log('\n--- 四半、不熟/不会：标记永久保留，答对只移出抽题池 ---');
+  // 2026-11-09 用户要求解耦：标记是主观标签（试卷回顾里要能复盘），
+  // 答对只影响「是否还在抽题池」——activeMarkIds() 比较 progress 与标记 added_at。
+  // 不删记录、不新增 store、不升 DB_VER；再答错或重新标记会自动恢复可抽。
   await w.api('/api/mark/unfamiliar/cn_0008', { method: 'POST' }).then(r => r.json());
   let marks = await w.api('/api/marks?kind=all').then(r => r.json());
   const beforeCorrect = marks.total;
+  const beforeActive = marks.total_active;
   check('cn_0008 已标不熟', marks.marks.some(m => m.question_id === 'cn_0008'), true);
+  check('新标记默认可抽', (marks.marks.find(m => m.question_id === 'cn_0008') || {}).active, true);
+
   await w.applyAnswer('cn_0008', 'cn', 'A', true, null, false);
   marks = await w.api('/api/marks?kind=all').then(r => r.json());
-  check('答对后标记自动移出', marks.total, beforeCorrect - 1);
-  check('cn_0008 已不在标记池', marks.marks.some(m => m.question_id === 'cn_0008'), false);
+  check('答对后标记仍在（不再被删除）', marks.total, beforeCorrect);
+  check('答对后 cn_0008 仍在标记列表', marks.marks.some(m => m.question_id === 'cn_0008'), true);
+  check('答对后该标记变为不可抽', (marks.marks.find(m => m.question_id === 'cn_0008') || {}).active, false);
+  check('可抽数 -1', marks.total_active, beforeActive - 1);
 
-  // 答错不应移出
-  await w.api('/api/mark/dontknow/cn_0008', { method: 'POST' }).then(r => r.json());
+  const poolAfter = await w.api('/api/exam/pool').then(r => r.json());
+  check('池子统计区分标记总数与可抽数',
+    poolAfter.unfamiliar >= poolAfter.unfamiliar_active, true);
+
+  // 答错 → 恢复可抽（错题本口径不变，标记仍保留）
   await w.applyAnswer('cn_0008', 'cn', 'B', false, null, false);
   marks = await w.api('/api/marks?kind=all').then(r => r.json());
   check('答错后标记保留', marks.marks.some(m => m.question_id === 'cn_0008'), true);
+  check('答错后恢复可抽', (marks.marks.find(m => m.question_id === 'cn_0008') || {}).active, true);
+
+  // 只有手动再点一次按钮才真正删除标记
+  await w.api('/api/mark/unfamiliar/cn_0008', { method: 'POST' }).then(r => r.json());
+  marks = await w.api('/api/marks?kind=all').then(r => r.json());
+  check('手动取消才删除标记', marks.marks.some(m => m.question_id === 'cn_0008'), false);
+
+  console.log('\n--- 四半·补：源码层不再清除标记 ---');
+  check('applyAnswer 不再 dbDelete(unfamiliar/dontknow)',
+    /dbDelete\('unfamiliar', qid\)|dbDelete\('dontknow', qid\)/.test(BACKEND_SRC), false);
+  check('抽题池改用 activeMarkIds', /qids = await activeMarkIds\(\)/.test(BACKEND_SRC), true);
 
   console.log('\n--- 五、前端：统计条 / 二次确认 / 重练按钮 ---');
   for (const id of ['examPoolBar', 'psFav', 'psFavSub', 'psExam', 'psExamSub', 'psUnfam', 'psDk']) {
@@ -427,6 +448,23 @@ const DAY = 86400000;
   await put('redo', [{ question_id: 'cn_0003', subject: 'cn', kind: 'ztwrong', added_at: fmt(Date.now()), due_at: Date.now() + 7 * DAY }]);
   const rw = await w.api('/api/questions/cn?mode=wrong&page=1&per_page=9999').then(r => r.json());
   check('冷却期内「错题」刷题仍含该题', (rw.questions || []).map(q => q.id).includes('cn_0003'), true);
+
+  console.log('\n--- 十五、交卷答对后，试卷回顾仍带出标记 ---');
+  // 放在最后：造 exam 记录会影响「模拟考答对过的题退出收藏池补足」的判定，
+  // 不能插在第十四节之前。applyAnswer 就是交卷时逐题调用的函数。
+  await w.api('/api/mark/dontknow/cn_0008', { method: 'POST' }).then(r => r.json());
+  await w.applyAnswer('cn_0008', 'cn', 'A', true, null, false);
+  const marksEnd = await w.api('/api/marks?kind=all').then(r => r.json());
+  check('交卷答对后标记没被清除', marksEnd.marks.some(m => m.question_id === 'cn_0008'), true);
+  check('但该标记已退出抽题池', (marksEnd.marks.find(m => m.question_id === 'cn_0008') || {}).active, false);
+  await put('exams', [{
+    id: 101, mode: 'full', question_ids: ['cn_0008'], answers: { cn_0008: 'A' },
+    total_count: 1, correct_count: 1, score: 2, duration_sec: 3600,
+    status: 'submitted', started_at: '2026-10-30 10:00:00', submitted_at: '2026-10-30 10:50:00'
+  }]);
+  const rev = await w.api('/api/questions/cn?mode=exam_review&exam_id=101&page=1&per_page=9999').then(r => r.json());
+  const rq = (rev.questions || []).find(q => q.id === 'cn_0008');
+  check('试卷回顾仍带出 is_dontknow（用户报的「不显示了」）', !!(rq && rq.is_dontknow), true);
 
   dom.window.close();
   console.log(`\n结果: ${pass} / ${pass + fail}` + (fail ? `，${fail} 项失败` : '，全部通过'));

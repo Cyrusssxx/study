@@ -279,12 +279,14 @@
                             : '/api/wrong';
                     const d = await (await api(url)).json();
                     const rows = mode === 'favorites' ? (d.favorites || [])
-                        : mode === 'unfamiliar' ? (d.marks || [])
+                        : mode === 'unfamiliar' ? (d.marks || []).filter(m => m.active !== false)
                             : (d.wrong_questions || []);
                     const n = rows.length;
                     if (!n) {
                         sourceText.textContent = mode === 'favorites' ? '还没有收藏题'
-                            : mode === 'unfamiliar' ? '还没有标记「不熟/不会」的题（刷题/试卷回顾时点 🟡不熟 即可加入）'
+                            : mode === 'unfamiliar' ? ((d.total || 0) > n
+                                ? '标记的题都答对过了，已移出抽题池（标记仍保留，试卷回顾里可见）'
+                                : '还没有标记「不熟/不会」的题（刷题/试卷回顾时点 🟡不熟 即可加入）')
                                 : '还没有未解决的错题';
                     } else {
                         // 分科统计，让"按真题各科题量"这件事在组卷前就可见
@@ -300,7 +302,7 @@
                         sourceText.textContent = mode === 'favorites'
                             ? `收藏 ${n} 题（${detail}）· 先清错题，再推没做过的，模拟考答对的退出抽题`
                             : mode === 'unfamiliar'
-                                ? `不熟 ${n} 题（${detail}）· 按真题比例抽，优先没做过`
+                                ? `可抽 ${n} 题（${detail}）· 标记共 ${d.total || n} 题 · 按真题比例抽，优先没做过`
                                 : `错题 ${n} 题（${detail}）· 按真题比例抽，优先没做过`;
                     }
                 }
@@ -363,13 +365,16 @@
                     : mode === 'unfamiliar' ? '/api/marks?kind=all'
                         : '/api/wrong';
                 const checkData = await (await api(checkUrl)).json();
-                poolLen = (mode === 'favorites' ? (checkData.favorites || [])
-                    : mode === 'unfamiliar' ? (checkData.marks || [])
+                poolLen = mode === 'unfamiliar'
+                    ? (checkData.total_active != null ? checkData.total_active : (checkData.marks || []).length)
+                    : (mode === 'favorites' ? (checkData.favorites || [])
                         : (checkData.wrong_questions || [])).length;
             }
             if (poolLen === 0) {
                 alert(mode === 'favorites' ? '您还没有收藏任何题目，无法进行收藏题考试。'
-                    : mode === 'unfamiliar' ? '您还没有标记「不熟/不会」的题目。\n在刷题或试卷回顾里点题目右上角的「不熟」按钮即可加入。'
+                    : mode === 'unfamiliar' ? ((checkData.total || 0) > poolLen
+                        ? '标记的题都答对过了，已移出抽题池（标记仍保留在试卷回顾里）。\n想再练：重新标记一次，或做错一次即可恢复。'
+                        : '您还没有标记「不熟/不会」的题目。\n在刷题或试卷回顾里点题目右上角的「不熟」按钮即可加入。')
                         : mode === 'examwrong' ? '池子是空的。\n模拟考做错的题会自动进来；试卷回顾里点「7 天后重练」「猜对了」也会加进来。\n做对一次后仍留在池子里，只是不再抽。'
                             : '您还没有错题，无法进行错题考试。');
                 return;
@@ -962,9 +967,9 @@
         set('psExam', d.exam_answered);
         set('psExamSub', `模拟考做过 · ${d.exam_sessions} 场`);
         set('psUnfam', d.unfamiliar);
-        set('psUnfamSub', `不熟 · 未做 ${d.unfamiliar_undone}`);
+        set('psUnfamSub', `不熟 · 未做 ${d.unfamiliar_undone} · 可抽 ${d.unfamiliar_active != null ? d.unfamiliar_active : d.unfamiliar}`);
         set('psDk', d.dontknow);
-        set('psDkSub', `不会 · 未做 ${d.dontknow_undone}`);
+        set('psDkSub', `不会 · 未做 ${d.dontknow_undone} · 可抽 ${d.dontknow_active != null ? d.dontknow_active : d.dontknow}`);
         const bar = document.getElementById('examPoolBar');
         if (bar) {
             bar.title = `【收藏池】共 ${d.favorites_total} 题`
@@ -974,8 +979,9 @@
                 + `\n  注：模拟考交卷会写作答记录，所以模拟考做过的题已经算在"已做"里，不在待抽中`
                 + `\n【模拟考】${d.exam_sessions} 场，做过 ${d.exam_answered} 题（去重）`
                 + `｜其中仍错 ${d.exam_wrong}｜到期错题 ${d.due_wrong}`
-                + `\n【标记】不熟 ${d.unfamiliar}（未做 ${d.unfamiliar_undone}）`
-                + `｜不会 ${d.dontknow}（未做 ${d.dontknow_undone}）`
+                + `\n【标记】不熟 ${d.unfamiliar}（未做 ${d.unfamiliar_undone} · 可抽 ${d.unfamiliar_active != null ? d.unfamiliar_active : d.unfamiliar}）`
+                + `｜不会 ${d.dontknow}（未做 ${d.dontknow_undone} · 可抽 ${d.dontknow_active != null ? d.dontknow_active : d.dontknow}）`
+                + `\n  注：标记永久保留供试卷回顾复盘；答对过的题只是不再被抽到`
                 + `\n【模拟考错题池】可抽 ${d.exam_pool_total != null ? d.exam_pool_total : d.exam_wrong} 题`
                 + `（模拟考仍错 ${d.exam_wrong} + 标记未掌握 ${d.marked_pending || 0}）`
                 + `\n  已做对、留池不抽 ${d.marked_mastered || 0} 题（做错会重新变回可抽）`

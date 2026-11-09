@@ -175,8 +175,11 @@ async function waitFor(fn, ms = 8000) {
     /exam_user_answer\)[\s\S]{0,160}?answered\[q\.id\] = \{/.test(QUIZ_SRC), true);
   check('不再用 last_status 覆盖试卷作答（先 exam 分支 continue）',
     /MODE === 'exam_wrong'\) && q\.exam_user_answer\)[\s\S]{0,400}?continue;/.test(QUIZ_SRC), true);
-  check('backend 组卷支持 unfamiliar 池',
-    /mode === 'unfamiliar'\) \{[\s\S]{0,160}?dbAll\('unfamiliar'\)/.test(
+  check('backend 组卷支持 unfamiliar 池（只抽 activeMarkIds 里仍可抽的标记）',
+    /mode === 'unfamiliar'\) \{[\s\S]{0,240}?qids = await activeMarkIds\(\)/.test(
+      fs.readFileSync(path.join(ROOT, 'pwa/js/backend.js'), 'utf8')), true);
+  check('标记不再随答对删除（只在 /api/mark 手动取消时删）',
+    !/dbDelete\('unfamiliar', qid\)/.test(
       fs.readFileSync(path.join(ROOT, 'pwa/js/backend.js'), 'utf8')), true);
 
   dom.window.close();

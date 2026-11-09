@@ -426,10 +426,10 @@ async function applyAnswer(qid, subject, userAnswer, isCorrect, ts, trackWrong =
             if (w.correct_streak >= 2) w.is_resolved = 1;
             await dbPut('wrong', w);
         }
-        // 答对即移出「不熟 / 不会」池（用户规则：答对 1 次就移出，池子只保留当前真正薄弱的题）。
-        // 与错题本"连对 2 次"不同 —— 不熟是主观标记，做对一次即可认为已过关。
-        if (await dbGet('unfamiliar', qid)) await dbDelete('unfamiliar', qid);
-        if (await dbGet('dontknow', qid)) await dbDelete('dontknow', qid);
+        // 「不熟 / 不会」标记不删除（2026-11-09 用户要求：标记是主观标签，试卷回顾里要能复盘）。
+        // 答对只影响「是否还在抽题池」：activeMarkIds() 比较 progress 与标记 added_at，
+        // 标记之后答对过的题不再被抽；再答错或重新标记会自动恢复。
+        // 错题本仍按「连对 2 次」置已解决，两者互不影响。
         // 池子成员（模拟考错题 / 7 天后重练 / 猜对了）：做对一次即置 mastered ——
         // **记录保留**（还留在「模拟考错题」池里能回看），只是之后不再被抽到。
         // 与上面两个标记不同：那两个直接删除，这个只改状态。
@@ -454,6 +454,25 @@ async function latestStatuses(subject) {
         }
     }
     return map;
+}
+
+// 「不熟 / 不会」标记的两种身份（2026-11-09 用户要求解耦）：
+//   ① 主观标签：永久保留，试卷回顾 / 题卡 / 题号面板都要能看到，只有手动再点一次按钮才删；
+//   ② 抽题池成员：标记之后若已答对过一次，就不再被抽到（原「答对即移出抽题池」规则保留）。
+// 判定 ② 用 progress 的最近一次作答与标记 added_at 比较，不新增 store、不升 DB_VER：
+// 之后再答错、或取消后重新标记（added_at 刷新）都会自动恢复可抽。
+async function activeMarkIds() {
+    const st = await latestStatuses('');
+    const out = [];
+    for (const store of ['unfamiliar', 'dontknow']) {
+        for (const r of await dbAll(store)) {
+            const s = st[r.question_id];
+            const passedAfterMark = s && s.is_correct &&
+                String(s.answered_at || '') >= String(r.added_at || '');
+            if (!passedAfterMark) out.push(r.question_id);
+        }
+    }
+    return out;
 }
 
 async function subjectStats(subject) {
@@ -662,6 +681,9 @@ async function api(url, opts = {}) {
             const favSet = new Set((await dbAll('favorites')).filter(f => mixed || f.subject === subject).map(f => f.question_id));
             const unfamSet = new Set((await dbAll('unfamiliar')).filter(f => mixed || f.subject === subject).map(f => f.question_id));
             const dontknowSet = new Set((await dbAll('dontknow')).filter(f => mixed || f.subject === subject).map(f => f.question_id));
+            // 抽题池口径：标记之后答对过的题不再被抽；标记本身仍全量保留，
+            // 让题卡按钮 / 题号角标 / 试卷回顾都能看到（这才是用户要的「取消清除标记」）。
+            const activeMarkSet = new Set(await activeMarkIds());
 
             if (mode === 'random') {
                 qs = qs.slice();
@@ -675,12 +697,10 @@ async function api(url, opts = {}) {
                 // 代码专项：只出含代码块的题
                 qs = qs.filter(q => (q.content || '').includes('<pre class="code-block"'));
             } else if (mode === 'wrong') {
-                // 错题池 = 错题本未了结 ∪ 不熟 ∪ 不会 ∪ 手动标记（不熟池已并入，不再单列）
+                // 错题池 = 错题本未了结 ∪ 仍可抽的不熟/不会 ∪ 手动标记（不熟池已并入，不再单列）
                 const wrongIds = (await dbAll('wrong')).filter(w => !w.is_resolved).map(w => w.question_id);
-                const unfamIds = (await dbAll('unfamiliar')).map(w => w.question_id);
-                const dkIds = (await dbAll('dontknow')).map(w => w.question_id);
                 const markIds = (await dbAll('redo')).filter(r => !r.mastered).map(r => r.question_id);
-                const pool = new Set([...wrongIds, ...unfamIds, ...dkIds, ...markIds]);
+                const pool = new Set([...wrongIds, ...activeMarkSet, ...markIds]);
                 qs = qs.filter(q => pool.has(q.id));
             } else if (mode === 'examwrong') {
                 // 模拟考错题池（刷题式大批量练）：成员 = 模拟考做错 ∪ 手动标记，做对过的不再出。
@@ -910,7 +930,12 @@ async function api(url, opts = {}) {
                 result.push({ ...m, ...q });
             }
             result.sort((a, b) => (a.added_at > b.added_at ? -1 : 1));
-            return jsonResp({ marks: result, total: result.length });
+            // active = 仍在抽题池（标记之后还没答对过）；标记本身无论 active 与否都返回，
+            // 供试卷回顾 / 题卡显示，exam.html 的池子来源文案按 active 计数。
+            const activeSet = new Set(await activeMarkIds());
+            for (const m of result) m.active = activeSet.has(m.question_id);
+            return jsonResp({ marks: result, total: result.length,
+                total_active: result.filter(m => m.active).length });
         }
 
         // ---------- 错题列表 ----------
@@ -1612,18 +1637,17 @@ async function examApi(action, body, arg) {
             if (mode === 'favorites') {
                 qids = (await dbAll('favorites')).map(r => r.question_id);
             } else if (mode === 'unfamiliar') {
-                // 兼容旧入口：不熟池已并入错题池，这里保留为子集视图
-                qids = [...(await dbAll('unfamiliar')), ...(await dbAll('dontknow'))].map(r => r.question_id);
+                // 兼容旧入口：不熟池已并入错题池，这里保留为子集视图。
+                // 只抽「仍可抽」的标记题（标记之后答对过的不再抽，但标记记录保留）。
+                qids = await activeMarkIds();
             } else if (mode === 'examwrong') {
                 // 模拟考仍错的题 + 「7 天后重练 / 猜对了」标记题（后者做对过就只留不抽）
                 qids = (await examWrongPoolQids(true)).pending;
             } else {
-                // 错题池 = 错题本未了结 ∪ 不熟 ∪ 不会 ∪ 手动标记（不熟池已并入，不再单列）
+                // 错题池 = 错题本未了结 ∪ 仍可抽的不熟/不会 ∪ 手动标记（不熟池已并入，不再单列）
                 const wrongIds = (await dbAll('wrong')).filter(w => !w.is_resolved).map(r => r.question_id);
-                const unfamIds = (await dbAll('unfamiliar')).map(r => r.question_id);
-                const dkIds = (await dbAll('dontknow')).map(r => r.question_id);
                 const markIds = (await dbAll('redo')).filter(r => !r.mastered).map(r => r.question_id);
-                qids = [...new Set([...wrongIds, ...unfamIds, ...dkIds, ...markIds])];
+                qids = [...new Set([...wrongIds, ...(await activeMarkIds()), ...markIds])];
             }
             for (const qid of qids) {
                 const subj = String(qid || '').split('_')[0];
@@ -1850,11 +1874,15 @@ async function examApi(action, body, arg) {
             const w = wrongMap.get(f.question_id);
             if (w && !w.is_resolved) wrongish++; else correct++;
         }
-        // 不熟 / 不会：总数 + 其中"还没做过"的（用户要看这两个池子里真正待抽多少）
+        // 不熟 / 不会：标记总数（永久保留）+ 其中还没做过的 + 仍在抽题池的。
+        // 标记之后答对过的题不再被抽，但标记仍在，所以三者可以不同。
         const unfamRows = await dbAll('unfamiliar');
         const dkRows = await dbAll('dontknow');
         const unfam = unfamRows.length;
         const dk = dkRows.length;
+        const activeSet = new Set(await activeMarkIds());
+        const unfamActive = unfamRows.filter(r => activeSet.has(r.question_id)).length;
+        const dkActive = dkRows.filter(r => activeSet.has(r.question_id)).length;
         let unfamUndone = 0, dkUndone = 0;
         for (const r of unfamRows) if (!progMap.has(r.question_id)) unfamUndone++;
         for (const r of dkRows) if (!progMap.has(r.question_id)) dkUndone++;
@@ -1902,8 +1930,10 @@ async function examApi(action, body, arg) {
             exam_sessions: examRows.length,   // 已交卷场数
             unfamiliar: unfam,
             unfamiliar_undone: unfamUndone,   // 不熟池里还没做过的
+            unfamiliar_active: unfamActive,   // 仍在抽题池（标记后没答对过）
             dontknow: dk,
             dontknow_undone: dkUndone,        // 不会池里还没做过的
+            dontknow_active: dkActive,        // 仍在抽题池（标记后没答对过）
             due_wrong: dueWrong,
             exam_wrong: examWrongIds.length,          // 模拟考仍错的题（动态）
             exam_wrong_by_subject: examWrongBySub,
