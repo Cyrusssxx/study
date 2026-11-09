@@ -8118,6 +8118,13 @@ body.fc-toc-open .fc-toc-fab { display: none; }
     background: rgba(128, 128, 128, .1); padding: 1px 5px; border-radius: 4px;
 }
 .question-content pre code, .explanation-body pre code { background: none; padding: 0; font-size: 1em; }
+/* 旧缓存数据里若仍是 highlight.js 的 flex 行 + 内联浅底：
+   display:contents 让行容器不生成盒子，行尾 \n 只换行一次（消除双倍行距）；
+   !important 把内联白底压回主题色，深色模式下不再是一块突兀的白底黑字。
+   构建管线已在 tools/build_zt.py 里从源头清洗，这里是缓存未更新时的兜底。 */
+.question-content pre code > span[style*="display:flex"],
+.explanation-body pre code > span[style*="display:flex"] { display: contents !important; }
+.question-content .highlight pre, .explanation-body .highlight pre { background: var(--light) !important; }
 .question-content table, .explanation-body table {
     border-collapse: collapse; margin: 10px 0; font-size: .88rem;
     max-width: 100%; display: block; overflow-x: auto;

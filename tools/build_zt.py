@@ -27,6 +27,20 @@ WATERMARK = re.compile(r'<pattern[^>]*watermark-pattern.*?</pattern>', re.S)
 SVG_RE = re.compile(r'<svg[\s\S]*?</svg>', re.I)
 _svg_n = [0]
 
+# 408os.cn 的 highlight.js 输出：每个代码行被 <span style="display:flex"> 包一层，
+# 行尾还带 \n。在 <pre> 的 white-space:pre 下，flex 容器是块级、内部 \n 又换一次行，
+# 于是每行代码后面跟一个空行（行距翻倍）；<pre> 的内联浅灰底 + token 的内联深色字
+# 还会盖掉站点深色主题。清洗时只剥样式标签，代码文本一字不改，配色交回 CSS。
+FLEX_ROW = re.compile(r'<span style="display:flex"><span>([\s\S]*?)</span></span>', re.I)
+COLOR_SPAN = re.compile(r'<span style="color:[^"]*"[^>]*>([\s\S]*?)</span>', re.I)
+# 清洗范围必须限于 <pre> 内部：题干 SVG 里 drawio 用 <span style="color:transparent">
+# 藏 mxGraphModel 数据，全局替换会把它变成可见文本印在图上。
+PRE_BLOCK = re.compile(r'<pre\b[^>]*>([\s\S]*?)</pre>', re.I)
+
+# 源 meta 把 2026 年三道大题分值都记成 10，与卷面不符，人工按真题修正。
+# 写在构建期而非产物上，保证重跑 build_zt.py 不会把修正覆盖掉。
+SCORE_FIX = {(2026, 45): 7, (2026, 46): 8, (2026, 47): 9}
+
 # 大题科目关键词分类（含题号先验：41-42 DS / 43-44 CO / 45-46 OS / 47 CN）
 KW = {
     'cn': ['TCP', 'UDP', 'IP', '路由', '协议', '以太网', '子网', 'DNS', 'HTTP', '交换机',
@@ -142,6 +156,20 @@ def read(p):
         return ''
 
 
+def clean_code_layout(body):
+    """还原代码块排版：只在 <pre> 内剥 flex 行包裹 / token 内联色 / pre 内联样式。"""
+    def _clean(m):
+        head = re.sub(r'<pre\b[^>]*>', '<pre>', m.group(0)[:m.group(0).find('>') + 1], flags=re.I)
+        inner = FLEX_ROW.sub(lambda x: x.group(1), m.group(1))   # 保留行尾 \n：消除双倍行距
+        for _ in range(3):                                        # token span 可能嵌套，替换到稳定
+            new = COLOR_SPAN.sub(r'\1', inner)
+            if new == inner:
+                break
+            inner = new
+        return head + inner + '</pre>'
+    return PRE_BLOCK.sub(_clean, body)
+
+
 def clean_html(body):
     """清洗题干/解析 HTML（含安全过滤：去 script/iframe/事件属性）。"""
     body = body.replace('<!DOCTYPE html>', '')
@@ -161,7 +189,7 @@ def clean_html(body):
     # 引用的水印 pattern 清理（defs 里的 watermark-pattern + 使用处保留）
     body = WATERMARK.sub('', body)
     body = body.strip()
-    return body
+    return clean_code_layout(body)
 
 
 def extract_content(html):
@@ -256,7 +284,7 @@ def main():
             item = {
                 'i': idx,
                 't': q['questionType'],
-                's': q['score'],
+                's': SCORE_FIX.get((y, idx), q['score']),
                 'a': (q.get('answer') or '').strip().upper() or None,
                 'sid': sid,
                 'q': stem,
