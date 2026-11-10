@@ -1039,15 +1039,22 @@
         } catch (e) { showZtTip('操作失败，请重试'); }
     }
 
-    // 轻提示：复用页面已有的 toast（没有就静默）
+    // 轻提示：zhenti.html 里并没有 #ztTip 节点，旧实现 `if (!el) return` 直接吞掉 ——
+    // 「已加入模拟考错题池」「笔记保存失败」这些提示从来没显示过。
+    // 现在按需自建节点，复用全站的 .quiz-tip toast 样式。
     function showZtTip(text) {
         if (typeof window.showTip === 'function') { window.showTip(text); return; }
-        const el = document.getElementById('ztTip');
-        if (!el) return;
+        let el = document.getElementById('ztTip');
+        if (!el) {
+            el = document.createElement('div');
+            el.id = 'ztTip';
+            el.className = 'quiz-tip';
+            document.body.appendChild(el);
+        }
         el.textContent = text;
         el.classList.add('show');
         clearTimeout(showZtTip._t);
-        showZtTip._t = setTimeout(() => el.classList.remove('show'), 1800);
+        showZtTip._t = setTimeout(() => el.classList.remove('show'), 2200);
     }
 
     async function toggleKpZt(iid) {
@@ -1231,6 +1238,9 @@
             let detail = '';
             try { const d = await resp.json(); if (d && d.error) detail = '：' + d.error; } catch (e) { }
             setZtNoteHint(qid, '保存失败' + detail + '（内容仍在编辑器里，可重试）', 5000);
+            // 面板里那行小字很容易被忽略 —— 保存失败必须弹一次提示，
+            // 否则用户会以为存上了，关掉页面才发现「笔记没了」。
+            showZtTip('笔记保存失败' + detail + '，内容还在编辑器里，可点「保存笔记」重试');
             throw new Error('保存失败' + detail);
         }
         markNoteState(qid, 'saved');
@@ -1435,6 +1445,17 @@
             saveNote(qid, cur).catch(() => { });   // 失败已在 saveNote 内提示并回滚
         });
     }
+
+    /* 关页 / 切后台时，把还挂在 700ms 防抖窗口里的笔记立刻落库。
+     * 刷题页一直有这条（quiz.html: `pagehide → flushNoteSave()`），zhenti / dati 却没有 ——
+     * 用户「写完就刷新 / 关标签」正好落在防抖里，那一次编辑会随页面一起消失，
+     * 下次打开看到的就是「笔记没了」（数据其实从来没进过库）。
+     * visibilitychange 比 pagehide 更早触发，能多给 IndexedDB 一点写入时间，
+     * 所以两个都挂。saveNote 内部会做乐观更新 + 失败回滚，这里只管发起。 */
+    window.addEventListener('pagehide', flushNote);
+    document.addEventListener('visibilitychange', () => {
+        if (document.visibilityState === 'hidden') flushNote();
+    });
 
     // 把做题模式下暂选的答案统一判分入库（进度 + 错题本）
     async function gradePending() {

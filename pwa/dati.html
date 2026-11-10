@@ -340,6 +340,14 @@
         saveNote(qid);
     }
 
+    // 关页 / 切后台时把还挂在防抖窗口里的笔记立刻落库（与 zhenti.js / quiz.html 同源）。
+    // 没有这条的话，「写完就刷新 / 关标签」会把最后一次编辑一起丢掉，
+    // 下次打开就是「笔记没了」。visibilitychange 比 pagehide 更早，多给点写入时间。
+    window.addEventListener('pagehide', flushDatiNote);
+    document.addEventListener('visibilitychange', () => {
+        if (document.visibilityState === 'hidden') flushDatiNote();
+    });
+
     function saveDoneSet() {
         localStorage.setItem('datiDone', JSON.stringify([...doneSet]));
     }
