@@ -944,7 +944,7 @@
         state.kpOpen.add(iid);
         localStorage.setItem('zhentiKpOpen', JSON.stringify([...state.kpOpen]));
         refreshCard(iid);
-        revealCardPanel(iid, 'kp', '.kp-panel');
+        revealCardPanel(iid, 'kp');
         if (state.kpCache[iid]) return;
         try {
             const d = await (await api('/api/kp/' + iid)).json();
@@ -982,18 +982,28 @@
      * 现在：把按钮带到视口上部（约 30% 高度、避开 60px 顶栏），展开内容从按钮
      * 下方一路向下铺开；只允许页面向下滚（scrollBy 正值），绝不向上滚。
      * 收起时完全不滚。答案 / 笔记 / 考点分析三个按钮走同一套逻辑。 */
-    function revealBelow(btn, panel) {
-        if (!btn || !panel) return;
+    // 展开面板时**不主动移动画面**（2026-11-10 用户反馈：点一下画面就跟着跳）。
+    // 旧实现把按钮固定带到视口 30% 高（84~220px）：按钮在中下部时要向下滚几百像素，
+    // 所以点「答案 / 笔记 / 知识点」画面会明显上移。
+    // 新规则：
+    //   ① 按钮下方还有 REVEAL_HEADROOM 的空间 → 完全不滚，面板就地向下铺开；
+    //   ② 按钮已贴近视口底部 → 只补「刚好够 REVEAL_HEADROOM」的最小滚动量，
+    //      且不把按钮滚出顶部 84px（导航栏高度）；
+    //   ③ 永不向上滚；收起时根本不调用本函数。
+    const REVEAL_HEADROOM = 140;
+    function revealBelow(btn) {
+        if (!btn) return;
         const vh = window.innerHeight || document.documentElement.clientHeight;
-        const top = btn.getBoundingClientRect().top;
-        const wantTop = Math.max(84, Math.min(vh * 0.3, 220));
-        const delta = top - wantTop;
-        if (delta > 2) window.scrollBy({ top: delta, behavior: 'smooth' });
+        const r = btn.getBoundingClientRect();
+        const gap = vh - r.bottom;                      // 按钮下方剩余空间
+        if (gap >= REVEAL_HEADROOM) return;             // 空间够：画面保持不动
+        const need = Math.min(REVEAL_HEADROOM - gap, Math.max(0, r.top - 84));
+        if (need > 2) window.scrollBy({ top: need, behavior: 'smooth' });
     }
-    function revealCardPanel(iid, kind, sel) {
+    function revealCardPanel(iid, kind) {
         const card = document.getElementById('card-' + iid);
         if (!card) return;
-        revealBelow(card.querySelector(`[data-toggle="${kind}"]`), card.querySelector(sel));
+        revealBelow(card.querySelector(`[data-toggle="${kind}"]`));
     }
 
     function toggleAns(iid) {
@@ -1005,7 +1015,7 @@
         if (opening) state.ansOpen.add(iid); else state.ansOpen.delete(iid);
         localStorage.setItem('zhentiAnsOpen2', JSON.stringify([...state.ansOpen]));
         refreshCard(iid);
-        if (opening) revealCardPanel(iid, 'ans', '.explanation-panel');
+        if (opening) revealCardPanel(iid, 'ans');
     }
 
     function toggleNotePanel(iid) {
@@ -1021,7 +1031,7 @@
         refreshCard(iid);
         if (!opening) return;
         // 展开后统一「向下展开」：按钮留在视口上部，面板从按钮下方铺开，绝不向上滚
-        revealCardPanel(iid, 'note', '.zt-note-panel');
+        revealCardPanel(iid, 'note');
         const card = document.getElementById('card-' + iid);
         const panel = card && card.querySelector('.zt-note-panel');
         if (!panel) return;

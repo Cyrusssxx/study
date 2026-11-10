@@ -72,14 +72,16 @@ check('输入时置「未保存」', /markNoteState\(qid, 'dirty'\)/.test(JS), t
 check('保存成功置「已保存」（自动保存也生效）', /markNoteState\(qid, 'saved'\)/.test(JS), true);
 // 2026-11-07：展开统一为「向下展开」——按钮留在视口上部、内容从按钮下方铺开，
 // 只允许向下滚；旧 scrollIntoView({block:'nearest'}) 会向上滚把按钮顶出视口。
+// 2026-11-10：再收敛为「空间够就完全不滚」（用户反馈：点一下画面别跟着动），
+// 只有按钮贴近视口底部才补最小滚动量。
 check('展开走统一的 revealBelow（不再 scrollIntoView nearest）',
-  /function revealBelow\(btn, panel\)/.test(JS) && !/panel\.scrollIntoView|box\.scrollIntoView/.test(JS), true);
+  /function revealBelow\(btn\)/.test(JS) && !/panel\.scrollIntoView|box\.scrollIntoView/.test(JS), true);
 check('三类按钮都带 data-toggle 标记',
   ['ans', 'note', 'kp'].every(k => JS.includes(`data-toggle="${k}"`)), true);
 check('答案 / 笔记 / 考点分析展开都调用 revealCardPanel',
   (JS.match(/revealCardPanel\(iid, '(ans|note|kp)'/g) || []).length, 3);
-check('只向下滚（scrollBy 正值 + 收起不滚）',
-  /if \(delta > 2\) window\.scrollBy/.test(JS) && /if \(opening\) revealCardPanel/.test(JS), true);
+check('只向下滚（空间不足才 scrollBy 正值 + 收起不滚）',
+  /if \(need > 2\) window\.scrollBy/.test(JS) && /if \(opening\) revealCardPanel/.test(JS), true);
 check('展开笔记后聚焦编辑器末尾', /focus\(\{ preventScroll: true \}\)/.test(JS), true);
 check('保存写规范键（跨页共享）', /api\('\/api\/note\/' \+ encodeURIComponent\(noteKeyOf\(qid\)\)/.test(JS), true);
 check('加载别名并回填', /applyNoteAlias\(byKey\)/.test(JS) && /loadNoteAlias\(\)/.test(JS), true);

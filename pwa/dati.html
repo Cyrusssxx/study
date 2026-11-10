@@ -692,13 +692,18 @@
     // 展开面板统一「向下展开」（与真题套卷页同源）：
     // 旧行为用「就近对齐」的 scrollIntoView，会为了塞下整块面板而向上滚、把按钮顶出视口。
     // 现在把按钮带到视口上部，展开内容从按钮下方一路向下铺开；只允许向下滚，收起时不滚。
-    function revealBelow(btn, panel) {
-        if (!btn || !panel) return;
+    // 展开时不主动移动画面（2026-11-10，与 zhenti.js 同源）：
+    // 按钮下方仍有 REVEAL_HEADROOM 就完全不滚；只有贴近视口底部才补最小滚动量，
+    // 且不把按钮滚出顶部 84px；永不向上滚。
+    const REVEAL_HEADROOM = 140;
+    function revealBelow(btn) {
+        if (!btn) return;
         const vh = window.innerHeight || document.documentElement.clientHeight;
-        const top = btn.getBoundingClientRect().top;
-        const wantTop = Math.max(84, Math.min(vh * 0.3, 220));
-        const delta = top - wantTop;
-        if (delta > 2) window.scrollBy({ top: delta, behavior: 'smooth' });
+        const r = btn.getBoundingClientRect();
+        const gap = vh - r.bottom;
+        if (gap >= REVEAL_HEADROOM) return;
+        const need = Math.min(REVEAL_HEADROOM - gap, Math.max(0, r.top - 84));
+        if (need > 2) window.scrollBy({ top: need, behavior: 'smooth' });
     }
 
     function toggleAnswer(qid) {
@@ -720,7 +725,7 @@
         ansOpen.add(qid);
         saveAnsOpen();
         if (btn) btn.textContent = '收起答案';
-        revealBelow(btn, box);
+        revealBelow(btn);
     }
 
     // 单题模式：左右两枚悬浮圆形箭头（垂直居中、两侧贴边、滚动恒在）。
@@ -1099,7 +1104,7 @@
             if (btn) btn.classList.add('active');
             const el = initDatiNoteEditor(p);
             if (el) el.focus({ preventScroll: true });
-            revealBelow(btn, p);
+            revealBelow(btn);
         } else {
             p.style.display = 'none';
             noteOpen.delete(qid);
