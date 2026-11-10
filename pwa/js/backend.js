@@ -1881,8 +1881,12 @@ async function examApi(action, body, arg) {
         }
         // 不熟 / 不会：标记总数（永久保留）+ 其中还没做过的 + 仍在抽题池的。
         // 标记之后答对过的题不再被抽，但标记仍在，所以三者可以不同。
-        const unfamRows = await dbAll('unfamiliar');
-        const dkRows = await dbAll('dontknow');
+        // 统计口径只算「题库里存在的题」：真题套卷里的合成 id（`os_zt2015_45` 这种，
+        // 大题没有题库映射）只在本页用来标记 + 题号标色，题库里查不到，也不参与抽题，
+        // 算进来会让「不熟 N 题」与不熟列表里的实际条数对不上。
+        const isBankQid = qid => !/_zt\d{4}_/.test(String(qid || ''));
+        const unfamRows = (await dbAll('unfamiliar')).filter(r => isBankQid(r.question_id));
+        const dkRows = (await dbAll('dontknow')).filter(r => isBankQid(r.question_id));
         const unfam = unfamRows.length;
         const dk = dkRows.length;
         const activeSet = new Set(await activeMarkIds());

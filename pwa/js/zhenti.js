@@ -408,13 +408,17 @@
 
     /* ---------------- 不熟 / 不会 / 考点分析（与刷题页同一套接口与样式） ---------------- */
     function markBtnsHtml(f) {
-        if (!f.mapped) return '';
+        // 大题一律可标：它没有题库映射（合成 id 形如 os_zt2015_45），但「不熟/不会」写的是
+        // IndexedDB 的 unfamiliar/dontknow store，键就用本页 iid（前缀是科目，后端只校验前缀）；
+        // 本页 loadStores() 直接 dbAll 这两个表，所以标记能存能读，只在本页闭环使用。
+        // 选择题仍要求有映射：未映射的选择题在错题本/抽题池里查不到，标了也无处回收。
+        if (!f.mapped && f.group !== 'big') return '';
         const un = state.unfamSet.has(f.iid), dk = state.dontknowSet.has(f.iid);
         return `<span class="mark-btns">
             <button class="mark-btn ${un ? 'mark-unfamiliar' : ''}" onclick="toggleMarkZt('unfamiliar','${f.iid}')"
-                title="${un ? '取消「不熟」标记' : '标记为不熟（黄色）'}">不熟</button>
+                title="${un ? '取消「不熟」标记' : '标记为不熟（右侧题号标黄）'}">不熟</button>
             <button class="mark-btn ${dk ? 'mark-dontknow' : ''}" onclick="toggleMarkZt('dontknow','${f.iid}')"
-                title="${dk ? '取消「不会」标记' : '标记为不会（红色）'}">不会</button>
+                title="${dk ? '取消「不会」标记' : '标记为不会（右侧题号标红）'}">不会</button>
         </span>`;
     }
     function kpBtnHtml(f, isFav) {
@@ -1008,10 +1012,11 @@
             const r = await api(`/api/mark/${kind}/${iid}`, { method: 'POST' });
             const j = await r.json();
             if (j.error) return;
-            const set = kind === 'unfamiliar' ? state.unfamSet : state.dontknowSet;
-            const on = kind === 'unfamiliar' ? j.is_unfamiliar : j.is_dontknow;
-            if (on) set.add(iid); else set.delete(iid);
-            refreshCard(iid);
+            // 后端对「不熟/不会」是互斥的（标一个会清另一个），响应里两者都带，
+            // 这里一并同步 —— 否则互斥清掉的那一个在界面上还亮着。
+            if (j.is_unfamiliar) state.unfamSet.add(iid); else state.unfamSet.delete(iid);
+            if (j.is_dontknow) state.dontknowSet.add(iid); else state.dontknowSet.delete(iid);
+            syncCardChrome(iid);
         } catch (e) { /* 静默：标记失败不影响看题 */ }
     }
 
@@ -1027,7 +1032,7 @@
             }
             if (j.in_pool) state.poolMap[iid] = { kind: 'ztwrong', mastered: false };
             else delete state.poolMap[iid];
-            refreshCard(iid);
+            syncCardChrome(iid);
             showZtTip(j.in_pool
                 ? `已加入「模拟考错题池」，${j.days || 7} 天内不参与模拟考组卷`
                 : '已从错题池移出');
@@ -1075,7 +1080,7 @@
         const r = await api('/api/favorite/' + iid);
         const j = await r.json();
         if (j.is_favorited) state.favSet.add(iid); else state.favSet.delete(iid);
-        refreshCard(iid);
+        syncCardChrome(iid);      // 只换星与「考点分析」按钮，不重绘整卡
     }
 
     function refreshCard(iid) {
@@ -1089,6 +1094,60 @@
         el.remove();
         if (fresh) { injectSvgs(fresh); initNoteEditors(fresh); }
         renderFq();
+    }
+
+    /* 只改卡片的「状态区」，完全不碰题干/题图/面板 —— 不熟、不会、收藏、错题池、
+     * 考点分析按钮的开关状态都走这里。整卡 refreshCard 会让题图退回「图加载中…」
+     * 的 56px 占位再撑回来，按钮行上下跳（2026-11-10 用户反馈，别再改回去）。 */
+    function syncCardChrome(iid) {
+        const card = document.getElementById('card-' + iid);
+        const f = state.flat.find(x => x.iid === iid);
+        if (!card || !f) return;
+        const isFav = state.favSet.has(iid);
+
+        // 不熟 / 不会
+        const oldMark = card.querySelector('.question-header .mark-btns');
+        const markHtml = markBtnsHtml(f);
+        if (oldMark) { if (markHtml) oldMark.outerHTML = markHtml; else oldMark.remove(); }
+        else if (markHtml) {
+            const meta = card.querySelector('.question-header .question-meta');
+            if (meta) meta.insertAdjacentHTML('afterend', markHtml);
+        }
+
+        // 收藏星
+        const star = card.querySelector('.question-header .btn-icon');
+        if (star) {
+            star.classList.toggle('favorited', isFav);
+            star.textContent = isFav ? '★' : '☆';
+            star.title = isFav ? '取消收藏' : '收藏';
+        }
+
+        // 考点分析（只有收藏题才有；取消收藏时连同面板一起收掉）
+        const kpBtn = card.querySelector('.question-tools [data-toggle="kp"]');
+        const kpHtml = kpBtnHtml(f, isFav);
+        if (kpBtn && !kpHtml) kpBtn.remove();
+        else if (kpBtn && kpHtml) kpBtn.outerHTML = kpHtml;
+        else if (!kpBtn && kpHtml) {
+            const tools = card.querySelector('.question-tools');
+            const pb = tools && tools.querySelector('.pool-btn');
+            if (pb) pb.insertAdjacentHTML('beforebegin', kpHtml);
+            else if (tools) tools.insertAdjacentHTML('beforeend', kpHtml);
+        }
+        if (!isFav && state.kpOpen.has(iid)) {
+            state.kpOpen.delete(iid);
+            localStorage.setItem('zhentiKpOpen', JSON.stringify([...state.kpOpen]));
+            setCardPanel(iid, 'kp', false);
+        }
+
+        // 加入错题池（仅映射的选择题）
+        const pb = card.querySelector('.question-tools .pool-btn');
+        if (pb) {
+            const tmp = document.createElement('div');
+            tmp.innerHTML = poolBtnHtml(f);
+            if (tmp.firstElementChild) pb.replaceWith(tmp.firstElementChild);
+        }
+
+        renderFq();          // 题号栏色点（不熟黄 / 不会红 / 收藏橙条 / 对错）
     }
 
     /* ---------------- 展开面板：原地展开，零滚动 ----------------
@@ -1469,9 +1528,15 @@
             if (!state.examMode && st) cls += st.is_correct ? ' ok' : (it.group === 'choice' ? ' bad' : '');
             else if (state.examMode && state.pending[it.iid]) cls += ' picked';
             if (state.favSet.has(it.iid)) cls += ' fav';   // 收藏：右缘橙条
+            // 不熟 / 不会：主观标记，任何时候都显示（做题模式也显示——它是复习靶子，不是作答记录）。
+            // 放在 ok/bad/picked 之后加，样式上压过对错色；不会=红，不熟=黄，两者互斥。
+            const un = state.unfamSet.has(it.iid), dk = state.dontknowSet.has(it.iid);
+            if (un) cls += ' un';
+            if (dk) cls += ' dk';
             const subjName = (typeof SUBJECTS !== 'undefined' && it.sid && SUBJECTS[it.sid]) ? SUBJECTS[it.sid].name : '';
             html += `<a class="${cls}" data-iid="${it.iid}" data-i="${it.i}" onclick="gotoQ('${it.iid}')" `
-                + `title="第 ${it.i} 题${subjName ? ' · ' + subjName : ''}${state.favSet.has(it.iid) ? ' · 已收藏' : ''}">${it.i}</a>`;
+                + `title="第 ${it.i} 题${subjName ? ' · ' + subjName : ''}${state.favSet.has(it.iid) ? ' · 已收藏' : ''}`
+                + `${un ? ' · 不熟' : ''}${dk ? ' · 不会' : ''}">${it.i}</a>`;
         }
         $('fqList').innerHTML = html;
         syncFqCur();
@@ -1539,6 +1604,30 @@
 
     // 跳转到指定题（同题 300ms 去重：触屏 pointerup 补偿与随后补发的 click 只生效一次）
     let lastGoto = { iid: '', t: 0 };
+    // 跳转落点留白（与 CSS `#ztMain .question-card{scroll-margin-top:84px}` 对齐，
+    // 多 8px 是给题卡上边框留一点气）
+    const GOTO_OFFSET = 92;
+    // 最近一次「用户自己滚动」的时间：跳转后的位置校正要避让，否则会跟手指抢滚动
+    let userScrollAt = 0;
+    (function bindUserScrollMark() {
+        const mark = () => { userScrollAt = Date.now(); };
+        window.addEventListener('wheel', mark, { passive: true });
+        window.addEventListener('touchstart', mark, { passive: true });
+        window.addEventListener('keydown', e => {
+            if (/^(Arrow|Page|Home|End| )/.test(e.key || '')) mark();
+        });
+    })();
+
+    function cardTargetY(el) {
+        const y = el.getBoundingClientRect().top + (window.scrollY || window.pageYOffset || 0) - GOTO_OFFSET;
+        return Math.max(0, Math.round(y));      // 页顶的题夹在 0，不能算出负值
+    }
+    function scrollToCard(el) {
+        const top = cardTargetY(el);
+        window.scrollTo(0, top);
+        return top;
+    }
+
     function gotoQ(iid) {
         const el = document.getElementById('card-' + iid);
         if (!el) return;                                   // 目标不在 DOM（被筛选掉）：不记录，允许重试
@@ -1547,12 +1636,29 @@
         // 窗口从 700ms 收到 300ms——旧值会把用户 700ms 内的重复点击也吞掉，表现为"点了没反应"
         if (iid === lastGoto.iid && now - lastGoto.t < 300) return;
         lastGoto = { iid: iid, t: now };
+        const clickedAt = now;                             // 校正窗口的基准时间（同一毫秒）
         try { flushNote(); } catch (e) { console.error(e); }   // 笔记落库失败不拖垮跳转
         // 首次进页时 common.js 的滚动位置恢复还在追滚（约 1s 内多次把页面拽回旧存档），
         // 会把刚跳到的题卡位置覆盖掉 —— 表现就是「第一次点右边题号没反应，第二次才成功」。
         // 跳转前先取消恢复，避免与追滚补偿抢滚动位置。
         if (typeof window.__psCancelRestore === 'function') window.__psCancelRestore();
-        el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        // 用「立即跳」而不是 smooth：题图 / KaTeX 可拉伸括号的 SVG 是异步注入的，
+        // 动画期间上方卡片高度还在变，smooth 的目的地是按启动那一刻算死的 → 落到错位置，
+        // 看起来就是「点了没跳过去（或只跳了一点）」。立即跳 + 事后校正更稳。
+        scrollToCard(el);
+        syncFqCur();                                       // 立刻高亮当前题号，不等滚动事件
+        // 布局稳定后再对齐几次：SVG 注入 / 懒加载图片会把锚点顶偏，只校正「还在原跳转目标上、
+        // 且用户没自己接管滚动」的情况，避免和手动滚动打架。
+        [140, 380, 800].forEach(ms => setTimeout(() => {
+            if (lastGoto.iid !== iid || lastGoto.t !== clickedAt) return;   // 已跳到别处
+            if (userScrollAt > clickedAt) return;                          // 用户已接管
+            const cur = document.getElementById('card-' + iid);
+            if (!cur) return;
+            // 与「当前滚动位置」比对（而不是与卡片相对视口的 top 比对）：
+            // 页顶的题目标位置会被夹到 0，用 rect 比对会永远差 92px、反复空滚动。
+            const want = cardTargetY(cur);
+            if (Math.abs(want - (window.scrollY || 0)) > 6) { window.scrollTo(0, want); syncFqCur(); }
+        }, ms));
     }
 
     // 触屏点击容错：手指轻点条时若有轻微位移（被判为滑动 → click 事件丢失、只剩列表动了一下），

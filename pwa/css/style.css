@@ -8063,6 +8063,10 @@ body.fc-toc-open .fc-toc-fab { display: none; }
 .zt-fq-i.cur { background: rgba(74, 122, 184, .16); color: var(--primary); box-shadow: inset 0 0 0 1px rgba(74, 122, 184, .55); }
 .zt-fq-i.ok { background: rgba(46, 125, 50, .17); color: #2e7d32; }
 .zt-fq-i.bad { background: rgba(198, 40, 40, .15); color: #c62828; }
+/* 不熟（黄）/ 不会（红）：主观标记，写在这几条之后 → 压过对错色；两者互斥，不会同时出现。
+ * 只改底色/字色/字重，不加 border/外框（避免改变 50×20 的盒模型让竖排题号错位）。 */
+.zt-fq-i.un { background: rgba(234, 179, 8, .22); color: #8a6a00; font-weight: 700; }
+.zt-fq-i.dk { background: rgba(198, 40, 40, .18); color: #c62828; font-weight: 700; }
 .zt-fq-i.picked { background: rgba(74, 122, 184, .2); color: var(--primary); }
 .zt-fq-i.zt-fq-sep { margin-top: 6px; }
 
@@ -8085,6 +8089,8 @@ body.fc-toc-open .fc-toc-fab { display: none; }
 .dark .zt-fq-i.fav { box-shadow: inset -3px 0 0 #e0b45c; }
 .dark .zt-fq-i.ok { color: #81c784; }
 .dark .zt-fq-i.bad { color: #e57373; }
+.dark .zt-fq-i.un { background: rgba(234, 179, 8, .26); color: #fde047; }
+.dark .zt-fq-i.dk { background: rgba(239, 83, 80, .26); color: #ff8a80; }
 .dark .zt-fq-i.cur { box-shadow: inset 0 0 0 1px rgba(143, 176, 217, .55); }
 
 /* 题卡锚点留位（避开固定顶栏） */

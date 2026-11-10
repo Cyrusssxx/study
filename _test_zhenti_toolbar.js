@@ -80,7 +80,8 @@ check('展开不再滚动（无 scrollBy / 展开路径无 scrollIntoView）',
 check('三类按钮都带 data-toggle 标记',
   ['ans', 'note', 'kp'].every(k => JS.includes(`data-toggle="${k}"`)), true);
 check('答案 / 笔记 / 考点分析都走原地 setCardPanel',
-  (JS.match(/setCardPanel\(iid, '(ans|note|kp)', (true|false|opening)\)/g) || []).length, 4);   // 考点分析开/关各一处
+  // 考点分析开/关各一处（toggleKpZt）+ 取消收藏时收起 kp 面板（syncCardChrome）
+  (JS.match(/setCardPanel\(iid, '(ans|note|kp)', (true|false|opening)\)/g) || []).length, 5);
 check('展开后只同步按钮、不重绘整卡（syncToggleBtns 三处）',
   (JS.match(/syncToggleBtns\(iid\);/g) || []).length, 4);   // 考点分析有开/关两条路
 // 三个展开函数内部不得再出现 refreshCard：整卡重绘 = 题图退回占位 = 按钮跳一下

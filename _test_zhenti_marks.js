@@ -31,15 +31,16 @@ function check(name, got, want) {
 }
 const sleep = ms => new Promise(r => setTimeout(r, ms));
 
-// 套卷：第 1 题映射到 os_0001，第 2 题没有 qid（合成 id）
+// 套卷：第 1 题映射到 os_0001；第 2 题无映射的选择题；第 3 题是综合题（大题，永远无映射）
 const PAPER = {
-  y: 2020, n: 2,
+  y: 2020, n: 3,
   items: [
     { i: 1, t: 1, sid: 'os', s: 2, q: '题干一', o: ['甲', '乙', '丙', '丁'], a: 'A', an: '解析一', qid: 'os_0001' },
-    { i: 2, t: 1, sid: 'os', s: 2, q: '题干二（无题库映射）', o: ['甲', '乙', '丙', '丁'], a: 'B', an: '解析二' }
+    { i: 2, t: 1, sid: 'os', s: 2, q: '题干二（无题库映射）', o: ['甲', '乙', '丙', '丁'], a: 'B', an: '解析二' },
+    { i: 3, t: 2, sid: 'os', s: 7, q: '综合题三', a: '参考答案三', an: '大题解析三' }
   ]
 };
-const INDEX = { years: [2020], counts: { 2020: { choice: 2, big: 0 } }, iids: { 2020: ['os_0001', 'os_zt2020_2'] } };
+const INDEX = { years: [2020], counts: { 2020: { choice: 2, big: 1 } }, iids: { 2020: ['os_0001', 'os_zt2020_2', 'os_zt2020_3'] } };
 const OS_BANK = {
   subject: '操作系统', total: 1,
   questions: [{
@@ -89,16 +90,19 @@ const OS_BANK = {
   await sleep(600);
 
   const card = iid => doc.getElementById('card-' + iid);
-  const c1 = card('os_0001'), c2 = card('os_zt2020_2');
+  const c1 = card('os_0001'), c2 = card('os_zt2020_2'), c3 = card('os_zt2020_3');
 
   console.log('--- 一、卡片渲染 ---');
-  check('套卷渲染出两张卡', !!c1 && !!c2, true);
+  check('套卷渲染出三张卡（含 1 道大题）', !!c1 && !!c2 && !!c3, true);
 
   console.log('\n--- 二、不熟 / 不会：只有映射题才有 ---');
   const marks1 = c1 ? c1.querySelectorAll('.mark-btn').length : -1;
   const marks2 = c2 ? c2.querySelectorAll('.mark-btn').length : -1;
   check('映射题有 2 个标记按钮（不熟/不会）', marks1, 2);
-  check('无映射题不显示标记按钮', marks2, 0);
+  check('无映射的选择题不显示标记按钮', marks2, 0);
+  // 大题（综合题）一律有标记：它没有题库映射，但标记写的是本页的 unfamiliar/dontknow 表
+  check('大题有 2 个标记按钮（不熟/不会）',
+    c3 ? c3.querySelectorAll('.mark-btn').length : -1, 2);
 
   console.log('\n--- 三、考点分析：做题模式下隐藏（含答案） ---');
   const kpBtn = c => [...c.querySelectorAll('.btn-explanation')].find(b => /考点分析/.test(b.textContent));
@@ -139,6 +143,29 @@ const OS_BANK = {
   kpBtn(card('os_0001')).click();
   await sleep(150);
   check('再点一次收起面板', !!card('os_0001').querySelector('.kp-panel'), false);
+
+  console.log('\n--- 五之二、大题标记 + 右侧题号标黄/标红 ---');
+  const fqOf = iid => doc.querySelector(`#fqList .zt-fq-i[data-iid="${iid}"]`);
+  const c3Now = card('os_zt2020_3');      // 前面 toggleExamMode 整卷重绘过，旧引用已失效
+  const bigBtn = kind => [...card('os_zt2020_3').querySelectorAll('.mark-btn')].find(b => b.textContent.includes(kind));
+  check('大题卡渲染在「综合题」分组', !!fqOf('os_zt2020_3'), true);
+  bigBtn('不会').click();
+  await sleep(250);
+  check('大题「不会」写入 dontknow 表',
+    (await w.dbAll('dontknow')).some(r => r.question_id === 'os_zt2020_3'), true);
+  check('大题卡按钮变红样式',
+    bigBtn('不会').classList.contains('mark-dontknow'), true);
+  check('右侧题号 + dk（标红）', fqOf('os_zt2020_3').classList.contains('dk'), true);
+  check('题号 title 标注「不会」', /不会/.test(fqOf('os_zt2020_3').title), true);
+  // 互斥：再点「不熟」→ 不会自动清掉，题号由红转黄
+  bigBtn('不熟').click();
+  await sleep(250);
+  check('互斥：不熟清掉不会', (await w.dbAll('dontknow')).some(r => r.question_id === 'os_zt2020_3'), false);
+  check('互斥：不熟已入库', (await w.dbAll('unfamiliar')).some(r => r.question_id === 'os_zt2020_3'), true);
+  check('右侧题号 + un（标黄）、dk 已移除',
+    [fqOf('os_zt2020_3').classList.contains('un'), fqOf('os_zt2020_3').classList.contains('dk')], [true, false]);
+  // 标记切换不得整卡重绘（重绘会让题图退回占位、按钮行跳）
+  check('标记后卡片节点未变（原地更新，不整卡重绘）', card('os_zt2020_3') === c3Now, true);
 
   console.log('\n--- 六、加入错题池（手动入池，与「7 天后重练」同一张 redo 表） ---');
   const poolBtn = () => card('os_0001').querySelector('.pool-btn');

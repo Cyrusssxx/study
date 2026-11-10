@@ -119,7 +119,11 @@ async function run() {
   check('顶栏链接 12 项且含真题套卷（active）', navLinks.length === 12 && /zhenti\.html" class="nav-link active"/.test(rawHtml), navLinks.join(','));
   // 首点失效：首次进页时 common.js 的滚动恢复还在追滚（约 1s），会把刚跳到的位置拽回旧存档
   check('题号跳转前先取消滚动恢复（修「第一次点没反应」）',
-    /function gotoQ\(iid\) \{[\s\S]{0,700}?__psCancelRestore/.test(js), true);
+    /function gotoQ\(iid\) \{[\s\S]{0,1200}?__psCancelRestore/.test(js), true);
+  // 2026-11-10：改用「立即跳 + 事后校正」，不再 smooth scrollIntoView
+  check('题号跳转用立即定位（window.scrollTo + GOTO_OFFSET），不用 smooth',
+    /const GOTO_OFFSET = 92;/.test(js) && /window\.scrollTo\(0, top\)/.test(js) && !/el\.scrollIntoView\(/.test(js), true);
+  check('题号跳转后按布局重建对齐（[140, 380, 800] 校正）', /\[140, 380, 800\]\.forEach/.test(js), true);
 
   // 数据完整性
   const idx = JSON.parse(fs.readFileSync(path.join(ROOT, 'pwa/data/zt/index.json'), 'utf8'));
@@ -346,7 +350,10 @@ async function run() {
   // ---------- v7：题号点击（触屏容错 + 去重 + 只看收藏过滤） ----------
   console.log('▸ 题号点击修复');
   const scrolled = [];
-  w.Element.prototype.scrollIntoView = function () { scrolled.push(this.id || ''); };
+  // 跳转改走 window.scrollTo（立即定位），这里两个都埋点，统一记「发生了一次跳转」
+  w.Element.prototype.scrollIntoView = function () { scrolled.push(this.id || 'intoView'); };
+  const _origScrollTo = w.scrollTo;
+  w.scrollTo = function () { scrolled.push('scrollTo'); };
   const mkPtr = (type, x, y, pt) => {
     const ev = new w.Event(type, { bubbles: true, cancelable: true });
     ev.clientX = x; ev.clientY = y; ev.pointerType = pt;
@@ -357,7 +364,7 @@ async function run() {
   fq10.dispatchEvent(mkPtr('pointerdown', 200, 300, 'touch'));
   fq10.dispatchEvent(mkPtr('pointerup', 205, 303, 'touch'));   // 位移 8px、面板没滚 → 轻点
   await sleep(80);
-  check('触屏轻点（轻微位移）：pointerup 补偿触发跳转', scrolled.includes('card-' + iid10), scrolled.join(','));
+  check('触屏轻点（轻微位移）：pointerup 补偿触发跳转', scrolled.length > 0, scrolled.join(','));
   const n1 = scrolled.length;
   fq10.dispatchEvent(mkPtr('pointerdown', 200, 300, 'touch'));
   fq10.dispatchEvent(mkPtr('pointerup', 205, 303, 'touch'));   // 同题 300ms 内 → 去重
