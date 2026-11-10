@@ -2212,7 +2212,10 @@ mark {
    不那么覆盖字体的颜色，下划线保持淡」——底色既要看得到、又不能把字压闷，
    所以换色相而非硬加浓度：基色改用更亮更透的 翠绿 #34d399 / 天蓝 #38bdf8 /
    玫粉 #fb7185，浓度回调到 .16/.16/.14（白底成品 ≈ #e0f8f1 / #ddf6fe / #fde5e9，
-   与浅黄 #fbf5dc 同级）。下划线维持 300 档、黄底 .18 全程不动。 */
+   与浅黄 #fbf5dc 同级）。下划线维持 300 档、黄底 .18 全程不动。
+   2026-11-10 四轮：「有点太淡了」——上一版色相认可、浓度不够，按上轮
+   「下划线保持不变」只提底色浓度：.16/.16/.14 → .22/.22/.20（约 +37%），
+   圆点底 .28/.28/.26 → .34/.34/.32；黄底与下划线仍不动。 */
 .note-input .hl-yellow,
 .line-anno-text .hl-yellow,
 .note-input [style*="background-color: rgb(255, 243, 163)"],
@@ -2237,7 +2240,7 @@ mark {
 .line-anno-text [style*="background-color:#b8e6c0"],
 .note-input [style*="background:#b8e6c0"],
 .line-anno-text [style*="background:#b8e6c0"] {
-    background: rgba(52, 211, 153, .16) !important;
+    background: rgba(52, 211, 153, .22) !important;
     border-bottom: 2px solid #86efac;
     border-radius: 2px;
     padding: 0 2px;
@@ -2253,7 +2256,7 @@ mark {
 .line-anno-text [style*="background-color:#b3d9f2"],
 .note-input [style*="background:#b3d9f2"],
 .line-anno-text [style*="background:#b3d9f2"] {
-    background: rgba(56, 189, 248, .16) !important;
+    background: rgba(56, 189, 248, .22) !important;
     border-bottom: 2px solid #93c5fd;
     border-radius: 2px;
     padding: 0 2px;
@@ -2269,7 +2272,7 @@ mark {
 .line-anno-text [style*="background-color:#f5c2d5"],
 .note-input [style*="background:#f5c2d5"],
 .line-anno-text [style*="background:#f5c2d5"] {
-    background: rgba(251, 113, 133, .14) !important;
+    background: rgba(251, 113, 133, .20) !important;
     border-bottom: 2px solid #f9a8d4;
     border-radius: 2px;
     padding: 0 2px;
@@ -5299,9 +5302,9 @@ a.chapter-badge-link:hover {
 }
 
 .note-hl-yellow { background: rgba(250, 204, 21, .18); border-bottom: 2px solid #fcd34d; }
-.note-hl-green  { background: rgba(52, 211, 153, .16); border-bottom: 2px solid #86efac; }
-.note-hl-blue   { background: rgba(56, 189, 248, .16); border-bottom: 2px solid #93c5fd; }
-.note-hl-pink   { background: rgba(251, 113, 133, .14); border-bottom: 2px solid #f9a8d4; }
+.note-hl-green  { background: rgba(52, 211, 153, .22); border-bottom: 2px solid #86efac; }
+.note-hl-blue   { background: rgba(56, 189, 248, .22); border-bottom: 2px solid #93c5fd; }
+.note-hl-pink   { background: rgba(251, 113, 133, .20); border-bottom: 2px solid #f9a8d4; }
 
 /* 选区浮层工具条 */
 .hl-toolbar {
@@ -5330,9 +5333,9 @@ a.chapter-badge-link:hover {
 .hl-dot-cur { box-shadow: 0 0 0 2px var(--primary, #4f46e5); }
 /* 取色圆点：浅底 + 2px 色环，和实际刷上去的效果一致（下边线那个色） */
 .hl-dot-yellow { background: rgba(250, 204, 21, .26); border: 2px solid #fcd34d; }
-.hl-dot-green  { background: rgba(52, 211, 153, .28); border: 2px solid #86efac; }
-.hl-dot-blue   { background: rgba(56, 189, 248, .28); border: 2px solid #93c5fd; }
-.hl-dot-pink   { background: rgba(251, 113, 133, .26); border: 2px solid #f9a8d4; }
+.hl-dot-green  { background: rgba(52, 211, 153, .34); border: 2px solid #86efac; }
+.hl-dot-blue   { background: rgba(56, 189, 248, .34); border: 2px solid #93c5fd; }
+.hl-dot-pink   { background: rgba(251, 113, 133, .32); border: 2px solid #f9a8d4; }
 
 /* 工具条内的 📝批注 按钮 */
 .hl-anno-btn {

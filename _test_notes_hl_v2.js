@@ -11,6 +11,9 @@
 //   2026-11-10 三轮：「又太淡了，除了黄色，三个颜色换一个不那么覆盖字体的，
 //     下划线保持淡」——换色相不硬加浓度：基色 翠绿 #34d399 / 天蓝 #38bdf8 /
 //     玫粉 #fb7185，浓度 .16/.16/.14；下划线维持 300 档、黄全部不动
+//   2026-11-10 四轮：「有点太淡了」——色相认可、浓度不够，只提底色：
+//     .16/.16/.14 → .22/.22/.20，圆点底 .28/.28/.26 → .34/.34/.32，
+//     黄底与下划线仍不动
 const fs = require('fs');
 const path = require('path');
 const ROOT = __dirname;
@@ -81,13 +84,17 @@ check('绿/蓝/粉下边线降到 300 档（400 档也嫌重）',
   /\.note-hl-blue\s+\{[^}]*#93c5fd/.test(css) &&
   /\.note-hl-pink\s+\{[^}]*#f9a8d4/.test(css) &&
   !/#16a34a|#2563eb|#db2777|#4ade80|#60a5fa|#f472b6|#eab308/.test(lightCss), true);
-check('绿/蓝/粉底色换亮色相并回调浓度（编辑态 + 行级批注两处同步）',
-  /rgba\(52,\s*211,\s*153,\s*\.16\) !important/.test(css) &&
-  /rgba\(56,\s*189,\s*248,\s*\.16\) !important/.test(css) &&
-  /rgba\(251,\s*113,\s*133,\s*\.14\) !important/.test(css) &&
-  /\.note-hl-green\s+\{[^}]*rgba\(52,\s*211,\s*153,\s*\.16\)/.test(css) &&
-  /\.note-hl-blue\s+\{[^}]*rgba\(56,\s*189,\s*248,\s*\.16\)/.test(css) &&
-  /\.note-hl-pink\s+\{[^}]*rgba\(251,\s*113,\s*133,\s*\.14\)/.test(css) &&
+check('绿/蓝/粉底色浓度四轮上调到 .22/.22/.20（编辑态 + 行级批注两处同步）',
+  /rgba\(52,\s*211,\s*153,\s*\.22\) !important/.test(css) &&
+  /rgba\(56,\s*189,\s*248,\s*\.22\) !important/.test(css) &&
+  /rgba\(251,\s*113,\s*133,\s*\.20\) !important/.test(css) &&
+  /\.note-hl-green\s+\{[^}]*rgba\(52,\s*211,\s*153,\s*\.22\)/.test(css) &&
+  /\.note-hl-blue\s+\{[^}]*rgba\(56,\s*189,\s*248,\s*\.22\)/.test(css) &&
+  /\.note-hl-pink\s+\{[^}]*rgba\(251,\s*113,\s*133,\s*\.20\)/.test(css) &&
+  // 上一版偏淡的 .16/.14 在亮色规则里退场（.dark 的同基色规则靠 lightCss 排除）
+  !/rgba\(52,\s*211,\s*153,\s*\.16\)/.test(lightCss) &&
+  !/rgba\(56,\s*189,\s*248,\s*\.16\)/.test(lightCss) &&
+  !/rgba\(251,\s*113,\s*133,\s*\.14\)/.test(lightCss) &&
   !/rgba\(74,\s*222,\s*128/.test(lightCss) &&
   !/rgba\(96,\s*165,\s*250/.test(lightCss) &&
   !/rgba\(244,\s*114,\s*182/.test(lightCss) &&
@@ -95,9 +102,9 @@ check('绿/蓝/粉底色换亮色相并回调浓度（编辑态 + 行级批注�
   !/rgba\(59,\s*130,\s*246,\s*\.16\) !important/.test(lightCss) &&
   !/rgba\(236,\s*72,\s*153,\s*\.16\) !important/.test(lightCss), true);
 check('取色圆点底色同步新色相（边框仍是 300 档下划线色）',
-  /\.hl-dot-green\s*\{[^}]*rgba\(52,\s*211,\s*153,\s*\.28\)[^}]*#86efac/.test(css) &&
-  /\.hl-dot-blue\s*\{[^}]*rgba\(56,\s*189,\s*248,\s*\.28\)[^}]*#93c5fd/.test(css) &&
-  /\.hl-dot-pink\s*\{[^}]*rgba\(251,\s*113,\s*133,\s*\.26\)[^}]*#f9a8d4/.test(css) &&
+  /\.hl-dot-green\s*\{[^}]*rgba\(52,\s*211,\s*153,\s*\.34\)[^}]*#86efac/.test(css) &&
+  /\.hl-dot-blue\s*\{[^}]*rgba\(56,\s*189,\s*248,\s*\.34\)[^}]*#93c5fd/.test(css) &&
+  /\.hl-dot-pink\s*\{[^}]*rgba\(251,\s*113,\s*133,\s*\.32\)[^}]*#f9a8d4/.test(css) &&
   /\.hl-dot-yellow\s*\{[^}]*rgba\(250,\s*204,\s*21,\s*\.26\)[^}]*#fcd34d/.test(css), true);
 check('取色圆点同步换成新色（圆点=实际刷上去的下边线色）',
   /\.hl-dot-yellow\s*\{[^}]*#fcd34d/.test(css) &&
