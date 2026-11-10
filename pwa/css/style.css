@@ -2192,12 +2192,26 @@ mark {
    两者作用域不重叠；下边框色即四色 hue，和以前的选择器保持一致。
    2026-11-09：黄色由「琥珀底 + 暗金下边线」调为浅黄（用户反馈原色偏深），
    亮色用浅奶油黄底 rgba(250,204,21,.18)（白底约 #fffbe6）+ 亮金 #eab308，
-   深色用略亮的黄边 #fde047，其余三色保持不动。 */
+   深色用略亮的黄边 #fde047。
+   2026-11-10：绿/蓝/粉也照黄色的口径调浅（用户反馈「高亮颜色太深、下划线也太深」）。
+   原来这三色用的是 Tailwind 600 档下边线（#16a34a / #2563eb / #db2777），
+   视觉重量明显重于黄色的 500 档 #eab308 —— 尤其蓝、粉的相对亮度只有黄色的一半左右。
+   现统一降到 400 档（#4ade80 / #60a5fa / #f472b6，深色模式本来就是这一档），
+   底色同步降到 13~14% 并换用同档浅色，白底成品色与浅黄同级：
+     绿 ≈ #e6faed、蓝 ≈ #eaf3fe、粉 ≈ #feedf6（浅黄 ≈ #fff6d5）。
+   只改这三处亮色规则 + 取色圆点；深色模式、教材 mark 荧光、全局搜索 mark、
+   跳转闪烁一律不动。
+   同时补齐一致性：内联高亮色（execCommand 产物）的 [style*=...] 兜底原来只挂在
+   `.note-input` 下，保存回显在 `.line-anno-text` 里会原样露出旧的内联色 ——
+   编辑时是浅底+下划线、存完变深底且没下划线。四色 × 三种写法现在两处都挂。 */
 .note-input .hl-yellow,
 .line-anno-text .hl-yellow,
 .note-input [style*="background-color: rgb(255, 243, 163)"],
+.line-anno-text [style*="background-color: rgb(255, 243, 163)"],
 .note-input [style*="background-color:#fff3a3"],
-.note-input [style*="background:#fff3a3"] {
+.line-anno-text [style*="background-color:#fff3a3"],
+.note-input [style*="background:#fff3a3"],
+.line-anno-text [style*="background:#fff3a3"] {
     background: rgba(250, 204, 21, .18) !important;
     border-bottom: 2px solid #eab308;
     border-radius: 2px;
@@ -2209,10 +2223,13 @@ mark {
 .note-input .hl-green,
 .line-anno-text .hl-green,
 .note-input [style*="background-color: rgb(184, 230, 192)"],
+.line-anno-text [style*="background-color: rgb(184, 230, 192)"],
 .note-input [style*="background-color:#b8e6c0"],
-.note-input [style*="background:#b8e6c0"] {
-    background: rgba(34, 197, 94, .18) !important;
-    border-bottom: 2px solid #16a34a;
+.line-anno-text [style*="background-color:#b8e6c0"],
+.note-input [style*="background:#b8e6c0"],
+.line-anno-text [style*="background:#b8e6c0"] {
+    background: rgba(74, 222, 128, .14) !important;
+    border-bottom: 2px solid #4ade80;
     border-radius: 2px;
     padding: 0 2px;
     -webkit-box-decoration-break: clone;
@@ -2222,10 +2239,13 @@ mark {
 .note-input .hl-blue,
 .line-anno-text .hl-blue,
 .note-input [style*="background-color: rgb(179, 217, 242)"],
+.line-anno-text [style*="background-color: rgb(179, 217, 242)"],
 .note-input [style*="background-color:#b3d9f2"],
-.note-input [style*="background:#b3d9f2"] {
-    background: rgba(59, 130, 246, .16) !important;
-    border-bottom: 2px solid #2563eb;
+.line-anno-text [style*="background-color:#b3d9f2"],
+.note-input [style*="background:#b3d9f2"],
+.line-anno-text [style*="background:#b3d9f2"] {
+    background: rgba(96, 165, 250, .13) !important;
+    border-bottom: 2px solid #60a5fa;
     border-radius: 2px;
     padding: 0 2px;
     -webkit-box-decoration-break: clone;
@@ -2235,10 +2255,13 @@ mark {
 .note-input .hl-pink,
 .line-anno-text .hl-pink,
 .note-input [style*="background-color: rgb(245, 194, 213)"],
+.line-anno-text [style*="background-color: rgb(245, 194, 213)"],
 .note-input [style*="background-color:#f5c2d5"],
-.note-input [style*="background:#f5c2d5"] {
-    background: rgba(236, 72, 153, .16) !important;
-    border-bottom: 2px solid #db2777;
+.line-anno-text [style*="background-color:#f5c2d5"],
+.note-input [style*="background:#f5c2d5"],
+.line-anno-text [style*="background:#f5c2d5"] {
+    background: rgba(244, 114, 182, .13) !important;
+    border-bottom: 2px solid #f472b6;
     border-radius: 2px;
     padding: 0 2px;
     -webkit-box-decoration-break: clone;
@@ -5267,9 +5290,9 @@ a.chapter-badge-link:hover {
 }
 
 .note-hl-yellow { background: rgba(250, 204, 21, .18); border-bottom: 2px solid #eab308; }
-.note-hl-green  { background: rgba(34, 197, 94, .18); border-bottom: 2px solid #16a34a; }
-.note-hl-blue   { background: rgba(59, 130, 246, .16); border-bottom: 2px solid #2563eb; }
-.note-hl-pink   { background: rgba(236, 72, 153, .16); border-bottom: 2px solid #db2777; }
+.note-hl-green  { background: rgba(74, 222, 128, .14); border-bottom: 2px solid #4ade80; }
+.note-hl-blue   { background: rgba(96, 165, 250, .13); border-bottom: 2px solid #60a5fa; }
+.note-hl-pink   { background: rgba(244, 114, 182, .13); border-bottom: 2px solid #f472b6; }
 
 /* 选区浮层工具条 */
 .hl-toolbar {
@@ -5298,9 +5321,9 @@ a.chapter-badge-link:hover {
 .hl-dot-cur { box-shadow: 0 0 0 2px var(--primary, #4f46e5); }
 /* 取色圆点：浅底 + 2px 色环，和实际刷上去的效果一致（下边线那个色） */
 .hl-dot-yellow { background: rgba(250, 204, 21, .26); border: 2px solid #eab308; }
-.hl-dot-green  { background: rgba(34, 197, 94, .24); border: 2px solid #16a34a; }
-.hl-dot-blue   { background: rgba(59, 130, 246, .22); border: 2px solid #2563eb; }
-.hl-dot-pink   { background: rgba(236, 72, 153, .22); border: 2px solid #db2777; }
+.hl-dot-green  { background: rgba(74, 222, 128, .22); border: 2px solid #4ade80; }
+.hl-dot-blue   { background: rgba(96, 165, 250, .20); border: 2px solid #60a5fa; }
+.hl-dot-pink   { background: rgba(244, 114, 182, .20); border: 2px solid #f472b6; }
 
 /* 工具条内的 📝批注 按钮 */
 .hl-anno-btn {
