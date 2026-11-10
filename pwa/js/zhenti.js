@@ -435,9 +435,13 @@
         return `<button class="btn-explanation pool-btn${inPool ? ' active' : ''}" onclick="togglePoolZt('${f.iid}')" title="${tip}">${label}</button>`;
     }
 
+    function kpBodyHtml(f) {
+        return `<div class="kp-panel">${state.kpCache[f.iid] || '<div class="kp-loading">正在加载考点分析…</div>'}</div>`;
+    }
+
     function kpPanelHtml(f, isFav) {
         if (!isFav || !f.mapped || state.examMode || !state.kpOpen.has(f.iid)) return '';
-        return `<div class="kp-panel">${state.kpCache[f.iid] || '<div class="kp-loading">正在加载考点分析…</div>'}</div>`;
+        return kpBodyHtml(f);
     }
 
     /* ---------------- 一键复制（题干 + 选项 + 答案 + 解析） ----------------
@@ -659,13 +663,7 @@
                 ${poolBtnHtml(f)}
             </div>
             ${noteOpen ? notePanel(f.iid) : ''}
-            ${ansOpen ? `<div class="explanation-panel">
-                <div class="explanation-title">答案解析</div>
-                <div class="explanation-meta">
-                    <span class="expl-answer">正确答案：${f.a || '暂无标准答案'}</span>
-                </div>
-                <div class="explanation-body">${f.an || '<div class="explanation-empty">该题暂无详细解析</div>'}</div>
-            </div>` : ''}
+            ${ansOpen ? ansPanelHtml(f) : ''}
             ${kpPanelHtml(f, isFav)}
         </div>`;
     }
@@ -697,38 +695,142 @@
                 ${kpBtnHtml(f, isFav)}
             </div>
             ${noteOpen ? notePanel(f.iid) : ''}
-            ${ansOpen ? `<div class="explanation-panel">
-                <div class="explanation-title">参考答案与解析</div>
-                <div class="explanation-body">${f.an || '<div class="explanation-empty">暂无解析</div>'}</div>
-            </div>` : ''}
+            ${ansOpen ? ansPanelHtml(f) : ''}
             ${kpPanelHtml(f, isFav)}
         </div>`;
+    }
+
+    /* ---------------- 展开面板：原地展开（不整卡重绘） ----------------
+     * 2026-11-10 用户反馈「参考答案与解析 / 笔记 不能原地展开，展开位置还会变动」。
+     * 根因不是滚动，而是旧实现用 refreshCard() 把整张卡片扔掉重建：
+     *   · 卡片里的题图是 <div class="zt-svgholder" data-svg>，重绘后先退回
+     *     「图加载中…」的 56px 占位（CSS .zt-svgholder{min-height:56px}），
+     *     异步注入完 SVG 才恢复真实高度 → 点一次，按钮那一行就上下跳一次；
+     *   · 一张卡里多张图各自注入完毕，跳动还分几次发生；答案面板里的图同理。
+     * 现在：只把面板节点插到 .question-tools 之后 / 从 DOM 里摘掉，其余节点一个不动，
+     * 按钮只改文案与 active 态 → 屏幕上位置完全不变（零滚动、零重排）。
+     * 面板顺序与整卡渲染保持一致：笔记 → 答案解析 → 考点分析。 */
+    const PANEL_CLS = { note: 'zt-note-panel', ans: 'explanation-panel', kp: 'kp-panel' };
+    const PANEL_ORDER = ['note', 'ans', 'kp'];
+
+    // 取卡片直属的面板节点（不用 :scope，兼容起见按 children 过滤）
+    function cardPanelNode(card, kind) {
+        if (!card) return null;
+        const cls = PANEL_CLS[kind];
+        for (const el of card.children) if (el.classList.contains(cls)) return el;
+        return null;
+    }
+
+    // 原地开/关某类面板：返回新插入的节点（收起时返回 null）
+    function setCardPanel(iid, kind, open) {
+        const card = document.getElementById('card-' + iid);
+        const f = state.flat.find(x => x.iid === iid);
+        if (!card || !f) return null;
+        const old = cardPanelNode(card, kind);
+        if (old) old.remove();
+        if (!open) return null;
+        const html = kind === 'ans' ? ansPanelHtml(f)
+            : kind === 'note' ? notePanel(iid)
+                : kpBodyHtml(f);
+        if (!html) return null;
+        const holder = document.createElement('div');
+        holder.innerHTML = html;
+        const node = holder.firstElementChild;
+        if (!node) return null;
+        // 按固定顺序插到第一个「应排在自己后面」的面板之前，没有就放卡片末尾
+        let placed = false;
+        for (const k of PANEL_ORDER.slice(PANEL_ORDER.indexOf(kind) + 1)) {
+            const next = cardPanelNode(card, k);
+            if (next) { card.insertBefore(node, next); placed = true; break; }
+        }
+        if (!placed) card.appendChild(node);
+        return node;
+    }
+
+    // 只改按钮的文案 / active 态：不碰卡片里任何其它节点，避免重排
+    function syncToggleBtns(iid) {
+        const card = document.getElementById('card-' + iid);
+        const f = state.flat.find(x => x.iid === iid);
+        if (!card || !f) return;
+        const q = kind => card.querySelector(`.question-tools [data-toggle="${kind}"]`);
+        const bA = q('ans');
+        if (bA) {
+            const open = state.showAll || (!state.examMode && state.ansOpen.has(iid));
+            bA.classList.toggle('active', open);
+            bA.textContent = (f.group === 'choice' ? '答案与解析 ' : '参考答案与解析 ') + (open ? '▴' : '▾');
+        }
+        const bN = q('note');
+        if (bN) {
+            const open = !state.examMode && state.noteOpen.has(iid);
+            const has = hasNoteOf(iid);
+            bN.classList.toggle('active', open);
+            bN.classList.toggle('has-note', has);
+            bN.textContent = '笔记' + (has ? ' ●' : '') + ' ' + (open ? '▴' : '▾');
+        }
+        const bK = q('kp');
+        if (bK) {
+            const open = state.kpOpen.has(iid);
+            bK.classList.toggle('active', open);
+            bK.textContent = '考点分析 ' + (open ? '▴' : '▾');
+        }
     }
 
     /* ---------------- 卡片：DS 大题（打卡表版本） ----------------
      * 41/42（按 ds_daka「real」映射命中）的题目与答案替换为打卡表内容：
      * 题图/题干（card.content）+ 讲义解法（source 关联 ds_code/extra）+ 解答原图。
      * 容器带 .zt-daka-figs 标记 → 教材原图复用 code-figs 样式 + lightbox 点击放大。 */
-    function dakaBigCard(f) {
+
+    // 打卡表教材原图区块（题目原图 / 解答原图共用）
+    function figWrapHtml(arr, label) {
+        if (!arr || !arr.length) return '';
+        return `<div class="code-figs zt-daka-figs"><div class="code-figs-label">📷 ${esc(label)}</div>${arr.map(n =>
+            `<img src="data/daka_figs/${esc(n)}" loading="lazy" alt="教材原图">`).join('')}</div>`;
+    }
+
+    // 打卡表大题的答案区（讲义解法 + 解答原图）：整卡渲染与就地展开共用同一份
+    function dakaAnswerHtml(f) {
         const { card, lecture } = f.daka;
+        const hasLecture = lecture && lecture.solutions && (lecture.solutions.list || []).length;
+        let html = '';
+        if (hasLecture) {
+            html += `<div class="daka-analysis">${esc((lecture.analysis || '').replace('易错点：', '\n易错点：'))}</div>${solHtml(lecture)}`;
+        }
+        html += figWrapHtml((card.figs || {}).answer, '解答原图');
+        return html || '<div class="explanation-empty">该题暂无解答内容</div>';
+    }
+
+    // 答案解析面板：选择题（带正确答案行）/ 普通大题（408os 原文）/ 打卡表大题（讲义解法）
+    function ansPanelHtml(f) {
+        if (f.daka) {
+            return `<div class="explanation-panel">
+                <div class="explanation-title">参考答案与解析</div>
+                <div class="explanation-body">${dakaAnswerHtml(f)}</div>
+            </div>`;
+        }
+        if (f.group === 'choice') {
+            return `<div class="explanation-panel">
+                <div class="explanation-title">答案解析</div>
+                <div class="explanation-meta">
+                    <span class="expl-answer">正确答案：${f.a || '暂无标准答案'}</span>
+                </div>
+                <div class="explanation-body">${f.an || '<div class="explanation-empty">该题暂无详细解析</div>'}</div>
+            </div>`;
+        }
+        return `<div class="explanation-panel">
+            <div class="explanation-title">参考答案与解析</div>
+            <div class="explanation-body">${f.an || '<div class="explanation-empty">暂无解析</div>'}</div>
+        </div>`;
+    }
+
+    function dakaBigCard(f) {
+        const { card } = f.daka;
         const isFav = state.favSet.has(f.iid);
         const ansOpen = state.showAll || (!state.examMode && state.ansOpen.has(f.iid));
         const showNote = !state.examMode;   // 做题模式不显示笔记（含「●」提示）
         const hasNote = showNote && hasNoteOf(f.iid);
         const noteOpen = showNote && state.noteOpen.has(f.iid);
         const figs = card.figs || {};
-        const figWrap = (arr, label) => (arr && arr.length)
-            ? `<div class="code-figs zt-daka-figs"><div class="code-figs-label">📷 ${esc(label)}</div>${arr.map(n =>
-                `<img src="data/daka_figs/${esc(n)}" loading="lazy" alt="教材原图">`).join('')}</div>`
-            : '';
-        const hasLecture = lecture && lecture.solutions && (lecture.solutions.list || []).length;
-        let answerHtml = '';
-        if (hasLecture) {
-            answerHtml += `<div class="daka-analysis">${esc((lecture.analysis || '').replace('易错点：', '\n易错点：'))}</div>${solHtml(lecture)}`;
-        }
-        answerHtml += figWrap(figs.answer, '解答原图');
-        if (!answerHtml) answerHtml = '<div class="explanation-empty">该题暂无解答内容</div>';
-        const contentHtml = [fmtContent(card.content || ''), figWrap(figs.content, '题目原图')].join('');
+        const contentHtml = [fmtContent(card.content || ''), figWrapHtml(figs.content, '题目原图')].join('');
         return `<div class="question-card zt-daka-card" id="card-${f.iid}" data-iid="${f.iid}" data-i="${f.i}">
             <div class="question-header">
                 <div class="question-meta">
@@ -748,10 +850,7 @@
                 ${kpBtnHtml(f, isFav)}
             </div>
             ${noteOpen ? notePanel(f.iid) : ''}
-            ${ansOpen ? `<div class="explanation-panel">
-                <div class="explanation-title">参考答案与解析</div>
-                <div class="explanation-body">${answerHtml}</div>
-            </div>` : ''}
+            ${ansOpen ? ansPanelHtml(f) : ''}
             ${kpPanelHtml(f, isFav)}
         </div>`;
     }
@@ -843,28 +942,33 @@
         }
     }
 
+    // 把 SVG 文本填进占位：KaTeX 可拉伸括号（\left[ \right] 等）是内联 SVG，必须留在
+    // 原来的 <span style="width:.667em;height:6em"> 里参与行盒排版；题图才包 .zt-svg-wrap
+    // （块级 + max-width:100% + height:auto）。给括号套上会把矩阵撑散、括号跑到正文里（2015-42）。
+    function applySvg(holder, t) {
+        if (!holder || !holder.isConnected) return;      // 卡片已被重绘/移除，别再往里写
+        if (!t) {
+            holder.innerHTML = '<span class="zt-svg-fail">[图加载失败，可刷新重试]</span>';
+            return;
+        }
+        if (holder.classList.contains('zt-svg-inline')) { holder.innerHTML = t; return; }
+        const wrap = document.createElement('div');
+        wrap.className = 'zt-svg-wrap';
+        wrap.innerHTML = t;
+        holder.replaceWith(wrap);
+    }
+
     function injectSvgs(root) {
         const host = root || document;
         const holders = [...host.querySelectorAll('.zt-svgholder[data-svg]')];
         for (const h of holders) {
             if (h.dataset.done) continue;
             h.dataset.done = '1';
-            // KaTeX 可拉伸括号（\left[ \right] 等）是内联 SVG，必须留在原来的
-            // <span style="width:.667em;height:6em"> 里参与行盒排版。
-            // 题图才包 .zt-svg-wrap（块级 + max-width:100% + height:auto）；
-            // 给括号套上会把矩阵撑散、括号跑到正文里（2015-42 答案）。
-            const inline = h.classList.contains('zt-svg-inline');
-            fetchSvg(h.dataset.svg).then(t => {
-                if (!t) {
-                    h.innerHTML = '<span class="zt-svg-fail">[图加载失败，可刷新重试]</span>';
-                    return;
-                }
-                if (inline) { h.innerHTML = t; return; }
-                const wrap = document.createElement('div');
-                wrap.className = 'zt-svg-wrap';
-                wrap.innerHTML = t;
-                h.replaceWith(wrap);
-            });
+            const name = h.dataset.svg;
+            // 已缓存的图**同步**注入：整卡重绘（作答/收藏/标记）时不会先退回
+            // 「图加载中…」的 56px 占位再撑回来，按钮行也就不会上下跳一次。
+            if (state.svgCache[name] != null) { applySvg(h, state.svgCache[name]); continue; }
+            fetchSvg(name).then(t => applySvg(h, t));
         }
     }
 
@@ -945,13 +1049,14 @@
         if (state.kpOpen.has(iid)) {
             state.kpOpen.delete(iid);
             localStorage.setItem('zhentiKpOpen', JSON.stringify([...state.kpOpen]));
-            refreshCard(iid);
+            setCardPanel(iid, 'kp', false);          // 原地收起，不重绘整卡
+            syncToggleBtns(iid);
             return;
         }
         state.kpOpen.add(iid);
         localStorage.setItem('zhentiKpOpen', JSON.stringify([...state.kpOpen]));
-        refreshCard(iid);
-        revealCardPanel(iid, 'kp');
+        setCardPanel(iid, 'kp', true);               // 先占位（正在加载考点分析…）
+        syncToggleBtns(iid);
         if (state.kpCache[iid]) return;
         try {
             const d = await (await api('/api/kp/' + iid)).json();
@@ -959,7 +1064,10 @@
         } catch (e) {
             state.kpCache[iid] = '<div class="kp-loading">考点分析加载失败，点按钮收起后重试</div>';
         }
-        if (state.kpOpen.has(iid)) refreshCard(iid);
+        // 只就地回填面板内容：整卡重绘会让题图退回占位、按钮行跳动
+        if (!state.kpOpen.has(iid)) return;
+        const p = cardPanelNode(document.getElementById('card-' + iid), 'kp');
+        if (p) p.innerHTML = state.kpCache[iid];
     }
 
     async function toggleFav(iid) {
@@ -983,46 +1091,32 @@
         renderFq();
     }
 
-    /* ---------------- 展开面板：统一「向下展开」 ----------------
-     * 旧行为用「就近对齐」的 scrollIntoView：为了把整块面板塞进视口，
-     * 浏览器可能向上滚动，把刚点的按钮顶出屏幕，看起来像面板「往上弹」。
-     * 现在：把按钮带到视口上部（约 30% 高度、避开 60px 顶栏），展开内容从按钮
-     * 下方一路向下铺开；只允许页面向下滚（scrollBy 正值），绝不向上滚。
-     * 收起时完全不滚。答案 / 笔记 / 考点分析三个按钮走同一套逻辑。 */
-    // 展开面板时**不主动移动画面**（2026-11-10 用户反馈：点一下画面就跟着跳）。
-    // 旧实现把按钮固定带到视口 30% 高（84~220px）：按钮在中下部时要向下滚几百像素，
-    // 所以点「答案 / 笔记 / 知识点」画面会明显上移。
-    // 新规则：
-    //   ① 按钮下方还有 REVEAL_HEADROOM 的空间 → 完全不滚，面板就地向下铺开；
-    //   ② 按钮已贴近视口底部 → 只补「刚好够 REVEAL_HEADROOM」的最小滚动量，
-    //      且不把按钮滚出顶部 84px（导航栏高度）；
-    //   ③ 永不向上滚；收起时根本不调用本函数。
-    const REVEAL_HEADROOM = 140;
-    function revealBelow(btn) {
-        if (!btn) return;
-        const vh = window.innerHeight || document.documentElement.clientHeight;
-        const r = btn.getBoundingClientRect();
-        const gap = vh - r.bottom;                      // 按钮下方剩余空间
-        if (gap >= REVEAL_HEADROOM) return;             // 空间够：画面保持不动
-        const need = Math.min(REVEAL_HEADROOM - gap, Math.max(0, r.top - 84));
-        if (need > 2) window.scrollBy({ top: need, behavior: 'smooth' });
-    }
-    function revealCardPanel(iid, kind) {
-        const card = document.getElementById('card-' + iid);
-        if (!card) return;
-        revealBelow(card.querySelector(`[data-toggle="${kind}"]`));
-    }
+    /* ---------------- 展开面板：原地展开，零滚动 ----------------
+     * 历史三代实现都被用户否决过：
+     *   ① scrollIntoView({block:'nearest'}) —— 为了塞下整块面板会向上滚，按钮被顶出屏幕；
+     *   ② 按按钮位置补最小滚动量 —— 按钮贴底时仍会滚 100+px，画面「跟着动」；
+     *   ③ 整卡重绘（refreshCard）—— 题图退回「图加载中…」56px 占位再撑回来，按钮行上下跳。
+     * 现在既不滚也不重绘：只原地插入 / 摘掉面板节点（setCardPanel），屏幕一个像素都不动。
+     * 答案 / 笔记 / 考点分析三个按钮走同一套。 */
 
     function toggleAns(iid) {
         if (state.examMode) {
             alert('做题模式下不显示答案。做完点「对答案」后即可查看。');
             return;
         }
+        // 「展开全部答案」是整卷级的开关：此时单题按钮只做提示，避免出现
+        // 「面板收起了、按钮还是 ▴」的不一致（原地展开后不再靠整卡重绘兜底）。
+        if (state.showAll) {
+            showZtTip('当前是「展开全部答案」，先点工具栏的「收起全部答案」再单独收起');
+            return;
+        }
         const opening = !state.ansOpen.has(iid);
         if (opening) state.ansOpen.add(iid); else state.ansOpen.delete(iid);
         localStorage.setItem('zhentiAnsOpen2', JSON.stringify([...state.ansOpen]));
-        refreshCard(iid);
-        if (opening) revealCardPanel(iid, 'ans');
+        // 原地展开：只插/摘面板节点，不重绘整卡（重绘会让题图先退回占位、按钮跳一下）
+        const panel = setCardPanel(iid, 'ans', opening);
+        syncToggleBtns(iid);
+        if (opening && panel) injectSvgs(panel);     // 解析里的题图/括号 SVG 按需注入
     }
 
     function toggleNotePanel(iid) {
@@ -1034,14 +1128,10 @@
         const opening = !state.noteOpen.has(iid);
         if (opening) state.noteOpen.add(iid); else state.noteOpen.delete(iid);
         localStorage.setItem('zhentiNoteOpen2', JSON.stringify([...state.noteOpen]));
-        flushNote();
-        refreshCard(iid);
-        if (!opening) return;
-        // 展开后统一「向下展开」：按钮留在视口上部，面板从按钮下方铺开，绝不向上滚
-        revealCardPanel(iid, 'note');
-        const card = document.getElementById('card-' + iid);
-        const panel = card && card.querySelector('.zt-note-panel');
-        if (!panel) return;
+        const panel = setCardPanel(iid, 'note', opening);
+        syncToggleBtns(iid);
+        if (!opening || !panel) return;
+        initNoteEditors(panel);                      // 只初始化新插入的这一个编辑器
         const ed = panel.querySelector('.note-input');
         if (ed) setTimeout(() => {
             ed.focus({ preventScroll: true });

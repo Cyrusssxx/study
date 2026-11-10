@@ -1,15 +1,20 @@
-// 折叠面板「向下展开」回归（2026-11-07）
+// 折叠面板「原地展开」回归（2026-11-10 第三次收敛）
 //
-// 用户要求：答案、笔记等按钮的展开逻辑统一向下展开。
-// 根因：旧实现用 panel.scrollIntoView({block:'nearest'})，浏览器为把整块面板塞进
-//       视口可能向上滚动，把刚点的按钮顶出屏幕，视觉上像面板「往上弹」。
-// 现行实现（zhenti.js / dati.html 同源，2026-11-10 第二次收敛）：
-//   · 用户反馈「点一下画面就跟着移动」——旧版把按钮固定带到视口 30% 高，
-//     按钮在中下部时要向下滚几百像素；
-//   · 新规则：按钮下方还有 140px 余量就**完全不滚**；只有贴近视口底部才补
-//     最小滚动量，且不把按钮滚出顶部 84px；永不向上滚；
-//   · 收起时完全不滚；
-//   · 答案 / 笔记 / 考点分析三类按钮走同一套 revealCardPanel。
+// 用户原话：「这俩不能原地展开吗 为什么展开位置还会变动」（参考答案与解析 / 笔记）。
+// 三代实现都被否决：
+//   ① scrollIntoView({block:'nearest'}) —— 为塞下整块面板会向上滚，按钮被顶出屏幕；
+//   ② 按按钮位置补最小滚动量（REVEAL_HEADROOM=140）—— 按钮贴底时仍要滚 100+px，
+//      画面「跟着移动」；
+//   ③ refreshCard() 整卡重绘 —— 卡片里的题图是 .zt-svgholder（CSS min-height:56px，
+//      内容「图加载中…」），重绘后先退回 56px 占位、异步注入 SVG 后才恢复真实高度，
+//      于是每点一次，按钮那一行就上下跳一次；一张卡多张图还会分几次跳。
+//
+// 现行契约（zhenti.js / dati.html 同源）：
+//   · 不滚动：没有任何 window.scrollBy；展开路径不调 scrollIntoView；
+//   · 不重绘：只把面板节点插到 .question-tools 之后 / 从 DOM 摘掉（setCardPanel），
+//     按钮只改文案与 active 态（syncToggleBtns）；卡片节点身份保持不变；
+//   · 面板顺序固定：笔记 → 答案解析 → 考点分析；
+//   · 已缓存的 SVG 同步注入（applySvg），任何必要的重绘也不再闪。
 //
 // 用法：NODE_PATH=<workspace>/node_modules node _test_expand_down.js
 const fs = require('fs');
@@ -27,28 +32,36 @@ const sleep = ms => new Promise(r => setTimeout(r, ms));
 const ZT = fs.readFileSync(path.join(ROOT, 'pwa/js/zhenti.js'), 'utf8');
 const DATI = fs.readFileSync(path.join(ROOT, 'pwa/dati.html'), 'utf8');
 
-console.log('--- 一、源码：两个页面同源的向下展开逻辑 ---');
-for (const [name, src] of [['zhenti.js', ZT], ['dati.html', DATI]]) {
-  check(`${name}：有 revealBelow(btn)`, /function revealBelow\(btn\)/.test(src), true);
-  check(`${name}：不再用 scrollIntoView({block:'nearest'}) 展开面板`,
-    /block:\s*'nearest'/.test(src), false);
-  check(`${name}：有 140px 余量阈值`, /const REVEAL_HEADROOM = 140;/.test(src), true);
-  check(`${name}：空间够就完全不滚`, /if \(gap >= REVEAL_HEADROOM\) return;/.test(src), true);
-  check(`${name}：贴底只补最小滚动量`,
-    /if \(need > 2\) window\.scrollBy\(\{ top: need, behavior: 'smooth' \}\)/.test(src), true);
-  check(`${name}：不再把按钮固定带到 30% 视口高`,
-    /Math\.max\(84, Math\.min\(vh \* 0\.3, 220\)\)/.test(src), false);
+function fnBody(src, name) {
+  const start = src.search(new RegExp(`function ${name}\\(`));
+  if (start < 0) return '';
+  const re = /\n\s{4}(async )?function /g;
+  re.lastIndex = start + 10;
+  const m = re.exec(src);
+  return src.slice(start, m ? m.index : undefined);
 }
-check('zhenti：三类按钮都有 data-toggle',
-  ['ans', 'note', 'kp'].every(k => ZT.includes(`data-toggle="${k}"`)), true);
-check('zhenti：答案 / 笔记 / 考点分析三处都调用 revealCardPanel',
-  (ZT.match(/revealCardPanel\(iid, '(ans|note|kp)'/g) || []).length, 3);
-check('zhenti：仅展开时滚（收起不滚）',
-  /if \(opening\) revealCardPanel\(iid, 'ans'/.test(ZT) && /if \(!opening\) return;/.test(ZT), true);
-check('dati：答案 / 笔记两处都调用 revealBelow(btn)',
-  (DATI.match(/revealBelow\(btn\);/g) || []).length >= 2, true);
-check('dati：笔记聚焦不触发滚动',
-  /el\.focus\(\{ preventScroll: true \}\)/.test(DATI), true);
+
+console.log('--- 一、源码：原地展开（零滚动、零重绘） ---');
+for (const [name, src] of [['zhenti.js', ZT], ['dati.html', DATI]]) {
+  check(`${name}：没有任何 window.scrollBy（展开不再移动画面）`, /window\.scrollBy/.test(src), false);
+  check(`${name}：不再有 revealBelow / revealCardPanel 旧滚动函数`,
+    /function revealBelow|function revealCardPanel/.test(src), false);
+  check(`${name}：面板展开不调 scrollIntoView`,
+    /panel\.scrollIntoView|box\.scrollIntoView/.test(src), false);
+}
+console.log('--- 二、zhenti：原地插拔面板，不重绘整卡 ---');
+check('zhenti：有 cardPanelNode / setCardPanel / syncToggleBtns',
+  ['cardPanelNode', 'setCardPanel', 'syncToggleBtns'].every(f => new RegExp(`function ${f}\\(`).test(ZT)), true);
+check('zhenti：面板顺序常量 = 笔记 → 答案 → 考点分析',
+  /const PANEL_ORDER = \['note', 'ans', 'kp'\];/.test(ZT), true);
+for (const fn of ['toggleAns', 'toggleNotePanel', 'toggleKpZt']) {
+  check(`zhenti：${fn} 不再调用 refreshCard`, /refreshCard/.test(fnBody(ZT, fn)), false);
+}
+check('zhenti：笔记展开后聚焦编辑器且不触发滚动',
+  /ed\.focus\(\{ preventScroll: true \}\)/.test(fnBody(ZT, 'toggleNotePanel')), true);
+console.log('--- 三、dati：面板早已在 DOM，只切显隐 ---');
+check('dati：查看答案只切 open 类', /box\.classList\.add\('open'\)/.test(fnBody(DATI, 'toggleAnswer')), true);
+check('dati：笔记只切 display', /p\.style\.display = 'block'/.test(fnBody(DATI, 'toggleNotePanel')), true);
 
 let JSDOM = null, VC = null, IDBFactory = null, IDBKeyRange = null;
 try { ({ JSDOM, VirtualConsole: VC } = require('jsdom')); } catch (e) { }
@@ -60,7 +73,7 @@ if (!JSDOM || !IDBFactory) {
 }
 
 (async () => {
-  console.log('\n--- 二、运行时：点击展开只向下滚，收起不滚 ---');
+  console.log('\n--- 四、运行时：点一下，屏幕上什么都不动 ---');
   const cache = {};
   const readFile = f => {
     if (!cache[f]) cache[f] = fs.readFileSync(path.join(ROOT, 'pwa', f), 'utf8');
@@ -72,7 +85,6 @@ if (!JSDOM || !IDBFactory) {
 
   const vc = new VC(); vc.on('jsdomError', () => { });
   const scrolls = [];
-  let btnTop = 600;                    // 模拟按钮在视口下半部
   const dom = new JSDOM(html, {
     runScripts: 'dangerously', pretendToBeVisual: true,
     url: 'http://localhost/zhenti.html', virtualConsole: vc,
@@ -80,18 +92,11 @@ if (!JSDOM || !IDBFactory) {
       w.indexedDB = new IDBFactory(); w.IDBKeyRange = IDBKeyRange;
       w.alert = () => { }; w.confirm = () => true;
       w.CSS = { escape: s => String(s).replace(/[^\w-]/g, c => '\\' + c) };
-      w.Element.prototype.scrollIntoView = function () { };
+      w.Element.prototype.scrollIntoView = function () { scrolls.push('intoView'); };
       w.requestAnimationFrame = cb => setTimeout(cb, 0);
       Object.defineProperty(w, 'innerHeight', { value: 768, configurable: true });
-      w.scrollBy = opt => scrolls.push(opt);          // 捕获所有滚动
-      w.scrollTo = () => { };
-      const orig = w.Element.prototype.getBoundingClientRect;
-      w.Element.prototype.getBoundingClientRect = function () {
-        if (this.hasAttribute && this.hasAttribute('data-toggle')) {
-          return { top: btnTop, bottom: btnTop + 30, left: 0, right: 200, width: 200, height: 30, x: 0, y: btnTop, toJSON() { return {}; } };
-        }
-        return orig.call(this);
-      };
+      w.scrollBy = opt => scrolls.push(['scrollBy', opt]);
+      w.scrollTo = opt => { if (opt && opt.top !== 0) scrolls.push(['scrollTo', opt]); };
       w.fetch = async u => {
         const m = String(u).match(/data\/[\w./-]+\.(json|svg)/);
         if (m) {
@@ -109,61 +114,75 @@ if (!JSDOM || !IDBFactory) {
   });
   const w = dom.window, doc = w.document;
   for (let i = 0; i < 60; i++) { await sleep(100); if (doc.querySelectorAll('#yearList .ol-nav-item').length) break; }
-  await sleep(500);
+  await sleep(600);
 
-  // 默认已取消做题模式，答案按钮可直接展开（无需再切换）
-  await sleep(500);
-  const clickAns = () => {
-    const b = doc.querySelector('.question-card [data-toggle="ans"]');
+  const card = doc.querySelector('.question-card');
+  check('能取到第一张题卡', !!card, true);
+  const iid = card.getAttribute('data-iid');
+  const cardNode = doc.getElementById('card-' + iid);
+  const click = sel => {
+    const b = cardNode.querySelector(sel);
     if (b) b.dispatchEvent(new w.MouseEvent('click', { bubbles: true }));
     return b;
   };
-  check('能取到答案按钮', !!doc.querySelector('.question-card [data-toggle="ans"]'), true);
 
-  // vh 固定 768（beforeParse 里 defineProperty），按钮高 30
-  // ① 按钮在视口中部（下方余量充足）→ 展开时完全不滚
-  btnTop = 300;
+  // ① 展开答案：零滚动 + 卡片节点身份不变（= 没有整卡重绘）
   scrolls.length = 0;
-  clickAns();
-  await sleep(120);
-  check('视口中部展开答案：完全不滚', scrolls.length, 0);
-  check('答案面板确实展开了', !!doc.querySelector('.question-card .explanation-panel'), true);
+  click('[data-toggle="ans"]');
+  await sleep(200);
+  check('展开答案：零滚动（无 scrollBy / scrollIntoView）', scrolls.length, 0);
+  check('展开答案：卡片节点身份不变（未整卡重绘）',
+    doc.getElementById('card-' + iid) === cardNode, true);
+  const ansNode = [...cardNode.children].find(n => n.classList.contains('explanation-panel'));
+  check('答案面板已就地插入', !!ansNode, true);
+  check('答案面板紧跟 .question-tools 之后',
+    ansNode && ansNode.previousElementSibling.classList.contains('question-tools'), true);
+check('答案按钮变 active + ▴',
+  !!cardNode.querySelector('[data-toggle="ans"].active')
+  && /▴/.test(cardNode.querySelector('[data-toggle="ans"]').textContent), true);
 
-  // ② 收起：完全不滚
+  // ② 展开笔记：面板插在答案之前，答案面板节点不动
   scrolls.length = 0;
-  clickAns();
-  await sleep(120);
-  check('收起答案：完全不滚', scrolls.length, 0);
+  click('[data-toggle="note"]');
+  await sleep(250);
+  check('展开笔记：零滚动', scrolls.length, 0);
+  check('展开笔记：卡片节点身份不变', doc.getElementById('card-' + iid) === cardNode, true);
+  const noteNode = [...cardNode.children].find(n => n.classList.contains('zt-note-panel'));
+  check('笔记面板已就地插入', !!noteNode, true);
+  check('笔记面板排在答案面板之前（顺序固定）',
+    noteNode && noteNode.nextElementSibling === ansNode, true);
+  check('笔记面板里的编辑器已装载（可编辑）',
+    !!(noteNode && noteNode.querySelector('.note-input[contenteditable="true"]')), true);
+  check('笔记按钮出现 ● 之外仍是 active', cardNode.querySelector('[data-toggle="note"]').classList.contains('active'), true);
 
-  // ③ 贴近视口底部（bottom=730，gap=38）→ 只补 140-38=102
-  btnTop = 700;
+  // ③ 收起答案：只摘答案节点，笔记节点原封不动
   scrolls.length = 0;
-  clickAns();
-  await sleep(120);
-  check('贴底展开：触发一次滚动', scrolls.length, 1);
-  check('补的量 = 140 - gap（102）', scrolls.length ? Math.round(scrolls[0].top) : -1, 102);
-  check('只向下滚', scrolls.every(s => s.top > 0), true);
-  check('平滑滚动', scrolls.every(s => s.behavior === 'smooth'), true);
+  click('[data-toggle="ans"]');
+  await sleep(150);
+  check('收起答案：零滚动', scrolls.length, 0);
+  check('收起答案：答案面板已移除',
+    !!cardNode.querySelector('.explanation-panel'), false);
+  check('收起答案：笔记面板仍在且是同一节点',
+    [...cardNode.children].find(n => n.classList.contains('zt-note-panel')) === noteNode, true);
+  check('收起答案：按钮恢复 ▾ 且不带 active',
+    cardNode.querySelector('[data-toggle="ans"]').classList.contains('active'), false);
 
-  // ④ 已越过视口底部（bottom=790，gap=-22）→ 162，且不超过「按钮到距顶 84」
-  btnTop = 760;
+  // ④ 反复开合 5 次：卡片节点始终是同一个（旧实现每次都会换节点）
   scrolls.length = 0;
-  clickAns();                       // 先收起
-  await sleep(60);
-  scrolls.length = 0;
-  clickAns();                       // 再展开
-  await sleep(120);
-  check('越出视口底：仍只向下滚', scrolls.every(s => s.top > 0), true);
-  check('滚动量不超过按钮到距顶 84 的余量', scrolls.length ? scrolls[0].top <= 162 : false, true);
+  let sameNode = true;
+  for (let i = 0; i < 5; i++) {
+    click('[data-toggle="note"]'); await sleep(60);
+    click('[data-toggle="answer-not-exist"]');       // 无效选择器不应报错
+    click('[data-toggle="ans"]'); await sleep(60);
+    click('[data-toggle="ans"]'); await sleep(60);
+    if (doc.getElementById('card-' + iid) !== cardNode) sameNode = false;
+  }
+  check('反复开合：卡片节点始终不变（零重绘）', sameNode, true);
+  check('反复开合：全程零滚动', scrolls.length, 0);
 
-  // ⑤ 笔记按钮同逻辑：视口中部不滚
-  btnTop = 300;
-  scrolls.length = 0;
-  const nb = doc.querySelector('.question-card [data-toggle="note"]');
-  check('能取到笔记按钮', !!nb, true);
-  if (nb) nb.dispatchEvent(new w.MouseEvent('click', { bubbles: true }));
-  await sleep(160);
-  check('视口中部展开笔记：完全不滚', scrolls.length, 0);
+  // ⑤ 其它卡片不受影响
+  const others = [...doc.querySelectorAll('.question-card')].filter(n => n.id !== 'card-' + iid);
+  check('其余题卡仍在（未被打乱）', others.length > 0, true);
 
   w.close();
   console.log(`\n结果: ${pass} / ${pass + fail}` + (fail ? `，${fail} 项失败` : '，全部通过'));

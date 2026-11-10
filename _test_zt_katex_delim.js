@@ -85,8 +85,10 @@ check('产物里 2026 大题分值 7/8/9',
   y26.items.filter(x => [45, 46, 47].includes(x.i)).map(x => x.s), [7, 8, 9]);
 
 console.log('\n--- 四、前端注入与样式 ---');
-check('injectSvgs 识别 zt-svg-inline', /h\.classList\.contains\('zt-svg-inline'\)/.test(ZTJS), true);
-check('内联分支直接 h.innerHTML = t（不包块级 wrap）', /if \(inline\) \{ h\.innerHTML = t; return; \}/.test(ZTJS), true);
+// 2026-11-10：SVG 注入拆出 applySvg —— 缓存命中时同步注入（避免整卡重绘时
+// 题图退回 56px 占位、按钮行跳动），内联/块级判定随之搬进 applySvg。断言跟着改。
+check('applySvg 识别 zt-svg-inline', /holder\.classList\.contains\('zt-svg-inline'\)/.test(ZTJS), true);
+check('内联分支直接 holder.innerHTML = t（不包块级 wrap）', /if \(holder\.classList\.contains\('zt-svg-inline'\)\) \{ holder\.innerHTML = t; return; \}/.test(ZTJS), true);
 check('题图分支仍包 .zt-svg-wrap', /wrap\.className = 'zt-svg-wrap'/.test(ZTJS), true);
 check('CSS 把内联 holder 覆盖成 inline-block',
   /\.zt-svgholder\.zt-svg-inline \{ display: inline-block; min-height: 0;/.test(CSS), true);

@@ -65,23 +65,36 @@ for (const fn of ['choiceCard', 'bigCard', 'dakaBigCard']) {
   const start = JS.indexOf('function ' + fn);
   const nextFn = JS.indexOf('function ', start + 10);
   const seg = JS.slice(start, nextFn > 0 ? nextFn : undefined);
-  check(fn + '：笔记在答案之前', seg.indexOf('notePanel(f.iid)') < seg.indexOf('explanation-panel'), true);
+  check(fn + '：笔记在答案之前', seg.indexOf('notePanel(f.iid)') < seg.indexOf('ansPanelHtml(f)'), true);
 }
 check('笔记面板含保存态节点', JS.includes('data-zt-state='), true);
 check('输入时置「未保存」', /markNoteState\(qid, 'dirty'\)/.test(JS), true);
 check('保存成功置「已保存」（自动保存也生效）', /markNoteState\(qid, 'saved'\)/.test(JS), true);
-// 2026-11-07：展开统一为「向下展开」——按钮留在视口上部、内容从按钮下方铺开，
-// 只允许向下滚；旧 scrollIntoView({block:'nearest'}) 会向上滚把按钮顶出视口。
-// 2026-11-10：再收敛为「空间够就完全不滚」（用户反馈：点一下画面别跟着动），
-// 只有按钮贴近视口底部才补最小滚动量。
-check('展开走统一的 revealBelow（不再 scrollIntoView nearest）',
-  /function revealBelow\(btn\)/.test(JS) && !/panel\.scrollIntoView|box\.scrollIntoView/.test(JS), true);
+// 2026-11-10 第三次收敛（用户：这俩不能原地展开吗，为什么展开位置还会变动）：
+// 答案 / 笔记 / 考点分析一律**原地展开** —— 既不滚动，也不整卡重绘。
+//   旧① scrollIntoView({block:'nearest'}) 会向上滚把按钮顶出屏幕；
+//   旧② 按按钮位置补最小滚动量，贴底时仍要滚 100+px；
+//   旧③ refreshCard() 整卡重建，题图退回 56px「图加载中…」占位再撑回真实高度 → 按钮上下跳。
+check('展开不再滚动（无 scrollBy / 展开路径无 scrollIntoView）',
+  !/window\.scrollBy/.test(JS) && !/panel\.scrollIntoView|box\.scrollIntoView/.test(JS), true);
 check('三类按钮都带 data-toggle 标记',
   ['ans', 'note', 'kp'].every(k => JS.includes(`data-toggle="${k}"`)), true);
-check('答案 / 笔记 / 考点分析展开都调用 revealCardPanel',
-  (JS.match(/revealCardPanel\(iid, '(ans|note|kp)'/g) || []).length, 3);
-check('只向下滚（空间不足才 scrollBy 正值 + 收起不滚）',
-  /if \(need > 2\) window\.scrollBy/.test(JS) && /if \(opening\) revealCardPanel/.test(JS), true);
+check('答案 / 笔记 / 考点分析都走原地 setCardPanel',
+  (JS.match(/setCardPanel\(iid, '(ans|note|kp)', (true|false|opening)\)/g) || []).length, 4);   // 考点分析开/关各一处
+check('展开后只同步按钮、不重绘整卡（syncToggleBtns 三处）',
+  (JS.match(/syncToggleBtns\(iid\);/g) || []).length, 4);   // 考点分析有开/关两条路
+// 三个展开函数内部不得再出现 refreshCard：整卡重绘 = 题图退回占位 = 按钮跳一下
+function fnBody(name) {
+  const start = JS.indexOf('function ' + name);
+  if (start < 0) return '';
+  const re = /\n    (async )?function /g;      // 下一个同级函数（含 async 前缀）
+  re.lastIndex = start + 10;
+  const m = re.exec(JS);
+  return JS.slice(start, m ? m.index : undefined);
+}
+for (const fn of ['toggleAns', 'toggleNotePanel', 'toggleKpZt']) {
+  check(fn + '：不调用 refreshCard（原地展开）', /refreshCard/.test(fnBody(fn)), false);
+}
 check('展开笔记后聚焦编辑器末尾', /focus\(\{ preventScroll: true \}\)/.test(JS), true);
 check('保存写规范键（跨页共享）', /api\('\/api\/note\/' \+ encodeURIComponent\(noteKeyOf\(qid\)\)/.test(JS), true);
 check('加载别名并回填', /applyNoteAlias\(byKey\)/.test(JS) && /loadNoteAlias\(\)/.test(JS), true);
