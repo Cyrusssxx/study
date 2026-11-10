@@ -59,12 +59,15 @@
     }
 
     function applyNoteAlias(byKey) {
+        // 空记录（content 空且无图片）不算「有笔记」：如果拿它去覆盖另一边，
+        // 会把本来有内容的显示成空，看起来就像笔记丢了（数据其实还在另一条 key 下）。
+        const has = rec => !!(rec && ((rec.content && rec.content.trim()) || (rec.images && rec.images.length)));
         const todo = [];
         for (const local in NOTE_ALIAS) {
             const spec = NOTE_ALIAS[local];
             if (!spec || spec === local) continue;
-            if (byKey[spec]) { if (!byKey[local]) byKey[local] = byKey[spec]; continue; }
-            if (byKey[local]) todo.push([spec, byKey[local]]);
+            if (has(byKey[spec])) { if (!has(byKey[local])) byKey[local] = byKey[spec]; continue; }
+            if (has(byKey[local])) todo.push([spec, byKey[local]]);
         }
         todo.forEach(([spec, rec]) => {
             api('/api/note/' + encodeURIComponent(spec), {
@@ -245,6 +248,7 @@
 
     /* ---------------- 渲染：套卷 ---------------- */
     async function renderPaper() {
+        flushNote();                      // 整卷重绘会清空 DOM，先把未落盘的编辑落库
         const year = state.year;
         if (!state.papers[year]) {
             $('ztMain').innerHTML = '<div class="loading">加载 ' + year + ' 年套卷…</div>';
@@ -819,6 +823,9 @@
             loadNoteIntoEditor(el, state.noteMap[el.dataset.qid] || '');
             renderZtNoteImages(el.dataset.qid);
             bindNoteToolbar(el);
+            // 回填完成后才允许 flushNote 参与比对：否则「还没装载内容」的空 DOM
+            // 会被自动保存当成用户清空，把库里的笔记删掉。
+            el.dataset.noteLoaded = '1';
         });
     }
 
@@ -1054,15 +1061,29 @@
         const qid = el.dataset.qid;
         markNoteState(qid, 'dirty');
         clearTimeout(state.noteTimer[qid]);
-        state.noteTimer[qid] = setTimeout(() => saveNote(qid, serializeNote(el)), 700);
+        state.noteTimer[qid] = setTimeout(() => { saveNote(qid, serializeNote(el)).catch(() => { }); }, 700);
     }
 
     async function saveNote(qid, content) {
-        state.noteMap[qid] = content;
-        await api('/api/note/' + encodeURIComponent(noteKeyOf(qid)), {
-            method: 'POST',
-            body: JSON.stringify({ content: content, images: state.noteImages[qid] || [] }),
-        });
+        const before = state.noteMap[qid] || '';
+        state.noteMap[qid] = content;               // 先说乐观更新，保证界面即时
+        let resp = null;
+        try {
+            resp = await api('/api/note/' + encodeURIComponent(noteKeyOf(qid)), {
+                method: 'POST',
+                body: JSON.stringify({ content: content, images: state.noteImages[qid] || [] }),
+            });
+        } catch (e) { resp = null; }
+        // 必须校验保存结果：/api/note 曾因 key 首段不是科目直接回 400，
+        // 而这里不看响应 → 界面显示「已保存」，刷新后笔记却没了。
+        if (!resp || !resp.ok) {
+            state.noteMap[qid] = before;            // 回滚，别让 UI 显示成功
+            markNoteState(qid, 'dirty');
+            let detail = '';
+            try { const d = await resp.json(); if (d && d.error) detail = '：' + d.error; } catch (e) { }
+            setZtNoteHint(qid, '保存失败' + detail + '（内容仍在编辑器里，可重试）', 5000);
+            throw new Error('保存失败' + detail);
+        }
         markNoteState(qid, 'saved');
         // 保存后同步该题的「笔记 ●」状态（删除笔记时圆点消失）
         const card = document.getElementById('card-' + qid);
@@ -1252,8 +1273,17 @@
             const qid = el.dataset.qid;
             if (!qid) return;
             clearTimeout(state.noteTimer[qid]);
+            // 只处理「已回填过内容」的编辑器：卡片重绘后新编辑器还没装载时 DOM 是空的，
+            // 拿它去和 state.noteMap 比会被判成「用户清空了笔记」，而 /api/note 收到
+            // 空 content 会直接 dbDelete —— 已保存的笔记就真被删了。
+            if (!el.dataset.noteLoaded) return;
             const cur = serializeNote(el);
-            if (cur !== (state.noteMap[qid] || '')) saveNote(qid, cur);
+            const old = state.noteMap[qid] || '';
+            if (cur === old) return;
+            // 自动保存只负责「写入/更新」，不负责「清空」：cur 空而库里有内容时不写。
+            // 真要删除笔记，走「保存笔记」按钮（saveZtNoteNow 是显式操作）。
+            if (!cur && old) return;
+            saveNote(qid, cur).catch(() => { });   // 失败已在 saveNote 内提示并回滚
         });
     }
 
@@ -1547,7 +1577,7 @@
         onNoteInput, toggleExamMode, toggleShowAll, toggleFavOnly, resetYear,
         gotoQ, toggleFq, toggleZtNav, expandZtNav, toggleAnsPop,
         pasteZtNoteImage, saveZtNoteNow, renderZtNoteImages, delZtNoteImage,
-        viewZtNoteImage, onZtNoteFilePick, copyZtCard,
+        viewZtNoteImage, onZtNoteFilePick, copyZtCard, flushNote,
         openPaperNote, closePaperNote, savePaperNote,
     });
 

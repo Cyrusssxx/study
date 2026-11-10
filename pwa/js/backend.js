@@ -762,7 +762,7 @@ async function api(url, opts = {}) {
             const total = qs.length;
             const pageQs = qs.slice((page - 1) * perPage, (page - 1) * perPage + perPage);
             const notes = {};
-            for (const n of await dbAll('notes')) if (mixed || n.subject === subject) notes[n.question_id] = n;
+            for (const n of await dbAll('notes')) if (mixed || !n.subject || n.subject === subject) notes[n.question_id] = n;
             const result = pageQs.map(q => ({
                 ...q,
                 is_favorited: favSet.has(q.id),
@@ -1278,8 +1278,13 @@ async function api(url, opts = {}) {
         // ---------- 笔记 ----------
         if (seg[1] === 'note') {
             const qid = seg[2];
-            const subject = qid.split('_')[0];
-            if (!SUBJECTS[subject]) return jsonResp({ error: '无效的题目ID' }, 400);
+            if (!qid) return jsonResp({ error: '缺少题目ID' }, 400);
+            // 笔记 key 有两类：① 题库 id（os_0001，首段是科目）；② 真题规范键
+            // （zt2015_42，data/note_alias.json 把各页本地 id 归一到它）。
+            // ②的首段不是科目，之前这里硬校验 SUBJECTS 会直接回 400 ——
+            // 真题大题的笔记保存因此一直静默失败（用户报「保存的笔记丢失」）。
+            const maybeSub = String(qid).split('_')[0];
+            const subject = SUBJECTS[maybeSub] ? maybeSub : '';
             if ((opts.method || 'GET') === 'GET') {
                 const n = await dbGet('notes', qid);
                 return jsonResp({ question_id: qid, note: n ? n.content : '', images: (n && n.images) || [] });

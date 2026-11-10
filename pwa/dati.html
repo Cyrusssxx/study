@@ -332,7 +332,12 @@
         const el = openPanel.querySelector('.dati-note-input');
         if (!el) return;
         const cur = noteMap[qid] || { content: '', images: [] };
-        if (serializeNote(el) !== (cur.content || '')) saveNote(qid);   // 内容有变动才写库
+        const html = serializeNote(el);
+        if (html === (cur.content || '')) return;          // 内容有变动才写库
+        // 自动保存不负责清空：DOM 空而库里有内容时不写。
+        // /api/note 收到空 content 且无图片会直接 dbDelete，误写一次笔记就没了。
+        if (!html && (cur.content || '').trim()) return;
+        saveNote(qid);
     }
 
     function saveDoneSet() {
