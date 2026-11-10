@@ -2203,7 +2203,11 @@ mark {
    跳转闪烁一律不动。
    同时补齐一致性：内联高亮色（execCommand 产物）的 [style*=...] 兜底原来只挂在
    `.note-input` 下，保存回显在 `.line-anno-text` 里会原样露出旧的内联色 ——
-   编辑时是浅底+下划线、存完变深底且没下划线。四色 × 三种写法现在两处都挂。 */
+   编辑时是浅底+下划线、存完变深底且没下划线。四色 × 三种写法现在两处都挂。
+   2026-11-10 二轮：用户反馈「下划线的存在感太强，可以多变淡一点」+「绿蓝粉再变淡一点」。
+   下划线四色（含黄）统一降到 Tailwind 300 档 #fcd34d / #86efac / #93c5fd / #f9a8d4，
+   比 400 档再淡一档、比黄原来的 500 档淡两档；绿/蓝/粉底色降到 10%/9%/9%，
+   黄底色 .18 维持（用户上轮确认黄色还行）。取色圆点边框同步（圆点=实际下边线色）。 */
 .note-input .hl-yellow,
 .line-anno-text .hl-yellow,
 .note-input [style*="background-color: rgb(255, 243, 163)"],
@@ -2213,7 +2217,7 @@ mark {
 .note-input [style*="background:#fff3a3"],
 .line-anno-text [style*="background:#fff3a3"] {
     background: rgba(250, 204, 21, .18) !important;
-    border-bottom: 2px solid #eab308;
+    border-bottom: 2px solid #fcd34d;
     border-radius: 2px;
     padding: 0 2px;
     -webkit-box-decoration-break: clone;
@@ -2228,8 +2232,8 @@ mark {
 .line-anno-text [style*="background-color:#b8e6c0"],
 .note-input [style*="background:#b8e6c0"],
 .line-anno-text [style*="background:#b8e6c0"] {
-    background: rgba(74, 222, 128, .14) !important;
-    border-bottom: 2px solid #4ade80;
+    background: rgba(74, 222, 128, .10) !important;
+    border-bottom: 2px solid #86efac;
     border-radius: 2px;
     padding: 0 2px;
     -webkit-box-decoration-break: clone;
@@ -2244,8 +2248,8 @@ mark {
 .line-anno-text [style*="background-color:#b3d9f2"],
 .note-input [style*="background:#b3d9f2"],
 .line-anno-text [style*="background:#b3d9f2"] {
-    background: rgba(96, 165, 250, .13) !important;
-    border-bottom: 2px solid #60a5fa;
+    background: rgba(96, 165, 250, .09) !important;
+    border-bottom: 2px solid #93c5fd;
     border-radius: 2px;
     padding: 0 2px;
     -webkit-box-decoration-break: clone;
@@ -2260,8 +2264,8 @@ mark {
 .line-anno-text [style*="background-color:#f5c2d5"],
 .note-input [style*="background:#f5c2d5"],
 .line-anno-text [style*="background:#f5c2d5"] {
-    background: rgba(244, 114, 182, .13) !important;
-    border-bottom: 2px solid #f472b6;
+    background: rgba(244, 114, 182, .09) !important;
+    border-bottom: 2px solid #f9a8d4;
     border-radius: 2px;
     padding: 0 2px;
     -webkit-box-decoration-break: clone;
@@ -5289,10 +5293,10 @@ a.chapter-badge-link:hover {
     box-decoration-break: clone;
 }
 
-.note-hl-yellow { background: rgba(250, 204, 21, .18); border-bottom: 2px solid #eab308; }
-.note-hl-green  { background: rgba(74, 222, 128, .14); border-bottom: 2px solid #4ade80; }
-.note-hl-blue   { background: rgba(96, 165, 250, .13); border-bottom: 2px solid #60a5fa; }
-.note-hl-pink   { background: rgba(244, 114, 182, .13); border-bottom: 2px solid #f472b6; }
+.note-hl-yellow { background: rgba(250, 204, 21, .18); border-bottom: 2px solid #fcd34d; }
+.note-hl-green  { background: rgba(74, 222, 128, .10); border-bottom: 2px solid #86efac; }
+.note-hl-blue   { background: rgba(96, 165, 250, .09); border-bottom: 2px solid #93c5fd; }
+.note-hl-pink   { background: rgba(244, 114, 182, .09); border-bottom: 2px solid #f9a8d4; }
 
 /* 选区浮层工具条 */
 .hl-toolbar {
@@ -5320,10 +5324,10 @@ a.chapter-badge-link:hover {
 /* 点击已有高亮弹出的换色工具条：当前颜色圆点加描边标记 */
 .hl-dot-cur { box-shadow: 0 0 0 2px var(--primary, #4f46e5); }
 /* 取色圆点：浅底 + 2px 色环，和实际刷上去的效果一致（下边线那个色） */
-.hl-dot-yellow { background: rgba(250, 204, 21, .26); border: 2px solid #eab308; }
-.hl-dot-green  { background: rgba(74, 222, 128, .22); border: 2px solid #4ade80; }
-.hl-dot-blue   { background: rgba(96, 165, 250, .20); border: 2px solid #60a5fa; }
-.hl-dot-pink   { background: rgba(244, 114, 182, .20); border: 2px solid #f472b6; }
+.hl-dot-yellow { background: rgba(250, 204, 21, .26); border: 2px solid #fcd34d; }
+.hl-dot-green  { background: rgba(74, 222, 128, .22); border: 2px solid #86efac; }
+.hl-dot-blue   { background: rgba(96, 165, 250, .20); border: 2px solid #93c5fd; }
+.hl-dot-pink   { background: rgba(244, 114, 182, .20); border: 2px solid #f9a8d4; }
 
 /* 工具条内的 📝批注 按钮 */
 .hl-anno-btn {

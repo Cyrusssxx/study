@@ -5,6 +5,9 @@
 //   2026-11-10：绿/蓝/粉同步调浅（用户反馈「高亮太深、下划线也太深」，黄色保持）——
 //     下边线由 600 档 #16a34a/#2563eb/#db2777 降到 400 档 #4ade80/#60a5fa/#f472b6，
 //     底色由 16~18% 降到 13~14% 并换同档浅色；另补 .line-anno-text 的内联色兜底
+//   2026-11-10 二轮：「下划线存在感太强，可以多变淡」+「绿蓝粉再变淡」——
+//     下划线四色（含黄）统一降到 300 档 #fcd34d/#86efac/#93c5fd/#f9a8d4；
+//     绿/蓝/粉底色降到 10%/9%/9%，黄底 .18 维持
 const fs = require('fs');
 const path = require('path');
 const ROOT = __dirname;
@@ -40,8 +43,8 @@ check('callout 内 b 保留橙色', /\.notes-body \.key-callout b,[\s\S]{0,120}c
 check('深色模式 mark 降亮度（橙色半透明，非亮黄）', /\.dark \.notes-body mark\s*\{[^}]*rgba\(251,\s*146,\s*60,\s*\.38/.test(css));
 check('深色模式 b 也不改文字色', /\.dark \.notes-body b,[\s\S]{0,200}color:\s*inherit/.test(css));
 
-// 亮色四色调色板：黄 09 定、绿蓝粉 10 定（统一浅底 + 400 档下边线）
-const LIGHT_HL = [['yellow', '#eab308'], ['green', '#4ade80'], ['blue', '#60a5fa'], ['pink', '#f472b6']];
+// 亮色四色调色板：下划线一律 300 档（10-10 二轮，含黄）
+const LIGHT_HL = [['yellow', '#fcd34d'], ['green', '#86efac'], ['blue', '#93c5fd'], ['pink', '#f9a8d4']];
 console.log('▸ 我的批注：下划线语言（与教材重点区分）');
 for (const [c, hex] of LIGHT_HL) {
   // 选择器列表变长了（补了 .line-anno-text 的内联兜底），匹配窗口从 340 放宽到 800
@@ -63,29 +66,36 @@ check('行级批注不再是实色平涂', !/\.note-hl-yellow\s*\{\s*background:
 check('行级批注换行不断裂', /\.note-hl\s*\{[^}]*box-decoration-break:\s*clone/.test(css));
 check('深色模式行级批注边框提亮', /\.dark \.note-hl-yellow[^}]*border-bottom-color:\s*#fde047/.test(css));
 
-console.log('▸ 亮色四色统一调浅（黄 09 定，绿蓝粉 10 定）');
+console.log('▸ 亮色四色统一调浅（下划线 300 档，绿蓝粉底 9~10%）');
 check('亮色：行级批注黄底为浅黄 18%',
   /\.note-hl-yellow\s*\{[^}]*rgba\(250,\s*204,\s*21,\s*\.18\)/.test(css), true);
-check('亮色：两处黄色下边线都是亮金 #eab308',
-  (css.match(/border-bottom:\s*2px solid #eab308/g) || []).length >= 2, true);
+check('亮色：两处黄色下边线降到 300 档 #fcd34d',
+  (css.match(/border-bottom:\s*2px solid #fcd34d/g) || []).length >= 2, true);
 check('深色：两处黄色边框都是浅黄 #fde047',
   (css.match(/border-bottom-color:\s*#fde047/g) || []).length >= 2, true);
-check('绿/蓝/粉下边线已降到 400 档（不再是 600 档的深色）',
-  /\.note-hl-green\s+\{[^}]*#4ade80/.test(css) &&
-  /\.note-hl-blue\s+\{[^}]*#60a5fa/.test(css) &&
-  /\.note-hl-pink\s+\{[^}]*#f472b6/.test(css) &&
-  !/#16a34a|#2563eb|#db2777/.test(lightCss), true);
-check('绿/蓝/粉底色降到 13~14% 且换同档浅色',
-  /rgba\(74,\s*222,\s*128,\s*\.14\) !important/.test(css) &&
-  /rgba\(96,\s*165,\s*250,\s*\.13\) !important/.test(css) &&
-  /rgba\(244,\s*114,\s*182,\s*\.13\) !important/.test(css) &&
+check('绿/蓝/粉下边线降到 300 档（400 档也嫌重）',
+  /\.note-hl-green\s+\{[^}]*#86efac/.test(css) &&
+  /\.note-hl-blue\s+\{[^}]*#93c5fd/.test(css) &&
+  /\.note-hl-pink\s+\{[^}]*#f9a8d4/.test(css) &&
+  !/#16a34a|#2563eb|#db2777|#4ade80|#60a5fa|#f472b6|#eab308/.test(lightCss), true);
+check('绿/蓝/粉底色再降到 10%/9%/9%（编辑态 + 行级批注两处同步）',
+  /rgba\(74,\s*222,\s*128,\s*\.10\) !important/.test(css) &&
+  /rgba\(96,\s*165,\s*250,\s*\.09\) !important/.test(css) &&
+  /rgba\(244,\s*114,\s*182,\s*\.09\) !important/.test(css) &&
+  /\.note-hl-green\s+\{[^}]*rgba\(74,\s*222,\s*128,\s*\.10\)/.test(css) &&
+  /\.note-hl-blue\s+\{[^}]*rgba\(96,\s*165,\s*250,\s*\.09\)/.test(css) &&
+  /\.note-hl-pink\s+\{[^}]*rgba\(244,\s*114,\s*182,\s*\.09\)/.test(css) &&
+  !/rgba\(74,\s*222,\s*128,\s*\.14/.test(lightCss) &&
+  !/rgba\(96,\s*165,\s*250,\s*\.13/.test(lightCss) &&
+  !/rgba\(244,\s*114,\s*182,\s*\.13/.test(lightCss) &&
   !/rgba\(34,\s*197,\s*94,\s*\.18\) !important/.test(lightCss) &&
   !/rgba\(59,\s*130,\s*246,\s*\.16\) !important/.test(lightCss) &&
   !/rgba\(236,\s*72,\s*153,\s*\.16\) !important/.test(lightCss), true);
 check('取色圆点同步换成新色（圆点=实际刷上去的下边线色）',
-  /\.hl-dot-green\s*\{[^}]*#4ade80/.test(css) &&
-  /\.hl-dot-blue\s*\{[^}]*#60a5fa/.test(css) &&
-  /\.hl-dot-pink\s*\{[^}]*#f472b6/.test(css), true);
+  /\.hl-dot-yellow\s*\{[^}]*#fcd34d/.test(css) &&
+  /\.hl-dot-green\s*\{[^}]*#86efac/.test(css) &&
+  /\.hl-dot-blue\s*\{[^}]*#93c5fd/.test(css) &&
+  /\.hl-dot-pink\s*\{[^}]*#f9a8d4/.test(css), true);
 check('教材重点 mark 的橙色荧光未受影响',
   /\.notes-body mark\s*\{[^}]*rgba\(249,\s*115,\s*22,\s*\.34\)/.test(css), true);
 check('全局搜索 mark 的浅黄底未受影响', /\nmark \{\s*background:\s*#fff3bf/.test(css), true);
