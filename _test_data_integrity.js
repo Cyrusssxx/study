@@ -111,14 +111,16 @@ console.log('\n--- 五、笔记插图必须落在小节内 ---');
     let inSub = 0;
     for (const ch of d.chapters || []) {
       for (const sec of ch.sections || []) {
-        if (/<img/i.test(sec.html || '')) bad.push(sec.section);
+        // 只有「节里还有小节」时，节级 html 才会被排到小节之后、把图推远；
+        // 没有小节的整块节（如 2.4 PV 大题总结）其节级 html 本身就是正文，允许放图。
+        if (/<img/i.test(sec.html || '') && (sec.subsections || []).length) bad.push(sec.section);
         for (const sub of sec.subsections || []) inSub += ((sub.html || '').match(/<img/gi) || []).length;
       }
     }
     figCount[k] = inSub;
     check(`${k} 节级 html 不含插图`, bad, []);
   }
-  check('OS 21 张图全部在小节内', figCount.os, 21);
+  check('OS 配图不少于 21 张（精确值见 _test_os_fig_p1）', figCount.os >= 21, true);
   // SPOOLing 那张图必须落在「九、SPOOLing技术」小节
   const osd = JSON.parse(fs.readFileSync(path.join(notesDir, 'os_notes.json'), 'utf8'));
   let hit = null;

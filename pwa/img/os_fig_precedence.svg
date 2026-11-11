@@ -1,0 +1,66 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 680 470" width="680" height="470" font-family="-apple-system,BlinkMacSystemFont,'Segoe UI','Microsoft YaHei',sans-serif">
+  <rect x="0" y="0" width="680" height="470" fill="#ffffff"/>
+  <text x="20" y="28" font-size="16" font-weight="700" fill="#312e81">前趋图 → PV 操作 · 一条边换一个信号量</text>
+  <text x="20" y="48" font-size="12" fill="#64748b">箭头尾（前驱）执行完做 V，箭头头（后继）开始前做 P，初值一律 0</text>
+
+  <defs>
+    <marker id="ar2" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto">
+      <path d="M0,0 L8,4 L0,8 z" fill="#4a7ab8"/>
+    </marker>
+  </defs>
+
+  <rect x="36" y="150" width="86" height="48" rx="6" fill="#dbeafe" stroke="#93c5fd" stroke-width="1.2"/>
+  <text x="79" y="172" font-size="12" font-weight="700" fill="#1e40af" text-anchor="middle">S1</text>
+  <text x="79" y="188" font-size="9" fill="#1e40af" text-anchor="middle">最先执行</text>
+
+  <rect x="252" y="82" width="86" height="48" rx="6" fill="#f8fafc" stroke="#cbd5e1" stroke-width="1.2"/>
+  <text x="295" y="104" font-size="12" font-weight="700" fill="#334155" text-anchor="middle">S2</text>
+  <text x="295" y="120" font-size="9" fill="#64748b" text-anchor="middle">P(a) 后执行</text>
+
+  <rect x="252" y="218" width="86" height="48" rx="6" fill="#f8fafc" stroke="#cbd5e1" stroke-width="1.2"/>
+  <text x="295" y="240" font-size="12" font-weight="700" fill="#334155" text-anchor="middle">S3</text>
+  <text x="295" y="256" font-size="9" fill="#64748b" text-anchor="middle">P(b) 后执行</text>
+
+  <rect x="470" y="150" width="86" height="48" rx="6" fill="#dcfce7" stroke="#86efac" stroke-width="1.2"/>
+  <text x="513" y="172" font-size="12" font-weight="700" fill="#166534" text-anchor="middle">S4</text>
+  <text x="513" y="188" font-size="9" fill="#166534" text-anchor="middle">P(c) P(d) 都要</text>
+
+  <path d="M122 170 L188 170 L188 106 L252 106" fill="none" stroke="#4a7ab8" stroke-width="1.4" marker-end="url(#ar2)"/>
+  <rect x="180" y="128" width="18" height="16" fill="#ffffff"/>
+  <text x="189" y="140" font-size="10.5" font-weight="700" fill="#1d4ed8">a</text>
+
+  <path d="M122 178 L188 178 L188 242 L252 242" fill="none" stroke="#4a7ab8" stroke-width="1.4" marker-end="url(#ar2)"/>
+  <rect x="180" y="196" width="18" height="16" fill="#ffffff"/>
+  <text x="189" y="208" font-size="10.5" font-weight="700" fill="#1d4ed8">b</text>
+
+  <path d="M338 106 L406 106 L406 170 L470 170" fill="none" stroke="#4a7ab8" stroke-width="1.4" marker-end="url(#ar2)"/>
+  <rect x="396" y="128" width="18" height="16" fill="#ffffff"/>
+  <text x="405" y="140" font-size="10.5" font-weight="700" fill="#15803d">c</text>
+
+  <path d="M338 242 L406 242 L406 178 L470 178" fill="none" stroke="#4a7ab8" stroke-width="1.4" marker-end="url(#ar2)"/>
+  <rect x="396" y="196" width="18" height="16" fill="#ffffff"/>
+  <text x="405" y="208" font-size="10.5" font-weight="700" fill="#15803d">d</text>
+
+  <text x="580" y="166" font-size="10" fill="#64748b">4 条边</text>
+  <text x="580" y="182" font-size="10" fill="#64748b">4 个信号量</text>
+  <text x="580" y="198" font-size="10" font-weight="700" fill="#1d4ed8">a,b,c,d = 0</text>
+
+  <line x1="30" y1="292" x2="650" y2="292" stroke="#e2e8f0" stroke-width="1"/>
+
+  <rect x="30" y="304" width="300" height="86" rx="6" fill="#f8fafc" stroke="#cbd5e1" stroke-width="1"/>
+  <text x="44" y="324" font-size="10.5" font-weight="700" fill="#334155">S1 ( ) {</text>
+  <text x="44" y="342" font-size="10.5" fill="#475569">　执行 S1 的操作;</text>
+  <text x="44" y="360" font-size="10.5" font-weight="700" fill="#1d4ed8">　V(a);  V(b);</text>
+  <text x="44" y="378" font-size="10.5" fill="#475569">}</text>
+
+  <rect x="344" y="304" width="300" height="86" rx="6" fill="#f8fafc" stroke="#cbd5e1" stroke-width="1"/>
+  <text x="358" y="324" font-size="10.5" font-weight="700" fill="#334155">S4 ( ) {</text>
+  <text x="358" y="342" font-size="10.5" font-weight="700" fill="#15803d">　P(c);  P(d);</text>
+  <text x="358" y="360" font-size="10.5" fill="#475569">　执行 S4 的操作;</text>
+  <text x="358" y="378" font-size="10.5" fill="#475569">}</text>
+
+  <rect x="30" y="400" width="614" height="56" rx="6" fill="#fef3c7" stroke="#fcd34d" stroke-width="1"/>
+  <text x="44" y="420" font-size="11" font-weight="700" fill="#92400e">两条铁律</text>
+  <text x="44" y="440" font-size="10.5" fill="#92400e">① 一个节点有几条入边就要做几个 P（S4 两个前驱 → P(c) 和 P(d) 都得写，少一个就失去约束）。</text>
+  <text x="44" y="454" font-size="10.5" fill="#92400e">② 几条出边就要 V 几次：V 写在操作<tspan font-weight="700">之后</tspan>，P 写在操作<tspan font-weight="700">之前</tspan>——顺序反了就变成「先放行再干活」。</text>
+</svg>

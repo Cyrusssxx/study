@@ -1,0 +1,56 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 680 508" width="680" height="508" font-family="-apple-system,BlinkMacSystemFont,'Segoe UI','Microsoft YaHei',sans-serif">
+  <rect x="0" y="0" width="680" height="508" fill="#ffffff"/>
+  <text x="20" y="28" font-size="16" font-weight="700" fill="#312e81">生产者-消费者 · 三个信号量各管一件事</text>
+  <text x="20" y="48" font-size="12" fill="#64748b">empty 数空位、full 数产品、mutex 管互斥——缓冲区容量 n 时 empty=n、full=0、mutex=1</text>
+
+  <rect x="24" y="70" width="232" height="106" rx="8" fill="#eef2ff" stroke="#c7d2fe" stroke-width="1"/>
+  <text x="140" y="92" font-size="11.5" font-weight="700" fill="#312e81" text-anchor="middle">生产者进程</text>
+  <text x="36" y="114" font-size="10.5" fill="#3730a3">while (1) {</text>
+  <text x="36" y="132" font-size="10.5" fill="#3730a3">　生产一个产品;</text>
+  <text x="36" y="150" font-size="10.5" font-weight="700" fill="#1d4ed8">　P(empty); P(mutex);</text>
+  <text x="36" y="168" font-size="10.5" fill="#3730a3">　产品放入缓冲区;</text>
+
+  <rect x="424" y="70" width="232" height="106" rx="8" fill="#f0fdf4" stroke="#bbf7d0" stroke-width="1"/>
+  <text x="540" y="92" font-size="11.5" font-weight="700" fill="#166534" text-anchor="middle">消费者进程</text>
+  <text x="436" y="114" font-size="10.5" fill="#14532d">while (1) {</text>
+  <text x="436" y="132" font-size="10.5" font-weight="700" fill="#15803d">　P(full); P(mutex);</text>
+  <text x="436" y="150" font-size="10.5" fill="#14532d">　从缓冲区取出产品;</text>
+  <text x="436" y="168" font-size="10.5" fill="#14532d">　V(mutex); V(empty);</text>
+
+  <text x="140" y="196" font-size="10" fill="#64748b" text-anchor="middle">放完：V(mutex); V(full);</text>
+  <text x="540" y="196" font-size="10" fill="#64748b" text-anchor="middle">取出后：消费该产品; }</text>
+
+  <text x="40" y="240" font-size="11.5" font-weight="700" fill="#334155">共享缓冲区（容量 n = 5，环形使用）</text>
+  <rect x="40" y="250" width="600" height="56" fill="#f8fafc" stroke="#cbd5e1" stroke-width="1"/>
+  <rect x="40" y="250" width="120" height="56" fill="#dbeafe" stroke="#93c5fd" stroke-width="1"/>
+  <text x="100" y="274" font-size="10.5" font-weight="700" fill="#1e40af" text-anchor="middle">0 [产品]</text>
+  <text x="100" y="292" font-size="9" fill="#1e40af" text-anchor="middle">out 指向此处</text>
+  <rect x="160" y="250" width="120" height="56" fill="#dbeafe" stroke="#93c5fd" stroke-width="1"/>
+  <text x="220" y="274" font-size="10.5" font-weight="700" fill="#1e40af" text-anchor="middle">1 [产品]</text>
+  <text x="220" y="292" font-size="9" fill="#1e40af" text-anchor="middle">已放 2 个</text>
+  <rect x="280" y="250" width="120" height="56" fill="#ffffff" stroke="#cbd5e1" stroke-width="1" stroke-dasharray="3 2"/>
+  <text x="340" y="274" font-size="10.5" fill="#94a3b8" text-anchor="middle">2 空</text>
+  <rect x="400" y="250" width="120" height="56" fill="#ffffff" stroke="#cbd5e1" stroke-width="1" stroke-dasharray="3 2"/>
+  <text x="460" y="274" font-size="10.5" fill="#94a3b8" text-anchor="middle">3 空</text>
+  <rect x="520" y="250" width="120" height="56" fill="#ffffff" stroke="#cbd5e1" stroke-width="1" stroke-dasharray="3 2"/>
+  <text x="580" y="274" font-size="10.5" fill="#94a3b8" text-anchor="middle">4 [空位]</text>
+  <text x="580" y="292" font-size="9" fill="#94a3b8" text-anchor="middle">in 指向此处</text>
+
+  <text x="40" y="328" font-size="10.5" fill="#475569">此刻 full = 2（已放 2 个）、empty = 3（还剩 3 个空位）、mutex = 1（无人持锁）。</text>
+
+  <line x1="24" y1="348" x2="656" y2="348" stroke="#e2e8f0" stroke-width="1"/>
+
+  <text x="20" y="370" font-size="11.5" font-weight="700" fill="#334155">P 的两个顺序不能换</text>
+  <rect x="24" y="380" width="308" height="60" rx="6" fill="#f0fdf4" stroke="#bbf7d0" stroke-width="1"/>
+  <text x="36" y="400" font-size="11" font-weight="700" fill="#166534">正确：P(empty) → P(mutex)</text>
+  <text x="36" y="420" font-size="10.5" fill="#14532d">先拿资源名额，再抢锁；拿不到名额时</text>
+  <text x="36" y="436" font-size="10.5" fill="#14532d">手里没有锁，别人照常进出。</text>
+
+  <rect x="348" y="380" width="308" height="60" rx="6" fill="#fef2f2" stroke="#fecaca" stroke-width="1"/>
+  <text x="360" y="400" font-size="11" font-weight="700" fill="#991b1b">颠倒：P(mutex) → P(empty)</text>
+  <text x="360" y="420" font-size="10.5" fill="#7f1d1d">缓冲区满（empty=0）时生产者持锁空等；</text>
+  <text x="360" y="436" font-size="10.5" fill="#7f1d1d">消费者进不来 → 互等 → 死锁。</text>
+
+  <text x="20" y="464" font-size="11.5" fill="#334155">口诀：<tspan font-weight="700">互斥加夹心，资源先 P 后 V</tspan>——要用的资源先 P，提供出去的资源后 V。两个 V 的顺序无所谓。</text>
+  <text x="20" y="486" font-size="11.5" fill="#334155">容量 n 时 mutex 的初值永远是 1，不是 n；<tspan font-weight="700">把 mutex 当 n 用是最常见的错答</tspan>。</text>
+</svg>
