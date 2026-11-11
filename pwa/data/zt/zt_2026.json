@@ -24,8 +24,13 @@
    "s": 2,
    "a": "D",
    "sid": "ds",
-   "q": "<p>设有一个双向链表 <code>L</code>，结构为 <code>[p2, p1]</code>，头结点为 <code>head</code>。初始时 <code>head = cu</code>。现要将每个结点的 <code>p2</code> 指向 <code>p1</code> 指向结点的直接后继，应该进行的操作是（ ）。</p>\n\n  <div class=\"option\">\n    <span class=\"opt-label\">A.</span>\n    <span class=\"opt-content\">\n<pre><code>while(cu!=NULL) {\n    cu-&gt;p2=cu-&gt;p1-&gt;p1;\n    cu=cu-&gt;p1;\n}</code></pre>\n    </span>\n  </div>\n\n  <div class=\"option\">\n    <span class=\"opt-label\">B.</span>\n    <span class=\"opt-content\">\n<pre><code>while(cu!=NULL &amp;&amp; cu-&gt;p2!=NULL) {\n    cu-&gt;p2 = cu-&gt;p1-&gt;p1;\n    cu = cu-&gt;p1;\n}</code></pre>\n    </span>\n  </div>\n\n  <div class=\"option\">\n    <span class=\"opt-label\">C.</span>\n    <span class=\"opt-content\">\n<pre><code>while(cu!=NULL) {\n    if(cu-&gt;p1!=NULL) {\n        cu-&gt;p2=cu-&gt;p1-&gt;p1;\n        cu=cu-&gt;p1;\n    }\n}</code></pre>\n    </span>\n  </div>\n\n  <div class=\"option\">\n    <span class=\"opt-label\">D.</span>\n    <span class=\"opt-content\">\n<pre><code>while(cu!=NULL) {\n    if(cu-&gt;p1!=NULL) {\n        cu-&gt;p2=cu-&gt;p1-&gt;p1;\n    } else {\n        cu-&gt;p2=NULL;\n    }\n    cu=cu-&gt;p1;\n}</code></pre>\n    </span>\n  </div>",
-   "o": [],
+   "q": "<p>设有一个双向链表 <code>L</code>，结构为 <code>[p2, p1]</code>，头结点为 <code>head</code>。初始时 <code>head = cu</code>。现要将每个结点的 <code>p2</code> 指向 <code>p1</code> 指向结点的直接后继，应该进行的操作是（ ）。</p>",
+   "o": [
+    "<pre><code>while(cu!=NULL) {\n    cu-&gt;p2=cu-&gt;p1-&gt;p1;\n    cu=cu-&gt;p1;\n}</code></pre>",
+    "<pre><code>while(cu!=NULL &amp;&amp; cu-&gt;p2!=NULL) {\n    cu-&gt;p2 = cu-&gt;p1-&gt;p1;\n    cu = cu-&gt;p1;\n}</code></pre>",
+    "<pre><code>while(cu!=NULL) {\n    if(cu-&gt;p1!=NULL) {\n        cu-&gt;p2=cu-&gt;p1-&gt;p1;\n        cu=cu-&gt;p1;\n    }\n}</code></pre>",
+    "<pre><code>while(cu!=NULL) {\n    if(cu-&gt;p1!=NULL) {\n        cu-&gt;p2=cu-&gt;p1-&gt;p1;\n    } else {\n        cu-&gt;p2=NULL;\n    }\n    cu=cu-&gt;p1;\n}</code></pre>"
+   ],
    "an": "<div class=\"analysis-content\"><br/><p><strong>【解析】</strong><br/><strong>题意澄清</strong></p><ul><li><p>双向链表结点结构为 <code>[p2, p1]</code></p><ul><li><code>p1</code>：后继指针（next）</li><li><code>p2</code>：需要被<strong>重新设置</strong></li></ul></li><li><p>目标：\n<strong>让每个结点的 <code>p2</code> 指向“<code>p1</code> 所指结点的直接后继”</strong>\n即：</p></li></ul><p>[\ncu-&gt;p2 = cu-&gt;p1-&gt;p1\n]</p><ul><li><p>若 <code>cu-&gt;p1 == NULL</code>（尾结点），则：\n[\ncu-&gt;p2 = NULL\n]</p></li><li><p>同时，<strong>遍历过程中必须始终推进 <code>cu</code>，否则死循环</strong></p></li></ul><p><strong>逐项分析</strong></p><p>❌ A</p><div class=\"highlight\"><pre><code class=\"language-c\" data-lang=\"c\">while(cu!=NULL) {\n    cu-&gt;p2=cu-&gt;p1-&gt;p1;\n    cu=cu-&gt;p1;\n}\n</code></pre></div><ul><li><strong>问题</strong>：\n当 <code>cu</code> 是尾结点时，<code>cu-&gt;p1 == NULL</code>\n→ <code>cu-&gt;p1-&gt;p1</code> <strong>非法访问</strong></li></ul><p>❌ B</p><div class=\"highlight\"><pre><code class=\"language-c\" data-lang=\"c\">while(cu!=NULL &amp;&amp; cu-&gt;p2!=NULL) {\n    cu-&gt;p2 = cu-&gt;p1-&gt;p1;\n    cu = cu-&gt;p1;\n}\n</code></pre></div><ul><li><strong>问题 1</strong>：<code>cu-&gt;p2</code> 作为循环条件毫无意义（它正是要被修改的）</li><li><strong>问题 2</strong>：仍然没有防止 <code>cu-&gt;p1 == NULL</code></li></ul><p>❌ C</p><div class=\"highlight\"><pre><code class=\"language-c\" data-lang=\"c\">while(cu!=NULL) {\n    if(cu-&gt;p1!=NULL) {\n        cu-&gt;p2=cu-&gt;p1-&gt;p1;\n        cu=cu-&gt;p1;\n    }\n}\n</code></pre></div><ul><li><p><strong>致命问题</strong>：</p><ul><li>当 <code>cu-&gt;p1 == NULL</code>（尾结点）</li><li><code>cu</code> <strong>不会更新</strong></li><li>→ <strong>死循环</strong></li></ul></li></ul><p>✅ D（唯一正确）</p><div class=\"highlight\"><pre><code class=\"language-c\" data-lang=\"c\">while(cu!=NULL) {\n    if(cu-&gt;p1!=NULL) {\n        cu-&gt;p2=cu-&gt;p1-&gt;p1;\n    } else {\n        cu-&gt;p2=NULL;\n    }\n    cu=cu-&gt;p1;\n}\n</code></pre></div><ul><li>✔ 正确处理尾结点（<code>p2 = NULL</code>）</li><li>✔ 每一轮都推进 <code>cu</code></li><li>✔ 无非法指针访问</li><li>✔ 完全符合题意</li></ul></div>",
    "qid": null
   },
@@ -171,8 +176,7 @@
     "仅Ⅱ、Ⅲ"
    ],
    "an": "<div class=\"analysis-content\"><p><strong>【解析】</strong></p>\n<p>Ⅰ正确：在初始归并段数和其他条件相同时，增大归并路数 k 可能减少归并趟数 d。</p>\n<p>Ⅱ错误：归并趟数与初始归并段数有关，初始归并段数变化可能改变 d。</p>\n<p>Ⅲ不作为必然结论：采用置换-选择排序生成初始归并段时，初始归并段长度可能超过内存工作区容量，不能笼统地说可用内存大小限制初始归并段的最大长度。</p>\n<p>因此正确的是仅Ⅰ，选择 A。</p></div>",
-   "qid": null,
-   "ans": "正确答案：C"
+   "qid": null
   },
   {
    "i": 12,
@@ -268,8 +272,7 @@
     "仅Ⅲ、Ⅳ"
    ],
    "an": "<div class=\"analysis-content\"><p><strong>【解析】</strong></p><p>Ⅰ条件跳转指令在条件不满足时，按存放顺序执行下一条指令。</p><p>Ⅱ过程调用指令的目标入口地址可能恰好是顺序存放的下一条指令地址，也可能按存放顺序继续执行。</p><p>Ⅲ陷阱指令转入陷阱处理程序；Ⅳ过程返回指令转到先前保存的返回地址，按题目所问的通常指令流程，不属于按存放顺序执行下一条指令。</p><p>因此选择 A（仅Ⅰ、Ⅱ）。</p></div>",
-   "qid": null,
-   "ans": "正确答案：B"
+   "qid": null
   },
   {
    "i": 18,
@@ -317,8 +320,7 @@
     "I、II、III"
    ],
    "an": "<div class=\"analysis-content\"><p><strong>【解析】</strong></p><p>I 正确。单周期数据通路中，每条指令恰好占一个时钟周期，CPI 等于 1。</p><p>II 正确。多周期数据通路中，一条指令需要多个时钟周期，平均 CPI 大于 1。</p><p>III 错误。流水线数据通路只有在理想稳态且无冒险、停顿时才可能达到 CPI 约为 1；题干仅排除了异常、中断处理和访存额外开销，没有排除流水线冒险，也不能保证 CPI 恒等于 1。</p><p>因此仅 I、II 正确，选择 A。</p></div>",
-   "qid": null,
-   "ans": "正确答案：D"
+   "qid": null
   },
   {
    "i": 21,
@@ -462,8 +464,7 @@
     "仅 I、III、IV"
    ],
    "an": "<div class=\"analysis-content\"><p><strong>【解析】</strong></p><p>I 正确。TLB 缓存地址转换结果，命中时减少访问内存中页表的次数。</p><p>II 不正确。多级页表主要节省页表存储空间；未命中 TLB 时逐级查表可能增加访存次数。</p><p>III 正确。工作集模型有助于维持进程局部性、减少缺页。</p><p>IV 正确。页缓冲队列用于保留已换出或空闲的页框，在适用情况下减少磁盘调页开销；它不是缓存页表项的“页表缓冲队列”。</p><p>因此 I、III、IV 正确，选择 D。</p></div>",
-   "qid": null,
-   "ans": "正确答案：C"
+   "qid": null
   },
   {
    "i": 30,
@@ -591,8 +592,7 @@
     "6"
    ],
    "an": "<div class=\"analysis-content\"><br/><p><a href=\"https://www.408os.cn/static/2026-37-network-analysis.html\" target=\"_blank\" rel=\"noopener noreferrer\" style=\"color:#1677ff;text-decoration:underline;\">详细分析</a></p><p><strong>【解析】</strong> 当 R1 与 R2 之间的链路断开后，R1 会根据更新后的链路状态数据库重新计算最短路径。重算后，前两条路由 <code>199.10.20.0/27</code> 和 <code>199.10.20.32/27</code> 的下一跳均为接口 2，两个网段地址连续且满足前缀对齐要求，因此可以充分聚合为 <code>199.10.20.0/26</code>。</p><p>充分聚合后的路由表如下：</p><table><thead><tr><th>目标网络</th><th>接口</th></tr></thead><tbody><tr><td>199.10.20.0/26</td><td>2</td></tr><tr><td>199.10.20.64/27</td><td>3</td></tr><tr><td>199.10.20.128/25</td><td>4</td></tr><tr><td>0.0.0.0/0</td><td>1</td></tr></tbody></table><p>不能把前三个网段继续聚合为 <code>199.10.20.0/25</code>，因为 <code>199.10.20.64/27</code> 的下一跳不同，而且聚合后会覆盖题目中未列出的地址范围。最终共有 4 条路由项，答案选择 B。</p></div>",
-   "qid": null,
-   "ans": "正确答案：C"
+   "qid": null
   },
   {
    "i": 38,

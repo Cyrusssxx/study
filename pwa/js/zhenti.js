@@ -662,6 +662,8 @@
             const key = LETTERS[k];
             const text = f.o[k] != null ? f.o[k] : '';
             let cls = 'option-item';
+            // 代码块选项（2026-2 等）在 2 列网格里会被挤成竖条，标记后整行显示。
+            if (/<pre\b/i.test(text)) cls += ' opt-code';
             if (showHist && st) {
                 if (key === f.a) cls += ' correct';
                 else if (key === sel && !st.is_correct) cls += ' wrong';

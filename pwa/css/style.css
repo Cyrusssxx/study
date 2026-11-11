@@ -8210,6 +8210,17 @@ body.fc-toc-open .fc-toc-fab { display: none; }
     border-radius: 8px;
     background: var(--card-bg);
 }
+/* 代码型选项（2026-2 四个 <pre> 代码块）：独占整行 + 横滚，避免两列网格挤压 */
+.zt-page .option-item.opt-code { grid-column: 1 / -1; align-items: flex-start; }
+.zt-page .option-item.opt-code .option-letter { margin-top: 6px; }
+.zt-page .option-item.opt-code .option-text { min-width: 0; }
+.zt-page .option-text pre {
+    display: block; margin: 4px 0 2px; padding: 8px 10px;
+    background: var(--light); border: 1px solid var(--border); border-radius: 6px;
+    overflow-x: auto; max-width: 100%; white-space: pre;
+    font: .82rem/1.5 Consolas, "Courier New", monospace; color: var(--text);
+}
+.zt-page .option-text pre code { background: none; padding: 0; font: inherit; }
 .zt-page .option-item:hover { border-color: rgba(74, 122, 184, .55); background: rgba(74, 122, 184, .04); }
 .zt-page .option-letter {
     flex: 0 0 26px;

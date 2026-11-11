@@ -37,9 +37,34 @@ COLOR_SPAN = re.compile(r'<span style="color:[^"]*"[^>]*>([\s\S]*?)</span>', re.
 # 藏 mxGraphModel 数据，全局替换会把它变成可见文本印在图上。
 PRE_BLOCK = re.compile(r'<pre\b[^>]*>([\s\S]*?)</pre>', re.I)
 
-# 源 meta 把 2026 年三道大题分值都记成 10，与卷面不符，人工按真题修正。
-# 写在构建期而非产物上，保证重跑 build_zt.py 不会把修正覆盖掉。
-SCORE_FIX = {(2026, 45): 7, (2026, 46): 8, (2026, 47): 9}
+# 源 meta 的分值录入错误，按卷面人工修正（写在构建期，保证重跑不被覆盖）：
+#   2026 三道大题源记 10，卷面为 7/8/9；
+#   2021 第 42 题源记 6，卷面为 8 分（41~47 = 15/8/15/8/7/8/9，合计 70，全卷 150）。
+SCORE_FIX = {(2021, 42): 8, (2026, 45): 7, (2026, 46): 8, (2026, 47): 9}
+
+# 源站题目/解析里少数配图仍以 <img> 指向 408os.cn 静态资源（相对路径或绝对 URL），
+# PWA 里必然 404 / 离线不可用。资源已由 tools/sync_zt_imgs.py 下载到 data/zt_img/，
+# 构建期把 src 改写到本地；映射键取源 URL 的年份/文件名后缀，避免污染源缓存。
+IMG_MAP = {
+    '2012/2012_4.drawio.svg': 'zt_2012_4.svg',
+    '2012/2012_27.drawio.svg': 'zt_2012_27.svg',
+    '2012/2012_29.drawio.svg': 'zt_2012_29.svg',
+    '2012/2012_44.drawio.svg': 'zt_2012_44.svg',
+    '2015/6.drawio.svg': 'zt_2015_6.svg',
+    '2016/2016_4.drawio.svg': 'zt_2016_4.svg',
+    '2016/6.drawio.svg': 'zt_2016_6.svg',
+    '2018/6.drawio.svg': 'zt_2018_6.svg',
+    '2020/2020_41.drawio.svg': 'zt_2020_41.svg',
+    '2023/2023_19_ans.jpg': 'zt_2023_19.jpg',
+    '2024-4-q.png': 'zt_2024_4.png',
+    '2025/2025_3_sol.png': 'zt_2025_3.png',
+    '2025/2025_20_raw.png': 'zt_2025_20.png',
+}
+
+# 源站答案页若只写「正确答案：X」，它属于 meta.answer 的重复；更糟的是 2026 卷
+# 有 5 题答案页字母与 meta / 解析不一致（解析支持 meta），写进 ans 会在页面上
+# 同时显示两个答案。此类短答案页一律不落 ans 字段。
+ANS_PAGE_LETTER = re.compile(r'^正确答案[：:]\s*[A-D](?:\s*[、,，]\s*[A-D])*\s*$')
 
 # 大题科目关键词分类（含题号先验：41-42 DS / 43-44 CO / 45-46 OS / 47 CN）
 KW = {
@@ -181,6 +206,41 @@ def clean_code_layout(body):
     return PRE_BLOCK.sub(_clean, body)
 
 
+def rewrite_img_src(body):
+    """把源站外链配图改写到本地 data/zt_img/（离线可用）。"""
+    def _r(m):
+        src = m.group(1)
+        for key, local in IMG_MAP.items():
+            if key in src:
+                return m.group(0).replace(src, 'data/zt_img/' + local)
+        return m.group(0)
+    return re.sub(r'\bsrc="([^"]+)"', _r, body)
+
+
+def balance_div(body):
+    """源站把整个 drawio 页面塞进 svg-container 时，尾部会多出若干 </div>。
+
+    多余的闭合标签会提前关掉题卡容器，把选项/按钮挤出卡片。只在闭合数大于开启数时，
+    从**末尾**连续闭合块里删掉多余项，不动中间结构。
+    """
+    opens = len(re.findall(r'<div\b', body, re.I))
+    closes = len(re.findall(r'</div>', body, re.I))
+    extra = closes - opens
+    if extra <= 0:
+        return body
+    m = re.search(r'((?:\s*</div>\s*)+)$', body, re.I)
+    if not m:
+        return body
+    parts = re.findall(r'</div>|\s+', m.group(1), re.I)
+    kept, dropped = [], 0
+    for tok in reversed(parts):
+        if re.match(r'</div>', tok, re.I) and dropped < extra:
+            dropped += 1
+            continue
+        kept.append(tok)
+    return body[:m.start(1)] + ''.join(reversed(kept))
+
+
 def clean_html(body):
     """清洗题干/解析 HTML（含安全过滤：去 script/iframe/事件属性）。"""
     body = body.replace('<!DOCTYPE html>', '')
@@ -206,7 +266,8 @@ def clean_html(body):
         return 'width:%s%%' % ('100' if v > 100 else m.group(1))
     body = re.sub(r'width:\s*(\d+(?:\.\d+)?)%', _cap_width, body)
     body = body.strip()
-    return clean_code_layout(body)
+    body = clean_code_layout(body)
+    return rewrite_img_src(body).strip()
 
 
 def extract_content(html):
@@ -218,29 +279,36 @@ def extract_content(html):
     # 到 </body>
     j = html.find('</body>', start)
     inner = html[start:j if j > 0 else len(html)]
-    # 去尾部多余的 </div>（content 的闭合）与其后空白
+    # 去尾部多余的 </div>（content 的闭合）与其后空白。
+    # 注意：源站个别页（2009-4）压根没写 content 的闭合，末尾那个 </div> 是
+    # 最后一个选项的 —— 无条件剥离会把 D 选项变成未闭合块、正则漏拆。
     inner = inner.strip()
     if inner.endswith('</div>'):
-        inner = inner[:-len('</div>')]
+        opens = len(re.findall(r'<div\b', inner, re.I))
+        closes = len(re.findall(r'</div>', inner, re.I))
+        if closes > opens:
+            inner = inner[:-len('</div>')]
     return inner.strip()
 
 
+# 2026-2 的四个选项把 <pre><code> 代码块缩进换行后放进 opt-content，
+# 旧正则要求标签紧邻无空白 → 四个选项全部漏拆、题干变成一整段、无法作答。
 OPT_RE = re.compile(
-    r'<div class="option"><span class="opt-label">\s*([A-D])[.、]?\s*</span>'
-    r'<span class="opt-content">(.*?)</span></div>', re.S)
+    r'<div class="option">\s*<span class="opt-label">\s*([A-D])[.、]?\s*</span>\s*'
+    r'<span class="opt-content">([\s\S]*?)</span>\s*</div>', re.S)
 
 
 def parse_options(content):
-    """拆出选项。返回 (stem, [optA, optB, optC, optD], 剩余HTML is_svg_opt)"""
-    opts = OPT_RE.findall(content)
-    if not opts:
+    """拆出选项，并按匹配区间从题干移除（不用重建字符串 replace，兼容缩进/代码块）。"""
+    matches = list(OPT_RE.finditer(content))
+    if not matches:
         return content, []
-    stem = content
-    for label, txt in opts:
-        full = ('<div class="option"><span class="opt-label">%s.</span>'
-                '<span class="opt-content">%s</span></div>' % (label, txt))
-        stem = stem.replace(full, '')
-    return stem.strip(), [clean_html(t) for _, t in opts]
+    pieces, last = [], 0
+    for m in matches:
+        pieces.append(content[last:m.start()])
+        last = m.end()
+    pieces.append(content[last:])
+    return ''.join(pieces).strip(), [clean_html(m.group(2)) for m in matches]
 
 
 def strip_answer_page(html):
@@ -291,6 +359,9 @@ def main():
             plain = re.sub(r'<[^>]+>', '', stem) + ''.join(re.sub(r'<[^>]+>', '', o) for o in opts)
             svg_files = []
             stem = extract_svgs(stem, tag, svg_files)
+            # 题干里多余的 </div> 只在 SVG 外置后配平：此时结构只剩容器/占位 div，
+            # 不会误删选项块的闭合标签（选项已在 parse_options 里移除）。
+            stem = balance_div(stem)
             opts = [extract_svgs(o, '%s_o%d' % (tag, k + 1), svg_files)
                     for k, o in enumerate(opts)]
             an = extract_svgs(an, '%s_an' % tag, svg_files)
@@ -311,7 +382,7 @@ def main():
             }
             # 主观题答案页（非"正确答案：X"时才有价值）
             ans_txt = strip_answer_page(ans_html)
-            if ans_txt and ans_txt not in ('', '详见解析') and not ans_txt.startswith('正确答案：' + (item['a'] or '^')):
+            if ans_txt and ans_txt != '详见解析' and not ANS_PAGE_LETTER.match(ans_txt):
                 item['ans'] = ans_txt
             out_items.append(item)
         out = {'y': y, 'n': len(out_items), 'items': out_items}

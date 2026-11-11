@@ -56,7 +56,7 @@
    "s": 2,
    "a": "B",
    "sid": "ds",
-   "q": "<p>给定无向图的邻接多重表，求顶点 b、d 的度（）</p>\n<div class=\"img-container\" style=\"height:auto;width:80%\"><img src=\"https://oss.408os.cn/image/2024-4-q.png\" style=\"width:100%;height:auto\" alt=\"\" draggable=\"false\"></div>",
+   "q": "<p>给定无向图的邻接多重表，求顶点 b、d 的度（）</p>\n<div class=\"img-container\" style=\"height:auto;width:80%\"><img src=\"data/zt_img/zt_2024_4.png\" style=\"width:100%;height:auto\" alt=\"\" draggable=\"false\"></div>",
    "o": [
     "0, 2",
     "2, 4",

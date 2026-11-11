@@ -79,7 +79,7 @@ check('内联 holder 用 <span class="zt-svgholder zt-svg-inline">',
 check('题图 holder 仍用 <div class="zt-svgholder">',
   /<div class="zt-svgholder" data-svg="%s"><\/div>/.test(BUILD), true);
 check('clean_html 收敛 >100% 宽度', /def _cap_width\(m\)/.test(BUILD) && /width:\\s\*\(\\d\+/.test(BUILD), true);
-check('2026 分值修正仍在（重跑幂等护栏）', /SCORE_FIX = \{\(2026, 45\): 7, \(2026, 46\): 8, \(2026, 47\): 9\}/.test(BUILD), true);
+check('分值修正仍在（重跑幂等护栏）', /SCORE_FIX = \{\(2021, 42\): 8, \(2026, 45\): 7, \(2026, 46\): 8, \(2026, 47\): 9\}/.test(BUILD), true);
 const y26 = JSON.parse(fs.readFileSync(path.join(ROOT, 'pwa/data/zt/zt_2026.json'), 'utf8'));
 check('产物里 2026 大题分值 7/8/9',
   y26.items.filter(x => [45, 46, 47].includes(x.i)).map(x => x.s), [7, 8, 9]);

@@ -30,10 +30,11 @@ check('18 年数据齐全（2009-2026）', [years.length, years[0], years[years.
 check('存在 clean_code_layout()', /def clean_code_layout\(body\):/.test(buildSrc), true);
 check('清洗范围限定 <pre> 内（不误伤 SVG）',
   buildSrc.includes("PRE_BLOCK = re.compile(r'<pre\\b[^>]*>") && /return PRE_BLOCK\.sub\(_clean, body\)/.test(buildSrc), true);
-check('clean_html 末尾调用清洗', /return clean_code_layout\(body\)/.test(buildSrc), true);
+check('clean_html 里调用代码清洗（后续还有配图改写/strip）',
+  /body = clean_code_layout\(body\)/.test(buildSrc) && /return rewrite_img_src\(body\)\.strip\(\)/.test(buildSrc), true);
 check('保留行尾 \\n（消除双倍行距的关键）', /FLEX_ROW\.sub\(lambda x: x\.group\(1\), m\.group\(1\)\)/.test(buildSrc), true);
-check('2026 分值修正在构建期（不靠手改产物）',
-  /SCORE_FIX = \{\(2026, 45\): 7, \(2026, 46\): 8, \(2026, 47\): 9\}/.test(buildSrc), true);
+check('分值修正在构建期（2021-42 / 2026 三题，不靠手改产物）',
+  /SCORE_FIX = \{\(2021, 42\): 8, \(2026, 45\): 7, \(2026, 46\): 8, \(2026, 47\): 9\}/.test(buildSrc), true);
 check('分值写入使用 SCORE_FIX', /'s': SCORE_FIX\.get\(\(y, idx\), q\['score'\]\)/.test(buildSrc), true);
 
 console.log('\n--- 二、全库数据清洗结果 ---');

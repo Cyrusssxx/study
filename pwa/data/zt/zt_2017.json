@@ -120,7 +120,7 @@
    "s": 2,
    "a": "A",
    "sid": "ds",
-   "q": "<p>下列二叉树中，可能成为折半查找判定树（不含外部结点）的是（）</p>\n<div class=\"svg-wrapper\"><div class=\"svg-container\" style=\"height:auto;width:80%\">\n\n<div class=\"zt-svgholder\" data-svg=\"zt_2017_8_1\"></div></div></div></div>",
+   "q": "<p>下列二叉树中，可能成为折半查找判定树（不含外部结点）的是（）</p>\n<div class=\"svg-wrapper\"><div class=\"svg-container\" style=\"height:auto;width:80%\">\n\n<div class=\"zt-svgholder\" data-svg=\"zt_2017_8_1\"></div></div></div>",
    "o": [
     "A",
     "B",

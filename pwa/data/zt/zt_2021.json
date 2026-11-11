@@ -656,7 +656,7 @@
   {
    "i": 42,
    "t": 2,
-   "s": 6,
+   "s": 8,
    "a": null,
    "sid": "ds",
    "q": "<p>已知某排序算法如下：</p>\n<div class=\"highlight\"><pre><code class=\"language-c\" data-lang=\"c\">void cmpCountSort(int a[], int b[], int n)\n{\n    int i, j, *count;\n    count = (int *) malloc(sizeof(int) * n) //C++ 语言：count = new int[n];\n    for (i = 0; i &lt; n; i++) count[i] = 0;\n    for (i = 0; i &lt; n - 1; i++)\n        for (j = i + 1; j &lt; n; j++)\n            if (a[i] &lt; a[j]) count[j]++;\n            else count[i]++;\n    for (i = 0; i &lt; n; i++) b[count[i]]= a[i];\n    free(count); // C++ 语言：delete count;\n}\n</code></pre></div>\n<p>请回答下列问题。</p>\n<p>(1) 若有 int a[] = {25, -10, 25, 10, 11, 19}, b[6]; ，则调用 cmpCountSort(a, b, 6) 后数组 b 中的内容是什么？</p>\n<p>(2) 若 a 中含有 n 个元素，则算法执行过程中，元素之间的比较次数是多少？</p>\n<p>(3) 该算法是稳定的吗？若是，则阐述理由；否则，修改为稳定排序算法。</p>",

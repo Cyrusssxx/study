@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="740" height="288" viewBox="0 0 740 288">
+  <rect width="100%" height="100%" fill="white" opacity="0"/>
+  <defs>
+    <marker id="arrow" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto" markerUnits="strokeWidth">
+      <path d="M0,0 L0,6 L9,3 z" fill="#111"/>
+    </marker>
+  </defs>
+  <style>
+    .axis { stroke: #111; stroke-width: 1.6; fill: none; marker-end: url(#arrow); }
+    .guide { stroke: #bbb; stroke-width: 1; stroke-dasharray: 5 5; }
+    .cpu { stroke: #111; stroke-width: 4; stroke-linecap: round; }
+    .io { stroke: #777; stroke-width: 3; stroke-linecap: round; stroke-dasharray: 8 6; }
+    .label { font-family: Arial, sans-serif; font-size: 16px; fill: #111; }
+    .small { font-family: Arial, sans-serif; font-size: 14px; fill: #111; }
+  </style>
+  <line class="axis" x1="50" y1="248" x2="685" y2="248"/>
+  <line class="axis" x1="50" y1="248" x2="50" y2="20"/>
+  <text class="label" x="700" y="253">t/ms</text>
+  <text class="label" x="14" y="86">P2</text>
+  <text class="label" x="14" y="171">P1</text>
+  <g class="small" text-anchor="middle">
+    <text x="50" y="273">0</text>
+    <text x="182" y="273">60</text>
+    <text x="358" y="273">140</text>
+    <text x="446" y="273">180</text>
+    <text x="490" y="273">200</text>
+    <text x="534" y="273">220</text>
+    <text x="622" y="273">260</text>
+  </g>
+  <g>
+    <line class="guide" x1="182" y1="38" x2="182" y2="248"/>
+    <line class="guide" x1="358" y1="38" x2="358" y2="248"/>
+    <line class="guide" x1="446" y1="38" x2="446" y2="248"/>
+    <line class="guide" x1="490" y1="38" x2="490" y2="248"/>
+    <line class="guide" x1="534" y1="38" x2="534" y2="248"/>
+    <line class="guide" x1="622" y1="38" x2="622" y2="248"/>
+  </g>
+  <line class="cpu" x1="182" y1="80" x2="446" y2="80"/>
+  <text class="label" x="314" y="70" text-anchor="middle">CPU</text>
+  <line class="io" x1="446" y1="80" x2="534" y2="80"/>
+  <text class="label" x="490" y="70" text-anchor="middle">I/O</text>
+  <line class="cpu" x1="534" y1="80" x2="622" y2="80"/>
+  <text class="label" x="578" y="70" text-anchor="middle">CPU</text>
+  <line class="cpu" x1="50" y1="165" x2="182" y2="165"/>
+  <text class="label" x="116" y="155" text-anchor="middle">CPU</text>
+  <line class="io" x1="182" y1="165" x2="358" y2="165"/>
+  <text class="label" x="270" y="155" text-anchor="middle">I/O</text>
+  <line class="cpu" x1="446" y1="165" x2="490" y2="165"/>
+  <text class="label" x="468" y="155" text-anchor="middle">CPU</text>
+</svg>
