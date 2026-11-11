@@ -55,7 +55,7 @@ for (const ch of DOC.chapters)
   for (const sec of ch.sections)
     for (const c of [sec].concat(sec.subsections || []))
       for (const m of (c.html || '').matchAll(/<img class="fig-img" src="img\/([^"]+)"/g)) refs.push(m[1]);
-check('CN 配图引用 = 原 PCM 图 + 新增 5 张', refs.length, 6);
+check('CN 配图引用 >= 6（协议篇下限，精确总量见 _test_cn_fig_p1）', refs.length >= 6, true);
 for (const f of FIGS) check(`引用 ${f}`, refs.includes(f), true);
 
 console.log('\n--- 三、DHCP 四步地址逐条补全（用户点名） ---');
@@ -139,7 +139,8 @@ if (!JSDOM || !IDBFactory) {
     const lines = d.querySelectorAll('.anno-line');
     check('渲染后行号总数 = 1220（与改动前一致，已存批注不错位）', lines.length, 1220);
     check('图块被误标行号 = 0', [...lines].filter(e => e.hasAttribute('data-fig') || e.closest('[data-fig]')).length, 0);
-    check('5 张新图都渲染出来', d.querySelectorAll('img.fig-img').length, 6);
+    check('协议篇 5 张新图都渲染出来（>= 6，精确总量见 _test_cn_fig_p1）',
+      d.querySelectorAll('img.fig-img').length >= 6, true);
     const sec = [...d.querySelectorAll('.notes-section')].find(s => s.dataset.sec === '4.2 IPv4');
     check('4.2 节表格数 ≥ 5（新增对照表生效）', sec ? sec.querySelectorAll('table').length >= 5 : false, true);
     for (const q of ['giaddr', 'DHCP Request', 'DHCP Relay', 'FF-FF-FF-FF-FF-FF']) {

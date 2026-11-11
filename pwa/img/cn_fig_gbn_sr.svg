@@ -1,0 +1,82 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 680 604" width="680" height="604" font-family="-apple-system,BlinkMacSystemFont,'Segoe UI','Microsoft YaHei',sans-serif">
+  <rect x="0" y="0" width="680" height="604" fill="#ffffff"/>
+  <text x="20" y="28" font-size="16" font-weight="700" fill="#312e81">GBN 与 SR · 同一个「4 号丢了」场景的两种反应</text>
+  <text x="20" y="48" font-size="12" fill="#64748b">0~3 号已正确接收并确认，4 号丢失，5/6/7 号随后到达</text>
+
+  <g font-size="10.5" fill="#64748b" text-anchor="middle">
+    <text x="120" y="84">0</text><text x="180" y="84">1</text><text x="240" y="84">2</text><text x="300" y="84">3</text>
+    <text x="360" y="84">4</text><text x="420" y="84">5</text><text x="480" y="84">6</text><text x="540" y="84">7</text>
+  </g>
+
+  <text x="20" y="110" font-size="12" font-weight="700" fill="#1e3a8a">GBN（后退 N 帧）　W_R = 1</text>
+  <g>
+    <rect x="90" y="120" width="56" height="42" rx="5" fill="#dcfce7" stroke="#4ade80" stroke-width="1.4"/>
+    <rect x="150" y="120" width="56" height="42" rx="5" fill="#dcfce7" stroke="#4ade80" stroke-width="1.4"/>
+    <rect x="210" y="120" width="56" height="42" rx="5" fill="#dcfce7" stroke="#4ade80" stroke-width="1.4"/>
+    <rect x="270" y="120" width="56" height="42" rx="5" fill="#dcfce7" stroke="#4ade80" stroke-width="1.4"/>
+    <rect x="330" y="120" width="56" height="42" rx="5" fill="#fee2e2" stroke="#f87171" stroke-width="1.5"/>
+    <rect x="390" y="120" width="56" height="42" rx="5" fill="#f1f5f9" stroke="#cbd5e1" stroke-width="1.2" stroke-dasharray="4 3"/>
+    <rect x="450" y="120" width="56" height="42" rx="5" fill="#f1f5f9" stroke="#cbd5e1" stroke-width="1.2" stroke-dasharray="4 3"/>
+    <rect x="510" y="120" width="56" height="42" rx="5" fill="#f1f5f9" stroke="#cbd5e1" stroke-width="1.2" stroke-dasharray="4 3"/>
+  </g>
+  <g font-size="11.5" text-anchor="middle">
+    <text x="118" y="140" fill="#166534">✓</text><text x="178" y="140" fill="#166534">✓</text>
+    <text x="238" y="140" fill="#166534">✓</text><text x="298" y="140" fill="#166534">✓</text>
+    <text x="358" y="140" font-weight="700" fill="#b91c1c">✗ 丢失</text>
+    <text x="418" y="140" fill="#94a3b8">✗ 丢</text><text x="478" y="140" fill="#94a3b8">✗ 丢</text><text x="538" y="140" fill="#94a3b8">✗ 丢</text>
+  </g>
+  <text x="584" y="132" font-size="10" fill="#94a3b8">到达但被</text>
+  <text x="584" y="146" font-size="10" fill="#94a3b8">丢弃</text>
+  <text x="20" y="140" font-size="10.5" fill="#166534">已确认</text>
+  <text x="20" y="156" font-size="10.5" fill="#94a3b8">W_R=1</text>
+
+  <rect x="328" y="168" width="60" height="24" rx="4" fill="#fef2f2" stroke="#f87171" stroke-width="1.1"/>
+  <text x="358" y="184" font-size="10" fill="#b91c1c" text-anchor="middle">期待 4 号</text>
+  <path d="M358 192 L358 208" stroke="#dc2626" stroke-width="1.2"/>
+
+  <path d="M330 214 L514 214" stroke="#dc2626" stroke-width="1.4"/>
+  <path d="M338 210 L329 214 L338 218" fill="#dc2626"/>
+  <text x="422" y="232" font-size="10.5" fill="#b91c1c" text-anchor="middle">超时后 4、5、6、7 全部重传（好帧也白重发）</text>
+
+  <text x="20" y="264" font-size="12" font-weight="700" fill="#1e3a8a">SR（选择重传）　W_R ＞ 1</text>
+  <g>
+    <rect x="90" y="274" width="56" height="42" rx="5" fill="#dcfce7" stroke="#4ade80" stroke-width="1.4"/>
+    <rect x="150" y="274" width="56" height="42" rx="5" fill="#dcfce7" stroke="#4ade80" stroke-width="1.4"/>
+    <rect x="210" y="274" width="56" height="42" rx="5" fill="#dcfce7" stroke="#4ade80" stroke-width="1.4"/>
+    <rect x="270" y="274" width="56" height="42" rx="5" fill="#dcfce7" stroke="#4ade80" stroke-width="1.4"/>
+    <rect x="330" y="274" width="56" height="42" rx="5" fill="#fee2e2" stroke="#f87171" stroke-width="1.5"/>
+    <rect x="390" y="274" width="56" height="42" rx="5" fill="#dbeafe" stroke="#60a5fa" stroke-width="1.5"/>
+    <rect x="450" y="274" width="56" height="42" rx="5" fill="#dbeafe" stroke="#60a5fa" stroke-width="1.5"/>
+    <rect x="510" y="274" width="56" height="42" rx="5" fill="#dbeafe" stroke="#60a5fa" stroke-width="1.5"/>
+  </g>
+  <g font-size="11.5" text-anchor="middle">
+    <text x="118" y="294" fill="#166534">✓</text><text x="178" y="294" fill="#166534">✓</text>
+    <text x="238" y="294" fill="#166534">✓</text><text x="298" y="294" fill="#166534">✓</text>
+    <text x="358" y="294" font-weight="700" fill="#b91c1c">✗ 丢失</text>
+    <text x="418" y="294" font-size="10.5" fill="#1e40af">已缓存</text>
+    <text x="478" y="294" font-size="10.5" fill="#1e40af">已缓存</text>
+    <text x="538" y="294" font-size="10.5" fill="#1e40af">已缓存</text>
+  </g>
+  <text x="584" y="286" font-size="10" fill="#1e40af">先收下</text>
+  <text x="584" y="300" font-size="10" fill="#1e40af">不重传</text>
+
+  <rect x="386" y="322" width="182" height="24" rx="4" fill="#eff6ff" stroke="#93c5fd" stroke-width="1.1"/>
+  <text x="477" y="338" font-size="10" fill="#1e40af" text-anchor="middle">接收窗口 4~7 有效（可失序缓存）</text>
+
+  <path d="M330 350 L386 350" stroke="#dc2626" stroke-width="1.6"/>
+  <path d="M378 346 L387 350 L378 354" fill="#dc2626"/>
+  <text x="20" y="354" font-size="10.5" fill="#b91c1c">只重传 4 号</text>
+
+  <rect x="20" y="374" width="640" height="96" rx="8" fill="#eef2ff" stroke="#c7d2fe" stroke-width="1"/>
+  <text x="34" y="394" font-size="11.5" font-weight="700" fill="#312e81">窗口上限（必考）：序号共 2ⁿ 个</text>
+  <text x="34" y="414" font-size="11.5" fill="#3730a3">GBN：W_T ≤ 2ⁿ − 1。若取满 2ⁿ 且全部未确认，下一轮新帧与上轮同号，接收方分不出新旧。</text>
+  <text x="34" y="434" font-size="11.5" fill="#3730a3">SR：W_T ≤ 2ⁿ⁻¹ 且 <tspan font-weight="700">W_T + W_R ≤ 2ⁿ</tspan>（收发窗口在序号环上不许重叠）。</text>
+  <text x="34" y="454" font-size="11.5" fill="#3730a3">W = 1 即停止-等待；W ＞ 1 即连续 ARQ（流水线），U = W·T/(T+R)。</text>
+
+  <rect x="20" y="482" width="640" height="112" rx="8" fill="#fef2f2" stroke="#fecaca" stroke-width="1"/>
+  <text x="34" y="502" font-size="11.5" font-weight="700" fill="#991b1b">易错：</text>
+  <text x="34" y="522" font-size="11.5" fill="#7f1d1d">① 「收到 0/2/3」→ GBN 要重传的是 4、5、6、7（累积确认只认最大号），不是只补 1 号。</text>
+  <text x="34" y="542" font-size="11.5" fill="#7f1d1d">② SR 里「已缓存」≠「已上交」：缓存帧要等缺的那一帧补齐后才按序交付给上层。</text>
+  <text x="34" y="562" font-size="11.5" fill="#7f1d1d">③ 只有 SR 允许接收方失序接收；GBN 的 W_R 恒为 1，收到非期待帧直接丢弃。</text>
+  <text x="34" y="582" font-size="11.5" fill="#7f1d1d">④ 计时器数量也是考点：停等/GBN 只需 1 个，SR 要逐帧计时。</text>
+</svg>

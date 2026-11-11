@@ -1,0 +1,70 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 680 620" width="680" height="620" font-family="-apple-system,BlinkMacSystemFont,'Segoe UI','Microsoft YaHei',sans-serif">
+  <rect x="0" y="0" width="680" height="620" fill="#ffffff"/>
+  <text x="20" y="28" font-size="16" font-weight="700" fill="#312e81">TCP 拥塞窗口演化 · 初始 cwnd=1、ssthresh=16</text>
+  <text x="20" y="48" font-size="12" fill="#64748b">慢开始指数爬到门限 → 拥塞避免线性爬 → cwnd=24 时超时，门限减半到 12、窗口打回 1</text>
+
+  <line x1="70" y1="60" x2="70" y2="430" stroke="#cbd5e1" stroke-width="1.3"/>
+  <line x1="70" y1="430" x2="648" y2="430" stroke="#cbd5e1" stroke-width="1.3"/>
+  <text x="70" y="450" font-size="11" fill="#64748b" text-anchor="middle">0</text>
+  <text x="164" y="450" font-size="11" fill="#64748b" text-anchor="middle">4</text>
+  <text x="258" y="450" font-size="11" fill="#64748b" text-anchor="middle">8</text>
+  <text x="352" y="450" font-size="11" fill="#64748b" text-anchor="middle">12</text>
+  <text x="446" y="450" font-size="11" fill="#64748b" text-anchor="middle">16</text>
+  <text x="540" y="450" font-size="11" fill="#64748b" text-anchor="middle">20</text>
+  <text x="634" y="450" font-size="11" fill="#64748b" text-anchor="middle">24</text>
+  <text x="648" y="470" font-size="11" fill="#64748b" text-anchor="end">RTT 轮次</text>
+  <text x="56" y="212" font-size="11" fill="#64748b" text-anchor="end">16</text>
+  <text x="56" y="264" font-size="11" fill="#64748b" text-anchor="end">12</text>
+  <text x="56" y="108" font-size="11" fill="#64748b" text-anchor="end">24</text>
+  <text x="56" y="407" font-size="11" fill="#64748b" text-anchor="end">1</text>
+  <text x="36" y="70" font-size="11" fill="#64748b">cwnd</text>
+  <text x="26" y="84" font-size="10" fill="#94a3b8">(MSS)</text>
+
+  <path d="M70 212 L352 212" stroke="#f59e0b" stroke-width="1.3" stroke-dasharray="6 4"/>
+  <path d="M352 264 L634 264" stroke="#f59e0b" stroke-width="1.3" stroke-dasharray="6 4"/>
+  <text x="140" y="205" font-size="10" fill="#b45309">ssthresh = 16</text>
+  <text x="440" y="257" font-size="10" fill="#b45309">ssthresh = 12（24/2）</text>
+
+  <path d="M70 407 L94 394 L117 368 L141 316 L164 212 L188 199 L211 186 L235 173 L258 160 L282 147 L305 134 L329 121 L352 108"
+        fill="none" stroke="#4338ca" stroke-width="2.2"/>
+  <path d="M352 108 L376 407 L399 394 L423 368 L446 316 L470 264 L493 251 L517 238 L540 225 L564 212 L587 199 L611 186"
+        fill="none" stroke="#4338ca" stroke-width="2.2" stroke-dasharray="0"/>
+
+  <circle cx="70" cy="407" r="3.4" fill="#4338ca"/>
+  <circle cx="164" cy="212" r="4" fill="#dc2626"/>
+  <circle cx="352" cy="108" r="5" fill="#dc2626"/>
+  <circle cx="470" cy="264" r="4" fill="#16a34a"/>
+
+  <path d="M352 108 L352 430" stroke="#f87171" stroke-width="1.2" stroke-dasharray="4 4"/>
+
+  <text x="176" y="180" font-size="10.5" fill="#b91c1c">到达门限转拥塞避免</text>
+  <path d="M172 184 L166 206" stroke="#f87171" stroke-width="1" stroke-dasharray="3 2"/>
+
+  <rect x="86" y="240" width="132" height="40" rx="5" fill="#eef2ff" stroke="#c7d2fe" stroke-width="1.1"/>
+  <text x="152" y="256" font-size="10.5" font-weight="700" fill="#312e81" text-anchor="middle">慢开始（指数）</text>
+  <text x="152" y="272" font-size="10.5" fill="#3730a3" text-anchor="middle">1→2→4→8→16</text>
+
+  <rect x="200" y="128" width="122" height="40" rx="5" fill="#f0fdf4" stroke="#bbf7d0" stroke-width="1.1"/>
+  <text x="261" y="144" font-size="10.5" font-weight="700" fill="#166534" text-anchor="middle">拥塞避免（线性）</text>
+  <text x="261" y="160" font-size="10.5" fill="#14532d" text-anchor="middle">每 RTT +1</text>
+
+  <rect x="360" y="82" width="180" height="42" rx="5" fill="#fef2f2" stroke="#fecaca" stroke-width="1.2"/>
+  <text x="450" y="99" font-size="10.5" font-weight="700" fill="#991b1b" text-anchor="middle">超时（cwnd = 24）</text>
+  <text x="450" y="115" font-size="10.5" fill="#b91c1c" text-anchor="middle">ssthresh = 12、cwnd = 1</text>
+
+  <rect x="560" y="330" width="96" height="40" rx="5" fill="#f0fdf4" stroke="#bbf7d0" stroke-width="1.1"/>
+  <text x="608" y="346" font-size="10" fill="#166534" text-anchor="middle">重新线性</text>
+  <text x="608" y="362" font-size="10" fill="#14532d" text-anchor="middle">12→13→…</text>
+
+  <text x="376" y="396" font-size="10.5" fill="#3730a3">超时后重新慢开始：1→2→4→8</text>
+  <text x="376" y="412" font-size="10.5" fill="#3730a3">因 2×8 ＞ 12 → 取 12 而非 16</text>
+
+  <rect x="20" y="480" width="640" height="58" rx="8" fill="#eff6ff" stroke="#bfdbfe" stroke-width="1"/>
+  <text x="34" y="500" font-size="11.5" font-weight="700" fill="#1e3a8a">另一分支：cwnd = 20 时收到 3 个重复 ACK（快重传 + 快恢复）</text>
+  <text x="34" y="520" font-size="11.5" fill="#1e40af">ssthresh = 20/2 = 10、cwnd = 10，<tspan font-weight="700">直接进入拥塞避免</tspan>（不回 1、不重新慢开始），此后每 RTT +1。</text>
+
+  <rect x="20" y="548" width="640" height="62" rx="8" fill="#fef2f2" stroke="#fecaca" stroke-width="1"/>
+  <text x="34" y="568" font-size="11.5" font-weight="700" fill="#991b1b">易错：</text>
+  <text x="34" y="586" font-size="11.5" fill="#7f1d1d">① 慢开始「慢」指<tspan font-weight="700">起点小</tspan>（从 1 起小心试探），增长其实是指数级、一点也不慢。</text>
+  <text x="34" y="604" font-size="11.5" fill="#7f1d1d">② 超时才是 cwnd=1；3 个重复 ACK 只把 cwnd 减半到 ssthresh，两者别混。</text>
+</svg>
