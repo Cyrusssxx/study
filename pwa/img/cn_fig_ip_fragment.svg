@@ -1,0 +1,54 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 680 566" width="680" height="566" font-family="-apple-system,BlinkMacSystemFont,'Segoe UI','Microsoft YaHei',sans-serif">
+  <rect x="0" y="0" width="680" height="566" fill="#ffffff"/>
+  <text x="20" y="28" font-size="16" font-weight="700" fill="#312e81">IP 分片 · 1400 B 的报文过 MTU = 500 的链路，怎么切成 3 片</text>
+  <text x="20" y="48" font-size="12" fill="#64748b">切的是「数据部分」，每片各自再加一个 20 B 首部 —— 所以三片的首部是重复的，不是共用的</text>
+
+  <text x="40" y="78" font-size="11" font-weight="700" fill="#334155">原始 IP 数据报（总长 1400 B）</text>
+  <rect x="40" y="86" width="56" height="38" fill="#cbd5e1" stroke="#94a3b8" stroke-width="1"/>
+  <text x="68" y="110" font-size="9.5" font-weight="700" fill="#334155" text-anchor="middle">首部</text>
+  <rect x="96" y="86" width="544" height="38" fill="#eef2ff" stroke="#c7d2fe" stroke-width="1"/>
+  <text x="368" y="110" font-size="10.5" fill="#312e81" text-anchor="middle">数据 1380 B</text>
+  <text x="68" y="138" font-size="9" fill="#64748b" text-anchor="middle">20 B</text>
+
+  <text x="40" y="164" font-size="11" font-weight="700" fill="#1e3a8a">切成 3 片（每片总长 ≤ MTU = 500）</text>
+
+  <rect x="40" y="172" width="56" height="34" fill="#cbd5e1" stroke="#94a3b8" stroke-width="1"/>
+  <rect x="96" y="172" width="189.1" height="34" fill="#dcfce7" stroke="#86efac" stroke-width="1"/>
+  <text x="190" y="193" font-size="10" fill="#166534" text-anchor="middle">数据 480 B</text>
+  <text x="300" y="187" font-size="10.5" fill="#166534">片 1　总长 500　偏移 <tspan font-weight="700">0</tspan>　MF = 1</text>
+  <text x="300" y="202" font-size="9.5" fill="#64748b">数据 0 ~ 479 字节</text>
+
+  <rect x="40" y="216" width="56" height="34" fill="#cbd5e1" stroke="#94a3b8" stroke-width="1"/>
+  <rect x="96" y="216" width="189.1" height="34" fill="#fef3c7" stroke="#fcd34d" stroke-width="1"/>
+  <text x="190" y="237" font-size="10" fill="#92400e" text-anchor="middle">数据 480 B</text>
+  <text x="300" y="231" font-size="10.5" fill="#92400e">片 2　总长 500　偏移 <tspan font-weight="700">60</tspan>　MF = 1</text>
+  <text x="300" y="246" font-size="9.5" fill="#64748b">数据 480 ~ 959 字节　（480 ÷ 8 = 60）</text>
+
+  <rect x="40" y="260" width="56" height="34" fill="#cbd5e1" stroke="#94a3b8" stroke-width="1"/>
+  <rect x="96" y="260" width="165.5" height="34" fill="#f3e8ff" stroke="#d8b4fe" stroke-width="1"/>
+  <text x="178" y="281" font-size="10" fill="#6b21a8" text-anchor="middle">数据 420 B</text>
+  <text x="300" y="275" font-size="10.5" fill="#6b21a8">片 3　总长 440　偏移 <tspan font-weight="700">120</tspan>　MF = 0</text>
+  <text x="300" y="290" font-size="9.5" fill="#64748b">数据 960 ~ 1379 字节　（960 ÷ 8 = 120）</text>
+
+  <text x="40" y="322" font-size="11" font-weight="700" fill="#334155">按片偏移拼回（目的主机才做，路由器不重组）</text>
+  <rect x="96" y="330" width="189.1" height="30" fill="#dcfce7" stroke="#86efac" stroke-width="1"/>
+  <text x="190" y="350" font-size="9.5" fill="#166534" text-anchor="middle">片 1 数据</text>
+  <rect x="285.1" y="330" width="189.2" height="30" fill="#fef3c7" stroke="#fcd34d" stroke-width="1"/>
+  <text x="379" y="350" font-size="9.5" fill="#92400e" text-anchor="middle">片 2 数据</text>
+  <rect x="474.3" y="330" width="165.7" height="30" fill="#f3e8ff" stroke="#d8b4fe" stroke-width="1"/>
+  <text x="557" y="350" font-size="9.5" fill="#6b21a8" text-anchor="middle">片 3 数据</text>
+  <text x="96" y="376" font-size="9" fill="#64748b">偏移 0</text>
+  <text x="285" y="376" font-size="9" fill="#64748b">偏移 60</text>
+  <text x="474" y="376" font-size="9" fill="#64748b">偏移 120</text>
+  <text x="640" y="376" font-size="9" fill="#64748b" text-anchor="end">1380 B</text>
+
+  <text x="20" y="404" font-size="11.5" fill="#334155">算一遍：每片数据上限 = MTU − 首部 = 500 − 20 = 480，<tspan font-weight="700">480 恰好是 8 的倍数</tspan>，所以正好装 480；</text>
+  <text x="20" y="424" font-size="11.5" fill="#334155">1380 ÷ 480 = 2 余 420 → 3 片。若 480 不是 8 的倍数（如 MTU = 502 时得 482），要向下取到 8 的倍数。</text>
+
+  <rect x="20" y="440" width="640" height="112" rx="8" fill="#fef2f2" stroke="#fecaca" stroke-width="1"/>
+  <text x="34" y="460" font-size="11.5" font-weight="700" fill="#991b1b">易错：</text>
+  <text x="34" y="480" font-size="11.5" fill="#7f1d1d">① 每片<tspan font-weight="700">都要带完整的 20 B 首部</tspan>，所以三片总字节 500 + 500 + 440 = 1440 ＞ 1400，多出 40 B。</text>
+  <text x="34" y="500" font-size="11.5" fill="#7f1d1d">② 偏移单位是 <tspan font-weight="700">8 字节</tspan>：480 B 要写成 60，不能直接填 480；这是最常见的扣分点。</text>
+  <text x="34" y="520" font-size="11.5" fill="#7f1d1d">③ 三片<tspan font-weight="700">标识相同</tspan>，靠它判定「同属一个报文」；MF 只在最后一片为 0，可据此判断收齐没有。</text>
+  <text x="34" y="540" font-size="11.5" fill="#7f1d1d">④ 重组只在目的主机做；中间路由器只分片不重组，DF = 1 又超 MTU 时丢弃并回 ICMP 不可达。</text>
+</svg>
