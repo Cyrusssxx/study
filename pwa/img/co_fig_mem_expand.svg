@@ -1,0 +1,94 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 680 480" width="680" height="480" font-family="-apple-system,BlinkMacSystemFont,'Segoe UI','Microsoft YaHei',sans-serif">
+  <defs>
+    <marker id="meArrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#4f46e5"/>
+    </marker>
+  </defs>
+
+  <rect x="0" y="0" width="680" height="480" fill="#ffffff"/>
+  <text x="20" y="28" font-size="16" font-weight="700" fill="#312e81">主存容量扩展 · 位扩展 / 字扩展 / 字位同时扩展</text>
+  <text x="20" y="48" font-size="12" fill="#64748b">判断口诀：数据线拆开＝位扩展，地址高位经译码器分选＝字扩展</text>
+
+  <rect x="16" y="62" width="208" height="286" rx="10" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1"/>
+  <text x="30" y="86" font-size="13" font-weight="700" fill="#1e40af">① 位扩展（增字长）</text>
+  <text x="30" y="104" font-size="10.5" fill="#64748b">8 片 8K×1 → 8K×8（图示 2 片）</text>
+  <rect x="40" y="116" width="120" height="40" rx="6" fill="#dbeafe" stroke="#2563eb" stroke-width="1"/>
+  <text x="100" y="134" font-size="11" font-weight="700" fill="#1e40af" text-anchor="middle">8K×1</text>
+  <text x="100" y="149" font-size="10" fill="#475569" text-anchor="middle">接 D7~D4</text>
+  <rect x="40" y="164" width="120" height="40" rx="6" fill="#dbeafe" stroke="#2563eb" stroke-width="1"/>
+  <text x="100" y="182" font-size="11" font-weight="700" fill="#1e40af" text-anchor="middle">8K×1</text>
+  <text x="100" y="197" font-size="10" fill="#475569" text-anchor="middle">接 D3~D0</text>
+  <line x1="160" y1="136" x2="200" y2="136" stroke="#4f46e5" stroke-width="1.4" marker-end="url(#meArrow)"/>
+  <line x1="160" y1="184" x2="200" y2="184" stroke="#4f46e5" stroke-width="1.4" marker-end="url(#meArrow)"/>
+  <text x="176" y="222" font-size="10" fill="#4f46e5" text-anchor="middle">数据线</text>
+  <text x="176" y="236" font-size="10" fill="#4f46e5" text-anchor="middle">按位拆</text>
+  <text x="176" y="250" font-size="10" fill="#4f46e5" text-anchor="middle">各接不同</text>
+  <text x="176" y="264" font-size="10" fill="#4f46e5" text-anchor="middle">数据位</text>
+  <rect x="30" y="278" width="180" height="26" rx="5" fill="#eef2ff" stroke="#c7d2fe" stroke-width="1"/>
+  <text x="120" y="295" font-size="10.5" fill="#312e81" text-anchor="middle">地址 / 片选 / 读写 全部并联</text>
+  <text x="30" y="322" font-size="10.5" fill="#065f46">所有芯片同时工作，共同凑出一个字</text>
+  <text x="30" y="338" font-size="10.5" fill="#065f46">片数 = 目标字长 ÷ 单片字长</text>
+
+  <rect x="236" y="62" width="208" height="286" rx="10" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1"/>
+  <text x="250" y="86" font-size="13" font-weight="700" fill="#1e40af">② 字扩展（增字数）</text>
+  <text x="250" y="104" font-size="10.5" fill="#64748b">4 片 16K×8 → 64K×8</text>
+  <rect x="252" y="116" width="84" height="38" rx="6" fill="#dbeafe" stroke="#2563eb" stroke-width="1"/>
+  <text x="294" y="140" font-size="10.5" font-weight="700" fill="#1e40af" text-anchor="middle">16K×8 ①</text>
+  <rect x="344" y="116" width="84" height="38" rx="6" fill="#dbeafe" stroke="#2563eb" stroke-width="1"/>
+  <text x="386" y="140" font-size="10.5" font-weight="700" fill="#1e40af" text-anchor="middle">16K×8 ②</text>
+  <rect x="252" y="162" width="84" height="38" rx="6" fill="#dbeafe" stroke="#2563eb" stroke-width="1"/>
+  <text x="294" y="186" font-size="10.5" font-weight="700" fill="#1e40af" text-anchor="middle">16K×8 ③</text>
+  <rect x="344" y="162" width="84" height="38" rx="6" fill="#dbeafe" stroke="#2563eb" stroke-width="1"/>
+  <text x="386" y="186" font-size="10.5" font-weight="700" fill="#1e40af" text-anchor="middle">16K×8 ④</text>
+  <rect x="256" y="212" width="168" height="34" rx="6" fill="#fef3c7" stroke="#b45309" stroke-width="1"/>
+  <text x="340" y="233" font-size="11" font-weight="700" fill="#92400e" text-anchor="middle">2-4 译码器（A₁₅A₁₄）</text>
+  <line x1="294" y1="212" x2="294" y2="202" stroke="#b45309" stroke-width="1.2"/>
+  <line x1="386" y1="212" x2="386" y2="202" stroke="#b45309" stroke-width="1.2"/>
+  <line x1="310" y1="212" x2="310" y2="204" stroke="#b45309" stroke-width="1.2"/>
+  <line x1="370" y1="212" x2="370" y2="204" stroke="#b45309" stroke-width="1.2"/>
+  <text x="340" y="262" font-size="10.5" fill="#92400e" text-anchor="middle">高位 00/01/10/11 → 选 1~4 号片</text>
+  <rect x="250" y="272" width="176" height="26" rx="5" fill="#eef2ff" stroke="#c7d2fe" stroke-width="1"/>
+  <text x="338" y="289" font-size="10.5" fill="#312e81" text-anchor="middle">低位地址 / 数据 / 读写 并联</text>
+  <text x="250" y="318" font-size="10.5" fill="#065f46">同一时刻只选中一片，各片地址范围错开</text>
+  <text x="250" y="334" font-size="10.5" fill="#065f46">片选线数 = log₂(组数)</text>
+
+  <rect x="456" y="62" width="208" height="286" rx="10" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1"/>
+  <text x="470" y="86" font-size="13" font-weight="700" fill="#1e40af">③ 字位同时扩展</text>
+  <text x="470" y="104" font-size="10.5" fill="#64748b">8 片 16K×4 → 64K×8</text>
+  <rect x="462" y="116" width="44" height="22" rx="4" fill="#dbeafe" stroke="#2563eb" stroke-width="1"/>
+  <text x="484" y="131" font-size="9" fill="#1e40af" text-anchor="middle">16K×4</text>
+  <rect x="462" y="142" width="44" height="22" rx="4" fill="#dbeafe" stroke="#2563eb" stroke-width="1"/>
+  <text x="484" y="157" font-size="9" fill="#1e40af" text-anchor="middle">16K×4</text>
+  <rect x="510" y="116" width="44" height="22" rx="4" fill="#dbeafe" stroke="#2563eb" stroke-width="1"/>
+  <text x="532" y="131" font-size="9" fill="#1e40af" text-anchor="middle">16K×4</text>
+  <rect x="510" y="142" width="44" height="22" rx="4" fill="#dbeafe" stroke="#2563eb" stroke-width="1"/>
+  <text x="532" y="157" font-size="9" fill="#1e40af" text-anchor="middle">16K×4</text>
+  <rect x="558" y="116" width="44" height="22" rx="4" fill="#dbeafe" stroke="#2563eb" stroke-width="1"/>
+  <text x="580" y="131" font-size="9" fill="#1e40af" text-anchor="middle">16K×4</text>
+  <rect x="558" y="142" width="44" height="22" rx="4" fill="#dbeafe" stroke="#2563eb" stroke-width="1"/>
+  <text x="580" y="157" font-size="9" fill="#1e40af" text-anchor="middle">16K×4</text>
+  <rect x="606" y="116" width="44" height="22" rx="4" fill="#dbeafe" stroke="#2563eb" stroke-width="1"/>
+  <text x="628" y="131" font-size="9" fill="#1e40af" text-anchor="middle">16K×4</text>
+  <rect x="606" y="142" width="44" height="22" rx="4" fill="#dbeafe" stroke="#2563eb" stroke-width="1"/>
+  <text x="628" y="157" font-size="9" fill="#1e40af" text-anchor="middle">16K×4</text>
+  <text x="484" y="180" font-size="9.5" fill="#065f46" text-anchor="middle">组1</text>
+  <text x="532" y="180" font-size="9.5" fill="#065f46" text-anchor="middle">组2</text>
+  <text x="580" y="180" font-size="9.5" fill="#065f46" text-anchor="middle">组3</text>
+  <text x="628" y="180" font-size="9.5" fill="#065f46" text-anchor="middle">组4</text>
+  <rect x="462" y="196" width="188" height="26" rx="5" fill="#fef3c7" stroke="#b45309" stroke-width="1"/>
+  <text x="556" y="213" font-size="10.5" font-weight="700" fill="#92400e" text-anchor="middle">2-4 译码器：A₁₅A₁₄ 选组</text>
+  <text x="470" y="244" font-size="10.5" fill="#475569">先把每 2 片位扩展成 16K×8 一组</text>
+  <text x="470" y="262" font-size="10.5" fill="#475569">再对 4 个组做字扩展</text>
+  <rect x="470" y="272" width="180" height="26" rx="5" fill="#eef2ff" stroke="#c7d2fe" stroke-width="1"/>
+  <text x="560" y="289" font-size="10.5" fill="#312e81" text-anchor="middle">先位后字，两组动作不混淆</text>
+  <text x="470" y="318" font-size="10.5" fill="#065f46">片数 = 目标容量 ÷ 单片容量</text>
+  <text x="470" y="334" font-size="10.5" fill="#065f46">组数 = 片数 ÷ 每组片数</text>
+
+  <rect x="16" y="362" width="648" height="42" rx="6" fill="#eef2ff" stroke="#c7d2fe" stroke-width="1"/>
+  <text x="28" y="380" font-size="11.5" fill="#312e81">计算三件套：片数 = 目标容量 ÷ 单片容量（统一换算成位）｜地址线 = log₂(字数)｜片选线 = log₂(组数)</text>
+  <text x="28" y="397" font-size="11.5" fill="#312e81">芯片内地址线 = log₂(芯片字数)；系统地址线 = 芯片内地址线 + 片选线</text>
+
+  <text x="20" y="426" font-size="11.5" fill="#475569">易错：①位扩展时地址线全部并联（同一地址同时选中所有片），字扩展时高位地址必须进译码器；</text>
+  <text x="20" y="444" font-size="11.5" fill="#475569">②地址范围由「片选高位 + 片内全 0 / 全 1」两端确定；③按字编址时地址线要按字长折算，别直接套字节地址。</text>
+  <text x="20" y="466" font-size="11" fill="#94a3b8">图中 A₁₅A₁₄ 仅为示例，实际位数由「总字数 ÷ 单片字数」决定</text>
+</svg>

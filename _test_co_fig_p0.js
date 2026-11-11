@@ -41,8 +41,9 @@ const FIGS = [
 
 check('序列化仍是 CRLF + 无尾换行',
   [notesRaw.indexOf('\r\n') > 0, notesRaw.endsWith('\n')], [true, false]);
-check('计组配图 13 张', (notesRaw.match(/fig-img/g) || []).length, 13);
-check('全计组黄框 24 个', (notesRaw.match(/class=\\"key-callout\\"/g) || []).length, 24);
+// 精确数量归 _test_co_fig_p1.js 统管，这里只守下限，避免后续批次误报
+check('计组配图 >= 13 张', (notesRaw.match(/fig-img/g) || []).length >= 13, true);
+check('全计组黄框 >= 24 个', (notesRaw.match(/class=\\"key-callout\\"/g) || []).length >= 24, true);
 check('加粗总量 >= 900', (notesRaw.match(/<b>/g) || []).length >= 900, true);
 
 for (const [name, sec, anchorText] of FIGS) {
@@ -76,7 +77,7 @@ const CALLOUT_ONLY = ['2.1.2', '3.5.3', '5.6.4', '5.4.3', '6.1.3', '5.1.3',
                       '1.3.1', '3.6.5', '6.2.2', '5.3.4', '7.2.4', '4.1.4'];
 for (const sec of CALLOUT_ONLY) {
   const h = nodeHtml(sec);
-  check(sec + ' 补上黄框', (h.match(/class="key-callout"/g) || []).length, 1);
+  check(sec + ' 至少 1 个黄框', (h.match(/class="key-callout"/g) || []).length >= 1, true);
   check(sec + ' 黄框带重点加粗', /class="key-callout">[\s\S]*?<b>/.test(h), true);
 }
 
@@ -98,7 +99,7 @@ check('前端会跳过 data-fig 的行号标注',
   page.includes("el.hasAttribute('data-fig') || el.closest('[data-fig]')"), true);
 check('表格只进搜索索引、不参与 anno-line',
   page.includes("section.querySelectorAll('.notes-body th, .notes-body td')"), true);
-check('SW 里计组图恰好 13 条', (sw.match(/'img\/co_fig_[^']+'/g) || []).length, 13);
+check('SW 里计组图 >= 13 条', (sw.match(/'img\/co_fig_[^']+'/g) || []).length >= 13, true);
 
 // ---- 运行时硬护栏：jsdom 真实渲染的 .anno-line 总数必须仍是 1971 ----
 // 静态 1819 只数「不带 data-fig 的 <p> + <li>」，fmtNotes 还会拆行；
@@ -133,8 +134,8 @@ if (!JSDOM || !IDBFactory) {
     const d = dom.window.document;
     check('真实渲染 .anno-line 总数 = 1971（已存批注不错位）',
       d.querySelectorAll('.anno-line').length, 1971);
-    check('真实渲染 13 张配图', d.querySelectorAll('img.fig-img').length, 13);
-    check('真实渲染 24 个黄框', d.querySelectorAll('.key-callout').length, 24);
+    check('真实渲染配图 >= 13 张', d.querySelectorAll('img.fig-img').length >= 13, true);
+    check('真实渲染黄框 >= 24 个', d.querySelectorAll('.key-callout').length >= 24, true);
     check('图块被误标行号 = 0',
       [...d.querySelectorAll('.anno-line')]
         .filter(e => e.hasAttribute('data-fig') || e.closest('[data-fig]')).length, 0);
