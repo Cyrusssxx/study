@@ -1,0 +1,105 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 680 476" width="680" height="476" font-family="-apple-system,BlinkMacSystemFont,'Segoe UI','Microsoft YaHei',sans-serif">
+  <defs>
+    <marker id="aoA" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#64748b"/>
+    </marker>
+  </defs>
+  <rect x="0" y="0" width="680" height="476" fill="#ffffff"/>
+  <text x="20" y="28" font-size="16" font-weight="700" fill="#312e81">AOE 网 · 拓扑排序求 ve、逆拓扑求 vl、定关键路径</text>
+  <text x="20" y="48" font-size="12" fill="#64748b">顶点 = 事件，边 = 活动（边权为持续时间）；e(i) = l(i) 的活动即关键活动</text>
+
+  <g stroke="#64748b" stroke-width="1.4">
+    <line x1="62" y1="134" x2="132" y2="82" marker-end="url(#aoA)"/>
+    <line x1="62" y1="146" x2="132" y2="200" marker-end="url(#aoA)"/>
+    <line x1="164" y1="78" x2="234" y2="112" marker-end="url(#aoA)"/>
+    <line x1="164" y1="86" x2="234" y2="228" marker-end="url(#aoA)"/>
+    <line x1="164" y1="206" x2="234" y2="128" marker-end="url(#aoA)"/>
+    <line x1="164" y1="212" x2="326" y2="154" marker-end="url(#aoA)"/>
+    <line x1="266" y1="122" x2="326" y2="144" marker-end="url(#aoA)"/>
+    <line x1="266" y1="238" x2="326" y2="162" marker-end="url(#aoA)"/>
+  </g>
+
+  <circle cx="46" cy="140" r="16" fill="#c7d2fe" stroke="#4338ca" stroke-width="2"/>
+  <text x="46" y="145" font-size="11.5" font-weight="700" fill="#312e81" text-anchor="middle">v1</text>
+  <circle cx="148" cy="76" r="16" fill="#eef2ff" stroke="#4f46e5" stroke-width="1.4"/>
+  <text x="148" y="81" font-size="11.5" fill="#312e81" text-anchor="middle">v2</text>
+  <circle cx="148" cy="206" r="16" fill="#eef2ff" stroke="#4f46e5" stroke-width="1.4"/>
+  <text x="148" y="211" font-size="11.5" fill="#312e81" text-anchor="middle">v3</text>
+  <circle cx="252" cy="118" r="16" fill="#fef3c7" stroke="#b45309" stroke-width="2"/>
+  <text x="252" y="123" font-size="11.5" font-weight="700" fill="#92400e" text-anchor="middle">v4</text>
+  <circle cx="252" cy="242" r="16" fill="#eef2ff" stroke="#4f46e5" stroke-width="1.4"/>
+  <text x="252" y="247" font-size="11.5" fill="#312e81" text-anchor="middle">v5</text>
+  <circle cx="342" cy="152" r="16" fill="#c7d2fe" stroke="#4338ca" stroke-width="2"/>
+  <text x="342" y="157" font-size="11.5" font-weight="700" fill="#312e81" text-anchor="middle">v6</text>
+
+  <text x="94" y="98" font-size="10.5" fill="#dc2626">3</text>
+  <text x="94" y="190" font-size="10.5" fill="#dc2626">2</text>
+  <text x="200" y="84" font-size="10.5" fill="#dc2626">2</text>
+  <text x="188" y="168" font-size="10.5" fill="#dc2626">3</text>
+  <text x="196" y="160" font-size="10.5" fill="#dc2626">4</text>
+  <text x="240" y="196" font-size="10.5" fill="#dc2626">3</text>
+  <text x="296" y="122" font-size="10.5" fill="#dc2626">2</text>
+  <text x="296" y="212" font-size="10.5" fill="#dc2626">1</text>
+
+  <text x="380" y="72" font-size="12" font-weight="700" fill="#312e81">最早 / 最迟发生时间</text>
+  <rect x="380" y="80" width="40" height="26" fill="#f1f5f9" stroke="#cbd5e1"/>
+  <text x="400" y="98" font-size="10.5" fill="#64748b" text-anchor="middle">事件</text>
+  <rect x="420" y="80" width="40" height="26" fill="#eef2ff" stroke="#cbd5e1"/>
+  <text x="440" y="98" font-size="11" fill="#312e81" text-anchor="middle">v1</text>
+  <rect x="460" y="80" width="40" height="26" fill="#eef2ff" stroke="#cbd5e1"/>
+  <text x="480" y="98" font-size="11" fill="#312e81" text-anchor="middle">v2</text>
+  <rect x="500" y="80" width="40" height="26" fill="#eef2ff" stroke="#cbd5e1"/>
+  <text x="520" y="98" font-size="11" fill="#312e81" text-anchor="middle">v3</text>
+  <rect x="540" y="80" width="40" height="26" fill="#eef2ff" stroke="#cbd5e1"/>
+  <text x="560" y="98" font-size="11" fill="#312e81" text-anchor="middle">v4</text>
+  <rect x="580" y="80" width="40" height="26" fill="#eef2ff" stroke="#cbd5e1"/>
+  <text x="600" y="98" font-size="11" fill="#312e81" text-anchor="middle">v5</text>
+  <rect x="620" y="80" width="40" height="26" fill="#eef2ff" stroke="#cbd5e1"/>
+  <text x="640" y="98" font-size="11" fill="#312e81" text-anchor="middle">v6</text>
+
+  <rect x="380" y="106" width="40" height="26" fill="#f1f5f9" stroke="#cbd5e1"/>
+  <text x="400" y="124" font-size="10.5" font-weight="700" fill="#1e40af" text-anchor="middle">ve</text>
+  <rect x="420" y="106" width="40" height="26" fill="#ffffff" stroke="#cbd5e1"/>
+  <text x="440" y="124" font-size="11" fill="#334155" text-anchor="middle">0</text>
+  <rect x="460" y="106" width="40" height="26" fill="#ffffff" stroke="#cbd5e1"/>
+  <text x="480" y="124" font-size="11" fill="#334155" text-anchor="middle">3</text>
+  <rect x="500" y="106" width="40" height="26" fill="#ffffff" stroke="#cbd5e1"/>
+  <text x="520" y="124" font-size="11" fill="#334155" text-anchor="middle">2</text>
+  <rect x="540" y="106" width="40" height="26" fill="#ffffff" stroke="#cbd5e1"/>
+  <text x="560" y="124" font-size="11" fill="#334155" text-anchor="middle">6</text>
+  <rect x="580" y="106" width="40" height="26" fill="#ffffff" stroke="#cbd5e1"/>
+  <text x="600" y="124" font-size="11" fill="#334155" text-anchor="middle">6</text>
+  <rect x="620" y="106" width="40" height="26" fill="#ffffff" stroke="#cbd5e1"/>
+  <text x="640" y="124" font-size="11" font-weight="700" fill="#dc2626" text-anchor="middle">8</text>
+
+  <rect x="380" y="132" width="40" height="26" fill="#f1f5f9" stroke="#cbd5e1"/>
+  <text x="400" y="150" font-size="10.5" font-weight="700" fill="#9a3412" text-anchor="middle">vl</text>
+  <rect x="420" y="132" width="40" height="26" fill="#ffffff" stroke="#cbd5e1"/>
+  <text x="440" y="150" font-size="11" fill="#334155" text-anchor="middle">0</text>
+  <rect x="460" y="132" width="40" height="26" fill="#ffffff" stroke="#cbd5e1"/>
+  <text x="480" y="150" font-size="11" fill="#334155" text-anchor="middle">3</text>
+  <rect x="500" y="132" width="40" height="26" fill="#ffffff" stroke="#cbd5e1"/>
+  <text x="520" y="150" font-size="11" fill="#334155" text-anchor="middle">2</text>
+  <rect x="540" y="132" width="40" height="26" fill="#ffffff" stroke="#cbd5e1"/>
+  <text x="560" y="150" font-size="11" fill="#334155" text-anchor="middle">6</text>
+  <rect x="580" y="132" width="40" height="26" fill="#ffffff" stroke="#cbd5e1"/>
+  <text x="600" y="150" font-size="11" fill="#334155" text-anchor="middle">7</text>
+  <rect x="620" y="132" width="40" height="26" fill="#ffffff" stroke="#cbd5e1"/>
+  <text x="640" y="150" font-size="11" font-weight="700" fill="#dc2626" text-anchor="middle">8</text>
+
+  <text x="380" y="182" font-size="10.5" fill="#475569">ve 顺拓扑取 max，vl 逆拓扑取 min；ve(汇) = vl(汇)。</text>
+  <text x="380" y="202" font-size="10.5" fill="#475569">关键活动：<tspan font-weight="700">e = ve(起点)</tspan>、<tspan font-weight="700">l = vl(终点) − 权</tspan>，e = l 才关键。</text>
+  <text x="380" y="222" font-size="10.5" fill="#475569">本例关键活动：v1→v2(3)、v1→v3(2)、v3→v4(4)、v4→v6(2)</text>
+  <text x="380" y="242" font-size="10.5" font-weight="700" fill="#dc2626">关键路径 v1→v3→v4→v6，工期 = 8</text>
+
+  <text x="20" y="300" font-size="12.5" font-weight="700" fill="#312e81">拓扑排序（AOV 网）</text>
+  <text x="20" y="322" font-size="11.5" fill="#334155">反复挑「入度为 0」的顶点输出并删去其出边，直到全部输出或用尽 —— 本例一种结果：<tspan font-weight="700">v1 v2 v3 v4 v5 v6</tspan>。</text>
+  <text x="20" y="342" font-size="11.5" fill="#334155">若某步已无入度 0 的顶点却还有剩余顶点，说明<tspan font-weight="700">存在环</tspan>，即「能否拓扑排序 = 是否 DAG」。</text>
+
+  <rect x="20" y="358" width="640" height="106" rx="8" fill="#eef2ff" stroke="#c7d2fe" stroke-width="1"/>
+  <text x="34" y="380" font-size="11.5" font-weight="700" fill="#312e81">易错：</text>
+  <text x="34" y="400" font-size="11.5" fill="#3730a3">① AOV 用<tspan font-weight="700">顶点</tspan>表示活动（只判先后），AOE 用<tspan font-weight="700">边</tspan>表示活动（还要算时间）—— 二者不能混。</text>
+  <text x="34" y="420" font-size="11.5" fill="#3730a3">② 拓扑序列<tspan font-weight="700">不唯一</tspan>：同一步有多个入度 0 的顶点时顺序可换，但「存在环则无解」是确定的。</text>
+  <text x="34" y="440" font-size="11.5" fill="#3730a3">③ 关键路径可能有多条；缩短关键活动才可能缩短工期，且缩短后关键路径可能转移，要重新计算。</text>
+  <text x="34" y="458" font-size="11.5" fill="#3730a3">④ 只有「关键活动」的时间余量 l − e = 0，非关键活动都有正余量，不能凭边权大就认定关键。</text>
+</svg>

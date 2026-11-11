@@ -1,0 +1,136 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 680 494" width="680" height="494" font-family="-apple-system,BlinkMacSystemFont,'Segoe UI','Microsoft YaHei',sans-serif">
+  <defs>
+    <marker id="grA" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#64748b"/>
+    </marker>
+  </defs>
+  <rect x="0" y="0" width="680" height="494" fill="#ffffff"/>
+  <text x="20" y="28" font-size="16" font-weight="700" fill="#312e81">图的存储结构 · 同一张图、两种主流表示</text>
+  <text x="20" y="48" font-size="12" fill="#64748b">有向带权图：A→B(2)、A→C(4)、B→D(3)、C→D(5)，用 ∞ 表示无边</text>
+
+  <circle cx="60" cy="104" r="16" fill="#c7d2fe" stroke="#4338ca" stroke-width="2"/>
+  <text x="60" y="109" font-size="12.5" font-weight="700" fill="#312e81" text-anchor="middle">A</text>
+  <circle cx="176" cy="104" r="16" fill="#eef2ff" stroke="#4f46e5" stroke-width="1.4"/>
+  <text x="176" y="109" font-size="12.5" fill="#312e81" text-anchor="middle">B</text>
+  <circle cx="60" cy="196" r="16" fill="#eef2ff" stroke="#4f46e5" stroke-width="1.4"/>
+  <text x="60" y="201" font-size="12.5" fill="#312e81" text-anchor="middle">C</text>
+  <circle cx="176" cy="196" r="16" fill="#eef2ff" stroke="#4f46e5" stroke-width="1.4"/>
+  <text x="176" y="201" font-size="12.5" fill="#312e81" text-anchor="middle">D</text>
+
+  <line x1="76" y1="104" x2="156" y2="104" stroke="#64748b" stroke-width="1.4" marker-end="url(#grA)"/>
+  <text x="116" y="98" font-size="11" fill="#dc2626" text-anchor="middle">2</text>
+  <line x1="60" y1="120" x2="60" y2="176" stroke="#64748b" stroke-width="1.4" marker-end="url(#grA)"/>
+  <text x="52" y="152" font-size="11" fill="#dc2626" text-anchor="middle">4</text>
+  <line x1="176" y1="120" x2="176" y2="176" stroke="#64748b" stroke-width="1.4" marker-end="url(#grA)"/>
+  <text x="190" y="152" font-size="11" fill="#dc2626" text-anchor="middle">3</text>
+  <line x1="76" y1="196" x2="156" y2="196" stroke="#64748b" stroke-width="1.4" marker-end="url(#grA)"/>
+  <text x="116" y="190" font-size="11" fill="#dc2626" text-anchor="middle">5</text>
+
+  <text x="286" y="76" font-size="12.5" font-weight="700" fill="#312e81">① 邻接矩阵（顺序存储）</text>
+  <rect x="300" y="86" width="34" height="26" fill="#eef2ff" stroke="#cbd5e1"/>
+  <rect x="334" y="60" width="34" height="26" fill="#eef2ff" stroke="#cbd5e1"/>
+  <rect x="368" y="60" width="34" height="26" fill="#eef2ff" stroke="#cbd5e1"/>
+  <rect x="402" y="60" width="34" height="26" fill="#eef2ff" stroke="#cbd5e1"/>
+  <rect x="436" y="60" width="34" height="26" fill="#eef2ff" stroke="#cbd5e1"/>
+  <text x="351" y="78" font-size="11" fill="#312e81" text-anchor="middle">A</text>
+  <text x="385" y="78" font-size="11" fill="#312e81" text-anchor="middle">B</text>
+  <text x="419" y="78" font-size="11" fill="#312e81" text-anchor="middle">C</text>
+  <text x="453" y="78" font-size="11" fill="#312e81" text-anchor="middle">D</text>
+
+  <rect x="300" y="86" width="34" height="26" fill="#eef2ff" stroke="#cbd5e1"/>
+  <rect x="334" y="86" width="34" height="26" fill="#ffffff" stroke="#cbd5e1"/>
+  <rect x="368" y="86" width="34" height="26" fill="#d1fae5" stroke="#059669"/>
+  <rect x="402" y="86" width="34" height="26" fill="#d1fae5" stroke="#059669"/>
+  <rect x="436" y="86" width="34" height="26" fill="#ffffff" stroke="#cbd5e1"/>
+  <text x="317" y="104" font-size="11" fill="#312e81" text-anchor="middle">A</text>
+  <text x="351" y="104" font-size="11" fill="#94a3b8" text-anchor="middle">∞</text>
+  <text x="385" y="104" font-size="11" fill="#065f46" text-anchor="middle">2</text>
+  <text x="419" y="104" font-size="11" fill="#065f46" text-anchor="middle">4</text>
+  <text x="453" y="104" font-size="11" fill="#94a3b8" text-anchor="middle">∞</text>
+
+  <rect x="300" y="112" width="34" height="26" fill="#eef2ff" stroke="#cbd5e1"/>
+  <rect x="334" y="112" width="34" height="26" fill="#ffffff" stroke="#cbd5e1"/>
+  <rect x="368" y="112" width="34" height="26" fill="#ffffff" stroke="#cbd5e1"/>
+  <rect x="402" y="112" width="34" height="26" fill="#ffffff" stroke="#cbd5e1"/>
+  <rect x="436" y="112" width="34" height="26" fill="#d1fae5" stroke="#059669"/>
+  <text x="317" y="130" font-size="11" fill="#312e81" text-anchor="middle">B</text>
+  <text x="351" y="130" font-size="11" fill="#94a3b8" text-anchor="middle">∞</text>
+  <text x="385" y="130" font-size="11" fill="#94a3b8" text-anchor="middle">∞</text>
+  <text x="419" y="130" font-size="11" fill="#94a3b8" text-anchor="middle">∞</text>
+  <text x="453" y="130" font-size="11" fill="#065f46" text-anchor="middle">3</text>
+
+  <rect x="300" y="138" width="34" height="26" fill="#eef2ff" stroke="#cbd5e1"/>
+  <rect x="334" y="138" width="34" height="26" fill="#ffffff" stroke="#cbd5e1"/>
+  <rect x="368" y="138" width="34" height="26" fill="#ffffff" stroke="#cbd5e1"/>
+  <rect x="402" y="138" width="34" height="26" fill="#ffffff" stroke="#cbd5e1"/>
+  <rect x="436" y="138" width="34" height="26" fill="#d1fae5" stroke="#059669"/>
+  <text x="317" y="156" font-size="11" fill="#312e81" text-anchor="middle">C</text>
+  <text x="351" y="156" font-size="11" fill="#94a3b8" text-anchor="middle">∞</text>
+  <text x="385" y="156" font-size="11" fill="#94a3b8" text-anchor="middle">∞</text>
+  <text x="419" y="156" font-size="11" fill="#94a3b8" text-anchor="middle">∞</text>
+  <text x="453" y="156" font-size="11" fill="#065f46" text-anchor="middle">5</text>
+
+  <rect x="300" y="164" width="34" height="26" fill="#eef2ff" stroke="#cbd5e1"/>
+  <rect x="334" y="164" width="34" height="26" fill="#ffffff" stroke="#cbd5e1"/>
+  <rect x="368" y="164" width="34" height="26" fill="#ffffff" stroke="#cbd5e1"/>
+  <rect x="402" y="164" width="34" height="26" fill="#ffffff" stroke="#cbd5e1"/>
+  <rect x="436" y="164" width="34" height="26" fill="#ffffff" stroke="#cbd5e1"/>
+  <text x="317" y="182" font-size="11" fill="#312e81" text-anchor="middle">D</text>
+  <text x="351" y="182" font-size="11" fill="#94a3b8" text-anchor="middle">∞</text>
+  <text x="385" y="182" font-size="11" fill="#94a3b8" text-anchor="middle">∞</text>
+  <text x="419" y="182" font-size="11" fill="#94a3b8" text-anchor="middle">∞</text>
+  <text x="453" y="182" font-size="11" fill="#94a3b8" text-anchor="middle">∞</text>
+
+  <text x="492" y="98" font-size="11" fill="#475569">空间 O(n²)，与边数无关</text>
+  <text x="492" y="118" font-size="11" fill="#475569">判边 (i,j) 存在：O(1)</text>
+  <text x="492" y="138" font-size="11" fill="#475569">找 i 的所有邻接点：O(n)</text>
+  <text x="492" y="158" font-size="11" fill="#475569">适合<tspan font-weight="700">稠密图</tspan>；无向图矩阵对称</text>
+  <text x="492" y="178" font-size="11" fill="#475569">A²[i][j] = 长度 2 的路径条数</text>
+
+  <text x="20" y="222" font-size="12.5" font-weight="700" fill="#312e81">② 邻接表（链式存储）</text>
+
+  <rect x="40" y="240" width="36" height="22" rx="3" fill="#e0e7ff" stroke="#4f46e5" stroke-width="1.1"/>
+  <text x="58" y="255" font-size="11" fill="#312e81" text-anchor="middle">A</text>
+  <line x1="76" y1="251" x2="94" y2="251" stroke="#64748b" stroke-width="1.2" marker-end="url(#grA)"/>
+  <rect x="96" y="240" width="66" height="22" rx="3" fill="#ffffff" stroke="#94a3b8" stroke-width="1.1"/>
+  <text x="129" y="255" font-size="10.5" fill="#334155" text-anchor="middle">B | 2</text>
+  <line x1="162" y1="251" x2="180" y2="251" stroke="#64748b" stroke-width="1.2" marker-end="url(#grA)"/>
+  <rect x="182" y="240" width="66" height="22" rx="3" fill="#ffffff" stroke="#94a3b8" stroke-width="1.1"/>
+  <text x="215" y="255" font-size="10.5" fill="#334155" text-anchor="middle">C | 4</text>
+  <line x1="248" y1="251" x2="266" y2="251" stroke="#64748b" stroke-width="1.2" marker-end="url(#grA)"/>
+  <text x="270" y="255" font-size="10.5" fill="#94a3b8">∧</text>
+
+  <rect x="40" y="270" width="36" height="22" rx="3" fill="#e0e7ff" stroke="#4f46e5" stroke-width="1.1"/>
+  <text x="58" y="285" font-size="11" fill="#312e81" text-anchor="middle">B</text>
+  <line x1="76" y1="281" x2="94" y2="281" stroke="#64748b" stroke-width="1.2" marker-end="url(#grA)"/>
+  <rect x="96" y="270" width="66" height="22" rx="3" fill="#ffffff" stroke="#94a3b8" stroke-width="1.1"/>
+  <text x="129" y="285" font-size="10.5" fill="#334155" text-anchor="middle">D | 3</text>
+  <line x1="162" y1="281" x2="180" y2="281" stroke="#64748b" stroke-width="1.2" marker-end="url(#grA)"/>
+  <text x="184" y="285" font-size="10.5" fill="#94a3b8">∧</text>
+
+  <rect x="40" y="300" width="36" height="22" rx="3" fill="#e0e7ff" stroke="#4f46e5" stroke-width="1.1"/>
+  <text x="58" y="315" font-size="11" fill="#312e81" text-anchor="middle">C</text>
+  <line x1="76" y1="311" x2="94" y2="311" stroke="#64748b" stroke-width="1.2" marker-end="url(#grA)"/>
+  <rect x="96" y="300" width="66" height="22" rx="3" fill="#ffffff" stroke="#94a3b8" stroke-width="1.1"/>
+  <text x="129" y="315" font-size="10.5" fill="#334155" text-anchor="middle">D | 5</text>
+  <line x1="162" y1="311" x2="180" y2="311" stroke="#64748b" stroke-width="1.2" marker-end="url(#grA)"/>
+  <text x="184" y="315" font-size="10.5" fill="#94a3b8">∧</text>
+
+  <rect x="40" y="330" width="36" height="22" rx="3" fill="#e0e7ff" stroke="#4f46e5" stroke-width="1.1"/>
+  <text x="58" y="345" font-size="11" fill="#312e81" text-anchor="middle">D</text>
+  <line x1="76" y1="341" x2="94" y2="341" stroke="#64748b" stroke-width="1.2" marker-end="url(#grA)"/>
+  <text x="98" y="345" font-size="10.5" fill="#94a3b8">∧</text>
+
+  <text x="228" y="285" font-size="11" fill="#475569">空间 O(n + e)：只存实际存在的边</text>
+  <text x="228" y="305" font-size="11" fill="#475569">找 i 的所有邻接点：O(度)；判边 (i,j)：O(度)</text>
+  <text x="228" y="325" font-size="11" fill="#475569">适合<tspan font-weight="700">稀疏图</tspan>；有向图求出度易、求入度难</text>
+  <text x="228" y="345" font-size="11" fill="#475569">逆邻接表：求入度易（按入边建表）</text>
+
+  <text x="20" y="378" font-size="11.5" fill="#334155">十字链表（<tspan font-weight="700">有向图</tspan>：同时存出边与入边，求出入度都 O(1)）　·　邻接多重表（<tspan font-weight="700">无向图</tspan>：每条边只存一个结点，删边不找双份）</text>
+  <text x="20" y="398" font-size="11" fill="#64748b">邻接表存无向图时每条边存两份（2e 个边结点），邻接多重表正是为了消掉这份冗余。</text>
+
+  <rect x="20" y="410" width="640" height="76" rx="8" fill="#eef2ff" stroke="#c7d2fe" stroke-width="1"/>
+  <text x="34" y="432" font-size="11.5" font-weight="700" fill="#312e81">易错：</text>
+  <text x="34" y="452" font-size="11.5" fill="#3730a3">① 邻接矩阵空间只与顶点数有关，邻接表空间与「边数」有关 —— 稀疏图（e ≪ n²）用邻接表才划算。</text>
+  <text x="34" y="472" font-size="11.5" fill="#3730a3">② 邻接表只有出边时，DFS / BFS 仍可遍历整张图（顺着出边走即可），不要求入边。</text>
+</svg>
