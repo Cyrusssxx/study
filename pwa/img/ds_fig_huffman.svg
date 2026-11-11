@@ -1,0 +1,109 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 680 496" width="680" height="496" font-family="-apple-system,BlinkMacSystemFont,'Segoe UI','Microsoft YaHei',sans-serif">
+  <rect x="0" y="0" width="680" height="496" fill="#ffffff"/>
+  <text x="20" y="28" font-size="16" font-weight="700" fill="#312e81">哈夫曼树构造 · 权值 {7, 5, 2, 4}</text>
+  <text x="20" y="48" font-size="12" fill="#64748b">每次取权值最小的两棵树合并，新根权 = 两权之和，重复 n − 1 = 3 次</text>
+
+  <text x="20" y="78" font-size="12.5" font-weight="700" fill="#4338ca">① 三步合并（每一步都从当前森林里挑最小的两个）</text>
+
+  <g stroke="#94a3b8" stroke-width="1.4">
+    <line x1="110" y1="96" x2="78" y2="140"/>
+    <line x1="110" y1="96" x2="142" y2="140"/>
+    <line x1="310" y1="96" x2="278" y2="140"/>
+    <line x1="310" y1="96" x2="342" y2="140"/>
+    <line x1="510" y1="96" x2="478" y2="140"/>
+    <line x1="510" y1="96" x2="542" y2="140"/>
+  </g>
+
+  <circle cx="110" cy="96" r="17" fill="#eef2ff" stroke="#4f46e5" stroke-width="1.6"/>
+  <circle cx="78" cy="140" r="17" fill="#f0fdf4" stroke="#16a34a" stroke-width="1.6"/>
+  <circle cx="142" cy="140" r="17" fill="#f0fdf4" stroke="#16a34a" stroke-width="1.6"/>
+  <text x="110" y="101" font-size="12.5" font-weight="700" fill="#312e81" text-anchor="middle">6</text>
+  <text x="78" y="145" font-size="12.5" fill="#15803d" text-anchor="middle">2</text>
+  <text x="142" y="145" font-size="12.5" fill="#15803d" text-anchor="middle">4</text>
+
+  <circle cx="310" cy="96" r="17" fill="#eef2ff" stroke="#4f46e5" stroke-width="1.6"/>
+  <circle cx="278" cy="140" r="17" fill="#f0fdf4" stroke="#16a34a" stroke-width="1.6"/>
+  <circle cx="342" cy="140" r="17" fill="#fef3c7" stroke="#d97706" stroke-width="1.6"/>
+  <text x="310" y="101" font-size="12.5" font-weight="700" fill="#312e81" text-anchor="middle">11</text>
+  <text x="278" y="145" font-size="12.5" fill="#15803d" text-anchor="middle">5</text>
+  <text x="342" y="145" font-size="12.5" font-weight="700" fill="#b45309" text-anchor="middle">6</text>
+
+  <circle cx="510" cy="96" r="17" fill="#c7d2fe" stroke="#4338ca" stroke-width="1.8"/>
+  <circle cx="478" cy="140" r="17" fill="#f0fdf4" stroke="#16a34a" stroke-width="1.6"/>
+  <circle cx="542" cy="140" r="17" fill="#fef3c7" stroke="#d97706" stroke-width="1.6"/>
+  <text x="510" y="101" font-size="12.5" font-weight="700" fill="#312e81" text-anchor="middle">18</text>
+  <text x="478" y="145" font-size="12.5" fill="#15803d" text-anchor="middle">7</text>
+  <text x="542" y="145" font-size="12.5" font-weight="700" fill="#b45309" text-anchor="middle">11</text>
+
+  <text x="205" y="128" font-size="14" fill="#94a3b8" text-anchor="middle">→</text>
+  <text x="405" y="128" font-size="14" fill="#94a3b8" text-anchor="middle">→</text>
+
+  <text x="110" y="172" font-size="10.5" fill="#64748b" text-anchor="middle">{2,4,5,7} → {5,6,7}</text>
+  <text x="310" y="172" font-size="10.5" fill="#64748b" text-anchor="middle">{5,6,7} → {7,11}</text>
+  <text x="510" y="172" font-size="10.5" fill="#64748b" text-anchor="middle">{7,11} → {18} 完成</text>
+
+  <text x="20" y="200" font-size="12.5" font-weight="700" fill="#4338ca">② 最终哈夫曼树（约定左 0、右 1）</text>
+
+  <g stroke="#94a3b8" stroke-width="1.4">
+    <line x1="190" y1="222" x2="128" y2="276"/>
+    <line x1="190" y1="222" x2="252" y2="276"/>
+    <line x1="252" y1="276" x2="206" y2="330"/>
+    <line x1="252" y1="276" x2="298" y2="330"/>
+    <line x1="298" y1="330" x2="270" y2="384"/>
+    <line x1="298" y1="330" x2="326" y2="384"/>
+  </g>
+  <text x="150" y="254" font-size="11" fill="#475569">0</text>
+  <text x="228" y="254" font-size="11" fill="#475569">1</text>
+  <text x="220" y="308" font-size="11" fill="#475569">0</text>
+  <text x="282" y="308" font-size="11" fill="#475569">1</text>
+  <text x="274" y="362" font-size="11" fill="#475569">0</text>
+  <text x="318" y="362" font-size="11" fill="#475569">1</text>
+
+  <circle cx="190" cy="222" r="19" fill="#eef2ff" stroke="#4f46e5" stroke-width="1.8"/>
+  <text x="190" y="227" font-size="13" font-weight="700" fill="#312e81" text-anchor="middle">18</text>
+  <circle cx="128" cy="276" r="17" fill="#f0fdf4" stroke="#16a34a" stroke-width="1.8"/>
+  <text x="128" y="281" font-size="12.5" font-weight="700" fill="#15803d" text-anchor="middle">7</text>
+  <circle cx="252" cy="276" r="19" fill="#eef2ff" stroke="#4f46e5" stroke-width="1.8"/>
+  <text x="252" y="281" font-size="13" font-weight="700" fill="#312e81" text-anchor="middle">11</text>
+  <circle cx="206" cy="330" r="17" fill="#f0fdf4" stroke="#16a34a" stroke-width="1.8"/>
+  <text x="206" y="335" font-size="12.5" font-weight="700" fill="#15803d" text-anchor="middle">5</text>
+  <circle cx="298" cy="330" r="19" fill="#eef2ff" stroke="#4f46e5" stroke-width="1.8"/>
+  <text x="298" y="335" font-size="13" font-weight="700" fill="#312e81" text-anchor="middle">6</text>
+  <circle cx="270" cy="384" r="17" fill="#f0fdf4" stroke="#16a34a" stroke-width="1.8"/>
+  <text x="270" y="389" font-size="12.5" font-weight="700" fill="#15803d" text-anchor="middle">2</text>
+  <circle cx="326" cy="384" r="17" fill="#f0fdf4" stroke="#16a34a" stroke-width="1.8"/>
+  <text x="326" y="389" font-size="12.5" font-weight="700" fill="#15803d" text-anchor="middle">4</text>
+
+  <text x="392" y="214" font-size="11.5" font-weight="700" fill="#312e81">叶</text>
+  <text x="452" y="214" font-size="11.5" font-weight="700" fill="#312e81">编码</text>
+  <text x="532" y="214" font-size="11.5" font-weight="700" fill="#312e81">码长</text>
+  <text x="586" y="214" font-size="11.5" font-weight="700" fill="#312e81">权×码长</text>
+  <line x1="392" y1="220" x2="660" y2="220" stroke="#cbd5e1" stroke-width="1"/>
+  <text x="392" y="241" font-size="12" fill="#15803d">7</text>
+  <text x="452" y="241" font-size="12" fill="#334155">0</text>
+  <text x="532" y="241" font-size="12" fill="#334155">1</text>
+  <text x="586" y="241" font-size="12" fill="#334155">7</text>
+  <text x="392" y="266" font-size="12" fill="#15803d">5</text>
+  <text x="452" y="266" font-size="12" fill="#334155">10</text>
+  <text x="532" y="266" font-size="12" fill="#334155">2</text>
+  <text x="586" y="266" font-size="12" fill="#334155">10</text>
+  <text x="392" y="291" font-size="12" fill="#15803d">2</text>
+  <text x="452" y="291" font-size="12" fill="#334155">110</text>
+  <text x="532" y="291" font-size="12" fill="#334155">3</text>
+  <text x="586" y="291" font-size="12" fill="#334155">6</text>
+  <text x="392" y="316" font-size="12" fill="#15803d">4</text>
+  <text x="452" y="316" font-size="12" fill="#334155">111</text>
+  <text x="532" y="316" font-size="12" fill="#334155">3</text>
+  <text x="586" y="316" font-size="12" fill="#334155">12</text>
+  <line x1="392" y1="328" x2="660" y2="328" stroke="#e2e8f0" stroke-width="1"/>
+  <text x="392" y="348" font-size="11.5" font-weight="700" fill="#b91c1c">合计</text>
+  <text x="452" y="348" font-size="11.5" fill="#b91c1c">平均 1.94</text>
+  <text x="586" y="348" font-size="11.5" font-weight="700" fill="#b91c1c">WPL 35</text>
+  <text x="392" y="374" font-size="10.5" fill="#64748b">总编码长度 = WPL = 35；</text>
+  <text x="392" y="390" font-size="10.5" fill="#64748b">平均码长 = 35 ÷ 18 ≈ 1.94</text>
+
+  <rect x="20" y="410" width="640" height="76" rx="8" fill="#fef2f2" stroke="#fecaca" stroke-width="1"/>
+  <text x="34" y="429" font-size="11.5" font-weight="700" fill="#991b1b">易错：</text>
+  <text x="34" y="448" font-size="11.2" fill="#7f1d1d">① 路径长度是<tspan font-weight="700">边数</tspan>，第 L 层的叶路径长为 L−1；② 只有度 0 和 2，结点数 2n−1 必为奇数。</text>
+  <text x="34" y="467" font-size="11.2" fill="#7f1d1d">③ 左右谁 0 谁 1 可以交换，编码不唯一，但 WPL 唯一（最优树本身不唯一）。</text>
+</svg>

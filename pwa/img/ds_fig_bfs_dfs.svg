@@ -1,0 +1,68 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 680 530" width="680" height="530" font-family="-apple-system,BlinkMacSystemFont,'Segoe UI','Microsoft YaHei',sans-serif">
+  <rect x="0" y="0" width="680" height="530" fill="#ffffff"/>
+  <text x="20" y="28" font-size="16" font-weight="700" fill="#312e81">图的遍历 · 同一张图上的 BFS 与 DFS</text>
+  <text x="20" y="48" font-size="12" fill="#64748b">BFS 靠队列逐层扩展，DFS 靠栈一路到底再回退；两者都要 visited[] 防重复访问</text>
+
+  <g stroke="#cbd5e1" stroke-width="1.5">
+    <line x1="175" y1="105" x2="105" y2="175"/>
+    <line x1="175" y1="105" x2="245" y2="175"/>
+    <line x1="105" y1="175" x2="62" y2="245"/>
+    <line x1="105" y1="175" x2="140" y2="245"/>
+    <line x1="245" y1="175" x2="215" y2="245"/>
+    <line x1="245" y1="175" x2="295" y2="245"/>
+    <line x1="140" y1="245" x2="140" y2="315"/>
+  </g>
+
+  <circle cx="175" cy="105" r="18" fill="#c7d2fe" stroke="#4338ca" stroke-width="1.8"/>
+  <text x="175" y="110" font-size="12.5" font-weight="700" fill="#312e81" text-anchor="middle">a</text>
+  <circle cx="105" cy="175" r="17" fill="#eef2ff" stroke="#4f46e5" stroke-width="1.6"/>
+  <text x="105" y="180" font-size="12" fill="#312e81" text-anchor="middle">b</text>
+  <circle cx="245" cy="175" r="17" fill="#eef2ff" stroke="#4f46e5" stroke-width="1.6"/>
+  <text x="245" y="180" font-size="12" fill="#312e81" text-anchor="middle">c</text>
+  <circle cx="62" cy="245" r="17" fill="#f8fafc" stroke="#94a3b8" stroke-width="1.4"/>
+  <text x="62" y="250" font-size="12" fill="#475569" text-anchor="middle">d</text>
+  <circle cx="140" cy="245" r="17" fill="#f8fafc" stroke="#94a3b8" stroke-width="1.4"/>
+  <text x="140" y="250" font-size="12" fill="#475569" text-anchor="middle">e</text>
+  <circle cx="215" cy="245" r="17" fill="#f8fafc" stroke="#94a3b8" stroke-width="1.4"/>
+  <text x="215" y="250" font-size="12" fill="#475569" text-anchor="middle">f</text>
+  <circle cx="295" cy="245" r="17" fill="#f8fafc" stroke="#94a3b8" stroke-width="1.4"/>
+  <text x="295" y="250" font-size="12" fill="#475569" text-anchor="middle">g</text>
+  <circle cx="140" cy="315" r="17" fill="#f8fafc" stroke="#94a3b8" stroke-width="1.4"/>
+  <text x="140" y="320" font-size="12" fill="#475569" text-anchor="middle">h</text>
+
+  <text x="20" y="360" font-size="10.5" fill="#64748b">8 顶点 7 边 · 邻接表按字母序</text>
+
+  <text x="350" y="82" font-size="12" font-weight="700" fill="#4338ca">BFS 队列过程</text>
+  <rect x="350" y="92" width="310" height="24" fill="#e0e7ff" stroke="#c7d2fe"/>
+  <text x="358" y="108" font-size="10.5" font-weight="700" fill="#312e81">步</text>
+  <text x="400" y="108" font-size="10.5" font-weight="700" fill="#312e81">出队</text>
+  <text x="470" y="108" font-size="10.5" font-weight="700" fill="#312e81">新入队（未访问邻居）</text>
+
+  <g stroke="#e2e8f0" fill="none" font-size="11.5">
+    <rect x="350" y="116" width="310" height="26"/><rect x="350" y="142" width="310" height="26"/>
+    <rect x="350" y="168" width="310" height="26"/><rect x="350" y="194" width="310" height="26"/>
+    <rect x="350" y="220" width="310" height="26"/><rect x="350" y="246" width="310" height="26"/>
+    <rect x="350" y="272" width="310" height="26"/><rect x="350" y="298" width="310" height="26"/>
+  </g>
+  <g font-size="11.5" fill="#334155">
+    <text x="358" y="134">1</text><text x="400" y="134" font-weight="700">a</text><text x="470" y="134">b, c</text>
+    <text x="358" y="160">2</text><text x="400" y="160" font-weight="700">b</text><text x="470" y="160">d, e</text>
+    <text x="358" y="186">3</text><text x="400" y="186" font-weight="700">c</text><text x="470" y="186">f, g</text>
+    <text x="358" y="212">4</text><text x="400" y="212">d</text><text x="470" y="212" fill="#94a3b8">—</text>
+    <text x="358" y="238">5</text><text x="400" y="238">e</text><text x="470" y="238">h</text>
+    <text x="358" y="264">6</text><text x="400" y="264">f</text><text x="470" y="264" fill="#94a3b8">—</text>
+    <text x="358" y="290">7</text><text x="400" y="290">g</text><text x="470" y="290" fill="#94a3b8">—</text>
+    <text x="358" y="316">8</text><text x="400" y="316">h</text><text x="470" y="316" fill="#94a3b8">—</text>
+  </g>
+  <text x="350" y="342" font-size="11.5" fill="#1e293b">BFS 序列：<tspan font-weight="700">a b c d e f g h</tspan>（严格按层）</text>
+
+  <text x="20" y="388" font-size="12" font-weight="700" fill="#4338ca">DFS 递归过程（系统栈）</text>
+  <text x="20" y="408" font-size="11.5" fill="#334155">a → b → d（d 无新邻居，回退到 b）→ e → h（回退 e → b → a）→ c → f → g</text>
+  <text x="20" y="426" font-size="11.5" fill="#1e293b">DFS 序列：<tspan font-weight="700">a b d e h c f g</tspan>（一路到底，撞墙才回头）</text>
+
+  <rect x="20" y="440" width="640" height="74" rx="8" fill="#fef2f2" stroke="#fecaca" stroke-width="1"/>
+  <text x="34" y="459" font-size="11.5" font-weight="700" fill="#991b1b">易错：</text>
+  <text x="34" y="477" font-size="11.2" fill="#7f1d1d">① BFS 只能求<tspan font-weight="700">无权图</tspan>单源最短路，带权必须 Dijkstra；② 序列都不唯一（起点 + 邻接表次序决定），邻接矩阵才唯一。</text>
+  <text x="34" y="495" font-size="11.2" fill="#7f1d1d">③ 时间复杂度只取决于存储结构（矩阵 O(|V|²) / 邻接表 O(|V|+|E|)），与 BFS 还是 DFS 无关。</text>
+  <text x="34" y="511" font-size="11.2" fill="#7f1d1d">④ 非连通图必须外层再套一个 for 循环，否则会漏掉整个连通分量。</text>
+</svg>

@@ -1,0 +1,95 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 680 524" width="680" height="524" font-family="-apple-system,BlinkMacSystemFont,'Segoe UI','Microsoft YaHei',sans-serif">
+  <rect x="0" y="0" width="680" height="524" fill="#ffffff"/>
+  <text x="20" y="28" font-size="16" font-weight="700" fill="#312e81">二路归并排序 · 8 个元素 3 趟</text>
+  <text x="20" y="48" font-size="12" fill="#64748b">每一趟只把「相邻」的两个有序段两两合并，段长翻倍：1 → 2 → 4 → 8</text>
+
+  <text x="20" y="120" font-size="11" fill="#64748b">初始</text>
+  <rect x="100" y="96" width="56" height="40" rx="4" fill="#f8fafc" stroke="#cbd5e1"/>
+  <rect x="162" y="96" width="56" height="40" rx="4" fill="#eef2ff" stroke="#c7d2fe"/>
+  <rect x="224" y="96" width="56" height="40" rx="4" fill="#f8fafc" stroke="#cbd5e1"/>
+  <rect x="286" y="96" width="56" height="40" rx="4" fill="#eef2ff" stroke="#c7d2fe"/>
+  <rect x="348" y="96" width="56" height="40" rx="4" fill="#f8fafc" stroke="#cbd5e1"/>
+  <rect x="410" y="96" width="56" height="40" rx="4" fill="#eef2ff" stroke="#c7d2fe"/>
+  <rect x="472" y="96" width="56" height="40" rx="4" fill="#f8fafc" stroke="#cbd5e1"/>
+  <rect x="534" y="96" width="56" height="40" rx="4" fill="#eef2ff" stroke="#c7d2fe"/>
+  <text x="128" y="122" font-size="12.5" fill="#334155" text-anchor="middle">49</text>
+  <text x="190" y="122" font-size="12.5" fill="#334155" text-anchor="middle">38</text>
+  <text x="252" y="122" font-size="12.5" fill="#334155" text-anchor="middle">65</text>
+  <text x="314" y="122" font-size="12.5" fill="#334155" text-anchor="middle">97</text>
+  <text x="376" y="122" font-size="12.5" fill="#334155" text-anchor="middle">76</text>
+  <text x="438" y="122" font-size="12.5" fill="#334155" text-anchor="middle">13</text>
+  <text x="500" y="122" font-size="12.5" fill="#334155" text-anchor="middle">27</text>
+  <text x="562" y="122" font-size="12.5" fill="#334155" text-anchor="middle">49*</text>
+
+  <text x="20" y="200" font-size="11" fill="#64748b">第 1 趟</text>
+  <rect x="100" y="176" width="56" height="40" rx="4" fill="#f0fdf4" stroke="#86efac"/>
+  <rect x="162" y="176" width="56" height="40" rx="4" fill="#f0fdf4" stroke="#86efac"/>
+  <rect x="224" y="176" width="56" height="40" rx="4" fill="#eef2ff" stroke="#c7d2fe"/>
+  <rect x="286" y="176" width="56" height="40" rx="4" fill="#eef2ff" stroke="#c7d2fe"/>
+  <rect x="348" y="176" width="56" height="40" rx="4" fill="#f0fdf4" stroke="#86efac"/>
+  <rect x="410" y="176" width="56" height="40" rx="4" fill="#f0fdf4" stroke="#86efac"/>
+  <rect x="472" y="176" width="56" height="40" rx="4" fill="#eef2ff" stroke="#c7d2fe"/>
+  <rect x="534" y="176" width="56" height="40" rx="4" fill="#eef2ff" stroke="#c7d2fe"/>
+  <text x="128" y="202" font-size="12.5" font-weight="700" fill="#15803d" text-anchor="middle">38</text>
+  <text x="190" y="202" font-size="12.5" font-weight="700" fill="#15803d" text-anchor="middle">49</text>
+  <text x="252" y="202" font-size="12.5" fill="#334155" text-anchor="middle">65</text>
+  <text x="314" y="202" font-size="12.5" fill="#334155" text-anchor="middle">97</text>
+  <text x="376" y="202" font-size="12.5" font-weight="700" fill="#15803d" text-anchor="middle">13</text>
+  <text x="438" y="202" font-size="12.5" font-weight="700" fill="#15803d" text-anchor="middle">76</text>
+  <text x="500" y="202" font-size="12.5" fill="#334155" text-anchor="middle">27</text>
+  <text x="562" y="202" font-size="12.5" fill="#334155" text-anchor="middle">49*</text>
+
+  <path d="M100 224 L100 230 L218 230 L218 224" stroke="#94a3b8" stroke-width="1.1" fill="none"/>
+  <path d="M224 224 L224 230 L342 230 L342 224" stroke="#94a3b8" stroke-width="1.1" fill="none"/>
+  <path d="M348 224 L348 230 L466 230 L466 224" stroke="#94a3b8" stroke-width="1.1" fill="none"/>
+  <path d="M472 224 L472 230 L590 230 L590 224" stroke="#94a3b8" stroke-width="1.1" fill="none"/>
+
+  <text x="20" y="280" font-size="11" fill="#64748b">第 2 趟</text>
+  <rect x="100" y="256" width="56" height="40" rx="4" fill="#f0fdf4" stroke="#86efac"/>
+  <rect x="162" y="256" width="56" height="40" rx="4" fill="#f0fdf4" stroke="#86efac"/>
+  <rect x="224" y="256" width="56" height="40" rx="4" fill="#f0fdf4" stroke="#86efac"/>
+  <rect x="286" y="256" width="56" height="40" rx="4" fill="#f0fdf4" stroke="#86efac"/>
+  <rect x="348" y="256" width="56" height="40" rx="4" fill="#eef2ff" stroke="#c7d2fe"/>
+  <rect x="410" y="256" width="56" height="40" rx="4" fill="#eef2ff" stroke="#c7d2fe"/>
+  <rect x="472" y="256" width="56" height="40" rx="4" fill="#eef2ff" stroke="#c7d2fe"/>
+  <rect x="534" y="256" width="56" height="40" rx="4" fill="#eef2ff" stroke="#c7d2fe"/>
+  <text x="128" y="282" font-size="12.5" fill="#15803d" text-anchor="middle">38</text>
+  <text x="190" y="282" font-size="12.5" fill="#15803d" text-anchor="middle">49</text>
+  <text x="252" y="282" font-size="12.5" fill="#15803d" text-anchor="middle">65</text>
+  <text x="314" y="282" font-size="12.5" fill="#15803d" text-anchor="middle">97</text>
+  <text x="376" y="282" font-size="12.5" fill="#334155" text-anchor="middle">13</text>
+  <text x="438" y="282" font-size="12.5" fill="#334155" text-anchor="middle">27</text>
+  <text x="500" y="282" font-size="12.5" fill="#334155" text-anchor="middle">49*</text>
+  <text x="562" y="282" font-size="12.5" fill="#334155" text-anchor="middle">76</text>
+
+  <path d="M100 304 L100 310 L342 310 L342 304" stroke="#94a3b8" stroke-width="1.1" fill="none"/>
+  <path d="M348 304 L348 310 L590 310 L590 304" stroke="#94a3b8" stroke-width="1.1" fill="none"/>
+
+  <text x="20" y="360" font-size="11" fill="#64748b">第 3 趟</text>
+  <rect x="100" y="336" width="56" height="40" rx="4" fill="#c7d2fe" stroke="#4338ca" stroke-width="1.6"/>
+  <rect x="162" y="336" width="56" height="40" rx="4" fill="#c7d2fe" stroke="#4338ca" stroke-width="1.6"/>
+  <rect x="224" y="336" width="56" height="40" rx="4" fill="#c7d2fe" stroke="#4338ca" stroke-width="1.6"/>
+  <rect x="286" y="336" width="56" height="40" rx="4" fill="#c7d2fe" stroke="#4338ca" stroke-width="1.6"/>
+  <rect x="348" y="336" width="56" height="40" rx="4" fill="#c7d2fe" stroke="#4338ca" stroke-width="1.6"/>
+  <rect x="410" y="336" width="56" height="40" rx="4" fill="#c7d2fe" stroke="#4338ca" stroke-width="1.6"/>
+  <rect x="472" y="336" width="56" height="40" rx="4" fill="#c7d2fe" stroke="#4338ca" stroke-width="1.6"/>
+  <rect x="534" y="336" width="56" height="40" rx="4" fill="#c7d2fe" stroke="#4338ca" stroke-width="1.6"/>
+  <text x="128" y="362" font-size="12.5" font-weight="700" fill="#312e81" text-anchor="middle">13</text>
+  <text x="190" y="362" font-size="12.5" font-weight="700" fill="#312e81" text-anchor="middle">27</text>
+  <text x="252" y="362" font-size="12.5" font-weight="700" fill="#312e81" text-anchor="middle">38</text>
+  <text x="314" y="362" font-size="12.5" font-weight="700" fill="#312e81" text-anchor="middle">49</text>
+  <text x="376" y="362" font-size="12.5" font-weight="700" fill="#312e81" text-anchor="middle">49*</text>
+  <text x="438" y="362" font-size="12.5" font-weight="700" fill="#312e81" text-anchor="middle">65</text>
+  <text x="500" y="362" font-size="12.5" font-weight="700" fill="#312e81" text-anchor="middle">76</text>
+  <text x="562" y="362" font-size="12.5" font-weight="700" fill="#312e81" text-anchor="middle">97</text>
+
+  <path d="M100 384 L100 390 L590 390 L590 384" stroke="#4338ca" stroke-width="1.2" fill="none"/>
+
+  <text x="20" y="412" font-size="11.5" fill="#334155">趟数：8 个元素 ⌈log₂8⌉ = 3 趟；16 个元素 4 趟；6 个初始段合并 ⌈log₂6⌉ = 3 趟 —— <tspan font-weight="700">与初始是否有序无关</tspan>。</text>
+
+  <rect x="20" y="428" width="640" height="82" rx="8" fill="#fef2f2" stroke="#fecaca" stroke-width="1"/>
+  <text x="34" y="448" font-size="11.5" font-weight="700" fill="#991b1b">易错：</text>
+  <text x="34" y="466" font-size="11.2" fill="#7f1d1d">① 时间最好 = 最坏 = 平均 = O(n log n)，只有空间是 O(n) —— 本章空间代价最大的内部排序，但稳定。</text>
+  <text x="34" y="484" font-size="11.2" fill="#7f1d1d">② 一趟归并只合并<tspan font-weight="700">相邻</tspan>两段，跨段合并是错的。</text>
+  <text x="34" y="502" font-size="11.2" fill="#7f1d1d">③ 外部排序用 k 路归并减少趟数：m 个初始段 → ⌈log_k m⌉ 趟，k 越大趟数越少。</text>
+</svg>
