@@ -46,7 +46,8 @@ const all73 = h731 + h732 + h733;
 
 check('计组笔记仍是 CRLF + 无尾换行（防 json.dump 污染）',
   [notesRaw.indexOf('\r\n') > 0, notesRaw.endsWith('\n')], [true, false]);
-check('计组配图引用 5 张', (notesRaw.match(/fig-img/g) || []).length, 5);
+check('计组配图引用 >= 5 张（后续批次只增不减）',
+  (notesRaw.match(/fig-img/g) || []).length >= 5, true);
 check('7.3.3 引用新图 co_fig_io_modes.svg', h733.includes('img/co_fig_io_modes.svg'), true);
 check('图题与图都带 data-fig="1"',
   (h733.match(/<p class="paragraph" data-fig="1">/g) || []).length, 2);
@@ -60,7 +61,8 @@ check('配图在高真题考点列表之前', iQuiz > iFig, true);
 check('7.3.1 有黄框', h731.includes('class="key-callout"'), true);
 check('7.3.2 有黄框', h732.includes('class="key-callout"'), true);
 check('7.3.3 有黄框', h733.includes('class="key-callout"'), true);
-check('全计组黄框 4 个', (notesRaw.match(/class=\\"key-callout\\"/g) || []).length, 4);
+check('全计组黄框 >= 4 个（后续批次只增不减）',
+  (notesRaw.match(/class=\\"key-callout\\"/g) || []).length >= 4, true);
 check('加粗总量提升（>=800）', (notesRaw.match(/<b>/g) || []).length >= 800, true);
 
 check('对比表存在且为 4 列', h733.includes('<table class="mc-table">'), true);
@@ -106,7 +108,8 @@ check('SVG 标注 CPU 介入粒度结论', svg.includes('CPU 介入粒度'), tru
 for (const f of ['von_neumann', 'mem_hierarchy', 'cache_map', 'pipeline', 'io_modes']) {
   check('SW DATA_PRECACHE 收录 img/co_fig_' + f + '.svg', sw.includes("'img/co_fig_" + f + ".svg'"), true);
 }
-check('SW 里计组图恰好 5 条', (sw.match(/'img\/co_fig_[^']+'/g) || []).length, 5);
+check('SW 里计组图 >= 5 条（后续批次只增不减）',
+  (sw.match(/'img\/co_fig_[^']+'/g) || []).length >= 5, true);
 check('本地 SVG 文件齐全',
   ['von_neumann', 'mem_hierarchy', 'cache_map', 'pipeline', 'io_modes']
     .every(f => fs.existsSync(path.join(ROOT, 'pwa/img/co_fig_' + f + '.svg'))), true);

@@ -1,0 +1,70 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 680 508" width="680" height="508" font-family="-apple-system,BlinkMacSystemFont,'Segoe UI','Microsoft YaHei',sans-serif">
+  <defs>
+    <marker id="mpArrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#4f46e5"/>
+    </marker>
+    <marker id="mpMiss" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#dc2626"/>
+    </marker>
+  </defs>
+  <rect x="0" y="0" width="680" height="508" fill="#ffffff"/>
+  <text x="20" y="28" font-size="16" font-weight="700" fill="#312e81">CPU 访存全链路 · 虚地址 → TLB → 页表 → Cache → 主存</text>
+  <text x="20" y="48" font-size="12" fill="#64748b">先做虚实地址变换，再拿物理地址访 Cache；顺序反了就是常见错题</text>
+
+  <rect x="20" y="64" width="640" height="44" rx="8" fill="#e0e7ff" stroke="#a5b4fc" stroke-width="1"/>
+  <text x="34" y="84" font-size="12" font-weight="700" fill="#312e81">CPU 给出虚拟地址 VA = 虚页号 VPN ｜ 页内偏移（偏移位数只由页面大小决定，低位原样拷贝）</text>
+  <text x="34" y="101" font-size="11" fill="#3730a3">目标：把 VPN 换成物理页号 PFN，拼接得到物理地址 PA = PFN ｜ 页内偏移，再用 PA 去取数据</text>
+
+  <g>
+    <rect x="20" y="122" width="150" height="52" rx="7" fill="#f1f5f9" stroke="#cbd5e1" stroke-width="1"/>
+    <text x="95" y="143" font-size="12" font-weight="700" fill="#334155" text-anchor="middle">① 查 TLB 快表</text>
+    <text x="95" y="161" font-size="10.5" fill="#64748b" text-anchor="middle">缓存近期页表项（SRAM）</text>
+
+    <rect x="196" y="122" width="150" height="52" rx="7" fill="#d1fae5" stroke="#6ee7b7" stroke-width="1"/>
+    <text x="271" y="143" font-size="12" font-weight="700" fill="#065f46" text-anchor="middle">命中 → 取 PFN</text>
+    <text x="271" y="161" font-size="10.5" fill="#059669" text-anchor="middle">TLB 命中 ⇒ 页必然命中</text>
+
+    <rect x="372" y="122" width="150" height="52" rx="7" fill="#fee2e2" stroke="#fca5a5" stroke-width="1"/>
+    <text x="447" y="143" font-size="12" font-weight="700" fill="#991b1b" text-anchor="middle">未命中 → 查页表</text>
+    <text x="447" y="161" font-size="10.5" fill="#dc2626" text-anchor="middle">页表常驻主存，多一次访存</text>
+
+    <rect x="548" y="122" width="112" height="52" rx="7" fill="#fef3c7" stroke="#fcd34d" stroke-width="1"/>
+    <text x="604" y="143" font-size="11.5" font-weight="700" fill="#92400e" text-anchor="middle">有效位 = 0？</text>
+    <text x="604" y="161" font-size="10.5" fill="#b45309" text-anchor="middle">缺页异常 → OS 调页</text>
+  </g>
+  <line x1="170" y1="148" x2="194" y2="148" stroke="#4f46e5" stroke-width="1.6" marker-end="url(#mpArrow)"/>
+  <line x1="346" y1="148" x2="370" y2="148" stroke="#dc2626" stroke-width="1.6" marker-end="url(#mpMiss)"/>
+  <line x1="522" y1="148" x2="546" y2="148" stroke="#dc2626" stroke-width="1.6" marker-end="url(#mpMiss)"/>
+  <text x="180" y="140" font-size="9.5" fill="#4f46e5">命中</text>
+  <text x="352" y="140" font-size="9.5" fill="#dc2626">缺</text>
+
+  <rect x="20" y="190" width="640" height="42" rx="8" fill="#eef2ff" stroke="#c7d2fe" stroke-width="1"/>
+  <text x="34" y="210" font-size="12" font-weight="700" fill="#312e81">② 得到物理地址 PA = PFN ｜ 页内偏移　→　用 PA 中的标记 / 行号 / 块内地址查 Cache</text>
+  <text x="34" y="227" font-size="11" fill="#3730a3">注意：MMU 检测的是「访问越权、页面缺失、TLB 缺失」，Cache 缺失不在此列（拿到 PA 之后才访 Cache）。</text>
+
+  <g>
+    <rect x="20" y="246" width="196" height="56" rx="7" fill="#d1fae5" stroke="#6ee7b7" stroke-width="1"/>
+    <text x="118" y="268" font-size="12" font-weight="700" fill="#065f46" text-anchor="middle">③ Cache 命中</text>
+    <text x="118" y="287" font-size="10.5" fill="#059669" text-anchor="middle">直接取块内数据 → 返回 CPU</text>
+
+    <rect x="240" y="246" width="196" height="56" rx="7" fill="#fee2e2" stroke="#fca5a5" stroke-width="1"/>
+    <text x="338" y="268" font-size="12" font-weight="700" fill="#991b1b" text-anchor="middle">③ Cache 缺失</text>
+    <text x="338" y="287" font-size="10.5" fill="#dc2626" text-anchor="middle">访主存取整块调入 Cache（可触发替换）</text>
+
+    <rect x="460" y="246" width="200" height="56" rx="7" fill="#fef3c7" stroke="#fcd34d" stroke-width="1"/>
+    <text x="560" y="268" font-size="12" font-weight="700" fill="#92400e" text-anchor="middle">④ 缺页处理</text>
+    <text x="560" y="287" font-size="10.5" fill="#b45309" text-anchor="middle">OS 从磁盘调页 → 重执行原指令</text>
+  </g>
+  <line x1="216" y1="274" x2="238" y2="274" stroke="#dc2626" stroke-width="1.6" marker-end="url(#mpMiss)"/>
+
+  <rect x="20" y="318" width="640" height="76" rx="9" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1"/>
+  <text x="34" y="340" font-size="12.5" font-weight="700" fill="#312e81">三种「命中」的包含关系（2010 / 2024 真题反复考）</text>
+  <text x="34" y="360" font-size="11.5" fill="#475569">Cache 命中 ⇒ Page 必然命中（内容已在主存）；TLB 命中 ⇒ Page 命中；反之都不一定。</text>
+  <text x="34" y="380" font-size="11.5" fill="#475569">「TLB 命中、Cache 命中、Page 未命中」不可能；「TLB 未命中、Page 命中、Cache 命中」完全可能。</text>
+
+  <rect x="20" y="404" width="640" height="88" rx="9" fill="#eef2ff" stroke="#c7d2fe" stroke-width="1"/>
+  <text x="34" y="426" font-size="12.5" font-weight="700" fill="#312e81">必背易错点</text>
+  <text x="34" y="446" font-size="11.5" fill="#3730a3">· 页内偏移位数只由页面大小决定，与虚 / 实地址总位数无关；VA 位数 = VPN 位数 + 偏移，PA 位数 = PFN 位数 + 偏移。</text>
+  <text x="34" y="465" font-size="11.5" fill="#3730a3">· TLB 是「页表项的缓存」（缓存映射关系），Cache 是「主存数据的缓存」（缓存数据本身），两者不同层次。</text>
+  <text x="34" y="484" font-size="11.5" fill="#3730a3">· 直接映射没有替换算法；全相联 / 组相联才有 LRU、FIFO、RAND。写回法必须有脏位，直写法可以没有。</text>
+</svg>

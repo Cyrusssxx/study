@@ -1,0 +1,70 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 680 528" width="680" height="528" font-family="-apple-system,BlinkMacSystemFont,'Segoe UI','Microsoft YaHei',sans-serif">
+  <rect x="0" y="0" width="680" height="528" fill="#ffffff"/>
+  <text x="20" y="28" font-size="16" font-weight="700" fill="#312e81">十种数据寻址方式 · 有效地址 EA 一图汇总</text>
+  <text x="20" y="48" font-size="12" fill="#64748b">A = 形式地址，R = 寄存器号，(X) = X 中的内容；访存次数均不含「取本条指令」</text>
+
+  <g>
+    <rect x="20" y="64" width="206" height="76" rx="8" fill="#d1fae5" stroke="#6ee7b7" stroke-width="1"/>
+    <text x="32" y="86" font-size="12.5" font-weight="700" fill="#065f46">立即寻址</text>
+    <text x="32" y="106" font-size="11.5" fill="#064e3b">操作数 = A 本身（在指令里）</text>
+    <text x="32" y="126" font-size="11.5" fill="#064e3b">EA 无　·　访存 0 次　·　最快</text>
+
+    <rect x="236" y="64" width="206" height="76" rx="8" fill="#d1fae5" stroke="#6ee7b7" stroke-width="1"/>
+    <text x="248" y="86" font-size="12.5" font-weight="700" fill="#065f46">寄存器寻址</text>
+    <text x="248" y="106" font-size="11.5" fill="#064e3b">操作数在 R 中，EA = R</text>
+    <text x="248" y="126" font-size="11.5" fill="#064e3b">访存 0 次　·　地址码短</text>
+
+    <rect x="452" y="64" width="208" height="76" rx="8" fill="#d1fae5" stroke="#6ee7b7" stroke-width="1"/>
+    <text x="464" y="86" font-size="12.5" font-weight="700" fill="#065f46">隐含寻址</text>
+    <text x="464" y="106" font-size="11.5" fill="#064e3b">操作数隐含在 ACC 等专用寄存器</text>
+    <text x="464" y="126" font-size="11.5" fill="#064e3b">访存 0 次　·　指令字最短</text>
+
+    <rect x="20" y="150" width="206" height="76" rx="8" fill="#e0e7ff" stroke="#a5b4fc" stroke-width="1"/>
+    <text x="32" y="172" font-size="12.5" font-weight="700" fill="#312e81">直接寻址</text>
+    <text x="32" y="192" font-size="11.5" fill="#3730a3">EA = A</text>
+    <text x="32" y="212" font-size="11.5" fill="#3730a3">访存 1 次　·　地址范围受 A 位数限制</text>
+
+    <rect x="236" y="150" width="206" height="76" rx="8" fill="#e0e7ff" stroke="#a5b4fc" stroke-width="1"/>
+    <text x="248" y="172" font-size="12.5" font-weight="700" fill="#312e81">寄存器间接寻址</text>
+    <text x="248" y="192" font-size="11.5" fill="#3730a3">EA = (R)，R 中放的是地址</text>
+    <text x="248" y="212" font-size="11.5" fill="#3730a3">访存 1 次　·　可扩大寻址范围</text>
+
+    <rect x="452" y="150" width="208" height="76" rx="8" fill="#fee2e2" stroke="#fca5a5" stroke-width="1"/>
+    <text x="464" y="172" font-size="12.5" font-weight="700" fill="#991b1b">间接寻址</text>
+    <text x="464" y="192" font-size="11.5" fill="#7f1d1d">EA = (A)，可多级间接</text>
+    <text x="464" y="212" font-size="11.5" fill="#7f1d1d">访存 ≥ 2 次　·　最慢但最灵活</text>
+
+    <rect x="20" y="236" width="206" height="80" rx="8" fill="#fef3c7" stroke="#fcd34d" stroke-width="1"/>
+    <text x="32" y="258" font-size="12.5" font-weight="700" fill="#92400e">相对寻址</text>
+    <text x="32" y="278" font-size="11.5" fill="#78350f">EA = (PC) + A（A 为补码偏移）</text>
+    <text x="32" y="298" font-size="11.5" fill="#78350f">访存 1 次　·　用于转移 / 位置无关</text>
+
+    <rect x="236" y="236" width="206" height="80" rx="8" fill="#fef3c7" stroke="#fcd34d" stroke-width="1"/>
+    <text x="248" y="258" font-size="12.5" font-weight="700" fill="#92400e">基址寻址</text>
+    <text x="248" y="278" font-size="11.5" fill="#78350f">EA = (BR) + A，BR 由 OS 管</text>
+    <text x="248" y="298" font-size="11.5" fill="#78350f">访存 1 次　·　A 可变，利于重定位</text>
+
+    <rect x="452" y="236" width="208" height="80" rx="8" fill="#fef3c7" stroke="#fcd34d" stroke-width="1"/>
+    <text x="464" y="258" font-size="12.5" font-weight="700" fill="#92400e">变址寻址</text>
+    <text x="464" y="278" font-size="11.5" fill="#78350f">EA = (IX) + A，IX 由程序员管</text>
+    <text x="464" y="298" font-size="11.5" fill="#78350f">访存 1 次　·　A 固定，利于数组循环</text>
+
+    <rect x="20" y="326" width="206" height="76" rx="8" fill="#f1f5f9" stroke="#cbd5e1" stroke-width="1"/>
+    <text x="32" y="348" font-size="12.5" font-weight="700" fill="#475569">堆栈寻址</text>
+    <text x="32" y="368" font-size="11.5" fill="#475569">EA = (SP)，SP 由入栈出栈自动增减</text>
+    <text x="32" y="388" font-size="11.5" fill="#475569">访存 1 次　·　零地址指令可用</text>
+
+    <rect x="236" y="326" width="424" height="76" rx="8" fill="#eef2ff" stroke="#c7d2fe" stroke-width="1"/>
+    <text x="248" y="348" font-size="12.5" font-weight="700" fill="#312e81">三种偏移寻址的共同点与区别</text>
+    <text x="248" y="368" font-size="11.5" fill="#3730a3">共同：EA = 某寄存器内容 + 形式地址 A（加法形成，都不改变指令字长）</text>
+    <text x="248" y="388" font-size="11.5" fill="#3730a3">区别：相对看 PC（程序内跳转）、基址由 OS 定基（多道程序重定位）、变址由程序员改（数组下标）。</text>
+  </g>
+
+  <rect x="20" y="414" width="640" height="48" rx="8" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1"/>
+  <text x="34" y="436" font-size="11.5" font-weight="700" fill="#475569">访存次数速记：立即 0、寄存器 0、隐含 0、直接 1、寄存器间接 1、三种偏移 1、堆栈 1、间接 ≥ 2（多级每多一级再加 1）。</text>
+  <text x="34" y="455" font-size="11.5" fill="#475569">指令寻址另算：顺序寻址 (PC)+1、跳跃寻址把目标地址送 PC；条件转移由标志位决定是否跳。</text>
+
+  <rect x="20" y="472" width="640" height="44" rx="8" fill="#fef3c7" stroke="#fcd34d" stroke-width="1"/>
+  <text x="34" y="492" font-size="11.5" font-weight="700" fill="#92400e">易错：形式地址 A 常被当成补码（相对 / 基址 + 偏移），需按符号扩展后再相加；大端存放时 LSB 位于最高地址 EA+3。</text>
+  <text x="34" y="510" font-size="11.5" fill="#92400e">直接寻址范围由 A 的位数决定（A 为 8 位且非负 → 0~255）；扩大寻址范围靠间接 / 寄存器间接 / 偏移，不是靠加长指令。</text>
+</svg>

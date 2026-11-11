@@ -1,0 +1,48 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 680 378" width="680" height="378" font-family="-apple-system,BlinkMacSystemFont,'Segoe UI','Microsoft YaHei',sans-serif">
+  <defs>
+    <pattern id="ieeeBits" x="24" y="72" width="20" height="52" patternUnits="userSpaceOnUse">
+      <rect x="0" y="0" width="20" height="52" fill="none" stroke="#cbd5e1" stroke-width="1"/>
+    </pattern>
+  </defs>
+  <rect x="0" y="0" width="680" height="378" fill="#ffffff"/>
+  <text x="20" y="28" font-size="16" font-weight="700" fill="#312e81">IEEE 754 单精度浮点数 · 32 位布局与隐藏位</text>
+  <text x="20" y="48" font-size="12" fill="#64748b">一位符号、八位移码阶码、二十三位原码尾数；最高位的 1 隐含不存</text>
+
+  <rect x="24" y="72" width="20" height="52" fill="#fef3c7"/>
+  <rect x="44" y="72" width="160" height="52" fill="#e0e7ff"/>
+  <rect x="204" y="72" width="460" height="52" fill="#d1fae5"/>
+  <rect x="24" y="72" width="640" height="52" fill="url(#ieeeBits)" stroke="#94a3b8" stroke-width="1.2"/>
+
+  <text x="34" y="104" font-size="13" font-weight="700" fill="#92400e" text-anchor="middle">S</text>
+  <text x="124" y="100" font-size="13" font-weight="700" fill="#312e81" text-anchor="middle">阶码 E（移码，偏置 127）</text>
+  <text x="124" y="116" font-size="11" fill="#312e81" text-anchor="middle">8 位 · 真阶码 = E − 127</text>
+  <text x="434" y="100" font-size="13" font-weight="700" fill="#065f46" text-anchor="middle">尾数 M（原码纯小数，只存小数部分）</text>
+  <text x="434" y="116" font-size="11" fill="#065f46" text-anchor="middle">23 位 · 实际有效位 1.M 共 24 位</text>
+  <text x="34" y="140" font-size="10.5" fill="#64748b" text-anchor="middle">31</text>
+  <text x="44" y="140" font-size="10.5" fill="#64748b">30</text>
+  <text x="194" y="140" font-size="10.5" fill="#64748b" text-anchor="end">23</text>
+  <text x="204" y="140" font-size="10.5" fill="#64748b">22</text>
+  <text x="664" y="140" font-size="10.5" fill="#64748b" text-anchor="end">0</text>
+
+  <rect x="24" y="154" width="640" height="46" rx="8" fill="#eef2ff" stroke="#c7d2fe" stroke-width="1"/>
+  <text x="38" y="176" font-size="13" font-weight="700" fill="#312e81">规格化数真值　N = (−1)^S × 1.M × 2^(E−127)</text>
+  <text x="38" y="193" font-size="11.5" fill="#475569">隐藏位：规格化尾数最高位必为 1，IEEE 754 省去不存，取数运算时先在最高位补回 1</text>
+
+  <rect x="24" y="210" width="312" height="104" rx="8" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1"/>
+  <text x="38" y="232" font-size="13" font-weight="700" fill="#312e81">特殊编码（阶码全 0 / 全 1）</text>
+  <text x="38" y="252" font-size="11.5" fill="#475569">E = 0，M = 0　→　±0（符号位决定）</text>
+  <text x="38" y="270" font-size="11.5" fill="#475569">E = 0，M ≠ 0　→　非规格化数（无隐藏位）</text>
+  <text x="38" y="288" font-size="11.5" fill="#475569">E = 255，M = 0　→　±∞（上溢）</text>
+  <text x="38" y="306" font-size="11.5" fill="#475569">E = 255，M ≠ 0　→　NaN</text>
+
+  <rect x="348" y="210" width="316" height="104" rx="8" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1"/>
+  <text x="362" y="232" font-size="13" font-weight="700" fill="#312e81">单精度 vs 双精度</text>
+  <text x="362" y="252" font-size="11.5" fill="#475569">单精度 32 位：1 | 8 | 23，偏置 127</text>
+  <text x="362" y="270" font-size="11.5" fill="#475569">双精度 64 位：1 | 11 | 52，偏置 1023</text>
+  <text x="362" y="288" font-size="11.5" fill="#475569">最大阶码 254 / 2046（255 / 2047 保留）</text>
+  <text x="362" y="306" font-size="11.5" fill="#475569">阶码用移码：便于直接比较两数大小</text>
+
+  <rect x="24" y="324" width="640" height="42" rx="6" fill="#fef3c7" stroke="#fcd34d" stroke-width="1"/>
+  <text x="38" y="342" font-size="11.5" font-weight="700" fill="#92400e">易错：偏置是 127 不是 128；别忘隐藏位 1（对阶、加减时都要先补回）</text>
+  <text x="38" y="359" font-size="11.5" fill="#92400e">阶码用移码、尾数用原码；尾数为原码小数时规格化要求最高数值位为 1</text>
+</svg>

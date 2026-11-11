@@ -1,0 +1,48 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 680 404" width="680" height="404" font-family="-apple-system,BlinkMacSystemFont,'Segoe UI','Microsoft YaHei',sans-serif">
+  <defs>
+    <marker id="mulArrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#4f46e5"/>
+    </marker>
+  </defs>
+  <rect x="0" y="0" width="680" height="404" fill="#ffffff"/>
+  <text x="20" y="28" font-size="16" font-weight="700" fill="#312e81">原码一位乘法 · n 次「加 / 不加 + 右移」迭代</text>
+  <text x="20" y="48" font-size="12" fill="#64748b">符号位单独异或，数值部分用绝对值；[P:Y] 联合右移 n 次得 2n 位乘积</text>
+
+  <rect x="20" y="66" width="290" height="120" rx="9" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1"/>
+  <text x="34" y="88" font-size="13" font-weight="700" fill="#312e81">三个 n 位寄存器 + 计数器</text>
+  <rect x="34" y="100" width="252" height="26" rx="5" fill="#e0e7ff" stroke="#4f46e5" stroke-width="1"/>
+  <text x="160" y="118" font-size="11" fill="#312e81" text-anchor="middle">X：被乘数 |X|（全程不变）</text>
+  <rect x="34" y="130" width="252" height="26" rx="5" fill="#fef3c7" stroke="#b45309" stroke-width="1"/>
+  <text x="160" y="148" font-size="11" fill="#92400e" text-anchor="middle">P：部分积（初值 0，n 位）</text>
+  <rect x="34" y="160" width="252" height="20" rx="5" fill="#d1fae5" stroke="#059669" stroke-width="1"/>
+  <text x="160" y="175" font-size="10.5" fill="#065f46" text-anchor="middle">Y：乘数 |Y|，每次取最低位 yᵢ</text>
+
+  <rect x="326" y="66" width="334" height="120" rx="9" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1"/>
+  <text x="340" y="88" font-size="13" font-weight="700" fill="#312e81">单次迭代（共 n 次）</text>
+  <text x="340" y="110" font-size="11.5" fill="#475569">① 取 Y 的最低位 yᵢ，判 0 / 1</text>
+  <text x="340" y="130" font-size="11.5" fill="#475569">② yᵢ=1 → P ← P + |X|；yᵢ=0 → P ← P + 0</text>
+  <text x="340" y="150" font-size="11.5" fill="#475569">③ [P:Y] 整体逻辑右移 1 位（Y 最低位移出）</text>
+  <text x="340" y="172" font-size="11" fill="#94a3b8">迭代式：Pᵢ = (Pᵢ₋₁ + X·yᵢ) 右移 1 位</text>
+
+  <line x1="310" y1="126" x2="324" y2="126" stroke="#4f46e5" stroke-width="1.6" marker-end="url(#mulArrow)"/>
+
+  <rect x="20" y="198" width="640" height="62" rx="9" fill="#eef2ff" stroke="#c7d2fe" stroke-width="1"/>
+  <text x="34" y="220" font-size="12.5" font-weight="700" fill="#312e81">n 次后：[P:Y] 的 2n 位就是乘积数值位</text>
+  <text x="34" y="242" font-size="11.5" fill="#3730a3">乘积符号 = Xₛ ⊕ Yₛ（两操作数符号位异或）；若高 n 位 P 非 0，说明超出 n 位表示范围，OF/CF 置 1。</text>
+  <text x="34" y="256" font-size="11" fill="#64748b">无符号乘法电路同理：X / Y / P 三寄存器 + 计数器控制迭代次数。</text>
+
+  <rect x="20" y="272" width="312" height="84" rx="9" fill="#f1f5f9" stroke="#e2e8f0" stroke-width="1"/>
+  <text x="34" y="294" font-size="12.5" font-weight="700" fill="#475569">补码一位乘（Booth）</text>
+  <text x="34" y="314" font-size="11" fill="#475569">增设辅助位 y₋₁（初值 0），看 yᵢ y₋₁：</text>
+  <text x="34" y="332" font-size="11" fill="#475569">01 → 加 [X]补；10 → 加 [−X]补；00/11 → 加 0</text>
+  <text x="34" y="350" font-size="11" fill="#475569">符号位参与运算，最后一步不右移</text>
+
+  <rect x="348" y="272" width="312" height="84" rx="9" fill="#fef3c7" stroke="#fcd34d" stroke-width="1"/>
+  <text x="362" y="294" font-size="12.5" font-weight="700" fill="#92400e">除法速记（原码加减交替法）</text>
+  <text x="362" y="314" font-size="11" fill="#78350f">|被除数| &lt; |除数| 直接商 0、余数 = 被除数</text>
+  <text x="362" y="332" font-size="11" fill="#78350f">余数为正商 1、左移减除数；为负商 0、左移加</text>
+  <text x="362" y="350" font-size="11" fill="#78350f">最终余数需乘 2⁻ⁿ，符号由异或决定</text>
+
+  <rect x="20" y="366" width="640" height="28" rx="6" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1"/>
+  <text x="34" y="385" font-size="11.5" fill="#475569">乘常数可优化为「移位 + 加减」；两变量相乘只能用移位 + 加法循环实现（不能用移位器一次算出）。</text>
+</svg>
