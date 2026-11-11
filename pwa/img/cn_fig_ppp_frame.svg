@@ -1,0 +1,76 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 680 566" width="680" height="566" font-family="-apple-system,BlinkMacSystemFont,'Segoe UI','Microsoft YaHei',sans-serif">
+  <rect x="0" y="0" width="680" height="566" fill="#ffffff"/>
+  <text x="20" y="28" font-size="16" font-weight="700" fill="#312e81">PPP 帧格式 · 字节填充 · 建立连接的三步</text>
+  <text x="20" y="48" font-size="12" fill="#64748b">PPP 只做「组帧 + 透明传输 + 检错 + 链路配置」，不做流量控制和重传</text>
+
+  <rect x="20" y="70" width="64" height="58" fill="#4a7ab8"/>
+  <rect x="84" y="70" width="64" height="58" fill="#93c5fd"/>
+  <rect x="148" y="70" width="64" height="58" fill="#4a7ab8"/>
+  <rect x="212" y="70" width="86" height="58" fill="#93c5fd"/>
+  <rect x="298" y="70" width="226" height="58" fill="#e0f2fe"/>
+  <rect x="524" y="70" width="72" height="58" fill="#4a7ab8"/>
+  <rect x="596" y="70" width="64" height="58" fill="#4a7ab8"/>
+
+  <g text-anchor="middle" font-size="11" font-weight="700">
+    <text x="52" y="94" fill="#ffffff">标志</text><text x="52" y="114" fill="#dbeafe">7E</text>
+    <text x="116" y="94" fill="#1e3a8a">地址</text><text x="116" y="114" fill="#1e40af">FF</text>
+    <text x="180" y="94" fill="#ffffff">控制</text><text x="180" y="114" fill="#dbeafe">03</text>
+    <text x="255" y="94" fill="#1e3a8a">协议</text><text x="255" y="114" fill="#1e40af">2 B</text>
+    <text x="411" y="94" fill="#0c4a6e">信息字段（≤ 1500 B）</text><text x="411" y="114" fill="#0c4a6e">装 IP 数据报</text>
+    <text x="560" y="94" fill="#ffffff">FCS</text><text x="560" y="114" fill="#dbeafe">2 B</text>
+    <text x="628" y="94" fill="#ffffff">标志</text><text x="628" y="114" fill="#dbeafe">7E</text>
+  </g>
+  <text x="20" y="146" font-size="10.5" fill="#64748b">两个 7E 之间才是完整一帧；地址 FF 与控制 03 是<tspan font-weight="700" fill="#b45309">固定值</tspan>（PPP 是点对点，不需要寻址）</text>
+
+  <text x="20" y="176" font-size="11.5" font-weight="700" fill="#334155">透明传输：信息字段里恰好出现 7E 或 7D 怎么办 → 字节填充</text>
+
+  <rect x="20" y="188" width="200" height="68" rx="6" fill="#fef3c7" stroke="#fcd34d" stroke-width="1"/>
+  <text x="120" y="208" font-size="10.5" fill="#92400e" text-anchor="middle">信息里出现 7E</text>
+  <text x="120" y="232" font-size="13" font-weight="700" fill="#78350f" text-anchor="middle" font-family="Consolas,'Courier New',monospace">7E  →  7D 5E</text>
+  <text x="120" y="248" font-size="10" fill="#a16207" text-anchor="middle">减去 0x20，前面加 7D</text>
+
+  <rect x="232" y="188" width="200" height="68" rx="6" fill="#fef3c7" stroke="#fcd34d" stroke-width="1"/>
+  <text x="332" y="208" font-size="10.5" fill="#92400e" text-anchor="middle">信息里出现 7D</text>
+  <text x="332" y="232" font-size="13" font-weight="700" fill="#78350f" text-anchor="middle" font-family="Consolas,'Courier New',monospace">7D  →  7D 5D</text>
+  <text x="332" y="248" font-size="10" fill="#a16207" text-anchor="middle">同样减 0x20 后转义</text>
+
+  <rect x="444" y="188" width="196" height="68" rx="6" fill="#fef3c7" stroke="#fcd34d" stroke-width="1"/>
+  <text x="542" y="208" font-size="10.5" fill="#92400e" text-anchor="middle">信息里出现 &lt; 0x20 的字符</text>
+  <text x="542" y="232" font-size="13" font-weight="700" fill="#78350f" text-anchor="middle" font-family="Consolas,'Courier New',monospace">7D +（原值+0x20）</text>
+  <text x="542" y="248" font-size="10" fill="#a16207" text-anchor="middle">接收方见 7D 就还原</text>
+
+  <text x="20" y="276" font-size="11.5" fill="#334155">接收方规则：见到 7D 就把<tspan font-weight="700">下一个字节加回 0x20</tspan>，这样 7E 永远不会在信息字段里「冒充」帧尾。</text>
+
+  <line x1="20" y1="294" x2="660" y2="294" stroke="#e2e8f0" stroke-width="1"/>
+
+  <text x="20" y="316" font-size="11.5" font-weight="700" fill="#334155">建立连接的三步（顺序不能乱）</text>
+
+  <rect x="36" y="330" width="178" height="76" rx="6" fill="#eef2ff" stroke="#c7d2fe" stroke-width="1"/>
+  <text x="125" y="352" font-size="12" font-weight="700" fill="#312e81" text-anchor="middle">① LCP</text>
+  <text x="125" y="372" font-size="10.5" fill="#3730a3" text-anchor="middle">建立/配置/测试/释放链路</text>
+  <text x="125" y="390" font-size="10.5" fill="#3730a3" text-anchor="middle">协商 MRU、认证方式</text>
+
+  <rect x="251" y="330" width="178" height="76" rx="6" fill="#fef3c7" stroke="#fcd34d" stroke-width="1"/>
+  <text x="340" y="352" font-size="12" font-weight="700" fill="#78350f" text-anchor="middle">② 认证</text>
+  <text x="340" y="372" font-size="10.5" fill="#92400e" text-anchor="middle">PAP：明文、两次握手</text>
+  <text x="340" y="390" font-size="10.5" fill="#92400e" text-anchor="middle">CHAP：摘要、三次握手更安全</text>
+
+  <rect x="466" y="330" width="178" height="76" rx="6" fill="#f0fdf4" stroke="#bbf7d0" stroke-width="1"/>
+  <text x="555" y="352" font-size="12" font-weight="700" fill="#166534" text-anchor="middle">③ NCP</text>
+  <text x="555" y="372" font-size="10.5" fill="#14532d" text-anchor="middle">配置网络层参数</text>
+  <text x="555" y="390" font-size="10.5" fill="#14532d" text-anchor="middle">IPCP 给客户端分配 IP</text>
+
+  <line x1="214" y1="368" x2="243" y2="368" stroke="#94a3b8" stroke-width="1.8"/>
+  <polygon points="251,368 241,363 241,373" fill="#94a3b8"/>
+  <line x1="429" y1="368" x2="458" y2="368" stroke="#94a3b8" stroke-width="1.8"/>
+  <polygon points="466,368 456,363 456,373" fill="#94a3b8"/>
+
+  <text x="20" y="428" font-size="11.5" fill="#334155">家庭宽带 PPPoE 就是这条链路：以太网里发现 BRAS → LCP 配链路 → CHAP 认证 → IPCP 发一个公网 IP → 上网。</text>
+
+  <rect x="20" y="444" width="640" height="106" rx="8" fill="#fef2f2" stroke="#fecaca" stroke-width="1"/>
+  <text x="34" y="464" font-size="11.5" font-weight="700" fill="#991b1b">易错：</text>
+  <text x="34" y="484" font-size="11.5" fill="#7f1d1d">① PPP <tspan font-weight="700">不提供</tspan>流量控制、序号、可靠传输 —— 只检错丢弃，错了不重传，可靠性交给上层 TCP。</text>
+  <text x="34" y="504" font-size="11.5" fill="#7f1d1d">② 与 HDLC 的最大区别：HDLC 面向比特、<tspan font-weight="700">有</tspan>序号和重传（可靠），PPP 面向字节、无序号。</text>
+  <text x="34" y="524" font-size="11.5" fill="#7f1d1d">③ PPP 的填充是<tspan font-weight="700">字节填充</tspan>（7D 转义）；HDLC 用的是<tspan font-weight="700">零比特填充</tspan>（连 5 个 1 插一个 0），两者别混。</text>
+  <text x="34" y="544" font-size="11.5" fill="#7f1d1d">④ 标志字段两端都是 7E，题目问「一帧几个 7E」答案常是 2 个，但相邻帧可共享一个。</text>
+</svg>

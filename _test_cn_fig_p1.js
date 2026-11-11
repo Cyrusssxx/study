@@ -47,11 +47,11 @@ const FIGS = [
 
 check('序列化仍是 CRLF + 无尾换行',
   [notesRaw.indexOf('\r\n') > 0, notesRaw.endsWith('\n')], [true, false]);
-check('CN 配图 14 张（6 原有 + 8 本批）',
-  (notesRaw.match(/fig-img/g) || []).length, 14);
-check('CN 黄框 13 个（5 原有 + 8 本批）',
-  (notesRaw.match(/class=\\"key-callout\\"/g) || []).length, 13);
-check('SW 里 CN 图 14 条', (sw.match(/'img\/cn_fig_[^']+'/g) || []).length, 14);
+check('CN 配图 >= 14 张（第一批下限，精确总量见 _test_cn_fig_p2）',
+  (notesRaw.match(/fig-img/g) || []).length >= 14, true);
+check('CN 黄框 >= 13 个（第一批下限）',
+  (notesRaw.match(/class=\\"key-callout\\"/g) || []).length >= 13, true);
+check('SW 里 CN 图 >= 14 条', (sw.match(/'img\/cn_fig_[^']+'/g) || []).length >= 14, true);
 check('笔记 HTML 里不得出现 SVG 专有的 tspan（黄框要用 b）',
   notesRaw.includes('tspan'), false);
 
@@ -191,8 +191,8 @@ if (!JSDOM || !IDBFactory) {
     const d = dom.window.document;
     check('真实渲染 .anno-line 总数 = 1220（已存批注不错位）',
       d.querySelectorAll('.anno-line').length, 1220);
-    check('真实渲染配图 14 张', d.querySelectorAll('img.fig-img').length, 14);
-    check('真实渲染黄框 13 个', d.querySelectorAll('.key-callout').length, 13);
+    check('真实渲染配图 >= 14 张', d.querySelectorAll('img.fig-img').length >= 14, true);
+    check('真实渲染黄框 >= 13 个', d.querySelectorAll('.key-callout').length >= 13, true);
     check('图块被误标行号 = 0',
       [...d.querySelectorAll('.anno-line')]
         .filter(e => e.hasAttribute('data-fig') || e.closest('[data-fig]')).length, 0);

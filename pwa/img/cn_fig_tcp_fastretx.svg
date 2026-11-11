@@ -1,0 +1,74 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 680 548" width="680" height="548" font-family="-apple-system,BlinkMacSystemFont,'Segoe UI','Microsoft YaHei',sans-serif">
+  <rect x="0" y="0" width="680" height="548" fill="#ffffff"/>
+  <text x="20" y="28" font-size="16" font-weight="700" fill="#312e81">TCP 快重传 · 发 1~5 号段，2 号丢失</text>
+  <text x="20" y="48" font-size="12" fill="#64748b">接收方每次收到失序段都立刻回一个「仍期望 3」的 ACK；发送方收满 3 个相同的冗余 ACK 就立即重传</text>
+
+  <line x1="90" y1="80" x2="90" y2="368" stroke="#94a3b8" stroke-width="1.4"/>
+  <line x1="520" y1="80" x2="520" y2="368" stroke="#94a3b8" stroke-width="1.4"/>
+  <text x="90" y="74" font-size="12" font-weight="700" fill="#1e3a8a" text-anchor="middle">发送方 A</text>
+  <text x="520" y="74" font-size="12" font-weight="700" fill="#166534" text-anchor="middle">接收方 B</text>
+
+  <line x1="90" y1="110" x2="506" y2="110" stroke="#4a7ab8" stroke-width="1.8"/>
+  <polygon points="520,110 506,104 506,116" fill="#4a7ab8"/>
+  <text x="305" y="104" font-size="11" fill="#1e3a8a" text-anchor="middle" font-weight="700">seg 1（字节 1~2）</text>
+  <text x="528" y="114" font-size="10.5" fill="#166534">按序到达</text>
+
+  <line x1="520" y1="134" x2="104" y2="134" stroke="#16a34a" stroke-width="1.8"/>
+  <polygon points="90,134 104,128 104,140" fill="#16a34a"/>
+  <text x="305" y="128" font-size="11" fill="#15803d" text-anchor="middle" font-weight="700">ACK 3（期望下一个字节是 3）</text>
+
+  <line x1="90" y1="158" x2="330" y2="158" stroke="#dc2626" stroke-width="1.8"/>
+  <line x1="330" y1="158" x2="506" y2="158" stroke="#cbd5e1" stroke-width="1.4" stroke-dasharray="5 4"/>
+  <g stroke="#dc2626" stroke-width="2.4">
+    <line x1="320" y1="148" x2="340" y2="168"/>
+    <line x1="340" y1="148" x2="320" y2="168"/>
+  </g>
+  <text x="210" y="152" font-size="11" fill="#b91c1c" text-anchor="middle" font-weight="700">seg 2 —— 丢失</text>
+
+  <line x1="90" y1="186" x2="506" y2="186" stroke="#4a7ab8" stroke-width="1.8"/>
+  <polygon points="520,186 506,180 506,192" fill="#4a7ab8"/>
+  <text x="305" y="180" font-size="11" fill="#1e3a8a" text-anchor="middle" font-weight="700">seg 3</text>
+  <text x="528" y="190" font-size="10.5" fill="#b45309">失序 → 立即回</text>
+
+  <line x1="520" y1="210" x2="104" y2="210" stroke="#b45309" stroke-width="1.8"/>
+  <polygon points="90,210 104,204 104,216" fill="#b45309"/>
+  <text x="305" y="204" font-size="11" fill="#b45309" text-anchor="middle" font-weight="700">ACK 3（冗余 1）</text>
+
+  <line x1="90" y1="234" x2="506" y2="234" stroke="#4a7ab8" stroke-width="1.8"/>
+  <polygon points="520,234 506,228 506,240" fill="#4a7ab8"/>
+  <text x="305" y="228" font-size="11" fill="#1e3a8a" text-anchor="middle" font-weight="700">seg 4</text>
+  <text x="528" y="238" font-size="10.5" fill="#b45309">失序 → 立即回</text>
+
+  <line x1="520" y1="258" x2="104" y2="258" stroke="#b45309" stroke-width="1.8"/>
+  <polygon points="90,258 104,252 104,264" fill="#b45309"/>
+  <text x="305" y="252" font-size="11" fill="#b45309" text-anchor="middle" font-weight="700">ACK 3（冗余 2）</text>
+
+  <line x1="90" y1="282" x2="506" y2="282" stroke="#4a7ab8" stroke-width="1.8"/>
+  <polygon points="520,282 506,276 506,288" fill="#4a7ab8"/>
+  <text x="305" y="276" font-size="11" fill="#1e3a8a" text-anchor="middle" font-weight="700">seg 5</text>
+  <text x="528" y="286" font-size="10.5" fill="#b45309">失序 → 立即回</text>
+
+  <line x1="520" y1="306" x2="104" y2="306" stroke="#b45309" stroke-width="1.8"/>
+  <polygon points="90,306 104,300 104,312" fill="#b45309"/>
+  <text x="305" y="300" font-size="11" fill="#b45309" text-anchor="middle" font-weight="700">ACK 3（冗余 3）</text>
+  <text x="528" y="310" font-size="10.5" fill="#7c3aed" font-weight="700">凑满 3 个 →</text>
+
+  <line x1="90" y1="336" x2="506" y2="336" stroke="#7c3aed" stroke-width="2.2"/>
+  <polygon points="520,336 506,330 506,342" fill="#7c3aed"/>
+  <text x="305" y="330" font-size="11" fill="#6d28d9" text-anchor="middle" font-weight="700">① 立即重传 seg 2（不等超时）</text>
+  <text x="528" y="340" font-size="10.5" fill="#166534" font-weight="700">补齐</text>
+
+  <line x1="520" y1="360" x2="104" y2="360" stroke="#16a34a" stroke-width="1.8"/>
+  <polygon points="90,360 104,354 104,366" fill="#16a34a"/>
+  <text x="305" y="354" font-size="11" fill="#15803d" text-anchor="middle" font-weight="700">ACK 6（1~5 全齐，连续到 6）</text>
+
+  <text x="20" y="392" font-size="11.5" fill="#334155">对比：若只靠超时重传，要<tspan font-weight="700">等 RTO 到期</tspan>（常几百 ms）才发现 2 号丢了；冗余 ACK 让发送方<tspan font-weight="700">在 RTT 内</tspan>就动手。</text>
+  <text x="20" y="412" font-size="11.5" fill="#334155">关键数：触发时发送方一共收到 <tspan font-weight="700">4 个对 1 号段的确认</tspan>（1 个正常 + 3 个冗余）—— 题目问「几个 ACK」别只数 3 个。</text>
+
+  <rect x="20" y="428" width="640" height="104" rx="8" fill="#fef2f2" stroke="#fecaca" stroke-width="1"/>
+  <text x="34" y="448" font-size="11.5" font-weight="700" fill="#991b1b">易错：</text>
+  <text x="34" y="468" font-size="11.5" fill="#7f1d1d">① <tspan font-weight="700">冗余 ACK 的定义是「再次确认某个已被确认过的报文段」</tspan>，所以第一次 ACK 3 不算冗余。</text>
+  <text x="34" y="488" font-size="11.5" fill="#7f1d1d">② 累积确认的 ACK 号永远是<tspan font-weight="700">第一个没收到的字节序号</tspan>（本例 3），不是「最后收到的序号」。</text>
+  <text x="34" y="508" font-size="11.5" fill="#7f1d1d">③ 快重传≠快恢复：这里只是重传一个段；配合拥塞控制时 ssthresh 与 cwnd 的调整才叫快恢复。</text>
+  <text x="34" y="528" font-size="11.5" fill="#7f1d1d">④ 序号按<tspan font-weight="700">字节</tspan>编号不是按段编号；「seg 3」的序号取决于每段长度。</text>
+</svg>
