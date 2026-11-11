@@ -58,7 +58,7 @@ for (const [name, sec, anchorText] of FIGS) {
   const svgName = 'img/os_fig_' + name + '.svg';
   check(sec + ' 引用了 ' + name, h.includes(svgName), true);
   const iFig = h.indexOf(svgName);
-  const iStar = h.indexOf('★');
+  const iStar = h.indexOf('★ 高频真题考点');   // 正文里 ★ 也作「置换缺页」符号，必须带标题
   check(sec + ' ' + name + ' 在 ★ 真题汇总之前', iStar < 0 || iFig < iStar, true);
   if (anchorText) {
     const iAnchor = h.indexOf(anchorText);

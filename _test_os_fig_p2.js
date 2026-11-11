@@ -41,10 +41,10 @@ const FIGS = [
 
 check('序列化仍是 indent=1 + LF + 尾换行',
   [notesRaw.indexOf('\r\n') < 0, notesRaw.endsWith('\n')], [true, true]);
-check('OS 配图 30 张（26 + 本批 4）',
-  (notesRaw.match(/class=\\"fig-img\\"/g) || []).length, 30);
-check('OS 黄框 35 个（31 + 本批 4）',
-  (notesRaw.match(/class=\\"key-callout\\"/g) || []).length, 35);
+check('OS 配图不少于 30 张（精确值见 _test_os_fig_p3）',
+  (notesRaw.match(/class=\\"fig-img\\"/g) || []).length >= 30, true);
+check('OS 黄框不少于 35 个（精确值见 _test_os_fig_p3）',
+  (notesRaw.match(/class=\\"key-callout\\"/g) || []).length >= 35, true);
 check('SW 里第二批 4 图进预缓存',
   ['sched_metric', 'sched_gantt', 'srtn_rr', 'mlfq']
     .every(n => sw.includes("'img/os_fig_" + n + ".svg'")), true);
@@ -54,7 +54,7 @@ for (const [name, sec, anchorText] of FIGS) {
   const svgName = 'img/os_fig_' + name + '.svg';
   check(sec + ' 引用了 ' + name, h.includes(svgName), true);
   const iFig = h.indexOf(svgName);
-  const iStar = h.indexOf('★');
+  const iStar = h.indexOf('★ 高频真题考点');   // 正文里 ★ 也作「置换缺页」符号，必须带标题
   check(sec + ' ' + name + ' 在 ★ 真题汇总之前', iStar < 0 || iFig < iStar, true);
   const iAnchor = h.indexOf(anchorText);
   check(sec + ' ' + name + ' 紧跟知识点「' + anchorText + '」',
@@ -170,8 +170,8 @@ if (!JSDOM || !IDBFactory) {
     const d = dom.window.document;
     check('真实渲染 .anno-line 总数 = 3668（已存批注不错位）',
       d.querySelectorAll('.anno-line').length, 3668);
-    check('真实渲染配图 30 张', d.querySelectorAll('img.fig-img').length, 30);
-    check('真实渲染黄框 35 个', d.querySelectorAll('.key-callout').length, 35);
+    check('真实渲染配图不少于 30 张', d.querySelectorAll('img.fig-img').length >= 30, true);
+    check('真实渲染黄框不少于 35 个', d.querySelectorAll('.key-callout').length >= 35, true);
     check('图块被误标行号 = 0',
       [...d.querySelectorAll('.anno-line')]
         .filter(e => e.hasAttribute('data-fig') || e.closest('[data-fig]')).length, 0);
