@@ -1,0 +1,40 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 680 470" width="680" height="470" font-family="-apple-system,BlinkMacSystemFont,'Segoe UI','Microsoft YaHei',sans-serif">
+  <rect x="0" y="0" width="680" height="470" fill="#ffffff"/>
+  <text x="20" y="28" font-size="16" font-weight="700" fill="#312e81">Cache 写入策略 · 命中与不命中各两种，交叉成四种组合</text>
+  <text x="20" y="48" font-size="12" fill="#64748b">写命中问「改不改主存」，写不命中问「要不要先把块调进来」</text>
+
+  <rect x="20" y="66" width="310" height="150" rx="10" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1"/>
+  <text x="34" y="88" font-size="12.5" font-weight="700" fill="#1e40af">写命中（要写的块已在 Cache）</text>
+  <rect x="34" y="100" width="282" height="46" rx="6" fill="#d1fae5" stroke="#059669" stroke-width="1"/>
+  <text x="46" y="119" font-size="11.5" font-weight="700" fill="#065f46">全写法（直写 Write Through）</text>
+  <text x="46" y="137" font-size="10.5" fill="#047857">同时写 Cache 与主存；无脏位，靠写缓冲缓解开销</text>
+  <rect x="34" y="154" width="282" height="46" rx="6" fill="#fef3c7" stroke="#b45309" stroke-width="1"/>
+  <text x="46" y="173" font-size="11.5" font-weight="700" fill="#92400e">回写法（Write Back）</text>
+  <text x="46" y="191" font-size="10.5" fill="#78350f">只改 Cache 并置脏位，换出时才写回主存</text>
+
+  <rect x="350" y="66" width="310" height="150" rx="10" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1"/>
+  <text x="364" y="88" font-size="12.5" font-weight="700" fill="#1e40af">写不命中（要写的块不在 Cache）</text>
+  <rect x="364" y="100" width="282" height="46" rx="6" fill="#dbeafe" stroke="#2563eb" stroke-width="1"/>
+  <text x="376" y="119" font-size="11.5" font-weight="700" fill="#1e40af">写分配法（Write Allocate）</text>
+  <text x="376" y="137" font-size="10.5" fill="#1d4ed8">先把主存块调入 Cache，再在 Cache 里改（吃空间局部性）</text>
+  <rect x="364" y="154" width="282" height="46" rx="6" fill="#f1f5f9" stroke="#94a3b8" stroke-width="1"/>
+  <text x="376" y="173" font-size="11.5" font-weight="700" fill="#334155">非写分配法（No Write Allocate）</text>
+  <text x="376" y="191" font-size="10.5" fill="#475569">只写主存，不把块调进 Cache（避免写一次就占一行）</text>
+
+  <text x="20" y="244" font-size="12.5" font-weight="700" fill="#334155">教材的典型搭配（考选择、也考简答）</text>
+  <rect x="20" y="254" width="316" height="52" rx="8" fill="#eef2ff" stroke="#c7d2fe" stroke-width="1"/>
+  <text x="34" y="274" font-size="11.5" font-weight="700" fill="#312e81">回写法 + 写分配法</text>
+  <text x="34" y="293" font-size="10.5" fill="#475569">写局部性好，块会被反复改；换出时一次写回，省带宽</text>
+  <rect x="344" y="254" width="316" height="52" rx="8" fill="#eef2ff" stroke="#c7d2fe" stroke-width="1"/>
+  <text x="358" y="274" font-size="11.5" font-weight="700" fill="#312e81">全写法 + 非写分配法</text>
+  <text x="358" y="293" font-size="10.5" fill="#475569">写一次就走，没必要把整块拉进来；主存始终是最新的</text>
+
+  <rect x="20" y="320" width="640" height="34" rx="6" fill="#fef3c7" stroke="#fcd34d" stroke-width="1"/>
+  <text x="32" y="342" font-size="11.5" fill="#78350f">一句话：全写法必然「主存最新」；回写法必然「Cache 可能比主存新」→ 所以只有回写法需要脏位</text>
+
+  <text x="20" y="380" font-size="11.5" fill="#475569">易错：① 写分配 / 非写分配是「写<tspan font-weight="700">不</tspan>命中」的策略，全写 / 回写是「写<tspan font-weight="700">命</tspan>中」的策略，不要混成两组对立；</text>
+  <text x="20" y="398" font-size="11.5" fill="#475569">② 写缓冲（Write Buffer）是为了不让 CPU 等主存，解决直写法的性能问题，但高频写会饱和；</text>
+  <text x="20" y="416" font-size="11.5" fill="#475569">③ 多核 / DMA 场景下，直写法一致性更好、回写法要额外处理；<tspan font-weight="700">Cache 与主存的不一致只在写操作后出现</tspan>；</text>
+  <text x="20" y="434" font-size="11.5" fill="#475569">④ 只有「写命中且回写」才置脏位；块被换出时脏位为 1 才写回主存，为 0 直接丢弃。</text>
+  <text x="20" y="456" font-size="10.5" fill="#94a3b8">总容量计算时：脏位只在回写法下存在，题目没提就按 0 位计</text>
+</svg>

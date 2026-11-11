@@ -41,8 +41,9 @@ const FIGS = [
 
 check('序列化仍是 CRLF + 无尾换行',
   [notesRaw.indexOf('\r\n') > 0, notesRaw.endsWith('\n')], [true, false]);
-check('计组配图 20 张（P1 精确总量）', (notesRaw.match(/fig-img/g) || []).length, 20);
-check('计组黄框 27 个（P1 精确总量）', (notesRaw.match(/class=\\"key-callout\\"/g) || []).length, 27);
+// 精确总量归 _test_co_fig_p2.js 统管，这里只守下限
+check('计组配图 >= 20 张', (notesRaw.match(/fig-img/g) || []).length >= 20, true);
+check('计组黄框 >= 27 个', (notesRaw.match(/class=\\"key-callout\\"/g) || []).length >= 27, true);
 check('加粗总量 >= 900', (notesRaw.match(/<b>/g) || []).length >= 900, true);
 
 for (const [name, sec, anchorText] of FIGS) {
@@ -90,7 +91,7 @@ for (const c of notes.chapters) {
   }
 }
 check('全库可批注行数锁死 1819（P1 未新增裸 p / li）', annoLines, 1819);
-check('SW 里计组图 20 条', (sw.match(/'img\/co_fig_[^']+'/g) || []).length, 20);
+check('SW 里计组图 >= 20 条', (sw.match(/'img\/co_fig_[^']+'/g) || []).length >= 20, true);
 check('前端会跳过 data-fig 的行号标注',
   page.includes("el.hasAttribute('data-fig') || el.closest('[data-fig]')"), true);
 
@@ -125,8 +126,8 @@ if (!JSDOM || !IDBFactory) {
     const d = dom.window.document;
     check('真实渲染 .anno-line 总数 = 1971（已存批注不错位）',
       d.querySelectorAll('.anno-line').length, 1971);
-    check('真实渲染配图 20 张', d.querySelectorAll('img.fig-img').length, 20);
-    check('真实渲染黄框 27 个', d.querySelectorAll('.key-callout').length, 27);
+    check('真实渲染配图 >= 20 张', d.querySelectorAll('img.fig-img').length >= 20, true);
+    check('真实渲染黄框 >= 27 个', d.querySelectorAll('.key-callout').length >= 27, true);
     check('图块被误标行号 = 0',
       [...d.querySelectorAll('.anno-line')]
         .filter(e => e.hasAttribute('data-fig') || e.closest('[data-fig]')).length, 0);

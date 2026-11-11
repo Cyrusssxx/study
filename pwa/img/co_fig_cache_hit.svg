@@ -1,0 +1,70 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 680 470" width="680" height="470" font-family="-apple-system,BlinkMacSystemFont,'Segoe UI','Microsoft YaHei',sans-serif">
+  <defs>
+    <marker id="chArrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#4f46e5"/>
+    </marker>
+    <marker id="chArrowR" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#dc2626"/>
+    </marker>
+    <marker id="chArrowG" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#059669"/>
+    </marker>
+  </defs>
+
+  <rect x="0" y="0" width="680" height="470" fill="#ffffff"/>
+  <text x="20" y="28" font-size="16" font-weight="700" fill="#312e81">一次访存的命中判断 · 命中直接取，缺失才动主存</text>
+  <text x="20" y="48" font-size="12" fill="#64748b">全程硬件完成、对程序员透明；调入以「块」为单位，不是单个字</text>
+
+  <rect x="60" y="70" width="130" height="40" rx="7" fill="#eef2ff" stroke="#818cf8" stroke-width="1"/>
+  <text x="125" y="95" font-size="12" font-weight="700" fill="#312e81" text-anchor="middle">CPU 给出主存地址</text>
+  <line x1="125" y1="110" x2="125" y2="130" stroke="#4f46e5" stroke-width="1.5" marker-end="url(#chArrow)"/>
+
+  <rect x="60" y="132" width="130" height="44" rx="7" fill="#dbeafe" stroke="#2563eb" stroke-width="1"/>
+  <text x="125" y="151" font-size="12" font-weight="700" fill="#1e40af" text-anchor="middle">按地址查 Cache</text>
+  <text x="125" y="167" font-size="10" fill="#475569" text-anchor="middle">行号 / 组号定位候选行</text>
+
+  <line x1="125" y1="176" x2="125" y2="196" stroke="#4f46e5" stroke-width="1.5" marker-end="url(#chArrow)"/>
+  <polygon points="125,198 183,226 125,254 67,226" fill="#fef3c7" stroke="#b45309" stroke-width="1.2"/>
+  <text x="125" y="223" font-size="10.5" font-weight="700" fill="#92400e" text-anchor="middle">标记相等</text>
+  <text x="125" y="238" font-size="10.5" font-weight="700" fill="#92400e" text-anchor="middle">且有效位=1？</text>
+
+  <line x1="183" y1="226" x2="222" y2="226" stroke="#059669" stroke-width="1.8" marker-end="url(#chArrowG)"/>
+  <text x="202" y="219" font-size="10.5" font-weight="700" fill="#059669" text-anchor="middle">是</text>
+  <rect x="224" y="202" width="170" height="48" rx="7" fill="#d1fae5" stroke="#059669" stroke-width="1.2"/>
+  <text x="309" y="222" font-size="12" font-weight="700" fill="#065f46" text-anchor="middle">命中：直接从 Cache 取</text>
+  <text x="309" y="240" font-size="10.5" fill="#047857" text-anchor="middle">耗时 = 命中时间 T_c</text>
+
+  <line x1="125" y1="254" x2="125" y2="278" stroke="#dc2626" stroke-width="1.8" marker-end="url(#chArrowR)"/>
+  <text x="133" y="270" font-size="10.5" font-weight="700" fill="#dc2626">否</text>
+  <rect x="46" y="280" width="158" height="52" rx="7" fill="#fee2e2" stroke="#dc2626" stroke-width="1.2"/>
+  <text x="125" y="300" font-size="11.5" font-weight="700" fill="#991b1b" text-anchor="middle">把整个主存块调入</text>
+  <text x="125" y="317" font-size="10.5" fill="#b91c1c" text-anchor="middle">满了先按替换算法换出</text>
+
+  <line x1="204" y1="306" x2="228" y2="306" stroke="#dc2626" stroke-width="1.5" marker-end="url(#chArrowR)"/>
+  <rect x="230" y="280" width="164" height="52" rx="7" fill="#fef3c7" stroke="#b45309" stroke-width="1.2"/>
+  <text x="312" y="300" font-size="11.5" font-weight="700" fill="#92400e" text-anchor="middle">再从该块中取目标字</text>
+  <text x="312" y="317" font-size="10.5" fill="#78350f" text-anchor="middle">本次代价 = 缺失损失 T_m</text>
+
+  <text x="20" y="366" font-size="12.5" font-weight="700" fill="#334155">平均访问时间（计算核心）</text>
+  <rect x="20" y="374" width="372" height="26" rx="5" fill="#e0e7ff" stroke="#4f46e5" stroke-width="1"/>
+  <text x="32" y="392" font-size="11.5" fill="#312e81">T_a = H·T_c + (1−H)·(T_m + T_c) = T_c + (1−H)·T_m</text>
+  <text x="20" y="418" font-size="10.5" fill="#64748b">H 命中率 ｜ T_c 命中时间 ｜ T_m 缺失损失（调入一整块的时间）</text>
+  <text x="20" y="436" font-size="10.5" fill="#dc2626">缺失时不是「跳过 T_c」：主存数据仍要经 Cache 交给 CPU，所以括号内是 T_m + T_c</text>
+  <text x="20" y="456" font-size="10.5" fill="#64748b">H 只统计「要访问的信息在 Cache 里」的概率；同块内其余字的访问另算命中</text>
+
+  <rect x="410" y="70" width="250" height="292" rx="10" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1"/>
+  <text x="424" y="92" font-size="12.5" font-weight="700" fill="#1e40af">这条流程要解决的四个问题</text>
+  <text x="424" y="116" font-size="11.5" font-weight="700" fill="#334155">① 数据查找</text>
+  <text x="436" y="134" font-size="10.5" fill="#64748b">怎么快速判断在不在</text>
+  <text x="436" y="150" font-size="10.5" fill="#94a3b8">→ 标记比较 + 有效位</text>
+  <text x="424" y="176" font-size="11.5" font-weight="700" fill="#334155">② 地址映射</text>
+  <text x="436" y="194" font-size="10.5" fill="#64748b">主存块能装到哪一行</text>
+  <text x="436" y="210" font-size="10.5" fill="#94a3b8">→ 直接 / 全相联 / 组相联</text>
+  <text x="424" y="236" font-size="11.5" font-weight="700" fill="#334155">③ 替换策略</text>
+  <text x="436" y="254" font-size="10.5" fill="#64748b">满了换谁</text>
+  <text x="436" y="270" font-size="10.5" fill="#94a3b8">→ LRU / FIFO / RAND</text>
+  <text x="424" y="296" font-size="11.5" font-weight="700" fill="#334155">④ 写入策略</text>
+  <text x="436" y="314" font-size="10.5" fill="#64748b">怎么保持与主存一致</text>
+  <text x="436" y="330" font-size="10.5" fill="#94a3b8">→ 全写 / 回写 × 写分配</text>
+  <text x="424" y="352" font-size="10.5" fill="#94a3b8">前两个决定能不能命中，后两个决定命中后怎么维护</text>
+</svg>

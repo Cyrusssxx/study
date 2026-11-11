@@ -1,0 +1,71 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 680 450" width="680" height="450" font-family="-apple-system,BlinkMacSystemFont,'Segoe UI','Microsoft YaHei',sans-serif">
+  <defs>
+    <marker id="ioArrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#4f46e5"/>
+    </marker>
+    <marker id="ioArrowO" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#b45309"/>
+    </marker>
+  </defs>
+
+  <rect x="0" y="0" width="680" height="450" fill="#ffffff"/>
+  <text x="20" y="28" font-size="16" font-weight="700" fill="#312e81">I/O 接口的基本结构 · 主机侧接总线，设备侧接外设</text>
+  <text x="20" y="48" font-size="12" fill="#64748b">接口 = 三类寄存器 + 控制逻辑；端口是接口内可寻址的寄存器，端口 ≠ 接口</text>
+
+  <rect x="18" y="80" width="104" height="40" rx="7" fill="#dbeafe" stroke="#2563eb" stroke-width="1"/>
+  <text x="70" y="105" font-size="12" font-weight="700" fill="#1e40af" text-anchor="middle">CPU</text>
+  <rect x="18" y="134" width="104" height="40" rx="7" fill="#dbeafe" stroke="#2563eb" stroke-width="1"/>
+  <text x="70" y="159" font-size="12" font-weight="700" fill="#1e40af" text-anchor="middle">主存</text>
+
+  <line x1="122" y1="100" x2="146" y2="100" stroke="#4f46e5" stroke-width="1.5"/>
+  <line x1="122" y1="154" x2="146" y2="154" stroke="#4f46e5" stroke-width="1.5"/>
+  <rect x="146" y="72" width="12" height="196" fill="#e0e7ff" stroke="#4f46e5" stroke-width="1"/>
+  <text x="152" y="64" font-size="10.5" fill="#4f46e5" text-anchor="middle">I/O 总线</text>
+
+  <rect x="172" y="72" width="352" height="242" rx="10" fill="#f8fafc" stroke="#cbd5e1" stroke-width="1.2" stroke-dasharray="5 4"/>
+  <text x="184" y="92" font-size="11.5" font-weight="700" fill="#334155">I/O 接口</text>
+
+  <rect x="184" y="100" width="150" height="44" rx="6" fill="#d1fae5" stroke="#059669" stroke-width="1"/>
+  <text x="259" y="118" font-size="11.5" font-weight="700" fill="#065f46" text-anchor="middle">数据缓冲寄存器</text>
+  <text x="259" y="135" font-size="10" fill="#047857" text-anchor="middle">暂存数据 / 速度匹配</text>
+
+  <rect x="184" y="154" width="150" height="44" rx="6" fill="#fef3c7" stroke="#b45309" stroke-width="1"/>
+  <text x="259" y="172" font-size="11.5" font-weight="700" fill="#92400e" text-anchor="middle">状态寄存器</text>
+  <text x="259" y="189" font-size="10" fill="#78350f" text-anchor="middle">忙/闲、就绪、错误</text>
+
+  <rect x="184" y="208" width="150" height="44" rx="6" fill="#e0e7ff" stroke="#4f46e5" stroke-width="1"/>
+  <text x="259" y="226" font-size="11.5" font-weight="700" fill="#312e81" text-anchor="middle">控制寄存器</text>
+  <text x="259" y="243" font-size="10" fill="#4338ca" text-anchor="middle">存放 CPU 下的命令字</text>
+
+  <rect x="352" y="154" width="156" height="98" rx="6" fill="#dbeafe" stroke="#2563eb" stroke-width="1.2"/>
+  <text x="430" y="182" font-size="11.5" font-weight="700" fill="#1e40af" text-anchor="middle">I/O 控制逻辑</text>
+  <text x="430" y="202" font-size="10" fill="#1d4ed8" text-anchor="middle">命令字译码 → 控制信号</text>
+  <text x="430" y="218" font-size="10" fill="#1d4ed8" text-anchor="middle">数据通路开关、状态采集</text>
+  <text x="430" y="238" font-size="10" fill="#1d4ed8" text-anchor="middle">中断请求与排队</text>
+
+  <line x1="158" y1="100" x2="182" y2="100" stroke="#4f46e5" stroke-width="1.2" marker-end="url(#ioArrow)"/>
+  <line x1="158" y1="176" x2="182" y2="176" stroke="#4f46e5" stroke-width="1.2" marker-end="url(#ioArrow)"/>
+  <line x1="158" y1="230" x2="182" y2="230" stroke="#4f46e5" stroke-width="1.2" marker-end="url(#ioArrow)"/>
+  <line x1="334" y1="176" x2="350" y2="176" stroke="#2563eb" stroke-width="1.2" marker-end="url(#ioArrow)"/>
+
+  <rect x="552" y="110" width="110" height="56" rx="7" fill="#f1f5f9" stroke="#94a3b8" stroke-width="1"/>
+  <text x="607" y="132" font-size="11" font-weight="700" fill="#334155" text-anchor="middle">外设界面</text>
+  <text x="607" y="149" font-size="10" fill="#64748b" text-anchor="middle">串/并转换、电平</text>
+  <line x1="524" y1="150" x2="548" y2="138" stroke="#b45309" stroke-width="1.5" marker-end="url(#ioArrowO)"/>
+
+  <rect x="552" y="190" width="110" height="56" rx="7" fill="#f8fafc" stroke="#cbd5e1" stroke-width="1"/>
+  <text x="607" y="216" font-size="11" font-weight="700" fill="#334155" text-anchor="middle">外设</text>
+  <text x="607" y="233" font-size="10" fill="#64748b" text-anchor="middle">磁盘 / 键盘 / 打印机</text>
+  <line x1="607" y1="166" x2="607" y2="188" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#ioArrow)"/>
+
+  <text x="176" y="308" font-size="10.5" fill="#94a3b8">主机侧：高速并行总线</text>
+  <text x="380" y="308" font-size="10.5" fill="#94a3b8">设备侧：可能是串行 / 窄位宽，由接口做宽度与格式转换</text>
+
+  <text x="20" y="342" font-size="12.5" font-weight="700" fill="#334155">三根线各传什么（2012 真题考点）</text>
+  <text x="20" y="362" font-size="11" fill="#475569">数据线：读/写的数据、状态信息、控制信息，<tspan font-weight="700">以及中断类型号</tspan>（不是走地址线）</text>
+  <text x="20" y="380" font-size="11" fill="#475569">地址线：指定要访问的接口内<tspan font-weight="700">哪个寄存器（端口地址）</tspan>，由 CPU 单向发出</text>
+  <text x="20" y="398" font-size="11" fill="#475569">控制线：读/写控制（区分寄存器访问方向）、中断请求与响应、总线仲裁、设备握手</text>
+
+  <rect x="20" y="410" width="640" height="30" rx="6" fill="#eef2ff" stroke="#c7d2fe" stroke-width="1"/>
+  <text x="32" y="430" font-size="11.5" fill="#312e81">端口复用：状态寄存器（只读）与控制寄存器（只写）方向相反、访问时间错开，可共用同一端口地址</text>
+</svg>
