@@ -1,0 +1,62 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 680 486" width="680" height="486" font-family="-apple-system,BlinkMacSystemFont,'Segoe UI','Microsoft YaHei',sans-serif">
+  <rect x="0" y="0" width="680" height="486" fill="#ffffff"/>
+  <text x="20" y="28" font-size="16" font-weight="700" fill="#312e81">多级反馈队列 · 走错一次就降一级，走对一次就早脱身</text>
+  <text x="20" y="48" font-size="12" fill="#64748b">三级队列：优先级越高的时间片越小（1 → 2 → 4），每级内部都是 RR</text>
+
+  <defs>
+    <marker id="ar3" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto">
+      <path d="M0,0 L8,4 L0,8 z" fill="#4a7ab8"/>
+    </marker>
+    <marker id="ar3r" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto">
+      <path d="M0,0 L8,4 L0,8 z" fill="#f87171"/>
+    </marker>
+  </defs>
+
+  <rect x="70" y="76" width="270" height="46" rx="6" fill="#dbeafe" stroke="#93c5fd" stroke-width="1.2"/>
+  <text x="86" y="96" font-size="11.5" font-weight="700" fill="#1e40af">第 1 级 · 时间片 1</text>
+  <text x="86" y="113" font-size="9.5" fill="#1e3a8a">优先级最高 · 新进程一律先放这里</text>
+
+  <rect x="70" y="164" width="270" height="46" rx="6" fill="#c7d2fe" stroke="#818cf8" stroke-width="1.2"/>
+  <text x="86" y="184" font-size="11.5" font-weight="700" fill="#3730a3">第 2 级 · 时间片 2</text>
+  <text x="86" y="201" font-size="9.5" fill="#312e81">上一级没跑完的降到这里</text>
+
+  <rect x="70" y="252" width="270" height="46" rx="6" fill="#e0e7ff" stroke="#a5b4fc" stroke-width="1.2"/>
+  <text x="86" y="272" font-size="11.5" font-weight="700" fill="#3730a3">第 3 级 · 时间片 4</text>
+  <text x="86" y="289" font-size="9.5" fill="#312e81">最低优先级 · 仍用 RR，接近 FCFS</text>
+
+  <path d="M205 122 L205 164" fill="none" stroke="#4a7ab8" stroke-width="1.4" marker-end="url(#ar3)"/>
+  <text x="213" y="148" font-size="9.5" fill="#1d4ed8">用完 + 没跑完 → 降级</text>
+  <path d="M205 210 L205 252" fill="none" stroke="#4a7ab8" stroke-width="1.4" marker-end="url(#ar3)"/>
+  <text x="213" y="236" font-size="9.5" fill="#1d4ed8">再用完 → 再降级</text>
+
+  <path d="M340 99 L420 99" fill="none" stroke="#4a7ab8" stroke-width="1.4" marker-end="url(#ar3)"/>
+  <text x="430" y="103" font-size="10" fill="#166534">完成 → 进程结束</text>
+  <path d="M340 187 L420 187" fill="none" stroke="#4a7ab8" stroke-width="1.4" marker-end="url(#ar3)"/>
+  <text x="430" y="191" font-size="10" fill="#166534">完成 → 进程结束</text>
+  <path d="M340 275 L420 275" fill="none" stroke="#4a7ab8" stroke-width="1.4" marker-end="url(#ar3)"/>
+  <text x="430" y="279" font-size="10" fill="#166534">完成 → 进程结束</text>
+
+  <path d="M205 40 L205 76" fill="none" stroke="#4a7ab8" stroke-width="1.4" marker-end="url(#ar3)"/>
+  <text x="213" y="64" font-size="9.5" fill="#1d4ed8">新进程</text>
+
+  <path d="M470 300 L470 268 L344 268" fill="none" stroke="#f87171" stroke-width="1.4" marker-end="url(#ar3r)"/>
+  <text x="478" y="288" font-size="9.5" fill="#991b1b">新进程进 1 级</text>
+  <text x="478" y="302" font-size="9.5" fill="#991b1b">→ 立即抢占低级</text>
+
+  <text x="430" y="330" font-size="10" fill="#64748b">长作业最终降到第 3 级，</text>
+  <text x="430" y="344" font-size="10" fill="#64748b">但不会被饿死</text>
+
+  <line x1="30" y1="368" x2="650" y2="368" stroke="#e2e8f0" stroke-width="1"/>
+
+  <rect x="30" y="378" width="300" height="94" rx="6" fill="#f0fdf4" stroke="#bbf7d0" stroke-width="1"/>
+  <text x="44" y="398" font-size="11" font-weight="700" fill="#166534">调度顺序（严格按级）</text>
+  <text x="44" y="418" font-size="10.5" fill="#14532d">仅当第 1 级空，才调度第 2 级；</text>
+  <text x="44" y="436" font-size="10.5" fill="#14532d">仅当前 i−1 级全空，才调度第 i 级。</text>
+  <text x="44" y="456" font-size="10.5" fill="#14532d">同一级内部按时间片轮转排队。</text>
+
+  <rect x="344" y="378" width="306" height="94" rx="6" fill="#fef2f2" stroke="#fecaca" stroke-width="1"/>
+  <text x="358" y="398" font-size="11" font-weight="700" fill="#991b1b">为什么它「不饿死长作业」</text>
+  <text x="358" y="418" font-size="10.5" fill="#7f1d1d">长作业在第 1 级也拿到了一个时间片，</text>
+  <text x="358" y="436" font-size="10.5" fill="#7f1d1d">只是没跑完才降级；每级都推进一截，</text>
+  <text x="358" y="456" font-size="10.5" fill="#7f1d1d">最终必在第 3 级跑完 → 不会无限等待。</text>
+</svg>

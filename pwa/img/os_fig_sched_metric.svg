@@ -1,0 +1,38 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 680 372" width="680" height="372" font-family="-apple-system,BlinkMacSystemFont,'Segoe UI','Microsoft YaHei',sans-serif">
+  <rect x="0" y="0" width="680" height="372" fill="#ffffff"/>
+  <text x="20" y="28" font-size="16" font-weight="700" fill="#312e81">四个时间量的定义 · 周转 / 等待 / 响应 到底谁减谁</text>
+  <text x="20" y="48" font-size="12" fill="#64748b">题目给出「到达时间」「运行时间」，要求算的三个量都只是同一根时间轴上的不同区间</text>
+
+  <line x1="60" y1="150" x2="620" y2="150" stroke="#cbd5e1" stroke-width="1.5"/>
+
+  <rect x="180" y="138" width="200" height="24" fill="#fef3c7" stroke="#fcd34d" stroke-width="1"/>
+  <text x="280" y="154" font-size="10.5" font-weight="700" fill="#92400e" text-anchor="middle">等待（在就绪队列里排队）</text>
+
+  <rect x="380" y="138" width="160" height="24" fill="#dbeafe" stroke="#93c5fd" stroke-width="1"/>
+  <text x="460" y="154" font-size="10.5" font-weight="700" fill="#1e40af" text-anchor="middle">运行（真正占 CPU）</text>
+
+  <circle cx="60" cy="150" r="5" fill="#334155"/>
+  <circle cx="180" cy="150" r="5" fill="#92400e"/>
+  <circle cx="380" cy="150" r="5" fill="#1e40af"/>
+  <circle cx="540" cy="150" r="5" fill="#166534"/>
+
+  <text x="60" y="130" font-size="10" fill="#334155" text-anchor="middle">到达</text>
+  <text x="60" y="174" font-size="9.5" fill="#64748b" text-anchor="middle">t 到</text>
+  <text x="180" y="130" font-size="10" fill="#92400e" text-anchor="middle">开始运行</text>
+  <text x="180" y="174" font-size="9.5" fill="#64748b" text-anchor="middle">t 开始</text>
+  <text x="380" y="130" font-size="10" fill="#1e40af" text-anchor="middle">（同一时刻）</text>
+  <text x="540" y="130" font-size="10" fill="#166534" text-anchor="middle">运行结束</text>
+  <text x="540" y="174" font-size="9.5" fill="#64748b" text-anchor="middle">t 完成</text>
+
+  <line x1="60" y1="192" x2="540" y2="192" stroke="#166534" stroke-width="1.2" stroke-dasharray="4 3"/>
+  <text x="300" y="208" font-size="10.5" fill="#166534" text-anchor="middle">周转时间 = 完成 − 到达</text>
+
+  <line x1="60" y1="224" x2="380" y2="224" stroke="#92400e" stroke-width="1.2" stroke-dasharray="4 3"/>
+  <text x="220" y="240" font-size="10.5" fill="#92400e" text-anchor="middle">等待时间 = 开始 − 到达（= 周转 − 运行）</text>
+
+  <rect x="20" y="258" width="640" height="98" rx="8" fill="#f8fafc" stroke="#cbd5e1" stroke-width="1"/>
+  <text x="34" y="278" font-size="11.5" font-weight="700" fill="#334155">三行公式（背这一组就够）</text>
+  <text x="34" y="300" font-size="11" fill="#1e40af">周转时间 = 完成时间 − 到达时间　　带权周转时间 = 周转时间 ÷ 运行时间</text>
+  <text x="34" y="320" font-size="11" fill="#92400e">等待时间 = 周转时间 − 运行时间　　响应时间 = 首次开始运行 − 到达</text>
+  <text x="34" y="342" font-size="10.5" fill="#64748b">平均 X = 各进程 X 之和 ÷ 进程数；带权周转时间一定 ≥ 1，越接近 1 说明等待越少。</text>
+</svg>

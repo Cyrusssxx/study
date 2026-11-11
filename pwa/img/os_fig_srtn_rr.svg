@@ -1,0 +1,67 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 680 470" width="680" height="470" font-family="-apple-system,BlinkMacSystemFont,'Segoe UI','Microsoft YaHei',sans-serif">
+  <rect x="0" y="0" width="680" height="470" fill="#ffffff"/>
+  <text x="20" y="26" font-size="16" font-weight="700" fill="#312e81">SRTN（抢占式最短剩余）与 RR（q=1）· 同一组进程两种切法</text>
+  <text x="20" y="46" font-size="12" fill="#64748b">P1/P2/P3 到达 0/1/2，运行 8/4/1 —— 两者都会切，但「切给谁」完全不同</text>
+
+  <text x="20" y="80" font-size="11.5" font-weight="700" fill="#1e40af">SRTN：每次新进程到达就重比剩余时间，谁剩得少给谁</text>
+  <text x="20" y="116" font-size="10.5" font-weight="700" fill="#334155" text-anchor="end">SRTN</text>
+
+  <rect x="70" y="98" width="44" height="28" fill="#dbeafe" stroke="#93c5fd" stroke-width="1"/>
+  <text x="92" y="117" font-size="9.5" font-weight="700" fill="#1e40af" text-anchor="middle">P1</text>
+  <rect x="114" y="98" width="44" height="28" fill="#c7d2fe" stroke="#818cf8" stroke-width="1"/>
+  <text x="136" y="117" font-size="9.5" font-weight="700" fill="#3730a3" text-anchor="middle">P2</text>
+  <rect x="158" y="98" width="44" height="28" fill="#fef3c7" stroke="#fcd34d" stroke-width="1"/>
+  <text x="180" y="117" font-size="9.5" font-weight="700" fill="#92400e" text-anchor="middle">P3</text>
+  <rect x="202" y="98" width="132" height="28" fill="#c7d2fe" stroke="#818cf8" stroke-width="1"/>
+  <text x="268" y="117" font-size="10" font-weight="700" fill="#3730a3" text-anchor="middle">P2（剩 3）</text>
+  <rect x="334" y="98" width="308" height="28" fill="#dbeafe" stroke="#93c5fd" stroke-width="1"/>
+  <text x="488" y="117" font-size="10" font-weight="700" fill="#1e40af" text-anchor="middle">P1（剩 7）一口气跑完</text>
+
+  <text x="20" y="176" font-size="11.5" font-weight="700" fill="#166534">RR（q=1）：每跑 1 个单位就下队尾，新到的也进队尾</text>
+  <text x="20" y="212" font-size="10.5" font-weight="700" fill="#334155" text-anchor="end">RR</text>
+
+  <rect x="70" y="194" width="44" height="28" fill="#dbeafe" stroke="#93c5fd" stroke-width="1"/>
+  <rect x="114" y="194" width="44" height="28" fill="#c7d2fe" stroke="#818cf8" stroke-width="1"/>
+  <rect x="158" y="194" width="44" height="28" fill="#fef3c7" stroke="#fcd34d" stroke-width="1"/>
+  <rect x="202" y="194" width="44" height="28" fill="#dbeafe" stroke="#93c5fd" stroke-width="1"/>
+  <rect x="246" y="194" width="44" height="28" fill="#c7d2fe" stroke="#818cf8" stroke-width="1"/>
+  <rect x="290" y="194" width="44" height="28" fill="#dbeafe" stroke="#93c5fd" stroke-width="1"/>
+  <rect x="334" y="194" width="44" height="28" fill="#c7d2fe" stroke="#818cf8" stroke-width="1"/>
+  <rect x="378" y="194" width="44" height="28" fill="#dbeafe" stroke="#93c5fd" stroke-width="1"/>
+  <rect x="422" y="194" width="44" height="28" fill="#c7d2fe" stroke="#818cf8" stroke-width="1"/>
+  <rect x="466" y="194" width="176" height="28" fill="#dbeafe" stroke="#93c5fd" stroke-width="1"/>
+
+  <text x="92" y="213" font-size="9" fill="#1e40af" text-anchor="middle">P1</text>
+  <text x="136" y="213" font-size="9" fill="#3730a3" text-anchor="middle">P2</text>
+  <text x="180" y="213" font-size="9" fill="#92400e" text-anchor="middle">P3</text>
+  <text x="224" y="213" font-size="9" fill="#1e40af" text-anchor="middle">P1</text>
+  <text x="268" y="213" font-size="9" fill="#3730a3" text-anchor="middle">P2</text>
+  <text x="312" y="213" font-size="9" fill="#1e40af" text-anchor="middle">P1</text>
+  <text x="356" y="213" font-size="9" fill="#3730a3" text-anchor="middle">P2</text>
+  <text x="400" y="213" font-size="9" fill="#1e40af" text-anchor="middle">P1</text>
+  <text x="444" y="213" font-size="9" fill="#3730a3" text-anchor="middle">P2</text>
+  <text x="554" y="213" font-size="9" fill="#1e40af" text-anchor="middle">P1（剩 4，无人可抢）</text>
+
+  <line x1="70" y1="238" x2="642" y2="238" stroke="#cbd5e1" stroke-width="1"/>
+  <text x="70" y="254" font-size="9.5" fill="#94a3b8" text-anchor="middle">0</text>
+  <text x="114" y="254" font-size="9.5" fill="#94a3b8" text-anchor="middle">1</text>
+  <text x="158" y="254" font-size="9.5" fill="#94a3b8" text-anchor="middle">2</text>
+  <text x="202" y="254" font-size="9.5" fill="#94a3b8" text-anchor="middle">3</text>
+  <text x="290" y="254" font-size="9.5" fill="#94a3b8" text-anchor="middle">5</text>
+  <text x="334" y="254" font-size="9.5" fill="#94a3b8" text-anchor="middle">6</text>
+  <text x="422" y="254" font-size="9.5" fill="#94a3b8" text-anchor="middle">8</text>
+  <text x="510" y="254" font-size="9.5" fill="#94a3b8" text-anchor="middle">10</text>
+  <text x="598" y="254" font-size="9.5" fill="#94a3b8" text-anchor="middle">12</text>
+  <text x="642" y="254" font-size="9.5" fill="#94a3b8" text-anchor="middle">13</text>
+
+  <rect x="20" y="272" width="640" height="94" rx="8" fill="#f8fafc" stroke="#cbd5e1" stroke-width="1"/>
+  <text x="34" y="292" font-size="11" font-weight="700" fill="#334155">SRTN 完成时刻</text>
+  <text x="34" y="312" font-size="10.5" fill="#1e40af">P1 = 13、P2 = 6、P3 = 3 → 周转 13 / 5 / 1 → 平均 19/3 ≈ 6.33</text>
+  <text x="34" y="334" font-size="11" font-weight="700" fill="#334155">RR（q=1）完成时刻</text>
+  <text x="34" y="354" font-size="10.5" fill="#166534">P1 = 13、P2 = 9、P3 = 3 → 周转 13 / 8 / 1 → 平均 22/3 ≈ 7.33</text>
+
+  <rect x="20" y="382" width="640" height="76" rx="8" fill="#fef3c7" stroke="#fcd34d" stroke-width="1"/>
+  <text x="34" y="402" font-size="11" font-weight="700" fill="#92400e">两个易错点</text>
+  <text x="34" y="422" font-size="10.5" fill="#92400e">① SRTN 每一步都要重算「当前剩余」与「新到需要」，不是只看新进程短不短——P2 在 t=2 被抢是因为 3 &gt; 1。</text>
+  <text x="34" y="442" font-size="10.5" fill="#92400e">② RR 里「新到的」与「被抢下的」谁先入队无统一规定，不同约定甘特图不同；<tspan font-weight="700">本题按「新到在前」</tspan>。</text>
+</svg>
