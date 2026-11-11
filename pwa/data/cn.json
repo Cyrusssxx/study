@@ -896,7 +896,8 @@
       "explanation": "<p>在OSI参考模型中，传输层是自下而上第一个提供端到端服务的层，通过端口号实现应用进程间的逻辑通信。数据链路层仅负责相邻节点（如交换机、路由器等中间设备）之间的通信，而网络层提供主机到主机的通信，不提供面向应用进程的服务。</p>",
       "chapter": "第1章 计算机网络体系结构",
       "section": "1.2 计算机网络体系结构与参考模型",
-      "subsection": "1.2.3 OSI参考模型和TCP/IP模型"
+      "subsection": "1.2.3 OSI参考模型和TCP/IP模型",
+      "kp_analysis": "<div class=\"kp-sec\"><b>考点</b>OSI 自下而上七层职责链：物理层传比特，数据链路层管相邻结点帧，网络层管主机到主机分组，传输层管进程到进程（端到端）报文段，其上为会话、表示、应用层。传输层用端口号实现应用进程间逻辑通信，是自下而上第一个提供端到端服务的层次。答案 B。</div><div class=\"kp-sec\"><b>易错点</b><span class=\"kp-trap\">①把「端到端」记到网络层，网络层只到主机，不区分进程；②数据链路层只覆盖相邻结点间的一段链路，中途交换机、路由器都要拆封。</span></div>"
     },
     {
       "id": "cn_0047",
@@ -913,7 +914,8 @@
       "chapter": "第1章 计算机网络体系结构",
       "section": "1.2 计算机网络体系结构与参考模型",
       "subsection": "1.2.1 计算机网络分层结构",
-      "_pdf_qno": 30
+      "_pdf_qno": 30,
+      "kp_analysis": "<div class=\"kp-sec\"><b>考点</b>网络体系结构是各层及其协议的集合，描述层次划分、每层必须完成的功能、每层使用的协议，属抽象定义；协议的内部实现细节属「实现」问题，由厂商自定，不由体系结构规定。答案 C。</div><div class=\"kp-sec\"><b>易错点</b><span class=\"kp-trap\">①把「每层使用的协议」误当实现细节而排除 B，协议是体系结构的一部分；②体系结构管「做什么」，实现管「怎么做」，二者不可混。</span></div>"
     },
     {
       "id": "cn_0048",
@@ -948,7 +950,8 @@
       "chapter": "第1章 计算机网络体系结构",
       "section": "1.2 计算机网络体系结构与参考模型",
       "subsection": "1.2.3 OSI参考模型和TCP/IP模型",
-      "_pdf_qno": 32
+      "_pdf_qno": 32,
+      "kp_analysis": "<div class=\"kp-sec\"><b>考点</b>OSI 相邻层服务关系：第 n 层直接为第 n+1 层提供服务。会话层为自下而上第 5 层，其下一层是第 4 层传输层，故传输层直接为会话层提供服务。答案 C。</div><div class=\"kp-sec\"><b>易错点</b><span class=\"kp-trap\">①忽略「直接」二字，按应用层→会话层的关系误选 A；②表示层在会话层之上，是会话层的上层，不是服务提供者。</span></div>"
     },
     {
       "id": "cn_0050",
@@ -983,7 +986,8 @@
       "chapter": "第1章 计算机网络体系结构",
       "section": "1.2 计算机网络体系结构与参考模型",
       "subsection": "1.2.3 OSI参考模型和TCP/IP模型",
-      "_pdf_qno": 34
+      "_pdf_qno": 34,
+      "kp_analysis": "<div class=\"kp-sec\"><b>考点</b>OSI 共 7 层，除物理层与应用层外还有 5 层做封装，每层加 20B 首部共 100B 额外开销；总传输量 400+100=500B，传输效率=400/500=80%。答案 A。</div><div class=\"kp-sec\"><b>易错点</b><span class=\"kp-trap\">①层数数错（按 4 层或 6 层）得 83%、87%；②未扣除物理层与应用层，把物理层也算入，效率偏低。</span></div>"
     },
     {
       "id": "cn_0052",
@@ -1000,7 +1004,8 @@
       "chapter": "第1章 计算机网络体系结构",
       "section": "1.2 计算机网络体系结构与参考模型",
       "subsection": "1.2.3 OSI参考模型和TCP/IP模型",
-      "_pdf_qno": 35
+      "_pdf_qno": 35,
+      "kp_analysis": "<div class=\"kp-sec\"><b>考点</b>OSI 自下而上第 5 层为会话层，负责建立、管理和终止不同主机各进程间的会话（对话），并管理数据交换的同步点。差错控制在链路层，路由选择在网络层，数据表示转换在表示层（第 6 层）。答案 C。</div><div class=\"kp-sec\"><b>易错点</b><span class=\"kp-trap\">①层序记错，把第 5 层当表示层选 D；②会话层与传输层都「管连接」，会话层面向应用进程对话，传输层面向端到端数据传送。</span></div>"
     },
     {
       "id": "cn_0053",
@@ -1034,7 +1039,8 @@
       "chapter": "第1章 计算机网络体系结构",
       "section": "1.2 计算机网络体系结构与参考模型",
       "subsection": "1.2.3 OSI参考模型和TCP/IP模型",
-      "_pdf_qno": 37
+      "_pdf_qno": 37,
+      "kp_analysis": "<div class=\"kp-sec\"><b>考点</b>TCP/IP 模型中传输层的下一层是网际层，核心功能是按目的 IP 查路由表选路并转发分组，提供无连接、不可靠的尽力而为服务；端到端报文段传输属传输层，对话管理属应用层。答案 B。</div><div class=\"kp-sec\"><b>易错点</b><span class=\"kp-trap\">①把端到端报文段传输归于网际层（C）；②节点到节点的流量控制在数据链路层，网际层只做拥塞控制，故 D 错。</span></div>"
     },
     {
       "id": "cn_0055",
@@ -1051,7 +1057,8 @@
       "chapter": "第1章 计算机网络体系结构",
       "section": "1.2 计算机网络体系结构与参考模型",
       "subsection": "1.2.3 OSI参考模型和TCP/IP模型",
-      "_pdf_qno": 38
+      "_pdf_qno": 38,
+      "kp_analysis": "<div class=\"kp-sec\"><b>考点</b>流量控制分层：数据链路层控制两个相邻结点之间（逐链路）的流量；网络层通过拥塞控制调节全网流量；传输层提供端到端流量控制。题干「相邻结点间」直接锁定链路层。答案 B。</div><div class=\"kp-sec\"><b>易错点</b><span class=\"kp-trap\">①见「流量控制」就选传输层，忽略「相邻结点」限定；②网络层是拥塞控制而非逐链路流量控制；③物理层不做流量控制。</span></div>"
     },
     {
       "id": "cn_0056",
@@ -1513,7 +1520,8 @@
       "chapter": "第2章 物理层",
       "section": "2.1 通信基础",
       "subsection": "2.1.2 信道的极限容量",
-      "_pdf_qno": 26
+      "_pdf_qno": 26,
+      "kp_analysis": "<div class=\"kp-sec\"><b>考点</b>无噪声信道用奈氏准则 C=2W·log<sub>2</sub>V。W=200kHz，4 个幅值即 V=4，log<sub>2</sub>4=2，C=2×200k×2=800kb/s。答案 C。</div><div class=\"kp-sec\"><b>易错点</b><span class=\"kp-trap\">①无噪声却用香农公式，题干无信噪比；②把「4 个幅值」当 4bit，得 1600kb/s（D），实为 log<sub>2</sub>4=2bit；③漏掉公式前的系数 2。</span></div>"
     },
     {
       "id": "cn_0082",
@@ -1741,7 +1749,8 @@
       "chapter": "第2章 物理层",
       "section": "2.2 传输介质",
       "subsection": "2.2.2 物理层接口的特性",
-      "_pdf_qno": 11
+      "_pdf_qno": 11,
+      "kp_analysis": "<div class=\"kp-sec\"><b>考点</b>物理层接口四特性：机械特性管接口形状、尺寸、引脚数；电气特性管电压、电平、阻抗；功能特性管各引脚的功能与含义；过程（规程）特性管完成各功能时事件发生的先后顺序。答案 C。</div><div class=\"kp-sec\"><b>易错点</b><span class=\"kp-trap\">①功能特性与过程特性混淆：功能管「引脚干什么」，过程管「先干什么后干什么」；②电气特性只描述电平电压，不含顺序。</span></div>"
     },
     {
       "id": "cn_0095",
@@ -1758,7 +1767,8 @@
       "chapter": "第2章 物理层",
       "section": "2.2 传输介质",
       "subsection": "2.2.2 物理层接口的特性",
-      "_pdf_qno": 12
+      "_pdf_qno": 12,
+      "kp_analysis": "<div class=\"kp-sec\"><b>考点</b>物理层接口规范含四特性：机械（接口形状、尺寸、引脚排列）、电气（信号电平、阻抗）、功能（引脚功能与含义）、过程（事件顺序）；MAC 物理地址用于标识链路层设备，属数据链路层。答案 C。</div><div class=\"kp-sec\"><b>易错点</b><span class=\"kp-trap\">①见「物理」二字就把物理地址归到物理层；②接口形状属机械特性、引脚功能属功能特性，都在物理层，不能排除。</span></div>"
     },
     {
       "id": "cn_0096",
@@ -2039,7 +2049,8 @@
       "chapter": "第3章 数据链路层",
       "section": "3.2 组帧",
       "subsection": "3.2.3 零比特填充法",
-      "_pdf_qno": 1
+      "_pdf_qno": 1,
+      "kp_analysis": "<div class=\"kp-sec\"><b>考点</b>HDLC 以 01111110 作帧界，发送端在数据中每出现 5 个连续 1 后就插入一个 0（零比特填充），接收端逢 5 个连续 1 删去其后的 0。0111110 后补 0，第二个 111111 处再补 0，得 011111000011111010。答案 A。</div><div class=\"kp-sec\"><b>易错点</b><span class=\"kp-trap\">①只处理 6 连 1 的那处，漏掉第二处连续 5 个 1；②填充规则是「逢 5 个 1 插 0」而非逢 6 个 1，也勿与字符填充插入 ESC 混淆。</span></div>"
     },
     {
       "id": "cn_0112",
@@ -2589,7 +2600,8 @@
       "chapter": "第3章 数据链路层",
       "section": "3.4 流量控制与可靠传输机制",
       "subsection": "3.4.2 可靠传输机制",
-      "_pdf_qno": 22
+      "_pdf_qno": 22,
+      "kp_analysis": "<div class=\"kp-sec\"><b>考点</b>GBN 采用累积确认，接收方对按序到达的最后一个正确帧发确认。收到 0、2、3 号确认，累积含义即 0~3 号均已按序收到（1 号确认帧丢失）。已发 0~7 号，故只需重发 4、5、6、7 号，共 4 帧。答案 C。</div><div class=\"kp-sec\"><b>易错点</b><span class=\"kp-trap\">①误以为缺 1 号就要从 1 号重发，算成 7 帧或 5 帧误选 D；②GBN 接收窗口为 1，乱序到达即丢弃，确认 3 号已隐含 0~2 号，勿按 SR 的独立确认理解。</span></div>"
     },
     {
       "id": "cn_0143",
@@ -2606,7 +2618,8 @@
       "chapter": "第3章 数据链路层",
       "section": "3.4 流量控制与可靠传输机制",
       "subsection": "3.4.2 可靠传输机制",
-      "_pdf_qno": 23
+      "_pdf_qno": 23,
+      "kp_analysis": "<div class=\"kp-sec\"><b>考点</b>SR 逐帧确认、不具累积性，接收窗口大于 1。已发 0~3 号，仅收到 1 号确认，0、2 号依次超时，故只重传 0、2 号两帧；3 号既未确认也未超时，暂不动。答案 B。</div><div class=\"kp-sec\"><b>易错点</b><span class=\"kp-trap\">①按 GBN 累积确认思维认为 1 号确认含 0 号，只重传 1 帧（A）；②把未超时的 3 号也列入重传得 3 帧（C）。</span></div>"
     },
     {
       "id": "cn_0144",
@@ -2695,7 +2708,8 @@
       "chapter": "第3章 数据链路层",
       "section": "3.4 流量控制与可靠传输机制",
       "subsection": "3.4.1 流量控制与滑动窗口机制",
-      "_pdf_qno": 28
+      "_pdf_qno": 28,
+      "kp_analysis": "<div class=\"kp-sec\"><b>考点</b>n 比特编号时序号空间为 2<sup>n</sup>。选择重传须同时满足 W<sub>T</sub>+W<sub>R</sub>≤2<sup>n</sup> 与 W<sub>R</sub>≤W<sub>T</sub>；n=3 时 2<sup>3</sup>=8，W<sub>T</sub>=5，故 W<sub>R</sub>≤3，取最大 3。答案 B。</div><div class=\"kp-sec\"><b>易错点</b><span class=\"kp-trap\">①只记 W<sub>R</sub>≤W<sub>T</sub> 得 5（D）；②误把序号空间当 2<sup>n</sup>-1=7 得 W<sub>R</sub>≤2；③该约束是 SR 特有，GBN 只要求 W<sub>T</sub>≤2<sup>n</sup>-1。</span></div>"
     },
     {
       "id": "cn_0149",
@@ -2712,7 +2726,8 @@
       "chapter": "第3章 数据链路层",
       "section": "3.4 流量控制与可靠传输机制",
       "subsection": "3.4.2 可靠传输机制",
-      "_pdf_qno": 29
+      "_pdf_qno": 29,
+      "kp_analysis": "<div class=\"kp-sec\"><b>考点</b>停等协议：帧长 1000B=8000b，10kb/s 下发送时延 800ms，确认帧同样 800ms；周期 T=800+200+800+200=2000ms，信道利用率=800/2000=40%。答案 D。</div><div class=\"kp-sec\"><b>易错点</b><span class=\"kp-trap\">①只算数据帧往返得 800+200=1000ms，误得 80%；②漏加确认帧及其传播时延；③10kb/s 不是 10kB/s，1000B 要乘 8。</span></div>"
     },
     {
       "id": "cn_0150",
@@ -6005,7 +6020,8 @@
       "chapter": "第4章 网络层",
       "section": "4.2 IPv4",
       "subsection": "4.2.7 网际控制报文协议ICMP",
-      "_pdf_qno": 56
+      "_pdf_qno": 56,
+      "kp_analysis": "<div class=\"kp-sec\"><b>考点</b>分层封装链：ICMP 报文作为数据部分封装在 IP 分组中，故 IP 直接为 ICMP 提供服务，二者同在网际层。PPP 在数据链路层为网络层服务，TCP、UDP 在传输层为应用层服务。答案 B。</div><div class=\"kp-sec\"><b>易错点</b><span class=\"kp-trap\">①把 ICMP 当传输层协议误选 UDP 或 TCP；②记「ICMP 是 IP 的助手」，同层封装而非上层调用；③PPP 只提供点到点链路服务，与 ICMP 无直接关系。</span></div>"
     },
     {
       "id": "cn_0334",
@@ -6076,7 +6092,8 @@
       "chapter": "第4章 网络层",
       "section": "4.2 IPv4",
       "subsection": "4.2.2 IPv4地址",
-      "_pdf_qno": 60
+      "_pdf_qno": 60,
+      "kp_analysis": "<div class=\"kp-sec\"><b>考点</b>/16 有 16 位主机号，划 128=2<sup>7</sup> 个等长子网需借 7 位，余 9 位主机号；每子网 2<sup>9</sup>=512 个地址，去掉网络地址与广播地址，可分配 510 个。答案 C。</div><div class=\"kp-sec\"><b>易错点</b><span class=\"kp-trap\">①选 512，忘减全 0 网络地址与全 1 广播地址；②把 128 当 2<sup>6</sup> 只借 6 位，主机号算成 10 位得 1022。</span></div>"
     },
     {
       "id": "cn_0338",
@@ -6201,7 +6218,8 @@
       "chapter": "第4章 网络层",
       "section": "4.2 IPv4",
       "subsection": "4.2.3 网络地址转换NAT",
-      "_pdf_qno": 67
+      "_pdf_qno": 67,
+      "kp_analysis": "<div class=\"kp-sec\"><b>考点</b>网络地址=IP 地址与子网掩码按位与。255.255.192.0 即 /18，第三字节 192=11000000，72=01001000，相与得 01000000=64，故网络地址为 183.80.64.0。答案 B。</div><div class=\"kp-sec\"><b>易错点</b><span class=\"kp-trap\">①把 192.0 当 /24，只清第四字节得 183.80.72.0（C）；②第三字节 72 与 192 相与是 64 而非 192，误选 D。</span></div>"
     },
     {
       "id": "cn_0345",
@@ -6843,7 +6861,8 @@
       "chapter": "第4章 网络层",
       "section": "4.4 路由算法与路由协议",
       "subsection": "4.4.3 路由信息协议",
-      "_pdf_qno": 24
+      "_pdf_qno": 24,
+      "kp_analysis": "<div class=\"kp-sec\"><b>考点</b>RIP 以跳数为度量，最大 15 跳，16 表示不可达。R2 通告 &lt;Net1,16&gt; 说明 R2 到 Net1 不可达；R1 若经 R2 转发需 16+1=17 跳，仍为不可达，故 R1 不能经 R2 到达 Net1。答案 D。</div><div class=\"kp-sec\"><b>易错点</b><span class=\"kp-trap\">①误选 C，把 17 当有效跳数，忘了超过 15 一律不可达；②&lt;Net1,16&gt; 是 R2 的距离向量，不能推出 R2 可达（误选 B）；A 方向也反了。</span></div>"
     },
     {
       "id": "cn_0381",
@@ -7389,7 +7408,8 @@
       "chapter": "第4章 网络层",
       "section": "4.7 网络层设备",
       "subsection": "4.7.1 冲突域和广播域",
-      "_pdf_qno": 21
+      "_pdf_qno": 21,
+      "kp_analysis": "<div class=\"kp-sec\"><b>考点</b>隔离能力：路由器既隔离广播域又隔离冲突域；交换机、网桥只隔离冲突域；集线器、中继器两者都不隔离。图中被路由器分成 2 个广播域，交换机每个端口各成一个冲突域，合计 4 个。答案 C。</div><div class=\"kp-sec\"><b>易错点</b><span class=\"kp-trap\">①以为交换机也隔离广播域，得 4、4（D）；②集线器下挂多台主机仍属同一冲突域，勿按主机台数计数。</span></div>"
     },
     {
       "id": "cn_0412",
@@ -8666,7 +8686,8 @@
       "chapter": "第5章 传输层",
       "section": "5.3 TCP",
       "subsection": "5.3.3 TCP连接管理",
-      "_pdf_qno": 44
+      "_pdf_qno": 44,
+      "kp_analysis": "<div class=\"kp-sec\"><b>考点</b>三次握手第二步：乙回 SYN=1、ACK=1；确认号 ack=甲初始序号+1=11220+1=11221；乙自身 seq 独立随机选取，与甲无关。故 (SYN=1,ACK=1,seq=11221,ack=11221) 合法。答案 C。</div><div class=\"kp-sec\"><b>易错点</b><span class=\"kp-trap\">①误选 A、D，第二步必须 SYN=1 且 ACK=1；②以为 seq 必须沿用 11220（B），乙的序号自选；③SYN 段占一个序号，故 ack 要加 1。</span></div>"
     },
     {
       "id": "cn_0483",
@@ -8683,7 +8704,8 @@
       "chapter": "第5章 传输层",
       "section": "5.3 TCP",
       "subsection": "5.3.3 TCP连接管理",
-      "_pdf_qno": 45
+      "_pdf_qno": 45,
+      "kp_analysis": "<div class=\"kp-sec\"><b>考点</b>TCP 序号指本报文段数据首字节的编号。第 3 段 seq=900、长 500B，则第 2 段占 500~899、seq=500，第 1 段占 0~299。乙只收到第 1、3 段，缺 500~899，累积确认期望下一字节为 500。答案 B。</div><div class=\"kp-sec\"><b>易错点</b><span class=\"kp-trap\">①按已收 900~1399 算成 1400（D）或 1200（C），忽略失序数据不确认；②TCP 确认号是期望的下一个字节序号，不是最后收到的字节号。</span></div>"
     },
     {
       "id": "cn_0484",
@@ -8754,7 +8776,8 @@
       "chapter": "第5章 传输层",
       "section": "5.3 TCP",
       "subsection": "5.3.3 TCP连接管理",
-      "_pdf_qno": 49
+      "_pdf_qno": 49,
+      "kp_analysis": "<div class=\"kp-sec\"><b>考点</b>接收缓存 64KB 大于目标窗口 32KB，窗口由拥塞窗口决定。慢开始 cwnd 从 1MSS=1KB 起每 RTT 翻倍：1→2→4→8→16→32KB，共 5 个 RTT，5×5ms=25ms。答案 A。</div><div class=\"kp-sec\"><b>易错点</b><span class=\"kp-trap\">①误把 64KB 缓存当瓶颈，算出 30ms 或 160ms；②漏算 1→2KB 这一步，按 4 个 RTT 得 20ms，或把 MSS 当 2KB 少算一轮。</span></div>"
     },
     {
       "id": "cn_0488",
@@ -8789,7 +8812,8 @@
       "chapter": "第5章 传输层",
       "section": "5.3 TCP",
       "subsection": "5.3.3 TCP连接管理",
-      "_pdf_qno": 51
+      "_pdf_qno": 51,
+      "kp_analysis": "<div class=\"kp-sec\"><b>考点</b>三次握手三步：①甲 SYN，seq=2018；②乙 SYN+ACK，seq=2046、ack=2019；③甲 ACK，ack=乙初始序号+1=2047。第三次握手只带 ACK，用于确认乙的 SYN。答案 D。</div><div class=\"kp-sec\"><b>易错点</b><span class=\"kp-trap\">①把确认号写成甲自己的 2019；②忘记 SYN 占一个序号，ack 应为 2046+1 而非 2046（C）。</span></div>"
     },
     {
       "id": "cn_0490",
@@ -10129,7 +10153,8 @@
       "chapter": "第6章 应用层",
       "section": "6.5 万维网",
       "subsection": "6.5.2 HTTP协议",
-      "_pdf_qno": 19
+      "_pdf_qno": 19,
+      "kp_analysis": "<div class=\"kp-sec\"><b>考点</b>非持久 HTTP/1.0 且不支持并行，每个对象都需新建 TCP 连接：建连 1RTT+请求响应 1RTT=2RTT。1 个页面加 7 个图像共 8 个对象，8×2=16RTT。答案 D。</div><div class=\"kp-sec\"><b>易错点</b><span class=\"kp-trap\">①漏算 7 个图像只算 2RTT，或算成 7×2=14（C）；②若支持并行连接则仅 4RTT，题干「不支持并行」是前提。</span></div>"
     }
   ]
 }

@@ -1,11 +1,14 @@
 // 真题套卷：不熟 / 不会 / 考点分析 回归（2026-11-03）
 //
-// 需求：套卷里每道题也能像刷题页那样标记「不熟 / 不会」；收藏过的题出现「考点分析」按钮。
+// 需求：套卷里每道题也能像刷题页那样标记「不熟 / 不会」；考点分析常驻显示。
 //
 // 关键约束（本测试锁定）：
-//   ① 只有**映射到题库**的题（it.qid 存在）才显示这两个功能 —— 合成 id 写不进标记表
-//   ② 考点分析含「答案 X」，**做题模式（examMode）下必须隐藏**
-//   ③ 考点分析按需拉取 /api/kp/<qid>，不整本载入题库
+//   ① 「不熟 / 不会」：映射题与**大题**都有（标记写 IndexedDB，按本页 iid 存）
+//   ② 考点分析「常驻」（2026-11-11 用户要求）：选择题默认展开、不再要求先收藏，
+//      按钮只用于收起；收起状态按题存 localStorage('zhentiKpClosed')
+//   ③ 考点分析含「答案 X」，**做题模式（examMode）下必须整块隐藏**
+//   ④ 数据来源：映射题取题库 kp_analysis（随知识点入口那次拉取一起收下），
+//      未映射选择题取 data/zt_kp.json；两者都不再走 /api/kp
 //
 // 用法：NODE_PATH=<workspace>/node_modules node _test_zhenti_marks.js
 const fs = require('fs');
@@ -41,6 +44,8 @@ const PAPER = {
   ]
 };
 const INDEX = { years: [2020], counts: { 2020: { choice: 2, big: 1 } }, iids: { 2020: ['os_0001', 'os_zt2020_2', 'os_zt2020_3'] } };
+// 未映射选择题的考点分析（真题卷里没有题库条目的那批，走 data/zt_kp.json）
+const ZT_KP = { 'os_zt2020_2': '<div class="kp-sec"><b>考点</b>未映射题考点</div>' };
 const OS_BANK = {
   subject: '操作系统', total: 1,
   questions: [{
@@ -78,6 +83,7 @@ const OS_BANK = {
         if (/data\/zt\/index\.json/.test(u)) return j(INDEX);
         if (/data\/zt\/zt_2020\.json/.test(u)) return j(PAPER);
         if (/data\/os\.json/.test(u)) return j(OS_BANK);
+        if (/data\/zt_kp\.json/.test(u)) return j(ZT_KP);
         if (/data\/zt_svg\//.test(u)) return { ok: true, status: 200, text: async () => '<svg></svg>' };
         if (/data\/(ds_daka|ds_code|ds_code_extra)\.json/.test(u)) return j({ cards: [], list: [] });
         return j({ questions: [], chapters: [], sections: [] });
@@ -104,21 +110,28 @@ const OS_BANK = {
   check('大题有 2 个标记按钮（不熟/不会）',
     c3 ? c3.querySelectorAll('.mark-btn').length : -1, 2);
 
-  console.log('\n--- 三、考点分析：做题模式下隐藏（含答案） ---');
+  console.log('\n--- 三、考点分析：选择题常驻（默认展开，做题模式隐藏） ---');
   const kpBtn = c => [...c.querySelectorAll('.btn-explanation')].find(b => /考点分析/.test(b.textContent));
-  // 默认已取消做题模式；先手动开启做题模式验证「考点分析」被隐藏，再退出继续收藏流程
+  const kpPanel = iid => card(iid) ? card(iid).querySelector('.kp-panel') : null;
+  // 2026-11-11 用户要求「选择题的考点分析搞成常驻」：不再要求先收藏，也不再需要点开
+  check('未收藏也有「考点分析」按钮（常驻）', !!kpBtn(card('os_0001')), true);
+  check('默认就展开出 kp-panel', !!kpPanel('os_0001'), true);
+  check('面板内容来自题库 kp_analysis（题库异步到位后回填）',
+    /测试考点内容/.test((kpPanel('os_0001') || {}).innerHTML || ''), true);
+  check('按钮默认 ▴（展开态）', /▴/.test(kpBtn(card('os_0001')).textContent), true);
+  check('未映射的选择题也常驻（数据来自 data/zt_kp.json）', !!kpPanel('os_zt2020_2'), true);
+  check('未映射题面板内容来自 zt_kp.json',
+    /未映射题考点/.test((kpPanel('os_zt2020_2') || {}).innerHTML || ''), true);
+  check('大题不常驻考点分析（走知识点跳转）', !!kpPanel('os_zt2020_3'), false);
+
+  // 考点分析写明答案 → 做题模式必须整块隐藏
   await w.toggleExamMode();
   await sleep(250);
   check('做题模式下无「考点分析」按钮', !!kpBtn(card('os_0001')), false);
+  check('做题模式下无 kp-panel', !!kpPanel('os_0001'), false);
   await w.toggleExamMode();
   await sleep(250);
-  check('未收藏时仍无「考点分析」按钮（只有收藏题才有）', !!kpBtn(card('os_0001')), false);
-
-  const star = card('os_0001').querySelector('.btn-icon');
-  check('找到收藏星', !!star, true);
-  star.click();
-  await sleep(250);
-  check('收藏后出现「考点分析」按钮', !!kpBtn(card('os_0001')), true);
+  check('退出做题模式后恢复常驻', !!kpBtn(card('os_0001')) && !!kpPanel('os_0001'), true);
 
   console.log('\n--- 四、点「不熟」写入标记库并变色 ---');
   const unBtn = [...card('os_0001').querySelectorAll('.mark-btn')].find(b => /不熟/.test(b.textContent));
@@ -130,19 +143,33 @@ const OS_BANK = {
   const unBtn2 = [...card('os_0001').querySelectorAll('.mark-btn')].find(b => /不熟/.test(b.textContent));
   check('按钮变为已标记样式', unBtn2.classList.contains('mark-unfamiliar'), true);
 
-  console.log('\n--- 五、点「考点分析」按需拉取并展开 ---');
-  const kb = kpBtn(card('os_0001'));
-  kb.click();
-  await sleep(300);
-  const panel = card('os_0001').querySelector('.kp-panel');
-  check('展开出 kp-panel', !!panel, true);
-  check('面板内容来自题库 kp_analysis', /测试考点内容/.test(panel ? panel.innerHTML : ''), true);
-  check('按钮变为展开态 ▴', /▴/.test(kpBtn(card('os_0001')).textContent), true);
-
-  // 再点一次收起
+  console.log('\n--- 五、常驻面板可收起 / 再展开，收起状态按题记住 ---');
   kpBtn(card('os_0001')).click();
   await sleep(150);
-  check('再点一次收起面板', !!card('os_0001').querySelector('.kp-panel'), false);
+  check('点一次收起面板', !!kpPanel('os_0001'), false);
+  check('按钮变 ▾', /▾/.test(kpBtn(card('os_0001')).textContent), true);
+  check('收起状态写入 localStorage(zhentiKpClosed)',
+    JSON.parse(w.localStorage.getItem('zhentiKpClosed') || '[]').includes('os_0001'), true);
+
+  kpBtn(card('os_0001')).click();
+  await sleep(150);
+  check('再点展开回来', !!kpPanel('os_0001'), true);
+  check('展开后内容仍在（走缓存，不重新请求）',
+    /测试考点内容/.test((kpPanel('os_0001') || {}).innerHTML || ''), true);
+  check('展开后 localStorage 里已移除',
+    JSON.parse(w.localStorage.getItem('zhentiKpClosed') || '[]').includes('os_0001'), false);
+
+  console.log('\n--- 五之一、收藏与考点分析解耦 ---');
+  const star = card('os_0001').querySelector('.btn-icon');
+  check('找到收藏星', !!star, true);
+  star.click();
+  await sleep(250);
+  check('收藏后 kp 面板仍在（不因收藏状态变化收起）', !!kpPanel('os_0001'), true);
+  check('收藏后按钮仍是常驻（只是星变实）',
+    !!kpBtn(card('os_0001')) && card('os_0001').querySelector('.btn-icon').classList.contains('favorited'), true);
+  star.click();
+  await sleep(200);
+  check('取消收藏后 kp 面板依然常驻', !!kpPanel('os_0001'), true);
 
   console.log('\n--- 五之二、大题标记 + 右侧题号标黄/标红 ---');
   const fqOf = iid => doc.querySelector(`#fqList .zt-fq-i[data-iid="${iid}"]`);

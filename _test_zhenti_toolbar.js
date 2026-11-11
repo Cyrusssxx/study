@@ -79,11 +79,16 @@ check('展开不再滚动（无 scrollBy / 展开路径无 scrollIntoView）',
   !/window\.scrollBy/.test(JS) && !/panel\.scrollIntoView|box\.scrollIntoView/.test(JS), true);
 check('三类按钮都带 data-toggle 标记',
   ['ans', 'note', 'kp'].every(k => JS.includes(`data-toggle="${k}"`)), true);
-check('答案 / 笔记 / 考点分析都走原地 setCardPanel',
-  // 考点分析开/关各一处（toggleKpZt）+ 取消收藏时收起 kp 面板（syncCardChrome）
-  (JS.match(/setCardPanel\(iid, '(ans|note|kp)', (true|false|opening)\)/g) || []).length, 5);
-check('展开后只同步按钮、不重绘整卡（syncToggleBtns 三处）',
-  (JS.match(/syncToggleBtns\(iid\);/g) || []).length, 4);   // 考点分析有开/关两条路
+check('答案 / 笔记走原地 setCardPanel（开 true / 关 false / 三态用 opening）',
+  (JS.match(/setCardPanel\(iid, '(ans|note)', (true|false|opening)\)/g) || []).length, 2);
+// 2026-11-11 考点分析常驻：面板默认就在，toggle 只需「收起 / 恢复」一次调用
+check('考点分析常驻 toggle 走 setCardPanel(iid, kp, !closing)',
+  (JS.match(/setCardPanel\(iid, 'kp', !closing\)/g) || []).length, 1);
+check('展开后只同步按钮、不重绘整卡（ans / note / kp 各一处）',
+  (JS.match(/syncToggleBtns\(iid\);/g) || []).length, 3);
+check('考点分析常驻：不再按收藏门控、不再走 /api/kp',
+  !/api\/kp/.test(JS.replace(/\/\*[\s\S]*?\*\//g, '')) && /function kpTextOf\(iid\)/.test(JS)
+  && /localStorage\.setItem\('zhentiKpClosed'/.test(JS), true);
 // 三个展开函数内部不得再出现 refreshCard：整卡重绘 = 题图退回占位 = 按钮跳一下
 function fnBody(name) {
   const start = JS.indexOf('function ' + name);

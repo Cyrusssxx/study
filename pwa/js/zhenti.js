@@ -23,8 +23,9 @@
         favSet: new Set(),
         unfamSet: new Set(),        // 不熟标记
         dontknowSet: new Set(),     // 不会标记
-        kpOpen: new Set(JSON.parse(localStorage.getItem('zhentiKpOpen') || '[]')),  // 展开了考点分析的题
-        kpCache: {},                // iid -> 考点分析 HTML（按需拉取后缓存，避免反复请求）
+        // 考点分析「常驻」：选择题默认展开显示，用户手动收起后记住（存的是「收起了哪些」）
+        kpClosed: new Set(JSON.parse(localStorage.getItem('zhentiKpClosed') || '[]')),
+        kpCache: {},                // iid -> 考点分析 HTML（覆盖值，优先级高于题库/zt_kp.json）
         poolMap: {},                // iid -> { kind, mastered } 错题池成员（redo 表）
         noteMap: {},
         noteImages: {},          // iid -> 已有图片数组（本页不编辑图片，保存时原样透传）
@@ -312,6 +313,7 @@
         await Promise.all(subs.map(s => ensureBank(s)));
         if (state.year !== year || !state.flat.length) return;   // 加载期间切了年份，放弃
         subs.forEach(s => refreshKpLinks(s));
+        fillKpPanels();          // 常驻考点分析：题库到位后就地回填（未映射题由 zt_kp.json 兜底）
     }
 
     // 顶栏「做题中 / 做题模式」按钮的状态同步（按钮常驻 navbar，不再随工具栏重绘）
@@ -341,10 +343,17 @@
      * 数据文件由 tools/build_zt_bigq_kp.py 生成。 */
     let KP_TABLE = {};       // year -> {题号: {sub, goto, mode}}
     let BANK_SEC = {};       // qid -> {sub, sec, sub_sec}  按需从题库补
+    let BANK_KP = {};        // qid -> kp_analysis（同一次题库拉取顺手收下，供常驻考点分析）
+    let ZT_KP = {};          // iid -> kp_analysis（未映射的真题选择题，data/zt_kp.json）
     const bankLoaded = new Set();
 
     async function loadKpTable() {
         try { KP_TABLE = await fetch('data/zt_bigq_kp.json').then(r => r.json()); } catch (e) { KP_TABLE = {}; }
+    }
+
+    // 未映射的真题选择题：题库里没有条目，考点分析单独放 data/zt_kp.json
+    async function loadZtKp() {
+        try { ZT_KP = await fetch('data/zt_kp.json').then(r => r.json()); } catch (e) { ZT_KP = {}; }
     }
 
     // 选择题：取题库里的章节锚点（一个小科目只加载一次）
@@ -355,6 +364,7 @@
             const d = await fetch('data/' + sub + '.json').then(r => r.json());
             for (const q of (d.questions || [])) {
                 BANK_SEC[q.id] = { sub, sec: q.section || '', sub_sec: q.subsection || '', chapter: q.chapter || '' };
+                if (q.kp_analysis) BANK_KP[q.id] = q.kp_analysis;   // 常驻考点分析复用同一次拉取
             }
         } catch (e) { /* 题库拉取失败：该科知识点入口静默降级为科目首页 */ }
     }
@@ -421,11 +431,51 @@
                 title="${dk ? '取消「不会」标记' : '标记为不会（右侧题号标红）'}">不会</button>
         </span>`;
     }
-    function kpBtnHtml(f, isFav) {
-        if (!isFav || !f.mapped || state.examMode) return '';   // 考点分析含答案，做题模式不显示
-        const open = state.kpOpen.has(f.iid);
-        return `<button class="btn-explanation${open ? ' active' : ''}" data-toggle="kp" onclick="toggleKpZt('${f.iid}')"
-            title="考点定位 + 该节笔记精华 + 个人数据 + 关联真题">考点分析 ${open ? '▴' : '▾'}</button>`;
+    /* ---------------- 考点分析：选择题常驻 ----------------
+     * 2026-11-11 用户要求「zhenti 选择题的考点分析也搞成常驻」：
+     *   · 旧实现要「先收藏 + 再点按钮」才显示，未映射的选择题根本没有入口；
+     *   · 现在选择题一律常驻展开，按钮只用来收起/再展开，收起状态按题记在
+     *     localStorage('zhentiKpClosed')，换卷/刷新后保持。
+     * 数据来源两档（都不再过 /api/kp，避免整本题库二次解析）：
+     *   ① 映射题 —— 本页 warmKpLinks() 为了知识点入口本来就会加载 data/<sub>.json，
+     *      顺手把 kp_analysis 收进 BANK_KP 复用；
+     *   ② 未映射的真题选择题（2025/2026 卷居多）—— data/zt_kp.json（iid → html）。
+     * 做题模式下整块隐藏：考点分析写明答案，露出来等于泄题。 */
+    function kpBtnHtml(f) {
+        if (state.examMode || f.group !== 'choice') return '';
+        const closed = state.kpClosed.has(f.iid);
+        return `<button class="btn-explanation${closed ? '' : ' active'}" data-toggle="kp" onclick="toggleKpZt('${f.iid}')"
+            title="考点定位 + 本题判定链 + 易错点（默认常驻，可收起）">考点分析 ${closed ? '▾' : '▴'}</button>`;
+    }
+
+    // 三道数据来源合成一道：本地覆盖 → 题库 → zt_kp.json
+    function kpTextOf(iid) {
+        const c = state.kpCache[iid];
+        if (typeof c === 'string') return c;
+        if (BANK_KP[iid]) return BANK_KP[iid];
+        if (ZT_KP[iid]) return ZT_KP[iid];
+        return null;
+    }
+
+    function kpBodyHtml(f) {
+        const txt = kpTextOf(f.iid);
+        return `<div class="kp-panel" data-kp="${f.iid}">${txt || '<div class="kp-loading">正在加载考点分析…</div>'}</div>`;
+    }
+
+    function kpPanelHtml(f) {
+        if (state.examMode || f.group !== 'choice') return '';
+        if (state.kpClosed.has(f.iid)) return '';     // 用户自己收起的
+        return kpBodyHtml(f);
+    }
+
+    // 数据到位后就地回填：只改 .kp-panel 的 innerHTML，不动卡片结构（零重排）
+    function fillKpPanels() {
+        for (const p of document.querySelectorAll('.kp-panel[data-kp]')) {
+            const iid = p.dataset.kp;
+            const txt = kpTextOf(iid)
+                || '<div class="kp-loading">该题暂无考点分析</div>';
+            if (p.innerHTML !== txt) p.innerHTML = txt;
+        }
     }
     // 「加入错题池」：写 redo(kind='ztwrong')，与「7 天后重练」同一条路子，只是来源不同
     function poolBtnHtml(f) {
@@ -437,15 +487,6 @@
             ? (rec.kind === 'ztwrong' ? '点一下从「模拟考错题池」移出' : `该题已通过「${rec.kind === 'redo' ? '7 天后重练' : '猜对了'}」在池中`)
             : '加入「模拟考错题池」，之后可在错题本里集中刷；加入后 7 天内不参与模拟考组卷';
         return `<button class="btn-explanation pool-btn${inPool ? ' active' : ''}" onclick="togglePoolZt('${f.iid}')" title="${tip}">${label}</button>`;
-    }
-
-    function kpBodyHtml(f) {
-        return `<div class="kp-panel">${state.kpCache[f.iid] || '<div class="kp-loading">正在加载考点分析…</div>'}</div>`;
-    }
-
-    function kpPanelHtml(f, isFav) {
-        if (!isFav || !f.mapped || state.examMode || !state.kpOpen.has(f.iid)) return '';
-        return kpBodyHtml(f);
     }
 
     /* ---------------- 一键复制（题干 + 选项 + 答案 + 解析） ----------------
@@ -663,12 +704,12 @@
                 <button class="btn-explanation${ansOpen ? ' active' : ''}" data-toggle="ans" onclick="toggleAns('${f.iid}')">答案与解析 ${ansOpen ? '▴' : '▾'}</button>
                 <button class="btn-explanation${noteOpen ? ' active' : ''}${hasNote ? ' has-note' : ''}" data-toggle="note" onclick="toggleNotePanel('${f.iid}')">笔记${hasNote ? ' ●' : ''} ${noteOpen ? '▴' : '▾'}</button>
                 ${kpLinkHtml(f)}
-                ${kpBtnHtml(f, isFav)}
+                ${kpBtnHtml(f)}
                 ${poolBtnHtml(f)}
             </div>
             ${noteOpen ? notePanel(f.iid) : ''}
             ${ansOpen ? ansPanelHtml(f) : ''}
-            ${kpPanelHtml(f, isFav)}
+            ${kpPanelHtml(f)}
         </div>`;
     }
 
@@ -696,11 +737,11 @@
                 <button class="btn-explanation${ansOpen ? ' active' : ''}" data-toggle="ans" onclick="toggleAns('${f.iid}')">参考答案与解析 ${ansOpen ? '▴' : '▾'}</button>
                 <button class="btn-explanation${noteOpen ? ' active' : ''}${hasNote ? ' has-note' : ''}" data-toggle="note" onclick="toggleNotePanel('${f.iid}')">笔记${hasNote ? ' ●' : ''} ${noteOpen ? '▴' : '▾'}</button>
                 ${kpLinkHtml(f)}
-                ${kpBtnHtml(f, isFav)}
+                ${kpBtnHtml(f)}
             </div>
             ${noteOpen ? notePanel(f.iid) : ''}
             ${ansOpen ? ansPanelHtml(f) : ''}
-            ${kpPanelHtml(f, isFav)}
+            ${kpPanelHtml(f)}
         </div>`;
     }
 
@@ -773,7 +814,7 @@
         }
         const bK = q('kp');
         if (bK) {
-            const open = state.kpOpen.has(iid);
+            const open = !state.kpClosed.has(iid);     // 常驻：默认展开，active 表示当前可见
             bK.classList.toggle('active', open);
             bK.textContent = '考点分析 ' + (open ? '▴' : '▾');
         }
@@ -851,11 +892,11 @@
                 <button class="btn-explanation${ansOpen ? ' active' : ''}" data-toggle="ans" onclick="toggleAns('${f.iid}')">参考答案与解析 ${ansOpen ? '▴' : '▾'}</button>
                 <button class="btn-explanation${noteOpen ? ' active' : ''}${hasNote ? ' has-note' : ''}" data-toggle="note" onclick="toggleNotePanel('${f.iid}')">笔记${hasNote ? ' ●' : ''} ${noteOpen ? '▴' : '▾'}</button>
                 ${kpLinkHtml(f)}
-                ${kpBtnHtml(f, isFav)}
+                ${kpBtnHtml(f)}
             </div>
             ${noteOpen ? notePanel(f.iid) : ''}
             ${ansOpen ? ansPanelHtml(f) : ''}
-            ${kpPanelHtml(f, isFav)}
+            ${kpPanelHtml(f)}
         </div>`;
     }
 
@@ -1057,29 +1098,13 @@
         showZtTip._t = setTimeout(() => el.classList.remove('show'), 2200);
     }
 
-    async function toggleKpZt(iid) {
-        if (state.kpOpen.has(iid)) {
-            state.kpOpen.delete(iid);
-            localStorage.setItem('zhentiKpOpen', JSON.stringify([...state.kpOpen]));
-            setCardPanel(iid, 'kp', false);          // 原地收起，不重绘整卡
-            syncToggleBtns(iid);
-            return;
-        }
-        state.kpOpen.add(iid);
-        localStorage.setItem('zhentiKpOpen', JSON.stringify([...state.kpOpen]));
-        setCardPanel(iid, 'kp', true);               // 先占位（正在加载考点分析…）
+    // 考点分析常驻：按钮只负责「收起 / 再展开」，收起状态按题记住
+    function toggleKpZt(iid) {
+        const closing = !state.kpClosed.has(iid);
+        if (closing) state.kpClosed.add(iid); else state.kpClosed.delete(iid);
+        localStorage.setItem('zhentiKpClosed', JSON.stringify([...state.kpClosed]));
+        setCardPanel(iid, 'kp', !closing);
         syncToggleBtns(iid);
-        if (state.kpCache[iid]) return;
-        try {
-            const d = await (await api('/api/kp/' + iid)).json();
-            state.kpCache[iid] = d.kp_analysis || '<div class="kp-loading">该题暂未生成考点分析（1312 道收藏题分批生成中）</div>';
-        } catch (e) {
-            state.kpCache[iid] = '<div class="kp-loading">考点分析加载失败，点按钮收起后重试</div>';
-        }
-        // 只就地回填面板内容：整卡重绘会让题图退回占位、按钮行跳动
-        if (!state.kpOpen.has(iid)) return;
-        const p = cardPanelNode(document.getElementById('card-' + iid), 'kp');
-        if (p) p.innerHTML = state.kpCache[iid];
     }
 
     async function toggleFav(iid) {
@@ -1129,21 +1154,14 @@
             star.title = isFav ? '取消收藏' : '收藏';
         }
 
-        // 考点分析（只有收藏题才有；取消收藏时连同面板一起收掉）
+        // 考点分析（常驻按钮：只切换文案/active，面板由 toggleKpZt 原地增删）
         const kpBtn = card.querySelector('.question-tools [data-toggle="kp"]');
-        const kpHtml = kpBtnHtml(f, isFav);
+        const kpHtml = kpBtnHtml(f);
         if (kpBtn && !kpHtml) kpBtn.remove();
         else if (kpBtn && kpHtml) kpBtn.outerHTML = kpHtml;
         else if (!kpBtn && kpHtml) {
             const tools = card.querySelector('.question-tools');
-            const pb = tools && tools.querySelector('.pool-btn');
-            if (pb) pb.insertAdjacentHTML('beforebegin', kpHtml);
-            else if (tools) tools.insertAdjacentHTML('beforeend', kpHtml);
-        }
-        if (!isFav && state.kpOpen.has(iid)) {
-            state.kpOpen.delete(iid);
-            localStorage.setItem('zhentiKpOpen', JSON.stringify([...state.kpOpen]));
-            setCardPanel(iid, 'kp', false);
+            if (tools) tools.insertAdjacentHTML('beforeend', kpHtml);
         }
 
         // 加入错题池（仅映射的选择题）
@@ -1769,7 +1787,7 @@
         try {
             $('ztMain').innerHTML = '<div class="loading">加载中…</div>';
             await loadNoteAlias();
-            await Promise.all([loadIndex(), loadStores(), loadDaka(), loadKpTable()]);
+            await Promise.all([loadIndex(), loadStores(), loadDaka(), loadKpTable(), loadZtKp()]);
             const remembered = +(localStorage.getItem('zhentiYear') || 0);
             state.year = (remembered && state.index.years.includes(remembered))
                 ? remembered : state.index.years[state.index.years.length - 1];
