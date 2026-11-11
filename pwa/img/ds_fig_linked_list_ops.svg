@@ -64,7 +64,7 @@
 
   <rect x="396" y="256" width="264" height="112" rx="8" fill="#fef2f2" stroke="#fecaca" stroke-width="1"/>
   <text x="412" y="278" font-size="11.5" font-weight="700" fill="#991b1b">顺序反了会怎样</text>
-  <text x="412" y="300" font-size="11" fill="#b91c1c">先 p-&gt;next = s; 再 s-&gt;next = p-&gt;next;</text>
+  <text x="404" y="300" font-size="11" fill="#b91c1c">先 p-&gt;next = s，再 s-&gt;next = p-&gt;next</text>
   <text x="412" y="320" font-size="11" fill="#b91c1c">此时 p-&gt;next 已经是 s，</text>
   <text x="412" y="338" font-size="11" font-weight="700" fill="#dc2626">s-&gt;next 就指向了自己</text>
   <text x="412" y="358" font-size="10.5" fill="#94a3b8">C 及其之后的整条链全部丢失</text>

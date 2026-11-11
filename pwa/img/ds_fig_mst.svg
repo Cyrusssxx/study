@@ -64,7 +64,7 @@
   <text x="500" y="242" font-size="10.5" fill="#64748b">要先对 e 条边排序，O(e log e)</text>
   <text x="500" y="262" font-size="10.5" fill="#64748b">稀疏图更优；用并查集判环</text>
 
-  <text x="20" y="344" font-size="11.5" fill="#334155">注意：Prim 第 4 步选 BC(5)、Kruskal 选 AB(5) —— <tspan font-weight="700">边的组合不同、总权相同</tspan>，所以「MST 唯一」只在边权互不相同时成立。</text>
+  <text x="20" y="344" font-size="11.5" fill="#334155">注意：Prim 第 4 步选 BC(5)、Kruskal 选 AB(5)，<tspan font-weight="700">边的组合不同、总权相同</tspan>，故「MST 唯一」只在边权互不相同时成立。</text>
   <text x="20" y="364" font-size="11.5" fill="#334155">判环是 Kruskal 的核心：并查集 Find(u) == Find(v) 说明已在同一连通块，这条边必须跳过。</text>
 
   <rect x="20" y="380" width="640" height="86" rx="8" fill="#eef2ff" stroke="#c7d2fe" stroke-width="1"/>

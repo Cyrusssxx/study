@@ -1,0 +1,76 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 680 556" width="680" height="556" font-family="-apple-system,BlinkMacSystemFont,'Segoe UI','Microsoft YaHei',sans-serif">
+  <rect x="0" y="0" width="680" height="556" fill="#ffffff"/>
+  <text x="20" y="28" font-size="16" font-weight="700" fill="#312e81">折半查找判定树 · 11 个元素的有序表</text>
+  <text x="20" y="48" font-size="12" fill="#64748b">判定树由 mid = ⌊(low+high)/2⌋ 的取整方式唯一确定，不是普通二叉树</text>
+
+  <g stroke="#cbd5e1" stroke-width="1.4">
+    <line x1="330" y1="100" x2="196" y2="146"/>
+    <line x1="350" y1="100" x2="484" y2="146"/>
+    <line x1="182" y1="172" x2="104" y2="218"/>
+    <line x1="202" y1="172" x2="272" y2="218"/>
+    <line x1="496" y1="172" x2="424" y2="218"/>
+    <line x1="512" y1="172" x2="590" y2="218"/>
+    <line x1="96" y1="244" x2="130" y2="290"/>
+    <line x1="280" y1="244" x2="306" y2="290"/>
+    <line x1="432" y1="244" x2="458" y2="290"/>
+    <line x1="598" y1="244" x2="626" y2="290"/>
+  </g>
+
+  <g stroke="#4338ca" stroke-width="2">
+    <circle cx="340" cy="84" r="17" fill="#c7d2fe"/>
+  </g>
+  <text x="340" y="89" font-size="12.5" font-weight="700" fill="#312e81" text-anchor="middle">41</text>
+
+  <g stroke="#4f46e5" stroke-width="1.6">
+    <circle cx="188" cy="160" r="17" fill="#eef2ff"/>
+    <circle cx="492" cy="160" r="17" fill="#eef2ff"/>
+  </g>
+  <text x="188" y="165" font-size="12.5" font-weight="700" fill="#312e81" text-anchor="middle">18</text>
+  <text x="492" y="165" font-size="12.5" font-weight="700" fill="#312e81" text-anchor="middle">73</text>
+
+  <g stroke="#4f46e5" stroke-width="1.6">
+    <circle cx="96" cy="232" r="17" fill="#eef2ff"/>
+    <circle cx="280" cy="232" r="17" fill="#eef2ff"/>
+    <circle cx="432" cy="232" r="17" fill="#eef2ff"/>
+    <circle cx="598" cy="232" r="17" fill="#eef2ff"/>
+  </g>
+  <text x="96" y="237" font-size="12.5" fill="#312e81" text-anchor="middle">7</text>
+  <text x="280" y="237" font-size="12.5" fill="#312e81" text-anchor="middle">25</text>
+  <text x="432" y="237" font-size="12.5" fill="#312e81" text-anchor="middle">52</text>
+  <text x="598" y="237" font-size="12.5" fill="#312e81" text-anchor="middle">85</text>
+
+  <g stroke="#93c5fd" stroke-width="1.6">
+    <circle cx="136" cy="302" r="17" fill="#eff6ff"/>
+    <circle cx="312" cy="302" r="17" fill="#eff6ff"/>
+    <circle cx="464" cy="302" r="17" fill="#eff6ff"/>
+    <circle cx="632" cy="302" r="17" fill="#eff6ff"/>
+  </g>
+  <text x="136" y="307" font-size="12.5" fill="#1e3a8a" text-anchor="middle">11</text>
+  <text x="312" y="307" font-size="12.5" fill="#1e3a8a" text-anchor="middle">33</text>
+  <text x="464" y="307" font-size="12.5" fill="#1e3a8a" text-anchor="middle">60</text>
+  <text x="632" y="307" font-size="12.5" fill="#1e3a8a" text-anchor="middle">96</text>
+
+  <text x="20" y="76" font-size="11" fill="#64748b">有序表</text>
+  <text x="20" y="94" font-size="11" fill="#334155">7 11 18 25 33</text>
+  <text x="20" y="112" font-size="11" fill="#334155">41 52 60 73 85</text>
+  <text x="20" y="130" font-size="11" fill="#334155">96</text>
+
+  <rect x="20" y="332" width="316" height="70" rx="8" fill="#eef2ff" stroke="#c7d2fe" stroke-width="1"/>
+  <text x="34" y="352" font-size="11.5" font-weight="700" fill="#312e81">ASL 成功 = 总比较次数 / 元素个数</text>
+  <text x="34" y="372" font-size="11.5" fill="#3730a3">= (1×1 + 2×2 + 3×4 + 4×4) / 11</text>
+  <text x="34" y="392" font-size="11.5" font-weight="700" fill="#3730a3">= 33 / 11 = 3</text>
+
+  <rect x="348" y="332" width="312" height="70" rx="8" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1"/>
+  <text x="362" y="352" font-size="11.5" font-weight="700" fill="#334155">树高决定最坏比较次数</text>
+  <text x="362" y="372" font-size="11.5" fill="#475569">h = ⌈log₂(n+1)⌉ = ⌈log₂12⌉ = 4</text>
+  <text x="362" y="392" font-size="11.5" fill="#475569">判定树是平衡树，h 只差 1 层</text>
+
+  <text x="20" y="426" font-size="11.5" fill="#334155">注意判定树里<tspan font-weight="700">没有「第 5 层」</tspan>：n = 11 时最多比较 4 次，说明折半查找的最坏时间就是 ⌈log₂(n+1)⌉。</text>
+  <text x="20" y="446" font-size="11.5" fill="#334155">查找 33 的路径：41 → 18 → 25 → 33，共 4 次比较；<tspan font-weight="700">结点所在的层号就是比较次数</tspan>，第 k 层 = 比较 k 次。</text>
+
+  <rect x="20" y="462" width="640" height="78" rx="8" fill="#eef2ff" stroke="#c7d2fe" stroke-width="1"/>
+  <text x="34" y="481" font-size="11.5" font-weight="700" fill="#312e81">易错：</text>
+  <text x="34" y="500" font-size="11.5" fill="#3730a3">① 向下取整 → 右子树结点数 ≥ 左子树（本例 6 vs 5）；向上取整则左右互换，判定树形状随之改变。</text>
+  <text x="34" y="518" font-size="11.5" fill="#3730a3">② 折半只对顺序存储的有序表有效，链表用不了（没法按下标折半）。</text>
+  <text x="34" y="536" font-size="11.5" fill="#3730a3">③ 失败 ASL 的分母是 n+1 个外部结点，不是 n，两问别混。</text>
+</svg>

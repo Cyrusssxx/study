@@ -1,0 +1,72 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 680 512" width="680" height="512" font-family="-apple-system,BlinkMacSystemFont,'Segoe UI','Microsoft YaHei',sans-serif">
+  <rect x="0" y="0" width="680" height="512" fill="#ffffff"/>
+  <text x="20" y="28" font-size="16" font-weight="700" fill="#312e81">堆排序 · 建大根堆与向下筛选（n = 8）</text>
+  <text x="20" y="48" font-size="12" fill="#64748b">序列 49 38 65 97 76 13 27 49*，按完全二叉树层序编号 1~8；建堆从 i = ⌊n/2⌋ = 4 递减到 1</text>
+
+  <g stroke="#cbd5e1" stroke-width="1.4">
+    <line x1="212" y1="112" x2="138" y2="144"/>
+    <line x1="228" y1="112" x2="302" y2="144"/>
+    <line x1="122" y1="176" x2="90" y2="208"/>
+    <line x1="138" y1="176" x2="170" y2="208"/>
+    <line x1="302" y1="176" x2="270" y2="208"/>
+    <line x1="318" y1="176" x2="350" y2="208"/>
+    <line x1="74" y1="240" x2="58" y2="272"/>
+  </g>
+
+  <circle cx="220" cy="96" r="16" fill="#c7d2fe" stroke="#4338ca" stroke-width="2"/>
+  <text x="220" y="101" font-size="12" font-weight="700" fill="#312e81" text-anchor="middle">97</text>
+
+  <circle cx="130" cy="160" r="16" fill="#eef2ff" stroke="#4f46e5" stroke-width="1.6"/>
+  <text x="130" y="165" font-size="12" font-weight="700" fill="#312e81" text-anchor="middle">76</text>
+  <circle cx="310" cy="160" r="16" fill="#eef2ff" stroke="#4f46e5" stroke-width="1.6"/>
+  <text x="310" y="165" font-size="12" font-weight="700" fill="#312e81" text-anchor="middle">65</text>
+
+  <circle cx="82" cy="224" r="16" fill="#eff6ff" stroke="#93c5fd" stroke-width="1.5"/>
+  <text x="82" y="229" font-size="12" fill="#1e3a8a" text-anchor="middle">38</text>
+  <circle cx="178" cy="224" r="16" fill="#eff6ff" stroke="#93c5fd" stroke-width="1.5"/>
+  <text x="178" y="229" font-size="12" fill="#1e3a8a" text-anchor="middle">49</text>
+  <circle cx="262" cy="224" r="16" fill="#eff6ff" stroke="#93c5fd" stroke-width="1.5"/>
+  <text x="262" y="229" font-size="12" fill="#1e3a8a" text-anchor="middle">13</text>
+  <circle cx="358" cy="224" r="16" fill="#eff6ff" stroke="#93c5fd" stroke-width="1.5"/>
+  <text x="358" y="229" font-size="12" fill="#1e3a8a" text-anchor="middle">27</text>
+
+  <circle cx="50" cy="288" r="16" fill="#eff6ff" stroke="#93c5fd" stroke-width="1.5"/>
+  <text x="50" y="293" font-size="11" fill="#1e3a8a" text-anchor="middle">49*</text>
+
+  <text x="226" y="76" font-size="10" fill="#64748b">1</text>
+  <text x="108" y="146" font-size="10" fill="#64748b">2</text>
+  <text x="326" y="146" font-size="10" fill="#64748b">3</text>
+  <text x="62" y="212" font-size="10" fill="#64748b">4</text>
+  <text x="196" y="212" font-size="10" fill="#64748b">5</text>
+  <text x="244" y="212" font-size="10" fill="#64748b">6</text>
+  <text x="376" y="212" font-size="10" fill="#64748b">7</text>
+  <text x="28" y="276" font-size="10" fill="#64748b">8</text>
+
+  <text x="20" y="330" font-size="10.5" fill="#64748b">小数字为层序编号（数组下标，从 1 开始）</text>
+  <text x="20" y="350" font-size="10.5" fill="#64748b">大根堆：每个结点都 ≥ 它的两个孩子，堆顶最大</text>
+
+  <rect x="404" y="86" width="256" height="180" rx="8" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1"/>
+  <text x="418" y="106" font-size="11.5" font-weight="700" fill="#334155">建堆过程（自底向上）</text>
+  <text x="418" y="128" font-size="10.5" fill="#475569">i = 4~8：都是叶子，本身就是一个堆</text>
+  <text x="418" y="150" font-size="10.5" fill="#475569">i = 2：38 的孩子是 97、76，</text>
+  <text x="428" y="166" font-size="10.5" fill="#475569">换 97 → 38 沉到 4 号位</text>
+  <text x="418" y="188" font-size="10.5" fill="#475569">i = 1：49 的孩子是 97、65，</text>
+  <text x="428" y="204" font-size="10.5" fill="#475569">换 97；49 又小于 76，再换</text>
+  <text x="428" y="220" font-size="10.5" fill="#475569">→ 49 沉到 5 号位</text>
+  <text x="418" y="246" font-size="10.5" font-weight="700" fill="#1e40af">结果：97 76 65 38 49 13 27 49*</text>
+
+  <rect x="20" y="366" width="316" height="66" rx="8" fill="#eef2ff" stroke="#c7d2fe" stroke-width="1"/>
+  <text x="34" y="385" font-size="11" font-weight="700" fill="#312e81">排序阶段（n−1 轮）</text>
+  <text x="34" y="403" font-size="10.5" fill="#3730a3">堆顶 ↔ 堆尾交换 → 最大的归位到末尾</text>
+  <text x="34" y="420" font-size="10.5" fill="#3730a3">堆区长度 −1，对新堆顶做一次 sift（O(log n)）</text>
+
+  <rect x="348" y="366" width="312" height="66" rx="8" fill="#f0fdf4" stroke="#bbf7d0" stroke-width="1"/>
+  <text x="362" y="385" font-size="11" font-weight="700" fill="#166534">复杂度</text>
+  <text x="362" y="403" font-size="10.5" fill="#14532d">建堆 O(n)；排序 n−1 次 sift → O(n log n)</text>
+  <text x="362" y="420" font-size="10.5" fill="#14532d">空间 O(1)，原地排序；但<tspan font-weight="700">不稳定</tspan></text>
+
+  <rect x="20" y="444" width="640" height="56" rx="8" fill="#fef2f2" stroke="#fecaca" stroke-width="1"/>
+  <text x="34" y="463" font-size="11.5" font-weight="700" fill="#991b1b">易错：</text>
+  <text x="34" y="482" font-size="11.5" fill="#7f1d1d">① 要<tspan font-weight="700">升序</tspan>就建<tspan font-weight="700">大</tspan>根堆（升序 ≠ 小根堆）；小根堆排出来是降序，还不能把数组倒过来当升序用。</text>
+  <text x="34" y="498" font-size="11.5" fill="#7f1d1d">② 建堆是<tspan font-weight="700">从 ⌊n/2⌋ 往前</tspan>调，不是从根往后；建堆总时间 O(n)，别写成 O(n log n)。</text>
+</svg>

@@ -1,0 +1,94 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 680 556" width="680" height="556" font-family="-apple-system,BlinkMacSystemFont,'Segoe UI','Microsoft YaHei',sans-serif">
+  <rect x="0" y="0" width="680" height="556" fill="#ffffff"/>
+  <text x="20" y="28" font-size="16" font-weight="700" fill="#312e81">处理冲突 · 线性探测 vs 拉链法（同一组关键字）</text>
+  <text x="20" y="48" font-size="12" fill="#64748b">表长 7，H(k) = k mod 7，依次插入 22、41、53、46、30、15</text>
+
+  <text x="20" y="86" font-size="11.5" font-weight="700" fill="#1e40af">① 线性探测法</text>
+  <text x="130" y="86" font-size="10.5" fill="#64748b">冲突了就往后找下一个空位（走到表尾回到 0），查找时按同样顺序找回去</text>
+
+  <text x="100" y="112" font-size="10.5" fill="#64748b" text-anchor="middle">0</text>
+  <text x="180" y="112" font-size="10.5" fill="#64748b" text-anchor="middle">1</text>
+  <text x="260" y="112" font-size="10.5" fill="#64748b" text-anchor="middle">2</text>
+  <text x="340" y="112" font-size="10.5" fill="#64748b" text-anchor="middle">3</text>
+  <text x="420" y="112" font-size="10.5" fill="#64748b" text-anchor="middle">4</text>
+  <text x="500" y="112" font-size="10.5" fill="#64748b" text-anchor="middle">5</text>
+  <text x="580" y="112" font-size="10.5" fill="#64748b" text-anchor="middle">6</text>
+
+  <rect x="60" y="118" width="80" height="44" rx="5" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1"/>
+  <rect x="140" y="118" width="80" height="44" rx="5" fill="#eef2ff" stroke="#4f46e5" stroke-width="1.4"/>
+  <text x="180" y="146" font-size="12" font-weight="700" fill="#312e81" text-anchor="middle">22</text>
+  <rect x="220" y="118" width="80" height="44" rx="5" fill="#eef2ff" stroke="#4f46e5" stroke-width="1.4"/>
+  <text x="260" y="146" font-size="12" font-weight="700" fill="#312e81" text-anchor="middle">30</text>
+  <rect x="300" y="118" width="80" height="44" rx="5" fill="#fef2f2" stroke="#dc2626" stroke-width="1.6"/>
+  <text x="340" y="146" font-size="12" font-weight="700" fill="#991b1b" text-anchor="middle">15</text>
+  <rect x="380" y="118" width="80" height="44" rx="5" fill="#eef2ff" stroke="#4f46e5" stroke-width="1.4"/>
+  <text x="420" y="146" font-size="12" font-weight="700" fill="#312e81" text-anchor="middle">53</text>
+  <rect x="460" y="118" width="80" height="44" rx="5" fill="#eff6ff" stroke="#93c5fd" stroke-width="1.4"/>
+  <text x="500" y="146" font-size="12" font-weight="700" fill="#1e3a8a" text-anchor="middle">46</text>
+  <text x="100" y="146" font-size="10.5" fill="#94a3b8" text-anchor="middle">空</text>
+  <text x="580" y="146" font-size="12" font-weight="700" fill="#312e81" text-anchor="middle">41</text>
+  <rect x="540" y="118" width="80" height="44" rx="5" fill="#eef2ff" stroke="#4f46e5" stroke-width="1.4"/>
+
+  <text x="180" y="180" font-size="10" fill="#64748b" text-anchor="middle">1 次</text>
+  <text x="260" y="180" font-size="10" fill="#64748b" text-anchor="middle">1 次</text>
+  <text x="340" y="180" font-size="10" fill="#dc2626" text-anchor="middle">3 次</text>
+  <text x="420" y="180" font-size="10" fill="#64748b" text-anchor="middle">1 次</text>
+  <text x="500" y="180" font-size="10" fill="#64748b" text-anchor="middle">2 次</text>
+  <text x="580" y="180" font-size="10" fill="#64748b" text-anchor="middle">1 次</text>
+  <text x="20" y="180" font-size="10" fill="#64748b">探测次数</text>
+
+  <text x="20" y="222" font-size="11.5" font-weight="700" fill="#9a3412">② 拉链法</text>
+  <text x="110" y="222" font-size="10.5" fill="#64748b">同义词挂在同一个槽的链表上，冲突时只在链内比较，不会去抢别人的槽</text>
+
+  <text x="100" y="248" font-size="10.5" fill="#64748b" text-anchor="middle">0</text>
+  <text x="180" y="248" font-size="10.5" fill="#64748b" text-anchor="middle">1</text>
+  <text x="260" y="248" font-size="10.5" fill="#64748b" text-anchor="middle">2</text>
+  <text x="340" y="248" font-size="10.5" fill="#64748b" text-anchor="middle">3</text>
+  <text x="420" y="248" font-size="10.5" fill="#64748b" text-anchor="middle">4</text>
+  <text x="500" y="248" font-size="10.5" fill="#64748b" text-anchor="middle">5</text>
+  <text x="580" y="248" font-size="10.5" fill="#64748b" text-anchor="middle">6</text>
+
+  <rect x="60" y="254" width="80" height="40" rx="5" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1"/>
+  <text x="100" y="279" font-size="10.5" fill="#94a3b8" text-anchor="middle">空</text>
+  <rect x="140" y="254" width="80" height="40" rx="5" fill="#eef2ff" stroke="#4f46e5" stroke-width="1.4"/>
+  <text x="180" y="279" font-size="12" font-weight="700" fill="#312e81" text-anchor="middle">22</text>
+  <rect x="220" y="254" width="80" height="40" rx="5" fill="#eef2ff" stroke="#4f46e5" stroke-width="1.4"/>
+  <text x="260" y="279" font-size="12" font-weight="700" fill="#312e81" text-anchor="middle">30</text>
+  <rect x="300" y="254" width="80" height="40" rx="5" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1"/>
+  <text x="340" y="279" font-size="10.5" fill="#94a3b8" text-anchor="middle">空</text>
+  <rect x="380" y="254" width="80" height="40" rx="5" fill="#eef2ff" stroke="#4f46e5" stroke-width="1.4"/>
+  <text x="420" y="279" font-size="12" font-weight="700" fill="#312e81" text-anchor="middle">53</text>
+  <rect x="460" y="254" width="80" height="40" rx="5" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1"/>
+  <text x="500" y="279" font-size="10.5" fill="#94a3b8" text-anchor="middle">空</text>
+  <rect x="540" y="254" width="80" height="40" rx="5" fill="#eef2ff" stroke="#4f46e5" stroke-width="1.4"/>
+  <text x="580" y="279" font-size="12" font-weight="700" fill="#312e81" text-anchor="middle">41</text>
+
+  <line x1="180" y1="294" x2="180" y2="316" stroke="#cbd5e1" stroke-width="1.4"/>
+  <rect x="152" y="316" width="56" height="28" rx="4" fill="#fef2f2" stroke="#dc2626" stroke-width="1.4"/>
+  <text x="180" y="335" font-size="11.5" font-weight="700" fill="#991b1b" text-anchor="middle">15</text>
+  <line x1="180" y1="344" x2="180" y2="360" stroke="#cbd5e1" stroke-width="1.4"/>
+  <line x1="152" y1="360" x2="208" y2="360" stroke="#cbd5e1" stroke-width="1.4"/>
+  <line x1="180" y1="360" x2="180" y2="368" stroke="#cbd5e1" stroke-width="1.4"/>
+  <line x1="170" y1="368" x2="190" y2="368" stroke="#cbd5e1" stroke-width="1.4"/>
+  <text x="214" y="334" font-size="10" fill="#dc2626">比较 2 次（比线性探测少一次）</text>
+
+  <line x1="420" y1="294" x2="420" y2="316" stroke="#cbd5e1" stroke-width="1.4"/>
+  <rect x="392" y="316" width="56" height="28" rx="4" fill="#eff6ff" stroke="#93c5fd" stroke-width="1.4"/>
+  <text x="420" y="335" font-size="11.5" font-weight="700" fill="#1e3a8a" text-anchor="middle">46</text>
+
+  <rect x="20" y="392" width="316" height="66" rx="8" fill="#eef2ff" stroke="#c7d2fe" stroke-width="1"/>
+  <text x="34" y="411" font-size="11" font-weight="700" fill="#312e81">线性探测 ASL 成功</text>
+  <text x="34" y="430" font-size="11" fill="#3730a3">= (1+1+3+1+2+1) / 6 = 9/6 = 1.5</text>
+  <text x="34" y="448" font-size="10.5" fill="#475569">一次聚集：落进连片区块的关键字越找越远</text>
+
+  <rect x="348" y="392" width="312" height="66" rx="8" fill="#f0fdf4" stroke="#bbf7d0" stroke-width="1"/>
+  <text x="362" y="411" font-size="11" font-weight="700" fill="#166534">拉链法 ASL 成功</text>
+  <text x="362" y="430" font-size="11" fill="#14532d">= (1+1+2+1+1+2) / 6 = 8/6 ≈ 1.33</text>
+  <text x="362" y="448" font-size="10.5" fill="#475569">链越长越慢，但不会波及其他槽</text>
+
+  <rect x="20" y="470" width="640" height="72" rx="8" fill="#fef2f2" stroke="#fecaca" stroke-width="1"/>
+  <text x="34" y="489" font-size="11.5" font-weight="700" fill="#991b1b">易错：</text>
+  <text x="34" y="508" font-size="11.5" fill="#7f1d1d">① 线性探测的探测次数<tspan font-weight="700">包含第一次比较</tspan>，别从 0 数；表满会死循环，所以装填因子必须 &lt; 1。</text>
+  <text x="34" y="526" font-size="11.5" fill="#7f1d1d">② 拉链法的「比较次数」是该同义词链上的查找长度，不是链长；空槽不参与。</text>
+  <text x="34" y="542" font-size="11.5" fill="#7f1d1d">③ 装填因子 α = 记录数 / 表长 只决定平均性能，不决定会不会冲突 —— 冲突一定存在。</text>
+</svg>

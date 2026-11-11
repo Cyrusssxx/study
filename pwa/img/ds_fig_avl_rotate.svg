@@ -1,0 +1,107 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 680 556" width="680" height="556" font-family="-apple-system,BlinkMacSystemFont,'Segoe UI','Microsoft YaHei',sans-serif">
+  <rect x="0" y="0" width="680" height="556" fill="#ffffff"/>
+  <text x="20" y="28" font-size="16" font-weight="700" fill="#312e81">平衡二叉树 · 四种失衡与对应旋转</text>
+  <text x="20" y="48" font-size="12" fill="#64748b">看「新结点插在最小不平衡子树的哪一侧」，橙色为插入结点，红色为失衡结点，旋转后三者都变成标准的三结点小树</text>
+
+  <text x="100" y="76" font-size="12.5" font-weight="700" fill="#1e40af" text-anchor="middle">LL 型 → 右单旋</text>
+  <text x="100" y="94" font-size="10.5" fill="#64748b" text-anchor="middle">插在左孩子的左子树</text>
+  <line x1="70" y1="126" x2="62" y2="178" stroke="#cbd5e1" stroke-width="1.4"/>
+  <line x1="56" y1="190" x2="42" y2="218" stroke="#cbd5e1" stroke-width="1.4"/>
+  <circle cx="72" cy="126" r="14" fill="#fee2e2" stroke="#dc2626" stroke-width="1.8"/>
+  <text x="72" y="130" font-size="11" font-weight="700" fill="#991b1b" text-anchor="middle">3</text>
+  <circle cx="58" cy="178" r="14" fill="#eef2ff" stroke="#4f46e5" stroke-width="1.4"/>
+  <text x="58" y="182" font-size="11" font-weight="700" fill="#312e81" text-anchor="middle">2</text>
+  <circle cx="38" cy="228" r="14" fill="#fed7aa" stroke="#c2410c" stroke-width="1.6"/>
+  <text x="38" y="232" font-size="11" font-weight="700" fill="#9a3412" text-anchor="middle">1</text>
+  <path d="M100 244 L106 258 L94 258 Z" fill="#94a3b8"/>
+  <text x="112" y="256" font-size="10" fill="#475569">右旋</text>
+  <line x1="100" y1="308" x2="62" y2="358" stroke="#cbd5e1" stroke-width="1.4"/>
+  <line x1="100" y1="308" x2="138" y2="358" stroke="#cbd5e1" stroke-width="1.4"/>
+  <circle cx="100" cy="308" r="14" fill="#c7d2fe" stroke="#4338ca" stroke-width="1.8"/>
+  <text x="100" y="312" font-size="11" font-weight="700" fill="#312e81" text-anchor="middle">2</text>
+  <circle cx="58" cy="360" r="14" fill="#eef2ff" stroke="#4f46e5" stroke-width="1.4"/>
+  <text x="58" y="364" font-size="11" fill="#312e81" text-anchor="middle">1</text>
+  <circle cx="142" cy="360" r="14" fill="#eef2ff" stroke="#4f46e5" stroke-width="1.4"/>
+  <text x="142" y="364" font-size="11" fill="#312e81" text-anchor="middle">3</text>
+
+  <line x1="235" y1="60" x2="235" y2="500" stroke="#e2e8f0" stroke-width="1"/>
+
+  <text x="265" y="76" font-size="12.5" font-weight="700" fill="#1e40af" text-anchor="middle">RR 型 → 左单旋</text>
+  <text x="265" y="94" font-size="10.5" fill="#64748b" text-anchor="middle">插在右孩子的右子树</text>
+  <line x1="258" y1="126" x2="266" y2="178" stroke="#cbd5e1" stroke-width="1.4"/>
+  <line x1="272" y1="190" x2="286" y2="218" stroke="#cbd5e1" stroke-width="1.4"/>
+  <circle cx="256" cy="126" r="14" fill="#fee2e2" stroke="#dc2626" stroke-width="1.8"/>
+  <text x="256" y="130" font-size="11" font-weight="700" fill="#991b1b" text-anchor="middle">1</text>
+  <circle cx="270" cy="178" r="14" fill="#eef2ff" stroke="#4f46e5" stroke-width="1.4"/>
+  <text x="270" y="182" font-size="11" font-weight="700" fill="#312e81" text-anchor="middle">2</text>
+  <circle cx="290" cy="228" r="14" fill="#fed7aa" stroke="#c2410c" stroke-width="1.6"/>
+  <text x="290" y="232" font-size="11" font-weight="700" fill="#9a3412" text-anchor="middle">3</text>
+  <path d="M265 244 L271 258 L259 258 Z" fill="#94a3b8"/>
+  <text x="277" y="256" font-size="10" fill="#475569">左旋</text>
+  <line x1="265" y1="308" x2="227" y2="358" stroke="#cbd5e1" stroke-width="1.4"/>
+  <line x1="265" y1="308" x2="303" y2="358" stroke="#cbd5e1" stroke-width="1.4"/>
+  <circle cx="265" cy="308" r="14" fill="#c7d2fe" stroke="#4338ca" stroke-width="1.8"/>
+  <text x="265" y="312" font-size="11" font-weight="700" fill="#312e81" text-anchor="middle">2</text>
+  <circle cx="223" cy="360" r="14" fill="#eef2ff" stroke="#4f46e5" stroke-width="1.4"/>
+  <text x="223" y="364" font-size="11" fill="#312e81" text-anchor="middle">1</text>
+  <circle cx="307" cy="360" r="14" fill="#eef2ff" stroke="#4f46e5" stroke-width="1.4"/>
+  <text x="307" y="364" font-size="11" fill="#312e81" text-anchor="middle">3</text>
+
+  <line x1="390" y1="60" x2="390" y2="500" stroke="#e2e8f0" stroke-width="1"/>
+
+  <text x="430" y="76" font-size="12.5" font-weight="700" fill="#9a3412" text-anchor="middle">LR 型 → 先左后右</text>
+  <text x="430" y="94" font-size="10.5" fill="#64748b" text-anchor="middle">插在左孩子的右子树</text>
+  <line x1="422" y1="126" x2="404" y2="178" stroke="#cbd5e1" stroke-width="1.4"/>
+  <line x1="410" y1="190" x2="424" y2="218" stroke="#cbd5e1" stroke-width="1.4"/>
+  <circle cx="426" cy="126" r="14" fill="#fee2e2" stroke="#dc2626" stroke-width="1.8"/>
+  <text x="426" y="130" font-size="11" font-weight="700" fill="#991b1b" text-anchor="middle">3</text>
+  <circle cx="400" cy="178" r="14" fill="#eef2ff" stroke="#4f46e5" stroke-width="1.4"/>
+  <text x="400" y="182" font-size="11" font-weight="700" fill="#312e81" text-anchor="middle">1</text>
+  <circle cx="428" cy="228" r="14" fill="#fed7aa" stroke="#c2410c" stroke-width="1.6"/>
+  <text x="428" y="232" font-size="11" font-weight="700" fill="#9a3412" text-anchor="middle">2</text>
+  <path d="M430 244 L436 258 L424 258 Z" fill="#94a3b8"/>
+  <text x="444" y="251" font-size="10" fill="#475569">对 1 左旋</text>
+  <text x="444" y="264" font-size="10" fill="#475569">再对 3 右旋</text>
+  <line x1="430" y1="308" x2="392" y2="358" stroke="#cbd5e1" stroke-width="1.4"/>
+  <line x1="430" y1="308" x2="468" y2="358" stroke="#cbd5e1" stroke-width="1.4"/>
+  <circle cx="430" cy="308" r="14" fill="#c7d2fe" stroke="#4338ca" stroke-width="1.8"/>
+  <text x="430" y="312" font-size="11" font-weight="700" fill="#312e81" text-anchor="middle">2</text>
+  <circle cx="388" cy="360" r="14" fill="#eef2ff" stroke="#4f46e5" stroke-width="1.4"/>
+  <text x="388" y="364" font-size="11" fill="#312e81" text-anchor="middle">1</text>
+  <circle cx="472" cy="360" r="14" fill="#eef2ff" stroke="#4f46e5" stroke-width="1.4"/>
+  <text x="472" y="364" font-size="11" fill="#312e81" text-anchor="middle">3</text>
+
+  <line x1="545" y1="60" x2="545" y2="500" stroke="#e2e8f0" stroke-width="1"/>
+
+  <text x="595" y="76" font-size="12.5" font-weight="700" fill="#9a3412" text-anchor="middle">RL 型 → 先右后左</text>
+  <text x="595" y="94" font-size="10.5" fill="#64748b" text-anchor="middle">插在右孩子的左子树</text>
+  <line x1="588" y1="126" x2="606" y2="178" stroke="#cbd5e1" stroke-width="1.4"/>
+  <line x1="600" y1="190" x2="586" y2="218" stroke="#cbd5e1" stroke-width="1.4"/>
+  <circle cx="584" cy="126" r="14" fill="#fee2e2" stroke="#dc2626" stroke-width="1.8"/>
+  <text x="584" y="130" font-size="11" font-weight="700" fill="#991b1b" text-anchor="middle">1</text>
+  <circle cx="610" cy="178" r="14" fill="#eef2ff" stroke="#4f46e5" stroke-width="1.4"/>
+  <text x="610" y="182" font-size="11" font-weight="700" fill="#312e81" text-anchor="middle">3</text>
+  <circle cx="582" cy="228" r="14" fill="#fed7aa" stroke="#c2410c" stroke-width="1.6"/>
+  <text x="582" y="232" font-size="11" font-weight="700" fill="#9a3412" text-anchor="middle">2</text>
+  <path d="M595 244 L601 258 L589 258 Z" fill="#94a3b8"/>
+  <text x="609" y="251" font-size="10" fill="#475569">对 3 右旋</text>
+  <text x="609" y="264" font-size="10" fill="#475569">再对 1 左旋</text>
+  <line x1="595" y1="308" x2="557" y2="358" stroke="#cbd5e1" stroke-width="1.4"/>
+  <line x1="595" y1="308" x2="633" y2="358" stroke="#cbd5e1" stroke-width="1.4"/>
+  <circle cx="595" cy="308" r="14" fill="#c7d2fe" stroke="#4338ca" stroke-width="1.8"/>
+  <text x="595" y="312" font-size="11" font-weight="700" fill="#312e81" text-anchor="middle">2</text>
+  <circle cx="553" cy="360" r="14" fill="#eef2ff" stroke="#4f46e5" stroke-width="1.4"/>
+  <text x="553" y="364" font-size="11" fill="#312e81" text-anchor="middle">1</text>
+  <circle cx="637" cy="360" r="14" fill="#eef2ff" stroke="#4f46e5" stroke-width="1.4"/>
+  <text x="637" y="364" font-size="11" fill="#312e81" text-anchor="middle">3</text>
+
+  <text x="20" y="398" font-size="11.5" fill="#334155">四种情形的<tspan font-weight="700">结果完全一样</tspan>：中间大小的关键字 2 成为新根，小的在左、大的在右。</text>
+  <text x="20" y="416" font-size="11.5" fill="#334155">所以做题时直接找「最小不平衡子树的三个结点，取中间值当根」就能写出答案，不必真去转。</text>
+  <text x="20" y="434" font-size="11.5" fill="#334155">判断型号只看两件事：<tspan font-weight="700">根 A 的平衡因子符号</tspan>（+ 左偏 / − 右偏）+ <tspan font-weight="700">新结点落在哪个孩子、哪一侧</tspan>。</text>
+
+  <rect x="20" y="448" width="640" height="94" rx="8" fill="#eef2ff" stroke="#c7d2fe" stroke-width="1"/>
+  <text x="34" y="468" font-size="11.5" font-weight="700" fill="#312e81">易错：</text>
+  <text x="34" y="488" font-size="11.5" fill="#3730a3">① 平衡因子只可能是 −1 / 0 / +1；插入后变 ±2 的那棵<tspan font-weight="700">最小</tspan>子树才是旋转对象，不是整棵树。</text>
+  <text x="34" y="508" font-size="11.5" fill="#3730a3">② LR / RL 是<tspan font-weight="700">两次旋转</tspan>，顺序不能反（先转孩子、再转根）；只转一次新树仍失衡。</text>
+  <text x="34" y="528" font-size="11.5" fill="#3730a3">③ 旋转只改指针不改中序序列 —— 平衡二叉树本质上有序，旋转前后中序遍历结果完全相同。</text>
+</svg>

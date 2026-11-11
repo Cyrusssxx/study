@@ -1,0 +1,120 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 680 574" width="680" height="574" font-family="-apple-system,BlinkMacSystemFont,'Segoe UI','Microsoft YaHei',sans-serif">
+  <rect x="0" y="0" width="680" height="574" fill="#ffffff"/>
+  <text x="20" y="28" font-size="16" font-weight="700" fill="#312e81">希尔排序 · 增量 5 → 3 → 1 的三趟分组</text>
+  <text x="20" y="48" font-size="12" fill="#64748b">同一颜色＝同一子序列；每趟只在组内做直接插入排序，靠「大步长」把元素快速搬到大致位置</text>
+
+  <text x="30" y="112" font-size="10.5" fill="#475569">初始</text>
+  <text x="30" y="128" font-size="10.5" fill="#475569">序列</text>
+  <rect x="90" y="96" width="54" height="40" rx="4" fill="#fee2e2" stroke="#fca5a5" stroke-width="1.3"/>
+  <text x="117" y="122" font-size="12" fill="#991b1b" text-anchor="middle">49</text>
+  <rect x="144" y="96" width="54" height="40" rx="4" fill="#dcfce7" stroke="#86efac" stroke-width="1.3"/>
+  <text x="171" y="122" font-size="12" fill="#14532d" text-anchor="middle">38</text>
+  <rect x="198" y="96" width="54" height="40" rx="4" fill="#dbeafe" stroke="#93c5fd" stroke-width="1.3"/>
+  <text x="225" y="122" font-size="12" fill="#1e3a8a" text-anchor="middle">65</text>
+  <rect x="252" y="96" width="54" height="40" rx="4" fill="#fef3c7" stroke="#fcd34d" stroke-width="1.3"/>
+  <text x="279" y="122" font-size="12" fill="#92400e" text-anchor="middle">97</text>
+  <rect x="306" y="96" width="54" height="40" rx="4" fill="#f3e8ff" stroke="#d8b4fe" stroke-width="1.3"/>
+  <text x="333" y="122" font-size="12" fill="#6b21a8" text-anchor="middle">76</text>
+  <rect x="360" y="96" width="54" height="40" rx="4" fill="#fee2e2" stroke="#fca5a5" stroke-width="1.3"/>
+  <text x="387" y="122" font-size="12" fill="#991b1b" text-anchor="middle">13</text>
+  <rect x="414" y="96" width="54" height="40" rx="4" fill="#dcfce7" stroke="#86efac" stroke-width="1.3"/>
+  <text x="441" y="122" font-size="12" fill="#14532d" text-anchor="middle">27</text>
+  <rect x="468" y="96" width="54" height="40" rx="4" fill="#dbeafe" stroke="#93c5fd" stroke-width="1.3"/>
+  <text x="495" y="122" font-size="12" fill="#1e3a8a" text-anchor="middle">49*</text>
+  <rect x="522" y="96" width="54" height="40" rx="4" fill="#fef3c7" stroke="#fcd34d" stroke-width="1.3"/>
+  <text x="549" y="122" font-size="12" fill="#92400e" text-anchor="middle">55</text>
+  <rect x="576" y="96" width="54" height="40" rx="4" fill="#f3e8ff" stroke="#d8b4fe" stroke-width="1.3"/>
+  <text x="603" y="122" font-size="12" fill="#6b21a8" text-anchor="middle">04</text>
+
+  <text x="30" y="188" font-size="10.5" font-weight="700" fill="#1e40af">d = 5</text>
+  <text x="30" y="204" font-size="10.5" fill="#475569">一趟</text>
+  <path d="M360 146 L366 158 L354 158 Z" fill="#94a3b8"/>
+  <text x="376" y="158" font-size="10" fill="#475569">5 个组各 2 个元素，两两比较即可</text>
+
+  <rect x="90" y="172" width="54" height="40" rx="4" fill="#fee2e2" stroke="#fca5a5" stroke-width="1.3"/>
+  <text x="117" y="198" font-size="12" font-weight="700" fill="#991b1b" text-anchor="middle">13</text>
+  <rect x="144" y="172" width="54" height="40" rx="4" fill="#dcfce7" stroke="#86efac" stroke-width="1.3"/>
+  <text x="171" y="198" font-size="12" font-weight="700" fill="#14532d" text-anchor="middle">27</text>
+  <rect x="198" y="172" width="54" height="40" rx="4" fill="#dbeafe" stroke="#93c5fd" stroke-width="1.3"/>
+  <text x="225" y="198" font-size="12" font-weight="700" fill="#1e3a8a" text-anchor="middle">49*</text>
+  <rect x="252" y="172" width="54" height="40" rx="4" fill="#fef3c7" stroke="#fcd34d" stroke-width="1.3"/>
+  <text x="279" y="198" font-size="12" font-weight="700" fill="#92400e" text-anchor="middle">55</text>
+  <rect x="306" y="172" width="54" height="40" rx="4" fill="#f3e8ff" stroke="#d8b4fe" stroke-width="1.3"/>
+  <text x="333" y="198" font-size="12" font-weight="700" fill="#6b21a8" text-anchor="middle">04</text>
+  <rect x="360" y="172" width="54" height="40" rx="4" fill="#fee2e2" stroke="#fca5a5" stroke-width="1.3"/>
+  <text x="387" y="198" font-size="12" font-weight="700" fill="#991b1b" text-anchor="middle">49</text>
+  <rect x="414" y="172" width="54" height="40" rx="4" fill="#dcfce7" stroke="#86efac" stroke-width="1.3"/>
+  <text x="441" y="198" font-size="12" font-weight="700" fill="#14532d" text-anchor="middle">38</text>
+  <rect x="468" y="172" width="54" height="40" rx="4" fill="#dbeafe" stroke="#93c5fd" stroke-width="1.3"/>
+  <text x="495" y="198" font-size="12" font-weight="700" fill="#1e3a8a" text-anchor="middle">65</text>
+  <rect x="522" y="172" width="54" height="40" rx="4" fill="#fef3c7" stroke="#fcd34d" stroke-width="1.3"/>
+  <text x="549" y="198" font-size="12" font-weight="700" fill="#92400e" text-anchor="middle">97</text>
+  <rect x="576" y="172" width="54" height="40" rx="4" fill="#f3e8ff" stroke="#d8b4fe" stroke-width="1.3"/>
+  <text x="603" y="198" font-size="12" font-weight="700" fill="#6b21a8" text-anchor="middle">76</text>
+
+  <text x="30" y="264" font-size="10.5" font-weight="700" fill="#1e40af">d = 3</text>
+  <text x="30" y="280" font-size="10.5" fill="#475569">一趟</text>
+  <path d="M360 222 L366 234 L354 234 Z" fill="#94a3b8"/>
+  <text x="376" y="234" font-size="10" fill="#475569">3 个组，组内 3~4 个元素做插入排序</text>
+
+  <rect x="90" y="248" width="54" height="40" rx="4" fill="#fee2e2" stroke="#fca5a5" stroke-width="1.3"/>
+  <text x="117" y="274" font-size="12" font-weight="700" fill="#991b1b" text-anchor="middle">13</text>
+  <rect x="144" y="248" width="54" height="40" rx="4" fill="#dcfce7" stroke="#86efac" stroke-width="1.3"/>
+  <text x="171" y="274" font-size="12" font-weight="700" fill="#14532d" text-anchor="middle">04</text>
+  <rect x="198" y="248" width="54" height="40" rx="4" fill="#dbeafe" stroke="#93c5fd" stroke-width="1.3"/>
+  <text x="225" y="274" font-size="12" font-weight="700" fill="#1e3a8a" text-anchor="middle">49*</text>
+  <rect x="252" y="248" width="54" height="40" rx="4" fill="#fee2e2" stroke="#fca5a5" stroke-width="1.3"/>
+  <text x="279" y="274" font-size="12" font-weight="700" fill="#991b1b" text-anchor="middle">38</text>
+  <rect x="306" y="248" width="54" height="40" rx="4" fill="#dcfce7" stroke="#86efac" stroke-width="1.3"/>
+  <text x="333" y="274" font-size="12" font-weight="700" fill="#14532d" text-anchor="middle">27</text>
+  <rect x="360" y="248" width="54" height="40" rx="4" fill="#dbeafe" stroke="#93c5fd" stroke-width="1.3"/>
+  <text x="387" y="274" font-size="12" font-weight="700" fill="#1e3a8a" text-anchor="middle">49</text>
+  <rect x="414" y="248" width="54" height="40" rx="4" fill="#fee2e2" stroke="#fca5a5" stroke-width="1.3"/>
+  <text x="441" y="274" font-size="12" font-weight="700" fill="#991b1b" text-anchor="middle">55</text>
+  <rect x="468" y="248" width="54" height="40" rx="4" fill="#dcfce7" stroke="#86efac" stroke-width="1.3"/>
+  <text x="495" y="274" font-size="12" font-weight="700" fill="#14532d" text-anchor="middle">65</text>
+  <rect x="522" y="248" width="54" height="40" rx="4" fill="#dbeafe" stroke="#93c5fd" stroke-width="1.3"/>
+  <text x="549" y="274" font-size="12" font-weight="700" fill="#1e3a8a" text-anchor="middle">97</text>
+  <rect x="576" y="248" width="54" height="40" rx="4" fill="#fee2e2" stroke="#fca5a5" stroke-width="1.3"/>
+  <text x="603" y="274" font-size="12" font-weight="700" fill="#991b1b" text-anchor="middle">76</text>
+
+  <text x="30" y="340" font-size="10.5" font-weight="700" fill="#166534">d = 1</text>
+  <text x="30" y="356" font-size="10.5" fill="#475569">一趟</text>
+  <path d="M360 298 L366 310 L354 310 Z" fill="#94a3b8"/>
+  <text x="376" y="310" font-size="10" fill="#475569">整体做一次插入排序，此时已基本有序 → 移动很少</text>
+
+  <rect x="90" y="324" width="54" height="40" rx="4" fill="#f0fdf4" stroke="#16a34a" stroke-width="1.5"/>
+  <text x="117" y="350" font-size="12" font-weight="700" fill="#14532d" text-anchor="middle">04</text>
+  <rect x="144" y="324" width="54" height="40" rx="4" fill="#f0fdf4" stroke="#16a34a" stroke-width="1.5"/>
+  <text x="171" y="350" font-size="12" font-weight="700" fill="#14532d" text-anchor="middle">13</text>
+  <rect x="198" y="324" width="54" height="40" rx="4" fill="#f0fdf4" stroke="#16a34a" stroke-width="1.5"/>
+  <text x="225" y="350" font-size="12" font-weight="700" fill="#14532d" text-anchor="middle">27</text>
+  <rect x="252" y="324" width="54" height="40" rx="4" fill="#f0fdf4" stroke="#16a34a" stroke-width="1.5"/>
+  <text x="279" y="350" font-size="12" font-weight="700" fill="#14532d" text-anchor="middle">38</text>
+  <rect x="306" y="324" width="54" height="40" rx="4" fill="#f0fdf4" stroke="#16a34a" stroke-width="1.5"/>
+  <text x="333" y="350" font-size="12" font-weight="700" fill="#14532d" text-anchor="middle">49*</text>
+  <rect x="360" y="324" width="54" height="40" rx="4" fill="#f0fdf4" stroke="#16a34a" stroke-width="1.5"/>
+  <text x="387" y="350" font-size="12" font-weight="700" fill="#14532d" text-anchor="middle">49</text>
+  <rect x="414" y="324" width="54" height="40" rx="4" fill="#f0fdf4" stroke="#16a34a" stroke-width="1.5"/>
+  <text x="441" y="350" font-size="12" font-weight="700" fill="#14532d" text-anchor="middle">55</text>
+  <rect x="468" y="324" width="54" height="40" rx="4" fill="#f0fdf4" stroke="#16a34a" stroke-width="1.5"/>
+  <text x="495" y="350" font-size="12" font-weight="700" fill="#14532d" text-anchor="middle">65</text>
+  <rect x="522" y="324" width="54" height="40" rx="4" fill="#f0fdf4" stroke="#16a34a" stroke-width="1.5"/>
+  <text x="549" y="350" font-size="12" font-weight="700" fill="#14532d" text-anchor="middle">76</text>
+  <rect x="576" y="324" width="54" height="40" rx="4" fill="#f0fdf4" stroke="#16a34a" stroke-width="1.5"/>
+  <text x="603" y="350" font-size="12" font-weight="700" fill="#14532d" text-anchor="middle">97</text>
+
+  <text x="20" y="386" font-size="10.5" fill="#64748b">49* 表示第二个 49（与第一个 49 值相同，用来检查稳定性）</text>
+
+  <text x="20" y="408" font-size="11.5" fill="#334155">注意 d = 5 那趟结束时整个序列<tspan font-weight="700">远没有有序</tspan>，但每个元素都已落到最终位置附近 ——</text>
+  <text x="20" y="426" font-size="11.5" fill="#334155">这才是希尔的思路：<tspan font-weight="700">先用大步长消除远距离逆序，再用小步长收尾</tspan>。</text>
+
+  <rect x="20" y="440" width="640" height="48" rx="8" fill="#eef2ff" stroke="#c7d2fe" stroke-width="1"/>
+  <text x="34" y="459" font-size="11.5" font-weight="700" fill="#312e81">空间 O(1)，时间取决于增量序列：</text>
+  <text x="34" y="478" font-size="11.5" fill="#3730a3">约 O(n^1.3)、最坏 O(n²)；只适用于<tspan font-weight="700">顺序存储</tspan>（要按下标跳着取），不能用链表。</text>
+
+  <rect x="20" y="498" width="640" height="66" rx="8" fill="#fef2f2" stroke="#fecaca" stroke-width="1"/>
+  <text x="34" y="517" font-size="11.5" font-weight="700" fill="#991b1b">易错：</text>
+  <text x="34" y="536" font-size="11.5" fill="#7f1d1d">① 最后一趟增量必须是 1，否则不保证有序。② 希尔排序<tspan font-weight="700">不稳定</tspan>（49* 会跑到 49 前面）。</text>
+  <text x="34" y="554" font-size="11.5" fill="#7f1d1d">③ 增量序列不能有 1 以外的公因子，否则小的增量那几趟白做（元素始终在不同组里）。</text>
+</svg>

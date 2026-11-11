@@ -1,0 +1,71 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 680 508" width="680" height="508" font-family="-apple-system,BlinkMacSystemFont,'Segoe UI','Microsoft YaHei',sans-serif">
+  <rect x="0" y="0" width="680" height="508" fill="#ffffff"/>
+  <text x="20" y="28" font-size="16" font-weight="700" fill="#312e81">红黑树 · 五条性质与插入后的调整</text>
+  <text x="20" y="48" font-size="12" fill="#64748b">红黑树是「带颜色的 2-3-4 树」，插入新结点一律先染红，再靠变色与旋转恢复性质</text>
+
+  <g stroke="#cbd5e1" stroke-width="1.4">
+    <line x1="200" y1="112" x2="118" y2="142"/>
+    <line x1="204" y1="112" x2="292" y2="142"/>
+    <line x1="106" y1="174" x2="64" y2="204"/>
+    <line x1="114" y1="174" x2="160" y2="204"/>
+    <line x1="296" y1="174" x2="258" y2="204"/>
+    <line x1="306" y1="174" x2="346" y2="204"/>
+    <line x1="348" y1="236" x2="318" y2="266"/>
+  </g>
+
+  <circle cx="202" cy="96" r="16" fill="#1e293b" stroke="#0f172a" stroke-width="1.6"/>
+  <text x="202" y="101" font-size="11.5" font-weight="700" fill="#ffffff" text-anchor="middle">13</text>
+
+  <circle cx="110" cy="158" r="16" fill="#fee2e2" stroke="#dc2626" stroke-width="1.8"/>
+  <text x="110" y="163" font-size="11.5" font-weight="700" fill="#991b1b" text-anchor="middle">8</text>
+  <circle cx="300" cy="158" r="16" fill="#fee2e2" stroke="#dc2626" stroke-width="1.8"/>
+  <text x="300" y="163" font-size="11.5" font-weight="700" fill="#991b1b" text-anchor="middle">17</text>
+
+  <circle cx="56" cy="220" r="16" fill="#1e293b" stroke="#0f172a" stroke-width="1.6"/>
+  <text x="56" y="225" font-size="11.5" font-weight="700" fill="#ffffff" text-anchor="middle">1</text>
+  <circle cx="164" cy="220" r="16" fill="#1e293b" stroke="#0f172a" stroke-width="1.6"/>
+  <text x="164" y="225" font-size="11.5" font-weight="700" fill="#ffffff" text-anchor="middle">11</text>
+  <circle cx="252" cy="220" r="16" fill="#1e293b" stroke="#0f172a" stroke-width="1.6"/>
+  <text x="252" y="225" font-size="11.5" font-weight="700" fill="#ffffff" text-anchor="middle">15</text>
+  <circle cx="352" cy="220" r="16" fill="#1e293b" stroke="#0f172a" stroke-width="1.6"/>
+  <text x="352" y="225" font-size="11.5" font-weight="700" fill="#ffffff" text-anchor="middle">25</text>
+
+  <circle cx="314" cy="282" r="16" fill="#fee2e2" stroke="#dc2626" stroke-width="1.8"/>
+  <text x="314" y="287" font-size="11.5" font-weight="700" fill="#991b1b" text-anchor="middle">22</text>
+
+  <text x="20" y="86" font-size="10.5" fill="#475569">● 黑结点</text>
+  <text x="20" y="104" font-size="10.5" fill="#dc2626">● 红结点</text>
+
+  <text x="404" y="90" font-size="12" font-weight="700" fill="#1e40af">把它看成 4 阶 B 树</text>
+  <text x="404" y="110" font-size="10.5" fill="#475569">红结点与黑父「合并在同一个 B 树结点里」，</text>
+  <text x="404" y="126" font-size="10.5" fill="#475569">黑结点才是 B 树的真实分层。</text>
+  <text x="404" y="152" font-size="10.5" fill="#475569">黑高（不含根）= 2，即所有叶子到根</text>
+  <text x="404" y="168" font-size="10.5" fill="#475569">经过的黑结点数相同 —— 这就是「平衡」。</text>
+  <text x="404" y="194" font-size="10.5" fill="#475569">因此最长路径 ≤ 2 × 最短路径，</text>
+  <text x="404" y="210" font-size="10.5" fill="#475569">树高 ≤ 2log₂(n+1)，查找 O(log n)。</text>
+  <text x="404" y="240" font-size="10.5" fill="#475569">插入的 22 挂到黑结点 25 下面，</text>
+  <text x="404" y="256" font-size="10.5" fill="#475569">先一律染红：不破坏黑高，只可能违反</text>
+  <text x="404" y="272" font-size="10.5" fill="#475569">「不能连红」这一条。</text>
+
+  <line x1="20" y1="304" x2="660" y2="304" stroke="#e2e8f0" stroke-width="1"/>
+
+  <text x="20" y="326" font-size="12" font-weight="700" fill="#312e81">五条性质（漏一条就判错）</text>
+  <text x="30" y="350" font-size="11" fill="#334155">① 每个结点<tspan font-weight="700">非红即黑</tspan></text>
+  <text x="30" y="370" font-size="11" fill="#334155">② <tspan font-weight="700">根结点必为黑</tspan></text>
+  <text x="30" y="390" font-size="11" fill="#334155">③ 叶结点（NIL 空指针）视为黑</text>
+  <text x="30" y="410" font-size="11" fill="#334155">④ <tspan font-weight="700">红结点的两个孩子都是黑</tspan>（不能红红相连）</text>
+  <text x="30" y="430" font-size="11" fill="#334155">⑤ 任一结点到所有叶子的路径上<tspan font-weight="700">黑结点数相同</tspan></text>
+
+  <rect x="392" y="338" width="268" height="46" rx="8" fill="#fef2f2" stroke="#fecaca" stroke-width="1"/>
+  <text x="404" y="356" font-size="11" font-weight="700" fill="#991b1b">叔叔为红 → 只变色，不上移</text>
+  <text x="404" y="374" font-size="10.5" fill="#7f1d1d">父与叔染黑、祖父染红，再把祖父当新结点往上查</text>
+
+  <rect x="392" y="392" width="268" height="46" rx="8" fill="#eff6ff" stroke="#bfdbfe" stroke-width="1"/>
+  <text x="404" y="410" font-size="11" font-weight="700" fill="#1e40af">叔叔为黑 → 旋转 + 变色</text>
+  <text x="404" y="428" font-size="10.5" fill="#1e3a8a">LL/RR 单旋、LR/RL 双旋，与 AVL 的四种型号完全对应</text>
+
+  <rect x="20" y="446" width="640" height="56" rx="8" fill="#eef2ff" stroke="#c7d2fe" stroke-width="1"/>
+  <text x="34" y="464" font-size="11.5" font-weight="700" fill="#312e81">易错：</text>
+  <text x="34" y="482" font-size="11.5" fill="#3730a3">① 新插入的结点一定是<tspan font-weight="700">红色</tspan>，染黑会立刻破坏性质⑤；最后别忘了把根强改回黑。</text>
+  <text x="34" y="498" font-size="11.5" fill="#3730a3">② 红黑树 ≠ AVL 树：它平衡更松但旋转更少，适合频繁插入删除的场景。</text>
+</svg>
