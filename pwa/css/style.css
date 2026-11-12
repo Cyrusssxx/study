@@ -3547,6 +3547,13 @@ a.review-chip-all:hover {
     color: var(--primary);
 }
 
+/* 讲义自绘配图（.fig-img）：由 common.js 的全局委托接管点击放大，需给出可点提示 */
+img.fig-img {
+    cursor: zoom-in;
+    transition: opacity .15s, transform .15s;
+}
+img.fig-img:hover { opacity: .92; }
+
 /* ===== 图片放大预览 lightbox（当前页，不新开标签页） ===== */
 .fig-lightbox {
     position: fixed; inset: 0; z-index: 3000;

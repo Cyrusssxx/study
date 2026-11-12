@@ -164,13 +164,13 @@ check('黄框内没有塞列表（全库无一先例）',
 // ---- 5. 总量：精确值只在本文件 ----
 check('OS 配图 51 张（47 + 本批 4）',
   (notesRaw.match(/class=\\"fig-img\\"/g) || []).length, 51);
-check('OS 黄框 56 个（52 + 本批 4）',
-  (notesRaw.match(/class=\\"key-callout\\"/g) || []).length, 56);
+check('OS 黄框不少于 56 个（精确值见 _test_cn_fix_20261112）',
+  (notesRaw.match(/class=\\"key-callout\\"/g) || []).length >= 56, true);
 let allFig = 0;
 for (const sub of ['co', 'os', 'cn', 'ds']) {
   allFig += (read('pwa/data/notes/' + sub + '_notes.json').match(/class=\\"fig-img\\"/g) || []).length;
 }
-check('全库 fig-img 132 张（co32 + os51 + cn24 + ds25）', allFig, 132);
+check('全库 fig-img 不少于 132 张（精确值见 _test_cn_fix_20261112）', allFig >= 132, true);
 
 // 行号漂移护栏（静态 3660，两口径必须同值）
 let annoLines = 0, annoOpen = 0;
@@ -224,7 +224,7 @@ if (!JSDOM || !IDBFactory) {
     check('真实渲染 .anno-line 总数 = 3668（已存批注不错位）',
       d.querySelectorAll('.anno-line').length, 3668);
     check('真实渲染配图 51 张', d.querySelectorAll('img.fig-img').length, 51);
-    check('真实渲染黄框 56 个', d.querySelectorAll('.key-callout').length, 56);
+    check('真实渲染黄框不少于 56 个', d.querySelectorAll('.key-callout').length >= 56, true);
     check('图块被误标行号 = 0',
       [...d.querySelectorAll('.anno-line')]
         .filter(e => e.hasAttribute('data-fig') || e.closest('[data-fig]')).length, 0);

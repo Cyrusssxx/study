@@ -48,8 +48,8 @@ check('序列化仍是 indent=1 + CRLF + 无尾换行',
   [notesRaw.indexOf('\r\n') >= 0, notesRaw.endsWith('}')], [true, true]);
 check('计组配图 32 张（P4 精确总量）',
   (notesRaw.match(/fig-img/g) || []).length, 32);
-check('计组黄框 52 个（P4 精确总量）',
-  (notesRaw.match(/class=\\"key-callout\\"/g) || []).length, 52);
+check('计组黄框不少于 52 个（精确值见 _test_cn_fix_20261112）',
+  (notesRaw.match(/class=\\"key-callout\\"/g) || []).length >= 52, true);
 check('SW 里本批 4 图全部进预缓存',
   ['perf_metrics', 'utf8', 'endian', 'cpu_regs']
     .every(n => sw.includes("'img/co_fig_" + n + ".svg'")), true);

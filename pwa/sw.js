@@ -17,8 +17,8 @@
  *          ② 只改数据不改外壳时，APP_VER 不变 → 外壳零重下；反之亦然；
  *          ③ 懒加载数据既不占首屏，改完也能凭 LAZY_VER 正确失效。
  */
-const APP_VER = 'quiz408-app-e0876f5931';
-const DATA_VER = 'quiz408-data-d0053d6f15';
+const APP_VER = 'quiz408-app-65df413d19';
+const DATA_VER = 'quiz408-data-9bded46b47';
 const LAZY_VER = 'quiz408-lazy-e6895aabfb';
 
 // 应用外壳：保证离线骨架与最新脚本。meta.json 仅几百字节，随外壳一起预缓存。
@@ -173,6 +173,7 @@ const DATA_PRECACHE = [
     'img/cn_fig_ip_fragment.svg',
     'img/cn_fig_rip_count2inf.svg',
     'img/cn_fig_tcp_zerowin.svg',
+    'img/cn_fig_tcp_header.svg',
     'img/os_fig_2_1_mem.png',
     'img/os_fig_2_2_state.png',
     'img/os_fig_3_8_paging.png',

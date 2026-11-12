@@ -309,6 +309,14 @@ function openImageLightbox(src) {
 
 // 事件委托：题干/解析里的 <img> 点击放大；排除笔记区（已有独立 viewNoteImage）
 document.addEventListener('click', e => {
+    // 讲义里的自绘配图（.fig-img）：此前没有绑定任何点击事件，点了没反应。
+    // 统一走带缩放/拖拽/键盘操作的 figLightbox（全站已引入 js/lightbox.js）。
+    const fig = e.target.closest('img.fig-img');
+    if (fig && fig.src) {
+        e.preventDefault();
+        openImageLightbox(fig.src);
+        return;
+    }
     const img = e.target.closest('.question-content img, .explanation-body img, .question-card img');
     // 题图路径：题库配图（*_figs）；或 zhenti 页「打卡表版本」的教材原图
     // （.zt-daka-figs 作用域限定，避免与 daka.html 元素级 openFigLightbox 双重触发叠两层弹层）

@@ -1,0 +1,69 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 680 566" width="680" height="566" font-family="-apple-system,BlinkMacSystemFont,'Segoe UI','Microsoft YaHei',sans-serif">
+  <rect x="0" y="0" width="680" height="566" fill="#ffffff"/>
+  <text x="20" y="26" font-size="16" font-weight="700" fill="#312e81">TCP 报文段首部 · 每行 32 bit（固定部分 20 B）</text>
+  <text x="20" y="46" font-size="11.5" fill="#64748b">「数据偏移」以 4 B 为单位给出首部长度：最小 5（20 B）、最大 15（60 B）</text>
+
+  <g>
+    <rect x="30" y="60" width="310" height="30" fill="#eef2ff" stroke="#c7d2fe" stroke-width="1"/>
+    <rect x="340" y="60" width="310" height="30" fill="#eef2ff" stroke="#c7d2fe" stroke-width="1"/>
+    <text x="185" y="80" font-size="11" font-weight="700" fill="#3730a3" text-anchor="middle">源端口 16 bit</text>
+    <text x="495" y="80" font-size="11" font-weight="700" fill="#3730a3" text-anchor="middle">目的端口 16 bit</text>
+
+    <rect x="30" y="90" width="620" height="30" fill="#f5f3ff" stroke="#c7d2fe" stroke-width="1"/>
+    <text x="340" y="110" font-size="11" font-weight="700" fill="#5b21b6" text-anchor="middle">序号 seq 32 bit（本报文段数据第一个字节的序号）</text>
+
+    <rect x="30" y="120" width="620" height="30" fill="#f5f3ff" stroke="#c7d2fe" stroke-width="1"/>
+    <text x="340" y="140" font-size="11" font-weight="700" fill="#5b21b6" text-anchor="middle">确认号 ack 32 bit（期望收到的下一个字节序号）</text>
+
+    <rect x="30" y="150" width="77.5" height="30" fill="#e0e7ff" stroke="#c7d2fe" stroke-width="1"/>
+    <rect x="107.5" y="150" width="116.25" height="30" fill="#f1f5f9" stroke="#c7d2fe" stroke-width="1"/>
+    <rect x="223.75" y="150" width="116.25" height="30" fill="#fef3c7" stroke="#c7d2fe" stroke-width="1"/>
+    <rect x="340" y="150" width="310" height="30" fill="#e0e7ff" stroke="#c7d2fe" stroke-width="1"/>
+    <text x="68.75" y="169" font-size="9" font-weight="700" fill="#3730a3" text-anchor="middle">偏移 4</text>
+    <text x="165.6" y="169" font-size="9" fill="#475569" text-anchor="middle">保留 6</text>
+    <text x="281.9" y="164" font-size="8.6" fill="#92400e" text-anchor="middle">URG ACK PSH</text>
+    <text x="281.9" y="176" font-size="8.6" fill="#92400e" text-anchor="middle">RST SYN FIN</text>
+    <text x="495" y="169" font-size="11" font-weight="700" fill="#3730a3" text-anchor="middle">窗口 16 bit（rwnd）</text>
+
+    <rect x="30" y="180" width="310" height="30" fill="#eef2ff" stroke="#c7d2fe" stroke-width="1"/>
+    <rect x="340" y="180" width="310" height="30" fill="#eef2ff" stroke="#c7d2fe" stroke-width="1"/>
+    <text x="185" y="200" font-size="11" fill="#3730a3" text-anchor="middle">检验和 16 bit（含 12 B 伪首部）</text>
+    <text x="495" y="200" font-size="11" fill="#3730a3" text-anchor="middle">紧急指针 16 bit</text>
+
+    <rect x="30" y="210" width="620" height="26" fill="#f8fafc" stroke-dasharray="5 3" stroke="#c7d2fe" stroke-width="1"/>
+    <text x="340" y="228" font-size="10" fill="#64748b" text-anchor="middle">选项（最初只定义了 MSS）与填充：0～40 B，仅当数据偏移 &gt; 5 时出现</text>
+
+    <rect x="30" y="236" width="620" height="30" fill="#dcfce7" stroke="#86efac"/>
+    <text x="340" y="256" font-size="11.5" font-weight="700" fill="#166534" text-anchor="middle">数据部分 ≤ MSS（MSS 只量这一块，不含任何首部）</text>
+  </g>
+
+  <text x="20" y="296" font-size="14" font-weight="700" fill="#312e81">MSS 与 MTU 量的不是同一块：一个在传输层，一个在链路层</text>
+
+  <rect x="30" y="308" width="620" height="42" rx="5" fill="#f8fafc" stroke="#cbd5e1" stroke-width="1"/>
+  <rect x="70" y="314" width="540" height="30" fill="#e0e7ff" stroke="#a5b4fc" stroke-width="1"/>
+  <text x="50" y="334" font-size="10" fill="#475569" text-anchor="middle">帧头</text>
+  <text x="630" y="334" font-size="10" fill="#475569" text-anchor="middle">帧尾</text>
+  <text x="340" y="334" font-size="11" font-weight="700" fill="#3730a3" text-anchor="middle">IP 数据报 = 帧的数据部分，上限就是 MTU</text>
+
+  <rect x="70" y="362" width="100" height="34" fill="#fee2e2" stroke="#fca5a5" stroke-width="1"/>
+  <text x="120" y="384" font-size="10" font-weight="700" fill="#991b1b" text-anchor="middle">IP 首部 20 B</text>
+  <rect x="170" y="362" width="440" height="34" fill="#ede9fe" stroke="#c4b5fd" stroke-width="1"/>
+  <text x="390" y="384" font-size="10.5" font-weight="700" fill="#5b21b6" text-anchor="middle">TCP 报文段 = IP 数据报的数据部分</text>
+
+  <rect x="170" y="406" width="110" height="34" fill="#fef3c7" stroke="#fcd34d" stroke-width="1"/>
+  <text x="225" y="428" font-size="9.6" font-weight="700" fill="#92400e" text-anchor="middle">TCP 首部 20 B</text>
+  <rect x="280" y="406" width="330" height="34" fill="#dcfce7" stroke="#86efac" stroke-width="1"/>
+  <text x="445" y="428" font-size="10.5" font-weight="700" fill="#166534" text-anchor="middle">TCP 数据 ≤ MSS</text>
+
+  <path d="M70 350 L610 350" stroke="#4338ca" stroke-width="1.4"/>
+  <path d="M70 345 L70 355 M610 345 L610 355" stroke="#4338ca" stroke-width="1.4"/>
+
+  <path d="M280 452 L610 452" stroke="#16a34a" stroke-width="1.4"/>
+  <path d="M280 447 L280 457 M610 447 L610 457" stroke="#16a34a" stroke-width="1.4"/>
+  <text x="445" y="468" font-size="9.5" font-weight="700" fill="#16a34a" text-anchor="middle">MSS 只含 TCP 数据</text>
+
+  <rect x="20" y="480" width="640" height="74" rx="8" fill="#eef2ff" stroke="#c7d2fe" stroke-width="1"/>
+  <text x="34" y="500" font-size="11.5" font-weight="700" fill="#312e81">一句话：MSS 是 TCP 数据部分的最大长度；MTU 是链路层帧的数据上限（整个 IP 数据报）</text>
+  <text x="34" y="520" font-size="11" fill="#3730a3">MTU 含 IP 首部 + TCP 首部 + TCP 数据；故 MSS ≤ MTU − 20 B − 20 B，以太网 MTU=1500 B → MSS=1460 B。</text>
+  <text x="34" y="540" font-size="11" fill="#3730a3">MSS 是 TCP 主动切分、用来<tspan font-weight="700">避免 IP 分片</tspan>；MTU 是链路硬限制，超了就由 IP 层分片。</text>
+</svg>
