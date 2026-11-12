@@ -231,6 +231,17 @@ if (!JSDOM || !IDBFactory) {
     check('真实渲染黄框 25 个', d.querySelectorAll('.key-callout').length, 25);
     check('图块被误标行号 = 0',
       [...d.querySelectorAll('[data-fig]')].filter(el => el.classList.contains('anno-line')).length, 0);
+    // 真实点击行为（不是只查字符串）：点第一张讲义图，必须打开带缩放的 lightbox
+    const figImgs = d.querySelectorAll('img.fig-img');
+    if (figImgs.length) {
+      figImgs[0].dispatchEvent(new dom.window.MouseEvent('click', { bubbles: true, cancelable: true }));
+      const lb = d.querySelector('#figLightbox');
+      check('点击 fig-img 真的打开 lightbox（.show）',
+        !!lb && lb.classList.contains('show'), true);
+      check('lightbox 载入的是被点击的讲义图',
+        !!lb && /cn_fig_/.test((lb.querySelector('img') || {}).getAttribute
+          ? (lb.querySelector('img').getAttribute('src') || '') : ''), true);
+    }
     console.log('_test_cn_fix_20261112: ' + pass + ' passed, ' + fail + ' failed');
     process.exit(fail ? 1 : 0);
   })().catch(e => { console.log('ERROR ' + e.message); process.exit(1); });
