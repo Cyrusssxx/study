@@ -1,0 +1,86 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 680 492" width="680" height="492" font-family="-apple-system,BlinkMacSystemFont,'Segoe UI','Microsoft YaHei',sans-serif">
+  <defs>
+    <marker id="lsA" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#1d4ed8"/>
+    </marker>
+    <marker id="lsB" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#15803d"/>
+    </marker>
+    <marker id="lsC" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#b91c1c"/>
+    </marker>
+  </defs>
+  <rect x="0" y="0" width="680" height="492" fill="#ffffff"/>
+  <text x="20" y="26" font-size="16" font-weight="700" fill="#312e81">链栈与共享栈：一个靠头插免溢出，一个靠两头挤省空间</text>
+  <text x="20" y="46" font-size="10.5" fill="#64748b">栈顶永远是「唯一能插入删除的那一端」——顺序栈用 top 下标，链栈用表头指针</text>
+
+  <rect x="24" y="62" width="316" height="238" rx="6" fill="#eff6ff" stroke="#bfdbfe" stroke-width="1"/>
+  <text x="182" y="84" font-size="12.5" font-weight="700" fill="#1e40af" text-anchor="middle">链栈（不带头结点）：栈顶 = 表头 Lhead</text>
+
+  <text x="40" y="110" font-size="11" font-weight="700" fill="#1e3a8a">Lhead</text>
+  <path d="M 78 106 L 92 106" fill="none" stroke="#1d4ed8" stroke-width="1.8" marker-end="url(#lsA)"/>
+
+  <rect x="94" y="94" width="44" height="30" fill="#dbeafe" stroke="#60a5fa" stroke-width="1.2"/>
+  <text x="116" y="113" font-size="11" font-weight="700" fill="#1e40af" text-anchor="middle">e</text>
+  <rect x="138" y="94" width="18" height="30" fill="#ffffff" stroke="#60a5fa" stroke-width="1.2"/>
+  <path d="M 156 109 L 170 109" fill="none" stroke="#1d4ed8" stroke-width="1.8" marker-end="url(#lsA)"/>
+
+  <rect x="172" y="94" width="44" height="30" fill="#dbeafe" stroke="#60a5fa" stroke-width="1.2"/>
+  <text x="194" y="113" font-size="11" font-weight="700" fill="#1e40af" text-anchor="middle">d</text>
+  <rect x="216" y="94" width="18" height="30" fill="#ffffff" stroke="#60a5fa" stroke-width="1.2"/>
+  <path d="M 234 109 L 248 109" fill="none" stroke="#1d4ed8" stroke-width="1.8" marker-end="url(#lsA)"/>
+
+  <rect x="250" y="94" width="44" height="30" fill="#dbeafe" stroke="#60a5fa" stroke-width="1.2"/>
+  <text x="272" y="113" font-size="11" font-weight="700" fill="#1e40af" text-anchor="middle">c</text>
+  <rect x="294" y="94" width="18" height="30" fill="#ffffff" stroke="#60a5fa" stroke-width="1.2"/>
+  <text x="316" y="113" font-size="11" fill="#64748b">∧</text>
+
+  <text x="40" y="146" font-size="9.5" fill="#64748b">↑ 栈顶</text>
+  <text x="330" y="146" font-size="9.5" fill="#64748b" text-anchor="end">栈底 ↑</text>
+
+  <text x="40" y="176" font-size="10" fill="#b91c1c"><tspan font-weight="700">push</tspan>：新结点插在 Lhead 之后，改两个指针，O(1)</text>
+  <text x="40" y="196" font-size="10" fill="#b91c1c"><tspan font-weight="700">pop</tspan>：Lhead 后移一步再释放，同样 O(1)，不必搬数据</text>
+  <text x="40" y="224" font-size="10.5" font-weight="700" fill="#1e40af">没有「栈满」：链表按需申请，除非内存耗尽</text>
+  <text x="40" y="246" font-size="9.5" fill="#475569">代价：每个结点多一个指针域，存储密度 &lt; 1</text>
+  <text x="40" y="266" font-size="9.5" fill="#475569">若规定栈顶在表尾且无尾指针，插入要遍历 → O(n)</text>
+
+  <rect x="352" y="62" width="304" height="238" rx="6" fill="#f0fdf4" stroke="#bbf7d0" stroke-width="1"/>
+  <text x="504" y="84" font-size="12.5" font-weight="700" fill="#166534" text-anchor="middle">共享栈：一个数组，两个栈底在两端</text>
+
+  <text x="504" y="106" font-size="9.5" fill="#15803d" text-anchor="middle">中间空白由两栈共用</text>
+  <line x1="486" y1="112" x2="522" y2="112" stroke="#86efac" stroke-width="1.2"/>
+  <line x1="486" y1="112" x2="486" y2="118" stroke="#86efac" stroke-width="1.2"/>
+  <line x1="522" y1="112" x2="522" y2="118" stroke="#86efac" stroke-width="1.2"/>
+
+  <rect x="372" y="120" width="26" height="34" fill="#dcfce7" stroke="#4ade80" stroke-width="1.2"/>
+  <text x="385" y="142" font-size="10" fill="#166534" text-anchor="middle">a</text>
+  <rect x="398" y="120" width="26" height="34" fill="#dcfce7" stroke="#4ade80" stroke-width="1.2"/>
+  <text x="411" y="142" font-size="10" fill="#166534" text-anchor="middle">b</text>
+  <rect x="424" y="120" width="26" height="34" fill="#ffffff" stroke="#cbd5e1" stroke-width="1"/>
+  <rect x="450" y="120" width="26" height="34" fill="#ffffff" stroke="#cbd5e1" stroke-width="1"/>
+  <rect x="476" y="120" width="26" height="34" fill="#ffffff" stroke="#cbd5e1" stroke-width="1"/>
+  <rect x="502" y="120" width="26" height="34" fill="#ffffff" stroke="#cbd5e1" stroke-width="1"/>
+  <rect x="528" y="120" width="26" height="34" fill="#ffffff" stroke="#cbd5e1" stroke-width="1"/>
+  <rect x="554" y="120" width="26" height="34" fill="#ffffff" stroke="#cbd5e1" stroke-width="1"/>
+  <rect x="580" y="120" width="26" height="34" fill="#ecfdf5" stroke="#4ade80" stroke-width="1.2"/>
+  <text x="593" y="142" font-size="10" fill="#166534" text-anchor="middle">z</text>
+  <text x="372" y="114" font-size="8.5" fill="#64748b" text-anchor="middle">0</text>
+  <text x="606" y="114" font-size="8.5" fill="#64748b" text-anchor="middle">MaxSize−1</text>
+
+  <path d="M 372 194 L 372 158" fill="none" stroke="#15803d" stroke-width="1.5" marker-end="url(#lsB)"/>
+  <text x="372" y="212" font-size="9.5" fill="#166534">top0 = −1（空）</text>
+  <path d="M 606 194 L 606 158" fill="none" stroke="#b91c1c" stroke-width="1.5" marker-end="url(#lsC)"/>
+  <text x="606" y="212" font-size="9.5" fill="#b91c1c" text-anchor="end">top1 = MaxSize（空）</text>
+
+  <text x="372" y="240" font-size="10" fill="#166534">0 号栈向右长（top0 先加 1），1 号栈向左长（top1 先减 1）</text>
+  <text x="372" y="264" font-size="10.5" font-weight="700" fill="#b91c1c">栈满：top1 − top0 == 1（相邻，不是相等）</text>
+  <text x="372" y="286" font-size="9.5" fill="#475569">整个数组占满才溢出，空间利用率最高</text>
+
+  <rect x="24" y="316" width="632" height="152" rx="6" fill="#fffbeb" stroke="#fde68a" stroke-width="1"/>
+  <text x="40" y="338" font-size="11" font-weight="700" fill="#854d0e">三条判据决定选哪种栈</text>
+  <text x="40" y="360" font-size="10.5" fill="#334155">① <tspan font-weight="700">元素个数不确定 / 要多个栈共存</tspan> → 链栈（无栈满、空间按需）</text>
+  <text x="40" y="380" font-size="10.5" fill="#334155">② <tspan font-weight="700">空间紧张、栈的总量固定</tspan> → 共享栈（两栈相向长，只在整个数组占满时溢出）</text>
+  <text x="40" y="400" font-size="10.5" fill="#334155">③ <tspan font-weight="700">题目给了 top 初值</tspan> → 顺序栈，先看它指向栈顶还是栈顶上一格，再定入栈写法</text>
+  <text x="40" y="424" font-size="9.5" fill="#64748b">链栈「不会满」只指容量：结点靠 malloc 申请，内存耗尽仍会失败；不带/带头结点的判空条件不同</text>
+  <text x="40" y="444" font-size="9.5" fill="#64748b">存储密度：顺序栈 = 1，链栈 &lt; 1；插入删除两者都是 O(1)（链栈必须限定在表头）</text>
+</svg>

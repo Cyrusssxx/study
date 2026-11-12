@@ -1,0 +1,93 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 680 500" width="680" height="500" font-family="-apple-system,BlinkMacSystemFont,'Segoe UI','Microsoft YaHei',sans-serif">
+  <defs>
+    <marker id="osA" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#1d4ed8"/>
+    </marker>
+  </defs>
+  <rect x="0" y="0" width="680" height="500" fill="#ffffff"/>
+  <text x="20" y="26" font-size="16" font-weight="700" fill="#312e81">OSPF 为什么收敛快：人人拿到全图，再自己算最短路</text>
+  <text x="20" y="46" font-size="10.5" fill="#64748b">链路状态（L-S）：泛洪「我连了谁、代价多少」，不交换路由表本身</text>
+
+  <rect x="24" y="62" width="318" height="284" rx="6" fill="#eff6ff" stroke="#bfdbfe" stroke-width="1"/>
+  <text x="183" y="84" font-size="12.5" font-weight="700" fill="#1e40af" text-anchor="middle">四步：从 LSA 到路由表</text>
+
+  <rect x="40" y="94" width="286" height="44" rx="4" fill="#dbeafe" stroke="#93c5fd" stroke-width="1"/>
+  <text x="50" y="112" font-size="10.5" font-weight="700" fill="#1e40af">① 泛洪 LSA</text>
+  <text x="50" y="128" font-size="9.5" fill="#334155">每台只说「我直连了谁、代价多少」，不说整张表</text>
+
+  <path d="M 183 140 L 183 150" fill="none" stroke="#1d4ed8" stroke-width="1.6" marker-end="url(#osA)"/>
+
+  <rect x="40" y="152" width="286" height="44" rx="4" fill="#ffffff" stroke="#bfdbfe" stroke-width="1"/>
+  <text x="50" y="170" font-size="10.5" font-weight="700" fill="#1e40af">② 建 LSDB</text>
+  <text x="50" y="186" font-size="9.5" fill="#334155">收到的 LSA 汇总 → 人人一份一致的全网拓扑</text>
+
+  <path d="M 183 198 L 183 208" fill="none" stroke="#1d4ed8" stroke-width="1.6" marker-end="url(#osA)"/>
+
+  <rect x="40" y="210" width="286" height="44" rx="4" fill="#ffffff" stroke="#bfdbfe" stroke-width="1"/>
+  <text x="50" y="228" font-size="10.5" font-weight="700" fill="#1e40af">③ 跑 Dijkstra</text>
+  <text x="50" y="244" font-size="9.5" fill="#334155">以「自己」为源点，算到所有目的的最短路径树</text>
+
+  <path d="M 183 256 L 183 266" fill="none" stroke="#1d4ed8" stroke-width="1.6" marker-end="url(#osA)"/>
+
+  <rect x="40" y="268" width="286" height="44" rx="4" fill="#f0fdf4" stroke="#86efac" stroke-width="1"/>
+  <text x="50" y="286" font-size="10.5" font-weight="700" fill="#166534">④ 填路由表</text>
+  <text x="50" y="302" font-size="9.5" fill="#334155">只写<tspan font-weight="700">下一跳</tspan>与代价，不存完整路径（Q 常考）</text>
+
+  <rect x="352" y="62" width="304" height="284" rx="6" fill="#f8fafc" stroke="#cbd5e1" stroke-width="1"/>
+  <text x="504" y="84" font-size="12.5" font-weight="700" fill="#334155" text-anchor="middle">RIP 与 OSPF 四维对照</text>
+
+  <rect x="362" y="92" width="66" height="30" fill="#e2e8f0" stroke="#94a3b8" stroke-width="1"/>
+  <text x="395" y="111" font-size="9.5" font-weight="700" fill="#334155" text-anchor="middle">维度</text>
+  <rect x="428" y="92" width="104" height="30" fill="#fef3c7" stroke="#fcd34d" stroke-width="1"/>
+  <text x="480" y="111" font-size="10" font-weight="700" fill="#92400e" text-anchor="middle">RIP</text>
+  <rect x="532" y="92" width="116" height="30" fill="#dcfce7" stroke="#86efac" stroke-width="1"/>
+  <text x="590" y="111" font-size="10" font-weight="700" fill="#166534" text-anchor="middle">OSPF</text>
+
+  <rect x="362" y="122" width="66" height="40" fill="#ffffff" stroke="#cbd5e1" stroke-width="1"/>
+  <text x="395" y="146" font-size="9" fill="#334155" text-anchor="middle">交换内容</text>
+  <rect x="428" y="122" width="104" height="40" fill="#fffbeb" stroke="#fde68a" stroke-width="1"/>
+  <text x="480" y="139" font-size="9" fill="#92400e" text-anchor="middle">整张距离</text>
+  <text x="480" y="152" font-size="9" fill="#92400e" text-anchor="middle">向量表</text>
+  <rect x="532" y="122" width="116" height="40" fill="#f0fdf4" stroke="#bbf7d0" stroke-width="1"/>
+  <text x="590" y="139" font-size="9" fill="#166534" text-anchor="middle">链路状态</text>
+  <text x="590" y="152" font-size="9" fill="#166534" text-anchor="middle">LSA</text>
+
+  <rect x="362" y="162" width="66" height="40" fill="#ffffff" stroke="#cbd5e1" stroke-width="1"/>
+  <text x="395" y="186" font-size="9" fill="#334155" text-anchor="middle">触发时机</text>
+  <rect x="428" y="162" width="104" height="40" fill="#fffbeb" stroke="#fde68a" stroke-width="1"/>
+  <text x="480" y="179" font-size="9" fill="#92400e" text-anchor="middle">每 30s</text>
+  <text x="480" y="192" font-size="9" fill="#92400e" text-anchor="middle">周期通告</text>
+  <rect x="532" y="162" width="116" height="40" fill="#f0fdf4" stroke="#bbf7d0" stroke-width="1"/>
+  <text x="590" y="179" font-size="9" fill="#166534" text-anchor="middle">拓扑变了</text>
+  <text x="590" y="192" font-size="9" fill="#166534" text-anchor="middle">才泛洪</text>
+
+  <rect x="362" y="202" width="66" height="40" fill="#ffffff" stroke="#cbd5e1" stroke-width="1"/>
+  <text x="395" y="226" font-size="9" fill="#334155" text-anchor="middle">算法</text>
+  <rect x="428" y="202" width="104" height="40" fill="#fffbeb" stroke="#fde68a" stroke-width="1"/>
+  <text x="480" y="226" font-size="8.5" fill="#92400e" text-anchor="middle">距离向量</text>
+  <rect x="532" y="202" width="116" height="40" fill="#f0fdf4" stroke="#bbf7d0" stroke-width="1"/>
+  <text x="590" y="226" font-size="9" fill="#166534" text-anchor="middle">Dijkstra</text>
+
+  <rect x="362" y="242" width="66" height="40" fill="#ffffff" stroke="#cbd5e1" stroke-width="1"/>
+  <text x="395" y="266" font-size="9" fill="#334155" text-anchor="middle">承载</text>
+  <rect x="428" y="242" width="104" height="40" fill="#fffbeb" stroke="#fde68a" stroke-width="1"/>
+  <text x="480" y="266" font-size="9" fill="#92400e" text-anchor="middle">UDP 520</text>
+  <rect x="532" y="242" width="116" height="40" fill="#f0fdf4" stroke="#bbf7d0" stroke-width="1"/>
+  <text x="590" y="266" font-size="9" fill="#166534" text-anchor="middle">IP 协议号 89</text>
+
+  <rect x="362" y="282" width="66" height="40" fill="#ffffff" stroke="#cbd5e1" stroke-width="1"/>
+  <text x="395" y="306" font-size="9" fill="#334155" text-anchor="middle">规模控制</text>
+  <rect x="428" y="282" width="104" height="40" fill="#fffbeb" stroke="#fde68a" stroke-width="1"/>
+  <text x="480" y="299" font-size="9" fill="#92400e" text-anchor="middle">直径限 15 跳</text>
+  <text x="480" y="312" font-size="8.5" fill="#92400e" text-anchor="middle">16 = 不可达</text>
+  <rect x="532" y="282" width="116" height="40" fill="#f0fdf4" stroke="#bbf7d0" stroke-width="1"/>
+  <text x="590" y="299" font-size="9" fill="#166534" text-anchor="middle">划分区域</text>
+  <text x="590" y="312" font-size="8.5" fill="#166534" text-anchor="middle">减少洪泛量</text>
+
+  <rect x="24" y="358" width="632" height="124" rx="6" fill="#fffbeb" stroke="#fde68a" stroke-width="1"/>
+  <text x="40" y="380" font-size="11" font-weight="700" fill="#854d0e">看到这几个词就直接判协议</text>
+  <text x="40" y="402" font-size="10.5" fill="#334155">「洪泛 LSA」「LSDB」「Dijkstra」「协议号 89」「area 0 / ABR」→ <tspan font-weight="700" fill="#166534">OSPF</tspan></text>
+  <text x="40" y="422" font-size="10.5" fill="#334155">「30 秒周期」「整张距离向量表」「UDP 520」「16 跳不可达」→ <tspan font-weight="700" fill="#92400e">RIP</tspan></text>
+  <text x="40" y="444" font-size="10.5" fill="#b91c1c">两者都<tspan font-weight="700">不承载在 TCP/UDP 之外的传输层</tspan>：RIP 用 UDP，OSPF 直接塞进 IP（协议号 89）</text>
+  <text x="40" y="466" font-size="9.5" fill="#64748b">Hello 报文只负责「邻居还活着」；链路状态只在网络变化时泛洪 —— 与 RIP 的周期整表交换正好相反</text>
+</svg>

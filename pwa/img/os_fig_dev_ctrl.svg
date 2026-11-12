@@ -1,0 +1,74 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 680 500" width="680" height="500" font-family="-apple-system,BlinkMacSystemFont,'Segoe UI','Microsoft YaHei',sans-serif">
+  <defs>
+    <marker id="dcA" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#1d4ed8"/>
+    </marker>
+  </defs>
+  <rect x="0" y="0" width="680" height="500" fill="#ffffff"/>
+  <text x="20" y="26" font-size="16" font-weight="700" fill="#312e81">I/O 设备怎么接进系统：控制器三部分 + 端口两种编址</text>
+  <text x="20" y="46" font-size="10.5" fill="#64748b">控制器把「读第 11408 个扇区」翻译成柱面/盘面/扇区号并驱动磁头 —— 屏蔽物理差异全靠这一层</text>
+
+  <rect x="32" y="104" width="94" height="66" rx="5" fill="#eef2ff" stroke="#a5b4fc" stroke-width="1.2"/>
+  <text x="79" y="130" font-size="12" font-weight="700" fill="#3730a3" text-anchor="middle">CPU</text>
+  <text x="79" y="148" font-size="9" fill="#4338ca" text-anchor="middle">执行 I/O 指令</text>
+  <text x="79" y="161" font-size="9" fill="#4338ca" text-anchor="middle">或访存指令</text>
+
+  <line x1="126" y1="120" x2="232" y2="120" stroke="#1d4ed8" stroke-width="1.6" marker-end="url(#dcA)"/>
+  <line x1="126" y1="137" x2="232" y2="137" stroke="#1d4ed8" stroke-width="1.6" marker-end="url(#dcA)"/>
+  <line x1="126" y1="154" x2="232" y2="154" stroke="#1d4ed8" stroke-width="1.6" marker-end="url(#dcA)"/>
+  <text x="179" y="115" font-size="9" fill="#475569" text-anchor="middle">数据线</text>
+  <text x="179" y="132" font-size="9" fill="#475569" text-anchor="middle">地址线</text>
+  <text x="179" y="149" font-size="9" fill="#475569" text-anchor="middle">控制线</text>
+
+  <rect x="234" y="84" width="238" height="118" rx="6" fill="#eff6ff" stroke="#60a5fa" stroke-width="1.4"/>
+  <text x="353" y="102" font-size="11.5" font-weight="700" fill="#1e40af" text-anchor="middle">设备控制器（I/O 接口芯片）</text>
+  <rect x="244" y="110" width="218" height="24" rx="3" fill="#ffffff" stroke="#bfdbfe" stroke-width="1"/>
+  <text x="252" y="126" font-size="9.5" fill="#1e3a8a">与 CPU 的接口：数据 / 地址 / 控制三类线</text>
+  <rect x="244" y="138" width="218" height="24" rx="3" fill="#dbeafe" stroke="#93c5fd" stroke-width="1"/>
+  <text x="252" y="154" font-size="9.5" font-weight="700" fill="#1e40af">I/O 逻辑：命令译码 · 地址识别 · 数据缓冲</text>
+  <rect x="244" y="166" width="218" height="24" rx="3" fill="#ffffff" stroke="#bfdbfe" stroke-width="1"/>
+  <text x="252" y="182" font-size="9.5" fill="#1e3a8a">与设备的接口：一个控制器可接多台设备</text>
+
+  <path d="M 472 118 L 496 118" fill="none" stroke="#1d4ed8" stroke-width="1.6" marker-end="url(#dcA)"/>
+  <path d="M 472 168 L 496 168" fill="none" stroke="#1d4ed8" stroke-width="1.6" marker-end="url(#dcA)"/>
+  <rect x="498" y="102" width="122" height="34" rx="4" fill="#f8fafc" stroke="#cbd5e1" stroke-width="1"/>
+  <text x="559" y="124" font-size="10.5" fill="#334155" text-anchor="middle">设备 1（磁盘）</text>
+  <rect x="498" y="150" width="122" height="34" rx="4" fill="#f8fafc" stroke="#cbd5e1" stroke-width="1"/>
+  <text x="559" y="172" font-size="10.5" fill="#334155" text-anchor="middle">设备 2（打印机）</text>
+  <text x="32" y="222" font-size="9.5" fill="#64748b">控制关系：通道 → 设备控制器 → 设备（Q558）；真正执行控制功能的是 I/O 逻辑（Q549）</text>
+
+  <text x="32" y="256" font-size="11.5" font-weight="700" fill="#1e40af">I/O 端口编址：地址线与主存分不分开</text>
+
+  <rect x="32" y="266" width="616" height="30" fill="#e0e7ff" stroke="#a5b4fc" stroke-width="1"/>
+  <text x="44" y="286" font-size="10.5" font-weight="700" fill="#312e81">比较维度</text>
+  <text x="196" y="286" font-size="10.5" font-weight="700" fill="#312e81">独立编址（I/O 映射）</text>
+  <text x="436" y="286" font-size="10.5" font-weight="700" fill="#312e81">统一编址（内存映射）</text>
+
+  <rect x="32" y="296" width="616" height="28" fill="#ffffff" stroke="#c7d2fe" stroke-width="1"/>
+  <text x="44" y="314" font-size="9.5" fill="#334155">地址空间</text>
+  <text x="196" y="314" font-size="9.5" fill="#1e3a8a">端口与内存分离，两个空间</text>
+  <text x="436" y="314" font-size="9.5" fill="#1e3a8a">共用同一地址空间，按范围区分</text>
+
+  <rect x="32" y="324" width="616" height="28" fill="#f8fafc" stroke="#c7d2fe" stroke-width="1"/>
+  <text x="44" y="342" font-size="9.5" fill="#334155">访问指令</text>
+  <text x="196" y="342" font-size="9.5" fill="#1e3a8a">专用 I/O 指令（IN / OUT）</text>
+  <text x="436" y="342" font-size="9.5" fill="#1e3a8a">普通访存指令（load / store）</text>
+
+  <rect x="32" y="352" width="616" height="28" fill="#ffffff" stroke="#c7d2fe" stroke-width="1"/>
+  <text x="44" y="370" font-size="9.5" fill="#334155">译码速度</text>
+  <text x="196" y="370" font-size="9.5" fill="#166534">地址线少，译码简单、寻址快</text>
+  <text x="436" y="370" font-size="9.5" fill="#b91c1c">须比对完整地址，译码较慢</text>
+
+  <rect x="32" y="380" width="616" height="28" fill="#f8fafc" stroke="#c7d2fe" stroke-width="1"/>
+  <text x="44" y="398" font-size="9.5" fill="#334155">代价</text>
+  <text x="196" y="398" font-size="9.5" fill="#b91c1c">需两组读/写信号，控制逻辑复杂</text>
+  <text x="436" y="398" font-size="9.5" fill="#b91c1c">占用主存地址空间，可用内存变少</text>
+
+  <rect x="32" y="408" width="616" height="28" fill="#ffffff" stroke="#c7d2fe" stroke-width="1"/>
+  <text x="44" y="426" font-size="9.5" fill="#334155">编程灵活性</text>
+  <text x="196" y="426" font-size="9.5" fill="#475569">低，指令功能有限</text>
+  <text x="436" y="426" font-size="9.5" fill="#166534">高，可用全部访存寻址方式</text>
+
+  <text x="32" y="458" font-size="10.5" font-weight="700" fill="#b91c1c">记忆钩子：独立编址「地址空间省了、指令多一组」；统一编址「指令省了、地址空间少一块」</text>
+  <text x="32" y="478" font-size="9.5" fill="#64748b">两种方式都靠地址线选寄存器：先选控制器（片选），再选控制器内部的寄存器编号</text>
+</svg>
