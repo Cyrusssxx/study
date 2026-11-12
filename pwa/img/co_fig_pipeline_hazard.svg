@@ -1,0 +1,98 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 530" width="720" height="530" font-family="-apple-system,BlinkMacSystemFont,'Segoe UI','Microsoft YaHei',sans-serif">
+  <rect x="0" y="0" width="720" height="530" fill="#ffffff"/>
+
+  <text x="360" y="26" font-size="15" font-weight="700" fill="#312e81" text-anchor="middle">三类流水线冒险：撞部件、撞数据、撞指令流</text>
+  <text x="360" y="46" font-size="10.8" fill="#64748b" text-anchor="middle">判断时必须写清「哪两条指令的哪两段相撞」，不能只写「有相关」</text>
+
+  <!-- ================= ① 结构冒险 ================= -->
+  <rect x="20" y="60" width="3" height="120" fill="#3b82f6"/>
+  <text x="32" y="76" font-size="11.5" font-weight="700" fill="#1e40af">① 结构冒险 = 撞部件</text>
+  <text x="32" y="93" font-size="9.4" fill="#64748b">LOAD 的 MEM 与 i+3 的 IF 同拍争主存</text>
+
+  <g font-size="9" fill="#94a3b8" text-anchor="middle">
+    <text x="147" y="110">1</text><text x="191" y="110">2</text><text x="235" y="110">3</text><text x="279" y="110">4</text><text x="323" y="110">5</text><text x="367" y="110">6</text><text x="411" y="110">7</text>
+  </g>
+
+  <text x="120" y="132" font-size="9.4" fill="#334155" text-anchor="end">LOAD</text>
+  <rect x="126" y="118" width="42" height="20" rx="2" fill="#dbeafe"/><text x="147" y="132" font-size="9.5" fill="#1e40af" text-anchor="middle">IF</text>
+  <rect x="170" y="118" width="42" height="20" rx="2" fill="#e0e7ff"/><text x="191" y="132" font-size="9.5" fill="#3730a3" text-anchor="middle">ID</text>
+  <rect x="214" y="118" width="42" height="20" rx="2" fill="#fef3c7"/><text x="235" y="132" font-size="9.5" fill="#92400e" text-anchor="middle">EX</text>
+  <rect x="258" y="118" width="42" height="20" rx="2" fill="#fecaca" stroke="#f87171" stroke-width="1.2"/><text x="279" y="132" font-size="9.5" font-weight="700" fill="#991b1b" text-anchor="middle">MEM</text>
+  <rect x="302" y="118" width="42" height="20" rx="2" fill="#fce7f3"/><text x="323" y="132" font-size="9.5" fill="#9d174d" text-anchor="middle">WB</text>
+
+  <text x="120" y="160" font-size="9.4" fill="#334155" text-anchor="end">i+3</text>
+  <rect x="258" y="146" width="42" height="20" rx="2" fill="#fde68a" stroke="#f59e0b" stroke-width="1"/><text x="279" y="160" font-size="9.2" font-weight="700" fill="#7c2d12" text-anchor="middle">停顿</text>
+  <rect x="302" y="146" width="42" height="20" rx="2" fill="#dbeafe"/><text x="323" y="160" font-size="9.5" fill="#1e40af" text-anchor="middle">IF</text>
+  <rect x="346" y="146" width="42" height="20" rx="2" fill="#e0e7ff"/><text x="367" y="160" font-size="9.5" fill="#3730a3" text-anchor="middle">ID</text>
+  <rect x="390" y="146" width="42" height="20" rx="2" fill="#fef3c7"/><text x="411" y="160" font-size="9.5" fill="#92400e" text-anchor="middle">EX</text>
+
+  <text x="448" y="112" font-size="9.4" fill="#1e40af">对策：指令 Cache 与数据 Cache</text>
+  <text x="448" y="128" font-size="9.4" fill="#1e40af">分离（根治，最常考）</text>
+  <text x="448" y="146" font-size="9.4" fill="#64748b">资源重复设置</text>
+  <text x="448" y="164" font-size="9.4" fill="#64748b">或把 IF 推后 1 拍（下图）</text>
+  <text x="32" y="176" font-size="9.2" fill="#991b1b">红框＝冲突点：第 4 拍两段同时要主存 → 阻塞 <tspan font-weight="700">1 拍</tspan></text>
+
+  <!-- ================= ② 数据冒险 ================= -->
+  <rect x="20" y="196" width="3" height="120" fill="#f59e0b"/>
+  <text x="32" y="212" font-size="11.5" font-weight="700" fill="#b45309">② 数据冒险 = 撞数据（RAW 写后读）</text>
+  <text x="32" y="229" font-size="9.4" fill="#64748b">add 的 WB（第 5 拍）晚于 sub 的 ID（第 3 拍）</text>
+
+  <g font-size="9" fill="#94a3b8" text-anchor="middle">
+    <text x="147" y="246">1</text><text x="191" y="246">2</text><text x="235" y="246">3</text><text x="279" y="246">4</text><text x="323" y="246">5</text><text x="367" y="246">6</text>
+  </g>
+
+  <text x="120" y="268" font-size="9.4" fill="#334155" text-anchor="end">add</text>
+  <rect x="126" y="254" width="42" height="20" rx="2" fill="#dbeafe"/><text x="147" y="268" font-size="9.5" fill="#1e40af" text-anchor="middle">IF</text>
+  <rect x="170" y="254" width="42" height="20" rx="2" fill="#e0e7ff"/><text x="191" y="268" font-size="9.5" fill="#3730a3" text-anchor="middle">ID</text>
+  <rect x="214" y="254" width="42" height="20" rx="2" fill="#fde68a" stroke="#f59e0b" stroke-width="1.2"/><text x="235" y="268" font-size="9.5" font-weight="700" fill="#7c2d12" text-anchor="middle">EX</text>
+  <rect x="258" y="254" width="42" height="20" rx="2" fill="#dcfce7"/><text x="279" y="268" font-size="9.5" fill="#166534" text-anchor="middle">MEM</text>
+  <rect x="302" y="254" width="42" height="20" rx="2" fill="#fecaca" stroke="#f87171" stroke-width="1.2"/><text x="323" y="268" font-size="9.5" font-weight="700" fill="#991b1b" text-anchor="middle">WB</text>
+
+  <text x="120" y="296" font-size="9.4" fill="#334155" text-anchor="end">sub</text>
+  <rect x="170" y="282" width="42" height="20" rx="2" fill="#dbeafe"/><text x="191" y="296" font-size="9.5" fill="#1e40af" text-anchor="middle">IF</text>
+  <rect x="214" y="282" width="42" height="20" rx="2" fill="#fecaca" stroke="#f87171" stroke-width="1.2"/><text x="235" y="296" font-size="9.5" font-weight="700" fill="#991b1b" text-anchor="middle">ID</text>
+  <rect x="258" y="282" width="42" height="20" rx="2" fill="#dcfce7"/><text x="279" y="296" font-size="9.5" fill="#166534" text-anchor="middle">EX</text>
+  <rect x="302" y="282" width="42" height="20" rx="2" fill="#dcfce7"/><text x="323" y="296" font-size="9.5" fill="#166534" text-anchor="middle">MEM</text>
+  <rect x="346" y="282" width="42" height="20" rx="2" fill="#fce7f3"/><text x="367" y="296" font-size="9.5" fill="#9d174d" text-anchor="middle">WB</text>
+
+  <path d="M247 274 L268 282" stroke="#f59e0b" stroke-width="1.4" fill="none"/>
+  <path d="M268 282 L260 278 L264 272 Z" fill="#f59e0b"/>
+
+  <text x="448" y="248" font-size="9.4" fill="#b45309">对策：转发（旁路）→ <tspan font-weight="700">0 拍</tspan></text>
+  <text x="448" y="266" font-size="9.4" fill="#64748b">load-use：转发来不及 →</text>
+  <text x="448" y="282" font-size="9.4" fill="#64748b">阻塞 <tspan font-weight="700">1 拍</tspan> 再转发</text>
+  <text x="448" y="300" font-size="9.4" fill="#64748b">不转发硬等 <tspan font-weight="700">3 拍</tspan>（前写后读 2 拍）</text>
+  <text x="32" y="312" font-size="9.2" fill="#991b1b">sub 第 3 拍读 R1 时 add 还没写回 → 读到旧值；橙箭头＝add 的 EX 结果直接旁路到 sub 的 EX</text>
+
+  <!-- ================= ③ 控制冒险 ================= -->
+  <rect x="20" y="332" width="3" height="120" fill="#ef4444"/>
+  <text x="32" y="348" font-size="11.5" font-weight="700" fill="#991b1b">③ 控制冒险 = 撞指令流</text>
+  <text x="32" y="365" font-size="9.4" fill="#64748b">bne 到 MEM 段末才改 PC，后面 3 条已经取进来</text>
+
+  <g font-size="9" fill="#94a3b8" text-anchor="middle">
+    <text x="147" y="382">1</text><text x="191" y="382">2</text><text x="235" y="382">3</text><text x="279" y="382">4</text><text x="323" y="382">5</text><text x="367" y="382">6</text>
+  </g>
+
+  <text x="120" y="404" font-size="9.4" fill="#334155" text-anchor="end">bne</text>
+  <rect x="126" y="390" width="42" height="20" rx="2" fill="#dbeafe"/><text x="147" y="404" font-size="9.5" fill="#1e40af" text-anchor="middle">IF</text>
+  <rect x="170" y="390" width="42" height="20" rx="2" fill="#e0e7ff"/><text x="191" y="404" font-size="9.5" fill="#3730a3" text-anchor="middle">ID</text>
+  <rect x="214" y="390" width="42" height="20" rx="2" fill="#fef3c7"/><text x="235" y="404" font-size="9.5" fill="#92400e" text-anchor="middle">EX</text>
+  <rect x="258" y="390" width="42" height="20" rx="2" fill="#fecaca" stroke="#f87171" stroke-width="1.2"/><text x="279" y="404" font-size="9.5" font-weight="700" fill="#991b1b" text-anchor="middle">MEM</text>
+  <rect x="302" y="390" width="42" height="20" rx="2" fill="#fce7f3"/><text x="323" y="404" font-size="9.5" fill="#9d174d" text-anchor="middle">WB</text>
+
+  <text x="120" y="432" font-size="9.4" fill="#334155" text-anchor="end">后续 3 条</text>
+  <rect x="214" y="418" width="42" height="20" rx="2" fill="#fee2e2" stroke="#f87171" stroke-width="1"/><text x="235" y="432" font-size="9.5" fill="#991b1b" text-anchor="middle">IF✗</text>
+  <rect x="258" y="418" width="42" height="20" rx="2" fill="#fee2e2" stroke="#f87171" stroke-width="1"/><text x="279" y="432" font-size="9.5" fill="#991b1b" text-anchor="middle">IF✗</text>
+  <rect x="302" y="418" width="42" height="20" rx="2" fill="#fee2e2" stroke="#f87171" stroke-width="1"/><text x="323" y="432" font-size="9.5" fill="#991b1b" text-anchor="middle">IF✗</text>
+
+  <text x="448" y="384" font-size="9.4" fill="#991b1b">对策：插 3 条 nop、分支预测</text>
+  <text x="448" y="400" font-size="9.4" fill="#991b1b">（猜错冲刷已取的 3 条）</text>
+  <text x="448" y="418" font-size="9.4" fill="#64748b">条件与改 PC 提前到 ID 段</text>
+  <text x="448" y="434" font-size="9.4" fill="#64748b">→ C 从 3 降到 1</text>
+  <text x="32" y="448" font-size="9.2" fill="#991b1b">红框＝改 PC 的时刻；它之前取的 3 条全部作废，延迟损失 <tspan font-weight="700">C = 3</tspan></text>
+
+  <!-- 底注 -->
+  <rect x="20" y="462" width="680" height="56" rx="6" fill="#eef2ff" stroke="#c7d2fe" stroke-width="1"/>
+  <text x="34" y="482" font-size="10.6" fill="#3730a3">记数字：相邻 R 型 <tspan font-weight="700">0 拍</tspan>｜load-use <tspan font-weight="700">1 拍</tspan>｜不转发硬等 <tspan font-weight="700">3 拍</tspan>（前半拍写后半拍读则 2 拍）｜控制冒险 <tspan font-weight="700">3 拍</tspan>。</text>
+  <text x="34" y="502" font-size="10.6" fill="#1e40af">按序流水线只考虑 RAW；WAR/WAW 只在乱序执行时出现。Cache 缺失与中断异常也会阻塞流水线，但不属于三类冒险。</text>
+</svg>

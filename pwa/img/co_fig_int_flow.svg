@@ -1,0 +1,65 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 470" width="720" height="470" font-family="-apple-system,BlinkMacSystemFont,'Segoe UI','Microsoft YaHei',sans-serif">
+  <rect x="0" y="0" width="720" height="470" fill="#ffffff"/>
+
+  <text x="360" y="26" font-size="15" font-weight="700" fill="#312e81" text-anchor="middle">中断响应与处理全流程：硬件三步 + 软件六步</text>
+  <text x="360" y="46" font-size="11" fill="#64748b" text-anchor="middle">中断隐指令不是指令系统中的真实指令，①②③ 全部由硬件自动完成</text>
+
+  <rect x="20" y="60" width="680" height="46" rx="6" fill="#f8fafc" stroke="#cbd5e1" stroke-width="1"/>
+  <text x="34" y="79" font-size="10.6" fill="#334155">主程序运行 →（外设数据就绪）发出中断请求 → 响应条件：① 有有效请求 ② 开中断 ③ 当前指令执行完（异常不受 ②③ 限制）</text>
+  <text x="34" y="97" font-size="10.2" fill="#64748b">可屏蔽中断走 INTR、不可屏蔽中断走 NMI（优先级最高，不受中断允许标志影响）；DMA 请求的总线优先级高于中断请求。</text>
+
+  <text x="20" y="126" font-size="10.5" font-weight="700" fill="#1e40af">① 硬件：中断隐指令（三步，最易错）</text>
+
+  <rect x="20" y="134" width="392" height="28" rx="4" fill="#dbeafe" stroke="#93c5fd" stroke-width="1"/>
+  <text x="32" y="153" font-size="10.6" fill="#1e40af">① 关中断 —— 屏蔽新中断，保证断点与现场完整</text>
+  <rect x="20" y="168" width="392" height="28" rx="4" fill="#dbeafe" stroke="#93c5fd" stroke-width="1"/>
+  <text x="32" y="187" font-size="10.6" fill="#1e40af">② 保存断点 —— PC（x86 还有 PSW）压栈或存专用寄存器</text>
+  <rect x="20" y="202" width="392" height="28" rx="4" fill="#dbeafe" stroke="#93c5fd" stroke-width="1"/>
+  <text x="32" y="221" font-size="10.6" fill="#1e40af">③ 引出服务程序 —— 取类型号 → 查向量表 → 入口地址送 PC</text>
+
+  <text x="20" y="250" font-size="10.5" font-weight="700" fill="#166534">② 软件：中断服务程序（六步，④ ~ ⑨）</text>
+
+  <rect x="20" y="258" width="392" height="28" rx="4" fill="#dcfce7" stroke="#86efac" stroke-width="1"/>
+  <text x="32" y="277" font-size="10.6" fill="#166534">④ 保存现场与屏蔽字 —— 通用寄存器由<tspan font-weight="700">软件</tspan>压栈</text>
+  <rect x="20" y="292" width="392" height="28" rx="4" fill="#dcfce7" stroke="#86efac" stroke-width="1"/>
+  <text x="32" y="311" font-size="10.6" fill="#166534">⑤ 开中断 —— 允许更高优先级中断，实现中断嵌套</text>
+  <rect x="20" y="326" width="392" height="28" rx="4" fill="#dcfce7" stroke="#86efac" stroke-width="1"/>
+  <text x="32" y="345" font-size="10.6" fill="#166534">⑥ 执行服务程序 —— 设备处理与数据传送</text>
+  <rect x="20" y="360" width="392" height="28" rx="4" fill="#dcfce7" stroke="#86efac" stroke-width="1"/>
+  <text x="32" y="379" font-size="10.6" fill="#166534">⑦ 关中断 —— 保证恢复现场过程不被再次打断</text>
+  <rect x="20" y="394" width="392" height="28" rx="4" fill="#dcfce7" stroke="#86efac" stroke-width="1"/>
+  <text x="32" y="413" font-size="10.6" fill="#166534">⑧ 恢复现场与屏蔽字 —— 与 ④ 对称，弹栈恢复</text>
+  <rect x="20" y="428" width="392" height="28" rx="4" fill="#dcfce7" stroke="#86efac" stroke-width="1"/>
+  <text x="32" y="447" font-size="10.6" fill="#166534">⑨ 开中断 + 中断返回 —— IRET 恢复断点，回到原程序</text>
+
+  <text x="430" y="126" font-size="10.5" font-weight="700" fill="#334155">三种「断点」指向不同（高频陷阱）</text>
+
+  <rect x="430" y="134" width="270" height="26" fill="#e0e7ff" stroke="#c7d2fe" stroke-width="1"/>
+  <text x="440" y="151" font-size="10" font-weight="700" fill="#3730a3">情形</text>
+  <text x="566" y="151" font-size="10" font-weight="700" fill="#3730a3">断点（PC 存什么）</text>
+
+  <rect x="430" y="160" width="270" height="30" fill="#ffffff" stroke="#e2e8f0" stroke-width="1"/>
+  <text x="440" y="179" font-size="9.8" fill="#334155">I/O 中断</text>
+  <text x="566" y="179" font-size="9.8" fill="#166534">下一条指令地址</text>
+
+  <rect x="430" y="190" width="270" height="40" fill="#fef2f2" stroke="#fca5a5" stroke-width="1"/>
+  <text x="440" y="207" font-size="9.8" fill="#991b1b">故障（缺页/除零）</text>
+  <text x="566" y="207" font-size="9.8" fill="#991b1b">当前指令地址，</text>
+  <text x="566" y="221" font-size="9.8" fill="#991b1b">处理后<tspan font-weight="700">重新执行</tspan></text>
+
+  <rect x="430" y="230" width="270" height="30" fill="#ffffff" stroke="#e2e8f0" stroke-width="1"/>
+  <text x="440" y="249" font-size="9.8" fill="#334155">陷阱（系统调用）</text>
+  <text x="566" y="249" font-size="9.8" fill="#166534">下一条指令地址</text>
+
+  <text x="430" y="284" font-size="10.5" font-weight="700" fill="#334155">中断向量怎么用</text>
+  <text x="430" y="304" font-size="9.8" fill="#334155">中断向量 = 服务程序<tspan font-weight="700">入口地址</tspan>；</text>
+  <text x="430" y="320" font-size="9.8" fill="#334155">全部向量集中存放 = <tspan font-weight="700">中断向量表</tspan>。</text>
+  <text x="430" y="336" font-size="9.8" fill="#334155">识别方法：硬件向量法（向量中断）／</text>
+  <text x="430" y="352" font-size="9.8" fill="#334155">软件查询法（非向量中断）。</text>
+
+  <rect x="430" y="366" width="270" height="90" rx="6" fill="#fef3c7" stroke="#fcd34d" stroke-width="1"/>
+  <text x="442" y="384" font-size="9.8" fill="#92400e">易错①：隐指令只有<tspan font-weight="700">关中断、保存断点、引出服务程序</tspan>三步。</text>
+  <text x="442" y="402" font-size="9.8" fill="#92400e">易错②：通用寄存器现场由<tspan font-weight="700">软件</tspan>保存，不是隐指令。</text>
+  <text x="442" y="420" font-size="9.8" fill="#92400e">易错③：CPU 只在<tspan font-weight="700">每条指令执行结束时</tspan>采样 I/O 请求。</text>
+  <text x="442" y="438" font-size="9.8" fill="#92400e">单重中断省去 ⑤ 与 ⑦，其余步骤不变。</text>
+</svg>

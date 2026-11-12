@@ -1,5 +1,5 @@
 /* 计组 P2（Cache 命中 / 写策略 / 编码数轴 / I/O 接口）4 张图 + 16 个黄框契约回归
- * 精确总量（配图 24 张 / 黄框 44 个）由本文件统管，前两批测试只守下限。
+ * 精确总量已移交 _test_co_fig_p3（28 图 / 48 框），本文件只守下限。
  */
 const fs = require('fs');
 const path = require('path');
@@ -35,8 +35,8 @@ const FIGS = [
 
 check('序列化仍是 CRLF + 无尾换行',
   [notesRaw.indexOf('\r\n') > 0, notesRaw.endsWith('\n')], [true, false]);
-check('计组配图 24 张（P2 精确总量）', (notesRaw.match(/fig-img/g) || []).length, 24);
-check('计组黄框 44 个（P2 精确总量）', (notesRaw.match(/class=\\"key-callout\\"/g) || []).length, 44);
+check('计组配图不少于 24 张（精确总量见 _test_co_fig_p3）', (notesRaw.match(/fig-img/g) || []).length >= 24, true);
+check('计组黄框不少于 44 个（精确总量见 _test_co_fig_p3）', (notesRaw.match(/class=\\"key-callout\\"/g) || []).length >= 44, true);
 check('加粗总量 >= 950', (notesRaw.match(/<b>/g) || []).length >= 950, true);
 
 for (const [name, sec, anchorText] of FIGS) {
@@ -106,7 +106,7 @@ for (const c of notes.chapters) {
   }
 }
 check('全库可批注行数锁死 1819（P2 未新增裸 p / li）', annoLines, 1819);
-check('SW 里计组图 24 条', (sw.match(/'img\/co_fig_[^']+'/g) || []).length, 24);
+check('SW 里计组图不少于 24 条（精确值见 _test_co_fig_p3）', (sw.match(/'img\/co_fig_[^']+'/g) || []).length >= 24, true);
 check('图片引用全部落在 pwa/img 内', [...notesRaw.matchAll(/src=\\"(img\/[^\\"]+)\\"/g)]
   .every(m => fs.existsSync(path.join(ROOT, 'pwa') + '/' + m[1])), true);
 
@@ -141,8 +141,8 @@ if (!JSDOM || !IDBFactory) {
     const d = dom.window.document;
     check('真实渲染 .anno-line 总数 = 1971（已存批注不错位）',
       d.querySelectorAll('.anno-line').length, 1971);
-    check('真实渲染配图 24 张', d.querySelectorAll('img.fig-img').length, 24);
-    check('真实渲染黄框 44 个', d.querySelectorAll('.key-callout').length, 44);
+    check('真实渲染配图不少于 24 张', d.querySelectorAll('img.fig-img').length >= 24, true);
+    check('真实渲染黄框不少于 44 个', d.querySelectorAll('.key-callout').length >= 44, true);
     check('图块被误标行号 = 0',
       [...d.querySelectorAll('.anno-line')]
         .filter(e => e.hasAttribute('data-fig') || e.closest('[data-fig]')).length, 0);

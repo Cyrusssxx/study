@@ -1,0 +1,84 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 452" width="720" height="452" font-family="-apple-system,BlinkMacSystemFont,'Segoe UI','Microsoft YaHei',sans-serif">
+  <rect x="0" y="0" width="720" height="452" fill="#ffffff"/>
+
+  <text x="360" y="26" font-size="15" font-weight="700" fill="#312e81" text-anchor="middle">中断屏蔽字与多重中断嵌套（2017 真题风格）</text>
+  <text x="360" y="46" font-size="10.8" fill="#64748b" text-anchor="middle">硬件响应优先级 A&gt;B&gt;C&gt;D，要求处理优先级改为 A&gt;D&gt;C&gt;B；屏蔽位置 1＝屏蔽，置 0＝允许</text>
+
+  <text x="20" y="70" font-size="10.5" font-weight="700" fill="#334155">① 四个中断源的屏蔽字（位序 A B C D）</text>
+
+  <g font-size="9.5" fill="#64748b" text-anchor="middle">
+    <text x="210" y="88">A</text><text x="240" y="88">B</text><text x="270" y="88">C</text><text x="300" y="88">D</text>
+  </g>
+  <text x="190" y="88" font-size="9.5" fill="#64748b" text-anchor="end">源 \ 位</text>
+
+  <g font-size="10.5" font-weight="700" fill="#334155" text-anchor="end">
+    <text x="190" y="115">A</text><text x="190" y="147">B</text><text x="190" y="179">C</text><text x="190" y="211">D</text>
+  </g>
+
+  <rect x="196" y="96" width="28" height="30" fill="#fee2e2" stroke="#fca5a5" stroke-width="1"/><text x="210" y="116" font-size="10.5" font-weight="700" fill="#991b1b" text-anchor="middle">1</text>
+  <rect x="226" y="96" width="28" height="30" fill="#fee2e2" stroke="#fca5a5" stroke-width="1"/><text x="240" y="116" font-size="10.5" font-weight="700" fill="#991b1b" text-anchor="middle">1</text>
+  <rect x="256" y="96" width="28" height="30" fill="#fee2e2" stroke="#fca5a5" stroke-width="1"/><text x="270" y="116" font-size="10.5" font-weight="700" fill="#991b1b" text-anchor="middle">1</text>
+  <rect x="286" y="96" width="28" height="30" fill="#fee2e2" stroke="#fca5a5" stroke-width="1"/><text x="300" y="116" font-size="10.5" font-weight="700" fill="#991b1b" text-anchor="middle">1</text>
+
+  <rect x="196" y="128" width="28" height="30" fill="#dcfce7" stroke="#86efac" stroke-width="1"/><text x="210" y="148" font-size="10.5" font-weight="700" fill="#166534" text-anchor="middle">0</text>
+  <rect x="226" y="128" width="28" height="30" fill="#fee2e2" stroke="#fca5a5" stroke-width="1"/><text x="240" y="148" font-size="10.5" font-weight="700" fill="#991b1b" text-anchor="middle">1</text>
+  <rect x="256" y="128" width="28" height="30" fill="#dcfce7" stroke="#86efac" stroke-width="1"/><text x="270" y="148" font-size="10.5" font-weight="700" fill="#166534" text-anchor="middle">0</text>
+  <rect x="286" y="128" width="28" height="30" fill="#dcfce7" stroke="#86efac" stroke-width="1"/><text x="300" y="148" font-size="10.5" font-weight="700" fill="#166534" text-anchor="middle">0</text>
+
+  <rect x="196" y="160" width="28" height="30" fill="#dcfce7" stroke="#86efac" stroke-width="1"/><text x="210" y="180" font-size="10.5" font-weight="700" fill="#166534" text-anchor="middle">0</text>
+  <rect x="226" y="160" width="28" height="30" fill="#fee2e2" stroke="#fca5a5" stroke-width="1"/><text x="240" y="180" font-size="10.5" font-weight="700" fill="#991b1b" text-anchor="middle">1</text>
+  <rect x="256" y="160" width="28" height="30" fill="#fee2e2" stroke="#fca5a5" stroke-width="1"/><text x="270" y="180" font-size="10.5" font-weight="700" fill="#991b1b" text-anchor="middle">1</text>
+  <rect x="286" y="160" width="28" height="30" fill="#dcfce7" stroke="#86efac" stroke-width="1"/><text x="300" y="180" font-size="10.5" font-weight="700" fill="#166534" text-anchor="middle">0</text>
+
+  <rect x="196" y="192" width="28" height="30" fill="#dcfce7" stroke="#86efac" stroke-width="1"/><text x="210" y="212" font-size="10.5" font-weight="700" fill="#166534" text-anchor="middle">0</text>
+  <rect x="226" y="192" width="28" height="30" fill="#fee2e2" stroke="#fca5a5" stroke-width="1"/><text x="240" y="212" font-size="10.5" font-weight="700" fill="#991b1b" text-anchor="middle">1</text>
+  <rect x="256" y="192" width="28" height="30" fill="#fee2e2" stroke="#fca5a5" stroke-width="1"/><text x="270" y="212" font-size="10.5" font-weight="700" fill="#991b1b" text-anchor="middle">1</text>
+  <rect x="286" y="192" width="28" height="30" fill="#fee2e2" stroke="#fca5a5" stroke-width="1"/><text x="300" y="212" font-size="10.5" font-weight="700" fill="#991b1b" text-anchor="middle">1</text>
+
+  <text x="20" y="242" font-size="9.6" fill="#64748b">优先级最高者屏蔽<tspan font-weight="700">所有</tspan>源（含自身），最低者只屏蔽<tspan font-weight="700">自身</tspan>；</text>
+  <text x="20" y="258" font-size="9.6" fill="#64748b">自身位恒为 1 —— 同一个服务程序不重入。</text>
+
+  <text x="360" y="70" font-size="10.5" font-weight="700" fill="#334155">② A、C、D 同时请求时的响应次序</text>
+
+  <g font-size="10" font-weight="700" fill="#334155" text-anchor="end">
+    <text x="368" y="112">A</text><text x="368" y="152">B</text><text x="368" y="192">C</text><text x="368" y="232">D</text>
+  </g>
+
+  <line x1="376" y1="96" x2="376" y2="252" stroke="#cbd5e1" stroke-width="1"/>
+
+  <rect x="384" y="100" width="80" height="20" rx="3" fill="#dbeafe" stroke="#93c5fd" stroke-width="1"/>
+  <text x="424" y="114" font-size="9.5" fill="#1e40af" text-anchor="middle">1111 独占</text>
+
+  <rect x="536" y="140" width="64" height="20" rx="3" fill="#fffbeb" stroke="#f59e0b" stroke-width="1" stroke-dasharray="3 2"/>
+  <text x="568" y="154" font-size="9.2" fill="#b45309" text-anchor="middle">请求到达</text>
+  <path d="M602 150 L612 150" stroke="#f59e0b" stroke-width="1" stroke-dasharray="2 2" fill="none"/>
+  <rect x="616" y="140" width="72" height="20" rx="3" fill="#fef3c7" stroke="#fcd34d" stroke-width="1"/>
+  <text x="652" y="154" font-size="9.5" fill="#92400e" text-anchor="middle">0100 服务</text>
+
+  <rect x="472" y="180" width="64" height="20" rx="3" fill="#dcfce7" stroke="#86efac" stroke-width="1"/>
+  <text x="504" y="194" font-size="9.5" fill="#166534" text-anchor="middle">0110</text>
+  <rect x="536" y="180" width="80" height="20" rx="3" fill="#dcfce7" stroke="#86efac" stroke-width="1"/>
+  <text x="576" y="194" font-size="9.5" fill="#166534" text-anchor="middle">C 继续</text>
+
+  <rect x="504" y="220" width="32" height="20" rx="3" fill="#fce7f3" stroke="#f9a8d4" stroke-width="1"/>
+  <text x="520" y="234" font-size="9.5" fill="#9d174d" text-anchor="middle">0111</text>
+
+  <path d="M520 218 L520 202" stroke="#9d174d" stroke-width="1.2" fill="none"/>
+  <path d="M520 202 L516 208 L524 208 Z" fill="#9d174d"/>
+
+  <text x="384" y="90" font-size="9.3" fill="#64748b">A、C、D 同时到达 → 按响应优先级先 A</text>
+  <text x="480" y="174" font-size="9.3" fill="#9d174d">D 打断 C（C 的 0110 允许 D）</text>
+  <text x="384" y="252" font-size="9.3" fill="#b45309">B 晚于 C 到达，被 C 的屏蔽字挡住 → C 结束后才响应</text>
+
+  <line x1="384" y1="262" x2="700" y2="262" stroke="#cbd5e1" stroke-width="1"/>
+  <path d="M700 262 L694 258 L694 266 Z" fill="#cbd5e1"/>
+  <text x="690" y="276" font-size="9.3" fill="#94a3b8" text-anchor="end">时间 →</text>
+
+  <rect x="20" y="292" width="680" height="140" rx="6" fill="#fef3c7" stroke="#fcd34d" stroke-width="1"/>
+  <text x="34" y="312" font-size="10.6" fill="#92400e">算屏蔽字的套路：<tspan font-weight="700">处理优先级比我高的全部置 1</tspan>（含自己），比我低的置 0。</text>
+  <text x="34" y="332" font-size="10.6" fill="#92400e">A 最高 → 1111；D 仅次于 A、比 B/C 高 → 0111；C 次于 A/D → 0110；B 最低 → 0100。</text>
+  <text x="34" y="354" font-size="10.6" fill="#1e40af">两个优先级别混：<tspan font-weight="700">响应优先级</tspan>由硬件排队电路固定，改不了；<tspan font-weight="700">处理优先级</tspan>靠屏蔽字动态调整。</text>
+  <text x="34" y="374" font-size="10.6" fill="#1e40af">只有<tspan font-weight="700">未被屏蔽</tspan>的请求才进判优电路；屏蔽字由软件在进入服务程序时加载，只在服务程序执行期间生效。</text>
+  <text x="34" y="396" font-size="10.6" fill="#991b1b">单重中断：<tspan font-weight="700">省去开中断与关中断两步</tspan>（⑤⑦），全程不响应新请求，因此不存在嵌套。</text>
+  <text x="34" y="418" font-size="10.6" fill="#991b1b">屏蔽字位序务必按题意（常见 A 在最高位）；位序写反是这类题最常见的丢分点。</text>
+</svg>
