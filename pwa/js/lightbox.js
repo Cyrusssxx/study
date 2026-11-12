@@ -6,7 +6,7 @@
  *
  * 交互：
  *   鼠标滚轮      以光标位置为中心缩放
- *   工具栏        ➖ 缩小 / 百分比 / ➕ 放大 / 1:1 重置 / ✕ 关闭
+ *   底部胶囊条    ➖ 缩小 / 百分比 / ➕ 放大 / 1:1 重置 / ✕ 关闭（浮在底部，不占版面）
  *   拖拽          放大后可拖动查看
  *   双击图片      重置为 1:1
  *   键盘          Esc 关闭 / + - 缩放 / 0 重置
@@ -24,15 +24,14 @@
         box.id = 'figLightbox';
         box.className = 'fig-lightbox';
         box.innerHTML =
+            '<div class="fig-lb-stage"><img alt="放大预览"></div>' +
             '<div class="fig-lb-bar">' +
             '    <button class="fig-lb-btn" data-act="out" title="缩小">➖</button>' +
             '    <span class="fig-lb-zoom" id="figLbZoom">100%</span>' +
             '    <button class="fig-lb-btn" data-act="in" title="放大">➕</button>' +
             '    <button class="fig-lb-btn" data-act="reset" title="重置为 1:1">1:1</button>' +
             '    <button class="fig-lb-btn fig-lb-close" data-act="close" title="关闭（Esc）">✕</button>' +
-            '</div>' +
-            '<div class="fig-lb-stage"><img alt="放大预览"></div>' +
-            '<div class="fig-lb-tip">滚轮缩放 · 拖动移动 · 双击复位 · Esc 关闭</div>';
+            '</div>';
 
         document.body.appendChild(box);
         imgEl = box.querySelector('img');
