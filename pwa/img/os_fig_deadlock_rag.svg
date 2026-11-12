@@ -1,0 +1,70 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 680 462" width="680" height="462" font-family="-apple-system,BlinkMacSystemFont,'Segoe UI','Microsoft YaHei',sans-serif">
+  <defs>
+    <marker id="rgAlloc" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#1d4ed8"/>
+    </marker>
+    <marker id="rgReq" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#b91c1c"/>
+    </marker>
+  </defs>
+  <rect x="0" y="0" width="680" height="462" fill="#ffffff"/>
+  <text x="20" y="26" font-size="16" font-weight="700" fill="#312e81">资源分配图怎么读 · 蓝实线＝分配边、红虚线＝请求边</text>
+  <text x="20" y="46" font-size="10.5" fill="#64748b">圆圈＝进程，方框＝一类资源（框内 ● 的个数＝实例数）。判死锁先看有没有「闭合的环」，再数实例。</text>
+
+  <!-- 左：单实例死锁 -->
+  <rect x="24" y="62" width="310" height="244" rx="6" fill="#fef2f2" stroke="#fecaca" stroke-width="1"/>
+  <text x="40" y="84" font-size="12" font-weight="700" fill="#b91c1c">单实例资源类 · 有环 ⇒ 必死锁</text>
+  <text x="40" y="102" font-size="9.5" fill="#64748b">P1 持扫描仪求打印机，P2 持打印机求扫描仪</text>
+
+  <circle cx="110" cy="136" r="26" fill="#ffffff" stroke="#b91c1c" stroke-width="1.6"/>
+  <text x="110" y="141" font-size="12" font-weight="700" fill="#b91c1c" text-anchor="middle">P1</text>
+  <circle cx="250" cy="232" r="26" fill="#ffffff" stroke="#b91c1c" stroke-width="1.6"/>
+  <text x="250" y="237" font-size="12" font-weight="700" fill="#b91c1c" text-anchor="middle">P2</text>
+
+  <rect x="212" y="116" width="76" height="40" rx="3" fill="#ffffff" stroke="#94a3b8" stroke-width="1.2"/>
+  <text x="236" y="141" font-size="10" font-weight="700" fill="#334155" text-anchor="middle">打印机</text>
+  <circle cx="272" cy="136" r="4" fill="#334155"/>
+
+  <rect x="72" y="212" width="76" height="40" rx="3" fill="#ffffff" stroke="#94a3b8" stroke-width="1.2"/>
+  <text x="96" y="237" font-size="10" font-weight="700" fill="#334155" text-anchor="middle">扫描仪</text>
+  <circle cx="132" cy="232" r="4" fill="#334155"/>
+
+  <path d="M 110 210 L 110 166" fill="none" stroke="#1d4ed8" stroke-width="1.5" marker-end="url(#rgAlloc)"/>
+  <path d="M 136 136 L 208 136" fill="none" stroke="#b91c1c" stroke-width="1.5" stroke-dasharray="5 3" marker-end="url(#rgReq)"/>
+  <path d="M 250 158 L 250 204" fill="none" stroke="#1d4ed8" stroke-width="1.5" marker-end="url(#rgAlloc)"/>
+  <path d="M 222 232 L 152 232" fill="none" stroke="#b91c1c" stroke-width="1.5" stroke-dasharray="5 3" marker-end="url(#rgReq)"/>
+
+  <text x="40" y="278" font-size="10.5" font-weight="700" fill="#b91c1c">环：P1 → 打印机 → P2 → 扫描仪 → P1</text>
+  <text x="40" y="292" font-size="9.5" fill="#64748b">四类资源各只有 1 个实例，环闭死就锁死，无外力无法推进。</text>
+
+  <!-- 右：多实例有等待但不死锁 -->
+  <rect x="346" y="62" width="310" height="244" rx="6" fill="#f0fdf4" stroke="#bbf7d0" stroke-width="1"/>
+  <text x="362" y="84" font-size="12" font-weight="700" fill="#166534">多实例资源类 · 等待未必是死锁</text>
+  <text x="362" y="102" font-size="9.5" fill="#64748b">输出设备 2 个实例，P0、P1 各持 1 台，P2 申请</text>
+
+  <rect x="445" y="116" width="112" height="40" rx="3" fill="#ffffff" stroke="#94a3b8" stroke-width="1.2"/>
+  <text x="472" y="141" font-size="10" font-weight="700" fill="#334155" text-anchor="middle">输出设备</text>
+  <circle cx="516" cy="136" r="4" fill="#334155"/>
+  <circle cx="532" cy="136" r="4" fill="#334155"/>
+
+  <circle cx="415" cy="212" r="24" fill="#ffffff" stroke="#15803d" stroke-width="1.6"/>
+  <text x="415" y="217" font-size="11.5" font-weight="700" fill="#15803d" text-anchor="middle">P0</text>
+  <circle cx="585" cy="212" r="24" fill="#ffffff" stroke="#15803d" stroke-width="1.6"/>
+  <text x="585" y="217" font-size="11.5" font-weight="700" fill="#15803d" text-anchor="middle">P1</text>
+  <circle cx="500" cy="240" r="20" fill="#ffffff" stroke="#15803d" stroke-width="1.6"/>
+  <text x="500" y="245" font-size="11.5" font-weight="700" fill="#15803d" text-anchor="middle">P2</text>
+
+  <path d="M 470 158 L 424 188" fill="none" stroke="#1d4ed8" stroke-width="1.5" marker-end="url(#rgAlloc)"/>
+  <path d="M 532 158 L 576 188" fill="none" stroke="#1d4ed8" stroke-width="1.5" marker-end="url(#rgAlloc)"/>
+  <path d="M 500 220 L 500 160" fill="none" stroke="#b91c1c" stroke-width="1.5" stroke-dasharray="5 3" marker-end="url(#rgReq)"/>
+
+  <text x="362" y="282" font-size="10.5" font-weight="700" fill="#15803d">P2 的请求边没有闭合成环 ⇒ 只是等待，不是死锁</text>
+  <text x="362" y="296" font-size="9.5" fill="#64748b">P0 或 P1 用完释放一台，P2 立刻可推进。</text>
+
+  <rect x="24" y="320" width="632" height="130" rx="5" fill="#fef9c3" stroke="#fcd34d" stroke-width="1"/>
+  <text x="40" y="342" font-size="11" font-weight="700" fill="#854d0e">判据速查</text>
+  <text x="40" y="366" font-size="10.5" fill="#854d0e">① 死锁一定有环，有环不一定死锁 —— 环是<tspan font-weight="700">必要</tspan>条件，不是充分条件。</text>
+  <text x="40" y="388" font-size="10.5" fill="#854d0e">② 单实例资源类：有环 ⇔ 死锁，可直接看图判定（四类资源各 1 个时，环＝锁死）。</text>
+  <text x="40" y="410" font-size="10.5" fill="#854d0e">③ 多实例资源类：有环还得「化简」—— 环上资源能被不相关进程释放就能打破（死锁定理）。</text>
+  <text x="40" y="432" font-size="10.5" fill="#854d0e">④ 四条必要条件同时成立才<tspan font-weight="700">可能</tspan>死锁：互斥 · 不可剥夺 · 请求并保持 · 循环等待。</text>
+</svg>

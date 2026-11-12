@@ -1,0 +1,172 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 680 496" width="680" height="496" font-family="-apple-system,BlinkMacSystemFont,'Segoe UI','Microsoft YaHei',sans-serif">
+  <defs>
+    <marker id="shArrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#475569"/>
+    </marker>
+  </defs>
+  <rect x="0" y="0" width="680" height="496" fill="#ffffff"/>
+  <text x="20" y="26" font-size="16" font-weight="700" fill="#312e81">三种移位的位流对照 · 补 0 还是补符号位，只有「右移」才分道</text>
+  <text x="20" y="46" font-size="10.5" fill="#64748b">8 位字长示意：蓝框＝操作前，绿框＝操作后，红框＝被移出 / 特殊位；左移 1 位＝×2、右移 1 位＝÷2</text>
+
+  <rect x="24" y="62" width="632" height="260" rx="6" fill="#eff6ff" stroke="#bfdbfe" stroke-width="1"/>
+
+  <!-- 行1 算术右移 -->
+  <text x="40" y="108" font-size="11.5" font-weight="700" fill="#1e40af">算术右移</text>
+  <text x="40" y="124" font-size="9.5" fill="#64748b">高位补符号位</text>
+  <rect x="130" y="88" width="26" height="30" rx="3" fill="#dbeafe" stroke="#60a5fa" stroke-width="1"/>
+  <text x="143" y="108" font-size="12" font-weight="700" fill="#1e3a8a" text-anchor="middle">1</text>
+  <rect x="158" y="88" width="26" height="30" rx="3" fill="#dbeafe" stroke="#60a5fa" stroke-width="1"/>
+  <text x="171" y="108" font-size="12" font-weight="700" fill="#1e3a8a" text-anchor="middle">1</text>
+  <rect x="186" y="88" width="26" height="30" rx="3" fill="#dbeafe" stroke="#60a5fa" stroke-width="1"/>
+  <text x="199" y="108" font-size="12" font-weight="700" fill="#1e3a8a" text-anchor="middle">1</text>
+  <rect x="214" y="88" width="26" height="30" rx="3" fill="#dbeafe" stroke="#60a5fa" stroke-width="1"/>
+  <text x="227" y="108" font-size="12" font-weight="700" fill="#1e3a8a" text-anchor="middle">1</text>
+  <rect x="242" y="88" width="26" height="30" rx="3" fill="#dbeafe" stroke="#60a5fa" stroke-width="1"/>
+  <text x="255" y="108" font-size="12" font-weight="700" fill="#1e3a8a" text-anchor="middle">1</text>
+  <rect x="270" y="88" width="26" height="30" rx="3" fill="#dbeafe" stroke="#60a5fa" stroke-width="1"/>
+  <text x="283" y="108" font-size="12" font-weight="700" fill="#1e3a8a" text-anchor="middle">0</text>
+  <rect x="298" y="88" width="26" height="30" rx="3" fill="#dbeafe" stroke="#60a5fa" stroke-width="1"/>
+  <text x="311" y="108" font-size="12" font-weight="700" fill="#1e3a8a" text-anchor="middle">0</text>
+  <rect x="326" y="88" width="26" height="30" rx="3" fill="#fee2e2" stroke="#fca5a5" stroke-width="1"/>
+  <text x="339" y="108" font-size="12" font-weight="700" fill="#b91c1c" text-anchor="middle">1</text>
+  <path d="M 356 103 L 386 103" fill="none" stroke="#475569" stroke-width="1.4" marker-end="url(#shArrow)"/>
+  <rect x="392" y="88" width="26" height="30" rx="3" fill="#dcfce7" stroke="#86efac" stroke-width="1"/>
+  <text x="405" y="108" font-size="12" font-weight="700" fill="#166534" text-anchor="middle">1</text>
+  <rect x="420" y="88" width="26" height="30" rx="3" fill="#dcfce7" stroke="#86efac" stroke-width="1"/>
+  <text x="433" y="108" font-size="12" font-weight="700" fill="#166534" text-anchor="middle">1</text>
+  <rect x="448" y="88" width="26" height="30" rx="3" fill="#dcfce7" stroke="#86efac" stroke-width="1"/>
+  <text x="461" y="108" font-size="12" font-weight="700" fill="#166534" text-anchor="middle">1</text>
+  <rect x="476" y="88" width="26" height="30" rx="3" fill="#dcfce7" stroke="#86efac" stroke-width="1"/>
+  <text x="489" y="108" font-size="12" font-weight="700" fill="#166534" text-anchor="middle">1</text>
+  <rect x="504" y="88" width="26" height="30" rx="3" fill="#dcfce7" stroke="#86efac" stroke-width="1"/>
+  <text x="517" y="108" font-size="12" font-weight="700" fill="#166534" text-anchor="middle">1</text>
+  <rect x="532" y="88" width="26" height="30" rx="3" fill="#dcfce7" stroke="#86efac" stroke-width="1"/>
+  <text x="545" y="108" font-size="12" font-weight="700" fill="#166534" text-anchor="middle">1</text>
+  <rect x="560" y="88" width="26" height="30" rx="3" fill="#dcfce7" stroke="#86efac" stroke-width="1"/>
+  <text x="573" y="108" font-size="12" font-weight="700" fill="#166534" text-anchor="middle">0</text>
+  <rect x="588" y="88" width="26" height="30" rx="3" fill="#dcfce7" stroke="#86efac" stroke-width="1"/>
+  <text x="601" y="108" font-size="12" font-weight="700" fill="#166534" text-anchor="middle">0</text>
+  <text x="392" y="134" font-size="9.5" fill="#166534">−7 → −4：高位补 1 保号，向 −∞ 取整</text>
+
+  <!-- 行2 算术左移·溢出 -->
+  <text x="40" y="166" font-size="11.5" font-weight="700" fill="#1e40af">算术左移</text>
+  <text x="40" y="182" font-size="9.5" fill="#b91c1c">低位补 0 · 本例溢出</text>
+  <rect x="130" y="146" width="26" height="30" rx="3" fill="#fee2e2" stroke="#fca5a5" stroke-width="1"/>
+  <text x="143" y="166" font-size="12" font-weight="700" fill="#b91c1c" text-anchor="middle">0</text>
+  <rect x="158" y="146" width="26" height="30" rx="3" fill="#dbeafe" stroke="#60a5fa" stroke-width="1"/>
+  <text x="171" y="166" font-size="12" font-weight="700" fill="#1e3a8a" text-anchor="middle">1</text>
+  <rect x="186" y="146" width="26" height="30" rx="3" fill="#dbeafe" stroke="#60a5fa" stroke-width="1"/>
+  <text x="199" y="166" font-size="12" font-weight="700" fill="#1e3a8a" text-anchor="middle">0</text>
+  <rect x="214" y="146" width="26" height="30" rx="3" fill="#dbeafe" stroke="#60a5fa" stroke-width="1"/>
+  <text x="227" y="166" font-size="12" font-weight="700" fill="#1e3a8a" text-anchor="middle">0</text>
+  <rect x="242" y="146" width="26" height="30" rx="3" fill="#dbeafe" stroke="#60a5fa" stroke-width="1"/>
+  <text x="255" y="166" font-size="12" font-weight="700" fill="#1e3a8a" text-anchor="middle">0</text>
+  <rect x="270" y="146" width="26" height="30" rx="3" fill="#dbeafe" stroke="#60a5fa" stroke-width="1"/>
+  <text x="283" y="166" font-size="12" font-weight="700" fill="#1e3a8a" text-anchor="middle">0</text>
+  <rect x="298" y="146" width="26" height="30" rx="3" fill="#dbeafe" stroke="#60a5fa" stroke-width="1"/>
+  <text x="311" y="166" font-size="12" font-weight="700" fill="#1e3a8a" text-anchor="middle">0</text>
+  <rect x="326" y="146" width="26" height="30" rx="3" fill="#dbeafe" stroke="#60a5fa" stroke-width="1"/>
+  <text x="339" y="166" font-size="12" font-weight="700" fill="#1e3a8a" text-anchor="middle">0</text>
+  <path d="M 356 161 L 386 161" fill="none" stroke="#475569" stroke-width="1.4" marker-end="url(#shArrow)"/>
+  <rect x="392" y="146" width="26" height="30" rx="3" fill="#dcfce7" stroke="#86efac" stroke-width="1"/>
+  <text x="405" y="166" font-size="12" font-weight="700" fill="#166534" text-anchor="middle">1</text>
+  <rect x="420" y="146" width="26" height="30" rx="3" fill="#dcfce7" stroke="#86efac" stroke-width="1"/>
+  <text x="433" y="166" font-size="12" font-weight="700" fill="#166534" text-anchor="middle">0</text>
+  <rect x="448" y="146" width="26" height="30" rx="3" fill="#dcfce7" stroke="#86efac" stroke-width="1"/>
+  <text x="461" y="166" font-size="12" font-weight="700" fill="#166534" text-anchor="middle">0</text>
+  <rect x="476" y="146" width="26" height="30" rx="3" fill="#dcfce7" stroke="#86efac" stroke-width="1"/>
+  <text x="489" y="166" font-size="12" font-weight="700" fill="#166534" text-anchor="middle">0</text>
+  <rect x="504" y="146" width="26" height="30" rx="3" fill="#dcfce7" stroke="#86efac" stroke-width="1"/>
+  <text x="517" y="166" font-size="12" font-weight="700" fill="#166534" text-anchor="middle">0</text>
+  <rect x="532" y="146" width="26" height="30" rx="3" fill="#dcfce7" stroke="#86efac" stroke-width="1"/>
+  <text x="545" y="166" font-size="12" font-weight="700" fill="#166534" text-anchor="middle">0</text>
+  <rect x="560" y="146" width="26" height="30" rx="3" fill="#dcfce7" stroke="#86efac" stroke-width="1"/>
+  <text x="573" y="166" font-size="12" font-weight="700" fill="#166534" text-anchor="middle">0</text>
+  <rect x="588" y="146" width="26" height="30" rx="3" fill="#dcfce7" stroke="#86efac" stroke-width="1"/>
+  <text x="601" y="166" font-size="12" font-weight="700" fill="#166534" text-anchor="middle">0</text>
+  <text x="392" y="192" font-size="9.5" fill="#b91c1c">移出 0 ≠ 新符号位 1 ⇒ 溢出（得 −128）</text>
+
+  <!-- 行3 逻辑右移 -->
+  <text x="40" y="224" font-size="11.5" font-weight="700" fill="#1e40af">逻辑右移</text>
+  <text x="40" y="240" font-size="9.5" fill="#64748b">高位一律补 0</text>
+  <rect x="130" y="204" width="26" height="30" rx="3" fill="#dbeafe" stroke="#60a5fa" stroke-width="1"/>
+  <text x="143" y="224" font-size="12" font-weight="700" fill="#1e3a8a" text-anchor="middle">1</text>
+  <rect x="158" y="204" width="26" height="30" rx="3" fill="#dbeafe" stroke="#60a5fa" stroke-width="1"/>
+  <text x="171" y="224" font-size="12" font-weight="700" fill="#1e3a8a" text-anchor="middle">1</text>
+  <rect x="186" y="204" width="26" height="30" rx="3" fill="#dbeafe" stroke="#60a5fa" stroke-width="1"/>
+  <text x="199" y="224" font-size="12" font-weight="700" fill="#1e3a8a" text-anchor="middle">1</text>
+  <rect x="214" y="204" width="26" height="30" rx="3" fill="#dbeafe" stroke="#60a5fa" stroke-width="1"/>
+  <text x="227" y="224" font-size="12" font-weight="700" fill="#1e3a8a" text-anchor="middle">1</text>
+  <rect x="242" y="204" width="26" height="30" rx="3" fill="#dbeafe" stroke="#60a5fa" stroke-width="1"/>
+  <text x="255" y="224" font-size="12" font-weight="700" fill="#1e3a8a" text-anchor="middle">1</text>
+  <rect x="270" y="204" width="26" height="30" rx="3" fill="#dbeafe" stroke="#60a5fa" stroke-width="1"/>
+  <text x="283" y="224" font-size="12" font-weight="700" fill="#1e3a8a" text-anchor="middle">0</text>
+  <rect x="298" y="204" width="26" height="30" rx="3" fill="#dbeafe" stroke="#60a5fa" stroke-width="1"/>
+  <text x="311" y="224" font-size="12" font-weight="700" fill="#1e3a8a" text-anchor="middle">0</text>
+  <rect x="326" y="204" width="26" height="30" rx="3" fill="#fee2e2" stroke="#fca5a5" stroke-width="1"/>
+  <text x="339" y="224" font-size="12" font-weight="700" fill="#b91c1c" text-anchor="middle">1</text>
+  <path d="M 356 219 L 386 219" fill="none" stroke="#475569" stroke-width="1.4" marker-end="url(#shArrow)"/>
+  <rect x="392" y="204" width="26" height="30" rx="3" fill="#dcfce7" stroke="#86efac" stroke-width="1"/>
+  <text x="405" y="224" font-size="12" font-weight="700" fill="#166534" text-anchor="middle">0</text>
+  <rect x="420" y="204" width="26" height="30" rx="3" fill="#dcfce7" stroke="#86efac" stroke-width="1"/>
+  <text x="433" y="224" font-size="12" font-weight="700" fill="#166534" text-anchor="middle">1</text>
+  <rect x="448" y="204" width="26" height="30" rx="3" fill="#dcfce7" stroke="#86efac" stroke-width="1"/>
+  <text x="461" y="224" font-size="12" font-weight="700" fill="#166534" text-anchor="middle">1</text>
+  <rect x="476" y="204" width="26" height="30" rx="3" fill="#dcfce7" stroke="#86efac" stroke-width="1"/>
+  <text x="489" y="224" font-size="12" font-weight="700" fill="#166534" text-anchor="middle">1</text>
+  <rect x="504" y="204" width="26" height="30" rx="3" fill="#dcfce7" stroke="#86efac" stroke-width="1"/>
+  <text x="517" y="224" font-size="12" font-weight="700" fill="#166534" text-anchor="middle">1</text>
+  <rect x="532" y="204" width="26" height="30" rx="3" fill="#dcfce7" stroke="#86efac" stroke-width="1"/>
+  <text x="545" y="224" font-size="12" font-weight="700" fill="#166534" text-anchor="middle">1</text>
+  <rect x="560" y="204" width="26" height="30" rx="3" fill="#dcfce7" stroke="#86efac" stroke-width="1"/>
+  <text x="573" y="224" font-size="12" font-weight="700" fill="#166534" text-anchor="middle">0</text>
+  <rect x="588" y="204" width="26" height="30" rx="3" fill="#dcfce7" stroke="#86efac" stroke-width="1"/>
+  <text x="601" y="224" font-size="12" font-weight="700" fill="#166534" text-anchor="middle">0</text>
+  <text x="392" y="250" font-size="9.5" fill="#166534">无符号 249 → 124；与上行只差「右移」</text>
+
+  <!-- 行4 循环左移 -->
+  <text x="40" y="282" font-size="11.5" font-weight="700" fill="#1e40af">循环左移</text>
+  <text x="40" y="298" font-size="9.5" fill="#64748b">移出位回到另一端</text>
+  <rect x="130" y="262" width="26" height="30" rx="3" fill="#dbeafe" stroke="#60a5fa" stroke-width="1"/>
+  <text x="143" y="282" font-size="12" font-weight="700" fill="#1e3a8a" text-anchor="middle">1</text>
+  <rect x="158" y="262" width="26" height="30" rx="3" fill="#dbeafe" stroke="#60a5fa" stroke-width="1"/>
+  <text x="171" y="282" font-size="12" font-weight="700" fill="#1e3a8a" text-anchor="middle">0</text>
+  <rect x="186" y="262" width="26" height="30" rx="3" fill="#dbeafe" stroke="#60a5fa" stroke-width="1"/>
+  <text x="199" y="282" font-size="12" font-weight="700" fill="#1e3a8a" text-anchor="middle">1</text>
+  <rect x="214" y="262" width="26" height="30" rx="3" fill="#dbeafe" stroke="#60a5fa" stroke-width="1"/>
+  <text x="227" y="282" font-size="12" font-weight="700" fill="#1e3a8a" text-anchor="middle">1</text>
+  <rect x="242" y="262" width="26" height="30" rx="3" fill="#dbeafe" stroke="#60a5fa" stroke-width="1"/>
+  <text x="255" y="282" font-size="12" font-weight="700" fill="#1e3a8a" text-anchor="middle">0</text>
+  <rect x="270" y="262" width="26" height="30" rx="3" fill="#dbeafe" stroke="#60a5fa" stroke-width="1"/>
+  <text x="283" y="282" font-size="12" font-weight="700" fill="#1e3a8a" text-anchor="middle">0</text>
+  <rect x="298" y="262" width="26" height="30" rx="3" fill="#dbeafe" stroke="#60a5fa" stroke-width="1"/>
+  <text x="311" y="282" font-size="12" font-weight="700" fill="#1e3a8a" text-anchor="middle">1</text>
+  <rect x="326" y="262" width="26" height="30" rx="3" fill="#dbeafe" stroke="#60a5fa" stroke-width="1"/>
+  <text x="339" y="282" font-size="12" font-weight="700" fill="#1e3a8a" text-anchor="middle">0</text>
+  <path d="M 356 277 L 386 277" fill="none" stroke="#475569" stroke-width="1.4" marker-end="url(#shArrow)"/>
+  <rect x="392" y="262" width="26" height="30" rx="3" fill="#dcfce7" stroke="#86efac" stroke-width="1"/>
+  <text x="405" y="282" font-size="12" font-weight="700" fill="#166534" text-anchor="middle">0</text>
+  <rect x="420" y="262" width="26" height="30" rx="3" fill="#dcfce7" stroke="#86efac" stroke-width="1"/>
+  <text x="433" y="282" font-size="12" font-weight="700" fill="#166534" text-anchor="middle">1</text>
+  <rect x="448" y="262" width="26" height="30" rx="3" fill="#dcfce7" stroke="#86efac" stroke-width="1"/>
+  <text x="461" y="282" font-size="12" font-weight="700" fill="#166534" text-anchor="middle">1</text>
+  <rect x="476" y="262" width="26" height="30" rx="3" fill="#dcfce7" stroke="#86efac" stroke-width="1"/>
+  <text x="489" y="282" font-size="12" font-weight="700" fill="#166534" text-anchor="middle">0</text>
+  <rect x="504" y="262" width="26" height="30" rx="3" fill="#dcfce7" stroke="#86efac" stroke-width="1"/>
+  <text x="517" y="282" font-size="12" font-weight="700" fill="#166534" text-anchor="middle">0</text>
+  <rect x="532" y="262" width="26" height="30" rx="3" fill="#dcfce7" stroke="#86efac" stroke-width="1"/>
+  <text x="545" y="282" font-size="12" font-weight="700" fill="#166534" text-anchor="middle">1</text>
+  <rect x="560" y="262" width="26" height="30" rx="3" fill="#dcfce7" stroke="#86efac" stroke-width="1"/>
+  <text x="573" y="282" font-size="12" font-weight="700" fill="#166534" text-anchor="middle">0</text>
+  <rect x="588" y="262" width="26" height="30" rx="3" fill="#dcfce7" stroke="#86efac" stroke-width="1"/>
+  <text x="601" y="282" font-size="12" font-weight="700" fill="#166534" text-anchor="middle">1</text>
+  <text x="392" y="308" font-size="9.5" fill="#166534">1011 0010 → 0110 0101，8 位不丢；带进位时 CF 入环</text>
+
+  <rect x="24" y="334" width="632" height="146" rx="5" fill="#fef9c3" stroke="#fcd34d" stroke-width="1"/>
+  <text x="40" y="356" font-size="11" font-weight="700" fill="#854d0e">判据速查</text>
+  <text x="40" y="380" font-size="10.5" fill="#854d0e">① 逻辑左移与算术左移结果相同 —— 差别只在「怎么判溢出」，不在补什么。</text>
+  <text x="40" y="402" font-size="10.5" fill="#854d0e">② 左移溢出：逻辑移位看最高位是否移出 1；算术移位看移出位是否 ≠ 原符号位。</text>
+  <text x="40" y="424" font-size="10.5" fill="#854d0e">③ 右移分道：逻辑补 0、算术补符号位（保号）—— 这是两者唯一结果不同的地方。</text>
+  <text x="40" y="446" font-size="10.5" fill="#854d0e">④ 循环移位不丢位、不改符号性；float 乘 2 只能阶码 +1，左移会破坏规格化形式。</text>
+  <text x="40" y="468" font-size="10.5" font-weight="700" fill="#b91c1c">⑤ 负数算术右移向 −∞ 取整（−7 &gt;&gt; 1 = −4），不是向 0 取整，选择题常在此设套。</text>
+</svg>

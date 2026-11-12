@@ -1,0 +1,91 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 680 412" width="680" height="412" font-family="-apple-system,BlinkMacSystemFont,'Segoe UI','Microsoft YaHei',sans-serif">
+  <rect x="0" y="0" width="680" height="412" fill="#ffffff"/>
+  <text x="20" y="26" font-size="16" font-weight="700" fill="#312e81">外部排序的时间账 · 2000 记录 / 每块 125 记录，每段 250 条</text>
+  <text x="20" y="46" font-size="10.5" fill="#64748b">外存读写远慢于内存运算，所以总代价只看 I/O 次数：每趟归并 = 16 读 + 16 写 = 32 次，初始建段也要 32 次</text>
+
+  <!-- 左：2 路 -->
+  <rect x="24" y="62" width="310" height="196" rx="6" fill="#eff6ff" stroke="#bfdbfe" stroke-width="1"/>
+  <text x="40" y="82" font-size="12" font-weight="700" fill="#1e40af">2 路归并 · 3 趟 → 128 次 I/O</text>
+  <text x="40" y="98" font-size="9.5" fill="#475569">8 段 →4→2→1，32×3 ＋ 建段 32 ＝ 128</text>
+
+  <rect x="163" y="112" width="32" height="16" rx="3" fill="#fef3c7" stroke="#fcd34d" stroke-width="1"/>
+  <text x="179" y="124" font-size="8.5" fill="#92400e" text-anchor="middle">有序</text>
+
+  <rect x="95" y="152" width="32" height="16" rx="3" fill="#dcfce7" stroke="#86efac" stroke-width="1"/>
+  <text x="111" y="164" font-size="8.5" fill="#166534" text-anchor="middle">R1″</text>
+  <rect x="231" y="152" width="32" height="16" rx="3" fill="#dcfce7" stroke="#86efac" stroke-width="1"/>
+  <text x="247" y="164" font-size="8.5" fill="#166534" text-anchor="middle">R2″</text>
+
+  <rect x="61" y="184" width="32" height="16" rx="3" fill="#dbeafe" stroke="#60a5fa" stroke-width="1"/>
+  <text x="77" y="196" font-size="8.5" fill="#1e40af" text-anchor="middle">R1′</text>
+  <rect x="129" y="184" width="32" height="16" rx="3" fill="#dbeafe" stroke="#60a5fa" stroke-width="1"/>
+  <text x="145" y="196" font-size="8.5" fill="#1e40af" text-anchor="middle">R2′</text>
+  <rect x="197" y="184" width="32" height="16" rx="3" fill="#dbeafe" stroke="#60a5fa" stroke-width="1"/>
+  <text x="213" y="196" font-size="8.5" fill="#1e40af" text-anchor="middle">R3′</text>
+  <rect x="265" y="184" width="32" height="16" rx="3" fill="#dbeafe" stroke="#60a5fa" stroke-width="1"/>
+  <text x="281" y="196" font-size="8.5" fill="#1e40af" text-anchor="middle">R4′</text>
+
+  <rect x="46" y="216" width="28" height="16" rx="2" fill="#f8fafc" stroke="#cbd5e1" stroke-width="1"/>
+  <text x="60" y="228" font-size="8" fill="#475569" text-anchor="middle">R1</text>
+  <rect x="80" y="216" width="28" height="16" rx="2" fill="#f8fafc" stroke="#cbd5e1" stroke-width="1"/>
+  <text x="94" y="228" font-size="8" fill="#475569" text-anchor="middle">R2</text>
+  <rect x="114" y="216" width="28" height="16" rx="2" fill="#f8fafc" stroke="#cbd5e1" stroke-width="1"/>
+  <text x="128" y="228" font-size="8" fill="#475569" text-anchor="middle">R3</text>
+  <rect x="148" y="216" width="28" height="16" rx="2" fill="#f8fafc" stroke="#cbd5e1" stroke-width="1"/>
+  <text x="162" y="228" font-size="8" fill="#475569" text-anchor="middle">R4</text>
+  <rect x="182" y="216" width="28" height="16" rx="2" fill="#f8fafc" stroke="#cbd5e1" stroke-width="1"/>
+  <text x="196" y="228" font-size="8" fill="#475569" text-anchor="middle">R5</text>
+  <rect x="216" y="216" width="28" height="16" rx="2" fill="#f8fafc" stroke="#cbd5e1" stroke-width="1"/>
+  <text x="230" y="228" font-size="8" fill="#475569" text-anchor="middle">R6</text>
+  <rect x="250" y="216" width="28" height="16" rx="2" fill="#f8fafc" stroke="#cbd5e1" stroke-width="1"/>
+  <text x="264" y="228" font-size="8" fill="#475569" text-anchor="middle">R7</text>
+  <rect x="284" y="216" width="28" height="16" rx="2" fill="#f8fafc" stroke="#cbd5e1" stroke-width="1"/>
+  <text x="298" y="228" font-size="8" fill="#475569" text-anchor="middle">R8</text>
+
+  <path d="M 60 216 L 77 202 M 94 216 L 77 202 M 128 216 L 145 202 M 162 216 L 145 202 M 196 216 L 213 202 M 230 216 L 213 202 M 264 216 L 281 202 M 298 216 L 281 202" fill="none" stroke="#94a3b8" stroke-width="1"/>
+  <path d="M 77 184 L 111 170 M 145 184 L 111 170 M 213 184 L 247 170 M 281 184 L 247 170" fill="none" stroke="#94a3b8" stroke-width="1"/>
+  <path d="M 111 152 L 179 130 M 247 152 L 179 130" fill="none" stroke="#94a3b8" stroke-width="1"/>
+  <text x="40" y="250" font-size="9" fill="#64748b">第 1 趟　→　第 2 趟　→　第 3 趟（每趟各 32 次 I/O）</text>
+
+  <!-- 右：4 路 -->
+  <rect x="346" y="62" width="310" height="196" rx="6" fill="#f0fdf4" stroke="#bbf7d0" stroke-width="1"/>
+  <text x="362" y="82" font-size="12" font-weight="700" fill="#166534">4 路归并 · 2 趟 → 96 次 I/O</text>
+  <text x="362" y="98" font-size="9.5" fill="#475569">8 段 →2→1，32×2 ＋ 建段 32 ＝ 96</text>
+
+  <rect x="485" y="132" width="32" height="16" rx="3" fill="#fef3c7" stroke="#fcd34d" stroke-width="1"/>
+  <text x="501" y="144" font-size="8.5" fill="#92400e" text-anchor="middle">有序</text>
+
+  <rect x="417" y="176" width="32" height="16" rx="3" fill="#dcfce7" stroke="#86efac" stroke-width="1"/>
+  <text x="433" y="188" font-size="8.5" fill="#166534" text-anchor="middle">R1′</text>
+  <rect x="553" y="176" width="32" height="16" rx="3" fill="#dcfce7" stroke="#86efac" stroke-width="1"/>
+  <text x="569" y="188" font-size="8.5" fill="#166534" text-anchor="middle">R2′</text>
+
+  <rect x="368" y="216" width="28" height="16" rx="2" fill="#f8fafc" stroke="#cbd5e1" stroke-width="1"/>
+  <text x="382" y="228" font-size="8" fill="#475569" text-anchor="middle">R1</text>
+  <rect x="402" y="216" width="28" height="16" rx="2" fill="#f8fafc" stroke="#cbd5e1" stroke-width="1"/>
+  <text x="416" y="228" font-size="8" fill="#475569" text-anchor="middle">R2</text>
+  <rect x="436" y="216" width="28" height="16" rx="2" fill="#f8fafc" stroke="#cbd5e1" stroke-width="1"/>
+  <text x="450" y="228" font-size="8" fill="#475569" text-anchor="middle">R3</text>
+  <rect x="470" y="216" width="28" height="16" rx="2" fill="#f8fafc" stroke="#cbd5e1" stroke-width="1"/>
+  <text x="484" y="228" font-size="8" fill="#475569" text-anchor="middle">R4</text>
+  <rect x="504" y="216" width="28" height="16" rx="2" fill="#f8fafc" stroke="#cbd5e1" stroke-width="1"/>
+  <text x="518" y="228" font-size="8" fill="#475569" text-anchor="middle">R5</text>
+  <rect x="538" y="216" width="28" height="16" rx="2" fill="#f8fafc" stroke="#cbd5e1" stroke-width="1"/>
+  <text x="552" y="228" font-size="8" fill="#475569" text-anchor="middle">R6</text>
+  <rect x="572" y="216" width="28" height="16" rx="2" fill="#f8fafc" stroke="#cbd5e1" stroke-width="1"/>
+  <text x="586" y="228" font-size="8" fill="#475569" text-anchor="middle">R7</text>
+  <rect x="606" y="216" width="28" height="16" rx="2" fill="#f8fafc" stroke="#cbd5e1" stroke-width="1"/>
+  <text x="620" y="228" font-size="8" fill="#475569" text-anchor="middle">R8</text>
+
+  <path d="M 382 216 L 382 204 M 416 216 L 416 204 M 450 216 L 450 204 M 484 216 L 484 204 M 382 204 L 484 204 M 433 204 L 433 194" fill="none" stroke="#94a3b8" stroke-width="1"/>
+  <path d="M 518 216 L 518 204 M 552 216 L 552 204 M 586 216 L 586 204 M 620 216 L 620 204 M 518 204 L 620 204 M 569 204 L 569 194" fill="none" stroke="#94a3b8" stroke-width="1"/>
+  <path d="M 433 176 L 433 168 L 501 168 L 501 148 M 569 176 L 569 168 L 501 168" fill="none" stroke="#94a3b8" stroke-width="1"/>
+  <text x="362" y="250" font-size="9" fill="#64748b">同样 8 段：路数翻倍 → 趟数减半（3→2），省下整整一趟 32 次 I/O</text>
+
+  <rect x="24" y="270" width="632" height="130" rx="5" fill="#fef9c3" stroke="#fcd34d" stroke-width="1"/>
+  <text x="40" y="292" font-size="11" font-weight="700" fill="#854d0e">判据速查</text>
+  <text x="40" y="316" font-size="10.5" fill="#854d0e">① 总 I/O ＝ 每趟读写 × 趟数 ＋ <tspan font-weight="700">建初始段的那一份</tspan>（32）；漏掉建段这一项就少算 32 次。</text>
+  <text x="40" y="338" font-size="10.5" fill="#854d0e">② 趟数 S ＝ ⌈log<sub>k</sub>r⌉：r＝8 时 k＝2 得 3 趟、k＝4 得 2 趟 —— 路数越大趟数越少。</text>
+  <text x="40" y="360" font-size="10.5" fill="#854d0e">③ k 不是越大越好：内存固定时输入缓冲区变小，每趟读写次数上升，k 过大总 I/O 反增。</text>
+  <text x="40" y="382" font-size="10.5" fill="#854d0e">④ 两条提速路：败者树（k 变大而每次只比 log₂k 次）＋ 置换-选择（r 变小、段变长）。</text>
+</svg>

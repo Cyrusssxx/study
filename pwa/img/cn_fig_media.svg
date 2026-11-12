@@ -1,0 +1,77 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 680 500" width="680" height="500" font-family="-apple-system,BlinkMacSystemFont,'Segoe UI','Microsoft YaHei',sans-serif">
+  <defs>
+    <marker id="mdArrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#0891b2"/>
+    </marker>
+  </defs>
+  <rect x="0" y="0" width="680" height="500" fill="#ffffff"/>
+  <text x="20" y="26" font-size="16" font-weight="700" fill="#312e81">传输介质：三种「线」的结构决定了抗干扰与带宽</text>
+  <text x="20" y="46" font-size="10.5" fill="#64748b">导向介质靠物理通道约束信号；非导向介质（无线电 / 微波 / 红外 / 激光）靠空间辐射，各有可视距与穿墙限制</text>
+
+  <rect x="24" y="62" width="310" height="302" rx="6" fill="#eff6ff" stroke="#bfdbfe" stroke-width="1"/>
+  <text x="40" y="80" font-size="11.5" font-weight="700" fill="#1e40af">导向传输介质（三类）</text>
+
+  <text x="40" y="102" font-size="10.5" font-weight="700" fill="#334155">双绞线 UTP / STP</text>
+  <rect x="44" y="110" width="108" height="26" rx="3" fill="#ffffff" stroke="#94a3b8" stroke-width="1" stroke-dasharray="4 3"/>
+  <path d="M 48 123 Q 60 111 72 123 Q 84 135 96 123 Q 108 111 120 123 Q 132 135 144 123" fill="none" stroke="#b45309" stroke-width="2"/>
+  <path d="M 48 123 Q 60 135 72 123 Q 84 111 96 123 Q 108 135 120 123 Q 132 111 144 123" fill="none" stroke="#d97706" stroke-width="2"/>
+  <text x="160" y="120" font-size="9" fill="#475569">虚线＝STP 金属编织屏蔽层</text>
+  <text x="160" y="134" font-size="9" fill="#475569">两线按规则绞合成对</text>
+  <text x="40" y="156" font-size="9.5" fill="#475569">绞合的目的＝抵消相邻导线间的<tspan font-weight="700">电磁干扰</tspan>（Q84）</text>
+  <text x="40" y="172" font-size="9.5" fill="#475569">再加屏蔽层（STP）抗扰更强，也更贵、更少用（Q85）</text>
+
+  <text x="40" y="200" font-size="10.5" font-weight="700" fill="#334155">同轴电缆 50Ω / 75Ω</text>
+  <rect x="44" y="208" width="108" height="30" rx="2" fill="#f1f5f9" stroke="#94a3b8" stroke-width="1"/>
+  <rect x="52" y="213" width="92" height="20" rx="2" fill="#e2e8f0" stroke="#64748b" stroke-width="1"/>
+  <rect x="64" y="218" width="68" height="10" rx="2" fill="#ffffff" stroke="#cbd5e1" stroke-width="1"/>
+  <line x1="44" y1="223" x2="152" y2="223" stroke="#b45309" stroke-width="2.4"/>
+  <text x="160" y="218" font-size="9" fill="#475569">内导体 / 绝缘 / 编织屏蔽 / 外皮</text>
+  <text x="160" y="232" font-size="9" fill="#475569">屏蔽层在外层，四层同心</text>
+  <text x="40" y="256" font-size="9.5" fill="#475569">外层金属屏蔽好 → 抗干扰好、带宽高，比双绞线快（Q87）</text>
+  <text x="40" y="272" font-size="9.5" fill="#475569">50Ω 数字基带 / 75Ω 模拟宽带；传统同轴以太网＝半双工（Q86）</text>
+
+  <text x="40" y="300" font-size="10.5" font-weight="700" fill="#334155">光纤（单模 / 多模）</text>
+  <rect x="44" y="308" width="108" height="28" rx="2" fill="#ecfeff" stroke="#67e8f9" stroke-width="1"/>
+  <rect x="52" y="313" width="92" height="18" rx="2" fill="#cffafe" stroke="#22d3ee" stroke-width="1"/>
+  <path d="M 54 322 L 66 314 L 78 330 L 90 314 L 102 330 L 114 314 L 126 330 L 140 321" fill="none" stroke="#0891b2" stroke-width="1.6"/>
+  <text x="160" y="318" font-size="9" fill="#475569">涂覆 / 包层 / 纤芯</text>
+  <text x="160" y="332" font-size="9" fill="#475569">光在纤芯内反复全反射</text>
+  <text x="40" y="350" font-size="9.5" fill="#475569">光信号<tspan font-weight="700">不导电</tspan> → 不受电磁干扰、保密性好（Q88）</text>
+
+  <rect x="346" y="62" width="310" height="302" rx="6" fill="#f0fdfa" stroke="#99f6e4" stroke-width="1"/>
+  <text x="362" y="80" font-size="11.5" font-weight="700" fill="#0f766e">单模 vs 多模 · 再看不靠「线」的四类</text>
+
+  <rect x="362" y="92" width="138" height="108" rx="4" fill="#ffffff" stroke="#bae6fd" stroke-width="1"/>
+  <text x="372" y="110" font-size="10.5" font-weight="700" fill="#0369a1">单模（纤芯细）</text>
+  <rect x="372" y="120" width="118" height="10" rx="2" fill="#f8fafc" stroke="#22d3ee" stroke-width="1"/>
+  <path d="M 374 125 L 486 125" fill="none" stroke="#0891b2" stroke-width="1.6" marker-end="url(#mdArrow)"/>
+  <text x="372" y="148" font-size="9" fill="#475569">激光源 · 沿直线传播</text>
+  <text x="372" y="164" font-size="9" fill="#475569">色散小、损耗低</text>
+  <text x="372" y="180" font-size="9" fill="#475569">→ 远距离骨干</text>
+  <text x="372" y="196" font-size="9" fill="#475569">纤芯直径 ≈ 光波长</text>
+
+  <rect x="508" y="92" width="132" height="108" rx="4" fill="#ffffff" stroke="#bae6fd" stroke-width="1"/>
+  <text x="518" y="110" font-size="10.5" font-weight="700" fill="#0369a1">多模（纤芯粗）</text>
+  <rect x="518" y="116" width="112" height="24" rx="2" fill="#f8fafc" stroke="#22d3ee" stroke-width="1"/>
+  <path d="M 520 128 L 540 118 L 560 138 L 580 118 L 600 138 L 620 118 L 628 126" fill="none" stroke="#0891b2" stroke-width="1.4"/>
+  <path d="M 520 128 L 540 138 L 560 118 L 580 138 L 600 118 L 620 138 L 628 130" fill="none" stroke="#22d3ee" stroke-width="1.2"/>
+  <text x="518" y="160" font-size="9" fill="#475569">LED 光源 · 多次全反射</text>
+  <text x="518" y="176" font-size="9" fill="#475569">色散大 → 短距离、楼宇</text>
+  <text x="518" y="192" font-size="9" fill="#475569">纤芯直径 ≫ 光波长</text>
+
+  <text x="362" y="220" font-size="9.5" fill="#475569">分界＝纤芯直径＋光源（激光 / LED），不看距离。</text>
+  <line x1="362" y1="232" x2="640" y2="232" stroke="#cbd5e1" stroke-width="1" stroke-dasharray="4 3"/>
+  <text x="362" y="250" font-size="10" font-weight="700" fill="#0f766e">非导向介质（靠空间辐射）</text>
+  <text x="362" y="268" font-size="9.5" fill="#475569">无线电波：全向、穿透强 → WiFi 2.4/5 GHz、蜂窝移动</text>
+  <text x="362" y="286" font-size="9.5" fill="#475569">微波：直线、可视距需中继；卫星＝高空中继，时延大</text>
+  <text x="362" y="304" font-size="9.5" fill="#475569">红外：直线、不能穿墙 → 遥控；激光：空间直线通信</text>
+  <text x="362" y="326" font-size="9.5" fill="#b91c1c">卫星虽覆盖广，但受气候影响大、误码率高（Q91）</text>
+  <text x="362" y="346" font-size="9.5" fill="#475569">无线共享空间，靠复用（FDM/TDM/WDM/CDM）</text>
+
+  <rect x="24" y="368" width="632" height="120" rx="5" fill="#fef9c3" stroke="#fcd34d" stroke-width="1"/>
+  <text x="40" y="390" font-size="11" font-weight="700" fill="#854d0e">判据速查</text>
+  <text x="40" y="414" font-size="10.5" fill="#854d0e">① 双绞线「绞合」目的＝抵消相互电磁干扰（Q84）；再加屏蔽层（STP）进一步提高抗扰（Q85）。</text>
+  <text x="40" y="436" font-size="10.5" fill="#854d0e">② 同轴比双绞线快＝外层屏蔽好、抗噪强（Q87）；传统同轴以太网＝半双工（Q86）。</text>
+  <text x="40" y="458" font-size="10.5" fill="#854d0e">③ 光纤抗电磁干扰＝全反射通路 ＋ 光不导电（Q88）；单模近直线、多模多次反射（Q89、Q90）。</text>
+  <text x="40" y="480" font-size="10.5" fill="#854d0e">④ 选型看三者权衡：双绞线便宜够用 → 同轴抗扰中等 → 光纤长距高带宽（骨干 / 数据中心）。</text>
+</svg>
