@@ -1,0 +1,90 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 680 500" width="680" height="500" font-family="-apple-system,BlinkMacSystemFont,'Segoe UI','Microsoft YaHei',sans-serif">
+  <rect x="0" y="0" width="680" height="500" fill="#ffffff"/>
+  <text x="20" y="26" font-size="16" font-weight="700" fill="#312e81">单缓冲 vs 双缓冲 · T=80μs、M=40μs、C=30μs 时的泳道图</text>
+  <text x="20" y="46" font-size="12" fill="#64748b">T＝设备装满一块缓冲、M＝缓冲区搬到用户区、C＝CPU 处理；横轴单位 μs</text>
+
+  <text x="100" y="76" font-size="11" font-weight="700" fill="#991b1b">单缓冲：周期 = max(T,C) + M = 80 + 40 = 120 μs</text>
+  <text x="30" y="114" font-size="9.5" fill="#64748b" text-anchor="end">设备 T</text>
+  <text x="30" y="142" font-size="9.5" fill="#64748b" text-anchor="end">系统 M</text>
+  <text x="30" y="170" font-size="9.5" fill="#64748b" text-anchor="end">CPU C</text>
+
+  <rect x="110" y="100" width="80" height="24" fill="#fecaca" stroke="#f87171" stroke-width="1"/>
+  <text x="150" y="116" font-size="9" fill="#991b1b" text-anchor="middle">T1</text>
+  <rect x="230" y="100" width="80" height="24" fill="#fecaca" stroke="#f87171" stroke-width="1"/>
+  <text x="270" y="116" font-size="9" fill="#991b1b" text-anchor="middle">T2</text>
+  <rect x="350" y="100" width="80" height="24" fill="#fecaca" stroke="#f87171" stroke-width="1"/>
+  <text x="390" y="116" font-size="9" fill="#991b1b" text-anchor="middle">T3</text>
+  <rect x="470" y="100" width="80" height="24" fill="#fecaca" stroke="#f87171" stroke-width="1"/>
+  <text x="510" y="116" font-size="9" fill="#991b1b" text-anchor="middle">T4</text>
+
+  <rect x="190" y="128" width="40" height="24" fill="#fef3c7" stroke="#fcd34d" stroke-width="1"/>
+  <text x="210" y="144" font-size="9" fill="#92400e" text-anchor="middle">M1</text>
+  <rect x="310" y="128" width="40" height="24" fill="#fef3c7" stroke="#fcd34d" stroke-width="1"/>
+  <text x="330" y="144" font-size="9" fill="#92400e" text-anchor="middle">M2</text>
+  <rect x="430" y="128" width="40" height="24" fill="#fef3c7" stroke="#fcd34d" stroke-width="1"/>
+  <text x="450" y="144" font-size="9" fill="#92400e" text-anchor="middle">M3</text>
+  <rect x="550" y="128" width="40" height="24" fill="#fef3c7" stroke="#fcd34d" stroke-width="1"/>
+  <text x="570" y="144" font-size="9" fill="#92400e" text-anchor="middle">M4</text>
+
+  <rect x="230" y="156" width="30" height="24" fill="#dbeafe" stroke="#93c5fd" stroke-width="1"/>
+  <text x="245" y="172" font-size="9" fill="#1e40af" text-anchor="middle">C1</text>
+  <rect x="350" y="156" width="30" height="24" fill="#dbeafe" stroke="#93c5fd" stroke-width="1"/>
+  <text x="365" y="172" font-size="9" fill="#1e40af" text-anchor="middle">C2</text>
+  <rect x="470" y="156" width="30" height="24" fill="#dbeafe" stroke="#93c5fd" stroke-width="1"/>
+  <text x="485" y="172" font-size="9" fill="#1e40af" text-anchor="middle">C3</text>
+  <rect x="590" y="156" width="30" height="24" fill="#dbeafe" stroke="#93c5fd" stroke-width="1"/>
+  <text x="605" y="172" font-size="9" fill="#1e40af" text-anchor="middle">C4</text>
+
+  <text x="200" y="198" font-size="9" fill="#166534">T2 与 C1 重叠（不同的块，可以并行）</text>
+  <line x1="230" y1="192" x2="245" y2="180" stroke="#166534" stroke-width="0.8"/>
+
+  <line x1="20" y1="214" x2="660" y2="214" stroke="#e2e8f0" stroke-width="1"/>
+
+  <text x="100" y="238" font-size="11" font-weight="700" fill="#166534">双缓冲：周期 = max(T, M+C) = max(80, 70) = 80 μs</text>
+  <text x="30" y="278" font-size="9.5" fill="#64748b" text-anchor="end">设备 T</text>
+  <text x="30" y="306" font-size="9.5" fill="#64748b" text-anchor="end">系统 M</text>
+  <text x="30" y="334" font-size="9.5" fill="#64748b" text-anchor="end">CPU C</text>
+
+  <rect x="110" y="264" width="80" height="24" fill="#fecaca" stroke="#f87171" stroke-width="1"/>
+  <text x="150" y="280" font-size="9" fill="#991b1b" text-anchor="middle">T1</text>
+  <rect x="190" y="264" width="80" height="24" fill="#fee2e2" stroke="#fca5a5" stroke-width="1"/>
+  <text x="230" y="280" font-size="9" fill="#991b1b" text-anchor="middle">T2</text>
+  <rect x="270" y="264" width="80" height="24" fill="#fecaca" stroke="#f87171" stroke-width="1"/>
+  <text x="310" y="280" font-size="9" fill="#991b1b" text-anchor="middle">T3</text>
+  <rect x="350" y="264" width="80" height="24" fill="#fee2e2" stroke="#fca5a5" stroke-width="1"/>
+  <text x="390" y="280" font-size="9" fill="#991b1b" text-anchor="middle">T4</text>
+
+  <rect x="190" y="292" width="40" height="24" fill="#fef3c7" stroke="#fcd34d" stroke-width="1"/>
+  <text x="210" y="308" font-size="9" fill="#92400e" text-anchor="middle">M1</text>
+  <rect x="270" y="292" width="40" height="24" fill="#fef3c7" stroke="#fcd34d" stroke-width="1"/>
+  <text x="290" y="308" font-size="9" fill="#92400e" text-anchor="middle">M2</text>
+  <rect x="350" y="292" width="40" height="24" fill="#fef3c7" stroke="#fcd34d" stroke-width="1"/>
+  <text x="370" y="308" font-size="9" fill="#92400e" text-anchor="middle">M3</text>
+  <rect x="430" y="292" width="40" height="24" fill="#fef3c7" stroke="#fcd34d" stroke-width="1"/>
+  <text x="450" y="308" font-size="9" fill="#92400e" text-anchor="middle">M4</text>
+
+  <rect x="230" y="320" width="30" height="24" fill="#dbeafe" stroke="#93c5fd" stroke-width="1"/>
+  <text x="245" y="336" font-size="9" fill="#1e40af" text-anchor="middle">C1</text>
+  <rect x="310" y="320" width="30" height="24" fill="#dbeafe" stroke="#93c5fd" stroke-width="1"/>
+  <text x="325" y="336" font-size="9" fill="#1e40af" text-anchor="middle">C2</text>
+  <rect x="390" y="320" width="30" height="24" fill="#dbeafe" stroke="#93c5fd" stroke-width="1"/>
+  <text x="405" y="336" font-size="9" fill="#1e40af" text-anchor="middle">C3</text>
+  <text x="440" y="336" font-size="9" fill="#64748b">…</text>
+
+  <text x="200" y="360" font-size="9" fill="#166534">设备连续不停：写完 B1 立刻写 B2，无须等 M+C</text>
+
+  <line x1="110" y1="374" x2="620" y2="374" stroke="#cbd5e1" stroke-width="1"/>
+  <text x="110" y="388" font-size="9" fill="#94a3b8" text-anchor="middle">0</text>
+  <text x="210" y="388" font-size="9" fill="#94a3b8" text-anchor="middle">100</text>
+  <text x="310" y="388" font-size="9" fill="#94a3b8" text-anchor="middle">200</text>
+  <text x="410" y="388" font-size="9" fill="#94a3b8" text-anchor="middle">300</text>
+  <text x="510" y="388" font-size="9" fill="#94a3b8" text-anchor="middle">400</text>
+  <text x="610" y="388" font-size="9" fill="#94a3b8" text-anchor="middle">500</text>
+
+  <rect x="20" y="400" width="640" height="44" rx="6" fill="#f0fdf4" stroke="#bbf7d0" stroke-width="1"/>
+  <text x="34" y="420" font-size="10.5" font-weight="700" fill="#166534">N 块总时间不能直接「周期 × N」</text>
+  <text x="34" y="438" font-size="10.5" fill="#14532d">首块必须完整串行走完 T→M→C：单缓冲 = (T+M+C) + (N−1)×[max(T,C)+M]；双缓冲 = (T+M+C) + (N−1)×max(T,C+M)。</text>
+
+  <rect x="20" y="452" width="640" height="42" rx="6" fill="#fef3c7" stroke="#fcd34d" stroke-width="1"/>
+  <text x="34" y="477" font-size="10.5" fill="#92400e">本题 N=4：单缓冲 150 + 3×120 = <tspan font-weight="700">510 μs</tspan>；双缓冲 150 + 3×80 = <tspan font-weight="700">390 μs</tspan>——快了约 23%。</text>
+</svg>

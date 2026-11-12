@@ -1,0 +1,62 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 680 486" width="680" height="486" font-family="-apple-system,BlinkMacSystemFont,'Segoe UI','Microsoft YaHei',sans-serif">
+  <rect x="0" y="0" width="680" height="486" fill="#ffffff"/>
+  <text x="20" y="26" font-size="16" font-weight="700" fill="#312e81">I/O 软件四层（外加硬件）· 一次 write 从上到下再原路返回</text>
+  <text x="20" y="46" font-size="12" fill="#64748b">越往上越抽象、越通用；越往下越具体、越依赖硬件。只有最底层懂硬件细节</text>
+
+  <defs>
+    <marker id="ar4" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto">
+      <path d="M0,0 L8,4 L0,8 z" fill="#4a7ab8"/>
+    </marker>
+    <marker id="ar4r" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto">
+      <path d="M0,0 L8,4 L0,8 z" fill="#16a34a"/>
+    </marker>
+  </defs>
+
+  <rect x="60" y="70" width="300" height="60" rx="6" fill="#dbeafe" stroke="#93c5fd" stroke-width="1.2"/>
+  <text x="76" y="92" font-size="12" font-weight="700" fill="#1e40af">① 用户层软件</text>
+  <text x="76" y="110" font-size="10" fill="#1e3a8a">printf / scanf 的库函数封装、SPOOLing</text>
+  <text x="76" y="124" font-size="9.5" fill="#64748b">绝不直接碰硬件，只能发系统调用</text>
+
+  <rect x="60" y="140" width="300" height="60" rx="6" fill="#e0e7ff" stroke="#a5b4fc" stroke-width="1.2"/>
+  <text x="76" y="162" font-size="12" font-weight="700" fill="#3730a3">② 设备独立性软件</text>
+  <text x="76" y="180" font-size="10" fill="#312e81">逻辑设备名→物理设备、缓冲、分配、保护</text>
+  <text x="76" y="194" font-size="9.5" fill="#64748b">统一 read/write 接口，屏蔽设备差异</text>
+
+  <rect x="60" y="210" width="300" height="60" rx="6" fill="#c7d2fe" stroke="#818cf8" stroke-width="1.2"/>
+  <text x="76" y="232" font-size="12" font-weight="700" fill="#3730a3">③ 设备驱动程序</text>
+  <text x="76" y="250" font-size="10" fill="#312e81">抽象命令→具体指令，写寄存器、启动设备</text>
+  <text x="76" y="264" font-size="9.5" fill="#64748b">每类设备一套；逻辑扇区→柱面·盘面·扇区</text>
+
+  <rect x="60" y="280" width="300" height="60" rx="6" fill="#fef3c7" stroke="#fcd34d" stroke-width="1.2"/>
+  <text x="76" y="302" font-size="12" font-weight="700" fill="#92400e">④ 中断处理程序</text>
+  <text x="76" y="320" font-size="10" fill="#92400e">保存现场→读状态→取数据→唤醒进程</text>
+  <text x="76" y="334" font-size="9.5" fill="#a16207">必须在中断上下文里快速完成，不可阻塞</text>
+
+  <rect x="60" y="350" width="300" height="52" rx="6" fill="#f1f5f9" stroke="#94a3b8" stroke-width="1.2"/>
+  <text x="76" y="372" font-size="12" font-weight="700" fill="#334155">⑤ 硬件（设备 + 控制器）</text>
+  <text x="76" y="390" font-size="10" fill="#475569">真正执行 I/O，完成后向 CPU 发中断</text>
+
+  <path d="M382 100 L382 390" fill="none" stroke="#4a7ab8" stroke-width="1.5" marker-end="url(#ar4)"/>
+  <text x="388" y="230" font-size="10" fill="#1d4ed8" transform="rotate(90 388 230)">write 请求向下</text>
+
+  <path d="M446 390 L446 100" fill="none" stroke="#16a34a" stroke-width="1.5" marker-end="url(#ar4r)"/>
+  <text x="452" y="230" font-size="10" fill="#15803d" transform="rotate(-90 452 230)">结果逐层返回</text>
+
+  <text x="480" y="90" font-size="11" font-weight="700" fill="#334155">分层的三条好处</text>
+  <rect x="480" y="100" width="180" height="88" rx="6" fill="#f0fdf4" stroke="#bbf7d0" stroke-width="1"/>
+  <text x="492" y="120" font-size="10" fill="#14532d">① 每层职责单一，结构清晰</text>
+  <text x="492" y="140" font-size="10" fill="#14532d">② 接口固定，改一层不影响他层</text>
+  <text x="492" y="160" font-size="10" fill="#14532d">③ 上层只见统一接口，可移植性</text>
+  <text x="492" y="180" font-size="10" fill="#14532d">　 强、可维护性好</text>
+
+  <text x="480" y="216" font-size="11" font-weight="700" fill="#334155">题目常考哪一条</text>
+  <rect x="480" y="226" width="180" height="80" rx="6" fill="#eff6ff" stroke="#bfdbfe" stroke-width="1"/>
+  <text x="492" y="246" font-size="10" fill="#1e3a8a">键盘输入最先到<tspan font-weight="700">中断处理程序</tspan></text>
+  <text x="492" y="264" font-size="10" fill="#1e3a8a">格式化、SPOOLing 属<tspan font-weight="700">用户层</tspan></text>
+  <text x="492" y="282" font-size="10" fill="#1e3a8a">逻辑→物理映射属<tspan font-weight="700">设备独立性</tspan></text>
+  <text x="492" y="300" font-size="10" fill="#1e3a8a">启动设备本体属<tspan font-weight="700">驱动程序</tspan></text>
+
+  <rect x="20" y="416" width="640" height="58" rx="8" fill="#fef3c7" stroke="#fcd34d" stroke-width="1"/>
+  <text x="34" y="436" font-size="10.5" fill="#92400e">① <tspan font-weight="700">陷阱指令（如 int $0x80 / syscall）是用户态进内核态的唯一合法入口</tspan>；中断是设备通知「我做完了」的机制。</text>
+  <text x="34" y="456" font-size="10.5" fill="#92400e">② 两者别混：系统调用由程序主动发起（软中断），I/O 完成中断由设备被动触发（硬中断）；返回时用 iret 恢复用户态。</text>
+</svg>

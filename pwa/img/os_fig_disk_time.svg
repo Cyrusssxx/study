@@ -1,0 +1,53 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 680 486" width="680" height="486" font-family="-apple-system,BlinkMacSystemFont,'Segoe UI','Microsoft YaHei',sans-serif">
+  <rect x="0" y="0" width="680" height="486" fill="#ffffff"/>
+  <text x="20" y="26" font-size="16" font-weight="700" fill="#312e81">磁盘存取时间 = 寻道 + 旋转延迟 + 传输</text>
+  <text x="20" y="46" font-size="12" fill="#64748b">Ta = Ts + Tr + Tt · 只有 Ts 是调度算法能优化的，Tr 与 Tt 由物理结构定死</text>
+
+  <rect x="60" y="70" width="300" height="46" fill="#fecaca" stroke="#f87171" stroke-width="1.2"/>
+  <text x="210" y="90" font-size="11.5" font-weight="700" fill="#991b1b" text-anchor="middle">Ts 寻道时间</text>
+  <text x="210" y="107" font-size="9.5" fill="#7f1d1d" text-anchor="middle">磁头臂移到目标柱面</text>
+
+  <rect x="360" y="70" width="130" height="46" fill="#fef3c7" stroke="#fcd34d" stroke-width="1.2"/>
+  <text x="425" y="90" font-size="11.5" font-weight="700" fill="#92400e" text-anchor="middle">Tr 旋转延迟</text>
+  <text x="425" y="107" font-size="9.5" fill="#a16207" text-anchor="middle">等扇区转过来</text>
+
+  <rect x="490" y="70" width="130" height="46" fill="#dbeafe" stroke="#93c5fd" stroke-width="1.2"/>
+  <text x="555" y="90" font-size="11.5" font-weight="700" fill="#1e40af" text-anchor="middle">Tt 传输时间</text>
+  <text x="555" y="107" font-size="9.5" fill="#1e3a8a" text-anchor="middle">读/写这块数据</text>
+
+  <text x="60" y="132" font-size="10" fill="#64748b">一次读写的总时间 Ta</text>
+  <line x1="60" y1="136" x2="620" y2="136" stroke="#94a3b8" stroke-width="1"/>
+
+  <rect x="20" y="152" width="310" height="86" rx="6" fill="#fef2f2" stroke="#fecaca" stroke-width="1"/>
+  <text x="34" y="172" font-size="11" font-weight="700" fill="#991b1b">① Ts = m × n + s</text>
+  <text x="34" y="192" font-size="10" fill="#7f1d1d">n = 跨越的磁道数，m ≈ 0.2 ms/道</text>
+  <text x="34" y="210" font-size="10" fill="#7f1d1d">s ≈ 2 ms 是磁头臂启动时间</text>
+  <text x="34" y="230" font-size="10" font-weight="700" fill="#991b1b">随目标距离变化，调度算法就在压它</text>
+
+  <rect x="346" y="152" width="314" height="86" rx="6" fill="#fffbeb" stroke="#fcd34d" stroke-width="1"/>
+  <text x="360" y="172" font-size="11" font-weight="700" fill="#92400e">② Tr = 1 / (2r)</text>
+  <text x="360" y="192" font-size="10" fill="#92400e">r 是<tspan font-weight="700">每秒</tspan>转数（rpm ÷ 60），取半圈为平均</text>
+  <text x="360" y="210" font-size="10" fill="#92400e">与磁头当前位置无关，只与转速有关</text>
+  <text x="360" y="230" font-size="10" font-weight="700" fill="#b45309">调度算法优化不了它</text>
+
+  <rect x="20" y="248" width="310" height="86" rx="6" fill="#eff6ff" stroke="#bfdbfe" stroke-width="1"/>
+  <text x="34" y="268" font-size="11" font-weight="700" fill="#1e40af">③ Tt = b / (r × N)</text>
+  <text x="34" y="288" font-size="10" fill="#1e3a8a">b = 要读的字节数，N = 每磁道字节数</text>
+  <text x="34" y="306" font-size="10" fill="#1e3a8a">r 同样要换算成每秒转数</text>
+  <text x="34" y="326" font-size="10" font-weight="700" fill="#1e40af">数据量越大越显著，通常远小于前两项</text>
+
+  <rect x="346" y="248" width="314" height="86" rx="6" fill="#f0fdf4" stroke="#bbf7d0" stroke-width="1"/>
+  <text x="360" y="268" font-size="11" font-weight="700" fill="#166534">两个速查值（背下来）</text>
+  <text x="360" y="288" font-size="10.5" fill="#14532d">7200 rpm → 一圈 8.33 ms，平均 Tr = 4.17 ms</text>
+  <text x="360" y="306" font-size="10.5" fill="#14532d">5400 rpm → 一圈 11.1 ms，平均 Tr = 5.56 ms</text>
+  <text x="360" y="326" font-size="10" fill="#64748b">常用 m = 0.2 ms/道、s = 2 ms 也算默认参数。</text>
+
+  <rect x="20" y="346" width="640" height="60" rx="6" fill="#f8fafc" stroke="#cbd5e1" stroke-width="1"/>
+  <text x="34" y="366" font-size="11" font-weight="700" fill="#334155">为什么「同一文件的数据放在同一柱面」</text>
+  <text x="34" y="386" font-size="10.5" fill="#475569">同一柱面内换磁道只需<tspan font-weight="700">切换盘面的磁头</tspan>，不用移动磁头臂——Ts ≈ 0，省掉最大的那一项。</text>
+  <text x="34" y="402" font-size="10.5" fill="#475569">磁盘地址「柱面号·盘面号·扇区号」里，<tspan font-weight="700">柱面号决定寻道量</tspan>，连续块优先换盘面、再换扇区。</text>
+
+  <rect x="20" y="416" width="640" height="58" rx="8" fill="#fef3c7" stroke="#fcd34d" stroke-width="1"/>
+  <text x="34" y="436" font-size="10.5" fill="#92400e">① 单位陷阱：<tspan font-weight="700">Tr = 1/(2r) 里的 r 是转/秒</tspan>，题目给的 7200 转/分要先除 60，否则差 60 倍。</text>
+  <text x="34" y="456" font-size="10.5" fill="#92400e">② 固定头磁盘（每道一个磁头）<tspan font-weight="700">没有寻道时间</tspan>，只有 Tr + Tt，别再套 Ts 公式。</text>
+</svg>
