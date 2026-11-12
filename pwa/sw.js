@@ -18,7 +18,7 @@
  *          ③ 懒加载数据既不占首屏，改完也能凭 LAZY_VER 正确失效。
  */
 const APP_VER = 'quiz408-app-e0876f5931';
-const DATA_VER = 'quiz408-data-9d402ac125';
+const DATA_VER = 'quiz408-data-a7cd42cc3d';
 const LAZY_VER = 'quiz408-lazy-e6895aabfb';
 
 // 应用外壳：保证离线骨架与最新脚本。meta.json 仅几百字节，随外壳一起预缓存。
@@ -210,6 +210,11 @@ const DATA_PRECACHE = [
     'img/os_fig_io_control.svg',
     'img/os_fig_disk_time.svg',
     'img/os_fig_buffer.svg',
+    'img/os_fig_thread_models.svg',
+    'img/os_fig_va_translate.svg',
+    'img/os_fig_alloc_algo.svg',
+    'img/os_fig_group_link.svg',
+    'img/os_fig_dev_alloc.svg',
     'img/os_fig_5_27_clook.png',
     'data/sub_all.txt',
     'data/sub_os.txt',

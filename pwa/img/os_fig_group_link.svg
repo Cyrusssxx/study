@@ -1,0 +1,60 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 680 442" width="680" height="442" font-family="-apple-system,BlinkMacSystemFont,'Segoe UI','Microsoft YaHei',sans-serif">
+  <rect x="0" y="0" width="680" height="442" fill="#ffffff"/>
+  <text x="20" y="26" font-size="16" font-weight="700" fill="#312e81">成组链接法：空闲盘块号栈只放一组，靠索引块串成链</text>
+  <text x="20" y="46" font-size="11" fill="#64748b">设空闲盘块为 201~7999，每组 100 块（最末组 99 块）——超级块里只有第一组，其余每组藏在前一组的末尾盘块中。</text>
+
+  <rect x="20" y="70" width="170" height="80" rx="6" fill="#fef3c7" stroke="#fcd34d" stroke-width="1"/>
+  <text x="105" y="90" font-size="10.5" font-weight="700" fill="#92400e" text-anchor="middle">空闲盘块号栈（超级块）</text>
+  <rect x="34" y="100" width="142" height="22" fill="#ffffff" stroke="#fcd34d" stroke-width="1"/>
+  <text x="105" y="116" font-size="9.5" fill="#78350f" text-anchor="middle">201, 202, …, 299, 300</text>
+  <text x="105" y="138" font-size="9.5" font-weight="700" fill="#92400e" text-anchor="middle">栈内计数 = 100</text>
+
+  <line x1="190" y1="110" x2="222" y2="110" stroke="#94a3b8" stroke-width="1.5"/>
+  <polygon points="230,110 220,105 220,115" fill="#94a3b8"/>
+
+  <rect x="230" y="70" width="150" height="80" rx="6" fill="#dbeafe" stroke="#93c5fd" stroke-width="1"/>
+  <text x="305" y="90" font-size="10.5" font-weight="700" fill="#1e3a8a" text-anchor="middle">盘块 300 的内容</text>
+  <rect x="244" y="100" width="122" height="22" fill="#ffffff" stroke="#93c5fd" stroke-width="1"/>
+  <text x="305" y="116" font-size="9.5" fill="#1e40af" text-anchor="middle">301, …, 400</text>
+  <text x="305" y="138" font-size="9.5" font-weight="700" fill="#1e40af" text-anchor="middle">计数 = 100</text>
+
+  <line x1="380" y1="110" x2="412" y2="110" stroke="#94a3b8" stroke-width="1.5"/>
+  <polygon points="420,110 410,105 410,115" fill="#94a3b8"/>
+
+  <rect x="420" y="70" width="150" height="80" rx="6" fill="#dbeafe" stroke="#93c5fd" stroke-width="1"/>
+  <text x="495" y="90" font-size="10.5" font-weight="700" fill="#1e3a8a" text-anchor="middle">盘块 400 的内容</text>
+  <rect x="434" y="100" width="122" height="22" fill="#ffffff" stroke="#93c5fd" stroke-width="1"/>
+  <text x="495" y="116" font-size="9.5" fill="#1e40af" text-anchor="middle">401, …, 500</text>
+  <text x="495" y="138" font-size="9.5" font-weight="700" fill="#1e40af" text-anchor="middle">计数 = 100</text>
+
+  <text x="590" y="120" font-size="16" font-weight="700" fill="#94a3b8">…</text>
+  <line x1="495" y1="150" x2="495" y2="176" stroke="#94a3b8" stroke-width="1.5"/>
+  <polygon points="495,184 490,174 500,174" fill="#94a3b8"/>
+
+  <text x="20" y="200" font-size="10.5" font-weight="700" fill="#334155">每组的最后一个盘块，同时充当下一组的索引块</text>
+  <text x="20" y="220" font-size="10" fill="#475569">盘块 300 里存 301~400、盘块 400 里存 401~500 …… 盘块 7900 里存 7901~7999。</text>
+  <text x="20" y="240" font-size="10" fill="#475569">最末组只 99 块；7900 里记录的第一个块号为 <tspan font-weight="700">0</tspan>，作为整条空闲块链结束的标志。</text>
+  <text x="20" y="260" font-size="10" fill="#991b1b">所以分配 300 号块时，读到的是 300 号块自己保存的 301~400 —— 索引块在<tspan font-weight="700">组末</tspan>，不在组首。</text>
+
+  <rect x="420" y="184" width="150" height="80" rx="6" fill="#dcfce7" stroke="#86efac" stroke-width="1"/>
+  <text x="495" y="204" font-size="10.5" font-weight="700" fill="#166534" text-anchor="middle">盘块 7900 的内容</text>
+  <rect x="434" y="214" width="122" height="22" fill="#ffffff" stroke="#86efac" stroke-width="1"/>
+  <text x="495" y="230" font-size="9.5" fill="#166534" text-anchor="middle">7901, …, 7999</text>
+  <text x="495" y="252" font-size="9" fill="#166534" text-anchor="middle">计数 99｜首号 0 → 链尾</text>
+
+  <rect x="20" y="276" width="310" height="86" rx="6" fill="#eff6ff" stroke="#bfdbfe" stroke-width="1"/>
+  <text x="34" y="296" font-size="10.5" font-weight="700" fill="#1e40af">分配一个空闲盘块</text>
+  <text x="34" y="316" font-size="9.5" fill="#1e3a8a">① 从栈顶取一块给用户，栈内计数 − 1；</text>
+  <text x="34" y="334" font-size="9.5" fill="#1e3a8a">② 若取到的正是栈底那块：先把它内容（下一组）整组读入栈；</text>
+  <text x="34" y="352" font-size="9.5" fill="#1e3a8a">③ 再把这块本身分配出去 —— 它的索引使命已完成。</text>
+
+  <rect x="350" y="276" width="310" height="86" rx="6" fill="#f0fdf4" stroke="#bbf7d0" stroke-width="1"/>
+  <text x="364" y="296" font-size="10.5" font-weight="700" fill="#166534">回收一个空闲盘块</text>
+  <text x="364" y="316" font-size="9.5" fill="#14532d">① 把块号压入栈顶，栈内计数 + 1；</text>
+  <text x="364" y="334" font-size="9.5" fill="#14532d">② 若压完栈满 100 项：把整栈 100 个块号写进刚回收的这块；</text>
+  <text x="364" y="352" font-size="9.5" fill="#14532d">③ 该块成为新的索引块，栈计数重置为 1（留下它自己）。</text>
+
+  <rect x="20" y="374" width="640" height="56" rx="6" fill="#fef3c7" stroke="#fcd34d" stroke-width="1"/>
+  <text x="34" y="394" font-size="10.5" fill="#92400e">优点：栈很小、几乎不随磁盘容量膨胀；链接信息写在盘块里，超级块坏了也能从盘上恢复；分配回收都是栈操作。</text>
+  <text x="34" y="414" font-size="10.5" fill="#92400e">适用：成组链接专为<tspan font-weight="700">大型文件系统</tspan>（UNIX）设计；位示图只适合小/中型，空闲表与空闲链都扛不住大磁盘。</text>
+</svg>

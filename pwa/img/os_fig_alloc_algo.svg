@@ -1,0 +1,85 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 680 500" width="680" height="500" font-family="-apple-system,BlinkMacSystemFont,'Segoe UI','Microsoft YaHei',sans-serif">
+  <rect x="0" y="0" width="680" height="500" fill="#ffffff"/>
+  <text x="20" y="26" font-size="16" font-weight="700" fill="#312e81">动态分区 · 最佳适应 55MB 推演（2010 真题）</text>
+  <text x="20" y="46" font-size="11" fill="#64748b">主存 55MB（初始全空），最佳适应算法，依次：分配 15MB → 分配 30MB → 释放 15MB → 分配 8MB → 分配 6MB。</text>
+  <text x="20" y="62" font-size="9.5" fill="#94a3b8">蓝＝空闲区、灰＝占用区、红＝本次新分配；横轴按 10px/MB 等比例，窄块数字标在条上方。</text>
+
+  <text x="20" y="96" font-size="9.5" font-weight="700" fill="#334155">① 分配 15MB</text>
+  <rect x="110" y="76" width="150" height="24" fill="#e2e8f0" stroke="#cbd5e1" stroke-width="1"/>
+  <text x="185" y="92" font-size="9" fill="#475569" text-anchor="middle">占用 15MB</text>
+  <rect x="260" y="76" width="400" height="24" fill="#dbeafe" stroke="#93c5fd" stroke-width="1"/>
+  <text x="460" y="92" font-size="9" fill="#1e40af" text-anchor="middle">空闲 40MB（15~55）</text>
+
+  <text x="20" y="134" font-size="9.5" font-weight="700" fill="#334155">② 分配 30MB</text>
+  <rect x="110" y="114" width="450" height="24" fill="#e2e8f0" stroke="#cbd5e1" stroke-width="1"/>
+  <text x="335" y="130" font-size="9" fill="#475569" text-anchor="middle">占用 45MB（0~45）</text>
+  <rect x="560" y="114" width="100" height="24" fill="#dbeafe" stroke="#93c5fd" stroke-width="1"/>
+  <text x="610" y="130" font-size="9" fill="#1e40af" text-anchor="middle">空闲 10MB</text>
+
+  <text x="20" y="172" font-size="9.5" font-weight="700" fill="#334155">③ 释放 15MB</text>
+  <rect x="110" y="152" width="150" height="24" fill="#dbeafe" stroke="#93c5fd" stroke-width="1"/>
+  <text x="185" y="168" font-size="9" fill="#1e40af" text-anchor="middle">空闲 15MB</text>
+  <rect x="260" y="152" width="300" height="24" fill="#e2e8f0" stroke="#cbd5e1" stroke-width="1"/>
+  <text x="410" y="168" font-size="9" fill="#475569" text-anchor="middle">占用 30MB</text>
+  <rect x="560" y="152" width="100" height="24" fill="#dbeafe" stroke="#93c5fd" stroke-width="1"/>
+  <text x="610" y="168" font-size="9" fill="#1e40af" text-anchor="middle">空闲 10MB</text>
+
+  <text x="20" y="210" font-size="9.5" font-weight="700" fill="#b45309">④ 分配 8MB</text>
+  <rect x="110" y="190" width="150" height="24" fill="#dbeafe" stroke="#93c5fd" stroke-width="1"/>
+  <text x="185" y="206" font-size="9" fill="#1e40af" text-anchor="middle">空闲 15MB</text>
+  <rect x="260" y="190" width="300" height="24" fill="#e2e8f0" stroke="#cbd5e1" stroke-width="1"/>
+  <text x="410" y="206" font-size="9" fill="#475569" text-anchor="middle">占用 30MB</text>
+  <rect x="560" y="190" width="80" height="24" fill="#fee2e2" stroke="#fca5a5" stroke-width="1"/>
+  <text x="600" y="206" font-size="9" font-weight="700" fill="#991b1b" text-anchor="middle">新占 8MB</text>
+  <text x="650" y="186" font-size="8.5" fill="#1e40af" text-anchor="middle">2</text>
+  <rect x="640" y="190" width="20" height="24" fill="#dbeafe" stroke="#93c5fd" stroke-width="1"/>
+
+  <text x="20" y="248" font-size="9.5" font-weight="700" fill="#b45309">⑤ 分配 6MB</text>
+  <rect x="110" y="228" width="60" height="24" fill="#fee2e2" stroke="#fca5a5" stroke-width="1"/>
+  <text x="140" y="244" font-size="8.5" font-weight="700" fill="#991b1b" text-anchor="middle">占 6</text>
+  <rect x="170" y="228" width="90" height="24" fill="#bbf7d0" stroke="#4ade80" stroke-width="1"/>
+  <text x="215" y="244" font-size="9" font-weight="700" fill="#166534" text-anchor="middle">空闲 9MB</text>
+  <rect x="260" y="228" width="300" height="24" fill="#e2e8f0" stroke="#cbd5e1" stroke-width="1"/>
+  <text x="410" y="244" font-size="9" fill="#475569" text-anchor="middle">占用 30MB</text>
+  <rect x="560" y="228" width="80" height="24" fill="#e2e8f0" stroke="#cbd5e1" stroke-width="1"/>
+  <text x="600" y="244" font-size="9" fill="#475569" text-anchor="middle">占用 8MB</text>
+  <text x="650" y="224" font-size="8.5" fill="#1e40af" text-anchor="middle">2</text>
+  <rect x="640" y="228" width="20" height="24" fill="#dbeafe" stroke="#93c5fd" stroke-width="1"/>
+
+  <text x="20" y="272" font-size="10" fill="#334155">④ 选块：够用的只有 15MB 与 10MB，最小是 10MB → 切走 8MB，剩 2MB（53~55），这是「最佳」留下的最小残块。</text>
+  <text x="20" y="290" font-size="10" fill="#334155">⑤ 选块：2MB 不够，只剩 15MB → 切走 6MB，剩 9MB（6~15）。结束时最大空闲分区 = <tspan font-weight="700" fill="#166534">9MB</tspan>。</text>
+
+  <rect x="20" y="304" width="640" height="24" fill="#f1f5f9" stroke="#cbd5e1" stroke-width="1"/>
+  <text x="30" y="320" font-size="9.5" font-weight="700" fill="#334155">算法</text>
+  <text x="130" y="320" font-size="9.5" font-weight="700" fill="#334155">排序依据</text>
+  <text x="250" y="320" font-size="9.5" font-weight="700" fill="#334155">取哪一块</text>
+  <text x="400" y="320" font-size="9.5" font-weight="700" fill="#334155">结论与考点</text>
+
+  <rect x="20" y="330" width="640" height="24" fill="#ffffff" stroke="#e2e8f0" stroke-width="1"/>
+  <text x="30" y="346" font-size="9.5" font-weight="700" fill="#1d4ed8">首次适应 FF</text>
+  <text x="130" y="346" font-size="9" fill="#475569">按地址递增</text>
+  <text x="250" y="346" font-size="9" fill="#475569">从链首查，第一个够用的</text>
+  <text x="400" y="346" font-size="9" fill="#166534">保留高地址大块，综合最好；回收后<tspan font-weight="700">不必重排</tspan></text>
+
+  <rect x="20" y="354" width="640" height="24" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1"/>
+  <text x="30" y="370" font-size="9.5" font-weight="700" fill="#1d4ed8">邻近适应 NF</text>
+  <text x="130" y="370" font-size="9" fill="#475569">按地址循环</text>
+  <text x="250" y="370" font-size="9" fill="#475569">从上次结束处往后找</text>
+  <text x="400" y="370" font-size="9" fill="#991b1b">低地址不被反复切碎，但大块被切散，通常不如 FF</text>
+
+  <rect x="20" y="378" width="640" height="24" fill="#ffffff" stroke="#e2e8f0" stroke-width="1"/>
+  <text x="30" y="394" font-size="9.5" font-weight="700" fill="#b45309">最佳适应 BF</text>
+  <text x="130" y="394" font-size="9" fill="#475569">按容量递增</text>
+  <text x="250" y="394" font-size="9" fill="#475569">够用的里面最小的</text>
+  <text x="400" y="394" font-size="9" fill="#991b1b">残块最小、最难利用，<tspan font-weight="700">碎片最多</tspan>（考得最多）</text>
+
+  <rect x="20" y="402" width="640" height="24" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1"/>
+  <text x="30" y="418" font-size="9.5" font-weight="700" fill="#b91c1c">最坏适应 WF</text>
+  <text x="130" y="418" font-size="9" fill="#475569">按容量递减</text>
+  <text x="250" y="418" font-size="9" fill="#475569">直接取最大的那块</text>
+  <text x="400" y="418" font-size="9" fill="#991b1b">大块迅速被耗光，后续大作业装不下</text>
+
+  <rect x="20" y="434" width="640" height="56" rx="6" fill="#fef3c7" stroke="#fcd34d" stroke-width="1"/>
+  <text x="34" y="454" font-size="10.5" fill="#92400e">① BF / WF 按<tspan font-weight="700">容量</tspan>排序，回收后必须重新排序；FF 按地址插入天然有序，回收后不必重排。</text>
+  <text x="34" y="474" font-size="10.5" fill="#92400e">② 动态分区的碎片是<tspan font-weight="700">外部碎片</tspan>（小块散落在已分配区之间），用紧凑（拼接）合并，代价是要支持动态重定位。</text>
+</svg>
