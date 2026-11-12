@@ -127,8 +127,10 @@ console.log('\n--- 五、笔记插图必须落在小节内 ---');
   for (const ch of osd.chapters || []) for (const sec of ch.sections || [])
     for (const sub of sec.subsections || []) {
       const h = sub.html || '';
-      if (!/<img/i.test(h) || !/spool/i.test(h)) continue;   // 只认"图在这块里"的小节
-      hit = h.slice(0, 40).replace(/<[^>]+>/g, '');
+      // 口径收紧：必须「小节标题就是 SPOOLing」且该小节里确实有图。
+      // 旧口径只看正文是否出现 spool 字样，5.2.5 只是例题里提到 SPOOLing 就会被误判成命中。
+      if (!/<img/i.test(h) || !/SPOOLing/i.test(sub.section || '')) continue;
+      hit = sub.section;
     }
   check('SPOOLing 图在 SPOOLing 小节里', /SPOOLing/.test(hit || ''), true);
 }

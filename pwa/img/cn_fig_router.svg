@@ -1,0 +1,92 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 680 420" width="680" height="420" font-family="-apple-system,BlinkMacSystemFont,'Segoe UI','Microsoft YaHei',sans-serif">
+  <defs>
+    <marker id="rtArrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#475569"/>
+    </marker>
+    <marker id="rtArrowBlue" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#1d4ed8"/>
+    </marker>
+  </defs>
+  <rect x="0" y="0" width="680" height="420" fill="#ffffff"/>
+  <text x="20" y="26" font-size="16" font-weight="700" fill="#1e3a8a">路由器内部：转发走交换结构（数据面），路由计算走处理机（控制面）</text>
+  <text x="20" y="46" font-size="10.5" fill="#64748b">连接异构网络、按 IP 地址转发；既隔离冲突域也隔离广播域，工作到网络层</text>
+
+  <!-- 路由器外框 -->
+  <rect x="24" y="60" width="430" height="304" rx="8" fill="#f8fafc" stroke="#94a3b8" stroke-width="1.4" stroke-dasharray="0"/>
+  <text x="40" y="80" font-size="11" font-weight="700" fill="#334155">路由器</text>
+
+  <!-- 路由选择处理机（控制面） -->
+  <rect x="40" y="88" width="398" height="46" rx="5" fill="#eef2ff" stroke="#818cf8" stroke-width="1.2"/>
+  <text x="52" y="106" font-size="10.5" font-weight="700" fill="#3730a3">路由选择处理机（控制面）</text>
+  <text x="52" y="123" font-size="9" fill="#4338ca">运行路由选择协议 → 构造并更新路由表，算出转发表内容（由路由算法决定）</text>
+
+  <!-- 输入端口 -->
+  <rect x="40" y="150" width="122" height="196" rx="5" fill="#eff6ff" stroke="#60a5fa" stroke-width="1.2"/>
+  <text x="101" y="168" font-size="10.5" font-weight="700" fill="#1e40af" text-anchor="middle">输入端口</text>
+  <rect x="50" y="178" width="102" height="26" rx="3" fill="#ffffff" stroke="#93c5fd" stroke-width="1"/>
+  <text x="101" y="195" font-size="9" fill="#1e3a8a" text-anchor="middle">物理层：接收比特流</text>
+  <rect x="50" y="210" width="102" height="26" rx="3" fill="#ffffff" stroke="#93c5fd" stroke-width="1"/>
+  <text x="101" y="227" font-size="9" fill="#1e3a8a" text-anchor="middle">链路层：拆帧、验 CRC</text>
+  <rect x="50" y="242" width="102" height="34" rx="3" fill="#dbeafe" stroke="#60a5fa" stroke-width="1"/>
+  <text x="101" y="257" font-size="9" font-weight="700" fill="#1e3a8a" text-anchor="middle">网络层：查转发表</text>
+  <text x="101" y="270" font-size="9" fill="#1e40af" text-anchor="middle">定输出端口</text>
+  <rect x="50" y="282" width="102" height="26" rx="3" fill="#ffffff" stroke="#93c5fd" stroke-width="1"/>
+  <text x="101" y="299" font-size="9" fill="#1e3a8a" text-anchor="middle">排队（可能丢包）</text>
+  <text x="101" y="326" font-size="8.5" fill="#64748b" text-anchor="middle">若查不到表项则丢弃</text>
+  <text x="101" y="338" font-size="8.5" fill="#64748b" text-anchor="middle">并回送 ICMP 不可达</text>
+
+  <!-- 交换结构 -->
+  <rect x="180" y="196" width="106" height="104" rx="5" fill="#fef3c7" stroke="#fbbf24" stroke-width="1.2"/>
+  <text x="233" y="214" font-size="10.5" font-weight="700" fill="#92400e" text-anchor="middle">交换结构</text>
+  <line x1="190" y1="224" x2="276" y2="224" stroke="#fbbf24" stroke-width="1"/>
+  <line x1="192" y1="232" x2="274" y2="250" stroke="#d97706" stroke-width="1" opacity="0.55"/>
+  <line x1="192" y1="242" x2="274" y2="260" stroke="#d97706" stroke-width="1" opacity="0.55"/>
+  <text x="233" y="268" font-size="8.5" fill="#92400e" text-anchor="middle">经内存 / 总线 /</text>
+  <text x="233" y="279" font-size="8.5" fill="#92400e" text-anchor="middle">互连网络交换</text>
+  <text x="233" y="290" font-size="8.5" font-weight="700" fill="#92400e" text-anchor="middle">数据面主体</text>
+
+  <!-- 输出端口 -->
+  <rect x="304" y="150" width="134" height="196" rx="5" fill="#ecfdf5" stroke="#34d399" stroke-width="1.2"/>
+  <text x="371" y="168" font-size="10.5" font-weight="700" fill="#065f46" text-anchor="middle">输出端口</text>
+  <rect x="314" y="178" width="114" height="26" rx="3" fill="#ffffff" stroke="#6ee7b7" stroke-width="1"/>
+  <text x="371" y="195" font-size="9" fill="#065f46" text-anchor="middle">排队、调度、整形</text>
+  <rect x="314" y="210" width="114" height="26" rx="3" fill="#ffffff" stroke="#6ee7b7" stroke-width="1"/>
+  <text x="371" y="227" font-size="9" fill="#065f46" text-anchor="middle">封装新的链路层帧</text>
+  <rect x="314" y="242" width="114" height="26" rx="3" fill="#ffffff" stroke="#6ee7b7" stroke-width="1"/>
+  <text x="371" y="259" font-size="9" fill="#065f46" text-anchor="middle">物理层：发送比特流</text>
+  <text x="371" y="290" font-size="8.5" fill="#047857" text-anchor="middle">IP 首部 TTL 减 1</text>
+  <text x="371" y="302" font-size="8.5" fill="#047857" text-anchor="middle">首部校验和重算</text>
+  <text x="371" y="322" font-size="8.5" fill="#047857" text-anchor="middle">源/目的 MAC 换成本段</text>
+  <text x="371" y="334" font-size="8.5" fill="#047857" text-anchor="middle">源 / 目的 IP 全程不变</text>
+
+  <!-- 连线 -->
+  <path d="M 8 248 L 34 248" fill="none" stroke="#475569" stroke-width="1.4" marker-end="url(#rtArrow)"/>
+  <text x="8" y="240" font-size="9" fill="#475569">入</text>
+  <path d="M 162 248 L 176 248" fill="none" stroke="#475569" stroke-width="1.4" marker-end="url(#rtArrow)"/>
+  <path d="M 286 248 L 300 248" fill="none" stroke="#475569" stroke-width="1.4" marker-end="url(#rtArrow)"/>
+  <path d="M 438 248 L 466 248" fill="none" stroke="#475569" stroke-width="1.4" marker-end="url(#rtArrow)"/>
+  <text x="444" y="240" font-size="9" fill="#475569">出</text>
+  <!-- 控制面下发转发表 -->
+  <path d="M 233 134 L 233 176" fill="none" stroke="#1d4ed8" stroke-width="1.2" stroke-dasharray="4 3" marker-end="url(#rtArrowBlue)"/>
+  <path d="M 371 134 L 371 176" fill="none" stroke="#1d4ed8" stroke-width="1.2" stroke-dasharray="4 3" marker-end="url(#rtArrowBlue)"/>
+  <text x="240" y="146" font-size="8.5" fill="#1d4ed8">下发转发表</text>
+
+  <!-- 右侧：五层处理路径 -->
+  <rect x="470" y="60" width="186" height="196" rx="6" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1"/>
+  <text x="484" y="80" font-size="11" font-weight="700" fill="#1e3a8a">转发一个分组走过的五层</text>
+  <text x="484" y="102" font-size="9.5" fill="#334155">物理层 →<tspan font-weight="700"> 数据链路层</tspan> →</text>
+  <text x="484" y="118" font-size="9.5" font-weight="700" fill="#1e3a8a">网络层（查表转发）</text>
+  <text x="484" y="134" font-size="9.5" fill="#334155">→ 数据链路层 → 物理层</text>
+  <text x="484" y="158" font-size="9" fill="#64748b">拆到网络层才看目的 IP，</text>
+  <text x="484" y="171" font-size="9" fill="#64748b">所以三层都实现、不碰传输层</text>
+  <line x1="484" y1="184" x2="642" y2="184" stroke="#e2e8f0" stroke-width="1"/>
+  <text x="484" y="202" font-size="9" fill="#334155">处理时延：集线器 ＜ 交换机 ＜ 路由器</text>
+  <text x="484" y="218" font-size="9" fill="#64748b">路由器要软件解析 IP 首部，最慢</text>
+  <text x="484" y="240" font-size="9" fill="#64748b">交换机按 MAC 硬件查表，几十 μs</text>
+
+  <rect x="470" y="272" width="186" height="92" rx="6" fill="#fff7ed" stroke="#fdba74" stroke-width="1"/>
+  <text x="484" y="292" font-size="11" font-weight="700" fill="#9a3412">与它对照着记</text>
+  <text x="484" y="310" font-size="9.5" fill="#334155">集线器：物理层，共享冲突域</text>
+  <text x="484" y="326" font-size="9.5" fill="#334155">交换机：链路层，隔离冲突域</text>
+  <text x="484" y="342" font-size="9.5" font-weight="700" fill="#9a3412">路由器：网络层，两个域都隔离</text>
+</svg>

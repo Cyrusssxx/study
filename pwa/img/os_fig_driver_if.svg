@@ -1,0 +1,61 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 680 424" width="680" height="424" font-family="-apple-system,BlinkMacSystemFont,'Segoe UI','Microsoft YaHei',sans-serif">
+  <defs>
+    <marker id="drArrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#475569"/>
+    </marker>
+    <marker id="drArrowUp" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#b45309"/>
+    </marker>
+  </defs>
+  <rect x="0" y="0" width="680" height="424" fill="#ffffff"/>
+  <text x="20" y="26" font-size="16" font-weight="700" fill="#1e3a8a">设备驱动程序：把抽象 I/O 请求翻成设备命令的唯一一层</text>
+  <text x="20" y="46" font-size="10.5" fill="#64748b">上层只说「读逻辑盘块 100 号」，驱动负责换成「第几盘面第几磁道第几扇区」，再交给控制器</text>
+
+  <!-- 左列流程 -->
+  <rect x="24" y="62" width="360" height="52" rx="6" fill="#f5f3ff" stroke="#c4b5fd" stroke-width="1.2"/>
+  <text x="38" y="80" font-size="11" font-weight="700" fill="#5b21b6">上层（设备无关层）交下来的抽象请求</text>
+  <text x="38" y="98" font-size="9.5" fill="#4c1d95">read / write ＋ 逻辑设备名 ＋ 逻辑块号 ＋ 传送长度</text>
+  <text x="38" y="108" font-size="9" fill="#6d28d9">比如：从逻辑设备 3 的 100 号盘块读 4KB</text>
+
+  <path d="M 204 114 L 204 134" fill="none" stroke="#475569" stroke-width="1.3" marker-end="url(#drArrow)"/>
+
+  <rect x="24" y="136" width="360" height="126" rx="6" fill="#fff7ed" stroke="#fdba74" stroke-width="1.4"/>
+  <text x="38" y="154" font-size="11" font-weight="700" fill="#9a3412">设备驱动程序的四件事</text>
+  <text x="38" y="172" font-size="9.5" fill="#7c2d12">① 检查请求合法性，查设备当前状态</text>
+  <text x="38" y="189" font-size="9.5" fill="#7c2d12">② 地址翻译：逻辑盘块号 → 盘面号 / 磁道号 / 扇区号</text>
+  <text x="38" y="206" font-size="9.5" fill="#7c2d12">③ 发命令启动设备；设备忙则把 PCB 挂到该设备等待队列</text>
+  <text x="38" y="223" font-size="9.5" fill="#7c2d12">④ 响应控制器中断，把状态与结果反馈给上层</text>
+  <text x="38" y="246" font-size="9" font-weight="700" fill="#9a3412">整套动作是「双向转换」：命令下行、状态上行</text>
+
+  <path d="M 204 262 L 204 280" fill="none" stroke="#475569" stroke-width="1.3" marker-end="url(#drArrow)"/>
+
+  <rect x="24" y="282" width="360" height="46" rx="6" fill="#eff6ff" stroke="#93c5fd" stroke-width="1.2"/>
+  <text x="38" y="300" font-size="10.5" font-weight="700" fill="#1e40af">设备控制器（数据 / 状态 / 控制寄存器）</text>
+  <text x="38" y="317" font-size="9.5" fill="#334155">只认端口里的具体命令，不认逻辑盘块号</text>
+
+  <path d="M 204 328 L 204 346" fill="none" stroke="#475569" stroke-width="1.3" marker-end="url(#drArrow)"/>
+
+  <rect x="24" y="348" width="360" height="38" rx="6" fill="#f1f5f9" stroke="#cbd5e1" stroke-width="1.2"/>
+  <text x="204" y="372" font-size="10.5" font-weight="700" fill="#334155" text-anchor="middle">物理设备（磁盘、键盘、打印机 …）</text>
+
+
+  <!-- 右列 -->
+  <rect x="428" y="62" width="228" height="154" rx="6" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1"/>
+  <text x="442" y="82" font-size="11" font-weight="700" fill="#1e3a8a">为什么必须「一类设备一个驱动」</text>
+  <text x="442" y="103" font-size="9.5" fill="#334155"><tspan font-weight="700">直接操作硬件端口</tspan>，不是通用逻辑</text>
+  <text x="442" y="122" font-size="9.5" fill="#334155"><tspan font-weight="700">与 I/O 控制方式强相关</tspan></text>
+  <text x="442" y="137" font-size="9" fill="#64748b">　程序控制 / 中断 / DMA 下要做的事不同</text>
+  <text x="442" y="157" font-size="9.5" fill="#334155">部分底层功能可交给<tspan font-weight="700">设备固件或 ROM</tspan></text>
+  <text x="442" y="177" font-size="9.5" fill="#334155">必须<tspan font-weight="700">可重入</tspan>，才能被多进程并发调用</text>
+  <text x="442" y="204" font-size="9" fill="#64748b">统一接口规范 → 无关层才能按名找到入口</text>
+
+  <rect x="428" y="224" width="228" height="162" rx="6" fill="#ecfdf5" stroke="#6ee7b7" stroke-width="1"/>
+  <text x="442" y="244" font-size="11" font-weight="700" fill="#065f46">与设备无关层的分界线</text>
+  <rect x="442" y="254" width="200" height="48" rx="4" fill="#ffffff" stroke="#34d399" stroke-width="1"/>
+  <text x="452" y="272" font-size="9.5" font-weight="700" fill="#065f46">端口 → 内核缓冲区：驱动的活</text>
+  <text x="452" y="288" font-size="9" fill="#047857">读 I/O 端口、依赖具体硬件</text>
+  <rect x="442" y="308" width="200" height="48" rx="4" fill="#ffffff" stroke="#34d399" stroke-width="1"/>
+  <text x="452" y="326" font-size="9.5" font-weight="700" fill="#065f46">内核缓冲区 → 用户区：无关层的活</text>
+  <text x="452" y="342" font-size="9" fill="#047857">纯内存拷贝、与硬件无关</text>
+  <text x="442" y="372" font-size="9" fill="#334155">缓冲区管理、数据分析都不归驱动</text>
+</svg>
