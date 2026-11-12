@@ -1,0 +1,92 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 680 516" width="680" height="516" font-family="-apple-system,BlinkMacSystemFont,'Segoe UI','Microsoft YaHei',sans-serif">
+  <rect x="0" y="0" width="680" height="516" fill="#ffffff"/>
+  <text x="20" y="26" font-size="16" font-weight="700" fill="#312e81">磁盘的三次格式化 · 每一层格式化的对象都不一样</text>
+  <text x="20" y="46" font-size="11" fill="#64748b">低级格式化划扇区（硬件级）→ 分区划逻辑盘 → 高级格式化建文件系统（软件级）。顺序不能颠倒。</text>
+
+  <rect x="20" y="62" width="196" height="98" rx="6" fill="#eff6ff" stroke="#bfdbfe" stroke-width="1"/>
+  <text x="34" y="80" font-size="10.5" font-weight="700" fill="#1e40af">① 低级格式化</text>
+  <text x="34" y="94" font-size="8.5" fill="#3b82f6">＝物理格式化，出厂前多已做完</text>
+  <text x="34" y="114" font-size="8.8" fill="#1e3a8a">把盘面划成磁道、扇区</text>
+  <text x="34" y="130" font-size="8.8" fill="#1e3a8a">写入扇区的头 / 尾控制信息</text>
+  <text x="34" y="146" font-size="8.8" fill="#1e3a8a">数据区大小 256B / 512B / 4KB</text>
+
+  <line x1="216" y1="111" x2="234" y2="111" stroke="#94a3b8" stroke-width="1.6"/>
+  <polygon points="241,111 231,106 231,116" fill="#94a3b8"/>
+
+  <rect x="242" y="62" width="196" height="98" rx="6" fill="#f0fdf4" stroke="#bbf7d0" stroke-width="1"/>
+  <text x="256" y="80" font-size="10.5" font-weight="700" fill="#166534">② 分区</text>
+  <text x="256" y="94" font-size="8.5" fill="#16a34a">把一块盘切成 C、D 等逻辑区域</text>
+  <text x="256" y="114" font-size="8.8" fill="#14532d">每个分区的起始位置与大小</text>
+  <text x="256" y="130" font-size="8.8" fill="#14532d">记录在<tspan font-weight="700">主引导记录 MBR 的分区表</tspan></text>
+  <text x="256" y="146" font-size="8.8" fill="#14532d">此时分区里还没有文件系统</text>
+
+  <line x1="438" y1="111" x2="456" y2="111" stroke="#94a3b8" stroke-width="1.6"/>
+  <polygon points="463,111 453,106 453,116" fill="#94a3b8"/>
+
+  <rect x="464" y="62" width="196" height="98" rx="6" fill="#faf5ff" stroke="#e9d5ff" stroke-width="1"/>
+  <text x="478" y="80" font-size="10.5" font-weight="700" fill="#6b21a8">③ 逻辑格式化</text>
+  <text x="478" y="94" font-size="8.5" fill="#9333ea">＝高级格式化</text>
+  <text x="478" y="114" font-size="8.8" fill="#581c87">初始化根目录（目录置空）</text>
+  <text x="478" y="130" font-size="8.8" fill="#581c87">建空闲/已分配管理结构（位示图、FAT）</text>
+  <text x="478" y="146" font-size="8.8" fill="#991b1b">分区内的<tspan font-weight="700">引导扇区也在此刻写入</tspan></text>
+
+  <text x="20" y="180" font-size="10.5" font-weight="700" fill="#334155">一个扇区长什么样（头尾信息由低级格式化建立）</text>
+  <rect x="20" y="190" width="80" height="42" fill="#dbeafe" stroke="#60a5fa" stroke-width="1"/>
+  <rect x="100" y="190" width="250" height="42" fill="#f8fafc" stroke="#cbd5e1" stroke-width="1"/>
+  <rect x="350" y="190" width="80" height="42" fill="#dbeafe" stroke="#60a5fa" stroke-width="1"/>
+  <text x="60" y="204" font-size="8.5" font-weight="700" fill="#1e40af" text-anchor="middle">头部</text>
+  <text x="60" y="216" font-size="7.4" fill="#1e3a8a" text-anchor="middle">磁道号 磁头号</text>
+  <text x="60" y="226" font-size="7.4" fill="#1e3a8a" text-anchor="middle">扇区号</text>
+  <text x="225" y="208" font-size="9" font-weight="700" fill="#334155" text-anchor="middle">数据区域</text>
+  <text x="225" y="222" font-size="7.8" fill="#64748b" text-anchor="middle">真正的用户数据，256B / 512B / 4KB</text>
+  <text x="390" y="208" font-size="9" font-weight="700" fill="#1e40af" text-anchor="middle">尾部</text>
+  <text x="390" y="222" font-size="7.8" fill="#1e3a8a" text-anchor="middle">CRC 校验码</text>
+
+  <rect x="446" y="186" width="214" height="50" rx="4" fill="#fffbeb" stroke="#fcd34d" stroke-width="1"/>
+  <text x="458" y="203" font-size="9" fill="#92400e">簇（块）＝ <tspan font-weight="700">2ⁿ 个连续扇区</tspan>，是分配单位</text>
+  <text x="458" y="219" font-size="8.3" fill="#a16207">磁盘控制器按扇区寻址，操作系统按簇分配</text>
+  <text x="458" y="232" font-size="8.3" fill="#a16207">占用空间 = ceil(文件大小/簇大小) × 簇大小</text>
+
+  <text x="20" y="256" font-size="10.5" font-weight="700" fill="#334155">启动链：ROM 里的一小段程序，逐级把更大的程序接上来</text>
+  <rect x="20" y="266" width="140" height="40" rx="4" fill="#f1f5f9" stroke="#cbd5e1" stroke-width="1"/>
+  <text x="90" y="283" font-size="9" font-weight="700" fill="#334155" text-anchor="middle">ROM 自举装入程序</text>
+  <text x="90" y="297" font-size="7.8" fill="#64748b" text-anchor="middle">固化，无法轻易修改</text>
+
+  <line x1="160" y1="286" x2="178" y2="286" stroke="#94a3b8" stroke-width="1.4"/>
+  <polygon points="185,286 175,281 175,291" fill="#94a3b8"/>
+
+  <rect x="186" y="266" width="150" height="40" rx="4" fill="#eff6ff" stroke="#93c5fd" stroke-width="1"/>
+  <text x="261" y="283" font-size="9" font-weight="700" fill="#1e40af" text-anchor="middle">MBR（磁盘 0 号扇区）</text>
+  <text x="261" y="297" font-size="7.8" fill="#1e3a8a" text-anchor="middle">引导代码 + 分区表 + 引导标志</text>
+
+  <line x1="336" y1="286" x2="354" y2="286" stroke="#94a3b8" stroke-width="1.4"/>
+  <polygon points="361,286 351,281 351,291" fill="#94a3b8"/>
+
+  <rect x="362" y="266" width="150" height="40" rx="4" fill="#f0fdf4" stroke="#86efac" stroke-width="1"/>
+  <text x="437" y="283" font-size="9" font-weight="700" fill="#166534" text-anchor="middle">引导扇区（活动分区首扇区）</text>
+  <text x="437" y="297" font-size="7.8" fill="#14532d" text-anchor="middle">存操作系统引导代码</text>
+
+  <line x1="512" y1="286" x2="530" y2="286" stroke="#94a3b8" stroke-width="1.4"/>
+  <polygon points="537,286 527,281 527,291" fill="#94a3b8"/>
+
+  <rect x="538" y="266" width="122" height="40" rx="4" fill="#faf5ff" stroke="#d8b4fe" stroke-width="1"/>
+  <text x="599" y="283" font-size="9" font-weight="700" fill="#6b21a8" text-anchor="middle">加载内核与驱动</text>
+  <text x="599" y="297" font-size="7.8" fill="#581c87" text-anchor="middle">操作系统这才接管</text>
+
+  <text x="20" y="330" font-size="9.5" fill="#475569">MBR 管<tspan font-weight="700">选哪个分区</tspan>（磁盘级），引导扇区管<tspan font-weight="700">启动这个分区里的操作系统</tspan>（分区级）—— 两个不同对象，别混。</text>
+
+  <text x="20" y="356" font-size="10.5" font-weight="700" fill="#334155">坏块：软件标记 或 硬件重映射，目标都是「让系统别用到它」</text>
+  <rect x="20" y="366" width="310" height="42" rx="4" fill="#fef2f2" stroke="#fca5a5" stroke-width="1"/>
+  <text x="32" y="383" font-size="9" font-weight="700" fill="#991b1b">简单磁盘（如 IDE）</text>
+  <text x="32" y="399" font-size="8.3" fill="#b91c1c">逻辑格式化时由操作系统检测，在 FAT 表里标为不可用</text>
+
+  <rect x="348" y="366" width="312" height="42" rx="4" fill="#f0f9ff" stroke="#7dd3fc" stroke-width="1"/>
+  <text x="360" y="383" font-size="9" font-weight="700" fill="#0c4a6e">现代复杂磁盘</text>
+  <text x="360" y="399" font-size="8.3" fill="#075985">控制器自维护坏块表 + 预留备用扇区，自动逻辑替换（对 OS 透明）</text>
+
+  <rect x="20" y="420" width="640" height="82" rx="6" fill="#fef3c7" stroke="#fcd34d" stroke-width="1"/>
+  <text x="34" y="440" font-size="10.5" fill="#92400e">两个必背判断：扇区头尾的<tspan font-weight="700">磁道号 / 磁头号 / 扇区号 / CRC 属于低级格式化</tspan>；</text>
+  <text x="34" y="458" font-size="10.5" fill="#92400e">而<tspan font-weight="700">引导扇区（自举记录）是高级格式化时才产生的</tspan> —— 前者建扇区，后者建文件系统与引导结构。</text>
+  <text x="34" y="478" font-size="10" fill="#991b1b">整簇分配 ⇒ 小于一簇的文件（哪怕 0 字节）也独占一整簇，这就是「0 字节文件也占磁盘空间」的原因。</text>
+  <text x="34" y="495" font-size="9.5" fill="#a16207">簇越大：索引项越少、寻道越少、I/O 越快；但簇内碎片越多、空间利用率越低 —— 一对矛盾要在两者间权衡。</text>
+</svg>

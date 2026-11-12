@@ -1,0 +1,72 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 680 424" width="680" height="424" font-family="-apple-system,BlinkMacSystemFont,'Segoe UI','Microsoft YaHei',sans-serif">
+  <rect x="0" y="0" width="680" height="424" fill="#ffffff"/>
+  <text x="20" y="26" font-size="16" font-weight="700" fill="#312e81">Peterson 算法 · 谁后写 turn，谁就把机会让给对方</text>
+  <text x="20" y="46" font-size="11" fill="#64748b">flag[] 表达「我想进」，turn 表达「让谁先进」。两者合起来：既有互斥，又不会彼此僵住。</text>
+
+  <rect x="20" y="60" width="312" height="128" rx="6" fill="#eff6ff" stroke="#bfdbfe" stroke-width="1"/>
+  <text x="34" y="78" font-size="10.5" font-weight="700" fill="#1e40af">进程 P0</text>
+  <text x="34" y="98" font-size="9.5" fill="#1e3a8a">①  flag[0] = true;</text>
+  <text x="34" y="116" font-size="9.5" fill="#1e3a8a">②  turn = 1;</text>
+  <text x="34" y="134" font-size="9.5" fill="#1e3a8a">③  while (flag[1] &amp;&amp; turn == 1);</text>
+  <text x="34" y="156" font-size="9.5" fill="#166534">④  临界区 …… ⑤  flag[0] = false;</text>
+  <text x="34" y="176" font-size="8.5" fill="#64748b">进入区 ①②③，退出区把 flag 置回 false</text>
+
+  <rect x="348" y="60" width="312" height="128" rx="6" fill="#f0fdf4" stroke="#bbf7d0" stroke-width="1"/>
+  <text x="362" y="78" font-size="10.5" font-weight="700" fill="#166534">进程 P1</text>
+  <text x="362" y="98" font-size="9.5" fill="#14532d">①  flag[1] = true;</text>
+  <text x="362" y="116" font-size="9.5" fill="#14532d">②  turn = 0;</text>
+  <text x="362" y="134" font-size="9.5" fill="#14532d">③  while (flag[0] &amp;&amp; turn == 0);</text>
+  <text x="362" y="156" font-size="9.5" fill="#166534">④  临界区 …… ⑤  flag[1] = false;</text>
+  <text x="362" y="176" font-size="8.5" fill="#64748b">两边写法完全对称，只是下标互换</text>
+
+  <text x="20" y="212" font-size="11" font-weight="700" fill="#334155">两人同时请求时，turn 的最终值由后赋值者决定 —— 后写的人主动退出</text>
+
+  <circle cx="42" cy="236" r="7" fill="#bfdbfe" stroke="#3b82f6" stroke-width="1"/>
+  <circle cx="120" cy="236" r="7" fill="#bfdbfe" stroke="#3b82f6" stroke-width="1"/>
+  <circle cx="198" cy="236" r="7" fill="#bbf7d0" stroke="#16a34a" stroke-width="1"/>
+  <circle cx="276" cy="236" r="7" fill="#bbf7d0" stroke="#16a34a" stroke-width="1"/>
+  <circle cx="354" cy="236" r="7" fill="#e2e8f0" stroke="#94a3b8" stroke-width="1"/>
+  <line x1="49" y1="236" x2="368" y2="236" stroke="#e2e8f0" stroke-width="1"/>
+  <text x="42" y="256" font-size="8" fill="#3b82f6" text-anchor="middle">t1</text>
+  <text x="120" y="256" font-size="8" fill="#3b82f6" text-anchor="middle">t2</text>
+  <text x="198" y="256" font-size="8" fill="#16a34a" text-anchor="middle">t3</text>
+  <text x="276" y="256" font-size="8" fill="#16a34a" text-anchor="middle">t4</text>
+  <text x="354" y="256" font-size="8" fill="#94a3b8" text-anchor="middle">t5</text>
+
+  <text x="42" y="278" font-size="8.5" fill="#1e3a8a" text-anchor="middle">P0 置</text>
+  <text x="42" y="290" font-size="8.5" fill="#1e3a8a" text-anchor="middle">flag[0]</text>
+  <text x="120" y="278" font-size="8.5" fill="#1e3a8a" text-anchor="middle">P0 写</text>
+  <text x="120" y="290" font-size="8.5" fill="#1e3a8a" text-anchor="middle">turn=1</text>
+  <text x="198" y="278" font-size="8.5" fill="#14532d" text-anchor="middle">P1 置</text>
+  <text x="198" y="290" font-size="8.5" fill="#14532d" text-anchor="middle">flag[1]</text>
+  <text x="276" y="278" font-size="8.5" fill="#14532d" text-anchor="middle">P1 写</text>
+  <text x="276" y="290" font-size="8.5" fill="#14532d" text-anchor="middle">turn=0</text>
+  <text x="354" y="278" font-size="8.5" fill="#94a3b8" text-anchor="middle">此刻</text>
+  <text x="354" y="290" font-size="8.5" fill="#94a3b8" text-anchor="middle">turn=0</text>
+
+  <rect x="378" y="224" width="272" height="72" rx="6" fill="#f8fafc" stroke="#cbd5e1" stroke-width="1"/>
+  <text x="390" y="243" font-size="9" fill="#1e40af">P0：flag[1] 真，turn=0≠1 → <tspan font-weight="700">进入临界区</tspan></text>
+  <text x="390" y="261" font-size="9" fill="#991b1b">P1：flag[0] 真，turn=0 → <tspan font-weight="700">原地循环等</tspan></text>
+  <text x="390" y="281" font-size="8.5" fill="#64748b">后写 turn 的一方主动让出，结果就反过来</text>
+
+  <text x="20" y="320" font-size="11" font-weight="700" fill="#334155">四条准则逐条对照</text>
+
+  <rect x="20" y="332" width="150" height="34" rx="4" fill="#f0fdf4" stroke="#86efac" stroke-width="1"/>
+  <text x="32" y="347" font-size="9" font-weight="700" fill="#166534">空闲让进 ✓</text>
+  <text x="32" y="360" font-size="8" fill="#166534">对方 flag 为假即直接进</text>
+
+  <rect x="180" y="332" width="150" height="34" rx="4" fill="#f0fdf4" stroke="#86efac" stroke-width="1"/>
+  <text x="192" y="347" font-size="9" font-weight="700" fill="#166534">忙则等待 ✓</text>
+  <text x="192" y="360" font-size="8" fill="#166534">turn 只指向一方，不会同时进</text>
+
+  <rect x="340" y="332" width="150" height="34" rx="4" fill="#f0fdf4" stroke="#86efac" stroke-width="1"/>
+  <text x="352" y="347" font-size="9" font-weight="700" fill="#166534">有限等待 ✓</text>
+  <text x="352" y="360" font-size="8" fill="#166534">只有输一次 turn，不会饿死</text>
+
+  <rect x="500" y="332" width="160" height="34" rx="4" fill="#fef2f2" stroke="#fca5a5" stroke-width="1"/>
+  <text x="512" y="347" font-size="9" font-weight="700" fill="#991b1b">让权等待 ✗</text>
+  <text x="512" y="360" font-size="8" fill="#991b1b">while 空转，仍是忙等</text>
+
+  <rect x="20" y="376" width="640" height="34" rx="6" fill="#fef3c7" stroke="#fcd34d" stroke-width="1"/>
+  <text x="34" y="398" font-size="10" fill="#92400e">纯软件法里 <tspan font-weight="700">只有 Peterson 同时满足前三准则</tspan>；它和 TS/Swap 一样卡在让权等待上，真正放弃 CPU 得靠信号量的阻塞队列。</text>
+</svg>

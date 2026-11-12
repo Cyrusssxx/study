@@ -42,10 +42,10 @@ const FIGS = [
 
 check('序列化仍是 indent=1 + LF + 尾换行',
   [notesRaw.indexOf('\r\n') < 0, notesRaw.endsWith('\n')], [true, true]);
-check('OS 配图 43 张（38 + 本批 5）',
-  (notesRaw.match(/class=\\"fig-img\\"/g) || []).length, 43);
-check('OS 黄框 48 个（43 + 本批 5）',
-  (notesRaw.match(/class=\\"key-callout\\"/g) || []).length, 48);
+check('OS 配图不少于 43 张（精确值见 _test_os_fig_p6）',
+  (notesRaw.match(/class=\\"fig-img\\"/g) || []).length >= 43, true);
+check('OS 黄框不少于 48 个（精确值见 _test_os_fig_p6）',
+  (notesRaw.match(/class=\\"key-callout\\"/g) || []).length >= 48, true);
 check('SW 里第五批 5 图进预缓存',
   ['thread_models', 'va_translate', 'alloc_algo', 'group_link', 'dev_alloc']
     .every(n => sw.includes("'img/os_fig_" + n + ".svg'")), true);
@@ -189,8 +189,8 @@ if (!JSDOM || !IDBFactory) {
     const d = dom.window.document;
     check('真实渲染 .anno-line 总数 = 3668（已存批注不错位）',
       d.querySelectorAll('.anno-line').length, 3668);
-    check('真实渲染配图 43 张', d.querySelectorAll('img.fig-img').length, 43);
-    check('真实渲染黄框 48 个', d.querySelectorAll('.key-callout').length, 48);
+    check('真实渲染配图不少于 43 张', d.querySelectorAll('img.fig-img').length >= 43, true);
+    check('真实渲染黄框不少于 48 个', d.querySelectorAll('.key-callout').length >= 48, true);
     check('图块被误标行号 = 0',
       [...d.querySelectorAll('.anno-line')]
         .filter(e => e.hasAttribute('data-fig') || e.closest('[data-fig]')).length, 0);

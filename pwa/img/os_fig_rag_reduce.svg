@@ -1,0 +1,81 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 680 502" width="680" height="502" font-family="-apple-system,BlinkMacSystemFont,'Segoe UI','Microsoft YaHei',sans-serif">
+  <rect x="0" y="0" width="680" height="502" fill="#ffffff"/>
+  <text x="20" y="26" font-size="16" font-weight="700" fill="#312e81">资源分配图化简 · 同样是环，左边能消、右边消不掉</text>
+  <text x="20" y="46" font-size="11" fill="#64748b">长方形＝一类资源（框内圆点＝实例数），圆圈＝进程；进程→资源的箭头是<tspan font-weight="700">请求</tspan>，资源→进程的箭头是<tspan font-weight="700">已分配</tspan>。</text>
+
+  <rect x="20" y="56" width="320" height="228" rx="6" fill="#f0fdf4" stroke="#bbf7d0" stroke-width="1"/>
+  <text x="34" y="74" font-size="10.5" font-weight="700" fill="#166534">① 可完全化简 → 不死锁</text>
+
+  <circle cx="95" cy="126" r="18" fill="#dcfce7" stroke="#16a34a" stroke-width="1.5"/>
+  <text x="95" y="131" font-size="10.5" font-weight="700" fill="#166534" text-anchor="middle">P1</text>
+  <circle cx="250" cy="251" r="18" fill="#dcfce7" stroke="#16a34a" stroke-width="1.5"/>
+  <text x="250" y="256" font-size="10.5" font-weight="700" fill="#166534" text-anchor="middle">P2</text>
+
+  <rect x="200" y="101" width="100" height="50" fill="#f8fafc" stroke="#64748b" stroke-width="1.2"/>
+  <text x="250" y="98" font-size="9" font-weight="700" fill="#334155" text-anchor="middle">R1（2 个实例）</text>
+  <circle cx="232" cy="120" r="4" fill="#64748b"/>
+  <circle cx="268" cy="120" r="4" fill="#64748b"/>
+  <text x="232" y="141" font-size="8" fill="#475569" text-anchor="middle">给 P2</text>
+  <text x="268" y="141" font-size="8" fill="#166534" text-anchor="middle">空闲</text>
+
+  <rect x="45" y="226" width="100" height="50" fill="#f8fafc" stroke="#64748b" stroke-width="1.2"/>
+  <text x="95" y="223" font-size="9" font-weight="700" fill="#334155" text-anchor="middle">R2（1 个实例）</text>
+  <circle cx="95" cy="245" r="4" fill="#64748b"/>
+  <text x="95" y="266" font-size="8" fill="#475569" text-anchor="middle">给 P1</text>
+
+  <line x1="113" y1="126" x2="192" y2="126" stroke="#3b82f6" stroke-width="1.6"/>
+  <polygon points="199,126 189,121 189,131" fill="#3b82f6"/>
+  <line x1="250" y1="151" x2="250" y2="226" stroke="#94a3b8" stroke-width="1.6"/>
+  <polygon points="250,233 245,223 255,223" fill="#94a3b8"/>
+  <line x1="232" y1="251" x2="153" y2="251" stroke="#3b82f6" stroke-width="1.6"/>
+  <polygon points="146,251 156,246 156,256" fill="#3b82f6"/>
+  <line x1="95" y1="226" x2="95" y2="151" stroke="#94a3b8" stroke-width="1.6"/>
+  <polygon points="95,144 90,154 100,154" fill="#94a3b8"/>
+
+  <text x="152" y="120" font-size="8" fill="#2563eb" text-anchor="middle">请求</text>
+  <text x="264" y="196" font-size="8" fill="#64748b">分配</text>
+
+  <rect x="350" y="56" width="310" height="228" rx="6" fill="#fef2f2" stroke="#fca5a5" stroke-width="1"/>
+  <text x="364" y="74" font-size="10.5" font-weight="700" fill="#991b1b">② 不可化简 → 死锁</text>
+
+  <circle cx="425" cy="126" r="18" fill="#fee2e2" stroke="#dc2626" stroke-width="1.5"/>
+  <text x="425" y="131" font-size="10.5" font-weight="700" fill="#991b1b" text-anchor="middle">P1</text>
+  <circle cx="580" cy="251" r="18" fill="#fee2e2" stroke="#dc2626" stroke-width="1.5"/>
+  <text x="580" y="256" font-size="10.5" font-weight="700" fill="#991b1b" text-anchor="middle">P2</text>
+
+  <rect x="530" y="101" width="100" height="50" fill="#f8fafc" stroke="#64748b" stroke-width="1.2"/>
+  <text x="580" y="98" font-size="9" font-weight="700" fill="#334155" text-anchor="middle">R1（1 个实例）</text>
+  <circle cx="580" cy="120" r="4" fill="#64748b"/>
+  <text x="580" y="141" font-size="8" fill="#475569" text-anchor="middle">给 P1</text>
+
+  <rect x="375" y="226" width="100" height="50" fill="#f8fafc" stroke="#64748b" stroke-width="1.2"/>
+  <text x="425" y="223" font-size="9" font-weight="700" fill="#334155" text-anchor="middle">R2（1 个实例）</text>
+  <circle cx="425" cy="245" r="4" fill="#64748b"/>
+  <text x="425" y="266" font-size="8" fill="#475569" text-anchor="middle">给 P2</text>
+
+  <line x1="443" y1="126" x2="522" y2="126" stroke="#3b82f6" stroke-width="1.6"/>
+  <polygon points="529,126 519,121 519,131" fill="#3b82f6"/>
+  <line x1="580" y1="151" x2="580" y2="226" stroke="#94a3b8" stroke-width="1.6"/>
+  <polygon points="580,233 575,223 585,223" fill="#94a3b8"/>
+  <line x1="562" y1="251" x2="483" y2="251" stroke="#3b82f6" stroke-width="1.6"/>
+  <polygon points="476,251 486,246 486,256" fill="#3b82f6"/>
+  <line x1="425" y1="226" x2="425" y2="151" stroke="#94a3b8" stroke-width="1.6"/>
+  <polygon points="425,144 420,154 430,154" fill="#94a3b8"/>
+
+  <text x="482" y="120" font-size="8" fill="#2563eb" text-anchor="middle">请求</text>
+  <text x="594" y="196" font-size="8" fill="#64748b">分配</text>
+
+  <text x="20" y="308" font-size="11" font-weight="700" fill="#334155">化简顺序：先问「有没有一个进程的全部请求都能被空闲实例满足」</text>
+
+  <text x="20" y="330" font-size="9.5" fill="#166534">左：R1 空闲 1 个 → P1 的请求立即可满足 → 删掉 P1 全部边、P1 成孤立点，</text>
+  <text x="20" y="346" font-size="9.5" fill="#166534">　　释放后 R1 又多出 1 个空闲 → P2 的请求被满足 → 全图边删光。<tspan font-weight="700">有环却仍可化简</tspan>。</text>
+
+  <text x="20" y="370" font-size="9.5" fill="#991b1b">右：R1、R2 的空闲实例都是 0 —— P1 等 R2、P2 等 R1，谁也推进不了，环原样留着，</text>
+  <text x="20" y="386" font-size="9.5" fill="#991b1b">　　化简后仍有边相连 → 这两个进程就是死锁进程。</text>
+
+  <rect x="20" y="400" width="640" height="88" rx="6" fill="#fef3c7" stroke="#fcd34d" stroke-width="1"/>
+  <text x="34" y="420" font-size="10.5" fill="#92400e">空闲实例数 = <tspan font-weight="700">该类资源总数 − 该资源节点的分配边条数</tspan>，这一步算错，整个化简就错了方向。</text>
+  <text x="34" y="440" font-size="10.5" fill="#92400e">死锁定理：系统死锁 ⇔ 资源分配图<tspan font-weight="700">不可完全化简</tspan>。无环必不死锁；有环只是<tspan font-weight="700">可能</tspan>死锁。</text>
+  <text x="34" y="460" font-size="10.5" fill="#991b1b">只有当环上每类资源都只有 1 个实例时，「有环」才与「死锁」等价 —— 这正是左右两栏唯一的区别。</text>
+  <text x="34" y="478" font-size="9.5" fill="#a16207">2019 考解除方法：资源剥夺 / 撤销进程 / 进程回退；检测与解除策略资源利用率最高，但要付出检测代价。</text>
+</svg>

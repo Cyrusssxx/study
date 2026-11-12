@@ -1,0 +1,117 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 680 486" width="680" height="486" font-family="-apple-system,BlinkMacSystemFont,'Segoe UI','Microsoft YaHei',sans-serif">
+  <rect x="0" y="0" width="680" height="486" fill="#ffffff"/>
+  <text x="20" y="26" font-size="16" font-weight="700" fill="#312e81">五种逻辑结构 · 差别就在「能不能算出第 i 条记录在哪」</text>
+  <text x="20" y="46" font-size="11" fill="#64748b">能算出地址的就能直接存取，算不出的只能从前往后扫。索引的全部意义，就是把「算不出」变成「查表可得」。</text>
+
+  <line x1="20" y1="58" x2="660" y2="58" stroke="#e2e8f0" stroke-width="1"/>
+  <text x="20" y="74" font-size="9" font-weight="700" fill="#94a3b8">组织方式</text>
+  <text x="180" y="74" font-size="9" font-weight="700" fill="#94a3b8">记录在文件里怎么摆</text>
+  <text x="500" y="74" font-size="9" font-weight="700" fill="#94a3b8">能否直接存取 / 平均查找次数（N=10000）</text>
+
+  <text x="20" y="104" font-size="10.5" font-weight="700" fill="#1e40af">顺序文件</text>
+  <text x="20" y="118" font-size="8.5" fill="#3b82f6">定长 + 按键字有序</text>
+  <rect x="180" y="92" width="44" height="22" fill="#dbeafe" stroke="#60a5fa" stroke-width="1"/>
+  <rect x="224" y="92" width="44" height="22" fill="#dbeafe" stroke="#60a5fa" stroke-width="1"/>
+  <rect x="268" y="92" width="44" height="22" fill="#dbeafe" stroke="#60a5fa" stroke-width="1"/>
+  <rect x="312" y="92" width="44" height="22" fill="#dbeafe" stroke="#60a5fa" stroke-width="1"/>
+  <rect x="356" y="92" width="44" height="22" fill="#eff6ff" stroke="#bfdbfe" stroke-width="1"/>
+  <rect x="400" y="92" width="44" height="22" fill="#eff6ff" stroke="#bfdbfe" stroke-width="1"/>
+  <text x="202" y="107" font-size="8.5" fill="#1e40af" text-anchor="middle">R1</text>
+  <text x="246" y="107" font-size="8.5" fill="#1e40af" text-anchor="middle">R2</text>
+  <text x="290" y="107" font-size="8.5" fill="#1e40af" text-anchor="middle">R3</text>
+  <text x="334" y="107" font-size="8.5" fill="#1e40af" text-anchor="middle">R4</text>
+  <text x="378" y="107" font-size="8.5" fill="#64748b" text-anchor="middle">…</text>
+  <text x="422" y="107" font-size="8.5" fill="#64748b" text-anchor="middle">R10000</text>
+  <text x="180" y="128" font-size="8" fill="#64748b">等宽 L，第 i 条 = 基址 + i×L</text>
+  <text x="500" y="100" font-size="9.5" font-weight="700" fill="#166534">能 ✓</text>
+  <text x="500" y="116" font-size="8.5" fill="#475569">有序列上再折半 ≈ log₂10000 ≈ 14 次</text>
+
+  <line x1="20" y1="140" x2="660" y2="140" stroke="#f1f5f9" stroke-width="1"/>
+
+  <text x="20" y="176" font-size="10.5" font-weight="700" fill="#991b1b">变长顺序文件</text>
+  <text x="20" y="190" font-size="8.5" fill="#b91c1c">串结构 / 记录不等长</text>
+  <rect x="180" y="164" width="30" height="22" fill="#fee2e2" stroke="#f87171" stroke-width="1"/>
+  <rect x="210" y="164" width="52" height="22" fill="#fee2e2" stroke="#f87171" stroke-width="1"/>
+  <rect x="262" y="164" width="36" height="22" fill="#fee2e2" stroke="#f87171" stroke-width="1"/>
+  <rect x="298" y="164" width="64" height="22" fill="#fee2e2" stroke="#f87171" stroke-width="1"/>
+  <rect x="362" y="164" width="40" height="22" fill="#fef2f2" stroke="#fca5a5" stroke-width="1"/>
+  <text x="195" y="179" font-size="8.5" fill="#991b1b" text-anchor="middle">R1</text>
+  <text x="236" y="179" font-size="8.5" fill="#991b1b" text-anchor="middle">R2</text>
+  <text x="280" y="179" font-size="8.5" fill="#991b1b" text-anchor="middle">R3</text>
+  <text x="330" y="179" font-size="8.5" fill="#991b1b" text-anchor="middle">R4</text>
+  <text x="382" y="179" font-size="8.5" fill="#991b1b" text-anchor="middle">…</text>
+  <text x="180" y="200" font-size="8" fill="#64748b">宽度不定，只能逐条累加长度</text>
+  <text x="500" y="172" font-size="9.5" font-weight="700" fill="#991b1b">不能 ✗</text>
+  <text x="500" y="188" font-size="8.5" fill="#475569">从头扫，平均 N/2 = 5000 次</text>
+
+  <line x1="20" y1="212" x2="660" y2="212" stroke="#f1f5f9" stroke-width="1"/>
+
+  <text x="20" y="248" font-size="10.5" font-weight="700" fill="#166534">索引文件</text>
+  <text x="20" y="262" font-size="8.5" fill="#16a34a">每条记录配一个索引项</text>
+  <rect x="180" y="228" width="56" height="17" fill="#dcfce7" stroke="#4ade80" stroke-width="1"/>
+  <rect x="240" y="228" width="56" height="17" fill="#dcfce7" stroke="#4ade80" stroke-width="1"/>
+  <rect x="300" y="228" width="56" height="17" fill="#dcfce7" stroke="#4ade80" stroke-width="1"/>
+  <rect x="360" y="228" width="56" height="17" fill="#dcfce7" stroke="#4ade80" stroke-width="1"/>
+  <text x="208" y="240" font-size="8" fill="#166534" text-anchor="middle">键 指针 长度</text>
+  <text x="268" y="240" font-size="8" fill="#166534" text-anchor="middle">键 指针 长度</text>
+  <text x="328" y="240" font-size="8" fill="#166534" text-anchor="middle">键 指针 长度</text>
+  <text x="388" y="240" font-size="8" fill="#166534" text-anchor="middle">键 指针 长度</text>
+  <text x="180" y="222" font-size="8" font-weight="700" fill="#166534">索引表（本身定长，可折半）</text>
+  <line x1="208" y1="245" x2="208" y2="262" stroke="#94a3b8" stroke-width="1" stroke-dasharray="2 2"/>
+  <line x1="328" y1="245" x2="312" y2="262" stroke="#94a3b8" stroke-width="1" stroke-dasharray="2 2"/>
+  <rect x="180" y="262" width="44" height="20" fill="#f0fdf4" stroke="#86efac" stroke-width="1"/>
+  <rect x="224" y="262" width="60" height="20" fill="#f0fdf4" stroke="#86efac" stroke-width="1"/>
+  <rect x="284" y="262" width="34" height="20" fill="#f0fdf4" stroke="#86efac" stroke-width="1"/>
+  <rect x="318" y="262" width="70" height="20" fill="#f0fdf4" stroke="#86efac" stroke-width="1"/>
+  <text x="202" y="276" font-size="8" fill="#166534" text-anchor="middle">记录 1</text>
+  <text x="254" y="276" font-size="8" fill="#166534" text-anchor="middle">记录 2</text>
+  <text x="301" y="276" font-size="8" fill="#166534" text-anchor="middle">记录 3</text>
+  <text x="353" y="276" font-size="8" fill="#166534" text-anchor="middle">记录 4</text>
+  <text x="500" y="240" font-size="9.5" font-weight="700" fill="#166534">能 ✓（先查表）</text>
+  <text x="500" y="256" font-size="8.5" fill="#475569">表内折半 14 次 + 按指针跳 1 次</text>
+  <text x="500" y="272" font-size="8.5" fill="#a16207">代价：每条记录一个索引项</text>
+
+  <line x1="20" y1="290" x2="660" y2="290" stroke="#f1f5f9" stroke-width="1"/>
+
+  <text x="20" y="326" font-size="10.5" font-weight="700" fill="#6b21a8">索引顺序文件</text>
+  <text x="20" y="340" font-size="8.5" fill="#9333ea">每组只建一个索引项</text>
+  <rect x="180" y="306" width="80" height="17" fill="#faf5ff" stroke="#c084fc" stroke-width="1"/>
+  <rect x="264" y="306" width="80" height="17" fill="#faf5ff" stroke="#c084fc" stroke-width="1"/>
+  <rect x="348" y="306" width="80" height="17" fill="#faf5ff" stroke="#c084fc" stroke-width="1"/>
+  <text x="220" y="318" font-size="8" fill="#6b21a8" text-anchor="middle">组 1 首条</text>
+  <text x="304" y="318" font-size="8" fill="#6b21a8" text-anchor="middle">组 2 首条</text>
+  <text x="388" y="318" font-size="8" fill="#6b21a8" text-anchor="middle">组 3 首条</text>
+  <line x1="220" y1="323" x2="220" y2="340" stroke="#94a3b8" stroke-width="1" stroke-dasharray="2 2"/>
+  <line x1="304" y1="323" x2="304" y2="340" stroke="#94a3b8" stroke-width="1" stroke-dasharray="2 2"/>
+  <line x1="388" y1="323" x2="388" y2="340" stroke="#94a3b8" stroke-width="1" stroke-dasharray="2 2"/>
+  <rect x="180" y="340" width="80" height="20" fill="#faf5ff" stroke="#d8b4fe" stroke-width="1"/>
+  <rect x="264" y="340" width="80" height="20" fill="#faf5ff" stroke="#d8b4fe" stroke-width="1"/>
+  <rect x="348" y="340" width="80" height="20" fill="#faf5ff" stroke="#d8b4fe" stroke-width="1"/>
+  <text x="220" y="354" font-size="8" fill="#581c87" text-anchor="middle">100 条（组内顺序查）</text>
+  <text x="304" y="354" font-size="8" fill="#581c87" text-anchor="middle">100 条（组内顺序查）</text>
+  <text x="388" y="354" font-size="8" fill="#581c87" text-anchor="middle">100 条（组内顺序查）</text>
+  <text x="500" y="316" font-size="9.5" font-weight="700" fill="#166534">能 ✓（先定组）</text>
+  <text x="500" y="332" font-size="8.5" fill="#475569">10000 条分 100 组：表 50 + 组内 50</text>
+  <text x="500" y="348" font-size="8.5" font-weight="700" fill="#6b21a8">= 100 次（m=√N 时最优）</text>
+
+  <line x1="20" y1="368" x2="660" y2="368" stroke="#f1f5f9" stroke-width="1"/>
+
+  <text x="20" y="404" font-size="10.5" font-weight="700" fill="#92400e">直接文件（散列）</text>
+  <text x="20" y="418" font-size="8.5" fill="#a16207">关键字即地址</text>
+  <rect x="180" y="392" width="54" height="20" rx="3" fill="#fef3c7" stroke="#fbbf24" stroke-width="1"/>
+  <text x="207" y="406" font-size="8.5" fill="#92400e" text-anchor="middle">关键字 K</text>
+  <line x1="236" y1="402" x2="254" y2="402" stroke="#94a3b8" stroke-width="1.4"/>
+  <polygon points="261,402 251,397 251,407" fill="#94a3b8"/>
+  <rect x="261" y="392" width="60" height="20" rx="3" fill="#fffbeb" stroke="#fbbf24" stroke-width="1"/>
+  <text x="291" y="406" font-size="8.5" fill="#92400e" text-anchor="middle">地址 = H(K)</text>
+  <line x1="323" y1="402" x2="341" y2="402" stroke="#94a3b8" stroke-width="1.4"/>
+  <polygon points="348,402 338,397 338,407" fill="#94a3b8"/>
+  <rect x="348" y="392" width="74" height="20" rx="3" fill="#fef3c7" stroke="#fbbf24" stroke-width="1"/>
+  <text x="385" y="406" font-size="8.5" fill="#92400e" text-anchor="middle">一步取到记录</text>
+  <text x="500" y="396" font-size="9.5" font-weight="700" fill="#166534">能 ✓ 最快</text>
+  <text x="500" y="412" font-size="8.5" fill="#991b1b">1 次，但不同 K 会撞同一地址</text>
+
+  <rect x="20" y="426" width="640" height="52" rx="6" fill="#fef3c7" stroke="#fcd34d" stroke-width="1"/>
+  <text x="34" y="446" font-size="10.5" fill="#92400e">判别口诀：题干出现「按记录号 / 偏移量直接算」→ 定长顺序文件或索引文件；出现「先查索引表，再查组内」</text>
+  <text x="34" y="466" font-size="10.5" fill="#92400e">→ 索引顺序文件；出现「只能从前往后依次读写」→ 变长顺序文件或无结构文件。<tspan font-weight="700">无结构文件压根没有「记录」</tspan>。</text>
+</svg>
