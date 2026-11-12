@@ -1,0 +1,62 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 680 500" width="680" height="500" font-family="-apple-system,BlinkMacSystemFont,'Segoe UI','Microsoft YaHei',sans-serif">
+  <defs>
+    <marker id="qArrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#b91c1c"/>
+    </marker>
+  </defs>
+  <rect x="0" y="0" width="680" height="500" fill="#ffffff"/>
+  <text x="20" y="26" font-size="16" font-weight="700" fill="#312e81">队列的「两端」与两个指针 · front 指队头、rear 指队尾下一位置</text>
+  <text x="20" y="46" font-size="10.5" fill="#64748b">队列是操作受限的线性表：队尾进、队头出，先进先出 FIFO（先到先服务）</text>
+
+  <rect x="24" y="62" width="632" height="200" rx="6" fill="#eff6ff" stroke="#bfdbfe" stroke-width="1"/>
+  <text x="40" y="84" font-size="12" font-weight="700" fill="#1e40af">顺序队列 Q[0…7]：当前含 a₁ a₂ a₃ a₄</text>
+  <text x="40" y="106" font-size="10.5" fill="#475569">入队 EnQueue(x)：在队尾（右端）写入</text>
+  <text x="640" y="106" font-size="10.5" fill="#475569" text-anchor="end">出队 DeQueue()：取队头（左端）元素</text>
+  <text x="102" y="126" font-size="9.5" fill="#64748b" text-anchor="middle">0</text>
+  <text x="170" y="126" font-size="9.5" fill="#64748b" text-anchor="middle">1</text>
+  <text x="238" y="126" font-size="9.5" fill="#64748b" text-anchor="middle">2</text>
+  <text x="306" y="126" font-size="9.5" fill="#64748b" text-anchor="middle">3</text>
+  <text x="374" y="126" font-size="9.5" fill="#64748b" text-anchor="middle">4</text>
+  <text x="442" y="126" font-size="9.5" fill="#64748b" text-anchor="middle">5</text>
+  <text x="510" y="126" font-size="9.5" fill="#64748b" text-anchor="middle">6</text>
+  <text x="578" y="126" font-size="9.5" fill="#64748b" text-anchor="middle">7</text>
+  <rect x="70" y="132" width="64" height="44" rx="3" fill="#dbeafe" stroke="#60a5fa" stroke-width="1"/>
+  <text x="102" y="159" font-size="12" font-weight="700" fill="#1e3a8a" text-anchor="middle">a₁</text>
+  <rect x="138" y="132" width="64" height="44" rx="3" fill="#dbeafe" stroke="#60a5fa" stroke-width="1"/>
+  <text x="170" y="159" font-size="12" font-weight="700" fill="#1e3a8a" text-anchor="middle">a₂</text>
+  <rect x="206" y="132" width="64" height="44" rx="3" fill="#dbeafe" stroke="#60a5fa" stroke-width="1"/>
+  <text x="238" y="159" font-size="12" font-weight="700" fill="#1e3a8a" text-anchor="middle">a₃</text>
+  <rect x="274" y="132" width="64" height="44" rx="3" fill="#dbeafe" stroke="#60a5fa" stroke-width="1"/>
+  <text x="306" y="159" font-size="12" font-weight="700" fill="#1e3a8a" text-anchor="middle">a₄</text>
+  <rect x="342" y="132" width="64" height="44" rx="3" fill="#ffffff" stroke="#cbd5e1" stroke-width="1"/>
+  <text x="374" y="159" font-size="10.5" fill="#94a3b8" text-anchor="middle">空</text>
+  <rect x="410" y="132" width="64" height="44" rx="3" fill="#ffffff" stroke="#cbd5e1" stroke-width="1"/>
+  <text x="442" y="159" font-size="10.5" fill="#94a3b8" text-anchor="middle">空</text>
+  <rect x="478" y="132" width="64" height="44" rx="3" fill="#ffffff" stroke="#cbd5e1" stroke-width="1"/>
+  <text x="510" y="159" font-size="10.5" fill="#94a3b8" text-anchor="middle">空</text>
+  <rect x="546" y="132" width="64" height="44" rx="3" fill="#ffffff" stroke="#cbd5e1" stroke-width="1"/>
+  <text x="578" y="159" font-size="10.5" fill="#94a3b8" text-anchor="middle">空</text>
+  <path d="M 102 200 L 102 180" fill="none" stroke="#b91c1c" stroke-width="1.5" marker-end="url(#qArrow)"/>
+  <path d="M 374 200 L 374 180" fill="none" stroke="#b91c1c" stroke-width="1.5" marker-end="url(#qArrow)"/>
+  <text x="40" y="220" font-size="10.5" font-weight="700" fill="#b91c1c">front = 0：指向队头元素 a₁（删除端）</text>
+  <text x="352" y="220" font-size="10.5" font-weight="700" fill="#b91c1c">rear = 4：指向队尾元素的下一位置（插入端）</text>
+  <text x="40" y="246" font-size="10.5" fill="#475569">只能访问两端，不能按序号随机访问 / 修改中间元素；队列是逻辑结构，顺序队列与链队列是存储结构。</text>
+
+  <rect x="24" y="274" width="310" height="82" rx="6" fill="#f0fdf4" stroke="#bbf7d0" stroke-width="1"/>
+  <text x="179" y="296" font-size="11.5" font-weight="700" fill="#166534" text-anchor="middle">约定 A（本讲义采用）</text>
+  <text x="40" y="318" font-size="10.5" fill="#475569">rear 指向队尾元素的下一位置</text>
+  <text x="40" y="340" font-size="10.5" font-weight="700" fill="#15803d">入队：先写 Q[rear]，再让 rear 后移</text>
+  <rect x="350" y="274" width="306" height="82" rx="6" fill="#fef2f2" stroke="#fecaca" stroke-width="1"/>
+  <text x="503" y="296" font-size="11.5" font-weight="700" fill="#b91c1c" text-anchor="middle">约定 B（另一类教材）</text>
+  <text x="366" y="318" font-size="10.5" fill="#475569">rear 指向队尾元素本身</text>
+  <text x="366" y="340" font-size="10.5" font-weight="700" fill="#b91c1c">入队：先让 rear 后移，再写 Q[rear]</text>
+
+  <rect x="24" y="368" width="632" height="48" rx="5" fill="#f8fafc" stroke="#cbd5e1" stroke-width="1"/>
+  <text x="40" y="388" font-size="10.5" fill="#475569">基本操作：InitQueue / QueueEmpty / EnQueue / DeQueue / GetHead（读队头元素但不出队）。</text>
+  <text x="40" y="408" font-size="10.5" fill="#475569">做题先看清 front/rear 约定；判空、判满与元素个数公式会随之改变（循环队列公式见 3.2.2）。</text>
+
+  <rect x="24" y="428" width="632" height="64" rx="5" fill="#fef9c3" stroke="#fcd34d" stroke-width="1"/>
+  <text x="40" y="450" font-size="11" font-weight="700" fill="#854d0e">判据速查</text>
+  <text x="40" y="470" font-size="10.5" fill="#854d0e">队头 = 允许删除的一端，队尾 = 允许插入的一端；FIFO 决定 a₁ 最先入、也最先出。</text>
+  <text x="40" y="488" font-size="10.5" fill="#854d0e">「rear 指下一位置」还是「指队尾本身」是选择题高频陷阱，先定约定再套公式。</text>
+</svg>

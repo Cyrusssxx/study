@@ -1,0 +1,47 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 680 500" width="680" height="500" font-family="-apple-system,BlinkMacSystemFont,'Segoe UI','Microsoft YaHei',sans-serif">
+  <rect x="0" y="0" width="680" height="500" fill="#ffffff"/>
+  <text x="20" y="26" font-size="16" font-weight="700" fill="#312e81">缺页率怎样拖垮有效访问时间 · EAT 加权平均与两道真题演算</text>
+  <text x="20" y="46" font-size="10.5" fill="#64748b">ma = 100 ns；缺页处理 T = 8 ms = 8×10⁶ ns（含中断服务、外存调入、必要时置换写回、重新访存）</text>
+
+  <rect x="24" y="62" width="632" height="76" rx="6" fill="#eff6ff" stroke="#bfdbfe" stroke-width="1"/>
+  <text x="40" y="80" font-size="11.5" font-weight="700" fill="#1e40af">命中与缺页是加权平均，不是相加</text>
+  <rect x="40" y="88" width="254" height="26" rx="4" fill="#ffffff" stroke="#bfdbfe" stroke-width="1"/>
+  <text x="167" y="105" font-size="10.5" fill="#1e3a8a" text-anchor="middle">命中 (1−p)：耗时 ma = 100 ns</text>
+  <rect x="306" y="88" width="330" height="26" rx="4" fill="#ffffff" stroke="#fca5a5" stroke-width="1"/>
+  <text x="471" y="105" font-size="10.5" fill="#b91c1c" text-anchor="middle">缺页 p：耗时 T = 8×10⁶ ns（磁盘 I/O）</text>
+  <text x="40" y="132" font-size="10.5" font-weight="700" fill="#334155">EAT = (1−p)×ma + p×T = ma + p×(T−ma)；T ≫ ma，p×T 主导</text>
+
+  <rect x="24" y="150" width="310" height="176" rx="6" fill="#f8fafc" stroke="#cbd5e1" stroke-width="1"/>
+  <text x="179" y="172" font-size="12.5" font-weight="700" fill="#334155" text-anchor="middle">典例：100 ns / 8 ms</text>
+  <text x="40" y="198" font-size="10.5" fill="#475569">P = 10⁻⁵ → 100 ns + 80 ns = 180 ns</text>
+  <text x="40" y="222" font-size="10.5" fill="#475569">P = 10⁻⁴ → EAT ≈ 900 ns（约 9 倍）</text>
+  <text x="40" y="246" font-size="10.5" fill="#475569">EAT ≤ 200 ns：100 + P×(8×10⁶−100) ≤ 200</text>
+  <text x="40" y="270" font-size="11" font-weight="700" fill="#1d4ed8">P ≤ 100/(8×10⁶−100) ≈ 1.25×10⁻⁵</text>
+  <text x="40" y="298" font-size="10.5" fill="#475569">缺页处理时间越长，允许的缺页率越低</text>
+
+  <rect x="350" y="150" width="306" height="176" rx="6" fill="#f0fdf4" stroke="#bbf7d0" stroke-width="1"/>
+  <text x="503" y="172" font-size="12.5" font-weight="700" fill="#166534" text-anchor="middle">变式：按修改位分两类缺页</text>
+  <text x="366" y="198" font-size="10.5" fill="#475569">ma = 1 μs；未改 9 μs、已改 21 μs；70% 已改</text>
+  <text x="366" y="222" font-size="10.5" fill="#475569">加权 = 30%×9 + 70%×21 = 17.4 μs</text>
+  <text x="366" y="246" font-size="10.5" fill="#475569">EAT = 1 − p + 17.4p = 1 + 16.4p</text>
+  <text x="366" y="270" font-size="11" font-weight="700" fill="#15803d">1 + 16.4p ≤ 2 → p ≤ 1/16.4 ≈ 6.1%</text>
+  <text x="366" y="298" font-size="10.5" fill="#475569">答案：最大缺页率约 6.1%（数值以题给为准）</text>
+
+  <rect x="24" y="338" width="632" height="82" rx="5" fill="#f8fafc" stroke="#cbd5e1" stroke-width="1"/>
+  <text x="40" y="358" font-size="11.5" font-weight="700" fill="#334155">影响缺页率的五大因素（真题多选）</text>
+  <rect x="40" y="368" width="112" height="24" rx="4" fill="#e0e7ff" stroke="#c7d2fe" stroke-width="1"/>
+  <text x="96" y="385" font-size="9.5" fill="#3730a3" text-anchor="middle">① 置换算法</text>
+  <rect x="158" y="368" width="112" height="24" rx="4" fill="#e0e7ff" stroke="#c7d2fe" stroke-width="1"/>
+  <text x="214" y="385" font-size="9.5" fill="#3730a3" text-anchor="middle">② 物理块数</text>
+  <rect x="276" y="368" width="112" height="24" rx="4" fill="#e0e7ff" stroke="#c7d2fe" stroke-width="1"/>
+  <text x="332" y="385" font-size="9.5" fill="#3730a3" text-anchor="middle">③ 页面大小</text>
+  <rect x="394" y="368" width="112" height="24" rx="4" fill="#e0e7ff" stroke="#c7d2fe" stroke-width="1"/>
+  <text x="450" y="385" font-size="9.5" fill="#3730a3" text-anchor="middle">④ 程序局部性</text>
+  <rect x="512" y="368" width="128" height="24" rx="4" fill="#e0e7ff" stroke="#c7d2fe" stroke-width="1"/>
+  <text x="576" y="385" font-size="9.5" fill="#3730a3" text-anchor="middle">⑤ 运行规模与访问模式</text>
+  <text x="40" y="410" font-size="10.5" fill="#475569">页面大 → 缺页率低但页内碎片大；块数低于工作集 → 抖动；工作集模型 / WSClock 动态调整每进程块数。</text>
+
+  <rect x="24" y="430" width="632" height="60" rx="5" fill="#fef9c3" stroke="#fcd34d" stroke-width="1"/>
+  <text x="40" y="452" font-size="10.5" fill="#854d0e">易错一：缺页部分是 p×(t_p + t_a) —— 先访存失败，再调入一页并重新访存，别漏掉那一次访存。</text>
+  <text x="40" y="476" font-size="10.5" fill="#854d0e">易错二：影响因素不含「内存总容量」本身，关键是每个进程分配到的物理块数。</text>
+</svg>

@@ -1,7 +1,7 @@
 /* 2026-11-12 第五批（跨四科）：4 张自绘图 + 8 个重点黄框。
  * OS 4.2.2 目录项分解 / CN 2.1.2 奈氏与香农 / CO 4.3.1 x86 相对转移 / DS 6.1.1 图的术语；
  * 另给 OS 2.3.4、CN 6.3.1、CO 5.7.1、DS 3.1.1 各补 1 个判据黄框。
- * 锁精确总量：fig-img 141（co33/os52/cn30/ds26）、黄框 242（55/59/33/95）。
+ * 总量只锁下限（精确量已归 _test_fig_p6.js）：fig-img ≥141（co33/os52/cn30/ds26）、黄框 ≥242（55/59/33/95）。
  * 行号双基线：CO 1819/1971、OS 3660/3668、CN 1108/1220、DS 1173(配对)/1175(开标签)/1330，本批零漂移。
  */
 const fs = require('fs');
@@ -159,24 +159,25 @@ for (const sub of SUBS) {
 const FIG_N = { co: 33, os: 52, cn: 30, ds: 26 };
 const CALL_N = { co: 55, os: 59, cn: 33, ds: 95 };
 for (const sub of SUBS) {
-  check(sub + ' 配图 ' + FIG_N[sub] + ' 张（P5 精确总量）', (RAW[sub].match(/fig-img/g) || []).length, FIG_N[sub]);
-  check(sub + ' 黄框 ' + CALL_N[sub] + ' 个（P5 精确总量）',
-    (RAW[sub].match(/class=\\"key-callout\\"/g) || []).length, CALL_N[sub]);
+  check(sub + ' 配图 ≥ ' + FIG_N[sub] + ' 张（P5 下限）', (RAW[sub].match(/fig-img/g) || []).length >= FIG_N[sub], true);
+  check(sub + ' 黄框 ≥ ' + CALL_N[sub] + ' 个（P5 下限）',
+    (RAW[sub].match(/class=\\"key-callout\\"/g) || []).length >= CALL_N[sub], true);
   check(sub + ' 序列化格式',
     [RAW[sub].indexOf('\r\n') > 0, RAW[sub].endsWith('\n')],
     sub === 'os' ? [false, true] : [true, false]);
   const refs = [...RAW[sub].matchAll(/img\/([a-z0-9_]+_fig_[a-z0-9_]+\.(?:svg|png))/g)].map(m => 'img/' + m[1]);
   check(sub + ' 图引用全部有磁盘文件且进了 SW',
-    refs.length === FIG_N[sub] &&
+    refs.length >= FIG_N[sub] &&
     refs.every(r => fs.existsSync(path.join(ROOT, 'pwa', r)) && sw.includes("'" + r + "'")), true);
 }
-check('全库 fig-img 141 张', SUBS.reduce((n, s) => n + (RAW[s].match(/fig-img/g) || []).length, 0), 141);
-check('全库黄框 242 个', SUBS.reduce((n, s) => n + (RAW[s].match(/class=\\"key-callout\\"/g) || []).length, 0), 242);
+check('全库 fig-img ≥141 张', SUBS.reduce((n, s) => n + (RAW[s].match(/fig-img/g) || []).length, 0) >= 141, true);
+check('全库黄框 ≥242 个', SUBS.reduce((n, s) => n + (RAW[s].match(/class=\\"key-callout\\"/g) || []).length, 0) >= 242, true);
 const STRUCT = { co: 0, ds: 0, cn: 11, os: 14 };
 check('内联 struct-fig 总量未变（CO0/DS0/CN11/OS14）',
   Object.entries(STRUCT).every(([s, v]) => (RAW[s].match(/struct-fig/g) || []).length === v), true);
 check('SW DATA_VER 已由构建脚本刷新（不等于上一批值）',
-  sw.includes('quiz408-data-') && !sw.includes('quiz408-data-c1cd4da923'), true);
+  sw.includes('quiz408-data-') && !sw.includes('quiz408-data-c1cd4da923') &&
+  !sw.includes('quiz408-data-7125a7ac45'), true);
 
 // ---------- 7. 纯插入守卫（有 before 备份才跑，仓库里没有就跳过） ----------
 function subseq(old, neu) {
@@ -201,7 +202,8 @@ for (const sub of SUBS) {
   guardDone++;
 }
 check('四科 before 备份都参与了纯插入校验', guardDone, 4);
-check('变化的 8 个小节全是纯插入（0 删除 / 0 改写）', [changed, guardBad], [8, 0]);
+check('变化的小节全是纯插入（0 删除 / 0 改写；后续批次会追加新小节）',
+  changed >= 8 && guardBad === 0, true);
 
 // ---------- 8. jsdom 真实渲染（四科逐行零漂移） ----------
 let JSDOM = null, IDBFactory = null, IDBKeyRange = null, VirtualConsole = null;
@@ -236,8 +238,8 @@ if (!JSDOM || !IDBFactory) {
       const d = dom.window.document;
       check(sub + ' 真实渲染 .anno-line = ' + JSDOM_BASE[sub],
         d.querySelectorAll('.anno-line').length, JSDOM_BASE[sub]);
-      check(sub + ' 真实渲染配图 ' + FIG_N[sub] + ' 张', d.querySelectorAll('img.fig-img').length, FIG_N[sub]);
-      check(sub + ' 真实渲染黄框 ' + CALL_N[sub] + ' 个', d.querySelectorAll('.key-callout').length, CALL_N[sub]);
+      check(sub + ' 真实渲染配图 ≥ ' + FIG_N[sub] + ' 张', d.querySelectorAll('img.fig-img').length >= FIG_N[sub], true);
+      check(sub + ' 真实渲染黄框 ≥ ' + CALL_N[sub] + ' 个', d.querySelectorAll('.key-callout').length >= CALL_N[sub], true);
       check(sub + ' 图块被误标行号 = 0',
         [...d.querySelectorAll('[data-fig]')].filter(el => el.classList.contains('anno-line')).length, 0);
       check(sub + ' 全库黄框没有一个落在 li/p 内部',

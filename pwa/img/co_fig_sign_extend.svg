@@ -1,0 +1,55 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 680 490" width="680" height="490" font-family="-apple-system,BlinkMacSystemFont,'Segoe UI','Microsoft YaHei',sans-serif">
+  <rect x="0" y="0" width="680" height="490" fill="#ffffff"/>
+  <text x="20" y="26" font-size="16" font-weight="700" fill="#312e81">存储单符号、运算双符号 · 模 4 补码与 C 语言符号扩展</text>
+  <text x="20" y="46" font-size="10.5" fill="#64748b">同一套加法器、两种解释：位级结果一致，有符号看 OF / SF，无符号看 CF，ZF 两类通用（Q79、Q93 2009）</text>
+
+  <rect x="24" y="62" width="310" height="252" rx="6" fill="#eff6ff" stroke="#bfdbfe" stroke-width="1"/>
+  <text x="179" y="84" font-size="12.5" font-weight="700" fill="#1e40af" text-anchor="middle">① 模 4 补码（变形补码）位流</text>
+  <text x="40" y="108" font-size="10.5" fill="#334155">内存中 [A]补：只占 1 个符号位</text>
+  <rect x="40" y="116" width="48" height="28" rx="3" fill="#ffffff" stroke="#93c5fd" stroke-width="1"/>
+  <text x="64" y="135" font-size="11" font-weight="700" fill="#1e3a8a" text-anchor="middle">s</text>
+  <rect x="88" y="116" width="176" height="28" rx="3" fill="#ffffff" stroke="#93c5fd" stroke-width="1"/>
+  <text x="176" y="135" font-size="10.5" fill="#475569" text-anchor="middle">数值位（n 位）</text>
+  <text x="40" y="162" font-size="10.5" fill="#334155">送入 ALU 时把符号位复制成两位</text>
+  <rect x="40" y="170" width="48" height="28" rx="3" fill="#dbeafe" stroke="#60a5fa" stroke-width="1"/>
+  <text x="64" y="189" font-size="11" font-weight="700" fill="#1e3a8a" text-anchor="middle">s s</text>
+  <rect x="88" y="170" width="176" height="28" rx="3" fill="#ffffff" stroke="#93c5fd" stroke-width="1"/>
+  <text x="176" y="189" font-size="10.5" fill="#475569" text-anchor="middle">数值位（n 位，不变）</text>
+  <text x="40" y="216" font-size="10.5" fill="#334155">加法结果看最高两位（00 正 / 11 负）</text>
+  <rect x="40" y="224" width="64" height="38" rx="4" fill="#dcfce7" stroke="#86efac" stroke-width="1"/>
+  <text x="72" y="240" font-size="11.5" font-weight="700" fill="#166534" text-anchor="middle">00</text>
+  <text x="72" y="256" font-size="9" fill="#166534" text-anchor="middle">正常·正</text>
+  <rect x="110" y="224" width="64" height="38" rx="4" fill="#dcfce7" stroke="#86efac" stroke-width="1"/>
+  <text x="142" y="240" font-size="11.5" font-weight="700" fill="#166534" text-anchor="middle">11</text>
+  <text x="142" y="256" font-size="9" fill="#166534" text-anchor="middle">正常·负</text>
+  <rect x="180" y="224" width="64" height="38" rx="4" fill="#fee2e2" stroke="#fca5a5" stroke-width="1"/>
+  <text x="212" y="240" font-size="11.5" font-weight="700" fill="#b91c1c" text-anchor="middle">01</text>
+  <text x="212" y="256" font-size="9" fill="#b91c1c" text-anchor="middle">正溢出</text>
+  <rect x="250" y="224" width="64" height="38" rx="4" fill="#fee2e2" stroke="#fca5a5" stroke-width="1"/>
+  <text x="282" y="240" font-size="11.5" font-weight="700" fill="#b91c1c" text-anchor="middle">10</text>
+  <text x="282" y="256" font-size="9" fill="#b91c1c" text-anchor="middle">负溢出</text>
+  <text x="40" y="282" font-size="10.5" font-weight="700" fill="#1d4ed8">正确符号位＝第一符号位；存回时截成单符号位</text>
+  <text x="40" y="302" font-size="10.5" fill="#475569">溢出只发生在同号相加 / 异号相减（Q79）</text>
+
+  <rect x="350" y="62" width="306" height="252" rx="6" fill="#f0fdf4" stroke="#bbf7d0" stroke-width="1"/>
+  <text x="503" y="84" font-size="12.5" font-weight="700" fill="#166534" text-anchor="middle">② short → int 符号扩展（Q93 2009）</text>
+  <text x="366" y="110" font-size="10.5" fill="#334155">16 位扩到 32 位：正数高位补 0、负数补 1</text>
+  <text x="366" y="140" font-size="11" font-weight="700" fill="#15803d">x = 127 ： 007FH → 0000 007FH</text>
+  <text x="366" y="164" font-size="11" font-weight="700" fill="#15803d">y = −9 ： FFF7H → FFFF FFF7H</text>
+  <text x="366" y="190" font-size="11.5" font-weight="700" fill="#14532d">z = x + y = 0000 0076H（= 118）</text>
+  <line x1="366" y1="204" x2="640" y2="204" stroke="#bbf7d0" stroke-width="1"/>
+  <text x="366" y="226" font-size="10.5" fill="#334155">Q97 2018：[y] = 41H（= 65），x − y = FFFF FF9EH</text>
+  <text x="366" y="250" font-size="10.5" fill="#334155">符号扩展不改变真值，只改变位宽</text>
+  <text x="366" y="274" font-size="10.5" fill="#334155">[−B]补 = [B]补 连同符号位取反、末位加 1</text>
+  <text x="366" y="298" font-size="10.5" font-weight="700" fill="#15803d">[A−B]补 = [A]补 + [−B]补：减法走同一加法器</text>
+
+  <rect x="24" y="326" width="632" height="64" rx="5" fill="#f8fafc" stroke="#cbd5e1" stroke-width="1"/>
+  <text x="40" y="347" font-size="11.5" font-weight="700" fill="#334155">③ 原码加减与 IEEE 754 尾数</text>
+  <text x="40" y="369" font-size="10.5" fill="#475569">现代计算机一般不实现原码加减：先比绝对值大小、符号由绝对值大的数决定、再做绝对值大减小。</text>
+  <text x="40" y="387" font-size="10.5" fill="#475569">IEEE 754 尾数虽为原码，但符号独立，尾数按无符号整数送入 ALU 运算。</text>
+
+  <rect x="24" y="402" width="632" height="70" rx="5" fill="#fef9c3" stroke="#fcd34d" stroke-width="1"/>
+  <text x="40" y="424" font-size="11" font-weight="700" fill="#854d0e">判据速查</text>
+  <text x="40" y="446" font-size="10.5" fill="#854d0e">双符号位 01 正溢 / 10 负溢、00 与 11 正常；判断溢出看「两位是否相同」，不是看结果是否为负。</text>
+  <text x="40" y="466" font-size="10.5" fill="#854d0e">OF 与 CF 互不代替：有符号比较看 OF⊕SF，无符号比较看 CF；ZF=1 表示相等。</text>
+</svg>
