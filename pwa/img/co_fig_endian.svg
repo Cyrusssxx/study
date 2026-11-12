@@ -1,0 +1,115 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 490" width="720" height="490" font-family="-apple-system,BlinkMacSystemFont,'Segoe UI','Microsoft YaHei',sans-serif">
+  <rect x="0" y="0" width="720" height="490" fill="#ffffff"/>
+
+  <text x="360" y="26" font-size="15" font-weight="700" fill="#312e81" text-anchor="middle">大端 / 小端、边界对齐与结构体填充</text>
+  <text x="360" y="46" font-size="10.6" fill="#64748b" text-anchor="middle">字节编址下每地址存 1 字节，多字节数据占连续单元 —— 排法有两种，对齐规则只有一条：起始地址是自己的整数倍</text>
+
+  <text x="24" y="70" font-size="10.5" font-weight="700" fill="#334155">① 同一数据在内存里的两种排法（int 0123 4567H 存入 0800H 起）</text>
+
+  <text x="170" y="92" font-size="8.8" fill="#94a3b8" text-anchor="end">地址</text>
+  <text x="209" y="92" font-size="8.8" fill="#94a3b8" text-anchor="middle">0800H</text>
+  <text x="275" y="92" font-size="8.8" fill="#94a3b8" text-anchor="middle">0801H</text>
+  <text x="341" y="92" font-size="8.8" fill="#94a3b8" text-anchor="middle">0802H</text>
+  <text x="407" y="92" font-size="8.8" fill="#94a3b8" text-anchor="middle">0803H</text>
+
+  <text x="170" y="118" font-size="9.4" font-weight="700" fill="#1e3a8a" text-anchor="end">大端（MSB 在低地址）</text>
+  <rect x="176" y="98" width="66" height="30" fill="#dbeafe" stroke="#93c5fd" stroke-width="1"/><text x="209" y="118" font-size="10.5" font-weight="700" fill="#1e3a8a" text-anchor="middle">01H</text>
+  <rect x="242" y="98" width="66" height="30" fill="#dbeafe" stroke="#93c5fd" stroke-width="1"/><text x="275" y="118" font-size="10.5" font-weight="700" fill="#1e3a8a" text-anchor="middle">23H</text>
+  <rect x="308" y="98" width="66" height="30" fill="#dbeafe" stroke="#93c5fd" stroke-width="1"/><text x="341" y="118" font-size="10.5" font-weight="700" fill="#1e3a8a" text-anchor="middle">45H</text>
+  <rect x="374" y="98" width="66" height="30" fill="#dbeafe" stroke="#93c5fd" stroke-width="1"/><text x="407" y="118" font-size="10.5" font-weight="700" fill="#1e3a8a" text-anchor="middle">67H</text>
+  <text x="456" y="118" font-size="9.2" fill="#1e3a8a">与十六进制书写顺序完全一致</text>
+
+  <text x="170" y="152" font-size="9.4" font-weight="700" fill="#166534" text-anchor="end">小端（LSB 在低地址）</text>
+  <rect x="176" y="132" width="66" height="30" fill="#dcfce7" stroke="#86efac" stroke-width="1"/><text x="209" y="152" font-size="10.5" font-weight="700" fill="#166534" text-anchor="middle">67H</text>
+  <rect x="242" y="132" width="66" height="30" fill="#dcfce7" stroke="#86efac" stroke-width="1"/><text x="275" y="152" font-size="10.5" font-weight="700" fill="#166534" text-anchor="middle">45H</text>
+  <rect x="308" y="132" width="66" height="30" fill="#dcfce7" stroke="#86efac" stroke-width="1"/><text x="341" y="152" font-size="10.5" font-weight="700" fill="#166534" text-anchor="middle">23H</text>
+  <rect x="374" y="132" width="66" height="30" fill="#dcfce7" stroke="#86efac" stroke-width="1"/><text x="407" y="152" font-size="10.5" font-weight="700" fill="#166534" text-anchor="middle">01H</text>
+  <text x="456" y="152" font-size="9.2" fill="#166534">首字节就是最低位字节 67H</text>
+
+  <text x="24" y="184" font-size="10.2" fill="#475569">同一规则用于负数：int −64 的补码是 FFFFFFC0H（最高字节 FF、最低字节 C0）</text>
+
+  <text x="170" y="212" font-size="9.4" font-weight="700" fill="#1e3a8a" text-anchor="end">大端</text>
+  <rect x="176" y="192" width="66" height="30" fill="#dbeafe" stroke="#93c5fd" stroke-width="1"/><text x="209" y="212" font-size="10.5" font-weight="700" fill="#1e3a8a" text-anchor="middle">FFH</text>
+  <rect x="242" y="192" width="66" height="30" fill="#dbeafe" stroke="#93c5fd" stroke-width="1"/><text x="275" y="212" font-size="10.5" font-weight="700" fill="#1e3a8a" text-anchor="middle">FFH</text>
+  <rect x="308" y="192" width="66" height="30" fill="#dbeafe" stroke="#93c5fd" stroke-width="1"/><text x="341" y="212" font-size="10.5" font-weight="700" fill="#1e3a8a" text-anchor="middle">FFH</text>
+  <rect x="374" y="192" width="66" height="30" fill="#dbeafe" stroke="#93c5fd" stroke-width="1"/><text x="407" y="212" font-size="10.5" font-weight="700" fill="#1e3a8a" text-anchor="middle">C0H</text>
+  <text x="456" y="212" font-size="9.2" fill="#1e3a8a">首字节 FF 是最高位字节</text>
+
+  <text x="170" y="246" font-size="9.4" font-weight="700" fill="#166534" text-anchor="end">小端</text>
+  <rect x="176" y="226" width="66" height="30" fill="#dcfce7" stroke="#86efac" stroke-width="1"/><text x="209" y="246" font-size="10.5" font-weight="700" fill="#166534" text-anchor="middle">C0H</text>
+  <rect x="242" y="226" width="66" height="30" fill="#dcfce7" stroke="#86efac" stroke-width="1"/><text x="275" y="246" font-size="10.5" font-weight="700" fill="#166534" text-anchor="middle">FFH</text>
+  <rect x="308" y="226" width="66" height="30" fill="#dcfce7" stroke="#86efac" stroke-width="1"/><text x="341" y="246" font-size="10.5" font-weight="700" fill="#166534" text-anchor="middle">FFH</text>
+  <rect x="374" y="226" width="66" height="30" fill="#dcfce7" stroke="#86efac" stroke-width="1"/><text x="407" y="246" font-size="10.5" font-weight="700" fill="#166534" text-anchor="middle">FFH</text>
+  <text x="456" y="246" font-size="9.2" fill="#166534">首字节 C0 是最低位字节</text>
+
+  <line x1="24" y1="266" x2="696" y2="266" stroke="#e2e8f0" stroke-width="1"/>
+
+  <text x="24" y="286" font-size="10.5" font-weight="700" fill="#334155">② 边界对齐：int 的地址必须是 4 的倍数，跨字就要两次访存再拼接</text>
+
+  <line x1="390" y1="292" x2="390" y2="374" stroke="#cbd5e1" stroke-width="1" stroke-dasharray="4 3"/>
+  <text x="394" y="332" font-size="8.4" fill="#94a3b8">字边界</text>
+
+  <text x="142" y="310" font-size="9.4" font-weight="700" fill="#166534" text-anchor="end">int @ 0800H（对齐）</text>
+  <rect x="150" y="292" width="60" height="28" fill="#dcfce7" stroke="#86efac" stroke-width="1"/><text x="180" y="311" font-size="9.4" font-weight="700" fill="#166534" text-anchor="middle">0800</text>
+  <rect x="210" y="292" width="60" height="28" fill="#dcfce7" stroke="#86efac" stroke-width="1"/><text x="240" y="311" font-size="9.4" font-weight="700" fill="#166534" text-anchor="middle">0801</text>
+  <rect x="270" y="292" width="60" height="28" fill="#dcfce7" stroke="#86efac" stroke-width="1"/><text x="300" y="311" font-size="9.4" font-weight="700" fill="#166534" text-anchor="middle">0802</text>
+  <rect x="330" y="292" width="60" height="28" fill="#dcfce7" stroke="#86efac" stroke-width="1"/><text x="360" y="311" font-size="9.4" font-weight="700" fill="#166534" text-anchor="middle">0803</text>
+  <rect x="390" y="292" width="60" height="28" fill="#f8fafc" stroke="#cbd5e1" stroke-width="1"/><text x="420" y="311" font-size="9.4" fill="#94a3b8" text-anchor="middle">0804</text>
+  <rect x="450" y="292" width="60" height="28" fill="#f8fafc" stroke="#cbd5e1" stroke-width="1"/><text x="480" y="311" font-size="9.4" fill="#94a3b8" text-anchor="middle">0805</text>
+  <rect x="510" y="292" width="60" height="28" fill="#f8fafc" stroke="#cbd5e1" stroke-width="1"/><text x="540" y="311" font-size="9.4" fill="#94a3b8" text-anchor="middle">0806</text>
+  <rect x="570" y="292" width="60" height="28" fill="#f8fafc" stroke="#cbd5e1" stroke-width="1"/><text x="600" y="311" font-size="9.4" fill="#94a3b8" text-anchor="middle">0807</text>
+  <text x="636" y="311" font-size="9.2" font-weight="700" fill="#166534">✓ 一次访存</text>
+
+  <text x="142" y="358" font-size="9.4" font-weight="700" fill="#991b1b" text-anchor="end">int @ 0802H（不对齐）</text>
+  <rect x="150" y="340" width="60" height="28" fill="#f8fafc" stroke="#cbd5e1" stroke-width="1"/><text x="180" y="359" font-size="9.4" fill="#94a3b8" text-anchor="middle">0800</text>
+  <rect x="210" y="340" width="60" height="28" fill="#f8fafc" stroke="#cbd5e1" stroke-width="1"/><text x="240" y="359" font-size="9.4" fill="#94a3b8" text-anchor="middle">0801</text>
+  <rect x="270" y="340" width="60" height="28" fill="#fee2e2" stroke="#fca5a5" stroke-width="1"/><text x="300" y="359" font-size="9.4" font-weight="700" fill="#991b1b" text-anchor="middle">0802</text>
+  <rect x="330" y="340" width="60" height="28" fill="#fee2e2" stroke="#fca5a5" stroke-width="1"/><text x="360" y="359" font-size="9.4" font-weight="700" fill="#991b1b" text-anchor="middle">0803</text>
+  <rect x="390" y="340" width="60" height="28" fill="#fee2e2" stroke="#fca5a5" stroke-width="1"/><text x="420" y="359" font-size="9.4" font-weight="700" fill="#991b1b" text-anchor="middle">0804</text>
+  <rect x="450" y="340" width="60" height="28" fill="#fee2e2" stroke="#fca5a5" stroke-width="1"/><text x="480" y="359" font-size="9.4" font-weight="700" fill="#991b1b" text-anchor="middle">0805</text>
+  <rect x="510" y="340" width="60" height="28" fill="#f8fafc" stroke="#cbd5e1" stroke-width="1"/><text x="540" y="359" font-size="9.4" fill="#94a3b8" text-anchor="middle">0806</text>
+  <rect x="570" y="340" width="60" height="28" fill="#f8fafc" stroke="#cbd5e1" stroke-width="1"/><text x="600" y="359" font-size="9.4" fill="#94a3b8" text-anchor="middle">0807</text>
+  <text x="636" y="359" font-size="9.2" font-weight="700" fill="#991b1b">✗ 两次访存</text>
+
+  <line x1="24" y1="382" x2="696" y2="382" stroke="#e2e8f0" stroke-width="1"/>
+
+  <text x="24" y="402" font-size="10.5" font-weight="700" fill="#334155">③ 成员顺序决定结构体大小（每个成员按自身大小对齐，整体补到最大对齐值的倍数）</text>
+
+  <text x="142" y="419" font-size="9.4" font-weight="700" fill="#334155" text-anchor="end">struct A</text>
+  <rect x="150" y="404" width="30" height="26" fill="#dbeafe" stroke="#93c5fd" stroke-width="1"/>
+  <rect x="180" y="404" width="30" height="26" fill="#dbeafe" stroke="#93c5fd" stroke-width="1"/>
+  <rect x="210" y="404" width="30" height="26" fill="#dbeafe" stroke="#93c5fd" stroke-width="1"/>
+  <rect x="240" y="404" width="30" height="26" fill="#dbeafe" stroke="#93c5fd" stroke-width="1"/>
+  <text x="210" y="421" font-size="9" font-weight="700" fill="#1e3a8a" text-anchor="middle">int a</text>
+  <rect x="270" y="404" width="30" height="26" fill="#dcfce7" stroke="#86efac" stroke-width="1"/>
+  <text x="285" y="421" font-size="9" font-weight="700" fill="#166534" text-anchor="middle">b</text>
+  <rect x="300" y="404" width="30" height="26" fill="#f1f5f9" stroke="#cbd5e1" stroke-width="1"/>
+  <line x1="300" y1="430" x2="330" y2="404" stroke="#cbd5e1" stroke-width="1"/>
+  <rect x="330" y="404" width="60" height="26" fill="#ede9fe" stroke="#c4b5fd" stroke-width="1"/>
+  <text x="360" y="421" font-size="9" font-weight="700" fill="#5b21b6" text-anchor="middle">short c</text>
+  <text x="396" y="421" font-size="9.4" font-weight="700" fill="#334155">= 8B</text>
+
+  <text x="142" y="453" font-size="9.4" font-weight="700" fill="#334155" text-anchor="end">struct B</text>
+  <rect x="150" y="438" width="30" height="26" fill="#dcfce7" stroke="#86efac" stroke-width="1"/>
+  <text x="165" y="455" font-size="9" font-weight="700" fill="#166534" text-anchor="middle">b</text>
+  <rect x="180" y="438" width="30" height="26" fill="#f1f5f9" stroke="#cbd5e1" stroke-width="1"/>
+  <line x1="180" y1="464" x2="210" y2="438" stroke="#cbd5e1" stroke-width="1"/>
+  <rect x="210" y="438" width="30" height="26" fill="#f1f5f9" stroke="#cbd5e1" stroke-width="1"/>
+  <line x1="210" y1="464" x2="240" y2="438" stroke="#cbd5e1" stroke-width="1"/>
+  <rect x="240" y="438" width="30" height="26" fill="#f1f5f9" stroke="#cbd5e1" stroke-width="1"/>
+  <line x1="240" y1="464" x2="270" y2="438" stroke="#cbd5e1" stroke-width="1"/>
+  <rect x="270" y="438" width="30" height="26" fill="#dbeafe" stroke="#93c5fd" stroke-width="1"/>
+  <rect x="300" y="438" width="30" height="26" fill="#dbeafe" stroke="#93c5fd" stroke-width="1"/>
+  <rect x="330" y="438" width="30" height="26" fill="#dbeafe" stroke="#93c5fd" stroke-width="1"/>
+  <rect x="360" y="438" width="30" height="26" fill="#dbeafe" stroke="#93c5fd" stroke-width="1"/>
+  <text x="330" y="455" font-size="9" font-weight="700" fill="#1e3a8a" text-anchor="middle">int a</text>
+  <rect x="390" y="438" width="60" height="26" fill="#ede9fe" stroke="#c4b5fd" stroke-width="1"/>
+  <text x="420" y="455" font-size="9" font-weight="700" fill="#5b21b6" text-anchor="middle">short c</text>
+  <rect x="450" y="438" width="30" height="26" fill="#f1f5f9" stroke="#cbd5e1" stroke-width="1"/>
+  <line x1="450" y1="464" x2="480" y2="438" stroke="#cbd5e1" stroke-width="1"/>
+  <rect x="480" y="438" width="30" height="26" fill="#f1f5f9" stroke="#cbd5e1" stroke-width="1"/>
+  <line x1="480" y1="464" x2="510" y2="438" stroke="#cbd5e1" stroke-width="1"/>
+  <text x="516" y="455" font-size="9.4" font-weight="700" fill="#991b1b">= 12B（顺序一换多 4B）</text>
+
+  <text x="24" y="482" font-size="8.8" fill="#94a3b8">蓝 = int（4B 对齐）　绿 = char（1B 对齐）　紫 = short（2B 对齐）　斜线格 = 编译器填充的空白字节（以空间换时间）</text>
+</svg>

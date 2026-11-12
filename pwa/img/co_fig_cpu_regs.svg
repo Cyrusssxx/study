@@ -1,0 +1,70 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 496" width="720" height="496" font-family="-apple-system,BlinkMacSystemFont,'Segoe UI','Microsoft YaHei',sans-serif">
+  <rect x="0" y="0" width="720" height="496" fill="#ffffff"/>
+
+  <text x="360" y="26" font-size="15" font-weight="700" fill="#312e81" text-anchor="middle">CPU 基本结构与寄存器的「可见 / 不可见」</text>
+  <text x="360" y="46" font-size="10.6" fill="#64748b" text-anchor="middle">蓝色实线框＝汇编指令能直接指名（可见）；灰色虚线框＝CPU 内部工作寄存器（不可见，程序无法触及）</text>
+
+  <rect x="24" y="62" width="672" height="310" rx="10" fill="#f8fafc" stroke="#cbd5e1" stroke-width="1.2"/>
+  <text x="40" y="82" font-size="11" font-weight="700" fill="#475569">CPU</text>
+
+  <rect x="38" y="92" width="296" height="208" rx="8" fill="#eff6ff" stroke="#bfdbfe" stroke-width="1"/>
+  <text x="52" y="110" font-size="10" font-weight="700" fill="#1e40af">控制器</text>
+
+  <rect x="50" y="120" width="126" height="34" rx="4" fill="#dbeafe" stroke="#2563eb" stroke-width="1.2"/>
+  <text x="113" y="142" font-size="9.4" font-weight="700" fill="#1e3a8a" text-anchor="middle">PC 程序计数器</text>
+
+  <rect x="186" y="120" width="136" height="34" rx="4" fill="#f1f5f9" stroke="#94a3b8" stroke-width="1.2" stroke-dasharray="4 3"/>
+  <text x="254" y="142" font-size="9.4" font-weight="700" fill="#475569" text-anchor="middle">IR 当前指令</text>
+
+  <rect x="50" y="164" width="272" height="32" rx="4" fill="#dbeafe" stroke="#93c5fd" stroke-width="1"/>
+  <text x="186" y="185" font-size="9.2" fill="#1e3a8a" text-anchor="middle">指令译码器 ID → 控制单元 CU（生成微操作信号）</text>
+
+  <rect x="50" y="204" width="272" height="32" rx="4" fill="#dbeafe" stroke="#93c5fd" stroke-width="1"/>
+  <text x="186" y="225" font-size="9.2" fill="#1e3a8a" text-anchor="middle">时序信号产生 ＋ 中断机构</text>
+
+  <text x="50" y="258" font-size="9" fill="#64748b">PC 位数由地址总线宽度决定，决定可寻址空间。</text>
+  <text x="50" y="276" font-size="9" fill="#64748b">IR 位数等于指令字长；ID 只译操作码，不看操作数。</text>
+
+  <rect x="346" y="92" width="350" height="208" rx="8" fill="#f0fdf4" stroke="#bbf7d0" stroke-width="1"/>
+  <text x="360" y="110" font-size="10" font-weight="700" fill="#166534">运算器</text>
+
+  <rect x="358" y="120" width="326" height="34" rx="4" fill="#dcfce7" stroke="#4ade80" stroke-width="1.2"/>
+  <text x="521" y="142" font-size="9.4" font-weight="700" fill="#14532d" text-anchor="middle">ALU（位数 = 机器字长 = 数据通路宽度）</text>
+
+  <rect x="358" y="164" width="326" height="32" rx="4" fill="#dcfce7" stroke="#4ade80" stroke-width="1.2"/>
+  <text x="521" y="185" font-size="9.4" font-weight="700" fill="#14532d" text-anchor="middle">通用寄存器组 R0…Rn（宽度 = 机器字长）</text>
+
+  <rect x="358" y="204" width="326" height="32" rx="4" fill="#fef9c3" stroke="#facc15" stroke-width="1.2"/>
+  <text x="521" y="225" font-size="9.4" font-weight="700" fill="#854d0e" text-anchor="middle">标志寄存器 FR / PSW（由 ALU 自动生成，只读）</text>
+
+  <text x="358" y="258" font-size="9" fill="#64748b">GPRs 暂存操作数与地址，减少访存次数。</text>
+  <text x="358" y="276" font-size="9" fill="#64748b">FR 保存 ZF / SF / OF / CF，是条件转移的依据。</text>
+
+  <rect x="200" y="316" width="150" height="32" rx="4" fill="#f1f5f9" stroke="#94a3b8" stroke-width="1.2" stroke-dasharray="4 3"/>
+  <text x="275" y="337" font-size="9.2" font-weight="700" fill="#475569" text-anchor="middle">MAR（主存地址）</text>
+
+  <rect x="370" y="316" width="150" height="32" rx="4" fill="#f1f5f9" stroke="#94a3b8" stroke-width="1.2" stroke-dasharray="4 3"/>
+  <text x="445" y="337" font-size="9.2" font-weight="700" fill="#475569" text-anchor="middle">MDR（主存数据）</text>
+
+  <text x="538" y="337" font-size="9" fill="#64748b">两者只是与主存交换数据的中转站，</text>
+  <text x="538" y="352" font-size="9" fill="#64748b">位数分别由地址 / 数据总线宽度决定。</text>
+
+  <rect x="250" y="406" width="220" height="46" rx="6" fill="#e2e8f0" stroke="#94a3b8" stroke-width="1.2"/>
+  <text x="360" y="434" font-size="10.5" font-weight="700" fill="#334155" text-anchor="middle">主　存</text>
+
+  <line x1="275" y1="348" x2="275" y2="406" stroke="#475569" stroke-width="1.2"/>
+  <path d="M271 400 L275 406 L279 400" stroke="#475569" stroke-width="1.2" fill="none"/>
+  <text x="283" y="380" font-size="8.8" fill="#475569">地址（单向）</text>
+
+  <line x1="445" y1="348" x2="445" y2="406" stroke="#475569" stroke-width="1.2"/>
+  <path d="M441 400 L445 406 L449 400" stroke="#475569" stroke-width="1.2" fill="none"/>
+  <path d="M441 354 L445 348 L449 354" stroke="#475569" stroke-width="1.2" fill="none"/>
+  <text x="453" y="380" font-size="8.8" fill="#475569">数据（双向）</text>
+
+  <rect x="24" y="466" width="18" height="12" rx="2" fill="#dbeafe" stroke="#2563eb" stroke-width="1.2"/>
+  <text x="50" y="476" font-size="9.2" fill="#334155">可见：PC、GPRs、FR（只读）、基址 / 变址寄存器</text>
+  <rect x="352" y="466" width="18" height="12" rx="2" fill="#f1f5f9" stroke="#94a3b8" stroke-width="1.2" stroke-dasharray="3 2"/>
+  <text x="378" y="476" font-size="9.2" fill="#334155">不可见：IR、MAR、MDR、暂存器 Y / Z</text>
+
+  <text x="24" y="492" font-size="8.8" fill="#94a3b8">「不可见」不是不能用，而是汇编指令里写不出它的名字 —— 它只被硬件（取指、访存）自动使用。</text>
+</svg>

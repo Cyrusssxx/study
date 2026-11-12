@@ -44,10 +44,10 @@ const FIGS = [
 // ---- 1. 序列化与总量 ----
 check('序列化仍是 indent=1 + CRLF + 无尾换行',
   [notesRaw.indexOf('\r\n') >= 0, notesRaw.endsWith('}')], [true, true]);
-check('计组配图 28 张（P3 精确总量）',
-  (notesRaw.match(/fig-img/g) || []).length, 28);
-check('计组黄框 48 个（P3 精确总量）',
-  (notesRaw.match(/class=\\"key-callout\\"/g) || []).length, 48);
+check('计组配图不少于 28 张（P3 下限；精确总量归最新批次测试）',
+  (notesRaw.match(/fig-img/g) || []).length >= 28, true);
+check('计组黄框不少于 48 个（P3 下限；精确总量归最新批次测试）',
+  (notesRaw.match(/class=\\"key-callout\\"/g) || []).length >= 48, true);
 check('SW 里本批 4 图全部进预缓存',
   ['instr_format', 'int_flow', 'int_mask', 'pipeline_hazard']
     .every(n => sw.includes("'img/co_fig_" + n + ".svg'")), true);

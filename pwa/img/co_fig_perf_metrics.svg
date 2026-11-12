@@ -1,0 +1,69 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 372" width="720" height="372" font-family="-apple-system,BlinkMacSystemFont,'Segoe UI','Microsoft YaHei',sans-serif">
+  <rect x="0" y="0" width="720" height="372" fill="#ffffff"/>
+
+  <text x="360" y="26" font-size="15" font-weight="700" fill="#312e81" text-anchor="middle">CPU 执行时间的三要素分解（指令条数 × CPI ÷ 主频）</text>
+  <text x="360" y="46" font-size="10.8" fill="#64748b" text-anchor="middle">主频只是三要素之一 —— 主频涨、CPI 与指令条数也在动，所以「主频高」不等于「跑得快」</text>
+
+  <text x="24" y="70" font-size="10.5" font-weight="700" fill="#334155">① 三要素相乘再除以主频</text>
+
+  <rect x="24" y="80" width="142" height="46" rx="5" fill="#eff6ff" stroke="#bfdbfe" stroke-width="1"/>
+  <text x="95" y="100" font-size="11.2" font-weight="700" fill="#1e40af" text-anchor="middle">指令条数 IC</text>
+  <text x="95" y="116" font-size="9" fill="#64748b" text-anchor="middle">程序执行的指令总数</text>
+
+  <text x="181" y="109" font-size="15" fill="#475569" text-anchor="middle">×</text>
+
+  <rect x="194" y="80" width="142" height="46" rx="5" fill="#eff6ff" stroke="#bfdbfe" stroke-width="1"/>
+  <text x="265" y="100" font-size="11.2" font-weight="700" fill="#1e40af" text-anchor="middle">平均 CPI</text>
+  <text x="265" y="116" font-size="9" fill="#64748b" text-anchor="middle">每条指令的时钟周期数</text>
+
+  <text x="351" y="109" font-size="15" fill="#475569" text-anchor="middle">÷</text>
+
+  <rect x="364" y="80" width="142" height="46" rx="5" fill="#eff6ff" stroke="#bfdbfe" stroke-width="1"/>
+  <text x="435" y="100" font-size="11.2" font-weight="700" fill="#1e40af" text-anchor="middle">主频 f</text>
+  <text x="435" y="116" font-size="9" fill="#64748b" text-anchor="middle">时钟频率（Hz）</text>
+
+  <text x="521" y="109" font-size="15" fill="#475569" text-anchor="middle">=</text>
+
+  <rect x="534" y="80" width="162" height="46" rx="5" fill="#fef3c7" stroke="#fcd34d" stroke-width="1.2"/>
+  <text x="615" y="100" font-size="11.2" font-weight="700" fill="#92400e" text-anchor="middle">CPU 执行时间 T</text>
+  <text x="615" y="116" font-size="9" fill="#a16207" text-anchor="middle">= IC × CPI ÷ f</text>
+
+  <text x="24" y="146" font-size="10.4" fill="#334155">MIPS = 主频 ÷ (CPI × 10⁶)</text>
+  <text x="252" y="146" font-size="10.4" fill="#334155">IPS = 主频 ÷ CPI</text>
+  <text x="424" y="146" font-size="10.4" fill="#334155">IPC = 1 ÷ CPI（每周期指令数）</text>
+
+  <line x1="24" y1="162" x2="696" y2="162" stroke="#e2e8f0" stroke-width="1"/>
+
+  <text x="24" y="184" font-size="10.5" font-weight="700" fill="#334155">② 真题演算：主频 1GHz、程序 10000 条指令，其中 80% 的指令 CPI = 1、20% 的 CPI = 10</text>
+
+  <rect x="24" y="196" width="206" height="46" rx="5" fill="#f8fafc" stroke="#cbd5e1" stroke-width="1"/>
+  <text x="127" y="214" font-size="9.6" fill="#475569" text-anchor="middle">① 按频度加权求平均 CPI</text>
+  <text x="127" y="231" font-size="10.2" font-weight="700" fill="#1e40af" text-anchor="middle">0.8×1 + 0.2×10 = 2.8</text>
+
+  <path d="M234 219 L248 219" stroke="#94a3b8" stroke-width="1.2" fill="none"/>
+  <path d="M244 215 L248 219 L244 223" stroke="#94a3b8" stroke-width="1.2" fill="none"/>
+
+  <rect x="254" y="196" width="200" height="46" rx="5" fill="#f8fafc" stroke="#cbd5e1" stroke-width="1"/>
+  <text x="354" y="214" font-size="9.6" fill="#475569" text-anchor="middle">② 时钟周期 = 1 ÷ 主频</text>
+  <text x="354" y="231" font-size="10.2" font-weight="700" fill="#1e40af" text-anchor="middle">1 ÷ 1GHz = 1ns</text>
+
+  <path d="M458 219 L472 219" stroke="#94a3b8" stroke-width="1.2" fill="none"/>
+  <path d="M468 215 L472 219 L468 223" stroke="#94a3b8" stroke-width="1.2" fill="none"/>
+
+  <rect x="478" y="196" width="218" height="46" rx="5" fill="#ecfdf5" stroke="#86efac" stroke-width="1.2"/>
+  <text x="587" y="214" font-size="9.6" fill="#166534" text-anchor="middle">③ T = 指令条数 × CPI × 周期</text>
+  <text x="587" y="231" font-size="10.2" font-weight="700" fill="#166534" text-anchor="middle">10000 × 2.8 × 1ns = 28000ns = 28μs</text>
+
+  <text x="24" y="272" font-size="10.5" font-weight="700" fill="#334155">③ 三个最容易错的点</text>
+
+  <circle cx="29" cy="290" r="2.2" fill="#dc2626"/>
+  <text x="38" y="294" font-size="9.8" fill="#334155">主频高 ≠ 更快：CISC 指令条数少，但 CPI 大、时钟周期长反而压主频；RISC 用「指令多、周期短」换主频。</text>
+
+  <circle cx="29" cy="314" r="2.2" fill="#dc2626"/>
+  <text x="38" y="318" font-size="9.8" fill="#334155">MIPS 的分母必须是<tspan font-weight="700">平均</tspan> CPI（按指令频度加权）；10⁶ 只是把「条」换成「百万条」，别和 10⁹ 混用。</text>
+
+  <circle cx="29" cy="338" r="2.2" fill="#dc2626"/>
+  <text x="38" y="342" font-size="9.8" fill="#334155">CPU 时间 ≠ 程序总时间：总时间 = CPU 时间 + I/O 等待，只提速 CPU 时 I/O 那一段不变。</text>
+
+  <text x="24" y="364" font-size="8.8" fill="#94a3b8">演算数据取自本节 ★ 真题汇总的 2022 年真题（1GHz、10000 条、80%×1 周期 + 20%×10 周期）。</text>
+</svg>
