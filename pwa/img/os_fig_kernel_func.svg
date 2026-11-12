@@ -1,0 +1,54 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 680 392" width="680" height="392" font-family="-apple-system,BlinkMacSystemFont,'Segoe UI','Microsoft YaHei',sans-serif">
+  <defs>
+    <marker id="kfArrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#475569"/>
+    </marker>
+  </defs>
+  <rect x="0" y="0" width="680" height="392" fill="#ffffff"/>
+  <text x="20" y="26" font-size="16" font-weight="700" fill="#1e3a8a">操作系统内核 · 常驻内存、紧贴硬件，功能分「支撑」与「资源管理」两类</text>
+  <text x="20" y="46" font-size="10.5" fill="#64748b">内核之所以单独切出来，是为了既不被应用程序破坏，又不必反复从外存调入</text>
+
+  <!-- 左卡：层次位置 -->
+  <rect x="24" y="60" width="316" height="286" rx="6" fill="#f8fafc" stroke="#cbd5e1" stroke-width="1"/>
+  <text x="40" y="82" font-size="11" font-weight="700" fill="#0f172a">内核在整机里的位置</text>
+
+  <rect x="56" y="94" width="252" height="30" rx="4" fill="#e0e7ff" stroke="#818cf8" stroke-width="1.1"/>
+  <text x="182" y="114" font-size="10.5" font-weight="700" fill="#3730a3" text-anchor="middle">应用程序（用户态）</text>
+
+  <path d="M 182 124 L 182 142" fill="none" stroke="#475569" stroke-width="1.2" marker-end="url(#kfArrow)"/>
+  <rect x="56" y="144" width="252" height="26" rx="4" fill="#fef9c3" stroke="#fcd34d" stroke-width="1.1"/>
+  <text x="182" y="161" font-size="10" fill="#92400e" text-anchor="middle">系统调用接口（陷入内核的唯一门）</text>
+
+  <rect x="56" y="180" width="252" height="112" rx="5" fill="#dbeafe" stroke="#60a5fa" stroke-width="1.3"/>
+  <text x="182" y="197" font-size="10.5" font-weight="700" fill="#1e3a8a" text-anchor="middle">内核（常驻内存）</text>
+  <text x="182" y="213" font-size="9" fill="#1e40af" text-anchor="middle">中断处理程序 · 设备驱动程序</text>
+  <text x="182" y="229" font-size="9" fill="#1e40af" text-anchor="middle">时钟管理 · 进程调度</text>
+  <text x="182" y="245" font-size="9" fill="#1e40af" text-anchor="middle">各模块共用的基础操作</text>
+  <text x="182" y="268" font-size="9" fill="#b45309" text-anchor="middle">共同点：与硬件紧密相关 或 运行频繁</text>
+  <text x="182" y="284" font-size="9" fill="#b45309" text-anchor="middle">原语靠关中断保证一气呵成</text>
+
+  <path d="M 182 292 L 182 310" fill="none" stroke="#475569" stroke-width="1.2" marker-end="url(#kfArrow)"/>
+  <rect x="56" y="312" width="252" height="26" rx="4" fill="#e2e8f0" stroke="#94a3b8" stroke-width="1.1"/>
+  <text x="182" y="329" font-size="10.5" fill="#334155" text-anchor="middle">硬件（CPU / 主存 / I/O 设备）</text>
+
+  <!-- 右卡：两类功能 -->
+  <rect x="352" y="60" width="304" height="286" rx="6" fill="#eff6ff" stroke="#bfdbfe" stroke-width="1"/>
+  <text x="368" y="82" font-size="11" font-weight="700" fill="#1e40af">两类功能 · 六项职责</text>
+
+  <rect x="368" y="92" width="272" height="112" rx="5" fill="#ffffff" stroke="#60a5fa" stroke-width="1.1"/>
+  <text x="380" y="110" font-size="10" font-weight="700" fill="#1e40af">① 支撑功能（给别人打地基）</text>
+  <text x="380" y="130" font-size="9.5" fill="#334155">时钟管理：计时 ＋ 产生定时中断</text>
+  <text x="380" y="148" font-size="9.5" fill="#334155">中断机制：保存现场 → 转处理 → 恢复</text>
+  <text x="380" y="166" font-size="9.5" fill="#334155">原语：原子执行，关中断保证不可分割</text>
+  <text x="380" y="186" font-size="9" fill="#64748b">时钟中断是时间片轮转的发动机</text>
+
+  <rect x="368" y="212" width="272" height="112" rx="5" fill="#ffffff" stroke="#60a5fa" stroke-width="1.1"/>
+  <text x="380" y="230" font-size="10" font-weight="700" fill="#1e40af">② 资源管理功能（管三样东西）</text>
+  <text x="380" y="250" font-size="9.5" fill="#334155">进程管理：创建撤销、状态转换、调度</text>
+  <text x="380" y="268" font-size="9.5" fill="#334155">存储器管理：分配回收、地址映射、保护</text>
+  <text x="380" y="286" font-size="9.5" fill="#334155">设备管理：设备分配、缓冲、I/O 调度</text>
+  <text x="380" y="306" font-size="9" fill="#64748b">都靠核心数据结构：PCB / DCT / 内存分配表</text>
+
+  <text x="20" y="368" font-size="9" fill="#64748b">判断「属不属于内核」只看两条：是否与硬件紧密相关、是否运行频繁 —— 命中其一就下沉到内核</text>
+  <text x="20" y="384" font-size="9" fill="#b45309">原语只在内核态执行，用户程序调不动；「分配 CPU」不属于创建进程的步骤，那是调度器的事</text>
+</svg>

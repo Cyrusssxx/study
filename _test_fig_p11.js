@@ -1,7 +1,8 @@
-/* 2026-11-13 第十一批（OS/CN/CO 三科优先）：4 张自绘图 + 8 个判据黄框。
- * OS 3.1.1 内存保护与共享 · OS 1.2.2 单道/多道批处理 · CN 6.3.1 FTP 双连接 · CO 3.4.1 磁盘地址与存取时间；
- * 另给 OS 2.1.5 进程控制、CN 6.2.2 域名服务器、CN 4.4.2 分层次路由、CO 5.1.3 CPU 寄存器各补 1 个判据黄框。
- * 锁精确总量：fig-img 165（co39/os59/cn36/ds31）、黄框 299（72/73/48/106）。
+/* 2026-11-13 第十一批（OS/CN/CO 三科优先）：8 张自绘图 + 12 个判据黄框。
+ * 第一轮：OS 3.1.1 内存保护与共享 · OS 1.2.2 单道/多道批处理 · CN 6.3.1 FTP 双连接 · CO 3.4.1 磁盘地址与存取时间；
+ * 第二轮：OS 1.3.1 内核两类功能 · OS 2.1.5 进程控制原语 · CN 6.2.2 四类域名服务器 · CN 4.4.2 分层次路由；
+ * 纯判据框另补：OS 2.1.5 / CN 6.2.2 / CN 4.4.2 / CO 5.1.3 / OS 3.2.1 / OS 2.2.2 / CN 5.1.1 / CO 6.1.3。
+ * 锁精确总量：fig-img 169（co39/os61/cn38/ds31）、黄框 303（73/75/49/106）。
  * 行号双基线（本批零漂移）：CO 1819 / OS 3660 / CN 1101 / DS 1173·1175；jsdom 1971 / 3668 / 1220 / 1330。
  */
 const fs = require('fs');
@@ -36,8 +37,8 @@ function allHtmls(sub) {
   return a;
 }
 const SVGS = {
-  os: ['os_fig_mem_protect', 'os_fig_batch_phase'],
-  cn: ['cn_fig_ftp'],
+  os: ['os_fig_mem_protect', 'os_fig_batch_phase', 'os_fig_kernel_func', 'os_fig_proc_ctrl'],
+  cn: ['cn_fig_ftp', 'cn_fig_dns_servers', 'cn_fig_as_route'],
   co: ['co_fig_disk_addr'],
 };
 const ALL_SVGS = [].concat(...Object.values(SVGS));
@@ -63,6 +64,10 @@ const LANDING = [
   ['os', '1.2.2', 'os_fig_batch_phase'],
   ['cn', '6.3.1', 'cn_fig_ftp'],
   ['co', '3.4.1', 'co_fig_disk_addr'],
+  ['os', '1.3.1', 'os_fig_kernel_func'],
+  ['os', '2.1.5', 'os_fig_proc_ctrl'],
+  ['cn', '6.2.2', 'cn_fig_dns_servers'],
+  ['cn', '4.4.2', 'cn_fig_as_route'],
 ];
 for (const [sub, num, name] of LANDING) {
   const h = secHtml(sub, num);
@@ -110,6 +115,10 @@ const SAME = [
   ['os', '1.2.2', 'os_fig_batch_phase', ['单道批处理', '多道批处理', '脱机', '中断', '后备队列']],
   ['cn', '6.3.1', 'cn_fig_ftp', ['控制连接', '数据连接', 'PORT', 'PASV', '主进程', '从属进程']],
   ['co', '3.4.1', 'co_fig_disk_addr', ['柱面', '盘面', '扇区', '寻道', '旋转', '格式化容量', '非格式化容量']],
+  ['os', '1.3.1', 'os_fig_kernel_func', ['时钟管理', '中断机制', '原语', '进程管理', '设备管理']],
+  ['os', '2.1.5', 'os_fig_proc_ctrl', ['PCB', '阻塞', '唤醒', '就绪队列', '等待队列']],
+  ['cn', '6.2.2', 'cn_fig_dns_servers', ['顶级', '权限', '本地域名服务器', 'CNAME', 'MX']],
+  ['cn', '4.4.2', 'cn_fig_as_route', ['OSPF', 'RIP', 'BGP', '自治系统', '链路状态']],
 ];
 for (const [sub, num, name, kws] of SAME) {
   const f = read('pwa/img/' + name + '.svg');
@@ -149,6 +158,10 @@ check('CO 磁盘图给出 6000 转 → 半圈 5ms、0.83ms/扇区',
 // ---------- 4. 八个黄框 ----------
 const CALLOUTS = [
   ['os', '3.1.1', '「先比后加」不能颠倒'],
+  ['os', '3.2.1', '虚拟内存的三条支柱'],
+  ['os', '2.2.2', '三级调度一句话'],
+  ['cn', '5.1.1', '传输层的两件事'],
+  ['co', '6.1.3', '三个指标各测什么'],
   ['os', '1.2.2', '一眼分辨'],
   ['os', '2.1.5', '进程控制全是原语'],
   ['cn', '6.3.1', '两条连接记端口、记生死'],
@@ -158,7 +171,7 @@ const CALLOUTS = [
   ['co', '5.1.3', '四个寄存器各司其职'],
 ];
 const NEW_KEYS = CALLOUTS.map(c => c[2]);
-const NEW_BY_SUB = { co: 2, os: 3, cn: 3, ds: 0 };
+const NEW_BY_SUB = { co: 3, os: 5, cn: 4, ds: 0 };
 for (const [sub, num, kw] of CALLOUTS) {
   const h = secHtml(sub, num);
   check(sub + ':' + num + ' 有黄框且含判据「' + kw + '」',
@@ -184,12 +197,12 @@ for (const sub of SUBS) for (const { h } of allHtmls(sub)) {
     }
   }
 }
-check('本批 8 个黄框都定位到了', newBodies.length, 8);
-check('本批 8 个黄框结构合法（无内嵌块级、无 tspan）',
+check('本批 12 个黄框都定位到了', newBodies.length, 12);
+check('本批 12 个黄框结构合法（无内嵌块级、无 tspan）',
   newBodies.every(b => !/<(p|ul|ol|li|table|div|figure)\b/.test(b) && !b.includes('tspan')), true);
-check('本批 8 个黄框都有至少两处加粗重点',
+check('本批 12 个黄框都有至少两处加粗重点',
   newBodies.every(b => (b.match(/<b>/g) || []).length >= 2), true);
-check('本批 8 个黄框都不是空壳（正文 > 80 字）',
+check('本批 12 个黄框都不是空壳（正文 > 80 字）',
   newBodies.every(b => flat(b).length > 80), true);
 check('全库黄框位置安全：没有一个落在未闭合正文内部', posBad, 0);
 check('全库黄框互不重复（前 24 字判重）', dupBad, 0);
@@ -214,8 +227,8 @@ for (const sub of SUBS) {
 }
 
 // ---------- 6. 精确总量 / 三方一致 / 序列化 ----------
-const FIG_N = { co: 39, os: 59, cn: 36, ds: 31 };
-const CALL_N = { co: 72, os: 73, cn: 48, ds: 106 };
+const FIG_N = { co: 39, os: 61, cn: 38, ds: 31 };
+const CALL_N = { co: 73, os: 75, cn: 49, ds: 106 };
 for (const sub of SUBS) {
   check(sub + ' 配图 ' + FIG_N[sub] + ' 张（P11 精确总量）', (RAW[sub].match(/fig-img/g) || []).length, FIG_N[sub]);
   check(sub + ' 黄框 ' + CALL_N[sub] + ' 个（P11 精确总量）',
@@ -227,8 +240,8 @@ for (const sub of SUBS) {
   check(sub + ' 图引用 / 文件 / SW 预缓存三方一致',
     refs.every(r => fs.existsSync(path.join(ROOT, 'pwa', r)) && sw.includes("'" + r + "'")), true);
 }
-check('全库 fig-img 165 张', SUBS.reduce((n, s) => n + (RAW[s].match(/fig-img/g) || []).length, 0), 165);
-check('全库黄框 299 个', SUBS.reduce((n, s) => n + (RAW[s].match(/class=\\"key-callout\\"/g) || []).length, 0), 299);
+check('全库 fig-img 169 张', SUBS.reduce((n, s) => n + (RAW[s].match(/fig-img/g) || []).length, 0), 169);
+check('全库黄框 303 个', SUBS.reduce((n, s) => n + (RAW[s].match(/class=\\"key-callout\\"/g) || []).length, 0), 303);
 const STRUCT = { co: 0, ds: 0, cn: 11, os: 14 };
 check('内联 struct-fig 总量未变（CO0/DS0/CN11/OS14）',
   Object.entries(STRUCT).every(([s, v]) => (RAW[s].match(/struct-fig/g) || []).length === v), true);
@@ -263,8 +276,8 @@ for (const sub of SUBS) {
 }
 if (guardDone === 3) {
   check('三科 before 备份都参与了纯插入校验', guardDone, 3);
-  check('变化的 8 个小节全是纯插入（0 删除 / 0 改写）', guardBad, 0);
-  check('变化小节数 = 8', changed, 8);
+  check('变化的 13 个小节全是纯插入（0 删除 / 0 改写）', guardBad, 0);
+  check('变化小节数 = 13', changed, 13);
 } else {
   console.log('SKIP 纯插入守卫：缺少三科 before 备份（归档目录不在 git 中）');
 }
