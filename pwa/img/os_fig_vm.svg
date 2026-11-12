@@ -1,0 +1,42 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 680 424" width="680" height="424" font-family="-apple-system,BlinkMacSystemFont,'Segoe UI','Microsoft YaHei',sans-serif">
+  <rect x="0" y="0" width="680" height="424" fill="#ffffff"/>
+  <text x="20" y="26" font-size="16" font-weight="700" fill="#312e81">第一类 vs 第二类 VMM：谁直接站在硬件上，决定效率与特权级</text>
+  <text x="20" y="46" font-size="10.5" fill="#64748b">VMM 的特权级一定高于客户操作系统；第二类 VMM 与普通应用同级，必须借宿主 OS 才能碰硬件。</text>
+
+  <text x="70" y="70" font-size="11" font-weight="700" fill="#92400e">第一类：裸金属型（VMware ESXi、Xen）</text>
+  <rect x="70" y="104" width="240" height="30" rx="4" fill="#f1f5f9" stroke="#cbd5e1" stroke-width="1"/>
+  <text x="190" y="123" font-size="9" fill="#475569" text-anchor="middle">应用程序（运行在客户机内）</text>
+  <rect x="70" y="142" width="240" height="40" rx="4" fill="#eff6ff" stroke="#93c5fd" stroke-width="1"/>
+  <text x="190" y="158" font-size="9.5" font-weight="700" fill="#1e3a8a" text-anchor="middle">客户操作系统</text>
+  <text x="190" y="173" font-size="8.6" fill="#3b82f6" text-anchor="middle">自认为在真实内核态，实际是虚拟内核态</text>
+  <rect x="70" y="190" width="240" height="62" rx="4" fill="#fef3c7" stroke="#fcd34d" stroke-width="1.4"/>
+  <text x="190" y="210" font-size="10" font-weight="700" fill="#92400e" text-anchor="middle">第一类 VMM（Hypervisor）</text>
+  <text x="190" y="226" font-size="8.8" fill="#78350f" text-anchor="middle">系统中唯一处于最高特权级的软件</text>
+  <text x="190" y="242" font-size="8.8" fill="#78350f" text-anchor="middle">直接管硬件，效率通常高于第二类</text>
+  <rect x="70" y="262" width="240" height="36" rx="4" fill="#e2e8f0" stroke="#cbd5e1" stroke-width="1"/>
+  <text x="190" y="285" font-size="9.5" font-weight="700" fill="#334155" text-anchor="middle">物理硬件</text>
+
+  <text x="380" y="70" font-size="11" font-weight="700" fill="#5b21b6">第二类：寄居型（VMware Workstation、VirtualBox）</text>
+  <rect x="380" y="96" width="240" height="26" rx="4" fill="#f1f5f9" stroke="#cbd5e1" stroke-width="1"/>
+  <text x="500" y="113" font-size="8.8" fill="#475569" text-anchor="middle">应用程序</text>
+  <rect x="380" y="130" width="240" height="36" rx="4" fill="#eff6ff" stroke="#93c5fd" stroke-width="1"/>
+  <text x="500" y="152" font-size="9.2" font-weight="700" fill="#1e3a8a" text-anchor="middle">客户操作系统（虚拟内核态）</text>
+  <rect x="380" y="174" width="240" height="38" rx="4" fill="#ede9fe" stroke="#c4b5fd" stroke-width="1.4"/>
+  <text x="500" y="191" font-size="9.5" font-weight="700" fill="#5b21b6" text-anchor="middle">第二类 VMM（一个用户态进程）</text>
+  <text x="500" y="205" font-size="8.4" fill="#6d28d9" text-anchor="middle">与普通应用地位相同，只是伪装成硬件</text>
+  <rect x="380" y="220" width="240" height="32" rx="4" fill="#eff6ff" stroke="#93c5fd" stroke-width="1"/>
+  <text x="500" y="240" font-size="9" font-weight="700" fill="#1e3a8a" text-anchor="middle">宿主操作系统（Windows / Linux）</text>
+  <rect x="380" y="262" width="240" height="36" rx="4" fill="#e2e8f0" stroke="#cbd5e1" stroke-width="1"/>
+  <text x="500" y="285" font-size="9.5" font-weight="700" fill="#334155" text-anchor="middle">物理硬件</text>
+
+  <line x1="326" y1="298" x2="326" y2="104" stroke="#94a3b8" stroke-width="1.2"/>
+  <polygon points="326,98 321,108 331,108" fill="#94a3b8"/>
+  <text x="352" y="200" font-size="8.6" fill="#94a3b8" transform="rotate(-90 352 200)">特权级：上高下低</text>
+
+  <rect x="40" y="308" width="620" height="102" rx="6" fill="#f8fafc" stroke="#cbd5e1" stroke-width="1"/>
+  <text x="52" y="328" font-size="9.5" font-weight="700" fill="#334155">三条判据</text>
+  <text x="52" y="346" font-size="9" fill="#475569">① 特权级：VMM 始终高于客户 OS。说“VMM 与操作系统特权级相同”是错的（2025 真题 C 项）。</text>
+  <text x="52" y="362" font-size="9" fill="#475569">② 敏感指令：客户 OS 执行特权指令一定陷入 VMM（硬件虚拟化下自动 VM exit），由 VMM 代为完成。</text>
+  <text x="52" y="378" font-size="9" fill="#475569">③ 真实硬件不会直接执行客户机内的敏感指令——第二类 VMM 通过宿主 OS 转手，所以性能低于第一类。</text>
+  <text x="52" y="396" font-size="9" fill="#92400e">补充：VMM 代码量小于一个完整操作系统；一台物理机可虚拟出多台虚拟机，但多台虚拟机并行 ≠ 真正并行（需多核）。</text>
+</svg>

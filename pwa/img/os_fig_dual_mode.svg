@@ -1,0 +1,36 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 680 424" width="680" height="424" font-family="-apple-system,BlinkMacSystemFont,'Segoe UI','Microsoft YaHei',sans-serif">
+  <rect x="0" y="0" width="680" height="424" fill="#ffffff"/>
+  <text x="20" y="26" font-size="16" font-weight="700" fill="#312e81">用户态 ⇄ 内核态：入口只有中断/异常，出口只有 IRET</text>
+  <text x="20" y="46" font-size="11" fill="#64748b">切换由硬件在响应中断时自动完成；用户程序自己改模式位属于特权指令，切不过去。</text>
+
+  <rect x="190" y="58" width="300" height="38" rx="4" fill="#eef2ff" stroke="#c7d2fe" stroke-width="1"/>
+  <text x="340" y="74" font-size="11" font-weight="700" fill="#3730a3" text-anchor="middle">PSW 程序状态字 · 模式位</text>
+  <text x="340" y="89" font-size="9.5" fill="#4338ca" text-anchor="middle">0 = 内核态（管态）　|　1 = 用户态（目态）</text>
+
+  <rect x="40" y="108" width="600" height="108" rx="6" fill="#fffbeb" stroke="#fcd34d" stroke-width="1"/>
+  <text x="56" y="128" font-size="11.5" font-weight="700" fill="#92400e">用户态（目态）· 模式位 = 1 · 只能执行非特权指令</text>
+  <text x="56" y="147" font-size="9.5" fill="#78350f">可做：算术与逻辑运算、跳转分支、存数取数、寄存器清零、压栈出栈</text>
+  <text x="56" y="164" font-size="9.5" fill="#78350f">不可做：I/O 指令、开/关中断、设置时钟、改模式位、清内存、改中断向量表、停机</text>
+  <rect x="56" y="174" width="568" height="28" rx="4" fill="#fee2e2" stroke="#fca5a5" stroke-width="1"/>
+  <text x="66" y="192" font-size="9.5" font-weight="700" fill="#991b1b">硬闯特权指令 → 硬件产生非法指令异常，OS 捕获后终止该程序（不会静默放行）</text>
+
+  <line x1="170" y1="218" x2="170" y2="264" stroke="#dc2626" stroke-width="2"/>
+  <polygon points="170,268 165,258 175,258" fill="#dc2626"/>
+  <text x="184" y="233" font-size="10" font-weight="700" fill="#b91c1c">① 中断 / 异常（含 Trap 访管指令）—— 唯一入口</text>
+  <text x="184" y="249" font-size="9.5" fill="#7f1d1d">硬件自动保存断点 PC 与 PSW，并把模式位置 0</text>
+
+  <line x1="470" y1="266" x2="470" y2="220" stroke="#2563eb" stroke-width="2"/>
+  <polygon points="470,216 465,226 475,226" fill="#2563eb"/>
+  <text x="484" y="233" font-size="10" font-weight="700" fill="#1d4ed8">② IRET 返回指令</text>
+  <text x="484" y="249" font-size="9.5" fill="#1e40af">在内核态执行，置模式位 1</text>
+
+  <rect x="40" y="268" width="600" height="108" rx="6" fill="#eff6ff" stroke="#93c5fd" stroke-width="1"/>
+  <text x="56" y="288" font-size="11.5" font-weight="700" fill="#1e3a8a">内核态（管态）· 模式位 = 0 · 可执行全部指令（访管指令除外）</text>
+  <text x="56" y="307" font-size="9.5" fill="#1e40af">做：中断与异常处理、系统调用服务例程、进程调度、设备驱动、访问全部地址空间</text>
+  <text x="56" y="324" font-size="9.5" fill="#1e40af">中断可能打断用户程序，也可能打断内核程序；但处理程序开始执行时 CPU 一定处于内核态</text>
+  <rect x="56" y="334" width="568" height="28" rx="4" fill="#fef3c7" stroke="#fcd34d" stroke-width="1"/>
+  <text x="66" y="352" font-size="9.5" font-weight="700" fill="#92400e">访管指令（Trap）是非特权指令、只在用户态执行；因此“内核态可执行除访管指令外的全部指令”成立</text>
+
+  <text x="40" y="396" font-size="9.5" fill="#475569">三种进入内核态的情形：外中断（I/O 完成、时钟）｜异常（缺页、除零、地址越界、非法操作码）｜系统调用（Trap 主动陷入）</text>
+  <text x="40" y="413" font-size="9.5" fill="#94a3b8">开机时硬件从内核态启动，加载完操作系统后切到用户态运行用户程序。</text>
+</svg>

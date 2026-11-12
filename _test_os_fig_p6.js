@@ -42,10 +42,10 @@ const FIGS = [
 
 check('序列化仍是 indent=1 + LF + 尾换行',
   [notesRaw.indexOf('\r\n') < 0, notesRaw.endsWith('\n')], [true, true]);
-check('OS 配图 47 张（43 + 本批 4）',
-  (notesRaw.match(/class=\\"fig-img\\"/g) || []).length, 47);
-check('OS 黄框 52 个（48 + 本批 4）',
-  (notesRaw.match(/class=\\"key-callout\\"/g) || []).length, 52);
+check('OS 配图不少于 47 张（精确值见 _test_os_fig_p7）',
+  (notesRaw.match(/class=\\"fig-img\\"/g) || []).length >= 47, true);
+check('OS 黄框不少于 52 个（精确值见 _test_os_fig_p7）',
+  (notesRaw.match(/class=\\"key-callout\\"/g) || []).length >= 52, true);
 check('SW 里第六批 4 图进预缓存',
   ['peterson', 'rag_reduce', 'file_logic', 'disk_format']
     .every(n => sw.includes("'img/os_fig_" + n + ".svg'")), true);
