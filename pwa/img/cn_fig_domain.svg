@@ -1,0 +1,62 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 680 440" width="680" height="440" font-family="-apple-system,BlinkMacSystemFont,'Segoe UI','Microsoft YaHei',sans-serif">
+  <rect x="0" y="0" width="680" height="440" fill="#ffffff"/>
+  <text x="20" y="26" font-size="16" font-weight="700" fill="#312e81">三种设备的隔离边界：虚线红框 = 冲突域，实线蓝框 = 广播域</text>
+  <text x="20" y="46" font-size="11" fill="#64748b">冲突域 = 能产生冲突的所有设备集合；广播域 = 一个广播帧能到达的范围</text>
+
+  <rect x="30" y="60" width="196" height="246" fill="#fef2f2" stroke="#fecaca" stroke-width="1"/>
+  <rect x="242" y="60" width="196" height="246" fill="#eff6ff" stroke="#bfdbfe" stroke-width="1"/>
+  <rect x="454" y="60" width="196" height="246" fill="#f0fdf4" stroke="#bbf7d0" stroke-width="1"/>
+  <text x="128" y="82" font-size="12.5" font-weight="700" fill="#991b1b" text-anchor="middle">集线器 / 中继器</text>
+  <text x="340" y="82" font-size="12.5" font-weight="700" fill="#1e40af" text-anchor="middle">交换机 / 网桥</text>
+  <text x="552" y="82" font-size="12.5" font-weight="700" fill="#166534" text-anchor="middle">路由器</text>
+  <text x="128" y="98" font-size="10" fill="#64748b" text-anchor="middle">物理层 · 转发依据：信号</text>
+  <text x="340" y="98" font-size="10" fill="#64748b" text-anchor="middle">数据链路层 · 依据：MAC</text>
+  <text x="552" y="98" font-size="10" fill="#64748b" text-anchor="middle">网络层 · 依据：目的 IP</text>
+
+  <rect x="86" y="106" width="84" height="24" fill="#ffffff" stroke="#fca5a5" stroke-width="1"/>
+  <rect x="298" y="106" width="84" height="24" fill="#ffffff" stroke="#93c5fd" stroke-width="1"/>
+  <rect x="510" y="106" width="84" height="24" fill="#ffffff" stroke="#86efac" stroke-width="1"/>
+  <text x="128" y="122" font-size="10.5" font-weight="700" fill="#991b1b" text-anchor="middle">Hub</text>
+  <text x="340" y="122" font-size="10.5" font-weight="700" fill="#1e40af" text-anchor="middle">Switch</text>
+  <text x="552" y="122" font-size="10.5" font-weight="700" fill="#166534" text-anchor="middle">Router</text>
+
+  <rect x="38" y="138" width="180" height="112" fill="#ffffff" stroke="#3b82f6" stroke-width="1.4"/>
+  <rect x="46" y="158" width="164" height="82" fill="#fef2f2" stroke="#ef4444" stroke-width="1.2" stroke-dasharray="5 3"/>
+  <text x="128" y="182" font-size="10.5" font-weight="700" fill="#b91c1c" text-anchor="middle">1 个冲突域</text>
+  <text x="128" y="202" font-size="9.5" fill="#7f1d1d" text-anchor="middle">4 台主机共享同一信道</text>
+  <text x="128" y="222" font-size="9.5" fill="#7f1d1d" text-anchor="middle">任一时刻只能一台发</text>
+  <text x="128" y="270" font-size="12" font-weight="700" fill="#991b1b" text-anchor="middle">1 冲突域 / 1 广播域</text>
+  <text x="128" y="290" font-size="10" fill="#64748b" text-anchor="middle">都不分割</text>
+
+  <rect x="250" y="138" width="180" height="112" fill="#ffffff" stroke="#3b82f6" stroke-width="1.4"/>
+  <rect x="256" y="158" width="40" height="82" fill="#eff6ff" stroke="#ef4444" stroke-width="1.2" stroke-dasharray="5 3"/>
+  <rect x="300" y="158" width="40" height="82" fill="#eff6ff" stroke="#ef4444" stroke-width="1.2" stroke-dasharray="5 3"/>
+  <rect x="344" y="158" width="40" height="82" fill="#eff6ff" stroke="#ef4444" stroke-width="1.2" stroke-dasharray="5 3"/>
+  <rect x="388" y="158" width="36" height="82" fill="#eff6ff" stroke="#ef4444" stroke-width="1.2" stroke-dasharray="5 3"/>
+  <text x="276" y="190" font-size="9" fill="#1e3a8a" text-anchor="middle">端口</text>
+  <text x="276" y="206" font-size="10" font-weight="700" fill="#1e3a8a" text-anchor="middle">1</text>
+  <text x="320" y="190" font-size="9" fill="#1e3a8a" text-anchor="middle">端口</text>
+  <text x="320" y="206" font-size="10" font-weight="700" fill="#1e3a8a" text-anchor="middle">2</text>
+  <text x="364" y="190" font-size="9" fill="#1e3a8a" text-anchor="middle">端口</text>
+  <text x="364" y="206" font-size="10" font-weight="700" fill="#1e3a8a" text-anchor="middle">3</text>
+  <text x="406" y="190" font-size="9" fill="#1e3a8a" text-anchor="middle">端口</text>
+  <text x="406" y="206" font-size="10" font-weight="700" fill="#1e3a8a" text-anchor="middle">4</text>
+  <text x="340" y="270" font-size="12" font-weight="700" fill="#1e40af" text-anchor="middle">4 冲突域 / 1 广播域</text>
+  <text x="340" y="290" font-size="10" fill="#64748b" text-anchor="middle">每端口 1 个冲突域</text>
+
+  <rect x="462" y="138" width="86" height="112" fill="#ffffff" stroke="#3b82f6" stroke-width="1.4"/>
+  <rect x="552" y="138" width="86" height="112" fill="#ffffff" stroke="#3b82f6" stroke-width="1.4"/>
+  <rect x="468" y="158" width="74" height="82" fill="#f0fdf4" stroke="#ef4444" stroke-width="1.2" stroke-dasharray="5 3"/>
+  <rect x="558" y="158" width="74" height="82" fill="#f0fdf4" stroke="#ef4444" stroke-width="1.2" stroke-dasharray="5 3"/>
+  <text x="505" y="194" font-size="9.5" fill="#166534" text-anchor="middle">接口 1</text>
+  <text x="595" y="194" font-size="9.5" fill="#166534" text-anchor="middle">接口 2</text>
+  <text x="552" y="270" font-size="12" font-weight="700" fill="#166534" text-anchor="middle">2 冲突域 / 2 广播域</text>
+  <text x="552" y="290" font-size="10" fill="#64748b" text-anchor="middle">每接口各 1 个</text>
+
+  <rect x="30" y="320" width="620" height="104" fill="#f8fafc" stroke="#cbd5e1" stroke-width="1"/>
+  <text x="42" y="340" font-size="11" font-weight="700" fill="#334155">判据：只有路由器不转发广播帧（255.255.255.255），所以只有它能分割广播域</text>
+  <text x="42" y="360" font-size="10.5" fill="#475569">集线器/中继器：冲突域、广播域都不分割；网桥/交换机：分割冲突域、不分割广播域（整体仍是 1 个）。</text>
+  <text x="42" y="380" font-size="10.5" fill="#475569">2020 真题 Q411：数出「4 个冲突域、2 个广播域」；2010 真题 Q409：抑制广播风暴仅路由器（IV）。</text>
+  <text x="42" y="400" font-size="10.5" fill="#475569">2012 真题 Q410：IP 路由器运行路由协议、丢弃拥塞分组、按目的 IP 转发，但不保证分组不丢失。</text>
+  <text x="42" y="418" font-size="10" fill="#64748b">易错：交换机端口多 ≠ 广播域多；广播域个数由「路由器接口数」决定，不由设备台数决定。</text>
+</svg>

@@ -1,0 +1,48 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 680 424" width="680" height="424" font-family="-apple-system,BlinkMacSystemFont,'Segoe UI','Microsoft YaHei',sans-serif">
+  <rect x="0" y="0" width="680" height="424" fill="#ffffff"/>
+  <text x="20" y="26" font-size="16" font-weight="700" fill="#312e81">分层封装 · 2017 真题 Q51：400 B 数据过 5 层，各层加 20 B</text>
+  <text x="20" y="46" font-size="11.5" fill="#64748b">每层只加自己的首部，不看上层内容；开销逐层累加，有效数据一个字节都没多</text>
+
+  <text x="30" y="76" font-size="11" font-weight="700" fill="#334155">封装后的一个 PDU：500 B（按题设比例示意）</text>
+
+  <rect x="30" y="86" width="400" height="40" fill="#eef2ff" stroke="#c7d2fe" stroke-width="1"/>
+  <text x="230" y="111" font-size="12" font-weight="700" fill="#312e81" text-anchor="middle">原始数据 400 B</text>
+  <rect x="430" y="86" width="20" height="40" fill="#fde68a" stroke="#f59e0b" stroke-width="1"/>
+  <rect x="450" y="86" width="20" height="40" fill="#fde68a" stroke="#f59e0b" stroke-width="1"/>
+  <rect x="470" y="86" width="20" height="40" fill="#fde68a" stroke="#f59e0b" stroke-width="1"/>
+  <rect x="490" y="86" width="20" height="40" fill="#fde68a" stroke="#f59e0b" stroke-width="1"/>
+  <rect x="510" y="86" width="20" height="40" fill="#fde68a" stroke="#f59e0b" stroke-width="1"/>
+  <text x="30" y="146" font-size="10" fill="#475569">有效数据 400 B</text>
+  <text x="430" y="146" font-size="10" fill="#92400e">开销 5×20 B = 100 B</text>
+
+  <rect x="560" y="86" width="92" height="80" fill="#fef3c7" stroke="#f59e0b" stroke-width="1"/>
+  <text x="606" y="112" font-size="11" font-weight="700" fill="#92400e" text-anchor="middle">传输效率</text>
+  <text x="606" y="142" font-size="22" font-weight="700" fill="#b45309" text-anchor="middle">80%</text>
+
+  <text x="30" y="182" font-size="11" font-weight="700" fill="#334155">PDU 名称：自上而下每层换一个叫法（物理层不加头，只搬比特流）</text>
+  <rect x="30" y="192" width="118" height="34" fill="#eef2ff" stroke="#c7d2fe" stroke-width="1"/>
+  <rect x="152" y="192" width="118" height="34" fill="#eef2ff" stroke="#c7d2fe" stroke-width="1"/>
+  <rect x="274" y="192" width="118" height="34" fill="#eef2ff" stroke="#c7d2fe" stroke-width="1"/>
+  <rect x="396" y="192" width="118" height="34" fill="#eef2ff" stroke="#c7d2fe" stroke-width="1"/>
+  <rect x="518" y="192" width="118" height="34" fill="#f1f5f9" stroke="#cbd5e1" stroke-width="1"/>
+  <text x="89" y="207" font-size="10.5" font-weight="700" fill="#312e81" text-anchor="middle">报文 Message</text>
+  <text x="211" y="207" font-size="10.5" font-weight="700" fill="#312e81" text-anchor="middle">报文段 Segment</text>
+  <text x="333" y="207" font-size="10.5" font-weight="700" fill="#312e81" text-anchor="middle">分组 Packet</text>
+  <text x="455" y="207" font-size="10.5" font-weight="700" fill="#312e81" text-anchor="middle">帧 Frame</text>
+  <text x="577" y="207" font-size="10.5" font-weight="700" fill="#475569" text-anchor="middle">比特 Bit</text>
+  <text x="89" y="220" font-size="9" fill="#64748b" text-anchor="middle">应用层</text>
+  <text x="211" y="220" font-size="9" fill="#64748b" text-anchor="middle">传输层</text>
+  <text x="333" y="220" font-size="9" fill="#64748b" text-anchor="middle">网络层</text>
+  <text x="455" y="220" font-size="9" fill="#64748b" text-anchor="middle">数据链路层</text>
+  <text x="577" y="220" font-size="9" fill="#64748b" text-anchor="middle">物理层</text>
+
+  <rect x="30" y="246" width="622" height="48" fill="#f8fafc" stroke="#cbd5e1" stroke-width="1"/>
+  <text x="42" y="268" font-size="11.5" font-weight="700" fill="#334155">公式：传输效率 = 原始数据 ÷（原始数据 + 各层开销）= 400 ÷ (400 + 5×20) = 400/500 = 80%</text>
+  <text x="42" y="286" font-size="10.5" fill="#475569">OSI 七层口诀：物理链路网络传，会话表示应（用）上头；TCP/IP 把会话、表示并入应用层。</text>
+
+  <rect x="30" y="308" width="622" height="96" fill="#eff6ff" stroke="#93c5fd" stroke-width="1"/>
+  <text x="42" y="330" font-size="11.5" font-weight="700" fill="#1e40af">别和 Q19 混：分块传输的优点「不包括」有效数据占比更大</text>
+  <text x="42" y="350" font-size="10.5" fill="#1e3a8a">把用户数据分成数据块后，每块都要附加控制信息 → 有效数据占比实际是变小。</text>
+  <text x="42" y="370" font-size="10.5" fill="#1e3a8a">真正的优点：减少延迟时间、提高错误控制效率、使多个应用更公平地共享通信介质。</text>
+  <text x="42" y="390" font-size="10" fill="#64748b">设备最高工作层：Hub = 物理层(1)、Switch = 数据链路层(2)、Router = 网络层(3)（Q50）</text>
+</svg>

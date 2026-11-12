@@ -154,13 +154,13 @@ check('按钮 title 说明垫底层的实际优先级', quiz.includes('前面三
 // ---------- 8. 总量 / 三方一致 / 序列化 ----------
 check('CN 序列化仍是 CRLF + 无尾换行',
   [cnRaw.indexOf('\r\n') > 0, cnRaw.endsWith('\n')], [true, false]);
-check('CN 配图 25 张（精确总量，24 + 本批 1）',
-  (cnRaw.match(/fig-img/g) || []).length, 25);
-check('CN 黄框 25 个（23 + 本批 2）',
-  (cnRaw.match(/class=\\"key-callout\\"/g) || []).length, 25);
-check('SW 里 CN 图 25 条', (sw.match(/'img\/cn_fig_[^']+'/g) || []).length, 25);
-check('全库 fig-img 133 张',
-  ['cn', 'os', 'co', 'ds'].reduce((n, s) => n + (read('pwa/data/notes/' + s + '_notes.json').match(/fig-img/g) || []).length, 0), 133);
+check('CN 配图不少于 25 张（精确值见 _test_cn_fig_p4）',
+  (cnRaw.match(/fig-img/g) || []).length >= 25, true);
+check('CN 黄框不少于 25 个（精确值见 _test_cn_fig_p4）',
+  (cnRaw.match(/class=\\"key-callout\\"/g) || []).length >= 25, true);
+check('SW 里 CN 图不少于 25 条', (sw.match(/'img\/cn_fig_[^']+'/g) || []).length >= 25, true);
+check('全库 fig-img 不少于 133 张（精确值见 _test_cn_fig_p4）',
+  ['cn', 'os', 'co', 'ds'].reduce((n, s) => n + (read('pwa/data/notes/' + s + '_notes.json').match(/fig-img/g) || []).length, 0) >= 133, true);
 // 旧测试已降为下限，精确量统归本文件
 check('计组黄框 53 个（52 + 本批跨科指针 1）',
   (coRaw.match(/class=\\"key-callout\\"/g) || []).length, 53);
@@ -170,8 +170,8 @@ check('OS 黄框 57 个（56 + 本批 inode 类比表 1）',
 check('OS 配图仍 51 张', (osRaw.match(/fig-img/g) || []).length, 51);
 // 2.1.3 有一张教材截图 cn_fig_2_3.png，其余 24 张是自绘 svg —— 合计 25 个 fig-img
 const refs = [...cnRaw.matchAll(/img\/(cn_fig_[a-z0-9_]+\.(?:svg|png))/g)].map(m => 'img/' + m[1]);
-check('CN 图引用 25 处且全部有磁盘文件',
-  refs.length === 25 && refs.every(r => fs.existsSync(path.join(ROOT, 'pwa', r))), true);
+check('CN 图引用不少于 25 处且全部有磁盘文件',
+  refs.length >= 25 && refs.every(r => fs.existsSync(path.join(ROOT, 'pwa', r))), true);
 check('CN 图引用全部进了 SW 预缓存',
   refs.every(r => sw.includes("'img/" + r.slice(4) + "'")), true);
 check('笔记 HTML 里不出现 SVG 专有的 tspan（黄框只用 b）',
@@ -227,8 +227,8 @@ if (!JSDOM || !IDBFactory) {
     await new Promise(r => setTimeout(r, 4000));
     const d = dom.window.document;
     check('真实渲染 .anno-line 总数 = 1220', d.querySelectorAll('.anno-line').length, 1220);
-    check('真实渲染配图 25 张', d.querySelectorAll('img.fig-img').length, 25);
-    check('真实渲染黄框 25 个', d.querySelectorAll('.key-callout').length, 25);
+    check('真实渲染配图不少于 25 张', d.querySelectorAll('img.fig-img').length >= 25, true);
+    check('真实渲染黄框不少于 25 个', d.querySelectorAll('.key-callout').length >= 25, true);
     check('图块被误标行号 = 0',
       [...d.querySelectorAll('[data-fig]')].filter(el => el.classList.contains('anno-line')).length, 0);
     // 真实点击行为（不是只查字符串）：点第一张讲义图，必须打开带缩放的 lightbox

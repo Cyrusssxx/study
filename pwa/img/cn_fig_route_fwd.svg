@@ -1,0 +1,64 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 680 490" width="680" height="490" font-family="-apple-system,BlinkMacSystemFont,'Segoe UI','Microsoft YaHei',sans-serif">
+  <rect x="0" y="0" width="680" height="490" fill="#ffffff"/>
+  <text x="20" y="26" font-size="16" font-weight="700" fill="#312e81">路由器的两副面孔：路由选择（控制面）与分组转发（数据面）</text>
+  <text x="20" y="46" font-size="11.5" fill="#64748b">路由表由算法生成、转发表由路由表导出；讨论原理时常笼统合称「路由表」</text>
+
+  <rect x="30" y="60" width="300" height="158" fill="#f5f3ff" stroke="#c4b5fd" stroke-width="1"/>
+  <text x="44" y="82" font-size="12.5" font-weight="700" fill="#5b21b6">控制面 · 路由选择（确定路径）</text>
+  <rect x="44" y="92" width="272" height="28" fill="#ffffff" stroke="#ddd6fe" stroke-width="1"/>
+  <text x="180" y="111" font-size="10" fill="#4c1d95" text-anchor="middle">路由选择协议：与相邻路由器定期交换信息</text>
+  <rect x="44" y="126" width="272" height="28" fill="#ffffff" stroke="#ddd6fe" stroke-width="1"/>
+  <text x="180" y="145" font-size="10" fill="#4c1d95" text-anchor="middle">路由算法：算到各目的网络的最优路径</text>
+  <rect x="44" y="160" width="272" height="28" fill="#ffffff" stroke="#ddd6fe" stroke-width="1"/>
+  <text x="180" y="179" font-size="10" fill="#4c1d95" text-anchor="middle">生成并维护路由表 → 导出转发表</text>
+  <text x="44" y="206" font-size="10" fill="#6d28d9">全局性、相对慢 · 侧重拓扑计算</text>
+
+  <rect x="350" y="60" width="300" height="158" fill="#eff6ff" stroke="#93c5fd" stroke-width="1"/>
+  <text x="364" y="82" font-size="12.5" font-weight="700" fill="#1e40af">数据面 · 分组转发（查表转发）</text>
+  <rect x="364" y="90" width="272" height="24" fill="#ffffff" stroke="#bfdbfe" stroke-width="1"/>
+  <text x="500" y="106" font-size="10" fill="#1e3a8a" text-anchor="middle">输入端口：先收完整个分组</text>
+  <rect x="364" y="116" width="272" height="24" fill="#ffffff" stroke="#bfdbfe" stroke-width="1"/>
+  <text x="500" y="132" font-size="10" fill="#1e3a8a" text-anchor="middle">查转发表：最长前缀匹配＋前缀长度降序</text>
+  <rect x="364" y="142" width="272" height="24" fill="#ffffff" stroke="#bfdbfe" stroke-width="1"/>
+  <text x="500" y="158" font-size="10" fill="#1e3a8a" text-anchor="middle">交换结构：送到合适的输出端口</text>
+  <rect x="364" y="168" width="272" height="24" fill="#ffffff" stroke="#bfdbfe" stroke-width="1"/>
+  <text x="500" y="184" font-size="10" fill="#1e3a8a" text-anchor="middle">输出端口：把分组发往下一段链路</text>
+  <text x="364" y="208" font-size="10" fill="#1d4ed8">作用于单个分组、局部快速 · 侧重查找速度</text>
+
+  <rect x="30" y="232" width="620" height="80" fill="#f8fafc" stroke="#cbd5e1" stroke-width="1"/>
+  <text x="42" y="252" font-size="11" font-weight="700" fill="#334155">路由表通常包含三列（表项用「目的网络」而非「目的主机」，可覆盖很多台主机）</text>
+  <rect x="42" y="260" width="190" height="28" fill="#e0e7ff" stroke="#c7d2fe" stroke-width="1"/>
+  <rect x="236" y="260" width="190" height="28" fill="#e0e7ff" stroke="#c7d2fe" stroke-width="1"/>
+  <rect x="430" y="260" width="208" height="28" fill="#e0e7ff" stroke="#c7d2fe" stroke-width="1"/>
+  <text x="137" y="279" font-size="10.5" font-weight="700" fill="#3730a3" text-anchor="middle">目的网络地址</text>
+  <text x="331" y="279" font-size="10.5" font-weight="700" fill="#3730a3" text-anchor="middle">子网掩码</text>
+  <text x="534" y="279" font-size="10.5" font-weight="700" fill="#3730a3" text-anchor="middle">下一跳路由器的 IP 地址</text>
+  <text x="42" y="304" font-size="10" fill="#b91c1c">易错：保存的是「目的网络 + 下一跳 IP」，不是完整路径，也不是下一跳的 MAC 地址。</text>
+
+  <rect x="30" y="326" width="620" height="76" fill="#fefce8" stroke="#fde047" stroke-width="1"/>
+  <text x="42" y="346" font-size="11" font-weight="700" fill="#854d0e">逐跳转发：每个路由器只根据路由表选下一跳，到了下一跳才知道再下一跳怎么走</text>
+  <rect x="50" y="354" width="64" height="26" fill="#ffffff" stroke="#fcd34d" stroke-width="1"/>
+  <rect x="168" y="354" width="64" height="26" fill="#ffffff" stroke="#fcd34d" stroke-width="1"/>
+  <rect x="286" y="354" width="64" height="26" fill="#ffffff" stroke="#fcd34d" stroke-width="1"/>
+  <rect x="404" y="354" width="64" height="26" fill="#ffffff" stroke="#fcd34d" stroke-width="1"/>
+  <rect x="522" y="354" width="64" height="26" fill="#ffffff" stroke="#fcd34d" stroke-width="1"/>
+  <text x="82" y="372" font-size="10.5" font-weight="700" fill="#854d0e" text-anchor="middle">源主机 H1</text>
+  <text x="200" y="372" font-size="10.5" font-weight="700" fill="#854d0e" text-anchor="middle">R1</text>
+  <text x="318" y="372" font-size="10.5" font-weight="700" fill="#854d0e" text-anchor="middle">R2</text>
+  <text x="436" y="372" font-size="10.5" font-weight="700" fill="#854d0e" text-anchor="middle">R3</text>
+  <text x="554" y="372" font-size="10.5" font-weight="700" fill="#854d0e" text-anchor="middle">目的 H2</text>
+  <line x1="114" y1="367" x2="164" y2="367" stroke="#d97706" stroke-width="1.4"/>
+  <polygon points="168,367 160,363 160,371" fill="#d97706"/>
+  <line x1="232" y1="367" x2="282" y2="367" stroke="#d97706" stroke-width="1.4"/>
+  <polygon points="286,367 278,363 278,371" fill="#d97706"/>
+  <line x1="350" y1="367" x2="400" y2="367" stroke="#d97706" stroke-width="1.4"/>
+  <polygon points="404,367 396,363 396,371" fill="#d97706"/>
+  <line x1="468" y1="367" x2="518" y2="367" stroke="#d97706" stroke-width="1.4"/>
+  <polygon points="522,367 514,363 514,371" fill="#d97706"/>
+  <text x="42" y="395" font-size="10" fill="#854d0e">结论：源主机与所有中间路由器都不掌握完整路径；主机只知道到本地网络的路径，其余一律交给路由器。</text>
+
+  <rect x="30" y="414" width="620" height="62" fill="#f0fdf4" stroke="#86efac" stroke-width="1"/>
+  <text x="42" y="434" font-size="10.5" font-weight="700" fill="#166534">存储转发：必须先接收到整个分组，才能开始向输出链路发送第一位 → 差错检查（出错丢弃）→ 存储正确分组 → 转发</text>
+  <text x="42" y="454" font-size="10.5" fill="#166534">转发依据：路由器是网络层设备，用 IP 地址标识主机，故按「目的 IP 地址」转发（不是端口号、不是 MAC、不是域名）。</text>
+  <text x="42" y="470" font-size="10" fill="#64748b">互连 4 种中继系统：物理层转发器/集线器 · 链路层网桥/交换机 · 网络层路由器 · 网络层以上网关；只有路由器才算真正网络互连。</text>
+</svg>
