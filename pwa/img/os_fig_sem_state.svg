@@ -1,0 +1,62 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 680 500" width="680" height="500" font-family="-apple-system,BlinkMacSystemFont,'Segoe UI','Microsoft YaHei',sans-serif">
+  <defs>
+    <marker id="semArrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#64748b"/>
+    </marker>
+  </defs>
+  <rect x="0" y="0" width="680" height="500" fill="#ffffff"/>
+  <text x="20" y="26" font-size="16" font-weight="700" fill="#312e81">记录型信号量 S 的取值 · 负号的绝对值就是排队人数</text>
+  <text x="20" y="46" font-size="10.5" fill="#64748b">value＝剩余资源数，L＝等待队列；wait 减 1、signal 加 1，判据全看减/加之后的符号</text>
+
+  <!-- 左卡：S 取值表 -->
+  <rect x="24" y="60" width="330" height="238" rx="6" fill="#eef2ff" stroke="#c7d2fe" stroke-width="1"/>
+  <text x="40" y="82" font-size="11" font-weight="700" fill="#3730a3">S 值 → 现场状态</text>
+  <line x1="40" y1="94" x2="338" y2="94" stroke="#c7d2fe" stroke-width="1"/>
+  <text x="44" y="112" font-size="9.5" font-weight="700" fill="#475569">S</text>
+  <text x="96" y="112" font-size="9.5" font-weight="700" fill="#475569">临界区内</text>
+  <text x="214" y="112" font-size="9.5" font-weight="700" fill="#475569">等待队列 |S|</text>
+
+  <text x="44" y="140" font-size="11" font-weight="700" fill="#166534">1</text>
+  <text x="96" y="140" font-size="10" fill="#334155">无人（资源 1 个空闲）</text>
+  <text x="214" y="140" font-size="10" fill="#475569">0</text>
+  <text x="44" y="170" font-size="11" font-weight="700" fill="#0f766e">0</text>
+  <text x="96" y="170" font-size="10" fill="#334155">1 个进程，资源刚用完</text>
+  <text x="214" y="170" font-size="10" fill="#475569">0</text>
+  <text x="44" y="200" font-size="11" font-weight="700" fill="#b45309">−1</text>
+  <text x="96" y="200" font-size="10" fill="#334155">1 个进程</text>
+  <text x="214" y="200" font-size="10" fill="#b91c1c">1 个在阻塞</text>
+  <text x="44" y="230" font-size="11" font-weight="700" fill="#b91c1c">−2</text>
+  <text x="96" y="230" font-size="10" fill="#334155">1 个进程</text>
+  <text x="214" y="230" font-size="10" fill="#b91c1c">2 个在阻塞</text>
+  <text x="40" y="258" font-size="9.5" fill="#3730a3">互斥信号量初值 1；S=0 表示「满了」，S&lt;0 表示「还欠着」。</text>
+  <text x="40" y="276" font-size="9.5" font-weight="700" fill="#b91c1c">S&lt;0 时 |S| = 等待队列中的进程数（Q219、Q241、Q264）。</text>
+
+  <!-- 右卡：时序 -->
+  <rect x="346" y="60" width="310" height="238" rx="6" fill="#f8fafc" stroke="#cbd5e1" stroke-width="1"/>
+  <text x="362" y="82" font-size="11" font-weight="700" fill="#0f172a">时序：P1 先入、P2 被 V 唤醒</text>
+
+  <rect x="362" y="94" width="278" height="58" rx="4" fill="#ffffff" stroke="#bfdbfe" stroke-width="1"/>
+  <text x="370" y="112" font-size="10" font-weight="700" fill="#1e40af">P1</text>
+  <text x="400" y="112" font-size="9.5" fill="#334155">P(S)：1 → 0，直接进临界区</text>
+  <text x="400" y="130" font-size="9.5" fill="#1e3a8a">执行临界区（独占资源）</text>
+  <text x="400" y="146" font-size="9.5" fill="#1e3a8a">V(S)：−1 → 0，唤醒 P2</text>
+
+  <rect x="362" y="160" width="278" height="58" rx="4" fill="#ffffff" stroke="#fecaca" stroke-width="1"/>
+  <text x="370" y="178" font-size="10" font-weight="700" fill="#b91c1c">P2</text>
+  <text x="400" y="178" font-size="9.5" fill="#334155">P(S)：0 → −1，block 入等待队列</text>
+  <text x="400" y="196" font-size="9.5" fill="#b91c1c">阻塞中（让出 CPU，不占 CPU 空转）</text>
+  <text x="400" y="212" font-size="9.5" fill="#166534">被 wakeup → 就绪态，等调度才运行</text>
+
+  <text x="362" y="238" font-size="9.5" fill="#475569">V 唤醒 ≠ 立刻运行：只是从等待队列移到就绪队列。</text>
+  <text x="362" y="256" font-size="9.5" fill="#475569">整型信号量 S≤0 时 while 空转 → 忙等、违反让权等待；</text>
+  <text x="362" y="274" font-size="9.5" font-weight="700" fill="#b91c1c">记录型靠 block/wakeup 让权等待，所以「不忙等」。</text>
+
+  <!-- 底部判据 -->
+  <rect x="24" y="310" width="632" height="132" rx="6" fill="#fefce8" stroke="#fde68a" stroke-width="1"/>
+  <text x="40" y="330" font-size="11" font-weight="700" fill="#854d0e">判 P/V 只看三处</text>
+  <text x="40" y="352" font-size="10.5" fill="#334155">① 谁动手：<tspan font-weight="700">P 由申请者自己调</tspan>（主动、可能阻塞自己）；<tspan font-weight="700">V 由释放者/中断处理程序调</tspan>（被动、唤醒别人）。</text>
+  <text x="40" y="372" font-size="10.5" fill="#334155">② 夹在哪：互斥把临界区夹在 P(S)…V(S) 之间、初值 1；同步用「<tspan font-weight="700">前 V 后 P</tspan>」、初值通常 0。</text>
+  <text x="40" y="392" font-size="10.5" fill="#334155">③ 数字对不对：先算 S 的终值，再看 |S| 是否等于等待进程数；S&gt;0 的值表示「还剩几个资源」。</text>
+  <text x="40" y="414" font-size="9.5" fill="#b91c1c">缺 V：等待者永久阻塞；缺 P：互斥失效。不同临界资源必须各配一个独立信号量。</text>
+  <text x="40" y="432" font-size="9.5" fill="#475569">P/V 必须是原语（不可中断），否则「检查计数值」与「改变计数值」之间会被别的进程插进来。</text>
+</svg>

@@ -1,0 +1,76 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 680 528" width="680" height="528" font-family="-apple-system,BlinkMacSystemFont,'Segoe UI','Microsoft YaHei',sans-serif">
+  <defs>
+    <marker id="bstArrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#94a3b8"/>
+    </marker>
+  </defs>
+  <rect x="0" y="0" width="680" height="528" fill="#ffffff"/>
+  <text x="20" y="26" font-size="16" font-weight="700" fill="#4c1d95">BST 删除的三种情况 · 有两棵子树时「换值再删后继」，不是删原结点</text>
+  <text x="20" y="46" font-size="10.5" fill="#64748b">红＝待删结点，蓝＝中序后继（右子树最左下），黄＝被顶替后挪位的结点；括号内为中序序列</text>
+
+  <!-- 左卡：删除前 -->
+  <rect x="24" y="60" width="306" height="330" rx="6" fill="#faf5ff" stroke="#ddd6fe" stroke-width="1"/>
+  <text x="40" y="82" font-size="11" font-weight="700" fill="#5b21b6">删除前：删 50（有两个孩子）</text>
+  <line x1="177" y1="120" x2="112" y2="190" stroke="#94a3b8" stroke-width="1.3"/>
+  <line x1="177" y1="120" x2="242" y2="190" stroke="#94a3b8" stroke-width="1.3"/>
+  <line x1="112" y1="190" x2="78" y2="258" stroke="#94a3b8" stroke-width="1.3"/>
+  <line x1="112" y1="190" x2="146" y2="258" stroke="#94a3b8" stroke-width="1.3"/>
+  <line x1="242" y1="190" x2="208" y2="258" stroke="#94a3b8" stroke-width="1.3"/>
+  <line x1="242" y1="190" x2="280" y2="258" stroke="#94a3b8" stroke-width="1.3"/>
+  <line x1="208" y1="258" x2="238" y2="322" stroke="#94a3b8" stroke-width="1.3"/>
+  <circle cx="177" cy="120" r="18" fill="#fee2e2" stroke="#f87171" stroke-width="1.6"/>
+  <text x="177" y="125" font-size="12" font-weight="700" fill="#b91c1c" text-anchor="middle">50</text>
+  <circle cx="112" cy="190" r="17" fill="#ffffff" stroke="#a78bfa" stroke-width="1.4"/>
+  <text x="112" y="195" font-size="11.5" fill="#4c1d95" text-anchor="middle">30</text>
+  <circle cx="242" cy="190" r="17" fill="#ffffff" stroke="#a78bfa" stroke-width="1.4"/>
+  <text x="242" y="195" font-size="11.5" fill="#4c1d95" text-anchor="middle">70</text>
+  <circle cx="78" cy="258" r="16" fill="#ffffff" stroke="#a78bfa" stroke-width="1.4"/>
+  <text x="78" y="263" font-size="11" fill="#4c1d95" text-anchor="middle">20</text>
+  <circle cx="146" cy="258" r="16" fill="#ffffff" stroke="#a78bfa" stroke-width="1.4"/>
+  <text x="146" y="263" font-size="11" fill="#4c1d95" text-anchor="middle">40</text>
+  <circle cx="208" cy="258" r="16" fill="#dbeafe" stroke="#60a5fa" stroke-width="1.6"/>
+  <text x="208" y="263" font-size="11" font-weight="700" fill="#1e40af" text-anchor="middle">55</text>
+  <circle cx="280" cy="258" r="16" fill="#ffffff" stroke="#a78bfa" stroke-width="1.4"/>
+  <text x="280" y="263" font-size="11" fill="#4c1d95" text-anchor="middle">80</text>
+  <circle cx="238" cy="322" r="16" fill="#ffffff" stroke="#a78bfa" stroke-width="1.4"/>
+  <text x="238" y="327" font-size="11" fill="#4c1d95" text-anchor="middle">60</text>
+
+  <text x="40" y="298" font-size="9.5" font-weight="700" fill="#1e40af">③ 用 55 覆盖 50，再删 55 结点</text>
+  <text x="40" y="314" font-size="9.5" fill="#475569">55 只有右孩子 60 → 由 60 顶替</text>
+  <text x="176" y="232" font-size="9" fill="#1e40af">中序后继</text>
+  <text x="40" y="352" font-size="9.5" font-weight="700" fill="#5b21b6">中序：(20, 30, 40, 50, 55, 60, 70, 80)</text>
+
+  <!-- 右卡：删除后 -->
+  <rect x="350" y="60" width="306" height="330" rx="6" fill="#f8fafc" stroke="#cbd5e1" stroke-width="1"/>
+  <text x="366" y="82" font-size="11" font-weight="700" fill="#0f172a">删除后：55 顶上，60 接 70 的左孩子</text>
+  <line x1="499" y1="120" x2="434" y2="190" stroke="#94a3b8" stroke-width="1.3"/>
+  <line x1="499" y1="120" x2="564" y2="190" stroke="#94a3b8" stroke-width="1.3"/>
+  <line x1="434" y1="190" x2="400" y2="258" stroke="#94a3b8" stroke-width="1.3"/>
+  <line x1="434" y1="190" x2="468" y2="258" stroke="#94a3b8" stroke-width="1.3"/>
+  <line x1="564" y1="190" x2="528" y2="258" stroke="#94a3b8" stroke-width="1.3"/>
+  <line x1="564" y1="190" x2="600" y2="258" stroke="#94a3b8" stroke-width="1.3"/>
+  <circle cx="499" cy="120" r="18" fill="#dbeafe" stroke="#60a5fa" stroke-width="1.6"/>
+  <text x="499" y="125" font-size="12" font-weight="700" fill="#1e40af" text-anchor="middle">55</text>
+  <circle cx="434" cy="190" r="17" fill="#ffffff" stroke="#a78bfa" stroke-width="1.4"/>
+  <text x="434" y="195" font-size="11.5" fill="#4c1d95" text-anchor="middle">30</text>
+  <circle cx="564" cy="190" r="17" fill="#ffffff" stroke="#a78bfa" stroke-width="1.4"/>
+  <text x="564" y="195" font-size="11.5" fill="#4c1d95" text-anchor="middle">70</text>
+  <circle cx="400" cy="258" r="16" fill="#dcfce7" stroke="#4ade80" stroke-width="1.4"/>
+  <text x="400" y="263" font-size="11" font-weight="700" fill="#166534" text-anchor="middle">20</text>
+  <circle cx="468" cy="258" r="16" fill="#ffffff" stroke="#a78bfa" stroke-width="1.4"/>
+  <text x="468" y="263" font-size="11" fill="#4c1d95" text-anchor="middle">40</text>
+  <circle cx="528" cy="258" r="16" fill="#fef3c7" stroke="#fbbf24" stroke-width="1.5"/>
+  <text x="528" y="263" font-size="11" font-weight="700" fill="#92400e" text-anchor="middle">60</text>
+  <circle cx="600" cy="258" r="16" fill="#ffffff" stroke="#a78bfa" stroke-width="1.4"/>
+  <text x="600" y="263" font-size="11" fill="#4c1d95" text-anchor="middle">80</text>
+  <text x="514" y="292" font-size="9" fill="#92400e">60 顶替原来的 55 位置</text>
+  <text x="366" y="356" font-size="9.5" font-weight="700" fill="#0f172a">中序：(20, 30, 40, 55, 60, 70, 80) —— 顺序仍递增</text>
+
+  <!-- 底部判据 -->
+  <rect x="24" y="402" width="632" height="112" rx="6" fill="#fefce8" stroke="#fde68a" stroke-width="1"/>
+  <text x="40" y="422" font-size="11" font-weight="700" fill="#854d0e">三句话记完</text>
+  <text x="40" y="444" font-size="10.5" fill="#334155">① 叶结点：直接删。　② 只有一棵子树：让那棵子树的根顶上来（55 由 60 顶替）。</text>
+  <text x="40" y="464" font-size="10.5" fill="#334155">③ 有两棵子树：先用<tspan font-weight="700">中序前驱（左子树最右下）或中序后继（右子树最左下）</tspan>的值覆盖待删结点，</text>
+  <text x="52" y="482" font-size="10.5" fill="#334155">再删除那个前驱/后继结点——它至多有一棵子树，于是转成 ①②。</text>
+  <text x="40" y="502" font-size="9.5" fill="#b91c1c">删叶后插回 → 树相同；删非叶后插回 → 树不同（Q455，2013）。插入的结点一定是叶结点。</text>
+</svg>

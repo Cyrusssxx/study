@@ -1,0 +1,61 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 680 500" width="680" height="500" font-family="-apple-system,BlinkMacSystemFont,'Segoe UI','Microsoft YaHei',sans-serif">
+  <rect x="0" y="0" width="680" height="500" fill="#ffffff"/>
+  <text x="20" y="26" font-size="16" font-weight="700" fill="#0f172a">子网划分与 CIDR · 借几位就切几刀，可用主机永远 2ⁿ−2</text>
+  <text x="20" y="46" font-size="10.5" fill="#64748b">例：202.118.1.0/24 借 2 位主机位划 4 个子网（Q301–Q306 口径）</text>
+
+  <!-- 卡片1：地址位划分 -->
+  <rect x="24" y="60" width="632" height="96" rx="6" fill="#f0fdfa" stroke="#99f6e4" stroke-width="1"/>
+  <text x="40" y="82" font-size="11" font-weight="700" fill="#0f766e">32 位地址被切成三段</text>
+  <rect x="40" y="92" width="450" height="26" rx="3" fill="#ccfbf1" stroke="#5eead4" stroke-width="1"/>
+  <text x="265" y="109" font-size="10.5" font-weight="700" fill="#0f766e" text-anchor="middle">原网络号 24 位（202.118.1）</text>
+  <rect x="490" y="92" width="38" height="26" rx="3" fill="#fef3c7" stroke="#fcd34d" stroke-width="1"/>
+  <text x="509" y="109" font-size="9" font-weight="700" fill="#92400e" text-anchor="middle">+2</text>
+  <rect x="528" y="92" width="112" height="26" rx="3" fill="#dbeafe" stroke="#93c5fd" stroke-width="1"/>
+  <text x="584" y="109" font-size="10.5" font-weight="700" fill="#1e40af" text-anchor="middle">主机 6 位</text>
+  <text x="528" y="132" font-size="9" fill="#92400e" text-anchor="middle">2 位 → 4 个子网</text>
+  <text x="40" y="134" font-size="9.5" fill="#475569">掩码 /26 = 255.255.255.192；主机位 6 位 → 2⁶ − 2 = 62 台</text>
+
+  <!-- 卡片2：四子网表 -->
+  <rect x="24" y="166" width="632" height="180" rx="6" fill="#f8fafc" stroke="#cbd5e1" stroke-width="1"/>
+  <text x="40" y="188" font-size="11" font-weight="700" fill="#0f172a">四个子网（前缀 202.118.1 省略不写）</text>
+  <line x1="40" y1="206" x2="640" y2="206" stroke="#cbd5e1" stroke-width="1"/>
+  <text x="44" y="224" font-size="9.5" font-weight="700" fill="#475569">借位</text>
+  <text x="150" y="224" font-size="9.5" font-weight="700" fill="#475569">网络地址</text>
+  <text x="296" y="224" font-size="9.5" font-weight="700" fill="#475569">可用主机（62 台）</text>
+  <text x="530" y="224" font-size="9.5" font-weight="700" fill="#475569">广播地址</text>
+
+  <text x="44" y="250" font-size="10.5" fill="#0f766e">① 00</text>
+  <text x="150" y="250" font-size="10.5" font-weight="700" fill="#0f172a">.0</text>
+  <text x="296" y="250" font-size="10.5" fill="#334155">.1 ~ .62</text>
+  <text x="530" y="250" font-size="10.5" fill="#b91c1c">.63</text>
+  <text x="44" y="278" font-size="10.5" fill="#0f766e">② 01</text>
+  <text x="150" y="278" font-size="10.5" font-weight="700" fill="#0f172a">.64</text>
+  <text x="296" y="278" font-size="10.5" fill="#334155">.65 ~ .126</text>
+  <text x="530" y="278" font-size="10.5" fill="#b91c1c">.127</text>
+  <text x="44" y="306" font-size="10.5" fill="#0f766e">③ 10</text>
+  <text x="150" y="306" font-size="10.5" font-weight="700" fill="#0f172a">.128</text>
+  <text x="296" y="306" font-size="10.5" fill="#334155">.129 ~ .190</text>
+  <text x="530" y="306" font-size="10.5" fill="#b91c1c">.191</text>
+  <text x="44" y="334" font-size="10.5" fill="#0f766e">④ 11</text>
+  <text x="150" y="334" font-size="10.5" font-weight="700" fill="#0f172a">.192</text>
+  <text x="296" y="334" font-size="10.5" fill="#334155">.193 ~ .254</text>
+  <text x="530" y="334" font-size="10.5" fill="#b91c1c">.255</text>
+  <line x1="40" y1="342" x2="640" y2="342" stroke="#e2e8f0" stroke-width="1"/>
+
+  <!-- 卡片3：CIDR -->
+  <rect x="24" y="356" width="302" height="128" rx="6" fill="#eff6ff" stroke="#bfdbfe" stroke-width="1"/>
+  <text x="40" y="378" font-size="11" font-weight="700" fill="#1e40af">CIDR 写法：IP / 前缀长度</text>
+  <text x="40" y="400" font-size="10.5" fill="#334155">192.168.4.0/22 → 22 位网络、10 位主机</text>
+  <text x="40" y="420" font-size="10.5" fill="#1e3a8a">地址数 = 2¹⁰ = <tspan font-weight="700">1024</tspan>（含网络地址与广播地址）</text>
+  <text x="40" y="440" font-size="10.5" fill="#334155">聚合（超网）：4 个 /24 合成 1 个 /22，</text>
+  <text x="40" y="458" font-size="10.5" fill="#334155">路由表少 3 条 —— 只为减少表项，不改交付方式</text>
+  <text x="40" y="476" font-size="9" fill="#64748b">VLSM 反方向：同一网络内各子网可用不同掩码，从最大子网先划</text>
+
+  <rect x="354" y="356" width="302" height="128" rx="6" fill="#fef2f2" stroke="#fecaca" stroke-width="1"/>
+  <text x="370" y="378" font-size="11" font-weight="700" fill="#b91c1c">转发用「最长前缀匹配」</text>
+  <text x="370" y="400" font-size="10.5" fill="#334155">目的 192.168.5.7 同时命中 192.168.0.0/16</text>
+  <text x="370" y="418" font-size="10.5" fill="#334155">与 192.168.4.0/22 两条表项 →</text>
+  <text x="370" y="438" font-size="10.5" font-weight="700" fill="#b91c1c">选 /22：前缀更长 = 更具体的那条</text>
+  <text x="370" y="458" font-size="10.5" fill="#334155">判交付：源、目的与掩码按位与后</text>
+  <text x="370" y="476" font-size="10.5" fill="#334155">子网地址相同 → 直接交付，否则交给路由器</text>
+</svg>

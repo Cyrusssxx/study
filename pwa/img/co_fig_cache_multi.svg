@@ -1,0 +1,69 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 680 516" width="680" height="516" font-family="-apple-system,BlinkMacSystemFont,'Segoe UI','Microsoft YaHei',sans-serif">
+  <defs>
+    <marker id="mlArrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#475569"/>
+    </marker>
+  </defs>
+  <rect x="0" y="0" width="680" height="516" fill="#ffffff"/>
+  <text x="20" y="26" font-size="16" font-weight="700" fill="#1e3a8a">分离 Cache 与多级 Cache · 取指和取数各走自己的 L1</text>
+  <text x="20" y="46" font-size="10.5" fill="#64748b">L1 最近、最快、最小；L2 较远、较慢、较大 —— 脏块逐级写回，不是每级都写主存</text>
+
+  <!-- 左卡：层次结构 -->
+  <rect x="24" y="60" width="316" height="300" rx="6" fill="#eff6ff" stroke="#bfdbfe" stroke-width="1"/>
+  <text x="40" y="82" font-size="11" font-weight="700" fill="#1e40af">层次与通路</text>
+
+  <rect x="132" y="94" width="100" height="30" rx="4" fill="#dbeafe" stroke="#60a5fa" stroke-width="1.2"/>
+  <text x="182" y="114" font-size="11" font-weight="700" fill="#1e3a8a" text-anchor="middle">CPU</text>
+
+  <path d="M 168 124 L 96 160" fill="none" stroke="#475569" stroke-width="1.3" marker-end="url(#mlArrow)"/>
+  <path d="M 196 124 L 268 160" fill="none" stroke="#475569" stroke-width="1.3" marker-end="url(#mlArrow)"/>
+  <text x="76" y="146" font-size="9" fill="#334155">取指</text>
+  <text x="248" y="146" font-size="9" fill="#334155">取数</text>
+
+  <rect x="36" y="162" width="120" height="34" rx="4" fill="#ffffff" stroke="#60a5fa" stroke-width="1.2"/>
+  <text x="96" y="184" font-size="10.5" font-weight="700" fill="#1e40af" text-anchor="middle">L1 指令 Cache</text>
+  <rect x="208" y="162" width="120" height="34" rx="4" fill="#ffffff" stroke="#60a5fa" stroke-width="1.2"/>
+  <text x="268" y="184" font-size="10.5" font-weight="700" fill="#1e40af" text-anchor="middle">L1 数据 Cache</text>
+
+  <path d="M 96 196 L 140 224" fill="none" stroke="#475569" stroke-width="1.3"/>
+  <path d="M 268 196 L 224 224" fill="none" stroke="#475569" stroke-width="1.3"/>
+  <rect x="104" y="226" width="164" height="30" rx="4" fill="#e0e7ff" stroke="#818cf8" stroke-width="1.2"/>
+  <text x="186" y="246" font-size="10.5" font-weight="700" fill="#3730a3" text-anchor="middle">L2 Cache（统一）</text>
+
+  <path d="M 186 256 L 186 284" fill="none" stroke="#475569" stroke-width="1.3" marker-end="url(#mlArrow)"/>
+  <rect x="104" y="286" width="164" height="28" rx="4" fill="#f1f5f9" stroke="#94a3b8" stroke-width="1.2"/>
+  <text x="186" y="305" font-size="10.5" fill="#334155" text-anchor="middle">主存</text>
+
+  <text x="40" y="330" font-size="9" fill="#0f766e">分离的意义：取指与执行同时访问也各走一条通路</text>
+  <text x="40" y="346" font-size="9" fill="#64748b">统一 Cache 时两者抢同一端口 → 冲突（2014）</text>
+
+  <!-- 右卡：写流程 -->
+  <rect x="352" y="60" width="304" height="300" rx="6" fill="#f8fafc" stroke="#cbd5e1" stroke-width="1"/>
+  <text x="368" y="82" font-size="11" font-weight="700" fill="#0f172a">写操作走「写分配 + 回写」</text>
+
+  <rect x="368" y="94" width="272" height="44" rx="4" fill="#dcfce7" stroke="#86efac" stroke-width="1"/>
+  <text x="376" y="112" font-size="10" font-weight="700" fill="#166534">① 写命中 L1</text>
+  <text x="376" y="129" font-size="9.5" fill="#334155">只改 L1 副本并置脏位，不访主存（回写法）</text>
+
+  <rect x="368" y="146" width="272" height="44" rx="4" fill="#fef3c7" stroke="#fcd34d" stroke-width="1"/>
+  <text x="376" y="164" font-size="10" font-weight="700" fill="#92400e">② L1 脏块被替换</text>
+  <text x="376" y="181" font-size="9.5" fill="#334155">整块写回 L2；L2 若也脏，暂不惊动主存</text>
+
+  <rect x="368" y="198" width="272" height="44" rx="4" fill="#fee2e2" stroke="#fca5a5" stroke-width="1"/>
+  <text x="376" y="216" font-size="10" font-weight="700" fill="#b91c1c">③ L2 脏块被替换</text>
+  <text x="376" y="233" font-size="9.5" fill="#334155">这才写回主存 —— 脏块逐级下落，不是每级都写</text>
+
+  <text x="368" y="264" font-size="9.5" fill="#b91c1c">若 L1 用直写：每次写都访主存，写缓冲容易饱和</text>
+  <text x="368" y="282" font-size="9.5" fill="#475569">L2 速度远高于主存 → 由它兜住写回，缓冲压力小</text>
+  <text x="368" y="300" font-size="9.5" fill="#166534">读缺失：从下一级取整块装入（写分配同理）</text>
+  <text x="368" y="322" font-size="9.5" fill="#64748b">L1 分离的是「指令/数据」，不是「读/写」——别记反</text>
+
+  <!-- 底部判据 -->
+  <rect x="24" y="374" width="632" height="126" rx="6" fill="#fefce8" stroke="#fde68a" stroke-width="1"/>
+  <text x="40" y="394" font-size="11" font-weight="700" fill="#854d0e">四个易错点，一句话一个</text>
+  <text x="40" y="416" font-size="10.5" fill="#334155">① 分离 Cache 的目的是<tspan font-weight="700">消除取指/执行冲突</tspan>（2014），不是「省容量」也不是「提高命中率」。</text>
+  <text x="40" y="436" font-size="10.5" fill="#334155">② 层级顺序：L1 比 L2 <tspan font-weight="700">更快、更小、更近</tspan>；容量与速度方向永远相反。</text>
+  <text x="40" y="456" font-size="10.5" fill="#334155">③ L1 数据 Cache 的固定组合 = <tspan font-weight="700">写分配法 + 回写法</tspan>（写命中不访主存）。</text>
+  <text x="40" y="476" font-size="10.5" fill="#334155">④ 脏块写回路径 = L1 → L2 → 主存，<tspan font-weight="700">逐级</tspan>；不要写成「L1 脏块直接写主存」。</text>
+  <text x="40" y="494" font-size="9" fill="#64748b">多级 Cache 的 CPI 与缺失率挂钩：缺失会插入等待周期（Q469，2025）。</text>
+</svg>

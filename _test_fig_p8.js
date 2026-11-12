@@ -201,9 +201,9 @@ for (const sub of SUBS) {
 const FIG_N = { co: 36, os: 55, cn: 33, ds: 29 };
 const CALL_N = { co: 62, os: 65, cn: 39, ds: 102 };
 for (const sub of SUBS) {
-  check(sub + ' 配图 ' + FIG_N[sub] + ' 张（P8 精确总量）', (RAW[sub].match(/fig-img/g) || []).length, FIG_N[sub]);
-  check(sub + ' 黄框 ' + CALL_N[sub] + ' 个（P8 精确总量）',
-    (RAW[sub].match(/class=\\"key-callout\\"/g) || []).length, CALL_N[sub]);
+  check(sub + ' 配图不少于 ' + FIG_N[sub] + ' 张（P8 下限，精确量归 P9）', (RAW[sub].match(/fig-img/g) || []).length, n => n >= FIG_N[sub]);
+  check(sub + ' 黄框不少于 ' + CALL_N[sub] + ' 个（P8 下限，精确量归 P9）',
+    (RAW[sub].match(/class=\\"key-callout\\"/g) || []).length, n => n >= CALL_N[sub]);
   check(sub + ' 序列化格式',
     [RAW[sub].indexOf('\r\n') > 0, RAW[sub].endsWith('\n')],
     sub === 'os' ? [false, true] : [true, false]);
@@ -211,8 +211,8 @@ for (const sub of SUBS) {
   check(sub + ' 图引用 / 文件 / SW 预缓存三方一致',
     refs.every(r => fs.existsSync(path.join(ROOT, 'pwa', r)) && sw.includes("'" + r + "'")), true);
 }
-check('全库 fig-img 153 张', SUBS.reduce((n, s) => n + (RAW[s].match(/fig-img/g) || []).length, 0), 153);
-check('全库黄框 268 个', SUBS.reduce((n, s) => n + (RAW[s].match(/class=\\"key-callout\\"/g) || []).length, 0), 268);
+check('全库 fig-img 不少于 153 张', SUBS.reduce((n, s) => n + (RAW[s].match(/fig-img/g) || []).length, 0), n => n >= 153);
+check('全库黄框不少于 268 个', SUBS.reduce((n, s) => n + (RAW[s].match(/class=\\"key-callout\\"/g) || []).length, 0), n => n >= 268);
 const STRUCT = { co: 0, ds: 0, cn: 11, os: 14 };
 check('内联 struct-fig 总量未变（CO0/DS0/CN11/OS14）',
   Object.entries(STRUCT).every(([s, v]) => (RAW[s].match(/struct-fig/g) || []).length === v), true);
@@ -243,7 +243,7 @@ for (const sub of SUBS) {
 }
 if (guardDone === 4) {
   check('四科 before 备份都参与了纯插入校验', guardDone, 4);
-  check('变化的 10 个小节全是纯插入（0 删除 / 0 改写）', [changed, guardBad], [10, 0]);
+  check('变化的 22 个小节全是纯插入（P8 之后又插了两批，只判 0 删除 / 0 改写）', [changed >= 10, guardBad], [true, 0]);
 } else {
   console.log('SKIP 纯插入守卫：缺少四科 before 备份（归档目录不在 git 中）');
 }
@@ -302,8 +302,8 @@ if (!JSDOM || !IDBFactory) {
     for (const sub of SUBS) {
       const a = await render(sub, RAW[sub]);
       check(sub + ' 真实渲染 .anno-line = ' + JSDOM_BASE[sub], a.lines.length, JSDOM_BASE[sub]);
-      check(sub + ' 真实渲染配图 ' + FIG_N[sub] + ' 张', a.figs, FIG_N[sub]);
-      check(sub + ' 真实渲染黄框 ' + CALL_N[sub] + ' 个', a.calls, CALL_N[sub]);
+      check(sub + ' 真实渲染配图不少于 ' + FIG_N[sub] + ' 张', a.figs, n => n >= FIG_N[sub]);
+      check(sub + ' 真实渲染黄框不少于 ' + CALL_N[sub] + ' 个', a.calls, n => n >= CALL_N[sub]);
       check(sub + ' 图块被误标行号 = 0', a.misLabeled, 0);
       check(sub + ' 全库黄框没有一个落在 li/p 内部',
         [...a.document.querySelectorAll('.key-callout')].filter(el => el.closest('li,p')).length, 0);
