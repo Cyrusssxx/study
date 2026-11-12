@@ -45,11 +45,11 @@ const FIGS = [
 
 check('序列化仍是 CRLF + 无尾换行',
   [notesRaw.indexOf('\r\n') > 0, notesRaw.endsWith('\n')], [true, false]);
-check('DS 配图 25 张（9 + 8 + 8）',
-  (notesRaw.match(/fig-img/g) || []).length, 25);
-check('DS 黄框 93 个（68 原有 + 9 + 8 + 8）',
-  (notesRaw.match(/class=\\"key-callout\\"/g) || []).length, 93);
-check('SW 里 DS 图 25 条', (sw.match(/'img\/ds_fig_[^']+'/g) || []).length, 25);
+check('DS 配图不少于 25 张（精确总量见 _test_fig_p5）',
+  (notesRaw.match(/fig-img/g) || []).length >= 25, true);
+check('DS 黄框不少于 93 个（精确总量见 _test_fig_p5）',
+  (notesRaw.match(/class=\\"key-callout\\"/g) || []).length >= 93, true);
+check('SW 里 DS 图不少于 25 条', (sw.match(/'img\/ds_fig_[^']+'/g) || []).length >= 25, true);
 
 for (const [name, sec, anchorText] of FIGS) {
   const h = nodeHtml(sec);
@@ -162,8 +162,8 @@ if (!JSDOM || !IDBFactory) {
     const d = dom.window.document;
     check('真实渲染 .anno-line 总数 = 1330（已存批注不错位）',
       d.querySelectorAll('.anno-line').length, 1330);
-    check('真实渲染配图 25 张', d.querySelectorAll('img.fig-img').length, 25);
-    check('真实渲染黄框 93 个', d.querySelectorAll('.key-callout').length, 93);
+    check('真实渲染配图不少于 25 张', d.querySelectorAll('img.fig-img').length >= 25, true);
+    check('真实渲染黄框不少于 93 个', d.querySelectorAll('.key-callout').length >= 93, true);
     check('图块被误标行号 = 0',
       [...d.querySelectorAll('.anno-line')]
         .filter(e => e.hasAttribute('data-fig') || e.closest('[data-fig]')).length, 0);

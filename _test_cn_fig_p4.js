@@ -180,20 +180,20 @@ check('CN 静态可批注行 1108（开标签口径，零漂移）', annoOpen, 1
 // ---------- 7. 总量 / 三方一致 / 序列化 ----------
 check('CN 序列化仍是 CRLF + 无尾换行',
   [cnRaw.indexOf('\r\n') > 0, cnRaw.endsWith('\n')], [true, false]);
-check('CN 配图 29 张（P4 精确总量）', (cnRaw.match(/fig-img/g) || []).length, 29);
-check('CN 黄框 31 个（P4 精确总量）', (cnRaw.match(/class=\\"key-callout\\"/g) || []).length, 31);
-check('全库 fig-img 137 张（cn29 + os51 + co32 + ds25）',
-  subjects.reduce((n, s) => n + (read('pwa/data/notes/' + s + '_notes.json').match(/fig-img/g) || []).length, 0), 137);
-check('全库黄框 raw 计数 234 个（cn31 + os57 + co53 + ds93）',
-  subjects.reduce((n, s) => n + (read('pwa/data/notes/' + s + '_notes.json').match(/class=\\"key-callout\\"/g) || []).length, 0), 234);
+check('CN 配图不少于 29 张（精确总量见 _test_fig_p5）', (cnRaw.match(/fig-img/g) || []).length >= 29, true);
+check('CN 黄框不少于 31 个（精确总量见 _test_fig_p5）', (cnRaw.match(/class=\\"key-callout\\"/g) || []).length >= 31, true);
+check('全库 fig-img 不少于 137 张（精确总量见 _test_fig_p5）',
+  subjects.reduce((n, s) => n + (read('pwa/data/notes/' + s + '_notes.json').match(/fig-img/g) || []).length, 0) >= 137, true);
+check('全库黄框 raw 计数不少于 234 个（精确总量见 _test_fig_p5）',
+  subjects.reduce((n, s) => n + (read('pwa/data/notes/' + s + '_notes.json').match(/class=\\"key-callout\\"/g) || []).length, 0) >= 234, true);
 check('全库黄框可解析条目 ≥233（OS 有 1 个历史内嵌 div 会截断）', allCallouts.length >= 233, true);
 check('内联 struct-fig 仍 11 张（CN）', (cnRaw.match(/struct-fig/g) || []).length, 11);
 const refs = [...cnRaw.matchAll(/img\/(cn_fig_[a-z0-9_]+\.(?:svg|png))/g)].map(m => 'img/' + m[1]);
-check('CN 图引用 29 处且全部有磁盘文件',
-  refs.length === 29 && refs.every(r => fs.existsSync(path.join(ROOT, 'pwa', r))), true);
+check('CN 图引用不少于 29 处且全部有磁盘文件',
+  refs.length >= 29 && refs.every(r => fs.existsSync(path.join(ROOT, 'pwa', r))), true);
 check('CN 图引用全部进了 SW 预缓存',
   refs.every(r => sw.includes("'img/" + r.slice(4) + "'")), true);
-check('SW 里 CN 图 29 条', (sw.match(/'img\/cn_fig_[^']+'/g) || []).length, 29);
+check('SW 里 CN 图不少于 29 条', (sw.match(/'img\/cn_fig_[^']+'/g) || []).length >= 29, true);
 check('笔记 JSON 里没有 SVG 专有的 tspan',
   subjects.every(s => !read('pwa/data/notes/' + s + '_notes.json').includes('tspan')), true);
 
@@ -227,8 +227,8 @@ if (!JSDOM || !IDBFactory) {
     const d = dom.window.document;
     check('真实渲染 .anno-line 总数 = 1220（黄框零覆盖，批注不错位）',
       d.querySelectorAll('.anno-line').length, 1220);
-    check('真实渲染配图 29 张', d.querySelectorAll('img.fig-img').length, 29);
-    check('真实渲染黄框 31 个', d.querySelectorAll('.key-callout').length, 31);
+    check('真实渲染配图不少于 29 张', d.querySelectorAll('img.fig-img').length >= 29, true);
+    check('真实渲染黄框不少于 31 个', d.querySelectorAll('.key-callout').length >= 31, true);
     check('图块被误标行号 = 0',
       [...d.querySelectorAll('[data-fig]')].filter(el => el.classList.contains('anno-line')).length, 0);
     // 结构性防复发：黄框/图块一旦被塞进未闭合的 <li>，行数不变但那行文本会被追加，

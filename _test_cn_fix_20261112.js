@@ -161,13 +161,11 @@ check('CN 黄框不少于 25 个（精确值见 _test_cn_fig_p4）',
 check('SW 里 CN 图不少于 25 条', (sw.match(/'img\/cn_fig_[^']+'/g) || []).length >= 25, true);
 check('全库 fig-img 不少于 133 张（精确值见 _test_cn_fig_p4）',
   ['cn', 'os', 'co', 'ds'].reduce((n, s) => n + (read('pwa/data/notes/' + s + '_notes.json').match(/fig-img/g) || []).length, 0) >= 133, true);
-// 旧测试已降为下限，精确量统归本文件
-check('计组黄框 53 个（52 + 本批跨科指针 1）',
-  (coRaw.match(/class=\\"key-callout\\"/g) || []).length, 53);
-check('计组配图仍 32 张', (coRaw.match(/fig-img/g) || []).length, 32);
-check('OS 黄框 57 个（56 + 本批 inode 类比表 1）',
-  (osRaw.match(/class=\\"key-callout\\"/g) || []).length, 57);
-check('OS 配图仍 51 张', (osRaw.match(/fig-img/g) || []).length, 51);
+// 旧批次精确量一律降为下限，最新精确量统归 _test_fig_p5
+check('计组黄框不少于 53 个', (coRaw.match(/class=\\"key-callout\\"/g) || []).length >= 53, true);
+check('计组配图不少于 32 张', (coRaw.match(/fig-img/g) || []).length >= 32, true);
+check('OS 黄框不少于 57 个', (osRaw.match(/class=\\"key-callout\\"/g) || []).length >= 57, true);
+check('OS 配图不少于 51 张', (osRaw.match(/fig-img/g) || []).length >= 51, true);
 // 2.1.3 有一张教材截图 cn_fig_2_3.png，其余 24 张是自绘 svg —— 合计 25 个 fig-img
 const refs = [...cnRaw.matchAll(/img\/(cn_fig_[a-z0-9_]+\.(?:svg|png))/g)].map(m => 'img/' + m[1]);
 check('CN 图引用不少于 25 处且全部有磁盘文件',

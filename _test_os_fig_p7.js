@@ -161,9 +161,9 @@ check('笔记 JSON 里没有 SVG 专有的 <tspan>', notesRaw.indexOf('<tspan') 
 check('黄框内没有塞列表（全库无一先例）',
   (notesRaw.match(/<div class="key-callout">[^<]*(<(?![\/]?b>)[a-z]+)/g) || []).length, 0);
 
-// ---- 5. 总量：精确值只在本文件 ----
-check('OS 配图 51 张（47 + 本批 4）',
-  (notesRaw.match(/class=\\"fig-img\\"/g) || []).length, 51);
+// ---- 5. 总量：旧批次降为下限，最新精确值见 _test_fig_p5 ----
+check('OS 配图不少于 51 张',
+  (notesRaw.match(/class=\\"fig-img\\"/g) || []).length >= 51, true);
 check('OS 黄框不少于 56 个（精确值见 _test_cn_fix_20261112）',
   (notesRaw.match(/class=\\"key-callout\\"/g) || []).length >= 56, true);
 let allFig = 0;
@@ -223,7 +223,7 @@ if (!JSDOM || !IDBFactory) {
     const d = dom.window.document;
     check('真实渲染 .anno-line 总数 = 3668（已存批注不错位）',
       d.querySelectorAll('.anno-line').length, 3668);
-    check('真实渲染配图 51 张', d.querySelectorAll('img.fig-img').length, 51);
+    check('真实渲染配图不少于 51 张', d.querySelectorAll('img.fig-img').length >= 51, true);
     check('真实渲染黄框不少于 56 个', d.querySelectorAll('.key-callout').length >= 56, true);
     check('图块被误标行号 = 0',
       [...d.querySelectorAll('.anno-line')]

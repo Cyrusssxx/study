@@ -46,8 +46,8 @@ const FIGS = [
 // ---- 1. 序列化与总量 ----
 check('序列化仍是 indent=1 + CRLF + 无尾换行',
   [notesRaw.indexOf('\r\n') >= 0, notesRaw.endsWith('}')], [true, true]);
-check('计组配图 32 张（P4 精确总量）',
-  (notesRaw.match(/fig-img/g) || []).length, 32);
+check('计组配图不少于 32 张（精确总量见 _test_fig_p5）',
+  (notesRaw.match(/fig-img/g) || []).length >= 32, true);
 check('计组黄框不少于 52 个（精确值见 _test_cn_fix_20261112）',
   (notesRaw.match(/class=\\"key-callout\\"/g) || []).length >= 52, true);
 check('SW 里本批 4 图全部进预缓存',

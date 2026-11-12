@@ -1,0 +1,36 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 680 460" width="680" height="460" font-family="-apple-system,BlinkMacSystemFont,'Segoe UI','Microsoft YaHei',sans-serif">
+  <rect x="0" y="0" width="680" height="460" fill="#ffffff"/>
+  <text x="20" y="26" font-size="16" font-weight="700" fill="#312e81">两条定理两条路：给状态数用奈奎斯特，给信噪比用香农，并存取较小值</text>
+  <text x="20" y="46" font-size="10.5" fill="#64748b">W 为带宽(Hz) · N 为码元状态数 · S/N 为信噪比真值 · dB = 10·log₁₀(S/N)</text>
+
+  <rect x="24" y="62" width="300" height="190" rx="6" fill="#eff6ff" stroke="#bfdbfe" stroke-width="1"/>
+  <text x="174" y="84" font-size="12.5" font-weight="700" fill="#1e40af" text-anchor="middle">奈奎斯特（理想低通 · 无噪声）</text>
+  <rect x="44" y="96" width="260" height="34" rx="4" fill="#dbeafe" stroke="#93c5fd" stroke-width="1"/>
+  <text x="174" y="119" font-size="14" font-weight="700" fill="#1e3a8a" text-anchor="middle">C = 2W·log₂N</text>
+  <text x="44" y="152" font-size="10.5" fill="#475569">W = 4000 Hz，N = 16 种物理状态（Q66）</text>
+  <text x="44" y="175" font-size="11" font-weight="700" fill="#1d4ed8">2×4000×log₂16 = 8000×4 = 32 kb/s</text>
+  <text x="44" y="199" font-size="10" fill="#475569">另给出波特率上限 = 2W Baud（与 N 无关）</text>
+  <text x="44" y="221" font-size="10" fill="#64748b">状态数越多，每个码元携带的比特越多</text>
+  <text x="44" y="242" font-size="9.5" fill="#64748b">采样率超过 2W 的部分无效（Q65：8 kHz、8 级 → 48 kb/s）</text>
+
+  <rect x="356" y="62" width="300" height="190" rx="6" fill="#f0fdf4" stroke="#bbf7d0" stroke-width="1"/>
+  <text x="506" y="84" font-size="12.5" font-weight="700" fill="#166534" text-anchor="middle">香农（有噪信道）</text>
+  <rect x="376" y="96" width="260" height="34" rx="4" fill="#dcfce7" stroke="#86efac" stroke-width="1"/>
+  <text x="506" y="119" font-size="14" font-weight="700" fill="#14532d" text-anchor="middle">C = W·log₂(1 + S/N)</text>
+  <text x="376" y="152" font-size="10.5" fill="#475569">3.5~3.9 MHz → W = 0.4 MHz（上限 − 下限）</text>
+  <text x="376" y="175" font-size="11" fill="#475569">S = 0.14 W，N = 0.02 W → S/N = 7</text>
+  <text x="376" y="198" font-size="11" font-weight="700" fill="#15803d">0.4M×log₂8 = 0.4M×3 = 1.2 Mb/s（Q69）</text>
+  <text x="376" y="221" font-size="10" fill="#475569">30 dB → S/N = 1000；20 dB → 100（Q68/Q78）</text>
+  <text x="376" y="242" font-size="9.5" fill="#64748b">信噪比 = 信号平均功率 ÷ 噪声功率（Q57）</text>
+
+  <rect x="24" y="266" width="632" height="118" rx="6" fill="#fff7ed" stroke="#fed7aa" stroke-width="1"/>
+  <text x="340" y="288" font-size="12.5" font-weight="700" fill="#9a3412" text-anchor="middle">实际可达速率 = min（奈氏上限，香农上限）</text>
+  <text x="40" y="312" font-size="10.5" fill="#475569">Q67：二进制信号、4 kHz、127:1 → 奈氏 2×4000×log₂2 = 8000 b/s</text>
+  <text x="40" y="333" font-size="10.5" fill="#475569">香农 4000×log₂(1+127) = 28000 b/s；两者并存取小（Q67、Q72、Q79）</text>
+  <text x="340" y="356" font-size="11.5" font-weight="700" fill="#c2410c" text-anchor="middle">取 8000 b/s，不是 28000 b/s</text>
+  <text x="40" y="376" font-size="9.5" fill="#64748b">给带宽 + 调制状态数 → 奈氏；给 dB 信噪比 → 香农；V 反推：log₂V = 6 → V = 64（QAM-64，2023 Q82）</text>
+
+  <rect x="24" y="396" width="632" height="56" rx="5" fill="#f8fafc" stroke="#cbd5e1" stroke-width="1"/>
+  <text x="40" y="416" font-size="10.5" fill="#475569">2022 Q81：200 kHz、ASK 4 个幅值 → 2×200k×log₂4 = 800 kb/s；最大速率由带宽与信噪比共同决定。</text>
+  <text x="40" y="438" font-size="10.5" font-weight="700" fill="#b91c1c">带宽 = 频率上限 − 下限；信号传播速度只影响传播时延，不影响数据传输速率（2014 Q76）。</text>
+</svg>
