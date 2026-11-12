@@ -1,0 +1,61 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 680 392" width="680" height="392" font-family="-apple-system,BlinkMacSystemFont,'Segoe UI','Microsoft YaHei',sans-serif">
+  <defs>
+    <marker id="ftpArrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#4a7ab8"/>
+    </marker>
+    <marker id="ftpArrowD" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#b45309"/>
+    </marker>
+  </defs>
+  <rect x="0" y="0" width="680" height="392" fill="#ffffff"/>
+  <text x="20" y="26" font-size="16" font-weight="700" fill="#1e3a8a">FTP 的两条 TCP 连接 · 控制连接全程在，数据连接按需开</text>
+  <text x="20" y="46" font-size="10.5" fill="#64748b">21 号端口传命令（带外），20 号端口传文件与目录列表；客户端端口由系统随机分配</text>
+
+  <!-- 客户端 -->
+  <rect x="40" y="76" width="164" height="150" rx="6" fill="#eff6ff" stroke="#bfdbfe" stroke-width="1"/>
+  <text x="56" y="97" font-size="11" font-weight="700" fill="#1e40af">客户端</text>
+  <rect x="56" y="108" width="132" height="30" rx="4" fill="#ffffff" stroke="#60a5fa" stroke-width="1.1"/>
+  <text x="122" y="127" font-size="10" font-weight="700" fill="#1e3a8a" text-anchor="middle">控制进程</text>
+  <rect x="56" y="170" width="132" height="30" rx="4" fill="#ffffff" stroke="#60a5fa" stroke-width="1.1"/>
+  <text x="122" y="189" font-size="10" font-weight="700" fill="#1e3a8a" text-anchor="middle">数据进程</text>
+  <text x="56" y="216" font-size="9" fill="#64748b">端口由系统临时分配</text>
+
+  <!-- 服务器 -->
+  <rect x="470" y="70" width="170" height="166" rx="6" fill="#f8fafc" stroke="#cbd5e1" stroke-width="1"/>
+  <text x="486" y="91" font-size="11" font-weight="700" fill="#0f172a">服务器</text>
+  <rect x="486" y="100" width="138" height="32" rx="4" fill="#dbeafe" stroke="#60a5fa" stroke-width="1.1"/>
+  <text x="555" y="114" font-size="10" font-weight="700" fill="#1e3a8a" text-anchor="middle">主进程</text>
+  <text x="555" y="126" font-size="9" fill="#1e3a8a" text-anchor="middle">守候熟知端口 21</text>
+  <rect x="486" y="160" width="138" height="44" rx="4" fill="#ffffff" stroke="#94a3b8" stroke-width="1.1"/>
+  <text x="555" y="177" font-size="10" font-weight="700" fill="#334155" text-anchor="middle">从属进程</text>
+  <text x="555" y="192" font-size="9" fill="#334155" text-anchor="middle">一个客户一个，处理完即终止</text>
+  <text x="486" y="222" font-size="9" fill="#64748b">主 / 从属进程并发执行</text>
+
+  <!-- 控制连接 -->
+  <path d="M 190 128 L 470 121" fill="none" stroke="#4a7ab8" stroke-width="1.8"
+        marker-start="url(#ftpArrow)" marker-end="url(#ftpArrow)"/>
+  <text x="330" y="113" font-size="10" font-weight="700" fill="#1e40af" text-anchor="middle">控制连接 · TCP 21</text>
+  <text x="330" y="146" font-size="9" fill="#1e40af" text-anchor="middle">整个会话一直保持 · 命令与应答带外传送</text>
+
+  <!-- 数据连接 -->
+  <path d="M 190 188 L 470 181" fill="none" stroke="#b45309" stroke-width="1.6" stroke-dasharray="5 4"
+        marker-start="url(#ftpArrowD)" marker-end="url(#ftpArrowD)"/>
+  <text x="330" y="208" font-size="10" font-weight="700" fill="#92400e" text-anchor="middle">数据连接 · TCP 20</text>
+  <text x="330" y="224" font-size="9" fill="#92400e" text-anchor="middle">按需建立、传完即释放（文件 / 目录列表走这里）</text>
+
+  <!-- 两种模式 -->
+  <rect x="40" y="248" width="290" height="84" rx="6" fill="#fffbeb" stroke="#fcd34d" stroke-width="1"/>
+  <text x="56" y="268" font-size="10.5" font-weight="700" fill="#92400e">PORT（主动）：服务器去连客户端</text>
+  <text x="56" y="288" font-size="9.5" fill="#334155">客户端告诉服务器自己的端口</text>
+  <text x="56" y="304" font-size="9.5" fill="#334155">服务器用<tspan font-weight="700">自己的 20 号端口</tspan>发起三次握手</text>
+  <text x="56" y="320" font-size="9" fill="#b45309">服务器 20 → 客户端随机端口</text>
+
+  <rect x="350" y="248" width="290" height="84" rx="6" fill="#f0fdf4" stroke="#86efac" stroke-width="1"/>
+  <text x="366" y="268" font-size="10.5" font-weight="700" fill="#166534">PASV（被动）：客户端去连服务器</text>
+  <text x="366" y="288" font-size="9.5" fill="#334155">服务器开一个<tspan font-weight="700">随机端口</tspan>并告知客户端</text>
+  <text x="366" y="304" font-size="9.5" fill="#334155">客户端主动连这个随机端口</text>
+  <text x="366" y="320" font-size="9" fill="#b45309">此时不出现「与客户端 20 端口建连接」</text>
+
+  <text x="40" y="356" font-size="9" fill="#64748b">FTP 是有状态协议：会话期间要记住账户与当前目录；HTTP 则是无状态</text>
+  <text x="40" y="374" font-size="9" fill="#64748b">文本用 ASCII 方式、图像/声音用 Binary 方式；两种连接的端口号是最高频考点</text>
+</svg>
