@@ -1,0 +1,78 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 680 432" width="680" height="432" font-family="-apple-system,BlinkMacSystemFont,'Segoe UI','Microsoft YaHei',sans-serif">
+  <defs>
+    <marker id="mxArrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#475569"/>
+    </marker>
+  </defs>
+  <rect x="0" y="0" width="680" height="432" fill="#ffffff"/>
+  <text x="20" y="26" font-size="16" font-weight="700" fill="#1e3a8a">信道划分「分什么」· FDM 分频 / TDM 分时 / WDM 分波长 / CDM 分码片</text>
+  <text x="20" y="46" font-size="10.5" fill="#64748b">静态把信道资源分给各站，靠「各占各的」来避免冲突，而不是靠冲突后重发</text>
+
+  <!-- 左卡：三种切法 -->
+  <rect x="24" y="62" width="316" height="352" rx="6" fill="#f8fafc" stroke="#cbd5e1" stroke-width="1"/>
+  <text x="40" y="84" font-size="11" font-weight="700" fill="#0f172a">把信道在某个维度上切开</text>
+
+  <!-- FDM -->
+  <text x="40" y="108" font-size="10" font-weight="700" fill="#1e40af">FDM 频分 · 分频段（不同频率同时传）</text>
+  <rect x="40" y="114" width="284" height="19" rx="3" fill="#dbeafe" stroke="#60a5fa" stroke-width="1"/>
+  <text x="52" y="127" font-size="9" fill="#1e40af">f1 —— 站 1 全程占用这个频段</text>
+  <rect x="40" y="136" width="284" height="19" rx="3" fill="#dbeafe" stroke="#60a5fa" stroke-width="1"/>
+  <text x="52" y="149" font-size="9" fill="#1e40af">f2 —— 站 2 全程占用这个频段</text>
+  <rect x="40" y="158" width="284" height="19" rx="3" fill="#dbeafe" stroke="#60a5fa" stroke-width="1"/>
+  <text x="52" y="171" font-size="9" fill="#1e40af">f3 —— 站 3 全程占用这个频段</text>
+
+  <!-- TDM -->
+  <text x="40" y="196" font-size="10" font-weight="700" fill="#166534">TDM 时分 · 分时隙（不同时间片轮流传）</text>
+  <rect x="40" y="202" width="47" height="26" rx="3" fill="#dcfce7" stroke="#4ade80" stroke-width="1"/>
+  <text x="63" y="219" font-size="9.5" fill="#166534" text-anchor="middle">1</text>
+  <rect x="87" y="202" width="47" height="26" rx="3" fill="#dcfce7" stroke="#4ade80" stroke-width="1"/>
+  <text x="110" y="219" font-size="9.5" fill="#166534" text-anchor="middle">2</text>
+  <rect x="134" y="202" width="47" height="26" rx="3" fill="#dcfce7" stroke="#4ade80" stroke-width="1"/>
+  <text x="157" y="219" font-size="9.5" fill="#166534" text-anchor="middle">3</text>
+  <rect x="181" y="202" width="47" height="26" rx="3" fill="#dcfce7" stroke="#4ade80" stroke-width="1"/>
+  <text x="204" y="219" font-size="9.5" fill="#166534" text-anchor="middle">1</text>
+  <rect x="228" y="202" width="47" height="26" rx="3" fill="#dcfce7" stroke="#4ade80" stroke-width="1"/>
+  <text x="251" y="219" font-size="9.5" fill="#166534" text-anchor="middle">2</text>
+  <rect x="275" y="202" width="49" height="26" rx="3" fill="#dcfce7" stroke="#4ade80" stroke-width="1"/>
+  <text x="299" y="219" font-size="9.5" fill="#166534" text-anchor="middle">3</text>
+  <text x="40" y="242" font-size="9" fill="#166534">时隙固定 → 同步 TDM；按需分配 → 统计 TDM</text>
+
+  <!-- CDM -->
+  <text x="40" y="270" font-size="10" font-weight="700" fill="#92400e">CDM 码分 · 分码片（同一时刻同频，靠正交码区分）</text>
+  <rect x="40" y="276" width="284" height="30" rx="3" fill="#fef3c7" stroke="#fbbf24" stroke-width="1"/>
+  <text x="182" y="295" font-size="9.5" fill="#92400e" text-anchor="middle">A ＋ B ＋ C 同时同频叠加在一起</text>
+  <text x="40" y="324" font-size="9" fill="#92400e">各站码片两两正交（规格化内积＝0），所以能再分开</text>
+
+  <text x="40" y="352" font-size="9" fill="#0f766e" font-weight="700">共同点：谁的冲突都不会发生 —— 因为没有「抢」这个动作</text>
+  <text x="40" y="370" font-size="9" fill="#64748b">代价：站不发数据时，分给它的那段资源照样空着浪费</text>
+  <text x="40" y="388" font-size="9" fill="#64748b">→ 适合重负载、持续发送；不适合突发流量</text>
+  <text x="40" y="406" font-size="9" fill="#b45309">WDM 分波长，是 FDM 在光纤上的说法（一根纤多个 λ）</text>
+
+  <!-- 右卡：CDMA 判决 -->
+  <rect x="352" y="62" width="304" height="352" rx="6" fill="#eff6ff" stroke="#bfdbfe" stroke-width="1"/>
+  <text x="368" y="84" font-size="11" font-weight="700" fill="#1e3a8a">CDMA 怎么从混合信号里判出某一站</text>
+
+  <rect x="368" y="94" width="272" height="32" rx="4" fill="#ffffff" stroke="#93c5fd" stroke-width="1.1"/>
+  <text x="380" y="114" font-size="10" fill="#1e40af">① 收到混合信号 S ＝ A ＋ B ＋ C</text>
+
+  <path d="M 504 126 L 504 142" fill="none" stroke="#475569" stroke-width="1.2" marker-end="url(#mxArrow)"/>
+
+  <rect x="368" y="144" width="272" height="32" rx="4" fill="#ffffff" stroke="#93c5fd" stroke-width="1.1"/>
+  <text x="380" y="164" font-size="10" fill="#1e40af">② 拿 S 与「站 A 的码片」求规格化内积</text>
+
+  <path d="M 504 176 L 504 192" fill="none" stroke="#475569" stroke-width="1.2" marker-end="url(#mxArrow)"/>
+
+  <rect x="368" y="194" width="272" height="26" rx="4" fill="#dcfce7" stroke="#4ade80" stroke-width="1.1"/>
+  <text x="380" y="212" font-size="9.5" fill="#166534">内积 ＝ ＋1　→　站 A 发送的是 1</text>
+  <rect x="368" y="226" width="272" height="26" rx="4" fill="#f1f5f9" stroke="#94a3b8" stroke-width="1.1"/>
+  <text x="380" y="244" font-size="9.5" fill="#334155">内积 ＝ 0　　→　站 A 没有发送（静默）</text>
+  <rect x="368" y="258" width="272" height="26" rx="4" fill="#fef3c7" stroke="#fbbf24" stroke-width="1.1"/>
+  <text x="380" y="276" font-size="9.5" fill="#92400e">内积 ＝ −1　→　站 A 发送的是 0</text>
+
+  <text x="368" y="304" font-size="9" fill="#1e40af" font-weight="700">前提就是「两两正交」，别的站内积为 0 才被滤掉</text>
+  <text x="368" y="322" font-size="9" fill="#334155">判决只看该站码片，不必知道别人发了什么、也不必等别人发完</text>
+  <text x="368" y="340" font-size="9" fill="#64748b">真题口径：得 1 / 0 / −1 判「发 1 / 未发送 / 发 0」</text>
+  <text x="368" y="362" font-size="9" fill="#0f766e" font-weight="700">对比记忆：随机访问是「先撞了再化解」，信道划分是「压根不给撞的机会」</text>
+  <text x="368" y="380" font-size="9" fill="#64748b">TDM 介质位速率必须大于单个信号的位速率（合起来才装得下）</text>
+  <text x="368" y="398" font-size="9" fill="#64748b">令牌（轮询）也免冲突，但代价是令牌轮转的等待开销</text>
+</svg>

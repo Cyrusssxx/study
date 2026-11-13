@@ -1,0 +1,92 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 680 452" width="680" height="452" font-family="-apple-system,BlinkMacSystemFont,'Segoe UI','Microsoft YaHei',sans-serif">
+  <defs>
+    <marker id="moArrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#475569"/>
+    </marker>
+    <marker id="moArrowR" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#dc2626"/>
+    </marker>
+  </defs>
+  <rect x="0" y="0" width="680" height="452" fill="#ffffff"/>
+  <text x="20" y="26" font-size="16" font-weight="700" fill="#1e3a8a">管程 Monitor · 互斥由编译器包了，程序员只管条件变量</text>
+  <text x="20" y="46" font-size="10.5" fill="#64748b">把共享资源与对它的操作封装成一个模块 —— 像类，但同一时刻只放一个进程进去执行</text>
+
+  <!-- 左卡：管程结构 -->
+  <rect x="24" y="62" width="392" height="374" rx="6" fill="#f8fafc" stroke="#cbd5e1" stroke-width="1"/>
+  <text x="40" y="84" font-size="11" font-weight="700" fill="#0f172a">管程内部长什么样</text>
+
+  <!-- 外部进程 -->
+  <rect x="40" y="96" width="60" height="26" rx="4" fill="#e2e8f0" stroke="#94a3b8" stroke-width="1"/>
+  <text x="70" y="113" font-size="9.5" fill="#334155" text-anchor="middle">进程 A</text>
+  <rect x="112" y="96" width="60" height="26" rx="4" fill="#e2e8f0" stroke="#94a3b8" stroke-width="1"/>
+  <text x="142" y="113" font-size="9.5" fill="#334155" text-anchor="middle">进程 B</text>
+  <rect x="184" y="96" width="60" height="26" rx="4" fill="#e2e8f0" stroke="#94a3b8" stroke-width="1"/>
+  <text x="214" y="113" font-size="9.5" fill="#334155" text-anchor="middle">进程 C</text>
+  <text x="256" y="113" font-size="9" fill="#64748b">← 只能调过程，进不去内部</text>
+
+  <path d="M 70 122 L 70 138" fill="none" stroke="#475569" stroke-width="1.2" marker-end="url(#moArrow)"/>
+  <path d="M 142 122 L 142 138" fill="none" stroke="#475569" stroke-width="1.2" marker-end="url(#moArrow)"/>
+  <path d="M 214 122 L 214 138" fill="none" stroke="#475569" stroke-width="1.2" marker-end="url(#moArrow)"/>
+
+  <!-- 互斥闸口 -->
+  <rect x="40" y="140" width="336" height="24" rx="4" fill="#fee2e2" stroke="#f87171" stroke-width="1.2"/>
+  <text x="208" y="157" font-size="9.5" font-weight="700" fill="#991b1b" text-anchor="middle">入口互斥：同一时刻只允许一个进程在管程内执行</text>
+
+  <!-- 管程主体 -->
+  <rect x="40" y="172" width="336" height="152" rx="5" fill="#ffffff" stroke="#4a7ab8" stroke-width="1.4" stroke-dasharray="6 3"/>
+  <text x="52" y="190" font-size="10" font-weight="700" fill="#1e3a8a">管程 Monitor</text>
+
+  <rect x="52" y="198" width="146" height="44" rx="3" fill="#dbeafe" stroke="#60a5fa" stroke-width="1.1"/>
+  <text x="125" y="214" font-size="9" font-weight="700" fill="#1e40af" text-anchor="middle">共享数据结构</text>
+  <text x="125" y="228" font-size="8.5" fill="#1e40af" text-anchor="middle">资源状态（如剩余数 S）</text>
+  <text x="125" y="238" font-size="8.5" fill="#1e40af" text-anchor="middle">初始化语句也写在这里</text>
+
+  <rect x="210" y="198" width="154" height="44" rx="3" fill="#dcfce7" stroke="#4ade80" stroke-width="1.1"/>
+  <text x="287" y="214" font-size="9" font-weight="700" fill="#166534" text-anchor="middle">一组过程（函数）</text>
+  <text x="287" y="228" font-size="8.5" fill="#166534" text-anchor="middle">申请 / 释放 / 查询…</text>
+  <text x="287" y="238" font-size="8.5" fill="#166534" text-anchor="middle">外部唯一入口</text>
+
+  <rect x="52" y="250" width="146" height="30" rx="3" fill="#fef3c7" stroke="#fbbf24" stroke-width="1.1"/>
+  <text x="125" y="269" font-size="9" fill="#92400e" text-anchor="middle">条件变量 x（等待队列）</text>
+  <rect x="210" y="250" width="154" height="30" rx="3" fill="#fef3c7" stroke="#fbbf24" stroke-width="1.1"/>
+  <text x="287" y="269" font-size="9" fill="#92400e" text-anchor="middle">条件变量 y（等待队列）</text>
+
+  <text x="52" y="298" font-size="8.5" fill="#64748b">不同阻塞原因各给一个条件变量，各自排队，互不干扰</text>
+  <text x="52" y="314" font-size="8.5" fill="#64748b">条件变量不存值，只负责「排队 + 通知」</text>
+
+  <!-- 条件变量两个操作 -->
+  <text x="40" y="346" font-size="9.5" font-weight="700" fill="#92400e">x.wait()</text>
+  <text x="100" y="346" font-size="9" fill="#334155">条件不满足 → 加入 x 队列，并自动释放管程（让别人进）</text>
+  <text x="40" y="364" font-size="9.5" font-weight="700" fill="#92400e">x.signal()</text>
+  <text x="100" y="364" font-size="9" fill="#334155">条件可能已满足 → 唤醒一个阻塞在 x 上的进程</text>
+  <text x="40" y="386" font-size="9" fill="#0f766e" font-weight="700">若 wait 不释放管程，别人进不来，整个系统就卡死了</text>
+  <text x="40" y="404" font-size="9" fill="#64748b">退出点：process 执行完过程 → 自动离开，下一个才能进</text>
+  <text x="40" y="422" font-size="9" fill="#64748b">典型实现：Java synchronized、Pthreads condition variable</text>
+
+  <!-- 右卡：管程 vs 信号量 -->
+  <rect x="428" y="62" width="228" height="374" rx="6" fill="#eff6ff" stroke="#bfdbfe" stroke-width="1"/>
+  <text x="444" y="84" font-size="11" font-weight="700" fill="#1e3a8a">管程 vs 信号量</text>
+
+  <text x="444" y="108" font-size="9.5" font-weight="700" fill="#1e40af">互斥谁保证</text>
+  <text x="444" y="124" font-size="9" fill="#166534">管程：编译器 / 运行时自动</text>
+  <text x="444" y="139" font-size="9" fill="#991b1b">信号量：程序员自己写 P/V</text>
+
+  <text x="444" y="163" font-size="9.5" font-weight="700" fill="#1e40af">同步谁做</text>
+  <text x="444" y="179" font-size="9" fill="#166534">管程：条件变量 wait/signal</text>
+  <text x="444" y="194" font-size="9" fill="#991b1b">信号量：P/V 兼顾互斥与同步</text>
+
+  <text x="444" y="218" font-size="9.5" font-weight="700" fill="#1e40af">有没有计数值</text>
+  <text x="444" y="234" font-size="9" fill="#166534">条件变量：没有，只排队</text>
+  <text x="444" y="249" font-size="9" fill="#166534">资源数量写在共享变量里</text>
+  <text x="444" y="264" font-size="9" fill="#991b1b">信号量：有整数值＝可用数量</text>
+
+  <text x="444" y="290" font-size="9.5" font-weight="700" fill="#1e40af">管程 vs 进程</text>
+  <text x="444" y="306" font-size="9" fill="#334155">进程：主动执行、有生命周期、私有 PCB</text>
+  <text x="444" y="321" font-size="9" fill="#334155">管程：被动被调、静态模块、管公共数据</text>
+
+  <text x="444" y="347" font-size="9" fill="#0f766e" font-weight="700">四大特性：模块化 / 信息隐蔽 /</text>
+  <text x="444" y="362" font-size="9" fill="#0f766e" font-weight="700">互斥性 / 队列管理</text>
+  <text x="444" y="384" font-size="9" fill="#b45309">易错：wait 会释放管程，signal 只</text>
+  <text x="444" y="398" font-size="9" fill="#b45309">唤醒不传值 —— 这两条最爱设陷阱</text>
+  <text x="444" y="420" font-size="9" fill="#64748b">管程解决的是「共享资源互斥」</text>
+</svg>

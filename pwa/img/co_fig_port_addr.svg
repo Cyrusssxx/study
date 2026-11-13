@@ -1,0 +1,60 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 680 460" width="680" height="460" font-family="-apple-system,BlinkMacSystemFont,'Segoe UI','Microsoft YaHei',sans-serif">
+  <defs>
+    <marker id="paArrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#475569"/>
+    </marker>
+  </defs>
+  <rect x="0" y="0" width="680" height="460" fill="#ffffff"/>
+  <text x="20" y="26" font-size="16" font-weight="700" fill="#1e3a8a">I/O 端口编址 · 统一编址靠「地址码」分家，独立编址靠「指令」分家</text>
+  <text x="20" y="46" font-size="10.5" fill="#64748b">端口是接口内部可被 CPU 直接访问的寄存器；端口 ≠ 接口，接口是整块电路</text>
+
+  <!-- 三个端口 -->
+  <rect x="24" y="60" width="632" height="70" rx="6" fill="#f8fafc" stroke="#cbd5e1" stroke-width="1"/>
+  <text x="40" y="80" font-size="10.5" font-weight="700" fill="#0f172a">一个 I/O 接口里的三个端口</text>
+  <rect x="40" y="88" width="188" height="30" rx="4" fill="#dbeafe" stroke="#60a5fa" stroke-width="1.1"/>
+  <text x="134" y="107" font-size="10" fill="#1e40af" text-anchor="middle">数据端口 · 可读可写</text>
+  <rect x="238" y="88" width="188" height="30" rx="4" fill="#dcfce7" stroke="#4ade80" stroke-width="1.1"/>
+  <text x="332" y="107" font-size="10" fill="#166534" text-anchor="middle">状态端口 · 只读</text>
+  <rect x="436" y="88" width="204" height="30" rx="4" fill="#fef3c7" stroke="#fbbf24" stroke-width="1.1"/>
+  <text x="538" y="107" font-size="10" fill="#92400e" text-anchor="middle">控制端口 · 只写</text>
+
+  <!-- 左卡：统一编址 -->
+  <rect x="24" y="142" width="308" height="266" rx="6" fill="#eff6ff" stroke="#bfdbfe" stroke-width="1"/>
+  <text x="40" y="164" font-size="11" font-weight="700" fill="#1e3a8a">统一编址（存储器映射）</text>
+
+  <text x="40" y="186" font-size="9.5" fill="#334155">一个地址空间，高处划一段给 I/O：</text>
+  <rect x="40" y="192" width="276" height="26" rx="3" fill="#e0e7ff" stroke="#818cf8" stroke-width="1.1"/>
+  <text x="178" y="209" font-size="9.5" fill="#3730a3" text-anchor="middle">主存单元 ……（低地址段）</text>
+  <rect x="40" y="220" width="276" height="26" rx="3" fill="#fde68a" stroke="#f59e0b" stroke-width="1.2"/>
+  <text x="178" y="237" font-size="9.5" fill="#78350f" text-anchor="middle">同一空间的高地址段 → 映射给 I/O 端口</text>
+  <text x="40" y="262" font-size="9" fill="#1e40af">CPU 用普通访存指令（加载 / 存储）就能访问端口</text>
+  <text x="40" y="278" font-size="9" fill="#1e40af">不设专用 I/O 指令；靠「不同地址码」区分是谁（2014 真题）</text>
+
+  <text x="40" y="302" font-size="9" font-weight="700" fill="#166534">优点</text>
+  <text x="40" y="318" font-size="9" fill="#166534">编程灵活；端口可获得较大的编址空间</text>
+  <text x="40" y="333" font-size="9" fill="#166534">保护可由虚拟存储管理统一实现，不需额外硬件</text>
+  <text x="40" y="357" font-size="9" font-weight="700" fill="#991b1b">缺点</text>
+  <text x="40" y="373" font-size="9" fill="#991b1b">占掉主存地址空间，可用内存变少</text>
+  <text x="40" y="388" font-size="9" fill="#991b1b">要判完整地址才知是不是 I/O，译码复杂、速度变慢</text>
+
+  <!-- 右卡：独立编址 -->
+  <rect x="348" y="142" width="308" height="266" rx="6" fill="#f0fdf4" stroke="#bbf7d0" stroke-width="1"/>
+  <text x="364" y="164" font-size="11" font-weight="700" fill="#166534">独立编址（I/O 映射）</text>
+
+  <text x="364" y="186" font-size="9.5" fill="#334155">两套地址空间，各自从 0 开始：</text>
+  <rect x="364" y="192" width="276" height="26" rx="3" fill="#e0e7ff" stroke="#818cf8" stroke-width="1.1"/>
+  <text x="502" y="209" font-size="9.5" fill="#3730a3" text-anchor="middle">主存空间（0,1,2,…）</text>
+  <rect x="364" y="220" width="276" height="26" rx="3" fill="#dcfce7" stroke="#22c55e" stroke-width="1.2"/>
+  <text x="502" y="237" font-size="9.5" fill="#14532d" text-anchor="middle">I/O 空间（0,1,2,…）地址值可相同也不冲突</text>
+  <text x="364" y="262" font-size="9" fill="#166534">CPU 用专用 I/O 指令访问（如 x86 的 IN / OUT）</text>
+  <text x="364" y="278" font-size="9" fill="#166534">指令里的地址字段直接给出端口号</text>
+
+  <text x="364" y="302" font-size="9" font-weight="700" fill="#166534">优点</text>
+  <text x="364" y="318" font-size="9" fill="#166534">端口数远少于内存单元 → 地址线少、译码简单快</text>
+  <text x="364" y="333" font-size="9" fill="#166534">I/O 操作一眼可辨，便于阅读与调试</text>
+  <text x="364" y="357" font-size="9" font-weight="700" fill="#991b1b">缺点</text>
+  <text x="364" y="373" font-size="9" fill="#991b1b">I/O 指令功能有限，只支持简单传送，灵活性差</text>
+  <text x="364" y="388" font-size="9" fill="#991b1b">要同时给存储器与 I/O 两组读写控制信号，控制复杂</text>
+
+  <text x="20" y="440" font-size="9" fill="#64748b">易错：I/O 指令的数据传送发生在「通用寄存器 ↔ I/O 端口」之间（2017 真题）；磁盘驱动器本身不属于 I/O 接口（2021 真题）</text>
+</svg>

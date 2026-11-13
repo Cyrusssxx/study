@@ -227,12 +227,14 @@ for (const sub of SUBS) {
 }
 
 // ---------- 6. 精确总量 / 三方一致 / 序列化 ----------
+// P12 起总量继续增长，本批改为下限（P11 当时精确值 39/61/38/31 与 73/75/49/106）
 const FIG_N = { co: 39, os: 61, cn: 38, ds: 31 };
 const CALL_N = { co: 73, os: 75, cn: 49, ds: 106 };
 for (const sub of SUBS) {
-  check(sub + ' 配图 ' + FIG_N[sub] + ' 张（P11 精确总量）', (RAW[sub].match(/fig-img/g) || []).length, FIG_N[sub]);
-  check(sub + ' 黄框 ' + CALL_N[sub] + ' 个（P11 精确总量）',
-    (RAW[sub].match(/class=\\"key-callout\\"/g) || []).length, CALL_N[sub]);
+  check(sub + ' 配图 ≥ ' + FIG_N[sub] + ' 张（P11 下限）',
+    (RAW[sub].match(/fig-img/g) || []).length, v => v >= FIG_N[sub]);
+  check(sub + ' 黄框 ≥ ' + CALL_N[sub] + ' 个（P11 下限）',
+    (RAW[sub].match(/class=\\"key-callout\\"/g) || []).length, v => v >= CALL_N[sub]);
   check(sub + ' 序列化格式',
     [RAW[sub].indexOf('\r\n') > 0, RAW[sub].endsWith('\n')],
     sub === 'os' ? [false, true] : [true, false]);
@@ -240,8 +242,8 @@ for (const sub of SUBS) {
   check(sub + ' 图引用 / 文件 / SW 预缓存三方一致',
     refs.every(r => fs.existsSync(path.join(ROOT, 'pwa', r)) && sw.includes("'" + r + "'")), true);
 }
-check('全库 fig-img 169 张', SUBS.reduce((n, s) => n + (RAW[s].match(/fig-img/g) || []).length, 0), 169);
-check('全库黄框 303 个', SUBS.reduce((n, s) => n + (RAW[s].match(/class=\\"key-callout\\"/g) || []).length, 0), 303);
+check('全库 fig-img ≥ 169 张', SUBS.reduce((n, s) => n + (RAW[s].match(/fig-img/g) || []).length, 0), v => v >= 169);
+check('全库黄框 ≥ 303 个', SUBS.reduce((n, s) => n + (RAW[s].match(/class=\\"key-callout\\"/g) || []).length, 0), v => v >= 303);
 const STRUCT = { co: 0, ds: 0, cn: 11, os: 14 };
 check('内联 struct-fig 总量未变（CO0/DS0/CN11/OS14）',
   Object.entries(STRUCT).every(([s, v]) => (RAW[s].match(/struct-fig/g) || []).length === v), true);
@@ -277,7 +279,7 @@ for (const sub of SUBS) {
 if (guardDone === 3) {
   check('三科 before 备份都参与了纯插入校验', guardDone, 3);
   check('变化的 13 个小节全是纯插入（0 删除 / 0 改写）', guardBad, 0);
-  check('变化小节数 = 13', changed, 13);
+  check('变化小节数 ≥ 13', changed, v => v >= 13);
 } else {
   console.log('SKIP 纯插入守卫：缺少三科 before 备份（归档目录不在 git 中）');
 }
@@ -336,8 +338,8 @@ if (!JSDOM || !IDBFactory) {
     for (const sub of SUBS) {
       const a = await render(sub, RAW[sub]);
       check(sub + ' 真实渲染 .anno-line = ' + JSDOM_BASE[sub], a.lines.length, JSDOM_BASE[sub]);
-      check(sub + ' 真实渲染配图 ' + FIG_N[sub] + ' 张', a.figs, FIG_N[sub]);
-      check(sub + ' 真实渲染黄框 ' + CALL_N[sub] + ' 个', a.calls, CALL_N[sub]);
+      check(sub + ' 真实渲染配图 ≥ ' + FIG_N[sub] + ' 张', a.figs, v => v >= FIG_N[sub]);
+      check(sub + ' 真实渲染黄框 ≥ ' + CALL_N[sub] + ' 个', a.calls, v => v >= CALL_N[sub]);
       check(sub + ' 图块被误标行号 = 0', a.misLabeled, 0);
       check(sub + ' 全库黄框没有一个落在 li/p 内部',
         [...a.document.querySelectorAll('.key-callout')].filter(el => el.closest('li,p')).length, 0);
