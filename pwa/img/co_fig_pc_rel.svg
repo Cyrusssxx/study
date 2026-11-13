@@ -1,0 +1,48 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 680 372" width="680" height="372" font-family="-apple-system,BlinkMacSystemFont,'Segoe UI','Microsoft YaHei',sans-serif">
+  <defs>
+    <marker id="pcArr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#b91c1c"/>
+    </marker>
+  </defs>
+  <rect x="0" y="0" width="680" height="372" fill="#ffffff"/>
+  <text x="20" y="26" font-size="16" font-weight="700" fill="#1e3a8a">取指后 PC 已指向下一条 · 相对转移以「下一条」为基准</text>
+  <text x="20" y="46" font-size="10.5" fill="#64748b">相对寻址公式里的 PC 是取指之后的值，不是转移指令自己的地址 —— 这是这条线里唯一的坑</text>
+
+  <text x="20" y="70" font-size="9.5" font-weight="700" fill="#334155">主存里连续三条指令（每条 4 B，字节编址）</text>
+
+  <rect x="20" y="80" width="200" height="56" rx="4" fill="#f1f5f9" stroke="#cbd5e1" stroke-width="1.2"/>
+  <text x="32" y="98" font-size="9" font-weight="700" fill="#64748b">1000</text>
+  <text x="208" y="98" font-size="8.5" fill="#94a3b8" text-anchor="end">4 B</text>
+  <text x="120" y="124" font-size="12" font-weight="700" fill="#334155" text-anchor="middle">MOV A, 5</text>
+
+  <rect x="240" y="80" width="200" height="56" rx="4" fill="#fef3c7" stroke="#fbbf24" stroke-width="1.6"/>
+  <text x="252" y="98" font-size="9" font-weight="700" fill="#92400e">1004</text>
+  <text x="428" y="98" font-size="8.5" fill="#b45309" text-anchor="end">4 B</text>
+  <text x="340" y="124" font-size="12" font-weight="700" fill="#92400e" text-anchor="middle">JMP rel, −8</text>
+
+  <rect x="460" y="80" width="200" height="56" rx="4" fill="#f1f5f9" stroke="#cbd5e1" stroke-width="1.2"/>
+  <text x="472" y="98" font-size="9" font-weight="700" fill="#64748b">1008</text>
+  <text x="648" y="98" font-size="8.5" fill="#94a3b8" text-anchor="end">4 B</text>
+  <text x="560" y="124" font-size="12" font-weight="700" fill="#334155" text-anchor="middle">ADD B, 1</text>
+
+  <path d="M 560 138 C 560 178, 120 178, 120 140" fill="none" stroke="#b91c1c" stroke-width="1.6" marker-end="url(#pcArr)"/>
+  <text x="340" y="196" font-size="9.5" font-weight="700" fill="#b91c1c" text-anchor="middle">跳跃目标 ＝ 取指后的 PC ＋ 位移量 ＝ 1008 ＋ (−8) ＝ 1000</text>
+
+  <rect x="20" y="210" width="310" height="108" rx="5" fill="#f8fafc" stroke="#cbd5e1" stroke-width="1"/>
+  <text x="34" y="229" font-size="10" font-weight="700" fill="#0f172a">取指这一步 PC 怎么动（顺序寻址）</text>
+  <text x="34" y="249" font-size="9" fill="#334155">① 取指前 PC ＝ 1004，正指向 JMP 这条指令</text>
+  <text x="34" y="267" font-size="9" fill="#334155">② 取指后 PC ← PC ＋ 指令长度 ＝ 1004 ＋ 4 ＝ 1008</text>
+  <text x="34" y="285" font-size="9" fill="#334155">③ 此时 PC 已指向下一条 —— 所以位移量的基准是 1008</text>
+  <text x="34" y="306" font-size="8.5" fill="#b45309">字节编址时每取一条指令就加「指令字长的字节数」，不是加 1</text>
+
+  <rect x="346" y="210" width="314" height="108" rx="5" fill="#f8fafc" stroke="#cbd5e1" stroke-width="1"/>
+  <text x="360" y="229" font-size="10" font-weight="700" fill="#0f172a">跳跃寻址：两种转移给出的东西不同</text>
+  <text x="360" y="249" font-size="9" fill="#334155">绝对转移：直接给出目标地址，JMP 1000 → PC ← 1000</text>
+  <text x="360" y="267" font-size="9" fill="#334155">相对转移：只给位移量，目标 ＝ (PC) ＋ 位移量</text>
+  <text x="360" y="285" font-size="9" fill="#334155">位移量可正可负，负数就是往回跳（循环靠它实现）</text>
+  <text x="360" y="306" font-size="8.5" fill="#b45309">转移指令的本质：把算出的地址送进 PC，取指就从那里继续</text>
+
+  <rect x="20" y="326" width="640" height="38" rx="4" fill="#fef3c7" stroke="#fbbf24" stroke-width="1.2"/>
+  <text x="32" y="344" font-size="9.5" fill="#92400e"><tspan font-weight="700">两类寻址别混</tspan>：指令寻址答「下一条指令在哪」（顺序靠 PC ＋ 指令长度、跳跃靠转移改写 PC）；数据寻址答「操作数在哪」。</text>
+  <text x="32" y="358" font-size="9.5" fill="#92400e">后者由形式地址 A 加寻址特征算出 EA（见 4.2.2）；「谁改写了程序计数器 PC」是判断指令寻址方式的唯一依据。</text>
+</svg>

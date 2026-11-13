@@ -1,0 +1,81 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 680 404" width="680" height="404" font-family="-apple-system,BlinkMacSystemFont,'Segoe UI','Microsoft YaHei',sans-serif">
+  <rect x="0" y="0" width="680" height="404" fill="#ffffff"/>
+  <text x="20" y="26" font-size="16" font-weight="700" fill="#1e3a8a">共享式以太网 · 集线器把总带宽切成 N 份</text>
+  <text x="20" y="46" font-size="10.5" fill="#64748b">一台集线器 = 一个冲突域 = 一个广播域；所有主机共享同一介质，同一时刻只能有一对成功通信</text>
+
+  <text x="20" y="70" font-size="9.5" font-weight="700" fill="#334155">以集线器为中心的星型布线（逻辑上仍是一条总线）</text>
+
+  <path d="M 150 194 L 76 124" fill="none" stroke="#94a3b8" stroke-width="1.4"/>
+  <path d="M 150 194 L 274 124" fill="none" stroke="#94a3b8" stroke-width="1.4"/>
+  <path d="M 150 194 L 76 252" fill="none" stroke="#94a3b8" stroke-width="1.4"/>
+  <path d="M 150 194 L 274 252" fill="none" stroke="#94a3b8" stroke-width="1.4"/>
+
+  <rect x="40" y="96" width="72" height="28" rx="4" fill="#eff6ff" stroke="#3b82f6" stroke-width="1.2"/>
+  <text x="76" y="114" font-size="9.5" fill="#1e3a8a" text-anchor="middle">主机 1</text>
+  <rect x="238" y="96" width="72" height="28" rx="4" fill="#eff6ff" stroke="#3b82f6" stroke-width="1.2"/>
+  <text x="274" y="114" font-size="9.5" fill="#1e3a8a" text-anchor="middle">主机 2</text>
+  <rect x="40" y="252" width="72" height="28" rx="4" fill="#eff6ff" stroke="#3b82f6" stroke-width="1.2"/>
+  <text x="76" y="270" font-size="9.5" fill="#1e3a8a" text-anchor="middle">主机 3</text>
+  <rect x="238" y="252" width="72" height="28" rx="4" fill="#eff6ff" stroke="#3b82f6" stroke-width="1.2"/>
+  <text x="274" y="270" font-size="9.5" fill="#1e3a8a" text-anchor="middle">主机 4</text>
+
+  <rect x="108" y="176" width="84" height="36" rx="5" fill="#fef3c7" stroke="#fbbf24" stroke-width="1.4"/>
+  <text x="150" y="192" font-size="10" font-weight="700" fill="#92400e" text-anchor="middle">集线器</text>
+  <text x="150" y="205" font-size="8.5" fill="#92400e" text-anchor="middle">只放大信号</text>
+
+  <text x="150" y="298" font-size="8.5" fill="#64748b" text-anchor="middle">收到什么帧就向其余端口原样复制，不认 MAC、不过滤</text>
+  <text x="150" y="312" font-size="8.5" fill="#b91c1c" text-anchor="middle">同一时刻只能有一对主机成功通信（半双工）</text>
+
+  <line x1="330" y1="64" x2="330" y2="318" stroke="#e2e8f0" stroke-width="1"/>
+
+  <text x="350" y="76" font-size="9.5" font-weight="700" fill="#334155">举例：一台 100 Mb/s 的集线器，挂的主机越多每台越慢</text>
+  <text x="350" y="99" font-size="9" fill="#1e40af">每台平均带宽 ＝ 总带宽 ÷ N ＝ 100 ÷ N（Mb/s）</text>
+
+  <text x="412" y="128" font-size="9" font-weight="700" fill="#334155" text-anchor="end">N = 1 台</text>
+  <rect x="420" y="112" width="240" height="22" rx="2" fill="#dbeafe" stroke="#3b82f6" stroke-width="1"/>
+  <text x="540" y="127" font-size="9" font-weight="700" fill="#1e3a8a" text-anchor="middle">100 Mb/s / 台</text>
+
+  <text x="412" y="166" font-size="9" font-weight="700" fill="#334155" text-anchor="end">N = 4 台</text>
+  <rect x="420" y="150" width="60" height="22" fill="#dbeafe" stroke="#3b82f6" stroke-width="1"/>
+  <rect x="480" y="150" width="60" height="22" fill="#eff6ff" stroke="#3b82f6" stroke-width="1"/>
+  <rect x="540" y="150" width="60" height="22" fill="#dbeafe" stroke="#3b82f6" stroke-width="1"/>
+  <rect x="600" y="150" width="60" height="22" fill="#eff6ff" stroke="#3b82f6" stroke-width="1"/>
+  <text x="450" y="165" font-size="8.5" fill="#1e3a8a" text-anchor="middle">25</text>
+  <text x="510" y="165" font-size="8.5" fill="#1e3a8a" text-anchor="middle">25</text>
+  <text x="570" y="165" font-size="8.5" fill="#1e3a8a" text-anchor="middle">25</text>
+  <text x="630" y="165" font-size="8.5" fill="#1e3a8a" text-anchor="middle">25</text>
+
+  <text x="412" y="204" font-size="9" font-weight="700" fill="#334155" text-anchor="end">N = 8 台</text>
+  <rect x="420" y="188" width="30" height="22" fill="#dbeafe" stroke="#3b82f6" stroke-width="0.9"/>
+  <rect x="450" y="188" width="30" height="22" fill="#eff6ff" stroke="#3b82f6" stroke-width="0.9"/>
+  <rect x="480" y="188" width="30" height="22" fill="#dbeafe" stroke="#3b82f6" stroke-width="0.9"/>
+  <rect x="510" y="188" width="30" height="22" fill="#eff6ff" stroke="#3b82f6" stroke-width="0.9"/>
+  <rect x="540" y="188" width="30" height="22" fill="#dbeafe" stroke="#3b82f6" stroke-width="0.9"/>
+  <rect x="570" y="188" width="30" height="22" fill="#eff6ff" stroke="#3b82f6" stroke-width="0.9"/>
+  <rect x="600" y="188" width="30" height="22" fill="#dbeafe" stroke="#3b82f6" stroke-width="0.9"/>
+  <rect x="630" y="188" width="30" height="22" fill="#eff6ff" stroke="#3b82f6" stroke-width="0.9"/>
+  <text x="420" y="226" font-size="8.5" fill="#1e40af">每台只剩 12.5 Mb/s —— 块越切越碎</text>
+
+  <rect x="350" y="238" width="310" height="58" rx="4" fill="#fef2f2" stroke="#fca5a5" stroke-width="1.2"/>
+  <text x="362" y="256" font-size="9.5" font-weight="700" fill="#b91c1c">为什么「共享」必然等于低效</text>
+  <text x="362" y="272" font-size="8.5" fill="#7f1d1d">所有站点竞争同一条信道，同一时刻只能一对通信（半双工）；</text>
+  <text x="362" y="287" font-size="8.5" fill="#7f1d1d">一旦两个站点同时开口就冲突，两边都作废、随机退避后重发。</text>
+
+  <rect x="20" y="320" width="206" height="50" rx="4" fill="#eff6ff" stroke="#93c5fd" stroke-width="1"/>
+  <text x="32" y="338" font-size="10" font-weight="700" fill="#1e40af">只放大，不解析</text>
+  <text x="32" y="354" font-size="8.5" fill="#334155">工作在物理层，认不出 MAC 地址，</text>
+  <text x="32" y="365" font-size="8.5" fill="#334155">没有智能转发或过滤</text>
+
+  <rect x="237" y="320" width="206" height="50" rx="4" fill="#fef3c7" stroke="#fbbf24" stroke-width="1"/>
+  <text x="249" y="338" font-size="10" font-weight="700" fill="#92400e">半双工 + CSMA/CD</text>
+  <text x="249" y="354" font-size="8.5" fill="#334155">共享介质，收与发不能同时进行；</text>
+  <text x="249" y="365" font-size="8.5" fill="#334155">冲突检测后随机退避重发</text>
+
+  <rect x="454" y="320" width="206" height="50" rx="4" fill="#dcfce7" stroke="#86efac" stroke-width="1"/>
+  <text x="466" y="338" font-size="10" font-weight="700" fill="#166534">一个冲突域 + 一个广播域</text>
+  <text x="466" y="354" font-size="8.5" fill="#334155">集线器两个域都不切；交换机只</text>
+  <text x="466" y="365" font-size="8.5" fill="#334155">切冲突域，广播域仍是一个</text>
+
+  <rect x="20" y="378" width="640" height="24" rx="4" fill="#f8fafc" stroke="#cbd5e1" stroke-width="1"/>
+  <text x="32" y="394" font-size="9" fill="#334155">换成交换式（数据链路层）：每端口<tspan font-weight="700">独占</tspan>带宽、<tspan font-weight="700">全双工</tspan>、全双工下<tspan font-weight="700">不用 CSMA/CD</tspan> —— 这三条正是 2016 那道对比题的答案。</text>
+</svg>

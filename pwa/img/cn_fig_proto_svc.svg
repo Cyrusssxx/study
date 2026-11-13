@@ -1,0 +1,79 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 680 424" width="680" height="424" font-family="-apple-system,BlinkMacSystemFont,'Segoe UI','Microsoft YaHei',sans-serif">
+  <defs>
+    <marker id="pvArr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#475569"/>
+    </marker>
+    <marker id="pvArrR" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#b45309"/>
+    </marker>
+  </defs>
+  <rect x="0" y="0" width="680" height="424" fill="#ffffff"/>
+  <text x="20" y="26" font-size="16" font-weight="700" fill="#1e3a8a">协议是水平的，服务是垂直的，接口就是 SAP</text>
+  <text x="20" y="46" font-size="10.5" fill="#64748b">协议说「同层两家怎么对话」，服务说「下层给紧邻上层什么」，接口是那个交接点 —— 三者不能互相顶替</text>
+
+  <text x="130" y="68" font-size="9.5" font-weight="700" fill="#334155" text-anchor="middle">系统 A</text>
+  <text x="370" y="68" font-size="9.5" font-weight="700" fill="#334155" text-anchor="middle">系统 B</text>
+
+  <rect x="60" y="76" width="140" height="40" rx="4" fill="#eff6ff" stroke="#3b82f6" stroke-width="1.2"/>
+  <text x="130" y="101" font-size="10" fill="#1e3a8a" text-anchor="middle">第 N+1 层（应用层）</text>
+  <rect x="300" y="76" width="140" height="40" rx="4" fill="#eff6ff" stroke="#3b82f6" stroke-width="1.2"/>
+  <text x="370" y="101" font-size="10" fill="#1e3a8a" text-anchor="middle">第 N+1 层（应用层）</text>
+
+  <path d="M 206 96 L 294 96" fill="none" stroke="#3b82f6" stroke-width="1.4" marker-start="url(#pvArr)" marker-end="url(#pvArr)"/>
+
+  <rect x="60" y="150" width="140" height="40" rx="4" fill="#eff6ff" stroke="#3b82f6" stroke-width="1.2"/>
+  <text x="130" y="175" font-size="10" fill="#1e3a8a" text-anchor="middle">第 N 层（传输层）</text>
+  <rect x="300" y="150" width="140" height="40" rx="4" fill="#eff6ff" stroke="#3b82f6" stroke-width="1.2"/>
+  <text x="370" y="175" font-size="10" fill="#1e3a8a" text-anchor="middle">第 N 层（传输层）</text>
+
+  <path d="M 206 170 L 294 170" fill="none" stroke="#3b82f6" stroke-width="1.4" marker-start="url(#pvArr)" marker-end="url(#pvArr)"/>
+  <text x="250" y="134" font-size="9.5" font-weight="700" fill="#1d4ed8" text-anchor="middle">协议</text>
+  <text x="250" y="146" font-size="8.5" fill="#3b82f6" text-anchor="middle">水平 · 对等层</text>
+
+  <rect x="60" y="224" width="140" height="40" rx="4" fill="#eff6ff" stroke="#3b82f6" stroke-width="1.2"/>
+  <text x="130" y="249" font-size="10" fill="#1e3a8a" text-anchor="middle">第 N−1 层（网络层）</text>
+  <rect x="300" y="224" width="140" height="40" rx="4" fill="#eff6ff" stroke="#3b82f6" stroke-width="1.2"/>
+  <text x="370" y="249" font-size="10" fill="#1e3a8a" text-anchor="middle">第 N−1 层（网络层）</text>
+
+  <path d="M 206 244 L 294 244" fill="none" stroke="#3b82f6" stroke-width="1.4" marker-start="url(#pvArr)" marker-end="url(#pvArr)"/>
+
+  <path d="M 92 146 L 92 122" fill="none" stroke="#b45309" stroke-width="1.4" marker-end="url(#pvArrR)"/>
+  <text x="98" y="140" font-size="8.5" font-weight="700" fill="#b45309">服务</text>
+  <path d="M 92 220 L 92 196" fill="none" stroke="#b45309" stroke-width="1.4" marker-end="url(#pvArrR)"/>
+  <text x="98" y="214" font-size="8.5" font-weight="700" fill="#b45309">服务</text>
+
+  <circle cx="166" cy="206" r="4" fill="#fbbf24" stroke="#b45309" stroke-width="1"/>
+  <text x="176" y="203" font-size="8.5" font-weight="700" fill="#92400e">SAP ＝ 接口</text>
+  <text x="176" y="214" font-size="8.5" fill="#92400e">上层从这点取服务</text>
+
+  <rect x="452" y="76" width="208" height="188" rx="6" fill="#f8fafc" stroke="#cbd5e1" stroke-width="1"/>
+  <text x="466" y="96" font-size="10.5" font-weight="700" fill="#0f172a">四层各有一个「地址」当 SAP</text>
+  <text x="466" y="120" font-size="9" fill="#334155">应用层　＝ 用户接口</text>
+  <text x="466" y="144" font-size="9" fill="#334155">传输层　＝ 端口号</text>
+  <text x="466" y="168" font-size="9" fill="#334155">网络层　＝ 协议字段</text>
+  <text x="466" y="192" font-size="9" fill="#334155">数据链路层 ＝ 类型字段</text>
+  <text x="466" y="220" font-size="8.5" fill="#64748b">SAP 之上是「交给谁」，SAP 之下</text>
+  <text x="466" y="234" font-size="8.5" fill="#64748b">是「怎么送」—— 别把 SAP 当物理接口</text>
+  <text x="466" y="252" font-size="8.5" fill="#b45309">服务只能逐层调用，不能跨层</text>
+
+  <text x="20" y="292" font-size="9.5" font-weight="700" fill="#334155">三要素认词：看到哪个词就归到哪一项</text>
+
+  <rect x="20" y="300" width="206" height="50" rx="4" fill="#eff6ff" stroke="#93c5fd" stroke-width="1"/>
+  <text x="32" y="318" font-size="10" font-weight="700" fill="#1e40af">语法</text>
+  <text x="32" y="334" font-size="8.5" fill="#334155">格式 / 编码 → 数据与控制信息</text>
+  <text x="32" y="345" font-size="8.5" fill="#334155">的结构，如 TCP 首部有哪些字段</text>
+
+  <rect x="237" y="300" width="206" height="50" rx="4" fill="#dcfce7" stroke="#86efac" stroke-width="1"/>
+  <text x="249" y="318" font-size="10" font-weight="700" fill="#166534">语义</text>
+  <text x="249" y="334" font-size="8.5" fill="#334155">含义 / 要做什么 → 每部分控制</text>
+  <text x="249" y="345" font-size="8.5" fill="#334155">信息表示什么动作，如 SYN 请求</text>
+
+  <rect x="454" y="300" width="206" height="50" rx="4" fill="#fef3c7" stroke="#fbbf24" stroke-width="1"/>
+  <text x="466" y="318" font-size="10" font-weight="700" fill="#92400e">同步（时序）</text>
+  <text x="466" y="334" font-size="8.5" fill="#334155">顺序 / 先后 → 事件实现的顺</text>
+  <text x="466" y="345" font-size="8.5" fill="#334155">序，如四次挥手谁先发谁后发</text>
+
+  <rect x="20" y="362" width="640" height="40" rx="4" fill="#fef3c7" stroke="#fbbf24" stroke-width="1.2"/>
+  <text x="32" y="380" font-size="9.5" fill="#92400e"><tspan font-weight="700">水平说协议、垂直说服务</tspan> —— 协议是对等层双方都要遵守的规则；服务是下层给紧邻上层的单向能力。</text>
+  <text x="32" y="395" font-size="9.5" fill="#92400e">凡是「上层直接调用下下层的功能」的表述一律错；接口（SAP）只是相邻两层之间的交接点。</text>
+</svg>
