@@ -16,7 +16,26 @@
         .dati-tab.active { background: var(--primary); color: #fff; border-color: var(--primary); }
         .dati-subject { display: none; }
         .dati-subject.active { display: block; }
-        /* 控制区分两层：排序+显示 / 状态筛选。分组靠标签与 1px 细线，不再把 13 个控件挤成一行 */
+        /* 控制条默认折叠：只留一行 summary，题目本身占据首屏；折叠状态存 localStorage */
+        .dati-tools {
+            margin: 0 0 12px; border: 1px solid var(--border);
+            border-radius: var(--radius); background: var(--card-bg);
+        }
+        .dati-tools > summary {
+            list-style: none; cursor: pointer; user-select: none;
+            padding: 7px 12px; font-size: .82rem; font-weight: 600;
+            color: var(--text-light); display: flex; align-items: center; gap: 8px;
+        }
+        .dati-tools > summary::-webkit-details-marker { display: none; }
+        .dati-tools > summary::after { content: '▾'; margin-left: auto; font-size: .72rem; }
+        .dati-tools[open] > summary { border-bottom: 1px solid var(--border); color: var(--text); }
+        .dati-tools[open] > summary::after { content: '▴'; }
+        .dati-tools-brief { margin-left: auto; font-weight: 400; font-size: .76rem; color: var(--text-light); }
+        .dati-tools-sum-txt { flex: 0 0 auto; }
+        .dati-tools .dati-filters {
+            margin-bottom: 0; border: none; border-radius: 0;
+            background: transparent; padding: 10px 12px;
+        }
         .dati-filters {
             display: flex; flex-direction: column; gap: 8px;
             margin-bottom: 18px; padding: 10px 12px;
@@ -108,37 +127,94 @@
         .dati-none { color: #888; padding: 20px 0; text-align: center; }
         .dark .dati-none { color: #999; }
 
-        /* ============ 题目导航（右抽屉，默认收起） ============ */
-        .dati-layout { display: block; }   /* 主区占满宽度，导航改为固定抽屉 */
+        /* 题面/答案与真题套卷页同一套排版（question-content / explanation-body 来自 style.css） */
+        .dati-qbody.question-content { padding: 2px 0 4px; }
+        .dati-abody .explanation-title { margin-top: 0; }
+        .dati-abody .explanation-body { padding: 0; }
+        .dati-abody .zt-svgholder { min-height: 56px; }
+        .dati-qsec { max-width: 40%; }
+
+        /* ============ 题目导航（常驻窄条 · 切题时全部题目始终可见） ============ */
+        /* 对齐 zhenti 的 .zt-fq：半透明窄条贴在右侧，宽版靠 FAB / 头部展开。
+           旧实现是默认收起的 300px 抽屉，切一次题就要重新点开，看不到全量题号。 */
+        .dati-layout { display: block; }   /* 主区占满宽度，导航改为固定窄条 */
         #datiRoot { min-width: 0; }
         .dati-nav {
-            position: fixed; top: 0; right: 0; bottom: 0;
-            width: 300px; max-width: 86vw;
-            background: var(--card-bg);
-            border-left: 1px solid var(--border);
-            box-shadow: -6px 0 18px rgba(0,0,0,.20);
-            transform: translateX(100%);          /* 默认收起到右侧屏外 */
-            transition: transform .25s ease;
-            z-index: 300;
-            overflow-y: auto;
+            position: fixed; right: 4px; top: 74px; bottom: 76px;
+            width: 88px; max-width: 86vw;
+            background: transparent; border: none;
+            z-index: 45; overflow: hidden;
             display: flex; flex-direction: column;
+            pointer-events: none;            /* 只有条条本身可交互，不挡题目 */
+            transition: width .15s ease;
         }
-        .dati-nav.open { transform: translateX(0); }   /* 滑出 */
+        /* 常驻窄条占 88px：题目区与「下一题」箭头都要让位，避免互相压住/盖住题号 */
+        @media (min-width: 901px) {
+            #datiRoot { margin-right: 96px; }
+            .dati-arrow.next { right: 100px; }
+        }
+        .dati-nav.open {
+            width: 300px; background: var(--card-bg);
+            border-left: 1px solid var(--border); border-radius: 10px 0 0 10px;
+            box-shadow: -6px 0 18px rgba(0,0,0,.20);
+            z-index: 300; pointer-events: auto;
+        }
         .dati-nav-head {
-            position: sticky; top: 0;
-            padding: 12px 14px; font-weight: 600; font-size: 0.95rem;
+            pointer-events: auto; flex: 0 0 auto;
+            padding: 7px 4px; font-weight: 600; font-size: 0.95rem;
             border-bottom: 1px solid var(--border);
-            background: var(--card-bg);
+            background: rgba(var(--card-rgb), .72);
             display: flex; justify-content: space-between; align-items: center;
             cursor: pointer; user-select: none;
         }
+        .dati-nav-prog { font-size: .66rem; color: var(--primary); font-variant-numeric: tabular-nums; }
         .dati-nav-head .close-x { color: var(--text-light); font-size: 1.15rem; line-height: 1; }
-        .dati-nav-body { padding: 4px 12px 18px; }
+        .dati-nav-body {
+            pointer-events: auto; flex: 1; min-height: 0;
+            padding: 3px 4px 8px; overflow-y: auto;
+            scrollbar-width: none; overscroll-behavior: contain;
+        }
+        .dati-nav-body::-webkit-scrollbar { display: none; }
         .dati-nav-sec {
             font-size: 0.82rem; color: var(--primary); font-weight: 600;
             margin: 12px 0 6px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
         }
         .dati-nav-sec .dati-count { color: var(--text-light); font-weight: 400; margin-left: 4px; }
+        /* 窄条：只显示按年份横排的精简题号带（一屏看全），完整分组留给宽版 */
+        .dati-nav:not(.open) .dati-nav-body { display: none; }
+        .dati-nav.open .dati-nav-mini { display: none; }
+        .dati-nav:not(.open) .dati-nav-head {
+            padding: 6px 2px; flex-direction: column; gap: 1px; font-size: .66rem;
+        }
+        .dati-nav:not(.open) .dati-nav-head .close-x { display: none; }
+        .dati-nav-mini {
+            pointer-events: auto; flex: 1; min-height: 0;
+            padding: 3px 2px 8px; overflow-y: auto;
+            scrollbar-width: none; overscroll-behavior: contain;
+        }
+        .dati-nav-mini::-webkit-scrollbar { display: none; }
+        .dati-nav-mini-row {
+            display: flex; align-items: center; gap: 2px; margin-bottom: 3px;
+        }
+        .dati-nav-mini-y {
+            flex: 0 0 16px; text-align: center; font-size: 9px;
+            color: var(--text-light); font-variant-numeric: tabular-nums;
+        }
+        .dati-nav-mini-btn {
+            flex: 1 1 0; min-width: 0; height: 20px; padding: 0;
+            font-size: 10px; line-height: 18px; text-align: center;
+            border: 1px solid var(--border); border-radius: 4px;
+            background: rgba(var(--card-rgb), .72); color: var(--text-light);
+            cursor: pointer; font-variant-numeric: tabular-nums;
+            transition: background .14s, color .14s, border-color .14s;
+        }
+        .dati-nav-mini-btn:hover { border-color: var(--primary); color: var(--primary); }
+        .dati-nav-mini-btn.done { background: rgba(46, 125, 50, .18); border-color: #81c784; color: #1b5e20; }
+        .dati-nav-mini-btn.current {
+            background: var(--primary); border-color: var(--primary); color: #fff; font-weight: 700;
+        }
+        .dati-nav-mini-empty { font-size: .72rem; color: var(--text-light); text-align: center; padding: 8px 0; }
+        .dati-nav.open .dati-nav-body { padding: 4px 12px 18px; }
         .dati-flash { outline: 3px solid var(--primary); outline-offset: 2px; border-radius: 8px; }
         .dati-nav-fab {
             display: block; position: fixed; right: 14px; bottom: 20px; z-index: 290;
@@ -149,6 +225,12 @@
         .dati-nav-fab.hide { display: none; }
         .dati-nav-mask { display: none; position: fixed; inset: 0; background: rgba(0,0,0,.4); z-index: 200; }
         .dati-nav-mask.open { display: block; }
+        @media (max-width: 900px) {
+            /* 窄屏不常驻窄条（会压住题干），改回浮钮 → 宽版抽屉；仍可一键看到全部题目 */
+            .dati-nav:not(.open) { display: none; }
+            #datiRoot { margin-right: 0; }
+            .dati-nav.open { bottom: 66px; }
+        }
 
         /* ============ 单题模式（一题一题加载） ============ */
         .dati-view-sep { width: 1px; height: 20px; background: var(--border); margin: 0 2px; }
@@ -226,13 +308,13 @@
         </div>
     </nav>
     <main class="container">
-        <div class="page-header">
-            <h1>📝 大题专项</h1>
-            <p>统考综合应用题真题截图（操作系统 / 计算机组成原理 / 计算机网络）。上排选<b>排序方式</b>与<b>显示方式</b>，下排按<b>练习状态</b>筛选；默认单题模式，一次一题、图片逐题加载，左右键或两侧箭头切换。</p>
-        </div>
-
         <div class="dati-tabs" id="datiTabs"></div>
-        <div class="dati-filters" id="datiFilters">
+        <details class="dati-tools" id="datiTools">
+            <summary class="dati-tools-sum" title="排序 / 显示方式 / 练习状态筛选（折叠状态会被记住）">
+                <span class="dati-tools-sum-txt">⚙ 排序与筛选</span>
+                <span class="dati-tools-brief" id="datiToolsBrief"></span>
+            </summary>
+            <div class="dati-filters" id="datiFilters">
             <div class="dati-bar">
                 <span class="dati-bar-label">排序</span>
                 <button class="dati-chip" id="fModeChapter" onclick="setMode('chapter')" title="按章节顺序浏览（第 1 章 → 第 n 章）">📚 按章节</button>
@@ -255,7 +337,8 @@
                 <button class="dati-chip" id="fDontknow" onclick="setFilter('dontknow')">🔴 不会 <span class="dati-count" id="cntDontknow"></span></button>
                 <span class="dati-overview" id="datiOverview"></span>
             </div>
-        </div>
+            </div>
+        </details>
         <div class="dati-layout">
             <div id="datiRoot">
                 <div class="loading">加载中...</div>
@@ -280,8 +363,11 @@
     let year = localStorage.getItem('datiYear') || '';          // '' = 全部年份（仅 year 模式生效）
     let chapter = localStorage.getItem('datiChapter') || '';    // '' = 全部章节（仅 chapter 模式生效）
     let chapterIds = null;   // 选中章的题目 id 集合；null = 不限章（passFilter / 计数 / 总览共用）
-    let favSet = new Set();      // 当前科目已收藏的题 id
-    const ansTpl = {};           // 答案图片 HTML 模板，首次展开时注入
+    let LEGACY = {};             // 旧 dati_* id → zhenti iid（一次性迁移做题记录，data/dati_zt.json 提供）
+    const svgCache = {};          // zt_svg 名 → SVG 文本（与 zhenti.js 同源，切题不重复请求）
+    const noteTimer = {};         // qid -> 防抖定时器，笔记停顿即自动保存
+    let favSet = new Set();      // 已收藏的题 id（题库全局，与真题页同一套 key）
+    const ansTpl = {};           // 答案 HTML 模板，首次展开时注入
     let noteMap = {};            // qid -> {content, images}，dati 题笔记
     let noteOpen = new Set(JSON.parse(localStorage.getItem('datiNoteOpen') || '[]'));  // 展开中的笔记面板 qid
     let ansOpen = new Set(JSON.parse(localStorage.getItem('datiAnsOpen') || '[]'));    // 展开中的答案面板 qid
@@ -333,11 +419,35 @@
         if (!el) return;
         const cur = noteMap[qid] || { content: '', images: [] };
         const html = serializeNote(el);
+        if (noteTimer[qid]) { clearTimeout(noteTimer[qid]); delete noteTimer[qid]; }
         if (html === (cur.content || '')) return;          // 内容有变动才写库
         // 自动保存不负责清空：DOM 空而库里有内容时不写。
         // /api/note 收到空 content 且无图片会直接 dbDelete，误写一次笔记就没了。
         if (!html && (cur.content || '').trim()) return;
         saveNote(qid);
+    }
+
+    // 输入（含工具条格式、高亮、粘贴图）后停顿 700ms 自动落库，
+    // 与真题套卷页 onNoteInput 同源。工具条点击时 note_richtext 会无参回调本函数。
+    function onNoteInput(el) {
+        if (!el || !el.dataset || !el.dataset.noteInput) el = document.activeElement;
+        if (!el || !el.dataset || !el.dataset.noteInput) {
+            // 工具条点击时焦点可能已离开编辑器 → 从当前展开的笔记面板兜底取 qid
+            el = document.querySelector('.dati-note-panel:not([style*="display:none"]) .dati-note-input')
+                || document.querySelector('.dati-note-input');
+        }
+        if (!el || !el.dataset || !el.dataset.noteInput) return;
+        const qid = el.dataset.noteInput;
+        const btn = document.querySelector(`[data-note-save="${qid}"]`);
+        if (btn) btn.classList.remove('saved');
+        clearTimeout(noteTimer[qid]);
+        noteTimer[qid] = setTimeout(() => {
+            delete noteTimer[qid];
+            const cur = noteMap[qid] || { content: '', images: [] };
+            const html = serializeNote(el);
+            if (!html && (cur.content || '').trim()) return;   // 自动保存不删除已有笔记
+            saveNote(qid);
+        }, 700);
     }
 
     // 关页 / 切后台时把还挂在防抖窗口里的笔记立刻落库（与 zhenti.js / quiz.html 同源）。
@@ -362,23 +472,162 @@
         localStorage.setItem('datiNoteOpen', JSON.stringify([...noteOpen]));
     }
 
-    // 题干图：data-src 惰挂载（章节收起时不发请求，展开时才激活为 src——见 activateChapterImgs）
+    // 旧截图版（data/dati.json 回退）的图片模板：题干 data-src 惰挂载，答案直接带 src
     const qimg = (key, fn) => `<img data-src="data/dati_figs/${key}/${fn}" loading="lazy" alt="大题截图">`;
-    // 答案图：答案面板本身惰性注入，展开时才进 DOM，直接带 src
     const aimg = (key, fn) => `<img src="data/dati_figs/${key}/${fn}" loading="lazy" alt="大题答案">`;
+
+    // 真源 dati_zt.json 的 q.q / q.a 是与真题套卷页同源的 HTML 字符串；
+    // 旧 dati.json 给的是截图文件名数组。两种格式都渲染，离线回退不会白屏。
+    function questionHtml(q, subKey) {
+        if (Array.isArray(q.q)) return q.q.map(fn => qimg(subKey, fn)).join('');
+        return typeof q.q === 'string' ? q.q : '';
+    }
+    function answerHtml(q, subKey) {
+        if (Array.isArray(q.a)) {
+            return q.a.length ? q.a.map(fn => aimg(subKey, fn)).join('')
+                : '<div class="dati-none">本题暂无答案截图</div>';
+        }
+        const raw = typeof q.a === 'string' ? q.a : '';
+        // .dati-abody 本身就是淡底容器，内部只放 title/body，避免「框中框」
+        return `<div class="explanation-title">参考答案与解析</div>
+                <div class="explanation-body">${raw || '<div class="explanation-empty">该题暂无详细解析</div>'}</div>`;
+    }
+    // 预取下一题用到的外置资源（真题 SVG / 打卡表教材原图），切题时图已就绪
+    function prefetchSrcsIn(html) {
+        for (const m of String(html || '').matchAll(/<img[^>]+src="(data\/daka_figs\/[^"]+)"/g)) {
+            new Image().src = m[1];
+        }
+    }
+
+    // ==================== 与真题套卷页同源（iid / 记录同步） ====================
+    // zhenti.js buildFlat() 的 id 公式：it.qid || sid + '_zt' + year + '_' + i
+    // data/dati_zt.json 已经按这个公式生成 id，所以本页与真题页的
+    // 收藏 / 不熟 / 不会 / 笔记落在同一个 IndexedDB 键上，天然双向同步。
+    function allQuestions() {
+        const out = [];
+        if (!DATI) return out;
+        for (const s of DATI) for (const c of s.chapters) for (const sec of c.sections)
+            for (const q of sec.questions) out.push(q);
+        return out;
+    }
+
+    // 旧 dati_* 记录一次性迁移：已练 / 笔记展开 / 答案展开 / 上次所在题
+    // （旧 favorites/unfamiliar/dontknow/notes 里的 dati_* 键由 migrateLegacyStores 处理）
+    function migrateLegacyLocal() {
+        if (!Object.keys(LEGACY).length) return;
+        const map = k => LEGACY[k] || k;
+        const sets = [
+            ['doneSet', () => doneSet, v => { doneSet = v; }, saveDoneSet, 'datiDone'],
+            ['noteOpen', () => noteOpen, v => { noteOpen = v; }, saveNoteOpen, 'datiNoteOpen'],
+            ['ansOpen', () => ansOpen, v => { ansOpen = v; }, saveAnsOpen, 'datiAnsOpen'],
+        ];
+        for (const [, get, set, save] of sets) {
+            const arr = [...get()];
+            const next = [...new Set(arr.map(map))];
+            if (next.join('|') !== arr.join('|')) { set(new Set(next)); save(); }
+        }
+        if (LEGACY[singleQid]) { singleQid = LEGACY[singleQid]; localStorage.setItem('datiSingleQ', singleQid); }
+        if (LEGACY[lastSeenQ]) { lastSeenQ = LEGACY[lastSeenQ]; localStorage.setItem('datiLastSeenQ', lastSeenQ); }
+    }
+
+    // 旧 dati_* 的收藏 / 标记 / 笔记补写一条新 id 记录；旧记录保留，绝不删除（备份优先）
+    async function migrateLegacyStores() {
+        if (!Object.keys(LEGACY).length) return;
+        for (const store of ['favorites', 'unfamiliar', 'dontknow', 'notes']) {
+            let rows = [];
+            try { rows = await dbAll(store); } catch (e) { continue; }
+            for (const r of rows) {
+                const oldId = r.question_id;
+                if (!oldId || !LEGACY[oldId]) continue;
+                const newId = LEGACY[oldId];
+                // 笔记写规范键 zt{年}_{题号}（与 zhenti 的 noteKeyOf 一致）
+                const key = store === 'notes' ? noteKeyOf(newId) : newId;
+                try { if (await dbGet(store, key)) continue; } catch (e) { continue; }
+                const rec = Object.assign({}, r, { question_id: key });
+                rec.subject = store === 'notes' ? '' : String(key).split('_')[0];
+                try { await dbPut(store, rec); } catch (e) { /* 降级库缺 store 时静默跳过 */ }
+            }
+        }
+    }
+
+    // 真源＝dati_zt.json（zhenti 同源 126 题）；取不到时回退旧的截图版 dati.json，
+    // 保证离线/旧缓存打开页面不会白屏。
+    async function fetchDatiSource() {
+        try {
+            const j = await fetch('data/dati_zt.json').then(r => r.json());
+            if (j && Array.isArray(j.subjects) && j.subjects.length && j.legacy) return j;
+        } catch (e) { /* 落到旧数据 */ }
+        return fetch('data/dati.json').then(r => r.json());
+    }
+
+    // ==================== 真题外置 SVG（与 zhenti.js injectSvgs 同源） ====================
+    async function fetchSvg(name) {
+        if (svgCache[name] != null) return svgCache[name];
+        try {
+            const r = await fetch('data/zt_svg/' + name + '.svg');
+            const t = r.ok && typeof r.text === 'function' ? await r.text() : '';
+            svgCache[name] = t;
+            return t;
+        } catch (e) { svgCache[name] = ''; return ''; }
+    }
+    function applyDatiSvg(holder, t) {
+        if (!holder || !holder.isConnected) return;
+        if (!t) { holder.innerHTML = '<span class="zt-svg-fail">[图加载失败，可刷新重试]</span>'; return; }
+        if (holder.classList.contains('zt-svg-inline')) { holder.innerHTML = t; return; }
+        const wrap = document.createElement('div');
+        wrap.className = 'zt-svg-wrap';
+        wrap.innerHTML = t;
+        holder.replaceWith(wrap);
+    }
+    function injectDatiSvgs(root) {
+        const host = root || document;
+        for (const h of host.querySelectorAll('.zt-svgholder[data-svg]')) {
+            if (h.dataset.done) continue;
+            const ans = h.closest('.dati-abody');
+            if (ans && !ans.classList.contains('open')) continue;   // 答案未展开不发请求
+            h.dataset.done = '1';
+            const name = h.dataset.svg;
+            if (svgCache[name] != null) { applyDatiSvg(h, svgCache[name]); continue; }
+            fetchSvg(name).then(t => applyDatiSvg(h, t));
+        }
+    }
+
+    // ==================== 折叠控制条（默认折叠 + 状态持久化） ====================
+    function initTools() {
+        const d = document.getElementById('datiTools');
+        if (!d) return;
+        const collapsed = localStorage.getItem('datiBarCollapsed');
+        d.open = collapsed === '0';      // 缺省 / '1' → 默认折叠（历史上用户已存 1）
+        d.addEventListener('toggle', () => {
+            localStorage.setItem('datiBarCollapsed', d.open ? '0' : '1');
+            syncToolsBrief();
+        });
+        syncToolsBrief();
+    }
+    function syncToolsBrief() {
+        const el = document.getElementById('datiToolsBrief');
+        if (!el || !DATI) return;
+        const sub = DATI.find(s => s.key === activeSubject);
+        const fName = { all: '', fav: '收藏', todo: '未练', done: '已练', unfam: '不熟', dontknow: '不会' }[filter] || '';
+        el.textContent = `${sub ? sub.name : ''}${fName ? ' · ' + fName : ''} · ${flatItems().length} 题`;
+    }
 
     // ==================== 数据与收藏 ====================
     async function loadDati() {
         try {
-            const resp = await fetch('data/dati.json');
-            DATI = (await resp.json()).subjects;
+            const src = await fetchDatiSource();
+            DATI = src.subjects;
+            LEGACY = src.legacy || {};
+            migrateLegacyLocal();
+            await loadNoteAlias();   // 先取跨页笔记映射，loadNotes 才能回填规范键
+            await migrateLegacyStores();
             await loadFavs();
-            await loadNoteAlias();   // 先取跨页笔记映射，loadNotes 才能把规范键回填到本地键
             await loadNotes();
             await loadMarks();
             renderTabs();
             renderYearOptions();
             renderChapterOptions();
+            initTools();
             // 恢复上次的筛选 / 年份 / 章节 / 视图模式 UI 状态
             syncFilterChips();
             document.getElementById('yearSel').value = year;
@@ -392,7 +641,7 @@
 
     async function loadFavs() {
         const rows = await dbAll('favorites');
-        favSet = new Set(rows.filter(r => (r.question_id || '').startsWith('dati_')).map(r => r.question_id));
+        favSet = new Set(rows.map(r => r.question_id));
     }
 
     // 跨页笔记：与 zhenti/daka 共用规范键 zt{年}_{卷面题号}（data/note_alias.json）
@@ -407,27 +656,35 @@
         noteMap = {};
         const byKey = {};
         for (const n of rows) byKey[n.question_id] = { content: n.content || '', images: n.images || [] };
-        // 规范键（真题页/打卡表写的）回填到本题的 dati_* 键；dati_* 独有内容静默迁移到规范键
-        const todo = [];
+        // 两页笔记互通：真键是规范键 zt{年}_{题号}。历史上部分笔记写在「本地 id」上
+        // （旧 dati_* 或真题 iid，如 co_zt2014_44），这里做双向补齐：
+        //   ① 规范键有内容 → 回填给本地 id（老页面也能读到）
+        //   ② 只有本地 id 有内容 → 补写一条规范键（旧记录保留，绝不删除）
+        const pairs = [];
         for (const local in NOTE_ALIAS) {
             if (!local.startsWith('dati_')) continue;
-            const spec = NOTE_ALIAS[local];
+            pairs.push([local, NOTE_ALIAS[local]]);
+        }
+        for (const q of allQuestions()) pairs.push([q.id, noteKeyOf(q.id)]);
+        const todo = [], seen = new Set();
+        for (const [local, spec] of pairs) {
             if (!spec || spec === local) continue;
             if (byKey[spec]) { if (!byKey[local]) byKey[local] = byKey[spec]; continue; }
-            if (byKey[local]) todo.push([spec, byKey[local]]);
+            if (byKey[local] && !seen.has(spec)) { seen.add(spec); todo.push([spec, byKey[local]]); }
         }
         for (const [spec, rec] of todo) {
-            dbPut('notes', { question_id: spec, subject: 'dati', content: rec.content || '', images: rec.images || [], updated_at: now() })
+            dbPut('notes', { question_id: spec, subject: '', content: rec.content || '', images: rec.images || [], updated_at: now() })
                 .catch(() => { });
         }
-        for (const k in byKey) if (k.startsWith('dati_')) noteMap[k] = byKey[k];
+        // 题目 id 已换成 zhenti 的 iid；优先读规范键，本地 id 作为历史兜底
+        for (const q of allQuestions()) noteMap[q.id] = byKey[noteKeyOf(q.id)] || byKey[q.id] || {};
     }
 
-    // 不熟 / 不会：复用后端 unfamiliar / dontknow 库（与刷题页同一套数据），只取大题（dati_ 前缀）
+    // 不熟 / 不会：复用后端 unfamiliar / dontknow 库（与真题页/刷题页同一套数据、同一套 id）
     async function loadMarks() {
         const [u, d] = [await dbAll('unfamiliar'), await dbAll('dontknow')];
-        unfamSet = new Set(u.filter(r => (r.question_id || '').startsWith('dati_')).map(r => r.question_id));
-        dontknowSet = new Set(d.filter(r => (r.question_id || '').startsWith('dati_')).map(r => r.question_id));
+        unfamSet = new Set(u.map(r => r.question_id));
+        dontknowSet = new Set(d.map(r => r.question_id));
     }
 
     // 标记「不熟 / 不会」：互斥（标一个自动清另一个），再点已选中的即取消
@@ -656,21 +913,21 @@
 
     function questionCard(subKey, secName, q, isFav) {
         const qid = q.id;
-        ansTpl[qid] = q.a.length ? q.a.map(fn => aimg(subKey, fn)).join('') : '<div class="dati-none">本题暂无答案截图</div>';
+        ansTpl[qid] = answerHtml(q, subKey);
         const note = noteMap[qid] || {};
         const hasNote = !!(note.content || (note.images || []).length);
         const done = doneSet.has(qid);
         return `
         <div class="dati-qcard" id="q${qid}">
             <div class="dati-qhead">
-                <span class="dati-qnum">第 ${q.num} 题</span>
+                <span class="dati-qnum">${q.year ? q.year + ' 年第 ' : '第 '}${q.num} 题${q.score ? ' · ' + q.score + ' 分' : ''}</span>
                 <span class="dati-qsec" title="${secName}">${secName}</span>
                 ${q.real ? `<span class="dati-real">${q.year} 统考真题</span>` : ''}
                 <button class="dati-fav${isFav ? ' on' : ''}" data-qid="${qid}" title="收藏本题"
                         onclick="toggleFav('${qid}', '${subKey}')">${isFav ? '★' : '☆'}</button>
             </div>
             <div class="dati-state" data-state="${qid}"></div>
-            <div class="dati-qbody">${q.q.map(fn => qimg(subKey, fn)).join('')}</div>
+            <div class="dati-qbody question-content">${questionHtml(q, subKey)}</div>
             <div class="dati-actions">
                 <button class="btn btn-secondary dati-done-btn${done ? ' done' : ''}" data-qid="${qid}" title="标记是否已练过本题"
                         onclick="toggleDone('${qid}')">${done ? '✅ 已练' : '○ 未练'}</button>
@@ -727,6 +984,7 @@
         ansOpen.add(qid);
         saveAnsOpen();
         if (btn) btn.textContent = '收起答案';
+        injectDatiSvgs(box);   // 答案里的外置 SVG 展开后才按需注入
     }
 
     // 单题模式：左右两枚悬浮圆形箭头（垂直居中、两侧贴边、滚动恒在）。
@@ -748,6 +1006,7 @@
     function render() {
         updateCounts();     // 两种模式共用筛选条计数（单题模式无列表渲染，不能漏）
         updateOverview();   // 顶部「当前 N / 范围共 M 题」总览
+        syncToolsBrief();   // 折叠条上的摘要跟着筛选/科目刷新
         if (viewMode === 'single') renderSingle(); else renderList();
         renderNav();
     }
@@ -811,15 +1070,17 @@
         box.dataset.filled = '1';
     }
 
-    // 预取下一题的题干首图 + 答案首图（各 1 张）：切到下一题时题干与答案都已就绪
-    // 总量固定 2 张，仍属逐题加载，不会累积整章请求
+    // 预取下一题资源：真源（真题 HTML）预取教材原图 + 外置 SVG；
+    // 旧截图版回退仍预取题干首图 + 答案首图。总量固定，切题时图已就绪。
     function prefetchSingleNeighbor(idx, items) {
         const next = items[idx + 1];
         if (!next) return;
-        const firstQ = next.q.q[0];
-        if (firstQ) new Image().src = `data/dati_figs/${activeSubject}/${firstQ}`;
-        const firstA = next.q.a && next.q.a[0];
-        if (firstA) new Image().src = `data/dati_figs/${activeSubject}/${firstA}`;
+        const q = next.q;
+        if (Array.isArray(q.q) && q.q[0]) new Image().src = `data/dati_figs/${activeSubject}/${q.q[0]}`;
+        if (Array.isArray(q.a) && q.a[0]) new Image().src = `data/dati_figs/${activeSubject}/${q.a[0]}`;
+        if (typeof q.q === 'string') prefetchSrcsIn(q.q);
+        if (typeof q.a === 'string') prefetchSrcsIn(q.a);
+        for (const name of (q.svgs || [])) fetchSvg(name);
     }
 
     // 单题模式下按顺序切题（d=±1）
@@ -836,20 +1097,39 @@
         renderNav();
     }
 
+    // 在全库按 id 找题（含所属科目）——收藏夹 / 错题本 / 搜题等入口可能跨科目跳转
+    function findQuestion(qid) {
+        if (!DATI) return null;
+        for (const s of DATI) for (const c of s.chapters) for (const sec of c.sections)
+            for (const q of sec.questions) if (q.id === qid) return { q, subKey: s.key };
+        return null;
+    }
+
     // 单题模式下直接跳到指定题（侧栏导航/收藏夹等入口复用）
     function singleGoTo(qid) {
-        const items = flatItems();
-        if (!items.some(it => it.q.id === qid)) {
+        const hit = findQuestion(qid);
+        if (!hit) return;                       // 库里没有这题，不做任何定位
+        flushDatiNote();
+        // 跨科目跳转：先切到该题所属科目，否则 flatItems() 里根本找不到，会静默回到第一题
+        if (hit.subKey !== activeSubject) {
+            activeSubject = hit.subKey;
+            localStorage.setItem('datiSubject', activeSubject);
+            chapter = '';
+            localStorage.setItem('datiChapter', '');
+            renderTabs();
+            renderChapterOptions();
+        }
+        if (!flatItems().some(it => it.q.id === qid)) {
             // 该题不在当前筛选集内：退回「全部」状态筛选 + 全部章节后再定位，避免点了没反应
-            flushDatiNote();
             filter = 'all';
             localStorage.setItem('datiFilter', 'all');
+            year = '';
+            localStorage.setItem('datiYear', '');
             chapter = '';
             localStorage.setItem('datiChapter', '');
             renderChapterOptions();
             syncFilterChips();
         }
-        flushDatiNote();
         singleQid = qid;
         renderSingle();
         renderNav();
@@ -911,9 +1191,13 @@
         const sub = DATI.find(s => s.key === activeSubject);
         const nav = document.getElementById('datiNav');
         if (!sub) return;
+        // 每年真题的卷面题号都是 41~47，只显示数字会全是一串重复的 45/46。
+        // 窄条用 label（如 25-45）区分年份；旧 dati.json 无 label 时回退纯题号。
         const chip = (q, tip) => {
             const isCur = viewMode === 'single' && q.id === singleQid;
-            return `<button class="num-btn${doneSet.has(q.id) ? ' done' : ''}${isCur ? ' current' : ''}" data-jump="${q.id}" onclick="jumpTo('${q.id}')" title="${tip}${doneSet.has(q.id) ? ' · 已练' : ''}${isCur ? ' · 当前' : ''}">${doneSet.has(q.id) ? '✅' : ''}${q.num}</button>`;
+            const txt = q.label || q.num;
+            const full = `${q.year ? q.year + ' 年' : ''}第 ${q.num} 题${tip ? ' · ' + tip : ''}`;
+            return `<button class="num-btn${doneSet.has(q.id) ? ' done' : ''}${isCur ? ' current' : ''}" data-jump="${q.id}" onclick="jumpTo('${q.id}')" title="${full}${doneSet.has(q.id) ? ' · 已练' : ''}${isCur ? ' · 当前' : ''}">${doneSet.has(q.id) ? '✅' : ''}${txt}</button>`;
         };
         const body = [];
         if (mode === 'year') {
@@ -934,9 +1218,42 @@
                 if (secs.length) body.push(`<div class="num-group-title">${ch.name}</div>${secs.join('')}`);
             }
         }
-        nav.innerHTML = `<div class="dati-nav-head" onclick="toggleNav()">题目导航<span class="close-x">✕</span></div>
+        const items = flatItems();
+        const curIdx = items.findIndex(it => it.q.id === singleQid);
+        // 常驻窄条用的精简题号带：按年份倒序，每年一行横排（每年仅 1~3 道大题），
+        // 18 行即可铺满全卷，切题时「全部题目」都在眼前，不必滚动、不必点开抽屉。
+        const byYear = new Map();
+        for (const { q } of items) {
+            const y = q.year || '未知';
+            if (!byYear.has(y)) byYear.set(y, []);
+            byYear.get(y).push(q);
+        }
+        const miniRows = [...byYear.keys()].sort((a, b) => (Number(b) || 0) - (Number(a) || 0)).map(y => {
+            const qs = byYear.get(y).sort((a, b) => a.num - b.num);
+            return `<div class="dati-nav-mini-row">
+                <span class="dati-nav-mini-y">${String(y).slice(-2)}</span>
+                ${qs.map(q => `<button class="dati-nav-mini-btn${doneSet.has(q.id) ? ' done' : ''}${viewMode === 'single' && q.id === singleQid ? ' current' : ''}"
+                    data-jump="${q.id}" onclick="jumpTo('${q.id}')" title="${y} 年第 ${q.num} 题">${q.num}</button>`).join('')}
+            </div>`;
+        }).join('');
+        nav.innerHTML = `<div class="dati-nav-head" onclick="toggleNav()">
+                <span>题目导航</span>
+                <span class="dati-nav-prog">${items.length ? (Math.max(curIdx, 0) + 1) + '/' + items.length : '0/0'}</span>
+                <span class="close-x">✕</span></div>
+            <div class="dati-nav-mini">${miniRows || '<div class="dati-nav-mini-empty">无题目</div>'}</div>
             <div class="dati-nav-body">${body.join('')}</div>`;
-        nav.classList.remove('open');   // 每次重渲染后保持收起
+        // 切题后回到常驻窄条（宽版展开会盖住题目）；setNav 同步收掉遮罩并恢复 FAB
+        setNav(false);
+        // 切题后把当前题号滚进可视区（窄条可滚动，但当前题必须一眼可见）
+        const miniBox = nav.querySelector('.dati-nav-mini');
+        const cur = nav.querySelector('.dati-nav-mini-btn.current');
+        if (miniBox && cur) {
+            const ar = cur.getBoundingClientRect(), br = miniBox.getBoundingClientRect();
+            if (ar.height && br.height) {
+                if (ar.top < br.top + 6) miniBox.scrollTop += ar.top - br.top - 6;
+                else if (ar.bottom > br.bottom - 6) miniBox.scrollTop += ar.bottom - br.bottom + 6;
+            }
+        }
     }
 
     function setNav(open) {
@@ -959,6 +1276,18 @@
             singleGoTo(qid);
             closeNavMobile();
             return;
+        }
+        // 列表模式跨科目：先切科目 + 清筛选再重渲染，否则目标题卡根本不在 DOM 里
+        const hit = findQuestion(qid);
+        if (hit && hit.subKey !== activeSubject) {
+            flushDatiNote();
+            activeSubject = hit.subKey;
+            localStorage.setItem('datiSubject', activeSubject);
+            chapter = ''; year = ''; filter = 'all';
+            localStorage.setItem('datiChapter', '');
+            localStorage.setItem('datiYear', '');
+            localStorage.setItem('datiFilter', 'all');
+            renderTabs(); renderChapterOptions(); syncFilterChips(); render();
         }
         const el = document.getElementById('q' + qid);
         if (el) {
@@ -1060,6 +1389,7 @@
             });
         });
         syncExpandBtn();
+        injectDatiSvgs(root);   // 题干 / 已展开答案里的外置 SVG（未展开的答案不请求）
     }
 
     // ==================== 章节级懒加载（E1+P2：收起章节 0 请求，展开才下题干图） ====================
@@ -1127,6 +1457,7 @@
             el.dataset.noteReady = '1';
             loadNoteIntoEditor(el, (noteMap[panel.dataset.note] || {}).content || '');
             bindNoteToolbar(el);
+            el.addEventListener('input', () => onNoteInput(el));
         }
         return el;
     }
@@ -1140,7 +1471,7 @@
         const hadNote = !!(cur.content || images.length);
         try {
             if (content || images.length) {
-                await dbPut('notes', { question_id: noteKeyOf(qid), subject: 'dati', content, images, updated_at: now() });
+                await dbPut('notes', { question_id: noteKeyOf(qid), subject: '', content, images, updated_at: now() });
                 noteMap[qid] = { content, images };
             } else {
                 await dbDelete('notes', noteKeyOf(qid));

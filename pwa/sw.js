@@ -17,9 +17,9 @@
  *          ② 只改数据不改外壳时，APP_VER 不变 → 外壳零重下；反之亦然；
  *          ③ 懒加载数据既不占首屏，改完也能凭 LAZY_VER 正确失效。
  */
-const APP_VER = 'quiz408-app-02019e2829';
+const APP_VER = 'quiz408-app-b0dfb0f186';
 const DATA_VER = 'quiz408-data-084f047cbd';
-const LAZY_VER = 'quiz408-lazy-e6895aabfb';
+const LAZY_VER = 'quiz408-lazy-e2ed6ba599';
 
 // 应用外壳：保证离线骨架与最新脚本。meta.json 仅几百字节，随外壳一起预缓存。
 const APP_PRECACHE = [
@@ -308,6 +308,7 @@ const DATA_PRECACHE = [
 // 若沿用缓存优先就会一直命中旧图/旧数据。LAZY_VER 由构建脚本按这些目录实际内容算出。
 const LAZY_PREFIXES = [
     'data/algo_notes.json',
+    'data/dati_zt.json',          // 大题专项真源（828K，只在打开 dati.html 时拉取）
     'data/daka_figs/',
     'data/ds_figs/',
     'data/os_figs/',

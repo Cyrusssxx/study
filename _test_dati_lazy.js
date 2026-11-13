@@ -181,12 +181,16 @@ function windowifyIdentifiers(code, names_) {
 }
 
 let code = sandbox;
-for (const n of ['visibleQuestionsOf', 'passFilter', 'updateCounts', 'toggleDone', 'questionCard', 'activateChapterImgs']) {
+// 2026-11-13：题卡改为「HTML 真源 + 旧截图数组」双格式兼容，新增 questionHtml/answerHtml
+// 两个纯渲染辅助函数；沙箱需要一并提取，否则 questionCard 内调用会 ReferenceError。
+for (const n of ['questionHtml', 'answerHtml', 'visibleQuestionsOf', 'passFilter', 'updateCounts', 'toggleDone', 'questionCard', 'activateChapterImgs']) {
   const fn = extractFn(main, n);
   code += windowifyIdentifiers(fn);
 }
 // new Function 内函数声明不外泄 → 显式挂到 window
 code += `
+window.questionHtml = questionHtml;
+window.answerHtml = answerHtml;
 window.visibleQuestionsOf = visibleQuestionsOf;
 window.passFilter = passFilter;
 window.updateCounts = updateCounts;
