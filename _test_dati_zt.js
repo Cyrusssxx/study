@@ -163,6 +163,87 @@ ok('切题后自动收起宽版并定位当前题', HTML.includes('setNav(false)
 ok('笔记输入防抖自动保存', HTML.includes('function onNoteInput') && HTML.includes('noteTimer[qid] = setTimeout') && HTML.includes("addEventListener('input', () => onNoteInput(el))"));
 ok('切页/切题前 flush 未落库笔记', HTML.includes('flushDatiNote') && HTML.includes("visibilitychange"));
 
+console.log('\n=== B2. 题号栏「不熟/不会」语义色 ===');
+// 窄条（常驻）与宽版（展开）都要上色，且与刷题页/真题页同一套黄/红
+ok('窄条按钮按 unfamSet/dontknowSet 加 un/dk',
+    /dati-nav-mini-btn\$\{doneSet\.has\(q\.id\) \? ' done' : ''\}\$\{unfamSet\.has\(q\.id\) \? ' un' : ''\}\$\{dontknowSet\.has\(q\.id\) \? ' dk' : ''\}/.test(HTML));
+ok('宽版 num-btn 同样加 un/dk',
+    /const un = unfamSet\.has\(q\.id\), dk = dontknowSet\.has\(q\.id\)/.test(HTML) &&
+    /num-btn\$\{doneSet\.has\(q\.id\) \? ' done' : ''\}\$\{un \? ' un' : ''\}\$\{dk \? ' dk' : ''\}/.test(HTML));
+ok('不熟 = 黄底', /\.dati-nav-mini-btn\.un,\s*#datiNav \.num-btn\.un \{[^}]*234, 179, 8/.test(HTML));
+ok('不会 = 红底', /\.dati-nav-mini-btn\.dk,\s*#datiNav \.num-btn\.dk \{[^}]*198, 40, 40/.test(HTML));
+ok('暗色主题单独定义（浅色不串味）',
+    /\.dark \.dati-nav-mini-btn\.un/.test(HTML) && /\.dark \.dati-nav-mini-btn\.dk/.test(HTML));
+ok('标记色压过已练底色、当前题保留描边',
+    HTML.indexOf('.dati-nav-mini-btn.un,') > HTML.indexOf('.dati-nav-mini-btn.done') &&
+    /\.dati-nav-mini-btn\.current,\s*#datiNav \.num-btn\.current \{ outline: 2px solid var\(--primary\)/.test(HTML));
+ok('题号按钮 title 带状态说明', /\$\{un \? ' · 不熟' : ''\}\$\{dk \? ' · 不会' : ''\}/.test(HTML) &&
+    /\$\{unfamSet\.has\(q\.id\) \? ' · 不熟' : ''\}/.test(HTML));
+ok('宽版有三色图例', /class="dati-nav-legend"/.test(HTML) && /lg-un/.test(HTML) && /lg-dk/.test(HTML));
+ok('切换标记后重绘题号栏（颜色即时刷新）', /function toggleMark[\s\S]{0,1800}?renderNav\(\)/.test(HTML));
+ok('年份分组标题用伪元素标题数（不污染 textContent）',
+    /class="dati-gcount" data-count=/.test(HTML) && /\.num-group-title \.dati-gcount::after/.test(HTML));
+
+console.log('\n=== B3. 年份分组核查：2016/2017 无排错 ===');
+{
+    // 用户曾质疑「2017 有 17-43/44/45，2016 却只有 16-44」是不是排错。
+    // 真相：每年 41-47 共 7 道大题，但各科题数由真题分布决定；计组 2017 有 3 题、2016 只有 1 题。
+    const KP = readJson('data/zt_bigq_kp.json');
+    const byYear = new Map();
+    for (const q of QS) {
+        if (!byYear.has(q.year)) byYear.set(q.year, []);
+        byYear.get(q.year).push(q);
+    }
+    check('年份数 = 18', byYear.size, 18);
+    const incomplete = [...byYear.entries()]
+        .filter(([, arr]) => JSON.stringify(arr.map(q => q.num).sort((a, b) => a - b)) !== JSON.stringify([41, 42, 43, 44, 45, 46, 47]))
+        .map(([y]) => y);
+    check('每年卷面 41-47 七题齐全（跨科目合计）', incomplete, []);
+    const labelBad = QS.filter(q => q.label !== `${String(q.year).slice(-2)}-${q.num}`);
+    check('label 与 年份/题号 完全一致（不会串年）', labelBad.map(q => q.id), []);
+    const idYearBad = QS.filter(q => {
+        const m = /_zt(\d{4})_/.exec(q.id);
+        return m && Number(m[1]) !== q.year;
+    });
+    check('id 内年份 = q.year', idYearBad.map(q => q.id), []);
+    // 逐题科目归属与独立考点表交叉验证。
+    // 已知例外 2014-42：题干是 OSPF 网络拓扑，考点表按「题材」归 cn（4.4.4）便于跳转复习；
+    // 但 zhenti 真源 sid=ds，且该题答案原文写明「其实考查的还是数据结构的内容」。
+    // 科目归属以 zhenti 的 sid 为准（dati 与 zhenti 必须同科），考点表只管知识点跳转。
+    const KP_SUB_OVERRIDE = new Set(['ds_zt2014_42']);
+    const sidBad = [];
+    for (const q of QS) {
+        if (KP_SUB_OVERRIDE.has(q.id)) continue;
+        const kp = (KP[String(q.year)] || {})[String(q.num)];
+        if (kp && kp.sub && kp.sub !== q.sid) sidBad.push([q.id, q.sid, kp.sub]);
+    }
+    check('科目归属与 zt_bigq_kp 独立标注一致（除已知题材例外）', sidBad, []);
+    check('例外题 2014-42 按 zhenti 口径留在数据结构',
+        QS.find(q => q.id === 'ds_zt2014_42').sid, 'ds');
+    // 逐题内容指纹与 zt 真源比对（除打卡表讲义改写版）
+    const strip = h => String(h || '').replace(/<[^>]*>/g, '').replace(/&[a-z]+;/g, '').replace(/\s+/g, '');
+    const drift = [];
+    for (const y of IDX.years) {
+        const paper = readJson(`data/zt/zt_${y}.json`);
+        for (const it of paper.items) {
+            if (it.t === 1) continue;
+            const iid = it.qid || `${it.sid}_zt${y}_${it.i}`;
+            const q = QS.find(x => x.id === iid);
+            if (!q) { drift.push([iid, '缺失']); continue; }
+            if (q.variant === 'daka') continue;
+            if (strip(it.q).slice(0, 60) !== strip(q.q).slice(0, 60)) drift.push([iid, '题干串位']);
+        }
+    }
+    check('题干内容与 zhenti 真源逐题一致（无串位/错题）', drift, []);
+    // 用户看到的两年，明确锁死预期分布
+    const co2017 = QS.filter(q => q.year === 2017 && q.sid === 'co').map(q => q.num).sort((a, b) => a - b);
+    const co2016 = QS.filter(q => q.year === 2016 && q.sid === 'co').map(q => q.num).sort((a, b) => a - b);
+    check('2017 计组 = 43/44/45 三题', co2017, [43, 44, 45]);
+    check('2016 计组 = 只有 44 一题（真题如此，非漏题）', co2016, [44]);
+    check('2016 全卷分布 cn/ds/co/os 齐全',
+        [...new Set(QS.filter(q => q.year === 2016).map(q => q.sid))].sort(), ['cn', 'co', 'ds', 'os']);
+}
+
 console.log('\n=== C. 与 zhenti 做题记录 / 笔记同源 ===');
 ok('收藏不再按 dati_ 前缀过滤', /favSet = new Set\(rows\.map\(r => r\.question_id\)\)/.test(HTML));
 ok('不熟/不会不再按 dati_ 前缀过滤', /unfamSet = new Set\(u\.map\(r => r\.question_id\)\)/.test(HTML));

@@ -271,6 +271,49 @@
             .dati-arrow.next { right: 3px; }
         }
         .num-btn.current { background: var(--primary); color: #fff; border-color: var(--primary); font-weight: 700; }
+
+        /* ===== 题号栏状态色：不熟（黄）/ 不会（红） =====
+           与刷题页 mark-btn、真题页 zt-fq 同一套语义色。规则置于 done/current 之后，
+           让主观标记压过「已练」底色；当前题另用主色描边保留定位（描边不被标记色覆盖）。 */
+        .dati-nav-mini-btn.un,
+        #datiNav .num-btn.un {
+            background: rgba(234, 179, 8, .24); border-color: #d4af37;
+            color: #8a6a00; font-weight: 700;
+        }
+        .dati-nav-mini-btn.dk,
+        #datiNav .num-btn.dk {
+            background: rgba(198, 40, 40, .18); border-color: #dc3545;
+            color: #b02a37; font-weight: 700;
+        }
+        .dark .dati-nav-mini-btn.un,
+        .dark #datiNav .num-btn.un {
+            background: rgba(234, 179, 8, .26); border-color: #e6c74f; color: #fde047;
+        }
+        .dark .dati-nav-mini-btn.dk,
+        .dark #datiNav .num-btn.dk {
+            background: rgba(239, 83, 80, .26); border-color: #ff6b6b; color: #ff8a80;
+        }
+        /* 当前题即使被标了不熟/不会，也要一眼定位 */
+        .dati-nav-mini-btn.current,
+        #datiNav .num-btn.current { outline: 2px solid var(--primary); outline-offset: -2px; }
+        /* 宽版图例：说明三种状态色，窄条空间不够就不放 */
+        .dati-nav-legend {
+            display: flex; flex-wrap: wrap; gap: 4px 12px; align-items: center;
+            font-size: .72rem; color: var(--text-light);
+            margin: 2px 0 8px; padding-bottom: 6px; border-bottom: 1px solid var(--border);
+        }
+        .dati-nav-legend i {
+            display: inline-block; width: 9px; height: 9px; border-radius: 2px;
+            margin-right: 4px; vertical-align: -1px;
+        }
+        .dati-nav-legend .lg-done { background: #81c784; }
+        .dati-nav-legend .lg-un { background: #d4af37; }
+        .dati-nav-legend .lg-dk { background: #dc3545; }
+        /* 分组标题右侧题数：每年题数不同（真题各科分布本就不均），标出来免得看成漏题。
+           用伪元素而非文本节点，保证 .num-group-title 的 textContent 仍是纯年份（既有测试依赖） */
+        .num-group-title .dati-gcount::after {
+            content: attr(data-count); font-weight: 400; color: var(--text-light); opacity: .8;
+        }
     </style>
 </head>
 <body>
@@ -1195,15 +1238,18 @@
         // 窄条用 label（如 25-45）区分年份；旧 dati.json 无 label 时回退纯题号。
         const chip = (q, tip) => {
             const isCur = viewMode === 'single' && q.id === singleQid;
+            const un = unfamSet.has(q.id), dk = dontknowSet.has(q.id);
             const txt = q.label || q.num;
             const full = `${q.year ? q.year + ' 年' : ''}第 ${q.num} 题${tip ? ' · ' + tip : ''}`;
-            return `<button class="num-btn${doneSet.has(q.id) ? ' done' : ''}${isCur ? ' current' : ''}" data-jump="${q.id}" onclick="jumpTo('${q.id}')" title="${full}${doneSet.has(q.id) ? ' · 已练' : ''}${isCur ? ' · 当前' : ''}">${doneSet.has(q.id) ? '✅' : ''}${txt}</button>`;
+            return `<button class="num-btn${doneSet.has(q.id) ? ' done' : ''}${un ? ' un' : ''}${dk ? ' dk' : ''}${isCur ? ' current' : ''}" data-jump="${q.id}" onclick="jumpTo('${q.id}')" title="${full}${doneSet.has(q.id) ? ' · 已练' : ''}${un ? ' · 不熟' : ''}${dk ? ' · 不会' : ''}${isCur ? ' · 当前' : ''}">${doneSet.has(q.id) ? '✅' : ''}${txt}</button>`;
         };
         const body = [];
         if (mode === 'year') {
             // 真题模式：按年份分组出题号（与单题/列表的年份倒序口径一致）
+            // 每年题数是「该科目在该年的大题数」，真题各科分布本就不均（如 2016 计组只有第 44 题），
+            // 标出题数避免被误看成漏题/排错。
             for (const g of yearGroups()) {
-                body.push(`<div class="num-group-title">${g.title}</div>
+                body.push(`<div class="num-group-title" title="该年本科共 ${g.items.length} 道大题">${g.title}<span class="dati-gcount" data-count=" · ${g.items.length} 题"></span></div>
                     <div class="num-grid">${g.items.map(({ q, secName }) => chip(q, secName)).join('')}</div>`);
             }
         } else {
@@ -1232,8 +1278,8 @@
             const qs = byYear.get(y).sort((a, b) => a.num - b.num);
             return `<div class="dati-nav-mini-row">
                 <span class="dati-nav-mini-y">${String(y).slice(-2)}</span>
-                ${qs.map(q => `<button class="dati-nav-mini-btn${doneSet.has(q.id) ? ' done' : ''}${viewMode === 'single' && q.id === singleQid ? ' current' : ''}"
-                    data-jump="${q.id}" onclick="jumpTo('${q.id}')" title="${y} 年第 ${q.num} 题">${q.num}</button>`).join('')}
+                ${qs.map(q => `<button class="dati-nav-mini-btn${doneSet.has(q.id) ? ' done' : ''}${unfamSet.has(q.id) ? ' un' : ''}${dontknowSet.has(q.id) ? ' dk' : ''}${viewMode === 'single' && q.id === singleQid ? ' current' : ''}"
+                    data-jump="${q.id}" onclick="jumpTo('${q.id}')" title="${y} 年第 ${q.num} 题${unfamSet.has(q.id) ? ' · 不熟' : ''}${dontknowSet.has(q.id) ? ' · 不会' : ''}">${q.num}</button>`).join('')}
             </div>`;
         }).join('');
         nav.innerHTML = `<div class="dati-nav-head" onclick="toggleNav()">
@@ -1241,7 +1287,11 @@
                 <span class="dati-nav-prog">${items.length ? (Math.max(curIdx, 0) + 1) + '/' + items.length : '0/0'}</span>
                 <span class="close-x">✕</span></div>
             <div class="dati-nav-mini">${miniRows || '<div class="dati-nav-mini-empty">无题目</div>'}</div>
-            <div class="dati-nav-body">${body.join('')}</div>`;
+            <div class="dati-nav-body"><div class="dati-nav-legend">
+                <span><i class="lg-done"></i>已练</span>
+                <span><i class="lg-un"></i>不熟</span>
+                <span><i class="lg-dk"></i>不会</span>
+            </div>${body.join('')}</div>`;
         // 切题后回到常驻窄条（宽版展开会盖住题目）；setNav 同步收掉遮罩并恢复 FAB
         setNav(false);
         // 切题后把当前题号滚进可视区（窄条可滚动，但当前题必须一眼可见）

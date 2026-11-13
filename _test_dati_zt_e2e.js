@@ -172,6 +172,37 @@ const allQ = () => {
     const unfRows = await w.dbAll('unfamiliar');
     ok('不熟表落到同一个 iid', unfRows.some(r => r.question_id === cur.id));
 
+    console.log('\n=== E2. 题号栏「不熟 / 不会」颜色真实渲染 ===');
+    const navAll = doc.getElementById('datiNav');
+    const navBtn = id => navAll.querySelector(`.dati-nav-mini-btn[data-jump="${id}"]`);
+    const wideBtn = id => navAll.querySelector(`#datiNav .num-btn[data-jump="${id}"]`) ||
+        navAll.querySelector(`.num-btn[data-jump="${id}"]`);
+    ok('窄条：不熟题带 un（黄）', navBtn(cur.id).classList.contains('un'));
+    ok('窄条：不熟题不带 dk（红）', !navBtn(cur.id).classList.contains('dk'));
+    ok('窄条：title 标注「不熟」', navBtn(cur.id).title.includes('不熟'));
+    ok('宽版：不熟题带 un（黄）', wideBtn(cur.id).classList.contains('un'));
+    ok('宽版：title 标注「不熟」', wideBtn(cur.id).title.includes('不熟'));
+
+    // 切到另一题标「不会」，验证红色与互斥（标一个自动清另一个）
+    const nextQ = w.eval('flatItems().find(i => i.q.id !== singleQid).q.id');
+    await w.toggleMark(nextQ, 'dontknow');
+    ok('窄条：不会题带 dk（红）', navBtn(nextQ).classList.contains('dk'));
+    ok('窄条：不会题不带 un', !navBtn(nextQ).classList.contains('un'));
+    ok('窄条：title 标注「不会」', navBtn(nextQ).title.includes('不会'));
+    ok('宽版：不会题带 dk（红）', wideBtn(nextQ).classList.contains('dk'));
+    // 同一题先不熟再不会：互斥后只剩红色
+    await w.toggleMark(cur.id, 'dontknow');
+    ok('互斥：原不熟题改标不会后 un 消失', !navBtn(cur.id).classList.contains('un'));
+    ok('互斥：原不熟题只剩 dk', navBtn(cur.id).classList.contains('dk'));
+    // 取消标记后颜色消失（不能残留）
+    await w.toggleMark(cur.id, 'dontknow');
+    ok('取消标记后 un/dk 都消失', !navBtn(cur.id).classList.contains('un') && !navBtn(cur.id).classList.contains('dk'));
+    ok('当前题仍保留 current 高亮', navAll.querySelector('.dati-nav-mini-btn.current') !== null);
+    ok('宽版图例渲染出三色', navAll.querySelectorAll('.dati-nav-legend i').length === 3);
+    ok('分组标题题数用 data-count（textContent 仍是纯年份）',
+        [...navAll.querySelectorAll('.num-group-title')].every(e => !/\d+ 题/.test(e.textContent)) &&
+        [...navAll.querySelectorAll('.dati-gcount')].every(e => /· \d+ 题/.test(e.dataset.count)));
+
     // 笔记：写规范键 zt{年}_{题号}（与 zhenti.js noteKeyOf 完全一致）
     const specKey = w.eval(`noteKeyOf('${cur.id}')`);
     ok('规范键形如 zt{年}_{题号}', /^zt\d{4}_\d+$/.test(specKey));
