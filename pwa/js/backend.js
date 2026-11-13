@@ -1701,12 +1701,17 @@ async function examApi(action, body, arg) {
             }
         } catch (e) { /* 取不到就只按错题层 */ }
 
-        // 收藏模式专用：模拟考答对过的题默认退出抽题；标了「猜对了」的放行到垫底层
+        // 模拟考三种模式（仅收藏 / 整卷 / 单科）统一口径 —— 2026-11-13 用户反馈
+        // 「前一场出的题又整场出现在下一场」，原来只有收藏模式排除答对题，整卷/单科没有。
+        // 专项池（错题 / 不熟 / 模拟考错题）池内本就是错题类，不套这套规则。
+        const isExamMode = mode === 'favorites' || (!isSpecial && (mode === 'full' || isSingle));
+
+        // 模拟考答对过的题默认退出抽题；标了「猜对了」的放行到垫底层
         // （已 mastered 的不放行 —— 做对过一次就不再抽，与「模拟考错题」池规则一致）
-        // 另：刚「加入错题池」的题有 7 天冷却，期间整题不进收藏池（用户要求：别隔天又在模拟考里见到）
+        // 另：刚「加入错题池」的题有 7 天冷却，期间整题不进池（用户要求：别隔天又在模拟考里见到）
         let examRightSet = new Set(), guessedSet = new Set();
         const ztCooling = new Set();
-        if (mode === 'favorites') {
+        if (isExamMode) {
             const tNow = Date.now();
             for (const r of redoRows) {
                 if (r.kind !== 'ztwrong' || r.mastered) continue;
@@ -1716,51 +1721,48 @@ async function examApi(action, body, arg) {
             for (const r of redoRows) if (r.kind === 'guessed' && !r.mastered) guessedSet.add(r.question_id);
         }
 
-        // 收藏题（favorites）：到期错题 → 做过的错题 → 没做过 → 做过的对题（垫底）。
-        //   ① 到期错题最优先：逾期越久越先抽，最多占本场该科题量 1/3（向上取整）；
-        //   ② 做过且错题本里仍挂着未解决（含未到 7 天的）：先把错过的题过一遍；
-        //   ③ 从没做过的：按题号稳定序（不随机），对应"1312 题一天 40"的推进节奏；
-        //   ④ 做过的对题垫底 —— 但**模拟考里答对的题默认退出**（用户规则：模拟考做对即视为掌握），
-        //      除非在试卷回顾里点过「猜对了」（guessed 标记），那样才回到垫底层可抽。
-        function prioritizeByTime(pool, take) {
-            const due = [], fresh = [], wrongish = [], correct = [];
-            const isWrongish = q => {
-                const w = wrongMap.get(q.id);
-                return !!(w && !w.is_resolved);
-            };
+        // 模拟考（收藏 / 整卷 / 单科）三档：新题 → 做过的对题 → 错题。
+        //   2026-11-13 用户口径：错题合计必须**严格小于 1/3**，且**新题占比必须最大**。
+        //   旧实现是「到期错题(≤1/3) → 做过的错题 → 没做过 → 做过的对题」，到期错题超帽后
+        //   被 pop 回「做过的错题」层，而该层整层排在「没做过」之前 —— 帽子形同虚设，
+        //   实测 40 题里错题 40 道（100%）、新题 0 道。现在改成新题绝对优先，
+        //   错题只在前两档填不满配额时才补，且受全局预算约束（见下面 wrongCap）。
+        //   到期错题不再是「插队者」，只决定错题档内部的先后（逾期越久越靠前）。
+        function wrongishOf(qid) {
+            const w = wrongMap.get(qid);
+            return !!(w && !w.is_resolved);
+        }
+        function splitTiers(pool) {
+            const fresh = [], correct = [], wrong = [];
             for (const q of pool) {
                 if (ztCooling.has(q.id)) continue;                 // 刚加入错题池的 7 天冷却：整题不进
+                if (wrongishOf(q.id)) { wrong.push(q); continue; } // 错题（含到期错题）
+                // 模拟考答对过、且没标「猜对了」→ 退出抽题池。
+                // 必须放在「新题」判断之前：模拟考里答对的题不一定写 progress（只记在 exams 里），
+                // 放后面会先从 fresh 档漏出去，导致上一场的题下一场又来。
+                if (examRightSet.has(q.id) && !guessedSet.has(q.id)) continue;
                 const p = progMap.get(q.id);
-                if (!p) { fresh.push(q); continue; }               // 从没做过
-                if (dueRank.has(q.id)) { due.push(q); continue; }  // 到期错题
-                if (isWrongish(q)) { wrongish.push(q); continue; } // 做过的错题
-                if (p.is_correct) {
-                    // 模拟考答对过、且没标「猜对了」→ 退出抽题池
-                    if (examRightSet.has(q.id) && !guessedSet.has(q.id)) continue;
-                    correct.push(q);   // 其余答对的题垫底
-                }
+                if (!p) { fresh.push(q); continue; }               // 从没做过 = 新题
+                correct.push(q);                                   // 做过的对题
             }
-            // 到期错题内部：逾期越久越靠前（dueRank 由 examDueWrongIds 按最后做错时间升序生成）
-            due.sort((a, b) => (dueRank.get(a.id) - dueRank.get(b.id)) || (a.id < b.id ? -1 : 1));
-            // 帽子 = 本场该科题量的 1/3：超出部分退回"做过的错题"层
-            const dueCap = Math.ceil((take || pool.length) / 3);
-            while (due.length > dueCap) {
-                const q = due.pop();
-                (isWrongish(q) ? wrongish : correct).push(q);
-            }
-            // 从没做过的：按题号稳定排序，保证每场抽到的顺序一致（不是随机）
-            fresh.sort((a, b) => (a.id < b.id ? -1 : a.id > b.id ? 1 : 0));
+            const byId = (a, b) => (a.id < b.id ? -1 : a.id > b.id ? 1 : 0);
             // 做过的：按最近一次作答时间升序 = 最早做的排最前；同刻用题号兜底
             const byAnswered = (a, b) => {
                 const ta = String((progMap.get(a.id) || {}).answered_at || '');
                 const tb = String((progMap.get(b.id) || {}).answered_at || '');
                 if (ta !== tb) return ta < tb ? -1 : 1;
-                return a.id < b.id ? -1 : a.id > b.id ? 1 : 0;
+                return byId(a, b);
             };
-            wrongish.sort(byAnswered);
+            // 新题：按题号稳定排序，保证每场抽到的顺序一致（不是随机）
+            fresh.sort(byId);
             correct.sort(byAnswered);
-            // 顺序：到期错题 → 做过的错题 → 没做过 → 做过的对题（垫底）
-            return due.concat(wrongish, fresh, correct);
+            // 错题：到期错题（逾期越久）在前，其余按最早做过
+            wrong.sort((a, b) => {
+                const ra = dueRank.has(a.id) ? dueRank.get(a.id) : Infinity;
+                const rb = dueRank.has(b.id) ? dueRank.get(b.id) : Infinity;
+                return (ra - rb) || byAnswered(a, b);
+            });
+            return { fresh, correct, wrong };
         }
 
         // 错题本（wrong）：三层优先级 —— 没做过 > 错题未解决 > 最久没做 > 最近做过
@@ -1784,56 +1786,96 @@ async function examApi(action, body, arg) {
             return ordered;
         }
 
-        // 收藏题用时间队列（最早做过的先抽）；错题本 / 整卷 / 单科保持原三层优先级
-        const order = mode === 'favorites' ? prioritizeByTime : prioritize;
+        // 抽题分两条路：
+        //   模拟考（收藏 / 整卷 / 单科）→ 三档 新题 → 做过的对题 → 错题，错题合计严格 < 1/3；
+        //   专项池（错题 / 不熟 / 模拟考错题）→ 池内本就全是错题类，沿用原三层优先级，不套预算。
+        const wrongCap = isExamMode ? Math.floor(total / 3) : Infinity;   // 40 题 → 13 题（< 1/3）
+        let wrongUsed = 0;
+        const quotas = isSingle ? { [mode]: total } : allocQuotas(total);
+        const cnt = {};
+        for (const k of EXAM_SUBJECT_ORDER) cnt[k] = 0;
+        const tierOf = {};
+        for (const k of EXAM_SUBJECT_ORDER) {
+            tierOf[k] = isExamMode
+                ? splitTiers(poolBySub[k])
+                : { fresh: [], correct: [], wrong: prioritize(poolBySub[k]) };
+        }
 
-        if (isSingle) {
-            picked = order(poolBySub[mode], total).slice(0, total);
-        } else {
-            // ---- 2. 第一轮：严格按真题各科题量抽 ----
-            const quotas = allocQuotas(total);
+        // ---- 2. 按真题各科题量抽：三档依次填，新题永远先吃配额 ----
+        for (const tier of ['fresh', 'correct', 'wrong']) {
             for (const k of EXAM_SUBJECT_ORDER) {
-                const take = Math.min(quotas[k], poolBySub[k].length);
-                for (const q of order(poolBySub[k], take).slice(0, take)) {
-                    picked.push(q);
-                    pickedIds.add(q.id);
+                const quota = quotas[k] || 0;
+                if (!quota) continue;
+                let remain = Math.min(quota, poolBySub[k].length) - cnt[k];
+                if (remain <= 0) continue;
+                let list = tierOf[k][tier];
+                if (tier === 'wrong' && isExamMode) list = list.slice(0, Math.max(0, wrongCap - wrongUsed));
+                for (const q of list) {
+                    if (remain <= 0) break;
+                    if (pickedIds.has(q.id)) continue;
+                    picked.push(q); pickedIds.add(q.id); cnt[k]++; remain--;
+                    if (tier === 'wrong') wrongUsed++;
                 }
             }
-            let short = total - picked.length;
+        }
+        let short = total - picked.length;
 
-            // ---- 3. 第二轮：某科不够时，先用其它科池里剩下的补（收藏/错题仍优先）----
-            if (short > 0) {
-                const rest = [];
-                for (const k of EXAM_SUBJECT_ORDER) {
-                    for (const q of poolBySub[k]) if (!pickedIds.has(q.id)) rest.push(q);
+        // ---- 3. 某科池子不够 → 跨科补。顺序不变：新题 → 对题 → 错题（预算内），
+        //         只有前两档也空了才允许错题超预算，避免凑不满题量。
+        if (short > 0 && isExamMode) {
+            const rest = { fresh: [], correct: [], wrong: [] };
+            for (const k of EXAM_SUBJECT_ORDER) {
+                for (const tier of ['fresh', 'correct', 'wrong']) {
+                    for (const q of tierOf[k][tier]) if (!pickedIds.has(q.id)) rest[tier].push(q);
                 }
-                // 同样按 order 排（到期错题优先/收藏=最早做过的先补），不做随机
-                for (const q of order(rest, short).slice(0, short)) {
-                    picked.push(q);
-                    pickedIds.add(q.id);
-                }
-                short = total - picked.length;
             }
-
-            // ---- 4. 第三轮：还差就跨科从全题库补 ----
-            // 收藏模式兜底时同样排除「答对过」的题 —— 否则会从全库把刚排除的题又捞回来。
+            let n = 0;
+            const fill = (list, cap) => {
+                n = 0;
+                for (const q of list) {
+                    if (short <= 0 || n >= cap) break;
+                    if (pickedIds.has(q.id)) continue;
+                    picked.push(q); pickedIds.add(q.id); short--; n++;
+                }
+                return n;
+            };
+            fill(rest.fresh, short);
+            if (short > 0) fill(rest.correct, short);
             if (short > 0) {
-                const rest = [];
-                for (const k of EXAM_SUBJECT_ORDER) {
-                    const data = await loadQuestions(k);
-                    for (const q of data.questions) {
-                        if (!q.answer || pickedIds.has(q.id)) continue;
-                        // 与池内规则保持一致：排除「模拟考答对且没标猜对了」的题；
-                        // 以及「刚加入错题池、还在 7 天冷却」的题（否则会从全库把它又捞回来）
-                        if (mode === 'favorites' && examRightSet.has(q.id) && !guessedSet.has(q.id)) continue;
-                        if (mode === 'favorites' && ztCooling.has(q.id)) continue;
-                        rest.push(q);
-                    }
+                wrongUsed += fill(rest.wrong, Math.max(0, wrongCap - wrongUsed));
+                if (short > 0) fill(rest.wrong, short);      // 兜底：错题超预算
+            }
+        } else if (short > 0) {
+            // 专项池：与旧行为一致，整池按三层优先级补（随机已在 prioritize 内做过）
+            const rest = [];
+            for (const k of EXAM_SUBJECT_ORDER) {
+                for (const q of poolBySub[k]) if (!pickedIds.has(q.id)) rest.push(q);
+            }
+            for (const q of prioritize(rest).slice(0, short)) {
+                picked.push(q);
+                pickedIds.add(q.id);
+            }
+            short = total - picked.length;
+        }
+
+        // ---- 4. 还差就跨科从全题库补（只发生在池子极小的情况）----
+        // 模拟考模式兜底时同样排除「答对过」「冷却中」的题 —— 否则会从全库把刚排除的题又捞回来。
+        if (short > 0) {
+            const rest = [];
+            for (const k of EXAM_SUBJECT_ORDER) {
+                const data = await loadQuestions(k);
+                for (const q of data.questions) {
+                    if (!q.answer || pickedIds.has(q.id)) continue;
+                    // 与池内规则保持一致：排除「模拟考答对且没标猜对了」的题；
+                    // 以及「刚加入错题池、还在 7 天冷却」的题（否则会从全库把它又捞回来）
+                    if (isExamMode && examRightSet.has(q.id) && !guessedSet.has(q.id)) continue;
+                    if (isExamMode && ztCooling.has(q.id)) continue;
+                    rest.push(q);
                 }
-                for (const q of shuffled(rest).slice(0, short)) {
-                    picked.push(q);
-                    pickedIds.add(q.id);
-                }
+            }
+            for (const q of shuffled(rest).slice(0, short)) {
+                picked.push(q);
+                pickedIds.add(q.id);
             }
         }
         if (!picked.length) return jsonResp({ error: '题库为空，无法组卷' }, 400);
@@ -1871,7 +1913,7 @@ async function examApi(action, body, arg) {
         const wrongMap = new Map();
         for (const w of await dbAll('wrong')) wrongMap.set(w.question_id, w);
         const favs = await dbAll('favorites');
-        // 与 prioritizeByTime 完全同口径：没做过 / 做过且错题未解决 / 做过且答对
+        // 与 splitTiers 完全同口径：没做过 / 做过且错题未解决 / 做过且答对
         let fresh = 0, wrongish = 0, correct = 0;
         for (const f of favs) {
             const p = progMap.get(f.question_id);

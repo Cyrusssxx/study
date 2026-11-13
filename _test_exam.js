@@ -57,8 +57,8 @@ if (allocQuotas) {
 // ---- 2. 后端抽题逻辑：分科 + 缺口补充 ----
 console.log('--- 后端 generate ---');
 ok('收藏/错题按科目建池', /poolBySub\[subj\]\.push\(q\)/.test(BACKEND));
-ok('第一轮按配额抽', /const take = Math\.min\(quotas\[k\], poolBySub\[k\]\.length\)/.test(BACKEND));
-ok('第二轮用同类池剩余补', /某科不够时，先用其它科池里剩下的补/.test(BACKEND));
+ok('第一轮按配额抽（每科配额 − 已抽数）', /let remain = Math\.min\(quota, poolBySub\[k\]\.length\) - cnt\[k\];/.test(BACKEND));
+ok('第二轮用同类池剩余补', /某科池子不够 → 跨科补/.test(BACKEND));
 ok('第三轮跨科全题库补', /还差就跨科从全题库补/.test(BACKEND));
 ok('默认模式为 favorites', /const mode = body\.mode \|\| 'favorites'/.test(BACKEND));
 ok('旧的分值比例常量已移除', !/EXAM_RATIO/.test(BACKEND));
@@ -100,26 +100,32 @@ ok('快捷按钮含 60 分钟', /onclick="setMinutes\(60\)"/.test(EXAM_HTML));
 ok('说明文字写明 40 题 = 60 分钟', /40 题 = 60 分钟/.test(EXAM_HTML));
 ok('用户手动改过后不覆盖', /if \(!force && minutesManual\) return;/.test(EXAM_HTML));
 
-console.log('--- 抽题优先级 ---');
+console.log('--- 抽题优先级（2026-11-13：新题 → 对题 → 错题，错题 < 1/3）---');
 ok('按 progress/wrong 建索引', /progMap/.test(BACKEND) && /wrongMap/.test(BACKEND));
-ok('三层优先级函数', /function prioritize\(pool\)/.test(BACKEND));
+ok('三层优先级函数（专项池用）', /function prioritize\(pool\)/.test(BACKEND));
 ok('未做过的优先', /if \(!p\) \{\s*fresh\.push/.test(BACKEND));
 ok('错题未解决次之', /w && !w\.is_resolved/.test(BACKEND));
 ok('做过的按日期从旧到新', /\[\.\.\.byDay\.keys\(\)\]\.sort\(\)/.test(BACKEND));
-ok('按科目抽题时使用优先级', /order\(poolBySub\[k\], take\)/.test(BACKEND));
 
-console.log('--- 收藏题：到期错题优先 + 时间队列轮转 ---');
-ok('有独立的时间队列函数（带题量参数）', /function prioritizeByTime\(pool, take\)/.test(BACKEND));
-ok('收藏模式选用时间队列', /mode === 'favorites' \? prioritizeByTime : prioritize/.test(BACKEND));
-ok('时间队列：按 answered_at 升序', /ta !== tb\) return ta < tb \? -1 : 1/.test(BACKEND));
-ok('时间队列：同刻用题号兜底（不随机）', /a\.id < b\.id \? -1 : a\.id > b\.id \? 1 : 0/.test(BACKEND));
-ok('时间队列：未做过的按题号稳定排', /fresh\.sort\(\(a, b\) => \(a\.id < b\.id/.test(BACKEND));
-ok('不熟/不会标记不参与抽题（仅到期错题加权）', (() => {
-    const m = BACKEND.match(/function prioritizeByTime[\s\S]*?\n        \}/);
+console.log('--- 模拟考三档：新题优先，错题受 1/3 预算 ---');
+ok('三档拆分函数 splitTiers', /function splitTiers\(pool\)/.test(BACKEND));
+ok('三档返回 fresh / correct / wrong', /return \{ fresh, correct, wrong \};/.test(BACKEND));
+ok('错题预算 = floor(total/3)（严格小于 1/3）',
+  /const wrongCap = isExamMode \? Math\.floor\(total \/ 3\) : Infinity;/.test(BACKEND));
+ok('主循环按 fresh → correct → wrong 三档填配额',
+  /for \(const tier of \['fresh', 'correct', 'wrong'\]\)/.test(BACKEND));
+ok('错题档受预算截断', /list = list\.slice\(0, Math\.max\(0, wrongCap - wrongUsed\)\)/.test(BACKEND));
+ok('专项池不套预算（Infinity）', /: Infinity;/.test(BACKEND));
+ok('新题按题号稳定排（不随机）', /fresh\.sort\(byId\)/.test(BACKEND));
+ok('做过的按 answered_at 升序 + 题号兜底', /ta !== tb\) return ta < tb \? -1 : 1/.test(BACKEND));
+ok('错题档内到期越久越靠前', /dueRank\.has\(a\.id\) \? dueRank\.get\(a\.id\) : Infinity/.test(BACKEND));
+ok('模拟考答对题退出抽题对整卷/单科同样生效',
+  /const isExamMode = mode === 'favorites' \|\| \(!isSpecial && \(mode === 'full' \|\| isSingle\)\);/.test(BACKEND));
+ok('不熟/不会标记不参与抽题（仅错题档）', (() => {
+    const m = BACKEND.match(/function splitTiers\(pool\)[\s\S]*?\n        \}\n/);
     return !!m && !/unfam|dontknow/i.test(m[0]);
 })());
-ok('第二轮补缺也用同一顺序器', /for \(const q of order\(rest, short\)\.slice\(0, short\)\)/.test(BACKEND));
-ok('UI 提示：分层顺序写清楚', /到期错题（≤1\/3）→ 做过的错题 → 没做过的/.test(EXAM_HTML));
+ok('UI 提示写明新题优先 + 错题 < 1/3', /新题优先，错题合计 < 1\/3/.test(EXAM_HTML));
 
 console.log('--- 鼠标侧键移植（刷题页 → 模拟考）---');
 ok('侧键接管函数 examSideTakeover', /function examSideTakeover/.test(EXAM_HTML));
@@ -174,7 +180,7 @@ ok('错题口径与 gradeExam 一致（含未作答）', /const isWrong = !\(\(!
 ok('跨科目按卷面顺序重排', /orderMap\.get\(a\.id\) - orderMap\.get\(b\.id\)/.test(BACKEND));
 ok('每题带考试时的作答（exam_user_answer）', /exam_user_answer: examUa\[q\.id\]/.test(BACKEND));
 ok('响应带试卷元信息 exam_meta', /examMeta = \{[\s\S]{0,300}exam_id: exam\.id, mode: exam\.mode,[\s\S]{0,160}score: exam\.score/.test(BACKEND) && /wrong_count: wrongCnt/.test(BACKEND));
-ok('混合模式下收藏/标记/笔记不按单科过滤', /mixed \|\| f\.subject === subject/.test(BACKEND) && /mixed \|\| n\.subject === subject/.test(BACKEND));
+ok('混合模式下收藏/标记/笔记不按单科过滤', /mixed \|\| f\.subject === subject/.test(BACKEND) && /mixed \|\| !n\.subject \|\| n\.subject === subject/.test(BACKEND));
 ok('混合模式下进度状态取全量', /latestStatuses\(mixed \? '' : subject\)/.test(BACKEND));
 ok('exam_meta 只在该模式返回', /if \(examMeta\) out\.exam_meta = examMeta;/.test(BACKEND));
 
@@ -236,16 +242,17 @@ ok('做对了不抽（答对且晚于最后做错 → 排除）', /st && st\.is_
 ok('已了结（is_resolved）不抽', /if \(w\.is_resolved\) continue;/.test(BACKEND));
 ok('未满 7 天不抽', /nowMs < base \+ EXAM_REDO_COOLDOWN_MS\) continue;/.test(BACKEND));
 ok('逾期越久越靠前（last_wrong_at 升序）', /a\[0\] < b\[0\] \? -1 : a\[0\] > b\[0\] \? 1/.test(BACKEND));
-ok('组卷按 rank 引用到期层', /dueRank\.has\(q\.id\)/.test(BACKEND) && /dueRank\.get\(a\.id\) - dueRank\.get\(b\.id\)/.test(BACKEND));
-ok('分层顺序 = 到期错题 → 做过的错题 → 没做过 → 做过的对题',
-  /return due\.concat\(wrongish, fresh, correct\);/.test(BACKEND));
-ok('到期错题帽子 = 本场该科题量 1/3（向上取整）', /const dueCap = Math\.ceil\(\(take \|\| pool\.length\) \/ 3\);/.test(BACKEND));
-ok('超帽到期错题回流（错题未解决的进 wrongish，否则进 correct）',
-  /while \(due\.length > dueCap\)[\s\S]{0,200}?isWrongish\(q\) \? wrongish : correct/.test(BACKEND));
+ok('组卷按 rank 引用到期层（错题档内排序）', /dueRank\.has\(a\.id\) \? dueRank\.get\(a\.id\) : Infinity/.test(BACKEND) && /dueRank\.get\(rb\)/.test(BACKEND) === false);
+ok('三档顺序 = 新题 → 做过的对题 → 错题（错题垫底）',
+  /for \(const tier of \['fresh', 'correct', 'wrong'\]\)/.test(BACKEND) && !/return due\.concat\(wrongish, fresh, correct\);/.test(BACKEND));
+ok('错题预算按全场总题量算（不是按该科）', /Math\.floor\(total \/ 3\)/.test(BACKEND));
+ok('跨科补缺也按三档顺序（新题先补）', /fill\(rest\.fresh, short\);[\s\S]{0,120}?fill\(rest\.correct, short\);[\s\S]{0,160}?fill\(rest\.wrong/.test(BACKEND));
+ok('错题预算用尽才允许超预算兜底', /if \(short > 0\) fill\(rest\.wrong, short\);\s*\/\/ 兜底/.test(BACKEND));
 ok('答对的题不再有 7 天冷却（无 cooling 层）', /cooling\.push\(q\)/.test(BACKEND) === false);
-ok('做过且错题未解决排在答对之前', /\(isWrongish\(q\) \? wrongish : correct\)\.push\(q\)/.test(BACKEND));
-ok('调用点传题量供帽子计算', /order\(poolBySub\[k\], take\)/.test(BACKEND) && /order\(rest, short\)/.test(BACKEND) && /order\(poolBySub\[mode\], total\)/.test(BACKEND));
-ok('组卷设置提示先清错题', /先清错题，再推没做过的，模拟考答对的退出抽题/.test(EXAM_HTML));
+ok('做过的错题排在答对之后（旧规则已反转）', !/\(isWrongish\(q\) \? wrongish : correct\)\.push\(q\)/.test(BACKEND));
+ok('专项池仍整池按三层优先级补', /for \(const q of prioritize\(rest\)\.slice\(0, short\)\)/.test(BACKEND));
+ok('组卷设置提示新题优先 + 错题 < 1/3',
+  /新题优先，错题合计 < 1\/3/.test(EXAM_HTML));
 
 console.log('--- 历史记录批量勾选删除 ---');
 ok('后端有 delete 动作（按 ids 删）', /action === 'delete'/.test(BACKEND) && /tx\.objectStore\('exams'\)\.delete\(id\)/.test(BACKEND));

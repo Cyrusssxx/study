@@ -1,6 +1,8 @@
-// 收藏题抽题逻辑的行为验证（真跑排序/筛选函数，不是正则匹配）：
-//   到期错题层：只含「最近一次作答仍是错的」、做错满 7 天的题，逾期越久越先抽；
-//   到期层受 1/3 帽子约束，超帽回流时间队列；未做过按题号稳定；其余最早做过先抽。
+// 模拟考三档排序的行为验证（真跑 splitTiers，不是正则匹配）：
+//   2026-11-13 用户口径：新题（没做过）必须是占比最大的一档；
+//   做过的对题其次；错题（含到期错题）垫底，且合计必须 < 1/3。
+//   旧实现「到期错题(≤1/3) → 做过的错题 → 没做过」的到期错题插队逻辑已删除，
+//   到期只决定「错题档内部」的先后（逾期越久越靠前）。
 const fs = require('fs');
 const path = require('path');
 const vm = require('vm');
@@ -13,170 +15,171 @@ function ok(name, cond, extra) {
   cond ? pass++ : fail++;
 }
 
-// ---- 从 backend.js 抽出 prioritizeByTime（progMap/dueRank 依赖）----
-const m = BACKEND.match(/function prioritizeByTime\(pool, take\) \{[\s\S]*?\n        \}\n/);
-if (!m) {
-  console.log('FAIL 抽不到 prioritizeByTime');
+// ---- 从 backend.js 抽出 wrongishOf + splitTiers（依赖 progMap / wrongMap / dueRank 等外层局部变量）----
+const mWrong = BACKEND.match(/function wrongishOf\(qid\) \{[\s\S]*?\n        \}\n/);
+const mSplit = BACKEND.match(/function splitTiers\(pool\) \{[\s\S]*?\n        \}\n/);
+if (!mWrong || !mSplit) {
+  console.log('FAIL 抽不到 wrongishOf / splitTiers');
   process.exit(1);
 }
-const src = m[0];
 
-function makeOrder(progRows, dueRankEntries) {
+function makeSplit(progRows, opts) {
+  const o = opts || {};
   const ctx = {
     progMap: new Map(progRows.map(r => [r.question_id, r])),
-    dueRank: new Map(dueRankEntries || []),
-    // prioritizeByTime 是外层大函数里的内嵌函数，单独提取执行时必须补上它引用的外层局部变量。
-    // 这里一律给"空"集合/映射 = 无冷却、无模拟考答对记录、无错题记录 —— 本测试 8 个场景
-    // 只验证时间队列与到期层排序，不涉及这些集合的语义。
-    ztCooling: new Set(),
-    examRightSet: new Set(),
-    guessedSet: new Set(),
-    wrongMap: new Map(),
+    wrongMap: new Map((o.wrongRows || []).map(r => [r.question_id, r])),
+    dueRank: new Map(o.dueRank || []),
+    ztCooling: new Set(o.ztCooling || []),
+    examRightSet: new Set(o.examRightSet || []),
+    guessedSet: new Set(o.guessedSet || []),
   };
   vm.createContext(ctx);
-  vm.runInContext(src + '\nthis.f = prioritizeByTime;', ctx);
+  vm.runInContext(mWrong[0] + mSplit[0] + '\nthis.f = splitTiers;', ctx);
   return ctx.f;
 }
 
 const Q = id => ({ id });
+const ids = arr => arr.map(x => x.id);
 
-// 场景 1：无到期错题时——做过三题，时间 1/1、1/2、1/3（越早做越靠前）
-// 注意：做过但没标 is_correct 的题，实现会既不进 correct 也不进其它层（被静默丢弃），
-// 所以测试数据必须显式给 is_correct: true，否则断言只剩未做过的那题。
+// 场景 1：三档齐全 —— 新题在前，做过的对题居中，错题垫底
 {
-  const order = makeOrder([
-    { question_id: 'c', answered_at: '2026-01-03 10:00:00', is_correct: true },
+  const split = makeSplit([
+    { question_id: 'c1', answered_at: '2026-01-02 10:00:00', is_correct: true },
+    { question_id: 'w1', answered_at: '2026-01-03 10:00:00', is_correct: false },
+  ], { wrongRows: [{ question_id: 'w1', is_resolved: 0 }] });
+  const t = split([Q('w1'), Q('c1'), Q('f1'), Q('f2')]);
+  ok('新题全在第一档（题号升序，不随机）', ids(t.fresh).join(',') === 'f1,f2', ids(t.fresh).join(','));
+  ok('做过的对题在第二档', ids(t.correct).join(',') === 'c1', ids(t.correct).join(','));
+  ok('错题在第三档', ids(t.wrong).join(',') === 'w1', ids(t.wrong).join(','));
+}
+
+// 场景 2：到期错题不再插队 —— 即使 dueRank 有它，也只排在错题档内
+{
+  const split = makeSplit([
+    { question_id: 'w1', answered_at: '2026-01-06 10:00:00', is_correct: false },
+    { question_id: 'w2', answered_at: '2026-01-05 10:00:00', is_correct: false },
+    { question_id: 'w3', answered_at: '2026-01-04 10:00:00', is_correct: false },
+    { question_id: 'd1', answered_at: '2026-01-01 10:00:00', is_correct: true },
+  ], {
+    wrongRows: ['w1', 'w2', 'w3'].map(id => ({ question_id: id, is_resolved: 0 })),
+    dueRank: [['w1', 0], ['w2', 1], ['w3', 2]],
+  });
+  const t = split([Q('f1'), Q('d1'), Q('w1'), Q('w2'), Q('w3')]);
+  ok('到期错题不越过新题（新题仍独占第一档）', ids(t.fresh).join(',') === 'f1', ids(t.fresh).join(','));
+  ok('到期错题不越过做过的对题', ids(t.correct).join(',') === 'd1', ids(t.correct).join(','));
+  ok('错题档内逾期越久越靠前（w1→w2→w3）', ids(t.wrong).join(',') === 'w1,w2,w3', ids(t.wrong).join(','));
+}
+
+// 场景 3：模拟考答对过的题退出抽题；标「猜对了」的回到第二档
+{
+  const split = makeSplit([
     { question_id: 'a', answered_at: '2026-01-01 10:00:00', is_correct: true },
-    { question_id: 'b', answered_at: '2026-01-02 10:00:00', is_correct: true },
-  ]);
-  const got = order([Q('a'), Q('b'), Q('c'), Q('d')]).map(x => x.id);
-  ok('最早做过的排最前（a→b→c），未做过的 d 排最前',
-    got[0] === 'd' && got[1] === 'a' && got[2] === 'b' && got[3] === 'c', got.join(','));
+    { question_id: 'b', answered_at: '2026-01-01 10:00:00', is_correct: true },
+  ], { examRightSet: ['a', 'b'] });
+  const t = split([Q('a'), Q('b'), Q('f')]);
+  ok('模拟考答对且没标猜对了 → 整题不出现',
+    !ids(t.fresh).concat(ids(t.correct), ids(t.wrong)).includes('a'), ids(t.correct).join(','));
+  const split2 = makeSplit([
+    { question_id: 'a', answered_at: '2026-01-01 10:00:00', is_correct: true },
+  ], { examRightSet: ['a'], guessedSet: ['a'] });
+  const t2 = split2([Q('a')]);
+  ok('标「猜对了」→ 放回做过的对题档', ids(t2.correct).join(',') === 'a', ids(t2.correct).join(','));
 }
 
-// 场景 2：做完 a 之后（时间刷新到今天），a 应沉到已做队列的队尾
+// 场景 4：刚入错题池的 7 天冷却 → 整题不进任何档
 {
-  const order = makeOrder([
-    { question_id: 'a', answered_at: '2026-10-23 09:00:00', is_correct: true },   // 刚做完
-    { question_id: 'b', answered_at: '2026-01-02 10:00:00', is_correct: true },
-    { question_id: 'c', answered_at: '2026-01-03 10:00:00', is_correct: true },
-  ]);
-  const got = order([Q('a'), Q('b'), Q('c')]).map(x => x.id);
-  ok('做完的题沉到队尾，下一场先抽更早做的 b', got[0] === 'b' && got[1] === 'c' && got[2] === 'a', got.join(','));
+  const split = makeSplit([], { ztCooling: ['x'] });
+  const t = split([Q('x'), Q('y')]);
+  ok('冷却中的题整题不进池', ids(t.fresh).join(',') === 'y', ids(t.fresh).join(','));
 }
 
-// 场景 3：同一时刻做的题，按题号兜底，不随机
+// 场景 5：同一时刻做过的题按题号兜底，不随机
 {
   const rows = ['z', 'y', 'x'].map(id => ({ question_id: id, answered_at: '2026-01-01 09:00:00', is_correct: true }));
-  const order = makeOrder(rows);
-  const got1 = order([Q('z'), Q('y'), Q('x')]).map(x => x.id);
-  const got2 = order([Q('x'), Q('y'), Q('z')]).map(x => x.id);
-  ok('同一时刻按题号稳定排序（两次结果一致）',
-    got1.join(',') === got2.join(',') && got1.join(',') === 'x,y,z', got1.join(','));
+  const split = makeSplit(rows);
+  const got1 = ids(split([Q('z'), Q('y'), Q('x')]).correct).join(',');
+  const got2 = ids(split([Q('x'), Q('y'), Q('z')]).correct).join(',');
+  ok('同一时刻按题号稳定排序（两次一致）', got1 === got2 && got1 === 'x,y,z', got1);
 }
 
-// 场景 4：未做过的多题，按题号顺序（不是随机）
+// 场景 6：做过的按 answered_at 升序（最早做的先抽）
 {
-  const order = makeOrder([]);
-  const pool = ['ds_0030', 'ds_0005', 'ds_0012'].map(Q);
-  const got1 = order(pool).map(x => x.id);
-  const got2 = order(pool.slice().reverse()).map(x => x.id);
-  ok('未做过的按题号升序（与入参顺序无关）',
-    got1.join(',') === 'ds_0005,ds_0012,ds_0030' && got2.join(',') === got1.join(','), got1.join(','));
+  const split = makeSplit([
+    { question_id: 'b', answered_at: '2026-01-02 10:00:00', is_correct: true },
+    { question_id: 'a', answered_at: '2026-01-01 10:00:00', is_correct: true },
+    { question_id: 'c', answered_at: '2026-01-03 10:00:00', is_correct: true },
+  ]);
+  ok('最早做过的排最前（a→b→c）', ids(split([Q('c'), Q('a'), Q('b')]).correct).join(',') === 'a,b,c',
+    ids(split([Q('c'), Q('a'), Q('b')]).correct).join(','));
 }
 
-// 场景 5：到期错题最优先 + 1/3 帽子：rank 小（逾期久）的先抽，超帽回流时间队列
+// 场景 7：三档互斥，并集 = 池子（除被排除项）
 {
-  const order = makeOrder([
-    { question_id: 'w1', answered_at: '2026-01-06 10:00:00' },
-    { question_id: 'w2', answered_at: '2026-01-05 10:00:00' },
-    { question_id: 'w3', answered_at: '2026-01-04 10:00:00' },
-    { question_id: 'd1', answered_at: '2026-01-01 10:00:00', is_correct: true },
-  ], [['w1', 0], ['w2', 1], ['w3', 2]]);   // w1 逾期最久
-  // take=3 → 帽子 ceil(3/3)=1 → 只有逾期最久的 w1 进到期层；w2/w3 回流 done：
-  // done 按 answered_at 升序 = d1(01-01) → w3(01-04) → w2(01-05)
-  const got = order([Q('f1'), Q('d1'), Q('w1'), Q('w2'), Q('w3')], 3).map(x => x.id);
-  ok('到期错题受 1/3 帽子约束（w1→f1→d1→w3→w2）',
-    got.join(',') === 'w1,f1,d1,w3,w2', got.join(','));
+  const split = makeSplit([
+    { question_id: 'c', answered_at: '2026-01-01 10:00:00', is_correct: true },
+    { question_id: 'w', answered_at: '2026-01-01 10:00:00', is_correct: false },
+    { question_id: 'gone', answered_at: '2026-01-01 10:00:00', is_correct: true },
+  ], { wrongRows: [{ question_id: 'w', is_resolved: 0 }], examRightSet: ['gone'] });
+  const t = split([Q('f'), Q('c'), Q('w'), Q('gone')]);
+  const all = ids(t.fresh).concat(ids(t.correct), ids(t.wrong));
+  ok('三档并集 = 池子 − 被排除项', all.slice().sort().join(',') === 'c,f,w', all.join(','));
+  ok('三档无重复', new Set(all).size === all.length, all.join(','));
 }
 
-// 场景 6：到期层内部按 rank 升序 = 逾期越久越先抽
+// 场景 8：源码口径守卫
 {
-  const order = makeOrder([
-    { question_id: 'w1', answered_at: '2026-01-06 10:00:00' },
-    { question_id: 'w2', answered_at: '2026-01-05 10:00:00' },
-    { question_id: 'w3', answered_at: '2026-01-04 10:00:00' },
-  ], [['w1', 0], ['w2', 1], ['w3', 2]]);
-  const got = order([Q('w3'), Q('w1'), Q('w2')], 9).map(x => x.id);
-  ok('到期层内逾期久的排最前（w1→w2→w3）', got.join(',') === 'w1,w2,w3', got.join(','));
-}
-
-// 场景 7：不熟/不会标记不参与收藏题抽题（到期错题是唯一的错题加权）
-{
-  const body = m[0];
-  ok('时间队列函数体内不引用 不熟/不会 集合', !/unfam|dontknow/i.test(body));
-  ok('到期层按 dueRank 排序（不再按最近动态）', /dueRank\.get\(a\.id\) - dueRank\.get\(b\.id\)/.test(body));
-}
-
-// 场景 8：收藏模式选用时间队列；错题本模式仍用三层优先级
-{
-  ok('收藏模式 → 时间队列', /mode === 'favorites' \? prioritizeByTime : prioritize/.test(BACKEND));
-  ok('三层优先级函数仍在（错题本用）', /function prioritize\(pool\)/.test(BACKEND));
+  ok('已无 dueCap 帽子逻辑（旧插队实现）', !/dueCap/.test(BACKEND));
+  ok('已无 prioritizeByTime（旧时间队列）', !/prioritizeByTime/.test(BACKEND));
+  ok('三档顺序写死在主循环', /for \(const tier of \['fresh', 'correct', 'wrong'\]\)/.test(BACKEND));
+  ok('错题预算 = floor(total/3)', /const wrongCap = isExamMode \? Math\.floor\(total \/ 3\) : Infinity;/.test(BACKEND));
+  ok('专项池仍用三层优先级', /function prioritize\(pool\)/.test(BACKEND));
   ok('第三轮跨科补题仍是兜底随机（不改）', /for \(const q of shuffled\(rest\)\.slice\(0, short\)\)/.test(BACKEND));
 }
 
-// ---- examDueWrongIds 行为验证（真跑筛选函数） ----
-// backend.js 已把 4 天重抽改为 7 天冷却（EXAM_REDO_COOLDOWN_DAYS = 7）
+// ---- examDueWrongIds 行为验证（未改动，保留原护栏）----
 const em = BACKEND.match(/const EXAM_REDO_COOLDOWN_DAYS = 7;[\s\S]*?async function examDueWrongIds\(\) \{[\s\S]*?\n\}\n/);
-if (em) {
-  const fmt = ms => { const d = new Date(ms), p = n => String(n).padStart(2, '0'); return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())} ${p(d.getHours())}:${p(d.getMinutes())}:${p(d.getSeconds())}`; };
-  const DAY = 86400000;
-  const now = Date.now();
-
-  function makeDue(wrongRows, statusMap) {
-    const ctx = {
-      tsToStr: v => (typeof v === 'string' ? v : ''),
-      dbAll: async () => wrongRows,
-      latestStatuses: async () => statusMap || {},
-    };
-    vm.createContext(ctx);
-    vm.runInContext(em[0] + '\nthis.f = examDueWrongIds;', ctx);
-    return ctx.f;
-  }
-
-  (async () => {
-    // w_old1(10 天前错) / w_old2(9 天前错) / w_rewrong(8 天前) → 满 7 天到期；w_recent(1 天前) → 冷却中
-    // w_res 已了结 → 不抽；w_fixed 做错过但后来答对 → 不抽；w_rewrong 答对在先、又做错 → 抽
-    const wrongRows = [
-      { question_id: 'w_old1', last_wrong_at: fmt(now - 10 * DAY) },
-      { question_id: 'w_old2', last_wrong_at: fmt(now - 9 * DAY) },
-      { question_id: 'w_recent', last_wrong_at: fmt(now - 1 * DAY) },
-      { question_id: 'w_res', last_wrong_at: fmt(now - 30 * DAY), is_resolved: 1 },
-      { question_id: 'w_fixed', last_wrong_at: fmt(now - 30 * DAY) },
-      { question_id: 'w_rewrong', last_wrong_at: fmt(now - 8 * DAY) },
-    ];
-    const statusMap = {
-      w_fixed: { is_correct: 1, answered_at: fmt(now - 2 * DAY) },    // 做对在最后做错之后 → 了结
-      w_rewrong: { is_correct: 1, answered_at: fmt(now - 20 * DAY) }, // 做对在最后做错之前 → 仍算错
-    };
-    const got = await makeDue(wrongRows, statusMap)();
-    ok('做错了 7 天后到期；做对不抽；又做错重新计 7 天；逾期久的在前',
-      got.join(',') === 'w_old1,w_old2,w_rewrong', got.join(','));
-
-    // 恰好满 7 天：base + 7d <= now 即到期
-    const edgeRows = [{ question_id: 'w_edge', last_wrong_at: fmt(now - 7 * DAY) }];
-    const got2 = await makeDue(edgeRows, {})();
-    ok('恰好满 7 天即到期', got2.join(',') === 'w_edge', got2.join(','));
-
-    // 不足 7 天：不到期
-    const earlyRows = [{ question_id: 'w_early', last_wrong_at: fmt(now - 6 * DAY) }];
-    const got3 = await makeDue(earlyRows, {})();
-    ok('未满 7 天不到期', got3.length === 0, got3.join(','));
-  })().then(() => {
-    console.log(`\n结果: ${fail === 0 ? '全部通过' : fail + ' 项失败'}（${pass + fail} 项）`);
-    process.exit(fail ? 1 : 0);
-  }).catch(e => { console.log('FAIL 异常', e); process.exit(1); });
-} else {
+if (!em) {
   console.log('FAIL 抽不到 examDueWrongIds');
   process.exit(1);
 }
+const fmt = ms => { const d = new Date(ms), p = n => String(n).padStart(2, '0'); return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())} ${p(d.getHours())}:${p(d.getMinutes())}:${p(d.getSeconds())}`; };
+const DAY = 86400000;
+const now = Date.now();
+
+function makeDue(wrongRows, statusMap) {
+  const ctx = {
+    tsToStr: v => (typeof v === 'string' ? v : ''),
+    dbAll: async () => wrongRows,
+    latestStatuses: async () => statusMap || {},
+  };
+  vm.createContext(ctx);
+  vm.runInContext(em[0] + '\nthis.f = examDueWrongIds;', ctx);
+  return ctx.f;
+}
+
+(async () => {
+  const wrongRows = [
+    { question_id: 'w_old1', last_wrong_at: fmt(now - 10 * DAY) },
+    { question_id: 'w_old2', last_wrong_at: fmt(now - 9 * DAY) },
+    { question_id: 'w_recent', last_wrong_at: fmt(now - 1 * DAY) },
+    { question_id: 'w_res', last_wrong_at: fmt(now - 30 * DAY), is_resolved: 1 },
+    { question_id: 'w_fixed', last_wrong_at: fmt(now - 30 * DAY) },
+    { question_id: 'w_rewrong', last_wrong_at: fmt(now - 8 * DAY) },
+  ];
+  const statusMap = {
+    w_fixed: { is_correct: 1, answered_at: fmt(now - 2 * DAY) },
+    w_rewrong: { is_correct: 1, answered_at: fmt(now - 20 * DAY) },
+  };
+  const got = await makeDue(wrongRows, statusMap)();
+  ok('做错满 7 天到期；做对不抽；又做错重新计 7 天；逾期久的在前',
+    got.join(',') === 'w_old1,w_old2,w_rewrong', got.join(','));
+
+  const got2 = await makeDue([{ question_id: 'w_edge', last_wrong_at: fmt(now - 7 * DAY) }], {})();
+  ok('恰好满 7 天即到期', got2.join(',') === 'w_edge', got2.join(','));
+
+  const got3 = await makeDue([{ question_id: 'w_early', last_wrong_at: fmt(now - 6 * DAY) }], {})();
+  ok('未满 7 天不到期', got3.length === 0, got3.join(','));
+
+  console.log(`\n结果: ${fail === 0 ? '全部通过' : fail + ' 项失败'}（${pass + fail} 项）`);
+  process.exit(fail ? 1 : 0);
+})().catch(e => { console.log('FAIL 异常', e); process.exit(1); });

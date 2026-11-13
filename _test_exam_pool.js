@@ -129,27 +129,29 @@ const DAY = 86400000;
     body: JSON.stringify({ mode, count })
   }).then(r => r.json());
 
-  console.log('--- 一、抽题分层顺序 ---');
+  console.log('--- 一、抽题分层顺序（2026-11-13 新口径：新题 → 对题 → 错题）---');
   const g = await gen('favorites', 6);
   check('组卷成功', !!g.exam_id, true);
   const ids = (g.questions || []).map(q => q.id);
   const at = id => ids.indexOf(id);
   check('抽出 6 题', ids.length, 6);
-  check('到期错题 cn_0004 排最前', at('cn_0004'), 0);
-  // 用户要求：先清错题、再推新题 → wrongish 必须排在 fresh 之前
-  check('做过的错题 cn_0003 排在没做过的 cn_0001 之前', at('cn_0003') < at('cn_0001'), true);
-  check('做过的错题 cn_0003 排在没做过的 cn_0006 之前', at('cn_0003') < at('cn_0006'), true);
-  check('没做过的 cn_0001 在"做过的对题"之前', at('cn_0001') < at('cn_0002'), true);
-  check('答对的 cn_0002 排在最后一位', at('cn_0002'), ids.length - 1);
-  check('到期重练 cn_0005 也进池（排在到期错题之后）', at('cn_0005') > at('cn_0004') && at('cn_0005') >= 0, true);
-  // cn_0006 本身没做过，所以它作为普通新题仍在池里；关键是它不能进 due 层
-  check('未到期的重练 cn_0006 不进 due 层（排在到期重练之后）', at('cn_0006') > at('cn_0005'), true);
+  // 用户口径：错题必须 < 1/3，新题占比最大 → 三题没做过的排最前
+  check('新题（cn_0001 未做）排第 1', at('cn_0001'), 0);
+  check('新题全部排在做过前面', at('cn_0005') < at('cn_0002') && at('cn_0006') < at('cn_0002'), true);
+  check('做过的错题排在做过对题之后', at('cn_0003') > at('cn_0002') && at('cn_0004') > at('cn_0002'), true);
+  check('到期错题 cn_0004 仍在错题档内（不插队到最前）', at('cn_0004') > 0, true);
+  check('答对的 cn_0002 不再是最后一位（错题垫底）', at('cn_0002'), ids.length - 3);
+  check('错题合计 ≤ floor(6/3)=2', ids.filter(x => x === 'cn_0003' || x === 'cn_0004').length <= 2, true);
+  check('到期重练 cn_0005 进池（本身没做过 → 走新题档）', at('cn_0005') >= 0, true);
+  check('未到期的重练 cn_0006 也按新题抽（不是不抽）', at('cn_0006') >= 0, true);
 
   console.log('\n--- 二、答对的题不再有 7 天冷却 ---');
   check('3 天前答对的题仍被抽到（没有冷却硬排除）', at('cn_0002') >= 0, true);
   check('源码里已无 cooling 层', /cooling\.push\(q\)/.test(BACKEND_SRC), false);
-  check('源码分层 = due + wrongish + fresh + correct',
-    /return due\.concat\(wrongish, fresh, correct\)/.test(BACKEND_SRC), true);
+  check('源码三档 = splitTiers 返回 fresh/correct/wrong',
+    /return \{ fresh, correct, wrong \};/.test(BACKEND_SRC), true);
+  check('错题预算 = floor(total/3)',
+    /const wrongCap = isExamMode \? Math\.floor\(total \/ 3\) : Infinity;/.test(BACKEND_SRC), true);
 
   console.log('\n--- 三、池子统计与抽题同口径 ---');
   // 不熟/不会各放一条「没做过」和「做过」的，验证未做数只算前者
@@ -316,7 +318,7 @@ const DAY = 86400000;
   const g3 = await gen('favorites', 6);
   const ids3 = (g3.questions || []).map(q => q.id);
   check('标「猜对了」后重新可抽', ids3.includes('cn_0002'), true);
-  check('放回后仍在垫底（最后一个）', ids3.indexOf('cn_0002'), ids3.length - 1);
+  check('放回后落在第二档（新题之后、错题之前）', ids3.indexOf('cn_0002'), ids3.length - 3);
 
   // 再点一次取消 → 又退出
   await w.api('/api/mark/guessed/cn_0002', { method: 'POST' }).then(r => r.json());
