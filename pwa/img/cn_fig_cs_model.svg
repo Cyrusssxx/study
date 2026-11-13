@@ -1,0 +1,71 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 680 392" width="680" height="392">
+  <rect x="0" y="0" width="680" height="392" fill="#ffffff"/>
+  <rect x="20" y="10" width="640" height="26" rx="4" fill="#eff6ff" stroke="#93c5fd" stroke-width="1"/>
+  <text x="32" y="28" font-size="11" font-weight="700" fill="#1e40af">C/S 与 P2P：客户/服务器是「角色」，不是某台固定机器</text>
+
+  <rect x="20" y="46" width="310" height="164" rx="4" fill="#f8fafc" stroke="#cbd5e1" stroke-width="1"/>
+  <text x="30" y="64" font-size="9.6" font-weight="700" fill="#334155">C/S 星型：一切经服务器</text>
+  <rect x="128" y="112" width="104" height="42" rx="4" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.4"/>
+  <text x="180" y="130" font-size="9.2" font-weight="700" fill="#1e40af" text-anchor="middle">服务器</text>
+  <text x="180" y="145" font-size="8" fill="#1e40af" text-anchor="middle">固定 IP · 长期在线</text>
+  <rect x="30" y="76" width="78" height="32" rx="3" fill="#dcfce7" stroke="#86efac" stroke-width="1"/>
+  <text x="69" y="96" font-size="8.8" fill="#166534" text-anchor="middle">客户 1</text>
+  <rect x="242" y="76" width="78" height="32" rx="3" fill="#dcfce7" stroke="#86efac" stroke-width="1"/>
+  <text x="281" y="96" font-size="8.8" fill="#166534" text-anchor="middle">客户 2</text>
+  <rect x="30" y="168" width="78" height="32" rx="3" fill="#dcfce7" stroke="#86efac" stroke-width="1"/>
+  <text x="69" y="188" font-size="8.8" fill="#166534" text-anchor="middle">客户 3</text>
+  <rect x="242" y="168" width="78" height="32" rx="3" fill="#dcfce7" stroke="#86efac" stroke-width="1"/>
+  <text x="281" y="188" font-size="8.8" fill="#166534" text-anchor="middle">客户 4</text>
+  <path d="M 92 108 L 136 126" stroke="#3b82f6" stroke-width="1.2" fill="none"/>
+  <path d="M 244 108 L 214 126" stroke="#3b82f6" stroke-width="1.2" fill="none"/>
+  <path d="M 92 172 L 136 142" stroke="#3b82f6" stroke-width="1.2" fill="none"/>
+  <path d="M 244 172 L 214 142" stroke="#3b82f6" stroke-width="1.2" fill="none"/>
+  <rect x="126" y="157" width="108" height="17" fill="#f8fafc"/>
+  <text x="180" y="168" font-size="8" fill="#1e40af" text-anchor="middle">客户请求 → 服务器响应</text>
+  <text x="180" y="202" font-size="8.1" fill="#b91c1c" text-anchor="middle">客户之间不能直接通信，必须经服务器中转</text>
+
+  <rect x="346" y="46" width="314" height="164" rx="4" fill="#f8fafc" stroke="#cbd5e1" stroke-width="1"/>
+  <text x="356" y="64" font-size="9.6" font-weight="700" fill="#334155">P2P 网状：每个节点既请求也提供服务</text>
+  <rect x="372" y="82" width="76" height="30" rx="3" fill="#fef3c7" stroke="#f59e0b" stroke-width="1"/>
+  <text x="410" y="101" font-size="8.8" fill="#92400e" text-anchor="middle">对等方 A</text>
+  <rect x="558" y="82" width="76" height="30" rx="3" fill="#fef3c7" stroke="#f59e0b" stroke-width="1"/>
+  <text x="596" y="101" font-size="8.8" fill="#92400e" text-anchor="middle">对等方 B</text>
+  <rect x="372" y="158" width="76" height="30" rx="3" fill="#fef3c7" stroke="#f59e0b" stroke-width="1"/>
+  <text x="410" y="177" font-size="8.8" fill="#92400e" text-anchor="middle">对等方 C</text>
+  <rect x="558" y="158" width="76" height="30" rx="3" fill="#fef3c7" stroke="#f59e0b" stroke-width="1"/>
+  <text x="596" y="177" font-size="8.8" fill="#92400e" text-anchor="middle">对等方 D</text>
+  <path d="M 448 97 L 558 97" stroke="#f59e0b" stroke-width="1.1" fill="none"/>
+  <path d="M 410 112 L 410 158" stroke="#f59e0b" stroke-width="1.1" fill="none"/>
+  <path d="M 596 112 L 596 158" stroke="#f59e0b" stroke-width="1.1" fill="none"/>
+  <path d="M 448 173 L 558 173" stroke="#f59e0b" stroke-width="1.1" fill="none"/>
+  <path d="M 446 108 L 560 164" stroke="#f59e0b" stroke-width="1.1" fill="none"/>
+  <path d="M 446 164 L 560 108" stroke="#f59e0b" stroke-width="1.1" fill="none"/>
+  <rect x="438" y="120" width="130" height="18" fill="#f8fafc"/>
+  <text x="503" y="132" font-size="8.2" fill="#92400e" text-anchor="middle">用户越多，可用资源越多</text>
+  <text x="503" y="200" font-size="8.1" fill="#166534" text-anchor="middle">单点故障影响小；但分散难管理、难管控</text>
+
+  <text x="20" y="228" font-size="9" fill="#64748b">四个维度对比（教材表）</text>
+  <rect x="20" y="236" width="640" height="26" fill="#f1f5f9" stroke="#cbd5e1" stroke-width="1"/>
+  <text x="30" y="253" font-size="8.8" font-weight="700" fill="#334155">维度</text>
+  <text x="240" y="253" font-size="8.8" font-weight="700" fill="#1e40af">C/S</text>
+  <text x="450" y="253" font-size="8.8" font-weight="700" fill="#92400e">P2P</text>
+  <rect x="20" y="262" width="640" height="22" fill="#ffffff" stroke="#e2e8f0" stroke-width="1"/>
+  <text x="30" y="277" font-size="8.5" fill="#475569">扩展性</text>
+  <text x="240" y="277" font-size="8.5" fill="#475569">受限（服务器是瓶颈）</text>
+  <text x="450" y="277" font-size="8.5" fill="#475569">随用户数增强</text>
+  <rect x="20" y="284" width="640" height="22" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1"/>
+  <text x="30" y="299" font-size="8.5" fill="#475569">可维护性</text>
+  <text x="240" y="299" font-size="8.5" fill="#475569">集中好管理</text>
+  <text x="450" y="299" font-size="8.5" fill="#475569">分散难管理</text>
+  <rect x="20" y="306" width="640" height="22" fill="#ffffff" stroke="#e2e8f0" stroke-width="1"/>
+  <text x="30" y="321" font-size="8.5" fill="#475569">可靠性</text>
+  <text x="240" y="321" font-size="8.5" fill="#475569">服务器单点故障影响大</text>
+  <text x="450" y="321" font-size="8.5" fill="#475569">单点故障影响小</text>
+  <rect x="20" y="328" width="640" height="22" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1"/>
+  <text x="30" y="343" font-size="8.5" fill="#475569">安全性</text>
+  <text x="240" y="343" font-size="8.5" fill="#475569">相对可控</text>
+  <text x="450" y="343" font-size="8.5" fill="#475569">难管控、易夹带恶意内容</text>
+
+  <rect x="20" y="356" width="640" height="30" rx="4" fill="#fef3c7" stroke="#f59e0b" stroke-width="1"/>
+  <text x="32" y="375" font-size="8.8" fill="#92400e">典型 C/S：Web、电子邮件、DNS、FTP。<tspan font-weight="700">服务器地址公开固定、客户地址每次可能不同</tspan>（服务器从报文里取）；连接建立后服务器也可主动发数据。</text>
+</svg>

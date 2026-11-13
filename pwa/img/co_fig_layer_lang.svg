@@ -1,0 +1,60 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 680 408" width="680" height="408">
+  <rect x="0" y="0" width="680" height="408" fill="#ffffff"/>
+  <rect x="20" y="10" width="640" height="26" rx="4" fill="#eff6ff" stroke="#93c5fd" stroke-width="1"/>
+  <text x="32" y="28" font-size="11" font-weight="700" fill="#1e40af">多级层次结构：ISA 是软硬件分界线，下层是上层的基础</text>
+
+  <text x="20" y="52" font-size="8.8" fill="#64748b">多级层次（图上从上往下读，下层是上层的基础）</text>
+  <text x="320" y="52" font-size="8.8" fill="#64748b">三类编程语言</text>
+  <rect x="20" y="58" width="280" height="30" fill="#f1f5f9" stroke="#cbd5e1" stroke-width="1"/>
+  <text x="30" y="78" font-size="9.5" fill="#334155">应用（问题）</text>
+  <rect x="20" y="90" width="280" height="30" fill="#f1f5f9" stroke="#cbd5e1" stroke-width="1"/>
+  <text x="30" y="110" font-size="9.5" fill="#334155">算法与编程</text>
+  <rect x="20" y="122" width="280" height="30" fill="#e0f2fe" stroke="#7dd3fc" stroke-width="1"/>
+  <text x="30" y="142" font-size="9.5" fill="#075985">操作系统／虚拟机</text>
+  <text x="288" y="142" font-size="8.2" fill="#075985" text-anchor="end">软件侧</text>
+  <rect x="20" y="154" width="280" height="32" fill="#fee2e2" stroke="#dc2626" stroke-width="1.6"/>
+  <text x="30" y="174" font-size="10" font-weight="700" fill="#b91c1c">ISA（指令集体系结构）· 软硬件分界线</text>
+  <rect x="20" y="188" width="280" height="30" fill="#dcfce7" stroke="#86efac" stroke-width="1"/>
+  <text x="30" y="208" font-size="9.5" fill="#166534">微体系结构</text>
+  <text x="288" y="208" font-size="8.2" fill="#166534" text-anchor="end">硬件侧</text>
+  <rect x="20" y="220" width="280" height="30" fill="#dcfce7" stroke="#86efac" stroke-width="1"/>
+  <text x="30" y="240" font-size="9.5" fill="#166534">功能部件／RTL</text>
+  <rect x="20" y="252" width="280" height="30" fill="#dcfce7" stroke="#86efac" stroke-width="1"/>
+  <text x="30" y="272" font-size="9.5" fill="#166534">电路与器件</text>
+  <text x="288" y="174" font-size="8.2" font-weight="700" fill="#b91c1c" text-anchor="end">分界线</text>
+
+  <rect x="320" y="58" width="108" height="62" rx="4" fill="#ffffff" stroke="#cbd5e1" stroke-width="1"/>
+  <text x="330" y="76" font-size="9.3" font-weight="700" fill="#334155">机器语言</text>
+  <text x="330" y="91" font-size="8.2" fill="#475569">0/1 二进制指令</text>
+  <text x="330" y="104" font-size="8.2" fill="#475569">唯一能直接识别</text>
+  <text x="330" y="116" font-size="8.2" fill="#475569">并执行的语言</text>
+  <rect x="434" y="58" width="108" height="62" rx="4" fill="#ffffff" stroke="#cbd5e1" stroke-width="1"/>
+  <text x="444" y="76" font-size="9.3" font-weight="700" fill="#334155">汇编语言</text>
+  <text x="444" y="91" font-size="8.2" fill="#475569">mov、add 助记符</text>
+  <text x="444" y="104" font-size="8.2" fill="#475569">与 ISA 指令基本</text>
+  <text x="444" y="116" font-size="8.2" fill="#475569">一一对应、不可移植</text>
+  <rect x="548" y="58" width="112" height="62" rx="4" fill="#ffffff" stroke="#cbd5e1" stroke-width="1"/>
+  <text x="558" y="76" font-size="9.3" font-weight="700" fill="#334155">高级语言</text>
+  <text x="558" y="91" font-size="8.2" fill="#475569">C、C++、Java 等</text>
+  <text x="558" y="104" font-size="8.2" fill="#475569">编译成汇编再汇编</text>
+  <text x="558" y="116" font-size="8.2" fill="#475569">或直接编译成机器语言</text>
+
+  <text x="320" y="138" font-size="8.8" fill="#64748b">三类翻译程序（先翻译后执行 vs 边翻译边执行）</text>
+  <rect x="320" y="144" width="340" height="30" rx="3" fill="#f0fdf4" stroke="#86efac" stroke-width="1"/>
+  <text x="330" y="163" font-size="8.9" fill="#166534"><tspan font-weight="700">汇编程序</tspan>：汇编源程序 → 机器语言目标程序（多为一一映射）</text>
+  <rect x="320" y="178" width="340" height="30" rx="3" fill="#eff6ff" stroke="#93c5fd" stroke-width="1"/>
+  <text x="330" y="197" font-size="8.9" fill="#1e40af"><tspan font-weight="700">编译程序</tspan>：一次性翻译、生成目标文件（.o/.exe），执行时不再要源程序</text>
+  <rect x="320" y="212" width="340" height="30" rx="3" fill="#fef3c7" stroke="#f59e0b" stroke-width="1"/>
+  <text x="330" y="231" font-size="8.9" fill="#92400e"><tspan font-weight="700">解释程序</tspan>：逐条翻译逐条执行、不生成独立目标程序，需源程序始终参与</text>
+
+  <rect x="320" y="252" width="340" height="30" rx="3" fill="#fee2e2" stroke="#fca5a5" stroke-width="1"/>
+  <text x="330" y="271" font-size="8.8" fill="#b91c1c"><tspan font-weight="700">ISA 定义「做什么」</tspan>：指令格式、操作类型、寻址方式、可访问的寄存器</text>
+  <rect x="320" y="286" width="340" height="30" rx="3" fill="#dcfce7" stroke="#86efac" stroke-width="1"/>
+  <text x="330" y="305" font-size="8.8" fill="#166534"><tspan font-weight="700">微架构决定「怎么做」</tspan>：数据通路、流水线级数、Cache 层次、分支预测</text>
+
+  <rect x="20" y="326" width="640" height="72" rx="4" fill="#fef3c7" stroke="#f59e0b" stroke-width="1"/>
+  <text x="32" y="344" font-size="8.9" fill="#92400e">ISA 是软件「感知」到的计算机功能视图（软件可见部分）：<tspan font-weight="700">相同 ISA 可对应多种微架构</tspan>（x86 的 Core、Skylake、Alder Lake），软件无需修改即兼容。</text>
+  <text x="32" y="360" font-size="8.9" fill="#92400e">硬件只能直接执行机器语言；<tspan font-weight="700">高级语言与机器指令不一一对应</tspan>，只有汇编语言与 ISA 指令基本一一对应。</text>
+  <text x="32" y="376" font-size="8.9" fill="#92400e">编译＝一次全部翻译、生成目标代码、运行快；解释＝逐句边译边执行、运行慢、不生成目标代码文件。</text>
+  <text x="32" y="390" font-size="8.5" fill="#92400e">源程序 → 可执行文件：<tspan font-weight="700">预处理 → 编译 → 汇编 → 链接</tspan>。</text>
+</svg>

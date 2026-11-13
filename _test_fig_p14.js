@@ -1,7 +1,7 @@
 /* 2026-11-13 第十四批（继续 CO / OS / CN 三科）：4 张自绘图，全部落在零图小节，本批不新增黄框。
  * 图：OS 3.2.1 虚拟内存（部分装入＋调入/置换＋容量上限）· OS 2.2.2 进程调度（三部件＋四可以三不可以）·
  *     CO 6.2.1 总线事务（三阶段＋非突发 80ns vs 突发 50ns）· CN 6.4.2 邮件三层结构＋MIME 三个首部＋Base64。
- * 锁精确总量：fig-img 186（co44/os67/cn44/ds31）、黄框 310（74/77/53/106，本批未动）。
+ * P14 下限（精确量由 _test_fig_p15.js 统管）：fig-img 186（co44/os67/cn44/ds31）、黄框 310（74/77/53/106，本批未动）。
  * 行号双基线（本批零漂移）：CO 1819 / OS 3660 / CN 1108 / DS 1173·1175；jsdom 1971 / 3668 / 1220 / 1330。
  */
 const fs = require('fs');
@@ -202,7 +202,8 @@ for (const sub of SUBS) {
 const FIG_N = { co: 44, os: 67, cn: 44, ds: 31 };
 const CALL_N = { co: 74, os: 77, cn: 53, ds: 106 };
 for (const sub of SUBS) {
-  check(sub + ' 配图 ' + FIG_N[sub] + ' 张（P14 精确总量）', (RAW[sub].match(/fig-img/g) || []).length, FIG_N[sub]);
+  check(sub + ' 配图 >= ' + FIG_N[sub] + ' 张（P14 下限，后续批次会继续加）',
+    (RAW[sub].match(/fig-img/g) || []).length, n => n >= FIG_N[sub]);
   check(sub + ' 黄框 ' + CALL_N[sub] + ' 个（P14 未动，精确）',
     (RAW[sub].match(/class=\\"key-callout\\"/g) || []).length, CALL_N[sub]);
   check(sub + ' 序列化格式',
@@ -212,7 +213,7 @@ for (const sub of SUBS) {
   check(sub + ' 图引用 / 文件 / SW 预缓存三方一致',
     refs.every(r => fs.existsSync(path.join(ROOT, 'pwa', r)) && sw.includes("'" + r + "'")), true);
 }
-check('全库 fig-img 186 张', SUBS.reduce((n, s) => n + (RAW[s].match(/fig-img/g) || []).length, 0), 186);
+check('全库 fig-img >= 186 张（P14 下限）', SUBS.reduce((n, s) => n + (RAW[s].match(/fig-img/g) || []).length, 0), n => n >= 186);
 check('全库黄框 310 个（本批未新增）', SUBS.reduce((n, s) => n + (RAW[s].match(/class=\\"key-callout\\"/g) || []).length, 0), 310);
 const STRUCT = { co: 0, ds: 0, cn: 11, os: 14 };
 check('内联 struct-fig 总量未变（CO0/DS0/CN11/OS14）',
@@ -245,9 +246,9 @@ for (const sub of SUBS) {
 if (guardDone === 3) {
   check('OS/CO/CN 三科 before 备份都参与了纯插入校验', guardDone, 3);
   check('变化的 4 个小节全是纯插入（0 删除 / 0 改写）', guardBad, 0);
-  check('变化小节数 = 4（本批只碰这四个零图小节）', changed, 4);
-  check('被改的小节正是 2.2.2 / 3.2.1 / 6.2.1 / 6.4.2',
-    changedKeys.slice().sort(), ['2.2.2', '3.2.1', '6.2.1', '6.4.2']);
+  check('变化小节数 >= 4（P14 下限，后续批次继续改）', changed, n => n >= 4);
+  check('P14 改的四个小节都在变化清单里',
+    ['2.2.2', '3.2.1', '6.2.1', '6.4.2'].every(k => changedKeys.includes(k)), true);
 } else {
   console.log('SKIP 纯插入守卫：缺少三科 before 备份（归档目录不在 git 中）');
 }

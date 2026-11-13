@@ -1,0 +1,85 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 680 388" width="680" height="388">
+  <rect x="0" y="0" width="680" height="388" fill="#ffffff"/>
+  <rect x="20" y="10" width="640" height="26" rx="4" fill="#eff6ff" stroke="#93c5fd" stroke-width="1"/>
+  <text x="32" y="28" font-size="11" font-weight="700" fill="#1e40af">C 语言整数类型转换：三种情形，看位模式到底变没变</text>
+
+  <text x="20" y="54" font-size="9.6" font-weight="700" fill="#1e40af">① 长 → 短（位截断）：直接丢弃高位、保留低位</text>
+  <text x="20" y="67" font-size="8.4" fill="#64748b">int x = 165537（0x000286A1） · 32 位补码</text>
+  <rect x="20" y="72" width="56" height="26" fill="#ffffff" stroke="#94a3b8" stroke-width="1"/>
+  <text x="48" y="90" font-size="9.5" fill="#475569" text-anchor="middle">00</text>
+  <rect x="76" y="72" width="56" height="26" fill="#ffffff" stroke="#94a3b8" stroke-width="1"/>
+  <text x="104" y="90" font-size="9.5" fill="#475569" text-anchor="middle">02</text>
+  <rect x="132" y="72" width="56" height="26" fill="#dbeafe" stroke="#3b82f6" stroke-width="1"/>
+  <text x="160" y="90" font-size="9.5" font-weight="700" fill="#1e40af" text-anchor="middle">86</text>
+  <rect x="188" y="72" width="56" height="26" fill="#dbeafe" stroke="#3b82f6" stroke-width="1"/>
+  <text x="216" y="90" font-size="9.5" font-weight="700" fill="#1e40af" text-anchor="middle">A1</text>
+  <path d="M 252 85 L 300 85" stroke="#64748b" stroke-width="1.2" fill="none"/>
+  <path d="M 294 81 L 300 85 L 294 89" stroke="#64748b" stroke-width="1.2" fill="none"/>
+  <text x="276" y="76" font-size="8" fill="#64748b" text-anchor="middle">丢高位</text>
+  <rect x="310" y="72" width="56" height="26" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.2"/>
+  <text x="338" y="90" font-size="9.5" font-weight="700" fill="#1e40af" text-anchor="middle">86</text>
+  <rect x="366" y="72" width="56" height="26" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.2"/>
+  <text x="394" y="90" font-size="9.5" font-weight="700" fill="#1e40af" text-anchor="middle">A1</text>
+  <text x="432" y="80" font-size="9" font-weight="700" fill="#334155">short = 0x86A1 = -31071</text>
+  <text x="432" y="95" font-size="8.5" fill="#b91c1c">不触发任何异常，隐蔽性强</text>
+  <text x="20" y="114" font-size="8.6" fill="#92400e">位截断产生的数值变化是<tspan font-weight="700">语义变化，不是运算溢出</tspan>，硬件不会报告。</text>
+
+  <path d="M 20 122 L 660 122" stroke="#e2e8f0" stroke-width="1" fill="none"/>
+  <text x="20" y="140" font-size="9.6" font-weight="700" fill="#166534">② 相同字长（仅改变解释方式）：位模式一个 bit 都不动</text>
+  <text x="20" y="153" font-size="8.4" fill="#64748b">short x = -4321（0xEF1F）</text>
+  <rect x="20" y="158" width="56" height="26" fill="#dcfce7" stroke="#22c55e" stroke-width="1.2"/>
+  <text x="48" y="176" font-size="9.5" font-weight="700" fill="#166534" text-anchor="middle">EF</text>
+  <rect x="76" y="158" width="56" height="26" fill="#dcfce7" stroke="#22c55e" stroke-width="1.2"/>
+  <text x="104" y="176" font-size="9.5" font-weight="700" fill="#166534" text-anchor="middle">1F</text>
+  <path d="M 140 171 L 188 171" stroke="#64748b" stroke-width="1.2" fill="none"/>
+  <path d="M 182 167 L 188 171 L 182 175" stroke="#64748b" stroke-width="1.2" fill="none"/>
+  <text x="164" y="162" font-size="8" fill="#64748b" text-anchor="middle">只换解释</text>
+  <text x="200" y="153" font-size="8.4" fill="#64748b">unsigned short y = 61215（仍是 0xEF1F）</text>
+  <rect x="200" y="158" width="56" height="26" fill="#dcfce7" stroke="#22c55e" stroke-width="1.2"/>
+  <text x="228" y="176" font-size="9.5" font-weight="700" fill="#166534" text-anchor="middle">EF</text>
+  <rect x="256" y="158" width="56" height="26" fill="#dcfce7" stroke="#22c55e" stroke-width="1.2"/>
+  <text x="284" y="176" font-size="9.5" font-weight="700" fill="#166534" text-anchor="middle">1F</text>
+  <text x="326" y="167" font-size="8.8" fill="#166534"><tspan font-weight="700">符号位变成数据位</tspan>，负数会变成大正数</text>
+  <text x="326" y="182" font-size="8.5" fill="#b91c1c">signed -1 → unsigned 65535 / 4294967295</text>
+
+  <path d="M 20 192 L 660 192" stroke="#e2e8f0" stroke-width="1" fill="none"/>
+  <text x="20" y="210" font-size="9.6" font-weight="700" fill="#92400e">③ 短 → 长（位扩展）：看源类型是有符号还是无符号</text>
+  <text x="20" y="227" font-size="8.6" fill="#475569">有符号补码 → <tspan font-weight="700">符号扩展</tspan>（高位重复符号位，补 1）：x = -4321（0xEF1F）→ int</text>
+  <rect x="20" y="234" width="50" height="24" fill="#fef3c7" stroke="#f59e0b" stroke-width="1"/>
+  <text x="45" y="250" font-size="9" fill="#92400e" text-anchor="middle">EF</text>
+  <rect x="70" y="234" width="50" height="24" fill="#fef3c7" stroke="#f59e0b" stroke-width="1"/>
+  <text x="95" y="250" font-size="9" fill="#92400e" text-anchor="middle">1F</text>
+  <path d="M 128 246 L 166 246" stroke="#64748b" stroke-width="1.2" fill="none"/>
+  <path d="M 160 242 L 166 246 L 160 250" stroke="#64748b" stroke-width="1.2" fill="none"/>
+  <rect x="174" y="234" width="50" height="24" fill="#fee2e2" stroke="#ef4444" stroke-width="1"/>
+  <text x="199" y="250" font-size="9" font-weight="700" fill="#b91c1c" text-anchor="middle">FF</text>
+  <rect x="224" y="234" width="50" height="24" fill="#fee2e2" stroke="#ef4444" stroke-width="1"/>
+  <text x="249" y="250" font-size="9" font-weight="700" fill="#b91c1c" text-anchor="middle">FF</text>
+  <rect x="274" y="234" width="50" height="24" fill="#fef3c7" stroke="#f59e0b" stroke-width="1"/>
+  <text x="299" y="250" font-size="9" fill="#92400e" text-anchor="middle">EF</text>
+  <rect x="324" y="234" width="50" height="24" fill="#fef3c7" stroke="#f59e0b" stroke-width="1"/>
+  <text x="349" y="250" font-size="9" fill="#92400e" text-anchor="middle">1F</text>
+  <text x="386" y="250" font-size="8.8" fill="#475569">0xFFFFEF1F → 仍是 <tspan font-weight="700">-4321</tspan></text>
+
+  <text x="20" y="276" font-size="8.6" fill="#475569">无符号数 → <tspan font-weight="700">零扩展</tspan>（高位补 0）：u = 61215（0xEF1F）→ int</text>
+  <rect x="20" y="283" width="50" height="24" fill="#fef3c7" stroke="#f59e0b" stroke-width="1"/>
+  <text x="45" y="299" font-size="9" fill="#92400e" text-anchor="middle">EF</text>
+  <rect x="70" y="283" width="50" height="24" fill="#fef3c7" stroke="#f59e0b" stroke-width="1"/>
+  <text x="95" y="299" font-size="9" fill="#92400e" text-anchor="middle">1F</text>
+  <path d="M 128 295 L 166 295" stroke="#64748b" stroke-width="1.2" fill="none"/>
+  <path d="M 160 291 L 166 295 L 160 299" stroke="#64748b" stroke-width="1.2" fill="none"/>
+  <rect x="174" y="283" width="50" height="24" fill="#dbeafe" stroke="#3b82f6" stroke-width="1"/>
+  <text x="199" y="299" font-size="9" font-weight="700" fill="#1e40af" text-anchor="middle">00</text>
+  <rect x="224" y="283" width="50" height="24" fill="#dbeafe" stroke="#3b82f6" stroke-width="1"/>
+  <text x="249" y="299" font-size="9" font-weight="700" fill="#1e40af" text-anchor="middle">00</text>
+  <rect x="274" y="283" width="50" height="24" fill="#fef3c7" stroke="#f59e0b" stroke-width="1"/>
+  <text x="299" y="299" font-size="9" fill="#92400e" text-anchor="middle">EF</text>
+  <rect x="324" y="283" width="50" height="24" fill="#fef3c7" stroke="#f59e0b" stroke-width="1"/>
+  <text x="349" y="299" font-size="9" fill="#92400e" text-anchor="middle">1F</text>
+  <text x="386" y="299" font-size="8.8" fill="#475569">0x0000EF1F → 仍是 <tspan font-weight="700">61215</tspan></text>
+
+  <rect x="20" y="318" width="640" height="60" rx="4" fill="#fef3c7" stroke="#f59e0b" stroke-width="1"/>
+  <text x="32" y="336" font-size="8.8" fill="#92400e">宽度：short 通常 <tspan font-weight="700">16 位</tspan>、int 通常 <tspan font-weight="700">32 位</tspan>、long 在 32 位系统 32 位／64 位系统通常 64 位、char 通常 <tspan font-weight="700">8 位</tspan>（特殊整型）。</text>
+  <text x="32" y="352" font-size="8.8" fill="#92400e">加 unsigned 为无符号，未显式指定则默认为有符号；<tspan font-weight="700">所有有符号整型以补码存储</tspan>；char 通常按无符号整数解释。</text>
+  <text x="32" y="368" font-size="8.8" fill="#92400e"><tspan font-weight="700">混用陷阱</tspan>：有符号与无符号一起运算时按无符号比较，所以 -1 &gt; 0u 在 C 里为真。</text>
+</svg>

@@ -1,0 +1,43 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 680 398" width="680" height="398">
+  <rect x="0" y="0" width="680" height="398" fill="#ffffff"/>
+  <rect x="20" y="10" width="640" height="26" rx="4" fill="#eff6ff" stroke="#93c5fd" stroke-width="1"/>
+  <text x="32" y="28" font-size="11" font-weight="700" fill="#1e40af">实时系统：按任务紧迫性／截止时间调度，看的是「有没有赶上时限」</text>
+
+  <text x="20" y="55" font-size="9" fill="#64748b">时间轴（红色竖线＝截止时间 deadline）</text>
+  <path d="M 40 158 L 648 158" stroke="#94a3b8" stroke-width="1.2" fill="none"/>
+  <text x="42" y="174" font-size="8.5" fill="#64748b">外部事件发生</text>
+  <path d="M 430 66 L 430 162" stroke="#dc2626" stroke-width="1.8" stroke-dasharray="5 3" fill="none"/>
+  <text x="436" y="76" font-size="9" font-weight="700" fill="#b91c1c">截止时间</text>
+  <text x="436" y="89" font-size="8.5" fill="#b91c1c">deadline</text>
+
+  <text x="52" y="76" font-size="9" font-weight="700" fill="#166534">任务 A · 硬实时（飞机的控制系统）</text>
+  <rect x="52" y="82" width="290" height="20" rx="3" fill="#dcfce7" stroke="#22c55e" stroke-width="1"/>
+  <text x="197" y="96" font-size="8.5" fill="#166534" text-anchor="middle">截止前完成 → 合格</text>
+  <text x="52" y="120" font-size="9" font-weight="700" fill="#b91c1c">任务 B · 硬实时（导弹制导）</text>
+  <rect x="352" y="106" width="196" height="20" rx="3" fill="#fee2e2" stroke="#ef4444" stroke-width="1"/>
+  <text x="442" y="120" font-size="8.5" fill="#b91c1c">错过 → 灾难性后果</text>
+  <text x="52" y="147" font-size="9" font-weight="700" fill="#92400e">任务 C · 软实时（订票、银行管理、股票交易）</text>
+  <rect x="232" y="132" width="250" height="20" rx="3" fill="#fef3c7" stroke="#f59e0b" stroke-width="1"/>
+  <text x="357" y="146" font-size="8.5" fill="#92400e" text-anchor="middle">偶尔错过 → 可容忍、无永久损害</text>
+
+  <rect x="20" y="186" width="310" height="118" rx="4" fill="#f8fafc" stroke="#cbd5e1" stroke-width="1"/>
+  <text x="32" y="205" font-size="10" font-weight="700" fill="#334155">分时系统（对照）</text>
+  <text x="32" y="223" font-size="8.7" fill="#475569">调度依据：时间片轮转</text>
+  <text x="32" y="239" font-size="8.7" fill="#475569">核心目标：快速响应用户、交互性好</text>
+  <text x="32" y="255" font-size="8.7" fill="#475569">时限要求：较短时间响应即可</text>
+  <text x="32" y="271" font-size="8.7" fill="#475569">典型应用：多用户终端交互</text>
+  <text x="32" y="288" font-size="8.7" fill="#475569">首要追求：响应速度与交互性</text>
+  <rect x="346" y="186" width="314" height="118" rx="4" fill="#dcfce7" stroke="#86efac" stroke-width="1"/>
+  <text x="358" y="205" font-size="10" font-weight="700" fill="#166534">实时系统</text>
+  <text x="358" y="223" font-size="8.7" fill="#166534">调度依据：任务紧迫性／截止时间（优先级）</text>
+  <text x="358" y="239" font-size="8.7" fill="#166534">核心目标：在规定时限内完成处理、可靠</text>
+  <text x="358" y="255" font-size="8.7" fill="#166534">时限要求：严格时限（硬实时不可错过）</text>
+  <text x="358" y="271" font-size="8.7" fill="#166534">典型应用：导弹制导、机床控制、订票</text>
+  <text x="358" y="288" font-size="8.7" fill="#166534">首要追求：及时性与可靠性（非资源利用率）</text>
+
+  <rect x="20" y="314" width="640" height="72" rx="4" fill="#fef3c7" stroke="#f59e0b" stroke-width="1"/>
+  <text x="32" y="333" font-size="9" fill="#92400e"><tspan font-weight="700">硬实时</tspan>：必须赶在截止时间前完成，否则引发灾难性后果，要提供绝对可靠的时间保证；<tspan font-weight="700">软实时</tspan>：允许偶尔错过，短暂延迟可容忍。</text>
+  <text x="32" y="350" font-size="9" fill="#92400e">三个特点：<tspan font-weight="700">确定性</tspan>（响应时间可预测）、<tspan font-weight="700">高可靠性</tspan>、<tspan font-weight="700">强时效性</tspan>；实时系统摒弃时间片轮转机制。</text>
+  <text x="32" y="367" font-size="9" fill="#92400e">为保证高优先级任务及时处理，<tspan font-weight="700">甚至允许浪费一些系统资源</tspan> —— 首要目标不是资源利用率。</text>
+  <text x="32" y="381" font-size="8.5" fill="#92400e">在实时系统控制下，计算机收到外部事件后能在可预测且有保障的时限内完成处理。</text>
+</svg>

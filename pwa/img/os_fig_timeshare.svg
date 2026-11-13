@@ -1,0 +1,66 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 680 396" width="680" height="396">
+  <rect x="0" y="0" width="680" height="396" fill="#ffffff"/>
+  <rect x="20" y="10" width="640" height="26" rx="4" fill="#eff6ff" stroke="#93c5fd" stroke-width="1"/>
+  <text x="32" y="28" font-size="11" font-weight="700" fill="#1e40af">分时系统：把 CPU 时间切成很短的时间片 Q，轮流分给各用户</text>
+
+  <text x="20" y="55" font-size="9" fill="#64748b">一轮轮转（4 个用户 A/B/C/D，每格就是一个时间片 Q）</text>
+  <text x="20" y="84" font-size="9" font-weight="700" fill="#334155">CPU</text>
+  <rect x="52" y="68" width="72" height="30" fill="#dbeafe" stroke="#3b82f6" stroke-width="1"/>
+  <text x="88" y="88" font-size="10" font-weight="700" fill="#1e40af" text-anchor="middle">A</text>
+  <rect x="124" y="68" width="72" height="30" fill="#dcfce7" stroke="#22c55e" stroke-width="1"/>
+  <text x="160" y="88" font-size="10" font-weight="700" fill="#166534" text-anchor="middle">B</text>
+  <rect x="196" y="68" width="72" height="30" fill="#fef3c7" stroke="#f59e0b" stroke-width="1"/>
+  <text x="232" y="88" font-size="10" font-weight="700" fill="#92400e" text-anchor="middle">C</text>
+  <rect x="268" y="68" width="72" height="30" fill="#fee2e2" stroke="#ef4444" stroke-width="1"/>
+  <text x="304" y="88" font-size="10" font-weight="700" fill="#b91c1c" text-anchor="middle">D</text>
+  <rect x="340" y="68" width="72" height="30" fill="#dbeafe" stroke="#3b82f6" stroke-width="1"/>
+  <text x="376" y="88" font-size="10" font-weight="700" fill="#1e40af" text-anchor="middle">A</text>
+  <rect x="412" y="68" width="72" height="30" fill="#dcfce7" stroke="#22c55e" stroke-width="1"/>
+  <text x="448" y="88" font-size="10" font-weight="700" fill="#166534" text-anchor="middle">B</text>
+  <rect x="484" y="68" width="72" height="30" fill="#fef3c7" stroke="#f59e0b" stroke-width="1"/>
+  <text x="520" y="88" font-size="10" font-weight="700" fill="#92400e" text-anchor="middle">C</text>
+  <rect x="556" y="68" width="72" height="30" fill="#fee2e2" stroke="#ef4444" stroke-width="1"/>
+  <text x="592" y="88" font-size="10" font-weight="700" fill="#b91c1c" text-anchor="middle">D</text>
+  <path d="M 52 108 L 628 108" stroke="#94a3b8" stroke-width="1" fill="none"/>
+  <path d="M 52 103 L 52 113" stroke="#94a3b8" stroke-width="1" fill="none"/>
+  <path d="M 340 103 L 340 113" stroke="#94a3b8" stroke-width="1" fill="none"/>
+  <path d="M 628 103 L 628 113" stroke="#94a3b8" stroke-width="1" fill="none"/>
+  <text x="52" y="126" font-size="8.5" fill="#64748b">第 1 轮开始</text>
+  <text x="340" y="126" font-size="8.5" fill="#64748b">第 2 轮开始</text>
+  <text x="628" y="126" font-size="8.5" fill="#64748b" text-anchor="end">一轮 = N × Q</text>
+  <text x="20" y="146" font-size="8.8" fill="#475569">程序在片内没算完 → 暂停、释放处理机给别的用户，下一轮再继续；机器极快，每人都以为自己独占。</text>
+
+  <rect x="20" y="158" width="310" height="76" rx="4" fill="#eff6ff" stroke="#93c5fd" stroke-width="1"/>
+  <text x="32" y="178" font-size="10" font-weight="700" fill="#1e40af">响应时间 T ≈ Q × N</text>
+  <text x="32" y="196" font-size="8.8" fill="#1e40af">Q ＝ 时间片长度，N ＝ 用户数（就绪进程数）</text>
+  <text x="32" y="211" font-size="8.8" fill="#1e40af">Q 一定 → 用户越多，轮一圈越久，响应越慢</text>
+  <text x="32" y="226" font-size="8.8" fill="#1e40af">N 一定 → 时间片越大，响应同样越慢</text>
+  <rect x="346" y="158" width="314" height="76" rx="4" fill="#dcfce7" stroke="#86efac" stroke-width="1"/>
+  <text x="358" y="178" font-size="10" font-weight="700" fill="#166534">正文算例：100 个进程、响应 ≤ 2s</text>
+  <text x="358" y="198" font-size="10" font-weight="700" fill="#166534">Q ≤ 2s ÷ 100 = 20ms</text>
+  <text x="358" y="216" font-size="8.8" fill="#166534">加大时间片会使响应时间变差</text>
+  <text x="358" y="229" font-size="8.8" fill="#166534">优先级＋非抢占可让重要作业尽快响应</text>
+
+  <text x="20" y="252" font-size="9" fill="#64748b">四大特征（按顺序记）</text>
+  <rect x="20" y="260" width="155" height="60" rx="4" fill="#ffffff" stroke="#cbd5e1" stroke-width="1"/>
+  <text x="30" y="279" font-size="9.5" font-weight="700" fill="#334155">① 同时性（多路性）</text>
+  <text x="30" y="295" font-size="8.4" fill="#475569">多个终端用户同时</text>
+  <text x="30" y="309" font-size="8.4" fill="#475569">使用同一台计算机</text>
+  <rect x="183" y="260" width="155" height="60" rx="4" fill="#ffffff" stroke="#cbd5e1" stroke-width="1"/>
+  <text x="193" y="279" font-size="9.5" font-weight="700" fill="#334155">② 交互性</text>
+  <text x="193" y="295" font-size="8.4" fill="#475569">人机对话直接控制</text>
+  <text x="193" y="309" font-size="8.4" fill="#475569">程序运行、及时返回</text>
+  <rect x="346" y="260" width="155" height="60" rx="4" fill="#ffffff" stroke="#cbd5e1" stroke-width="1"/>
+  <text x="356" y="279" font-size="9.5" font-weight="700" fill="#334155">③ 独立性</text>
+  <text x="356" y="295" font-size="8.4" fill="#475569">各用户操作相互隔离</text>
+  <text x="356" y="309" font-size="8.4" fill="#475569">都感觉系统为自己独占</text>
+  <rect x="509" y="260" width="151" height="60" rx="4" fill="#ffffff" stroke="#cbd5e1" stroke-width="1"/>
+  <text x="519" y="279" font-size="9.5" font-weight="700" fill="#334155">④ 及时性</text>
+  <text x="519" y="295" font-size="8.4" fill="#475569">用户请求能在较短</text>
+  <text x="519" y="309" font-size="8.4" fill="#475569">时间内获得响应</text>
+
+  <rect x="20" y="330" width="640" height="56" rx="4" fill="#fef3c7" stroke="#f59e0b" stroke-width="1"/>
+  <text x="32" y="349" font-size="9" fill="#92400e"><tspan font-weight="700">与多道批处理的根本区别在目标</tspan>：分时求人机交互与快速响应，批处理求吞吐量与资源利用率、无须人工干预。</text>
+  <text x="32" y="365" font-size="9" fill="#92400e">分时的底子仍是<tspan font-weight="700">多道程序设计</tspan> —— 没有多道就谈不上轮流分时间片；静态页式管理、代码可重入与响应时间无关。</text>
+  <text x="32" y="379" font-size="8.5" fill="#92400e">采用「优先级＋非抢占式调度」改善响应时，次要作业也不致长期得不到响应。</text>
+</svg>

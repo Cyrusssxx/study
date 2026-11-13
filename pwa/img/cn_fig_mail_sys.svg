@@ -1,0 +1,66 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 680 400" width="680" height="400">
+  <defs>
+    <marker id="mailArr2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#475569"/>
+    </marker>
+  </defs>
+  <rect x="0" y="0" width="680" height="400" fill="#ffffff"/>
+  <rect x="20" y="10" width="640" height="26" rx="4" fill="#eff6ff" stroke="#93c5fd" stroke-width="1"/>
+  <text x="32" y="28" font-size="11" font-weight="700" fill="#1e40af">邮件收发六步：前段全是 SMTP 在「推」，最后一步才是 POP3/IMAP 在「拉」</text>
+
+  <rect x="20" y="46" width="486" height="20" rx="3" fill="#dbeafe" stroke="#93c5fd" stroke-width="1"/>
+  <text x="263" y="60" font-size="9" font-weight="700" fill="#1e40af" text-anchor="middle">SMTP 推：① ② ③ ④ ⑤（用户代理 → 服务器 → 服务器）</text>
+  <rect x="512" y="46" width="148" height="20" rx="3" fill="#dcfce7" stroke="#86efac" stroke-width="1"/>
+  <text x="586" y="60" font-size="9" font-weight="700" fill="#166534" text-anchor="middle">⑥ POP3/IMAP 拉</text>
+
+  <rect x="20" y="76" width="108" height="56" rx="4" fill="#f8fafc" stroke="#cbd5e1" stroke-width="1"/>
+  <text x="74" y="94" font-size="9.3" font-weight="700" fill="#334155" text-anchor="middle">① 发件人 UA</text>
+  <text x="74" y="109" font-size="8.2" fill="#475569" text-anchor="middle">撰写编辑邮件</text>
+  <text x="74" y="122" font-size="8.2" fill="#475569" text-anchor="middle">Outlook / 网页邮箱</text>
+  <path d="M 132 104 L 166 104" stroke="#475569" stroke-width="1.4" marker-end="url(#mailArr2)" fill="none"/>
+  <text x="149" y="96" font-size="7.8" fill="#1e40af" text-anchor="middle">SMTP</text>
+  <rect x="170" y="76" width="154" height="56" rx="4" fill="#eff6ff" stroke="#3b82f6" stroke-width="1.2"/>
+  <text x="247" y="94" font-size="9.3" font-weight="700" fill="#1e40af" text-anchor="middle">② 发送端邮件服务器</text>
+  <text x="247" y="109" font-size="8.2" fill="#1e40af" text-anchor="middle">③ 暂存在邮件缓存队列</text>
+  <text x="247" y="122" font-size="8.2" fill="#1e40af" text-anchor="middle">等待发送（暂存转发）</text>
+  <path d="M 328 104 L 372 104" stroke="#475569" stroke-width="1.4" marker-end="url(#mailArr2)" fill="none"/>
+  <text x="350" y="96" font-size="7.8" fill="#1e40af" text-anchor="middle">SMTP</text>
+  <rect x="376" y="76" width="154" height="56" rx="4" fill="#eff6ff" stroke="#3b82f6" stroke-width="1.2"/>
+  <text x="453" y="94" font-size="9.3" font-weight="700" fill="#1e40af" text-anchor="middle">④ 接收端邮件服务器</text>
+  <text x="453" y="109" font-size="8.2" fill="#1e40af" text-anchor="middle">⑤ 存入收件人的邮箱</text>
+  <text x="453" y="122" font-size="8.2" fill="#1e40af" text-anchor="middle">每个收件人各有邮箱</text>
+  <path d="M 534 104 L 566 104" stroke="#475569" stroke-width="1.4" marker-end="url(#mailArr2)" fill="none"/>
+  <text x="550" y="96" font-size="7.8" fill="#166534" text-anchor="middle">拉</text>
+  <rect x="570" y="76" width="90" height="56" rx="4" fill="#f0fdf4" stroke="#22c55e" stroke-width="1.2"/>
+  <text x="615" y="94" font-size="9.3" font-weight="700" fill="#166534" text-anchor="middle">⑥ 收件人 UA</text>
+  <text x="615" y="109" font-size="8.2" fill="#166534" text-anchor="middle">POP3 / IMAP</text>
+  <text x="615" y="122" font-size="8.2" fill="#166534" text-anchor="middle">下载阅读</text>
+
+  <text x="20" y="152" font-size="9" fill="#64748b">六步必背（与上面的编号一一对应）</text>
+  <rect x="20" y="160" width="310" height="82" rx="4" fill="#ffffff" stroke="#cbd5e1" stroke-width="1"/>
+  <text x="30" y="178" font-size="8.5" fill="#334155">① 发件人通过用户代理撰写编辑邮件</text>
+  <text x="30" y="195" font-size="8.5" fill="#334155">② UA 用 SMTP 把邮件送到发送端服务器</text>
+  <text x="30" y="212" font-size="8.5" fill="#334155">③ 发送端服务器把邮件暂存缓存队列</text>
+  <text x="30" y="229" font-size="8.5" fill="#334155">　　等待发送（收发双方不必同时在线）</text>
+  <rect x="346" y="160" width="314" height="82" rx="4" fill="#ffffff" stroke="#cbd5e1" stroke-width="1"/>
+  <text x="356" y="178" font-size="8.5" fill="#334155">④ SMTP 客户与对方 SMTP 服务器建 TCP 连接</text>
+  <text x="356" y="195" font-size="8.5" fill="#334155">　　依次把队列里的邮件直接发过去</text>
+  <text x="356" y="212" font-size="8.5" fill="#334155">⑤ 接收端服务器把邮件存入收件人邮箱</text>
+  <text x="356" y="229" font-size="8.5" fill="#334155">⑥ 收件人用 POP3 / IMAP 下载邮件</text>
+
+  <rect x="20" y="252" width="310" height="72" rx="4" fill="#f0fdf4" stroke="#86efac" stroke-width="1"/>
+  <text x="32" y="271" font-size="9.6" font-weight="700" fill="#166534">服务器 A → B 发送时</text>
+  <text x="32" y="289" font-size="8.7" fill="#166534">A 扮演 <tspan font-weight="700">SMTP 客户</tspan>（主动建连接、推送邮件）</text>
+  <text x="32" y="305" font-size="8.7" fill="#166534">B 扮演 <tspan font-weight="700">SMTP 服务器</tspan>（被动接收、存入邮箱）</text>
+  <text x="32" y="319" font-size="8.4" fill="#166534">服务器既能收也能发，不是只有一种身份</text>
+  <rect x="346" y="252" width="314" height="72" rx="4" fill="#eff6ff" stroke="#93c5fd" stroke-width="1"/>
+  <text x="358" y="271" font-size="9.6" font-weight="700" fill="#1e40af">反过来 B → A 时</text>
+  <text x="358" y="289" font-size="8.7" fill="#1e40af">B 变成 SMTP 客户、A 变成 SMTP 服务器</text>
+  <text x="358" y="305" font-size="8.7" fill="#1e40af">同一台机器<tspan font-weight="700">两种角色都要做</tspan> —— 双重角色</text>
+  <text x="358" y="319" font-size="8.4" fill="#1e40af">SMTP 不支持「服务器 → 用户代理」这一段</text>
+
+  <rect x="20" y="334" width="640" height="56" rx="4" fill="#fef3c7" stroke="#f59e0b" stroke-width="1"/>
+  <text x="32" y="352" font-size="8.9" fill="#92400e"><tspan font-weight="700">一次收发只走两种协议</tspan>：2012 真题答案「SMTP、SMTP、POP3」就是按这个推／拉分界来的。</text>
+  <text x="32" y="368" font-size="8.9" fill="#92400e"><tspan font-weight="700">暂存转发是关键设计</tspan>：先入缓存队列再找机会直连对方服务器，所以收发双方不必同时在线。</text>
+  <text x="32" y="383" font-size="8.9" fill="#92400e">SMTP 只认 <tspan font-weight="700">7 位 ASCII</tspan>；图像、语音、视频要靠 MIME 扩展，MIME 不是独立协议，只是对邮件格式的补充。</text>
+</svg>
