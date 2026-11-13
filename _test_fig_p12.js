@@ -1,7 +1,7 @@
 /* 2026-11-13 第十二批（继续 CO / OS / CN 三科）：4 张自绘图 + 5 个判据黄框。
  * 图：CO 7.2.4 I/O 端口编址 · OS 2.1.6 四种进程通信 · CN 3.5.1 信道划分 · OS 2.3.6 管程与条件变量；
  * 纯判据框：CN 6.4.1 邮件收发 · CO 5.2.1 取指与中断 · OS 1.1.2 三大角色 · OS 1.2.3 响应时间 · CN 2.3.1 中继器。
- * 锁精确总量：fig-img 173（co40/os63/cn39/ds31）、黄框 308（74/77/51/106）。
+ * 锁精确总量：fig-img 177（co41/os65/cn40/ds31）、黄框 308（74/77/51/106）。
  * 行号双基线（本批零漂移）：CO 1819 / OS 3660 / CN 1108 / DS 1173·1175；jsdom 1971 / 3668 / 1220 / 1330。
  */
 const fs = require('fs');
@@ -36,9 +36,9 @@ function allHtmls(sub) {
   return a;
 }
 const SVGS = {
-  co: ['co_fig_port_addr'],
-  os: ['os_fig_ipc', 'os_fig_monitor'],
-  cn: ['cn_fig_multiplex'],
+  co: ['co_fig_port_addr', 'co_fig_regs'],
+  os: ['os_fig_ipc', 'os_fig_monitor', 'os_fig_critical', 'os_fig_lut'],
+  cn: ['cn_fig_multiplex', 'cn_fig_lpm'],
 };
 const ALL_SVGS = [].concat(...Object.values(SVGS));
 const STAR = '<h4>★ 高频真题考点与陷阱</h4>';
@@ -63,6 +63,10 @@ const LANDING = [
   ['os', '2.1.6', 'os_fig_ipc'],
   ['cn', '3.5.1', 'cn_fig_multiplex'],
   ['os', '2.3.6', 'os_fig_monitor'],
+  ['co', '5.1.3', 'co_fig_regs'],
+  ['os', '2.3.1', 'os_fig_critical'],
+  ['cn', '4.7.3', 'cn_fig_lpm'],
+  ['os', '5.2.1', 'os_fig_lut'],
 ];
 for (const [sub, num, name] of LANDING) {
   const h = secHtml(sub, num);
@@ -87,6 +91,18 @@ check('OS 2.1.6 图在「信号」段之后、★ 之前',
 check('CN 3.5.1 图在三大类访问控制之后、★ 之前',
   secHtml('cn', '3.5.1').indexOf('cn_fig_multiplex.svg') > secHtml('cn', '3.5.1').indexOf('轮询访问') &&
   secHtml('cn', '3.5.1').indexOf('cn_fig_multiplex.svg') < secHtml('cn', '3.5.1').indexOf(STAR), true);
+check('CO 5.1.3 图在寄存器堆段之后、★ 之前',
+  secHtml('co', '5.1.3').indexOf('co_fig_regs.svg') > secHtml('co', '5.1.3').indexOf('寄存器堆与 Cache') &&
+  secHtml('co', '5.1.3').indexOf('co_fig_regs.svg') < secHtml('co', '5.1.3').indexOf(STAR), true);
+check('OS 2.3.1 图在临界资源段之后、★ 之前',
+  secHtml('os', '2.3.1').indexOf('os_fig_critical.svg') > secHtml('os', '2.3.1').indexOf('不属于临界资源') &&
+  secHtml('os', '2.3.1').indexOf('os_fig_critical.svg') < secHtml('os', '2.3.1').indexOf(STAR), true);
+check('CN 4.7.3 图在跨网段寻址段之后、★ 之前',
+  secHtml('cn', '4.7.3').indexOf('cn_fig_lpm.svg') > secHtml('cn', '4.7.3').indexOf('逐跳换') &&
+  secHtml('cn', '4.7.3').indexOf('cn_fig_lpm.svg') < secHtml('cn', '4.7.3').indexOf(STAR), true);
+check('OS 5.2.1 图紧跟「三、LUT」标题之后（不是整节末尾）',
+  secHtml('os', '5.2.1').indexOf('os_fig_lut.svg') > secHtml('os', '5.2.1').indexOf('三、逻辑设备名到物理设备名'),
+  true);
 check('OS 2.3.6 图在条件变量段之后、易错清单之前',
   secHtml('os', '2.3.6').indexOf('os_fig_monitor.svg') > secHtml('os', '2.3.6').indexOf('Pthreads') &&
   secHtml('os', '2.3.6').indexOf('os_fig_monitor.svg') < secHtml('os', '2.3.6').indexOf('易错：管程的互斥'), true);
@@ -113,6 +129,10 @@ const SAME = [
   ['os', '2.1.6', 'os_fig_ipc', ['共享存储', '消息传递', '管道', '信号', '环形缓冲区', '半双工', '信箱', 'SIGILL']],
   ['cn', '3.5.1', 'cn_fig_multiplex', ['FDM', 'TDM', 'WDM', 'CDM', '正交', '内积', '时隙', '码片']],
   ['os', '2.3.6', 'os_fig_monitor', ['管程', '条件变量', 'wait', 'signal', '互斥', '共享数据结构', '过程']],
+  ['co', '5.1.3', 'co_fig_regs', ['通用寄存器', '程序计数器', '指令寄存器', 'MAR', 'MDR', '标志寄存器']],
+  ['os', '2.3.1', 'os_fig_critical', ['临界资源', '临界区', '进入区', '退出区', '剩余区', '同步', '互斥']],
+  ['cn', '4.7.3', 'cn_fig_lpm', ['路由表', '下一跳', '最长前缀匹配', '掩码']],
+  ['os', '5.2.1', 'os_fig_lut', ['设备独立性', '逻辑设备名', '逻辑设备表', 'LUT', '驱动程序']],
 ];
 for (const [sub, num, name, kws] of SAME) {
   const f = read('pwa/img/' + name + '.svg');
@@ -212,7 +232,7 @@ for (const sub of SUBS) {
 }
 
 // ---------- 6. 精确总量 / 三方一致 / 序列化 ----------
-const FIG_N = { co: 40, os: 63, cn: 39, ds: 31 };
+const FIG_N = { co: 41, os: 65, cn: 40, ds: 31 };
 const CALL_N = { co: 74, os: 77, cn: 51, ds: 106 };
 for (const sub of SUBS) {
   check(sub + ' 配图 ' + FIG_N[sub] + ' 张（P12 精确总量）', (RAW[sub].match(/fig-img/g) || []).length, FIG_N[sub]);
@@ -225,7 +245,7 @@ for (const sub of SUBS) {
   check(sub + ' 图引用 / 文件 / SW 预缓存三方一致',
     refs.every(r => fs.existsSync(path.join(ROOT, 'pwa', r)) && sw.includes("'" + r + "'")), true);
 }
-check('全库 fig-img 173 张', SUBS.reduce((n, s) => n + (RAW[s].match(/fig-img/g) || []).length, 0), 173);
+check('全库 fig-img 177 张', SUBS.reduce((n, s) => n + (RAW[s].match(/fig-img/g) || []).length, 0), 177);
 check('全库黄框 308 个', SUBS.reduce((n, s) => n + (RAW[s].match(/class=\\"key-callout\\"/g) || []).length, 0), 308);
 const STRUCT = { co: 0, ds: 0, cn: 11, os: 14 };
 check('内联 struct-fig 总量未变（CO0/DS0/CN11/OS14）',
@@ -257,8 +277,8 @@ for (const sub of SUBS) {
 }
 if (guardDone === 3) {
   check('三科 before 备份都参与了纯插入校验', guardDone, 3);
-  check('变化的 9 个小节全是纯插入（0 删除 / 0 改写）', guardBad, 0);
-  check('变化小节数 = 9', changed, 9);
+  check('变化的 13 个小节全是纯插入（0 删除 / 0 改写）', guardBad, 0);
+  check('变化小节数 = 13', changed, 13);
 } else {
   console.log('SKIP 纯插入守卫：缺少三科 before 备份（归档目录不在 git 中）');
 }

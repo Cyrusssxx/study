@@ -1,0 +1,67 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 680 404" width="680" height="404" font-family="-apple-system,BlinkMacSystemFont,'Segoe UI','Microsoft YaHei',sans-serif">
+  <defs>
+    <marker id="crArrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#475569"/>
+    </marker>
+  </defs>
+  <rect x="0" y="0" width="680" height="404" fill="#ffffff"/>
+  <text x="20" y="26" font-size="16" font-weight="700" fill="#1e3a8a">临界区四段 · 同步管「按序」，互斥管「独占」</text>
+  <text x="20" y="46" font-size="10.5" fill="#64748b">临界资源＝同一时刻只准一个进程用的东西；临界区＝每个进程里访问它的那段代码</text>
+
+  <!-- 四段条 -->
+  <text x="24" y="76" font-size="10" font-weight="700" fill="#0f172a">一个进程访问临界资源的四段代码</text>
+  <rect x="24" y="84" width="146" height="46" rx="4" fill="#e2e8f0" stroke="#94a3b8" stroke-width="1.2"/>
+  <text x="97" y="103" font-size="10" font-weight="700" fill="#334155" text-anchor="middle">进入区</text>
+  <text x="97" y="119" font-size="8.5" fill="#475569" text-anchor="middle">检查能否进入，置「正在访问」</text>
+
+  <rect x="176" y="84" width="146" height="46" rx="4" fill="#fee2e2" stroke="#f87171" stroke-width="1.3"/>
+  <text x="249" y="103" font-size="10" font-weight="700" fill="#991b1b" text-anchor="middle">临界区</text>
+  <text x="249" y="119" font-size="8.5" fill="#991b1b" text-anchor="middle">真正访问临界资源的那几句</text>
+
+  <rect x="328" y="84" width="146" height="46" rx="4" fill="#dcfce7" stroke="#4ade80" stroke-width="1.2"/>
+  <text x="401" y="103" font-size="10" font-weight="700" fill="#166534" text-anchor="middle">退出区</text>
+  <text x="401" y="119" font-size="8.5" fill="#166534" text-anchor="middle">清标志，把资源还回去</text>
+
+  <rect x="480" y="84" width="176" height="46" rx="4" fill="#f1f5f9" stroke="#cbd5e1" stroke-width="1.2"/>
+  <text x="568" y="103" font-size="10" font-weight="700" fill="#475569" text-anchor="middle">剩余区</text>
+  <text x="568" y="119" font-size="8.5" fill="#64748b" text-anchor="middle">其余代码，与资源无关</text>
+
+  <path d="M 170 107 L 174 107" fill="none" stroke="#475569" stroke-width="1.4" marker-end="url(#crArrow)"/>
+  <path d="M 322 107 L 326 107" fill="none" stroke="#475569" stroke-width="1.4" marker-end="url(#crArrow)"/>
+  <path d="M 474 107 L 478 107" fill="none" stroke="#475569" stroke-width="1.4" marker-end="url(#crArrow)"/>
+
+  <!-- 同步 -->
+  <rect x="24" y="146" width="312" height="150" rx="6" fill="#eff6ff" stroke="#bfdbfe" stroke-width="1"/>
+  <text x="40" y="168" font-size="11" font-weight="700" fill="#1e3a8a">同步：直接制约 · 源于协作</text>
+  <text x="40" y="188" font-size="9.5" fill="#334155">为完成同一个任务，进程之间必须按次序走</text>
+
+  <rect x="40" y="198" width="70" height="26" rx="4" fill="#dbeafe" stroke="#60a5fa" stroke-width="1.1"/>
+  <text x="75" y="215" font-size="9.5" fill="#1e40af" text-anchor="middle">进程 A</text>
+  <rect x="128" y="198" width="90" height="26" rx="4" fill="#bfdbfe" stroke="#3b82f6" stroke-width="1.2"/>
+  <text x="173" y="215" font-size="9" fill="#1e3a8a" text-anchor="middle">单缓冲区</text>
+  <rect x="236" y="198" width="70" height="26" rx="4" fill="#dbeafe" stroke="#60a5fa" stroke-width="1.1"/>
+  <text x="271" y="215" font-size="9.5" fill="#1e40af" text-anchor="middle">进程 B</text>
+  <path d="M 112 211 L 126 211" fill="none" stroke="#2563eb" stroke-width="1.2" marker-end="url(#crArrow)"/>
+  <path d="M 220 211 L 234 211" fill="none" stroke="#2563eb" stroke-width="1.2" marker-end="url(#crArrow)"/>
+  <text x="40" y="242" font-size="9" fill="#1e40af">缓冲空 → B 没数据可用要阻塞；A 放入后唤醒 B</text>
+  <text x="40" y="257" font-size="9" fill="#1e40af">缓冲满 → A 写不进要阻塞；B 取走后再唤醒 A</text>
+  <text x="40" y="278" font-size="9" fill="#0f766e" font-weight="700">判据：A 必须先做完、B 才能接着来</text>
+
+  <!-- 互斥 -->
+  <rect x="348" y="146" width="308" height="150" rx="6" fill="#fef9f3" stroke="#fcd9b6" stroke-width="1"/>
+  <text x="364" y="168" font-size="11" font-weight="700" fill="#9a3412">互斥：间接制约 · 源于竞争</text>
+  <text x="364" y="188" font-size="9.5" fill="#334155">同一时刻只准一个进程用资源，其余排队</text>
+
+  <rect x="364" y="198" width="276" height="26" rx="4" fill="#fef3c7" stroke="#fbbf24" stroke-width="1.2"/>
+  <text x="502" y="215" font-size="9.5" fill="#92400e" text-anchor="middle">打印机（临界资源，只此一台）</text>
+  <text x="364" y="242" font-size="9" fill="#92400e">B 正在打印 → A 想打，只能进阻塞态</text>
+  <text x="364" y="257" font-size="9" fill="#92400e">B 打完释放 → 系统唤醒 A，A 转就绪态</text>
+  <text x="364" y="278" font-size="9" fill="#0f766e" font-weight="700">判据：不管谁先谁后，就是不能同时进</text>
+
+  <!-- 底部：谁算临界资源 + 生产者消费者 -->
+  <rect x="24" y="308" width="632" height="76" rx="6" fill="#f0fdf4" stroke="#bbf7d0" stroke-width="1"/>
+  <text x="40" y="327" font-size="10" font-weight="700" fill="#166534">判临界资源只看「同一时刻能否被多个进程共享使用」</text>
+  <text x="40" y="345" font-size="9" fill="#166534">算：打印机、公用队列、共享变量、共享缓冲区</text>
+  <text x="40" y="361" font-size="9" fill="#991b1b">不算：磁盘、可重入代码、非共享数据 —— 这三个最爱被误判成临界资源</text>
+  <text x="40" y="377" font-size="9" fill="#b45309">生产者-消费者同时有两种关系：缓冲区是共享临界资源（要互斥），消费者必须等生产者（要同步）</text>
+</svg>

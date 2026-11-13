@@ -1,0 +1,73 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 680 404" width="680" height="404" font-family="-apple-system,BlinkMacSystemFont,'Segoe UI','Microsoft YaHei',sans-serif">
+  <defs>
+    <marker id="luArrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#475569"/>
+    </marker>
+    <marker id="luArrowG" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#059669"/>
+    </marker>
+  </defs>
+  <rect x="0" y="0" width="680" height="404" fill="#ffffff"/>
+  <text x="20" y="26" font-size="16" font-weight="700" fill="#1e3a8a">设备独立性 · 程序只说逻辑设备名，LUT 负责换成物理设备</text>
+  <text x="20" y="46" font-size="10.5" fill="#64748b">系统只认物理设备号，所以「逻辑名 → 物理名」这一步映射必须由设备独立性软件完成</text>
+
+  <!-- 映射链路 -->
+  <rect x="24" y="62" width="152" height="52" rx="5" fill="#dbeafe" stroke="#60a5fa" stroke-width="1.2"/>
+  <text x="100" y="82" font-size="10" font-weight="700" fill="#1e40af" text-anchor="middle">应用程序</text>
+  <text x="100" y="98" font-size="8.5" fill="#1e40af" text-anchor="middle">只写逻辑设备名</text>
+
+  <path d="M 178 88 L 196 88" fill="none" stroke="#475569" stroke-width="1.3" marker-end="url(#luArrow)"/>
+
+  <rect x="200" y="62" width="160" height="52" rx="5" fill="#eff6ff" stroke="#93c5fd" stroke-width="1.2"/>
+  <text x="280" y="82" font-size="10" font-weight="700" fill="#1e40af" text-anchor="middle">设备独立性软件</text>
+  <text x="280" y="98" font-size="8.5" fill="#1e40af" text-anchor="middle">（与设备无关层）</text>
+
+  <path d="M 362 88 L 380 88" fill="none" stroke="#475569" stroke-width="1.3" marker-end="url(#luArrow)"/>
+
+  <rect x="384" y="62" width="272" height="52" rx="5" fill="#fef3c7" stroke="#fbbf24" stroke-width="1.3"/>
+  <text x="520" y="80" font-size="10" font-weight="700" fill="#92400e" text-anchor="middle">逻辑设备表 LUT</text>
+  <text x="520" y="97" font-size="8.5" fill="#92400e" text-anchor="middle">逻辑设备名 → 物理设备名 + 驱动入口</text>
+
+  <!-- LUT 表 -->
+  <rect x="384" y="126" width="272" height="112" rx="4" fill="#ffffff" stroke="#fbbf24" stroke-width="1.2"/>
+  <rect x="384" y="126" width="272" height="24" rx="4" fill="#fde68a" stroke="#f59e0b" stroke-width="1"/>
+  <text x="400" y="143" font-size="9" font-weight="700" fill="#78350f">逻辑设备名</text>
+  <text x="496" y="143" font-size="9" font-weight="700" fill="#78350f">物理设备</text>
+  <text x="580" y="143" font-size="9" font-weight="700" fill="#78350f">驱动入口</text>
+  <line x1="384" y1="150" x2="656" y2="150" stroke="#fcd34d" stroke-width="1"/>
+  <text x="400" y="168" font-size="9" fill="#334155">「打印机」</text>
+  <text x="496" y="168" font-size="9" fill="#334155">LPT1</text>
+  <text x="580" y="168" font-size="9" fill="#334155">lp_drv</text>
+  <line x1="384" y1="178" x2="656" y2="178" stroke="#f1f5f9" stroke-width="1"/>
+  <text x="400" y="196" font-size="9" fill="#334155">「打印机」</text>
+  <text x="496" y="196" font-size="9" fill="#334155">USB001（换了）</text>
+  <text x="580" y="196" font-size="9" fill="#334155">usb_drv</text>
+  <text x="396" y="228" font-size="8.5" fill="#92400e">同一个逻辑名可以指向不同物理设备 —— 程序不用改</text>
+
+  <!-- 下游 -->
+  <path d="M 520 238 L 520 256" fill="none" stroke="#475569" stroke-width="1.3" marker-end="url(#luArrow)"/>
+  <rect x="384" y="258" width="272" height="34" rx="4" fill="#f8fafc" stroke="#94a3b8" stroke-width="1.1"/>
+  <text x="520" y="279" font-size="9.5" fill="#334155" text-anchor="middle">设备驱动程序 → 设备控制器 → 物理设备</text>
+
+  <!-- 左卡：优点 -->
+  <rect x="24" y="126" width="336" height="172" rx="6" fill="#f0fdf4" stroke="#bbf7d0" stroke-width="1"/>
+  <text x="40" y="148" font-size="10.5" font-weight="700" fill="#166534">引入设备独立性换来三件事</text>
+
+  <text x="40" y="170" font-size="9.5" font-weight="700" fill="#166534">① 简化编程</text>
+  <text x="40" y="185" font-size="9" fill="#334155">把设备细节留给操作系统，程序不面向具体型号</text>
+
+  <text x="40" y="207" font-size="9.5" font-weight="700" fill="#166534">② 换设备不必改程序</text>
+  <text x="40" y="222" font-size="9" fill="#334155">逻辑设备名不变，只改 LUT 里那一行映射</text>
+
+  <text x="40" y="244" font-size="9.5" font-weight="700" fill="#166534">③ 上层代码可复用</text>
+  <text x="40" y="259" font-size="9" fill="#334155">统一的抽象 I/O 接口，一类设备写一份逻辑</text>
+
+  <text x="40" y="278" font-size="9" fill="#b45309">与驱动的分界不是死线：缓冲、部分差错处理两边都可能放</text>
+
+  <!-- 底部判据 -->
+  <rect x="24" y="304" width="632" height="80" rx="6" fill="#eff6ff" stroke="#bfdbfe" stroke-width="1"/>
+  <text x="40" y="323" font-size="9.5" font-weight="700" fill="#1e3a8a">三条判据</text>
+  <text x="40" y="341" font-size="9" fill="#1e40af">① 设备独立性＝用逻辑设备名做 I/O，不指定物理设备；映射靠 LUT</text>
+  <text x="40" y="357" font-size="9" fill="#1e40af">② 这一层在设备驱动程序之上，是内核 I/O 子系统的最上层，只做各类设备共有的公共操作</text>
+  <text x="40" y="373" font-size="9" fill="#991b1b">③ 它不负责启动设备、不碰端口 —— 「端口→内核缓冲区」是驱动程序的活（对比 5.2.5）</text>
+</svg>
