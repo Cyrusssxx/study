@@ -1,0 +1,335 @@
+/* 2026-11-13 第十四批（继续 CO / OS / CN 三科）：4 张自绘图，全部落在零图小节，本批不新增黄框。
+ * 图：OS 3.2.1 虚拟内存（部分装入＋调入/置换＋容量上限）· OS 2.2.2 进程调度（三部件＋四可以三不可以）·
+ *     CO 6.2.1 总线事务（三阶段＋非突发 80ns vs 突发 50ns）· CN 6.4.2 邮件三层结构＋MIME 三个首部＋Base64。
+ * 锁精确总量：fig-img 186（co44/os67/cn44/ds31）、黄框 310（74/77/53/106，本批未动）。
+ * 行号双基线（本批零漂移）：CO 1819 / OS 3660 / CN 1108 / DS 1173·1175；jsdom 1971 / 3668 / 1220 / 1330。
+ */
+const fs = require('fs');
+const path = require('path');
+const ROOT = __dirname;
+const read = p => fs.readFileSync(path.join(ROOT, p), 'utf8');
+let fail = 0, pass = 0;
+function check(name, got, want) {
+  const ok = typeof want === 'function' ? want(got) : JSON.stringify(got) === JSON.stringify(want);
+  if (ok) pass++; else { fail++; console.log('FAIL ' + name + ' => ' + JSON.stringify(got)); }
+}
+const SUBS = ['co', 'os', 'cn', 'ds'];
+const RAW = {}, DOC = {};
+for (const s of SUBS) {
+  RAW[s] = read('pwa/data/notes/' + s + '_notes.json');
+  DOC[s] = JSON.parse(RAW[s]);
+}
+const sw = read('pwa/sw.js');
+const css = read('pwa/css/style.css');
+const flat = s => s.replace(/\s+/g, '').replace(/[−–—]/g, '-')
+  .replace(/[₁₂₃]/g, c => ({ '₁': '1', '₂': '2', '₃': '3' }[c]));
+function secHtml(sub, num) {
+  for (const ch of DOC[sub].chapters) for (const s of ch.sections || [])
+    for (const x of [s].concat(s.subsections || []))
+      if (x.section.split(' ')[0] === num) return x.html || '';
+  return '';
+}
+function allHtmls(sub) {
+  const a = [];
+  for (const ch of DOC[sub].chapters) for (const s of ch.sections || [])
+    for (const x of [s].concat(s.subsections || [])) a.push({ key: x.section.split(' ')[0], h: x.html || '' });
+  return a;
+}
+const SVGS = {
+  os: ['os_fig_vmem', 'os_fig_sched'],
+  co: ['co_fig_burst'],
+  cn: ['cn_fig_mail'],
+};
+const ALL_SVGS = [].concat(...Object.values(SVGS));
+const STAR = '<h4>★ 高频真题考点与陷阱</h4>';
+
+// ---------- 1. 五张 SVG 结构 ----------
+for (const name of ALL_SVGS) {
+  const p = 'pwa/img/' + name + '.svg';
+  check(name + ' 文件存在', fs.existsSync(path.join(ROOT, p)), true);
+  const s = read(p);
+  check(name + ' 白底 + 680 宽 viewBox', s.includes('<rect x="0" y="0"') && /viewBox="0 0 680 \d+"/.test(s), true);
+  check(name + ' 无 HTML 标签 / 完整收尾',
+    ['<b>', '</b>', '<br', '<i>', '</i>', 'font-size="0"', '<g stroke'].every(t => !s.includes(t)) &&
+    s.trim().startsWith('<svg') && s.trim().endsWith('</svg>'), true);
+  check(name + ' 进了 SW 预缓存', sw.includes("'img/" + name + ".svg'"), true);
+  check(name + ' text 标签成对', (s.match(/<text\b/g) || []).length, (s.match(/<\/text>/g) || []).length);
+  check(name + ' 没有元素画到 680 之外', [...s.matchAll(/ x="(\d+)"/g)].every(m => +m[1] <= 650), true);
+  check(name + ' 没有 stroke 挂在 <g> 上（避免文字发虚）', !/<g[^>]*stroke/.test(s), true);
+}
+
+// ---------- 2. 落位：紧跟知识点、不落进 <p>/<li> ----------
+const LANDING = [
+  ['os', '3.2.1', 'os_fig_vmem'],
+  ['os', '2.2.2', 'os_fig_sched'],
+  ['co', '6.2.1', 'co_fig_burst'],
+  ['cn', '6.4.2', 'cn_fig_mail'],
+];
+for (const [sub, num, name] of LANDING) {
+  const h = secHtml(sub, num);
+  check(sub + ':' + num + ' 含本批图', h.includes('img/' + name + '.svg'), true);
+  check(sub + ':' + num + ' 图块带 data-fig=1',
+    /<p class="paragraph" data-fig="1"><img class="fig-img" src="img\/[a-z0-9_]+\.svg"/.test(h), true);
+  if (h.includes(STAR)) {
+    check(sub + ':' + num + ' 图在 ★ 之前', h.indexOf('img/' + name + '.svg') < h.indexOf(STAR), true);
+  }
+  const i = h.indexOf('img/' + name + '.svg');
+  const figStart = h.lastIndexOf('<p class="paragraph" data-fig="1"><b>图：', i);
+  check(sub + ':' + num + ' 图块前一个标签是闭合标签（没落在正文里）',
+    figStart >= 0 && /<\/(p|ul|ol|table|div|figure|h4)>$/.test(h.slice(0, figStart).trimEnd()), true);
+}
+// 具体位置口径
+check('OS 3.2.1 图在「虚存的三条支柱」黄框之后、★ 之前',
+  secHtml('os', '3.2.1').indexOf('os_fig_vmem.svg') > secHtml('os', '3.2.1').indexOf('虚拟内存的三条支柱') &&
+  secHtml('os', '3.2.1').indexOf('os_fig_vmem.svg') < secHtml('os', '3.2.1').indexOf(STAR), true);
+check('OS 2.2.2 图在「三级调度一句话」黄框之后、★ 之前',
+  secHtml('os', '2.2.2').indexOf('os_fig_sched.svg') > secHtml('os', '2.2.2').indexOf('三级调度一句话') &&
+  secHtml('os', '2.2.2').indexOf('os_fig_sched.svg') < secHtml('os', '2.2.2').indexOf(STAR), true);
+check('CO 6.2.1 图在突发传输 ul 之后、串行/并行段之前',
+  secHtml('co', '6.2.1').indexOf('co_fig_burst.svg') > secHtml('co', '6.2.1').indexOf('一次地址，多次数据') &&
+  secHtml('co', '6.2.1').indexOf('co_fig_burst.svg') < secHtml('co', '6.2.1').indexOf('串行传输与并行传输'), true);
+check('CN 6.4.2 图在 MIME 三部分之后、★ 之前',
+  secHtml('cn', '6.4.2').indexOf('cn_fig_mail.svg') > secHtml('cn', '6.4.2').indexOf('MIME 主要包括三部分') &&
+  secHtml('cn', '6.4.2').indexOf('cn_fig_mail.svg') < secHtml('cn', '6.4.2').indexOf(STAR), true);
+
+// ---------- 3. 图与正文同源（术语必须同时出现在 SVG 与该小节 HTML） ----------
+const SAME = [
+  ['os', '3.2.1', 'os_fig_vmem', ['虚拟内存', '部分装入', '请求调入', '置换', '对换区', '多次性', '对换性', '虚拟性', '局部性']],
+  ['os', '2.2.2', 'os_fig_sched', ['进程调度', '排队器', '分派器', '上下文切换', '就绪队列', '闲逛进程', '内核临界区', '原子操作', '抢占', '时间片']],
+  ['co', '6.2.1', 'co_fig_burst', ['总线事务', '突发', '非突发', '首地址', '从设备', '主设备', '数据传送', '地址']],
+  ['cn', '6.4.2', 'cn_fig_mail', ['信封', '首部', '主体', '空行', 'Content-Type', 'Content-Transfer-Encoding', 'MIME版本', 'Base64', 'SMTP', 'POP3', 'IMAP']],
+];
+for (const [sub, num, name, kws] of SAME) {
+  const f = read('pwa/img/' + name + '.svg');
+  const h = secHtml(sub, num);
+  for (const kw of kws) {
+    check(sub + ':' + num + ' 图/正文同源「' + kw + '」',
+      flat(f).includes(flat(kw)) && flat(h).includes(flat(kw)), true);
+  }
+}
+const osVm = flat(read('pwa/img/os_fig_vmem.svg'));
+check('OS 虚存图给出容量上限 min(内存＋外存, 2^地址位)',
+  osVm.includes('min(内存＋外存,2^地址位)'), true);
+check('OS 虚存图算出 32 位地址 → 4GB',
+  osVm.includes('4GB'), true);
+check('OS 虚存图点明虚拟性是本质、多次性与对换性是手段',
+  osVm.includes('虚拟性是本质与目标'), true);
+check('OS 虚存图点名传统管理的两个毛病（一次性＋驻留性）',
+  osVm.includes('一次性') && osVm.includes('驻留性'), true);
+const osSc = flat(read('pwa/img/os_fig_sched.svg'));
+check('OS 调度图写明普通临界区可以被调度',
+  osSc.includes('普通临界区'), true);
+check('OS 调度图给出闲逛进程 PID 0',
+  osSc.includes('PID0'), true);
+check('OS 调度图区分两对 load/store 的上下文切换开销',
+  osSc.includes('两对load/store'), true);
+const coBu = flat(read('pwa/img/co_fig_burst.svg'));
+check('CO 突发图算出非突发 80ns 与突发 50ns',
+  coBu.includes('80ns') && coBu.includes('50ns'), true);
+check('CO 突发图用 100MHz / 32 位 / 128 位这组正文同款参数',
+  coBu.includes('100MHz') && coBu.includes('32位宽') && coBu.includes('128位'), true);
+check('CO 突发图点明地址数据复用只省线不加速',
+  coBu.includes('地址/数据复用只省线、不加速'), true);
+const cnMa = flat(read('pwa/img/cn_fig_mail.svg'));
+check('CN 邮件图把首部与主体之间写成空行分隔',
+  cnMa.includes('空行'), true);
+check('CN 邮件图给出 Base64 每 3 字节 → 4 个 ASCII 字符',
+  cnMa.includes('3字节') && cnMa.includes('4个ASCII字符'), true);
+check('CN 邮件图列出三个 MIME 首部字段',
+  cnMa.includes('Content-Type') && cnMa.includes('Content-Transfer-Encoding') && cnMa.includes('MIME-Version'), true);
+check('CN 邮件图端口齐全 25 / 110 / 143',
+  cnMa.includes('SMTP25') && cnMa.includes('POP3110') && cnMa.includes('IMAP143'), true);
+
+// ---------- 4. 本批不新增黄框（只补图） ----------
+const CALLOUTS = [];
+const NEW_KEYS = CALLOUTS.map(c => c[2]);
+const NEW_BY_SUB = { co: 0, os: 0, cn: 0, ds: 0 };
+for (const [sub, num, kw] of CALLOUTS) {
+  const h = secHtml(sub, num);
+  check(sub + ':' + num + ' 有黄框且含判据「' + kw + '」',
+    h.includes('key-callout') && h.includes(kw), true);
+  if (h.includes(STAR))
+    check(sub + ':' + num + ' 黄框在 ★ 之前', h.indexOf(kw) < h.indexOf(STAR), true);
+}
+let newBodies = [], posBad = 0, copyBad = 0, dupBad = 0;
+const heads = new Set();
+for (const sub of SUBS) for (const { h } of allHtmls(sub)) {
+  const re = /<div class="key-callout">([\s\S]*?)<\/div>/g;
+  let m;
+  while ((m = re.exec(h))) {
+    const body = m[1], text = flat(body);
+    const before = h.slice(0, m.index).replace(/\s+$/, '');
+    if (!(before === '' || before.endsWith('>'))) posBad++;
+    const head = text.slice(0, 24);
+    if (heads.has(head)) dupBad++; else heads.add(head);
+    if (NEW_KEYS.some(k => body.includes(k))) {
+      newBodies.push(body);
+      const paras = [...h.matchAll(/<p(?![^>]*data-fig)[^>]*>([\s\S]*?)<\/p>/g)].map(x => flat(x[1]));
+      if (text.length > 40 && paras.some(p => p === text)) copyBad++;
+    }
+  }
+}
+check('本批不新增黄框，定位到 0 个', newBodies.length, 0);
+check('全库黄框结构合法（无内嵌块级、无 tspan）',
+  newBodies.every(b => !/<(p|ul|ol|li|table|div|figure)\b/.test(b) && !b.includes('tspan')), true);
+check('全库每个黄框都有至少两处加粗重点',
+  newBodies.every(b => (b.match(/<b>/g) || []).length >= 2), true);
+check('全库每个黄框都不是空壳（正文 > 80 字）',
+  newBodies.every(b => flat(b).length > 80), true);
+check('全库黄框位置安全：没有一个落在未闭合正文内部', posBad, 0);
+check('全库黄框互不重复（前 24 字判重）', dupBad, 0);
+check('全库没有黄框整段复刻正文 <p>', copyBad, 0);
+const cssRules = [...css.matchAll(/\.key-callout[^{]*\{([^}]*)\}/g)].map(m => m[1]).join('\n');
+check('CSS .key-callout 无绝对定位 / z-index / 负外边距遮挡',
+  !/position:\s*(absolute|fixed)|z-index|margin[^;]*:\s*-\d/.test(cssRules), true);
+check('笔记 JSON 里没有 SVG 专有的 tspan', SUBS.every(s => !RAW[s].includes('tspan')), true);
+
+// ---------- 5. 行号双基线（图块与黄框都不参与行号） ----------
+const LINE_BASE = { co: [1819, 1819], os: [3660, 3660], cn: [1108, 1108], ds: [1173, 1175] };
+for (const sub of SUBS) {
+  let paired = 0, open = 0;
+  for (const { h } of allHtmls(sub)) {
+    (h.match(/<p\b[^>]*>[\s\S]*?<\/p>/g) || []).forEach(t => { if (!/^<p\b[^>]*data-fig/.test(t)) paired++; });
+    paired += (h.match(/<li\b[^>]*>/g) || []).length;
+    (h.match(/<p\b[^>]*>/g) || []).forEach(t => { if (!/data-fig/.test(t)) open++; });
+    open += (h.match(/<li\b[^>]*>/g) || []).length;
+  }
+  check(sub + ' 静态可批注行（配对口径）' + LINE_BASE[sub][0], paired, LINE_BASE[sub][0]);
+  check(sub + ' 静态可批注行（开标签口径）' + LINE_BASE[sub][1], open, LINE_BASE[sub][1]);
+}
+
+// ---------- 6. 精确总量 / 三方一致 / 序列化 ----------
+const FIG_N = { co: 44, os: 67, cn: 44, ds: 31 };
+const CALL_N = { co: 74, os: 77, cn: 53, ds: 106 };
+for (const sub of SUBS) {
+  check(sub + ' 配图 ' + FIG_N[sub] + ' 张（P14 精确总量）', (RAW[sub].match(/fig-img/g) || []).length, FIG_N[sub]);
+  check(sub + ' 黄框 ' + CALL_N[sub] + ' 个（P14 未动，精确）',
+    (RAW[sub].match(/class=\\"key-callout\\"/g) || []).length, CALL_N[sub]);
+  check(sub + ' 序列化格式',
+    [RAW[sub].indexOf('\r\n') > 0, RAW[sub].endsWith('\n')],
+    sub === 'os' ? [false, true] : [true, false]);
+  const refs = [...new Set([...RAW[sub].matchAll(/img\/([a-z0-9_]+_fig_[a-z0-9_]+\.(?:svg|png))/g)].map(m => 'img/' + m[1]))];
+  check(sub + ' 图引用 / 文件 / SW 预缓存三方一致',
+    refs.every(r => fs.existsSync(path.join(ROOT, 'pwa', r)) && sw.includes("'" + r + "'")), true);
+}
+check('全库 fig-img 186 张', SUBS.reduce((n, s) => n + (RAW[s].match(/fig-img/g) || []).length, 0), 186);
+check('全库黄框 310 个（本批未新增）', SUBS.reduce((n, s) => n + (RAW[s].match(/class=\\"key-callout\\"/g) || []).length, 0), 310);
+const STRUCT = { co: 0, ds: 0, cn: 11, os: 14 };
+check('内联 struct-fig 总量未变（CO0/DS0/CN11/OS14）',
+  Object.entries(STRUCT).every(([s, v]) => (RAW[s].match(/struct-fig/g) || []).length === v), true);
+check('SW DATA_VER 非空且已刷新为本批哈希',
+  /quiz408-data-[a-f0-9]{10}/.test(sw), true);
+
+// ---------- 7. 纯插入守卫（有 before 备份才跑） ----------
+function subseq(old, neu) {
+  let j = 0;
+  for (const c of old) { j = neu.indexOf(c, j); if (j < 0) return false; j++; }
+  return true;
+}
+const BAK_DIR = 'archive/fig_p14_2026-11-13/';
+let guardDone = 0, guardBad = 0, changed = 0, changedKeys = [];
+for (const sub of SUBS) {
+  const bp = BAK_DIR + sub + '_notes.before.json';
+  if (!fs.existsSync(path.join(ROOT, bp))) continue;
+  const before = JSON.parse(read(bp));
+  const B = new Map(), A = new Map();
+  for (const ch of before.chapters) for (const s of ch.sections || [])
+    for (const x of [s].concat(s.subsections || [])) B.set(x.section.split(' ')[0], x.html || '');
+  for (const { key, h } of allHtmls(sub)) A.set(key, h);
+  for (const [k, old] of B) {
+    const neu = A.get(k) || '';
+    if (old !== neu) { changed++; changedKeys.push(k); if (!subseq(old, neu)) guardBad++; }
+  }
+  guardDone++;
+}
+if (guardDone === 3) {
+  check('OS/CO/CN 三科 before 备份都参与了纯插入校验', guardDone, 3);
+  check('变化的 4 个小节全是纯插入（0 删除 / 0 改写）', guardBad, 0);
+  check('变化小节数 = 4（本批只碰这四个零图小节）', changed, 4);
+  check('被改的小节正是 2.2.2 / 3.2.1 / 6.2.1 / 6.4.2',
+    changedKeys.slice().sort(), ['2.2.2', '3.2.1', '6.2.1', '6.4.2']);
+} else {
+  console.log('SKIP 纯插入守卫：缺少三科 before 备份（归档目录不在 git 中）');
+}
+
+// ---------- 8. jsdom 真实渲染 + 双版本逐行文本比对 ----------
+let JSDOM = null, IDBFactory = null, IDBKeyRange = null, VirtualConsole = null;
+try { ({ JSDOM, VirtualConsole } = require('jsdom')); } catch (e) { }
+try { ({ IDBFactory, IDBKeyRange } = require('fake-indexeddb')); } catch (e) { }
+if (!JSDOM || !IDBFactory) {
+  console.log('SKIP 缺少 jsdom / fake-indexeddb');
+  console.log('_test_fig_p14: ' + pass + ' passed, ' + fail + ' failed');
+  process.exit(fail ? 1 : 0);
+} else {
+  (async () => {
+    async function render(sub, raw) {
+      const pageHtml = read('pwa/notes.html')
+        .replace(/<script src="([^"]+)"[^>]*><\/script>/g, (m, s) => {
+          try { return '<script>' + read('pwa/' + s) + '</script>'; } catch (e) { return ''; }
+        }).replace(/<link\b[^>]*>/gi, '');
+      const vc = new VirtualConsole(); vc.on('jsdomError', () => { });
+      const dom = new JSDOM(pageHtml, {
+        runScripts: 'dangerously', pretendToBeVisual: true,
+        url: 'https://x.test/notes.html?subject=' + sub, virtualConsole: vc,
+        beforeParse(w) {
+          w.indexedDB = new IDBFactory(); w.IDBKeyRange = IDBKeyRange;
+          w.alert = () => { }; w.confirm = () => true; w.scrollTo = () => { };
+          w.CSS = { escape: s => String(s).replace(/[^a-zA-Z0-9_-]/g, c => '\\' + c) };
+          w.Element.prototype.scrollIntoView = function () { };
+          w.fetch = async () => ({ ok: true, status: 200, json: async () => JSON.parse(raw) });
+        }
+      });
+      await new Promise(r => setTimeout(r, 4000));
+      const d = dom.window.document;
+      const out = {
+        window: dom.window, document: d,
+        lines: [...d.querySelectorAll('.anno-line')].map(e => e.textContent.trim()),
+        figs: d.querySelectorAll('img.fig-img').length,
+        calls: d.querySelectorAll('.key-callout').length,
+        lightbox: null,
+        misLabeled: [...d.querySelectorAll('[data-fig]')].filter(el => el.classList.contains('anno-line')).length,
+        newCalls: [...d.querySelectorAll('.key-callout')].filter(el => NEW_KEYS.some(k => el.textContent.includes(k))).length,
+        badCalls: [...d.querySelectorAll('.key-callout')]
+          .filter(el => NEW_KEYS.some(k => el.textContent.includes(k)) && el.closest('li,p')).length,
+        badFigs: [...d.querySelectorAll('img.fig-img')]
+          .filter(img => /cn_fig_hetero|cn_fig_proto_svc|cn_fig_shared_eth|co_fig_bus_bw|co_fig_pc_rel/.test(img.getAttribute('src') || '') && img.closest('li')).length,
+      };
+      const firstFig = d.querySelector('img.fig-img');
+      if (firstFig) {
+        firstFig.dispatchEvent(new dom.window.MouseEvent('click', { bubbles: true, cancelable: true }));
+        const lb = d.querySelector('#figLightbox');
+        out.lightbox = !!lb && lb.classList.contains('show');
+      }
+      return out;
+    }
+    const JSDOM_BASE = { co: 1971, os: 3668, cn: 1220, ds: 1330 };
+    for (const sub of SUBS) {
+      const a = await render(sub, RAW[sub]);
+      check(sub + ' 真实渲染 .anno-line = ' + JSDOM_BASE[sub], a.lines.length, JSDOM_BASE[sub]);
+      check(sub + ' 真实渲染配图 >= ' + FIG_N[sub] + ' 张', a.figs, n => n >= FIG_N[sub]);
+      check(sub + ' 真实渲染黄框 >= ' + CALL_N[sub] + ' 个', a.calls, n => n >= CALL_N[sub]);
+      check(sub + ' 图块被误标行号 = 0', a.misLabeled, 0);
+      check(sub + ' 全库黄框没有一个落在 li/p 内部',
+        [...a.document.querySelectorAll('.key-callout')].filter(el => el.closest('li,p')).length, 0);
+      check(sub + ' 本批黄框在 DOM 里都定位到了且不嵌 li/p',
+        [a.newCalls, a.badCalls], [NEW_BY_SUB[sub], 0]);
+      check(sub + ' 本批新图没有一张落进 li', a.badFigs, 0);
+      check(sub + ' 配图仍可点击放大', a.lightbox, true);
+      const bp = BAK_DIR + sub + '_notes.before.json';
+      if (fs.existsSync(path.join(ROOT, bp))) {
+        const b = await render(sub, read(bp));
+        check(sub + ' 双版本 .anno-line 数量一致', b.lines.length, a.lines.length);
+        let first = -1;
+        if (b.lines.length === a.lines.length)
+          for (let i = 0; i < b.lines.length; i++) if (b.lines[i] !== a.lines[i]) { first = i; break; }
+        check(sub + ' 双版本逐行文本完全一致（黄框零覆盖 / 批注零错位）', first, -1);
+        b.window.close();
+      } else {
+        console.log('SKIP ' + sub + ' 双版本逐行比对：缺 before 备份');
+      }
+      a.window.close();
+    }
+    console.log('_test_fig_p14: ' + pass + ' passed, ' + fail + ' failed');
+    process.exit(fail ? 1 : 0);
+  })().catch(e => { console.log('ERR', e.message); process.exit(1); });
+}

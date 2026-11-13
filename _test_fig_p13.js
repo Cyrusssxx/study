@@ -216,7 +216,8 @@ for (const sub of SUBS) {
 const FIG_N = { co: 43, os: 65, cn: 43, ds: 31 };
 const CALL_N = { co: 74, os: 77, cn: 53, ds: 106 };
 for (const sub of SUBS) {
-  check(sub + ' 配图 ' + FIG_N[sub] + ' 张（P13 精确总量）', (RAW[sub].match(/fig-img/g) || []).length, FIG_N[sub]);
+  check(sub + ' 配图 >= ' + FIG_N[sub] + ' 张（P13 下限，后续批次会继续加）',
+    (RAW[sub].match(/fig-img/g) || []).length, n => n >= FIG_N[sub]);
   check(sub + ' 黄框 ' + CALL_N[sub] + ' 个（P13 精确总量）',
     (RAW[sub].match(/class=\\"key-callout\\"/g) || []).length, CALL_N[sub]);
   check(sub + ' 序列化格式',
@@ -226,7 +227,7 @@ for (const sub of SUBS) {
   check(sub + ' 图引用 / 文件 / SW 预缓存三方一致',
     refs.every(r => fs.existsSync(path.join(ROOT, 'pwa', r)) && sw.includes("'" + r + "'")), true);
 }
-check('全库 fig-img 182 张', SUBS.reduce((n, s) => n + (RAW[s].match(/fig-img/g) || []).length, 0), 182);
+check('全库 fig-img >= 182 张（P13 下限）', SUBS.reduce((n, s) => n + (RAW[s].match(/fig-img/g) || []).length, 0), n => n >= 182);
 check('全库黄框 310 个', SUBS.reduce((n, s) => n + (RAW[s].match(/class=\\"key-callout\\"/g) || []).length, 0), 310);
 const STRUCT = { co: 0, ds: 0, cn: 11, os: 14 };
 check('内联 struct-fig 总量未变（CO0/DS0/CN11/OS14）',
@@ -259,9 +260,9 @@ for (const sub of SUBS) {
 if (guardDone === 2) {
   check('CN/CO 两科 before 备份都参与了纯插入校验', guardDone, 2);
   check('变化的 5 个小节全是纯插入（0 删除 / 0 改写）', guardBad, 0);
-  check('变化小节数 = 5（本批只碰这五个零图小节）', changed, 5);
-  check('被改的小节正是 4.1.1 / 1.2.2 / 3.8.3 / 6.1.3 / 4.2.1',
-    changedKeys.slice().sort(), ['1.2.2', '3.8.3', '4.1.1', '4.2.1', '6.1.3']);
+  check('变化小节数 >= 5（P13 下限，后续批次继续改）', changed, n => n >= 5);
+  check('P13 改的五个小节都在变化清单里',
+    ['4.1.1', '1.2.2', '3.8.3', '6.1.3', '4.2.1'].every(k => changedKeys.includes(k)), true);
 } else {
   console.log('SKIP 纯插入守卫：缺少 CN/CO before 备份（归档目录不在 git 中）');
 }

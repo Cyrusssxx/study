@@ -1,0 +1,66 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 680 372" width="680" height="372" font-family="-apple-system,BlinkMacSystemFont,'Segoe UI','Microsoft YaHei',sans-serif">
+  <defs>
+    <marker id="buArr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#475569"/>
+    </marker>
+  </defs>
+  <rect x="0" y="0" width="680" height="372" fill="#ffffff"/>
+  <text x="20" y="26" font-size="16" font-weight="700" fill="#1e3a8a">突发传输省的是「地址开销」· 一次地址，多次数据</text>
+  <text x="20" y="46" font-size="10.5" fill="#64748b">非突发每传一个单元都要重发地址；突发只发首地址，后续地址由硬件自增，总线不释放</text>
+
+  <text x="20" y="70" font-size="9.5" font-weight="700" fill="#334155">一次总线事务的三个基本阶段（读与写都要走完）</text>
+
+  <rect x="20" y="78" width="196" height="40" rx="4" fill="#eff6ff" stroke="#3b82f6" stroke-width="1.2"/>
+  <text x="32" y="95" font-size="9.5" font-weight="700" fill="#1e3a8a">① 地址传送</text>
+  <text x="32" y="110" font-size="8.5" fill="#334155">主设备送目标地址与读/写命令</text>
+  <path d="M 220 98 L 238 98" fill="none" stroke="#475569" stroke-width="1.2" marker-end="url(#buArr)"/>
+
+  <rect x="242" y="78" width="196" height="40" rx="4" fill="#f1f5f9" stroke="#cbd5e1" stroke-width="1.2"/>
+  <text x="254" y="95" font-size="9.5" font-weight="700" fill="#334155">② 从设备响应</text>
+  <text x="254" y="110" font-size="8.5" fill="#334155">按地址准备数据（题中未提可忽略）</text>
+  <path d="M 442 98 L 460 98" fill="none" stroke="#475569" stroke-width="1.2" marker-end="url(#buArr)"/>
+
+  <rect x="464" y="78" width="196" height="40" rx="4" fill="#dcfce7" stroke="#22c55e" stroke-width="1.2"/>
+  <text x="476" y="95" font-size="9.5" font-weight="700" fill="#166534">③ 数据传送</text>
+  <text x="476" y="110" font-size="8.5" fill="#334155">数据真正在总线上搬一次</text>
+
+  <text x="20" y="140" font-size="9.5" font-weight="700" fill="#334155">同一道题里的两种走法：100MHz（10ns/周期）、32 位宽、突发写 128 位＝4 个单元</text>
+
+  <text x="20" y="166" font-size="9" font-weight="700" fill="#b91c1c">非突发</text>
+  <rect x="40" y="174" width="75" height="24" fill="#dbeafe" stroke="#3b82f6" stroke-width="1"/>
+  <text x="77" y="190" font-size="8" fill="#1e3a8a" text-anchor="middle">地址</text>
+  <rect x="115" y="174" width="75" height="24" fill="#dcfce7" stroke="#22c55e" stroke-width="1"/>
+  <text x="152" y="190" font-size="8" fill="#166534" text-anchor="middle">数据</text>
+  <rect x="190" y="174" width="75" height="24" fill="#dbeafe" stroke="#3b82f6" stroke-width="1"/>
+  <text x="227" y="190" font-size="8" fill="#1e3a8a" text-anchor="middle">地址</text>
+  <rect x="265" y="174" width="75" height="24" fill="#dcfce7" stroke="#22c55e" stroke-width="1"/>
+  <text x="302" y="190" font-size="8" fill="#166534" text-anchor="middle">数据</text>
+  <rect x="340" y="174" width="75" height="24" fill="#dbeafe" stroke="#3b82f6" stroke-width="1"/>
+  <text x="377" y="190" font-size="8" fill="#1e3a8a" text-anchor="middle">地址</text>
+  <rect x="415" y="174" width="75" height="24" fill="#dcfce7" stroke="#22c55e" stroke-width="1"/>
+  <text x="452" y="190" font-size="8" fill="#166534" text-anchor="middle">数据</text>
+  <rect x="490" y="174" width="75" height="24" fill="#dbeafe" stroke="#3b82f6" stroke-width="1"/>
+  <text x="527" y="190" font-size="8" fill="#1e3a8a" text-anchor="middle">地址</text>
+  <rect x="565" y="174" width="75" height="24" fill="#dcfce7" stroke="#22c55e" stroke-width="1"/>
+  <text x="602" y="190" font-size="8" fill="#166534" text-anchor="middle">数据</text>
+  <text x="40" y="212" font-size="8.5" fill="#64748b">4 次「地址＋数据」各 10ns ＝ 80ns，地址白占了 40ns</text>
+
+  <text x="20" y="238" font-size="9" font-weight="700" fill="#166534">突发</text>
+  <rect x="40" y="246" width="75" height="24" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.4"/>
+  <text x="77" y="262" font-size="8" font-weight="700" fill="#1e3a8a" text-anchor="middle">首地址</text>
+  <rect x="115" y="246" width="75" height="24" fill="#dcfce7" stroke="#22c55e" stroke-width="1"/>
+  <text x="152" y="262" font-size="8" fill="#166534" text-anchor="middle">数据0</text>
+  <rect x="190" y="246" width="75" height="24" fill="#dcfce7" stroke="#22c55e" stroke-width="1"/>
+  <text x="227" y="262" font-size="8" fill="#166534" text-anchor="middle">数据1</text>
+  <rect x="265" y="246" width="75" height="24" fill="#dcfce7" stroke="#22c55e" stroke-width="1"/>
+  <text x="302" y="262" font-size="8" fill="#166534" text-anchor="middle">数据2</text>
+  <rect x="340" y="246" width="75" height="24" fill="#dcfce7" stroke="#22c55e" stroke-width="1"/>
+  <text x="377" y="262" font-size="8" fill="#166534" text-anchor="middle">数据3</text>
+  <rect x="415" y="246" width="225" height="24" fill="#f8fafc" stroke="#cbd5e1" stroke-width="1" stroke-dasharray="4 3"/>
+  <text x="527" y="262" font-size="8.5" fill="#92400e" text-anchor="middle">省下 3 次地址 ＝ 30ns</text>
+  <text x="40" y="284" font-size="8.5" fill="#b45309">地址 10ns ＋ 4×10ns ＝ 50ns（正文同款算例）；总线不释放、地址由硬件自增，所以 4 个单元只花 1 次地址</text>
+
+  <rect x="20" y="296" width="640" height="48" rx="4" fill="#fef3c7" stroke="#fbbf24" stroke-width="1.2"/>
+  <text x="32" y="314" font-size="9.5" fill="#92400e"><tspan font-weight="700">提高同步总线传输速率只有三条</tspan>：增加总线宽度、提高工作频率、支持突发传输 —— 地址/数据复用只省线、不加速。</text>
+  <text x="32" y="329" font-size="9.5" fill="#92400e">任一总线周期内只能有一对主从通信：多个部件只能分时发送、但可以同时接收。</text>
+</svg>

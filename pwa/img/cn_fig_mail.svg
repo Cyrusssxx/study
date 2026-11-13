@@ -1,0 +1,60 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 680 410" width="680" height="410" font-family="-apple-system,BlinkMacSystemFont,'Segoe UI','Microsoft YaHei',sans-serif">
+  <defs>
+    <marker id="mailArr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#475569"/>
+    </marker>
+  </defs>
+  <rect x="0" y="0" width="680" height="410" fill="#ffffff"/>
+  <text x="20" y="26" font-size="16" font-weight="700" fill="#1e3a8a">一封邮件 = 信封 + 内容（首部 + 主体），MIME 只在首部做扩展</text>
+  <text x="20" y="46" font-size="10.5" fill="#64748b">MIME 不改也不取代 SMTP，只在 SMTP 之上加首部、把二进制 Base64 化成 ASCII 再交给它送</text>
+
+  <text x="20" y="70" font-size="9.5" font-weight="700" fill="#334155">邮件的三层结构（用户只写首部和主体，信封由系统生成）</text>
+
+  <rect x="20" y="78" width="380" height="34" rx="4" fill="#f1f5f9" stroke="#cbd5e1" stroke-width="1.2"/>
+  <text x="34" y="99" font-size="9.5" font-weight="700" fill="#334155">信封</text>
+  <text x="80" y="99" font-size="8.5" fill="#64748b">SMTP 真正在用的收发地址，用户看不见、也填不了</text>
+
+  <rect x="20" y="118" width="380" height="34" rx="4" fill="#eff6ff" stroke="#3b82f6" stroke-width="1.4"/>
+  <text x="34" y="139" font-size="9.5" font-weight="700" fill="#1e3a8a">首部</text>
+  <text x="80" y="139" font-size="8.5" fill="#334155">To（必填）· Subject（可选）· From（必填，系统填）</text>
+
+  <rect x="20" y="158" width="380" height="18" rx="2" fill="#ffffff" stroke="#cbd5e1" stroke-width="1" stroke-dasharray="4 3"/>
+  <text x="34" y="171" font-size="8" fill="#92400e">空行 —— 首部与主体之间的唯一分隔</text>
+
+  <rect x="20" y="182" width="380" height="34" rx="4" fill="#dcfce7" stroke="#22c55e" stroke-width="1.2"/>
+  <text x="34" y="203" font-size="9.5" font-weight="700" fill="#166534">主体</text>
+  <text x="80" y="203" font-size="8.5" fill="#334155">用户自由撰写；附件的 Base64 也是塞在这里</text>
+
+  <text x="20" y="238" font-size="8.5" fill="#64748b">RFC 822 只规定首部格式；主体写什么由用户决定。收件人地址形如 邮箱名@主机域名。</text>
+
+  <rect x="416" y="78" width="244" height="172" rx="5" fill="#fef3c7" stroke="#fbbf24" stroke-width="1.3"/>
+  <text x="430" y="97" font-size="10.5" font-weight="700" fill="#92400e">MIME 加了什么</text>
+  <text x="430" y="116" font-size="8.5" fill="#92400e">根因：SMTP 只能传 7 位 ASCII</text>
+  <text x="430" y="130" font-size="8.5" fill="#92400e">所以中文、图片、可执行文件都传不了</text>
+  <line x1="430" y1="140" x2="646" y2="140" stroke="#fbbf24" stroke-width="1"/>
+  <text x="430" y="157" font-size="8.5" fill="#334155">① Content-Type</text>
+  <text x="430" y="171" font-size="8" fill="#64748b">　说明正文是文本、图片还是多部分</text>
+  <text x="430" y="187" font-size="8.5" fill="#334155">② Content-Transfer-Encoding</text>
+  <text x="430" y="201" font-size="8" fill="#64748b">　说明怎么解码（Base64 等）</text>
+  <text x="430" y="217" font-size="8.5" fill="#334155">③ MIME-Version（MIME 版本）</text>
+  <text x="430" y="231" font-size="8" fill="#64748b">　声明本邮件按 MIME 解释</text>
+  <text x="430" y="245" font-size="8" fill="#b45309">三个都在首部，SMTP 本身一个字都没改</text>
+
+  <text x="20" y="268" font-size="9.5" font-weight="700" fill="#334155">Base64 只是在搬运前换个字母表：每 3 字节 → 4 个 ASCII 字符</text>
+
+  <rect x="20" y="276" width="120" height="28" rx="3" fill="#eff6ff" stroke="#3b82f6" stroke-width="1.1"/>
+  <text x="80" y="294" font-size="9" fill="#1e3a8a" text-anchor="middle">3 字节二进制</text>
+  <path d="M 146 290 L 176 290" fill="none" stroke="#475569" stroke-width="1.2" marker-end="url(#mailArr)"/>
+  <text x="161" y="284" font-size="8" fill="#475569" text-anchor="middle">编码</text>
+  <rect x="182" y="276" width="140" height="28" rx="3" fill="#dcfce7" stroke="#22c55e" stroke-width="1.1"/>
+  <text x="252" y="294" font-size="9" fill="#166534" text-anchor="middle">4 个 ASCII 字符</text>
+  <text x="336" y="294" font-size="8.5" fill="#64748b">→ 体积约涨 1/3，但 SMTP 认得</text>
+
+  <rect x="20" y="314" width="640" height="44" rx="4" fill="#f8fafc" stroke="#cbd5e1" stroke-width="1.1"/>
+  <text x="32" y="332" font-size="9" fill="#334155">端口对照：<tspan font-weight="700">SMTP 25</tspan>（发信与服务器间转发）· <tspan font-weight="700">POP3 110</tspan>（下载到本地，默认删服务器副本）</text>
+  <text x="32" y="348" font-size="9" fill="#334155"><tspan font-weight="700">IMAP 143</tspan>（在服务器上管理邮件、多设备同步，更现代）· 三者都跑在 TCP 上</text>
+
+  <rect x="20" y="366" width="640" height="36" rx="4" fill="#fef3c7" stroke="#fbbf24" stroke-width="1.2"/>
+  <text x="32" y="384" font-size="9.5" fill="#92400e"><tspan font-weight="700">一句话分辨 POP3 与 IMAP</tspan>：POP3 把信拿走、本地管；IMAP 把信留在服务器、多端同步 —— 手机与电脑看到同一份用 IMAP。</text>
+  <text x="32" y="397" font-size="8.5" fill="#92400e">安全变体只是换了加密端口：SMTPS 465 / POP3S 995 / IMAPS 993。</text>
+</svg>
