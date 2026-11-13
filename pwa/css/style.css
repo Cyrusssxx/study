@@ -2073,7 +2073,8 @@ mark {
     font-family: inherit;
     resize: none;
     overflow-y: hidden;
-    line-height: 1.5;
+    /* 1.62：中文长段落按 1.5 排会挤成一坨（一屏十几行时特别明显） */
+    line-height: 1.62;
     /* contenteditable 必要 */
     min-height: 60px;
     word-break: break-word;
@@ -2091,24 +2092,54 @@ mark {
     border-color: var(--primary);
 }
 /* 富文本元素基线 */
-/* 笔记内标题：只用字号 + 细线分层，不加颜色（用户明确不要彩色） */
+/* 笔记内标题：只用字号 + 细线分层，不加颜色（用户明确不要彩色）。
+   粘贴常把整段正文一起带成 <h1>/<h2>，字号必须收敛（正文 .88rem），
+   否则长句标题折两三行把正文挤掉；H1/H2 靠「线型 + 段前距」区分层级。 */
+.note-input h1,
+.note-input h2,
+.note-input h3 {
+    /* 关键：不吃 .note-input 的 pre-wrap —— 粘贴源码里的缩进/换行会在标题里
+       撑出大空隙；标题内部换行折叠为空格（要换行请用 H1/H2 分段） */
+    white-space: normal;
+    background: none !important;   /* 粘贴残留的半透明白底一律清掉 */
+    text-indent: 0;
+    letter-spacing: 0;
+}
 .note-input h1 {
-    font-size: 1.2rem; font-weight: 700; line-height: 1.45;
-    margin: 0.9em 0 0.45em; padding-bottom: 0.18em;
-    border-bottom: 1px solid var(--border);
+    font-size: 1.02rem; font-weight: 700; line-height: 1.4;
+    margin: 0.8em 0 0.25em; padding: 0 0 5px;
+    border-bottom: 1px solid rgba(128, 128, 128, 0.42);
 }
 .note-input h2 {
-    font-size: 1.05rem; font-weight: 700; line-height: 1.5;
-    margin: 0.75em 0 0.35em; padding-left: 8px;
-    border-left: 3px solid var(--border);
+    font-size: 0.93rem; font-weight: 700; line-height: 1.45;
+    margin: 0.62em 0 0.2em; padding: 0 0 0 8px;
+    border-left: 2.5px solid rgba(128, 128, 128, 0.42);
 }
-.note-input h1:first-child, .note-input h2:first-child { margin-top: 0; }
+/* H3 没有工具栏按钮，但粘贴内容常带：不给样式就是浏览器默认 1.17em + 1em 外边距，
+   在一堆 14px 正文里突然顶出一大块。这里收成「小一号的加粗行」 */
+.note-input h3 {
+    font-size: 0.89rem; font-weight: 700; line-height: 1.5;
+    margin: 0.5em 0 0.18em;
+}
+.note-input h1:first-child, .note-input h2:first-child, .note-input h3:first-child { margin-top: 0; }
+/* 连续标题（H1 紧跟 H2 之类）不留双倍空档 */
+.note-input h1 + h2, .note-input h2 + h2, .note-input h1 + h1,
+.note-input h1 + h3, .note-input h2 + h3 { margin-top: 0.14em; }
+/* 空标题（点了 H1 没打字 / 历史脏数据）不画线：否则页面出现孤立横线、竖线 */
+.note-input h1:empty, .note-input h2:empty { display: none; }
 
 /* 笔记保存态：已保存＝浅灰，未保存＝深色加粗（无色也能分辨） */
 .note-state { font-size: .78rem; color: var(--text-light); margin-left: 2px; white-space: nowrap; }
 .note-state.dirty { color: var(--text); font-weight: 600; }
-.note-input p  { margin: 0.2em 0; }
+.note-input p  { margin: 0.3em 0; }
 .note-input blockquote { border-left: 3px solid var(--border); margin: 0.3em 0; padding-left: 8px; color: var(--text-light); }
+/* 列表：全局 * { margin:0; padding:0 } 把缩进清零了，粘贴来的 ul/ol 会顶格成
+   普通段落、看不见项目符号。这里把缩进与符号还回去，并压紧行距 */
+.note-input ul, .note-input ol { margin: 0.3em 0; padding-left: 1.5em; }
+.note-input ul { list-style: disc; }
+.note-input ol { list-style: decimal; }
+.note-input li { margin: 0.12em 0; }
+.note-input li > ul, .note-input li > ol { margin: 0.1em 0; }
 
 /* ===== 笔记富文本工具条 ===== */
 .note-toolbar {

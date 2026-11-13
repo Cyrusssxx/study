@@ -15,6 +15,13 @@
         return v.split(/\s+/).every(tok => tok === 'hl' || NOTE_ALLOWED_CLASS_RE.test(tok));
     }
 
+    // 元素是否处在标题（H1/H2/H3）之内 —— 标题不承载底色，粘贴带来的半透明白底要剥掉
+    function inHeading(c) {
+        if (/^H[1-3]$/.test(c.tagName)) return true;
+        const p = c.parentElement;
+        return !!(p && p.closest && p.closest('h1,h2,h3'));
+    }
+
     window.sanitizeNoteHtml = function (html) {
         if (!html) return '';
         // 极速判定：不含 '<' 即安全纯文本，原样返回（无标签无法构造 HTML/XSS）
@@ -31,11 +38,17 @@
                         node.removeChild(c);
                     } else {
                         // 清掉危险属性，只保留 style.color/style.backgroundColor
+                        const head = inHeading(c);
                         for (const a of [...c.attributes]) {
                             if (a.name === 'style') {
                                 const ok = a.value.split(';').map(s => s.trim()).filter(s => {
                                     const m = s.match(/^([a-z-]+):/);
-                                    return m && (m[1] === 'color' || m[1] === 'background-color' || m[1] === 'background');
+                                    if (!m) return false;
+                                    if (m[1] === 'color') return true;
+                                    // 标题内不保留底色：粘贴来的标题常带 rgba(255,255,255,.25)
+                                    // 这类半透明白底，浅色看不出、深色就是一块白斑
+                                    if (m[1] === 'background-color' || m[1] === 'background') return !head;
+                                    return false;
                                 });
                                 if (ok.length) c.setAttribute('style', ok.join('; '));
                                 else c.removeAttribute('style');
@@ -49,10 +62,29 @@
                     }
                 } else if (c.nodeType === 8) {
                     c.remove();
+                } else if (c.nodeType === 3) {
+                    // 文本节点里的「换行 + 缩进」：网页源码粘进来时长这样，
+                    // pre-wrap 下会渲染成空行加缩进。块级结构已经表达分段，
+                    // 这里只去掉换行后的缩进与重复空行，段落内的单纯换行保留。
+                    if (c.nodeValue.indexOf('\n') >= 0) {
+                        c.nodeValue = c.nodeValue.replace(/\n[ \t\u00a0]+/g, '\n').replace(/\n{2,}/g, '\n');
+                    }
                 }
             }
         })(t.content);
-        return t.innerHTML;
+        // 折叠「标签之间的纯空白换行」：.note-input 是 pre-wrap，粘贴内容的源码缩进
+        // 会被原样渲染成一堆空行（块级标签的 margin 之外再叠一层 \n）
+        return t.innerHTML.replace(/>\s*\n\s*</g, '><');
+    };
+
+    // 清掉空标题（点了 H1/H2 没打字，或把标题字全部删掉）：
+    // H1 有下边框、H2 有左竖线，空标题会留下一根孤立的线
+    window.pruneEmptyNoteHeadings = function (root) {
+        if (!root || !root.querySelectorAll) return;
+        root.querySelectorAll('h1, h2, h3').forEach(h => {
+            if (h.textContent.replace(/[\u200b\s]/g, '')) return;
+            h.remove();
+        });
     };
 
     window.isHtmlNote = function (s) {
@@ -72,6 +104,8 @@
             // 纯文本：换行转 <br>，整体白名单化（仍防 HTML 注入）
             el.innerHTML = window.sanitizeNoteHtml(raw.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/\n/g, '<br>'));
         }
+        // 历史脏数据：空 H1/H2 会画出一根孤立的横线/竖线，装载时一次性清掉
+        window.pruneEmptyNoteHeadings(el);
         window.updateNotePlaceholder(el);
     };
 
@@ -80,7 +114,11 @@
         // 内容为空（含只有空标签/空 <br>）时返回空串——使用 stripTags 等价判断，避免"<br><br><br>" 等空气笔记被存为非空
         const text = el.textContent.replace(/\u00a0/g, ' ').trim();
         if (!text) return '';
-        return el.innerHTML;
+        // 空标题（只剩 <br>/空格/空 span）不进库：在克隆体上清理，
+        // 真实 DOM 不动——保存是防抖触发的，删节点会把正在输入的光标弄丢
+        const clone = el.cloneNode(true);
+        window.pruneEmptyNoteHeadings(clone);
+        return clone.innerHTML;
     };
 
     window.updateNotePlaceholder = function (el) {
@@ -116,6 +154,17 @@
         </div>`;
     };
 
+    // 标题开关：再点一次同一个标题按钮 → 退回正文段落（不必先去点「清除格式」）。
+    // formatBlock 的规范参数是带尖括号的标签名，'H1' 这种裸写法部分浏览器不认。
+    function toggleNoteHeading(tag) {
+        let cur = '';
+        try {
+            cur = String(document.queryCommandValue('formatBlock') || '').toUpperCase().replace(/[<>]/g, '');
+        } catch (e) { cur = ''; }
+        const next = (cur === tag) ? 'p' : tag.toLowerCase();
+        try { document.execCommand('formatBlock', false, '<' + next + '>'); } catch (e) { }
+    }
+
     window.bindNoteToolbar = function (el) {
         // 工具条只对当前 input 元素绑一次（renderQuestion 多次创建会复用；用 dataset 标记防重复）
         if (!el) return;
@@ -134,8 +183,8 @@
             const cmd = btn.dataset.cmd;
             if (cmd === 'bold') document.execCommand('bold');
             else if (cmd === 'italic') document.execCommand('italic');
-            else if (cmd === 'h1') document.execCommand('formatBlock', false, 'H1');
-            else if (cmd === 'h2') document.execCommand('formatBlock', false, 'H2');
+            else if (cmd === 'h1') toggleNoteHeading('H1');
+            else if (cmd === 'h2') toggleNoteHeading('H2');
             else if (cmd === 'hl') window.applyNoteHighlight(el, btn.dataset.color);
             else if (cmd === 'color') window.applyNoteForeColor(el, btn.dataset.color);
             else if (cmd === 'painter') window.toggleFormatPainter(el, btn);
@@ -255,7 +304,7 @@
             // 1) 行内格式
             document.execCommand('removeFormat');
             // 2) 块级格式：H1/H2/H3/blockquote → 普通段落 P（removeFormat 对 formatBlock 无效）
-            try { document.execCommand('formatBlock', false, 'P'); } catch (e) {}
+            try { document.execCommand('formatBlock', false, '<p>'); } catch (e) {}
             // 3) 高亮：剥掉 class 化 span 与内联 background（removeFormat 不处理这两类）
             window.stripNoteHighlight(sel.getRangeAt(0), el);
         });
