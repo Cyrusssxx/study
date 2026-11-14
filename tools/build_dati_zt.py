@@ -173,6 +173,15 @@ def daka_answer(card, lecture):
     return out or '<div class="explanation-empty">该题暂无解答内容</div>'
 
 
+# 题面 HTML 不得内嵌 <style>（复制题面会把 CSS 文本一并抄走）；
+# 专属排版规则已统一迁到 pwa/css/style.css，这里只做剥离兜底。
+STYLE_BLOCK_RE = re.compile(r'(?s)<style>.*?</style>')
+
+
+def strip_style(h):
+    return STYLE_BLOCK_RE.sub('', h).strip() if '<style>' in h else h
+
+
 def build():
     alias = read_json('data/note_alias.json')
     old = read_json('data/dati.json')
@@ -231,8 +240,8 @@ def build():
                 a_html = daka_answer(card, lecture)
                 variant = 'daka'
             else:
-                q_html = it.get('q') or ''
-                a_html = it.get('an') or ''
+                q_html = strip_style(it.get('q') or '')
+                a_html = strip_style(it.get('an') or '')
                 variant = 'zt'
 
             old_ids = spec2old.get(spec, [])

@@ -8494,3 +8494,137 @@ body.fc-toc-open .fc-toc-fab { display: none; }
 .zt-pn-bar-edit:hover { border-color: var(--primary); }
 .dark .zt-pn-bar { background: rgba(74, 144, 217, .10); }
 .dark .zt-pn-bar:hover { background: rgba(74, 144, 217, .16); }
+
+/* ============ 真题题面专用排版（自数据内嵌 <style> 迁出） ============
+   部分真题大题的题面用专属表格/代码卡排版；此前规则内嵌在各题 HTML 的
+   <style> 里，复制题面时会把 CSS 文本一并抄进剪贴板。现统一迁到全局，
+   数据 JSON 不再携带样式，zhenti / dati 两页共用。 */
+.addr-format-wrap {
+    margin: 14px 0 18px;
+    overflow-x: auto;
+}
+.addr-format {
+    width: 100%;
+    min-width: 560px;
+    border-collapse: collapse;
+    table-layout: fixed;
+    color: inherit;
+    background: transparent;
+}
+.addr-format td {
+    border: 1px solid currentColor;
+    padding: 12px 10px;
+    text-align: center;
+    vertical-align: middle;
+    color: inherit;
+    background: transparent;
+    font-size: 15px;
+    white-space: nowrap;
+}
+.context-table {
+    width: 100%;
+    margin: 12px 0 18px;
+    border-collapse: collapse;
+    color: inherit;
+    background: transparent;
+}
+.context-table th,
+.context-table td {
+    border: 1px solid currentColor;
+    padding: 7px 10px;
+    text-align: center;
+    vertical-align: middle;
+    color: inherit;
+    background: transparent;
+}
+.dir-entry-wrap {
+    margin: 12px 0 18px;
+    overflow-x: auto;
+}
+.dir-entry-table {
+    width: 100%;
+    max-width: 360px;
+    border-collapse: collapse;
+    color: inherit;
+    background: transparent;
+}
+.dir-entry-table th,
+.dir-entry-table td {
+    border: 1px solid currentColor;
+    padding: 10px 16px;
+    text-align: center;
+    vertical-align: middle;
+    color: inherit;
+    background: transparent;
+}
+.semaphore-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(240px, 1fr));
+    gap: 24px;
+    margin: 18px 0 22px;
+}
+.semaphore-card {
+    border: 1px solid currentColor;
+    background: transparent;
+}
+.semaphore-card-title {
+    padding: 10px 16px;
+    font-weight: 700;
+    border-bottom: 1px solid currentColor;
+    background: rgba(127, 127, 127, .08);
+    color: inherit;
+}
+.semaphore-card-body {
+    padding: 18px 18px 20px;
+    background: transparent;
+    color: inherit;
+}
+.semaphore-card-code {
+    margin: 0;
+    white-space: pre-wrap;
+    font-family: Consolas, "Courier New", monospace;
+    font-size: 16px;
+    line-height: 1.55;
+    color: inherit;
+}
+.semaphore-card-code + .semaphore-card-code {
+    margin-top: 18px;
+}
+.semaphore-card-spacer {
+    height: 96px;
+}
+.semaphore-card-body pre {
+    margin: 0;
+    padding: 0;
+    border: none;
+    background: transparent;
+    color: inherit;
+    white-space: inherit;
+    font: inherit;
+}
+@media (max-width: 900px) {
+    .semaphore-grid { grid-template-columns: 1fr; }
+    .semaphore-card-body { padding: 14px 14px 16px; }
+    .semaphore-card-code { font-size: 15px; line-height: 1.45; }
+    .semaphore-card-code + .semaphore-card-code { margin-top: 14px; }
+    .semaphore-card-spacer { height: 24px; }
+}
+.process-block {
+    margin: 14px 0 18px;
+    padding: 14px 16px;
+    border: 1px solid #d9d9d9;
+    background: #f7f7f7;
+    color: inherit;
+}
+.process-block pre {
+    margin: 0;
+    padding: 0;
+    border: none;
+    background: transparent;
+    color: inherit;
+    white-space: pre-wrap;
+}
+.dark .process-block {
+    border-color: #3a3f4b;
+    background: #262a33;
+}

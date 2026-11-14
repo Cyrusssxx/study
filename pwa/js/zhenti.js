@@ -495,6 +495,9 @@
     function ztPlain(html) {
         const box = document.createElement('div');
         box.innerHTML = html || '';
+        // style/script 的文本会被 textContent 原样抄走（题面曾内嵌 <style> 导致复制带出 CSS）；
+        // 样式现已全局化，这里保留防御：任何隐藏标记语言都不进复制结果。
+        box.querySelectorAll('style,script').forEach(n => n.remove());
         // KaTeX 可能同时带 .katex-mathml（给屏幕阅读器的隐藏副本）与 .katex-html（可见排版），
         // 直接取文本会把同一个公式抄两遍。有 annotation 时优先还原成 $LaTeX$（贴到 AI/markdown 更好用），
         // 否则只保留可见排版、删掉隐藏副本。当前 zt 数据两者都没有，这里只是防御。
