@@ -3,7 +3,8 @@
  * CO 2.1.4 整数转换三种位模式 / CO 1.2.4 层次结构与 ISA 分界线及三类语言翻译程序；
  * CN 6.4.1 邮件六步收发与服务器双重角色 / CN 5.1.1 三层通信范围与端口分用 /
  * CN 6.1.1 C/S 与 P2P / CN 3.7.1 节点交换机与路由器作用域。
- * 锁精确总量：fig-img 195（co46/os70/cn48/ds31）、黄框 310（74/77/53/106，本批未动）。
+ * P15 时点精确总量：fig-img 195（co46/os70/cn48/ds31）、黄框 310（74/77/53/106，本批未动）。
+ * 后续批次只增不减 → 配图断言降级为下限，精确总量由最新批次测试 _test_fig_p16.js 统管。
  * 行号双基线（本批零漂移）：CO 1819 / OS 3660 / CN 1108 / DS 1173·1175；jsdom 1971 / 3668 / 1220 / 1330。
  */
 const fs = require('fs');
@@ -201,7 +202,8 @@ for (const sub of SUBS) {
 const FIG_N = { co: 46, os: 70, cn: 48, ds: 31 };
 const CALL_N = { co: 74, os: 77, cn: 53, ds: 106 };
 for (const sub of SUBS) {
-  check(sub + ' 配图 ' + FIG_N[sub] + ' 张（P15 精确总量）', (RAW[sub].match(/fig-img/g) || []).length, FIG_N[sub]);
+  check(sub + ' 配图 >= ' + FIG_N[sub] + ' 张（P15 下限，精确总量见 _test_fig_p16）',
+    (RAW[sub].match(/fig-img/g) || []).length, n => n >= FIG_N[sub]);
   check(sub + ' 黄框 ' + CALL_N[sub] + ' 个（P15 未动，精确）',
     (RAW[sub].match(/class=\\"key-callout\\"/g) || []).length, CALL_N[sub]);
   check(sub + ' 序列化格式',
@@ -211,7 +213,8 @@ for (const sub of SUBS) {
   check(sub + ' 图引用 / 文件 / SW 预缓存三方一致',
     refs.every(r => fs.existsSync(path.join(ROOT, 'pwa', r)) && sw.includes("'" + r + "'")), true);
 }
-check('全库 fig-img 195 张', SUBS.reduce((n, s) => n + (RAW[s].match(/fig-img/g) || []).length, 0), 195);
+check('全库 fig-img >= 195 张（精确 196 见 _test_fig_p16）',
+  SUBS.reduce((n, s) => n + (RAW[s].match(/fig-img/g) || []).length, 0), n => n >= 195);
 check('全库黄框 310 个（本批未新增）', SUBS.reduce((n, s) => n + (RAW[s].match(/class=\\"key-callout\\"/g) || []).length, 0), 310);
 const STRUCT = { co: 0, ds: 0, cn: 11, os: 14 };
 check('内联 struct-fig 总量未变（CO0/DS0/CN11/OS14）',
@@ -243,10 +246,11 @@ for (const sub of SUBS) {
 }
 if (guardDone === 3) {
   check('OS/CO/CN 三科 before 备份都参与了纯插入校验', guardDone, 3);
-  check('变化的 9 个小节全是纯插入（0 删除 / 0 改写）', guardBad, 0);
-  check('变化小节数 = 9（本批只碰这九个零图小节）', changed, 9);
-  check('被改的小节正是 1.1.2/1.2.3/1.2.4×2/2.1.4/3.7.1/5.1.1/6.1.1/6.4.1',
-    changedKeys.slice().sort(), ['1.1.2', '1.2.3', '1.2.4', '1.2.4', '2.1.4', '3.7.1', '5.1.1', '6.1.1', '6.4.1']);
+  check('变化的小节全是纯插入（0 删除 / 0 改写，含后续批次）', guardBad, 0);
+  check('变化小节数 >= 9（P15 九个零图小节；后续批次可新增，如图 P16 的 OS 3.1.3）', changed, n => n >= 9);
+  const P15_KEYS = ['1.1.2', '1.2.3', '1.2.4', '1.2.4', '2.1.4', '3.7.1', '5.1.1', '6.1.1', '6.4.1'];
+  check('P15 的九个小节变化仍在（后续新增不覆盖）',
+    P15_KEYS.every(k => changedKeys.includes(k)), true);
 } else {
   console.log('SKIP 纯插入守卫：缺少三科 before 备份（归档目录不在 git 中）');
 }

@@ -661,9 +661,15 @@
             const flat = [];          // 扁平化 {ch, sec}，下标即 slot 的 data-i
             let skeleton = '';
             for (const ch of notes.chapters) {
+                // 章/节级重点汇总：不写进数据，按小节标记现算，避免三处清单不同步。
+                const chSubs = ch.sections.reduce((a, s) => a.concat(s.subsections || []), []);
+                const chCore = chSubs.filter(s => s.core).length;
+                const chImp = chSubs.filter(s => s.important).length;
+                const chCls = chCore >= 2 ? ' notes-toc-ch-core'
+                    : (chImp >= 3 ? ' notes-toc-ch-strong' : '');
                 // 章标题也可点：跳到该章第一个节（data-sec 由下方循环填充，这里先记首节名）
                 const chFirst = (ch.sections[0] && ch.sections[0].section) || '';
-                toc += `<div class="notes-toc-ch" data-sec="${chFirst}" title="跳到「${ch.chapter}」">${ch.chapter}</div>`;
+                toc += `<div class="notes-toc-ch${chCls}" data-sec="${chFirst}" title="跳到「${ch.chapter}」">${ch.chapter}</div>`;
                 // 章标题直接进索引（数据在手，不必等 DOM 渲染）
                 noteIndex.push({ text: ch.chapter, path: '章', w: 0, r: 0, order: noteOrder++ });
                 addToInverted(ch.chapter, noteIndex[noteOrder - 1]);
@@ -671,11 +677,13 @@
                 for (const sec of ch.sections) {
                     const subs = sec.subsections || [];
                     const hasSub = subs.length > 0;
+                    const secCls = subs.some(s => s.core) ? ' notes-toc-sec-core'
+                        : (subs.some(s => s.important) ? ' notes-toc-sec-strong' : '');
                     // 目录：有子节的可点击展开/收起，无子节的点击跳转（事件委托见下方，避免内联onclick引号嵌套bug）
-                    toc += `<a class="notes-toc-sec" data-sec="${sec.section}"${hasSub ? ' data-hassub="1"' : ''}>${hasSub ? '<span class="toc-sec-arrow">▾</span>' : ''}${sec.section}</a>`;
+                    toc += `<a class="notes-toc-sec${secCls}" data-sec="${sec.section}"${hasSub ? ' data-hassub="1"' : ''}>${hasSub ? '<span class="toc-sec-arrow">▾</span>' : ''}${sec.section}</a>`;
                     if (hasSub) {
                         toc += `<div class="notes-toc-subs">` + subs.map(s =>
-                            `<a class="notes-toc-sub${s.important ? ' notes-toc-sub-strong' : ''}" data-sec="${s.section}">${s.section}</a>`
+                            `<a class="notes-toc-sub${s.important ? ' notes-toc-sub-strong' : ''}${s.core ? ' notes-toc-sub-core' : ''}" data-sec="${s.section}">${s.section}</a>`
                         ).join('') + `</div>`;
                     }
                     skeleton += `<div class="notes-sec-slot" data-i="${flat.length}"></div>`;

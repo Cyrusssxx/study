@@ -8628,3 +8628,21 @@ body.fc-toc-open .fc-toc-fab { display: none; }
     border-color: #3a3f4b;
     background: #262a33;
 }
+
+/* ============ 讲义目录重点标记（notes JSON 的 important / core） ============
+   重点 = 加粗 + 主色（既有 .notes-toc-sub-strong）；很重点 = 加粗 + 名称后 * 星标。
+   星标一律用伪元素，不进 textContent，搜索索引、跳转 data-sec 与既有断言都不受影响。
+   章/节级只是汇总：章下 >=2 个 core 或 >=3 个 important 才标，节下有 core / important 才标。 */
+.notes-toc-ch-strong, .notes-toc-sec-strong { font-weight: 700; }
+.notes-toc-ch-core, .notes-toc-sec-core, .notes-toc-sub-core { font-weight: 700; }
+.notes-toc-sub-core { color: var(--primary-dark); }
+.notes-toc-ch-core::after, .notes-toc-sec-core::after, .notes-toc-sub-core::after {
+    content: '*';
+    margin-left: 3px;
+    color: #e8590c;
+    font-weight: 700;
+}
+.dark .notes-toc-sub-core { color: #ffc53d; }
+.dark .notes-toc-ch-core::after,
+.dark .notes-toc-sec-core::after,
+.dark .notes-toc-sub-core::after { color: #ff7a45; }

@@ -1,0 +1,52 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 680 440" width="680" height="440" font-family="-apple-system,BlinkMacSystemFont,'Segoe UI','Microsoft YaHei',sans-serif">
+  <rect x="0" y="0" width="680" height="440" fill="#ffffff"/>
+  <text x="20" y="28" font-size="16" font-weight="700" fill="#312e81">两级页表地址翻译：每一级都是「表起始物理地址 + 下标×4B」</text>
+  <text x="20" y="48" font-size="11.5" fill="#64748b">2020 真题 46：32 位、页面 4KB、页目录项/页表项均 4B；a[1][2] 虚拟地址 10801008H，按 10 / 10 / 12 位拆开。</text>
+
+  <text x="20" y="66" font-size="11" font-weight="700" fill="#1e40af">虚拟地址 10801008H 的三段</text>
+  <rect x="20" y="72" width="200" height="36" fill="#dbeafe" stroke="#93c5fd" stroke-width="1"/>
+  <text x="120" y="87" font-size="11" fill="#1e3a8a" text-anchor="middle">页目录号 10 位</text>
+  <text x="120" y="103" font-size="13" font-weight="700" fill="#1e3a8a" text-anchor="middle">042H</text>
+  <rect x="224" y="72" width="200" height="36" fill="#dbeafe" stroke="#93c5fd" stroke-width="1"/>
+  <text x="324" y="87" font-size="11" fill="#1e3a8a" text-anchor="middle">页号 10 位</text>
+  <text x="324" y="103" font-size="13" font-weight="700" fill="#1e3a8a" text-anchor="middle">001H</text>
+  <rect x="428" y="72" width="232" height="36" fill="#fef3c7" stroke="#fcd34d" stroke-width="1"/>
+  <text x="544" y="87" font-size="11" fill="#92400e" text-anchor="middle">页内偏移 12 位</text>
+  <text x="544" y="103" font-size="13" font-weight="700" fill="#92400e" text-anchor="middle">008H</text>
+
+  <path d="M120 108 V 128" fill="none" stroke="#93c5fd" stroke-width="1.5"/>
+  <path d="M116 124 L120 130 L124 124" fill="none" stroke="#93c5fd" stroke-width="1.5"/>
+  <path d="M324 108 V 128" fill="none" stroke="#93c5fd" stroke-width="1.5"/>
+  <path d="M320 124 L324 130 L328 124" fill="none" stroke="#93c5fd" stroke-width="1.5"/>
+
+  <rect x="20" y="132" width="470" height="66" rx="6" fill="#eff6ff" stroke="#93c5fd" stroke-width="1"/>
+  <text x="32" y="152" font-size="12" font-weight="700" fill="#1e40af">① 查页目录项 PDE（下标 = 页目录号 042H）</text>
+  <text x="32" y="173" font-size="12" fill="#1e3a8a">00201000H + 042H×4B = 00201108H → 读出页框号 00301H</text>
+  <text x="32" y="190" font-size="11" fill="#64748b">页目录表起始物理地址 + 下标 × 表项长度；00301H 即二级页表所在页框</text>
+
+  <path d="M255 198 V 216" fill="none" stroke="#93c5fd" stroke-width="1.5"/>
+  <path d="M251 212 L255 218 L259 212" fill="none" stroke="#93c5fd" stroke-width="1.5"/>
+
+  <rect x="20" y="220" width="470" height="66" rx="6" fill="#eff6ff" stroke="#93c5fd" stroke-width="1"/>
+  <text x="32" y="240" font-size="12" font-weight="700" fill="#1e40af">② 查页表项 PTE（下标 = 页号 001H）</text>
+  <text x="32" y="261" font-size="12" fill="#1e3a8a">00301000H + 001H×4B = 00301004H → 读出目标页框号</text>
+  <text x="32" y="278" font-size="11" fill="#64748b">同一套算法、换一张表：起始地址 00301000H 就是①读出的页框号左移 12 位</text>
+
+  <path d="M255 286 V 304" fill="none" stroke="#93c5fd" stroke-width="1.5"/>
+  <path d="M251 300 L255 306 L259 300" fill="none" stroke="#93c5fd" stroke-width="1.5"/>
+
+  <rect x="20" y="308" width="470" height="62" rx="6" fill="#eef2ff" stroke="#a5b4fc" stroke-width="1"/>
+  <text x="32" y="328" font-size="12" font-weight="700" fill="#3730a3">③ 拼出物理地址（这时才用到页内偏移）</text>
+  <text x="32" y="349" font-size="12" fill="#1e3a8a">00301000H（页框号左移 12 位）+ 008H = 00301008H</text>
+  <text x="32" y="365" font-size="11" fill="#64748b">页内偏移不是查表的偏移量，它是页内部第 8 个字节</text>
+
+  <rect x="496" y="150" width="144" height="66" rx="6" fill="#ffffff" stroke="#fcd34d" stroke-width="1"/>
+  <text x="568" y="172" font-size="11.5" font-weight="700" fill="#92400e" text-anchor="middle">页内偏移 008H</text>
+  <text x="568" y="190" font-size="11" fill="#92400e" text-anchor="middle">不参与两次查表</text>
+  <text x="568" y="206" font-size="11" fill="#92400e" text-anchor="middle">只在最后一步拼接</text>
+  <path d="M656 108 H 648 V 336 H 494" fill="none" stroke="#fcd34d" stroke-width="1.2" stroke-dasharray="4 4"/>
+  <path d="M500 332 L494 336 L500 340" fill="none" stroke="#fcd34d" stroke-width="1.2"/>
+
+  <rect x="20" y="386" width="640" height="38" rx="6" fill="#fef3c7" stroke="#fcd34d" stroke-width="1"/>
+  <text x="32" y="411" font-size="12.5" font-weight="700" fill="#92400e">口诀：每级查表都是「表起始物理地址 + 下标×4B」，偏移量各有各的；页内偏移只在最后拼物理地址时用。</text>
+</svg>
