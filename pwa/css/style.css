@@ -4800,16 +4800,17 @@ h3.algo-h:first-child, h4.algo-h:first-child, h5.algo-h:first-child { margin-top
     color: var(--primary);
     font-weight: 600;
 }
-/* 重点小节：目录加粗 + 主色，醒目提示 */
+/* 重点小节：主色但不加粗（数量占全部子节的 30%，见文件末尾「目录重点标记」一段）。
+   Windows 中文只有 400/700 两档字形，写 600 会被合成成 Bold，想去重只能显式 400。 */
 .notes-toc-sub-strong {
-    color: var(--primary-dark);
-    font-weight: 700;
+    color: var(--primary);
+    font-weight: 400;
 }
 .notes-toc-sub-strong:hover {
-    color: var(--primary);
+    color: var(--primary-dark);
 }
 .dark .notes-toc-sub-strong {
-    color: #ffc53d;
+    color: #8fb0d9;
 }
 
 /* 正文小节（二级标题 + 内容块） */
@@ -8665,22 +8666,39 @@ body.fc-toc-open .fc-toc-fab { display: none; }
 }
 
 /* ============ 讲义目录重点标记（notes JSON 的 important / core） ============
-   重点 = 加粗 + 主色（既有 .notes-toc-sub-strong）；很重点 = 加粗 + 名称后 * 星标。
-   星标一律用伪元素，不进 textContent，搜索索引、跳转 data-sec 与既有断言都不受影响。
-   章/节级只是汇总：章下 >=2 个 core 或 >=3 个 important 才标，节下有 core / important 才标。 */
-.notes-toc-ch-strong, .notes-toc-sec-strong { font-weight: 700; }
-.notes-toc-ch-core, .notes-toc-sec-core, .notes-toc-sub-core { font-weight: 700; }
-.notes-toc-sub-core { color: var(--primary-dark); }
-.notes-toc-ch-core::after, .notes-toc-sec-core::after, .notes-toc-sub-core::after {
+   三档视觉，靠「颜色 + 粗细 + 星标」拉开，粗体总量从 145 处收到 30 出头，
+   标记本身一个不删（重点由题库题量 + 错题/不熟/不会 + 大题锚点加权得出，
+   删任何一个都是丢信息）：
+     普通子节  = 灰 400
+     重点      = 主色 400（彩色但不加重，一坨彩色细字不刺眼）
+     很重点    = 深主色 700 + 名称后 * 星标（唯一加粗档，醒目度全押在它身上）
+   节/章只是「自身被标」才加重，子节有标记不再连带——否则节名 71/111、章名 25/26
+   全被加粗，三级叠起来整条侧栏都是粗体，反而看不出哪一节最重。
+   星标一律用伪元素，不进 textContent，搜索索引、跳转 data-sec 与既有断言都不受影响。 */
+.notes-toc-sec-strong, .notes-toc-ch-core, .notes-toc-sec-core, .notes-toc-sub-core {
+    font-weight: 700;
+}
+.notes-toc-sec-strong { color: var(--primary-dark); }
+.notes-toc-sec-core, .notes-toc-sub-core { color: var(--primary-dark); }
+.notes-toc-ch-core::after, .notes-toc-sec-core::after {
     content: '*';
     margin-left: 3px;
     color: #e8590c;
     font-weight: 700;
 }
+/* 子节名是 nowrap + ellipsis，星标放名字后面会被截断吞掉（「1.2.3 OSI参考模型和TC…」
+   整条 190px 宽必定折在省略号里），所以前置。 */
+.notes-toc-sub-core::before {
+    content: '*';
+    margin-right: 2px;
+    color: #e8590c;
+    font-weight: 700;
+}
+.dark .notes-toc-sec-strong { color: #8fb0d9; }
 .dark .notes-toc-sub-core { color: #ffc53d; }
 .dark .notes-toc-ch-core::after,
 .dark .notes-toc-sec-core::after,
-.dark .notes-toc-sub-core::after { color: #ff7a45; }
+.dark .notes-toc-sub-core::before { color: #ff7a45; }
 
 /* ============ 基带编码波形（内联 SVG，替代原 img 外链） ============
    原图是 <img src="*.svg"> 且硬编码白底 #ffffff + 深色文字：暗色主题下白块刺眼，

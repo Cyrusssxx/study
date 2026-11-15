@@ -206,6 +206,12 @@ if (!JSDOM || !IDBFactory) {
     const d = dom.window.document;
     const out = {
       lines: [...d.querySelectorAll('.anno-line')].map(e => e.textContent.trim()),
+      // OS 1.5 已按「精简」重排（110 段 → 41 段，见 tools/slim_os15.py）：
+      // 逐行比对与数量一致性都排除该节，其余小节仍要求零漂移。
+      no15: [...d.querySelectorAll('.anno-line')].filter(e => {
+          const sc = e.closest('.notes-section');
+          return !(sc && sc.dataset.sec.startsWith('1.5 '));
+      }).map(e => e.textContent.trim()),
       figs: d.querySelectorAll('img.fig-img').length,
       waveFigs: d.querySelectorAll('figure.wave-fig').length,
       wavePaths: d.querySelectorAll('figure.wave-fig path.wave-line').length,
@@ -226,10 +232,10 @@ if (!JSDOM || !IDBFactory) {
   check('内联图没有落进 li', a.inLi, 0);
   if (fs.existsSync(path.join(ROOT, BAK))) {
     const b = await render(read(BAK));
-    check('双版本 .anno-line 数量一致（改图不影响行号）', b.lines.length, a.lines.length);
+    check('双版本 .anno-line 数量一致（改图不影响行号）', b.no15.length, a.no15.length);
     let first = -1;
-    if (b.lines.length === a.lines.length)
-      for (let k = 0; k < b.lines.length; k++) if (b.lines[k] !== a.lines[k]) { first = k; break; }
+    if (b.no15.length === a.no15.length)
+      for (let k = 0; k < b.no15.length; k++) if (b.no15[k] !== a.no15[k]) { first = k; break; }
     check('双版本逐行文本完全一致（行级批注零错位）', first, -1);
     check('改图后 img.fig-img 由 48 降为 47', [b.figs, a.figs], [48, 47]);
     b.window.close();

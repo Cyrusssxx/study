@@ -185,7 +185,7 @@ check('CSS .key-callout 无绝对定位 / z-index / 负外边距遮挡',
 check('笔记 JSON 里没有 SVG 专有的 tspan', SUBS.every(s => !RAW[s].includes('tspan')), true);
 
 // ---------- 5. 行号双基线（图块与黄框都不参与行号） ----------
-const LINE_BASE = { co: [1819, 1819], os: [3660, 3660], cn: [1108, 1108], ds: [1173, 1175] };
+const LINE_BASE = { co: [1819, 1819], os: [3581, 3581], cn: [1108, 1108], ds: [1173, 1175] };
 for (const sub of SUBS) {
   let paired = 0, open = 0;
   for (const { h } of allHtmls(sub)) {
@@ -230,7 +230,7 @@ function subseq(old, neu) {
 }
 const BAK_DIR = 'archive/fig_p15_2026-11-13/';
 // 第十七批豁免：CN 2.1.3 的编码波形图由 <img> 外链换成内联 SVG，属替换而非纯插入。
-const REPLACED_KEYS = ['2.1.3'];
+const REPLACED_KEYS = ['2.1.3', '1.5'];   // 1.5：OS 引导正文精简重排（tools/slim_os15.py）
 let guardDone = 0, guardBad = 0, changed = 0, changedKeys = [];
 for (const sub of SUBS) {
   const bp = BAK_DIR + sub + '_notes.before.json';
@@ -293,6 +293,12 @@ if (!JSDOM || !IDBFactory) {
       const out = {
         window: dom.window, document: d,
         lines: [...d.querySelectorAll('.anno-line')].map(e => e.textContent.trim()),
+        // OS 1.5 已按「精简」重排（110 段 → 41 段，见 tools/slim_os15.py）：
+        // 逐行比对与数量一致性都排除该节，其余小节仍要求零漂移。
+        no15: [...d.querySelectorAll('.anno-line')].filter(e => {
+            const sc = e.closest('.notes-section');
+            return !(sc && sc.dataset.sec.startsWith('1.5 '));
+        }).map(e => e.textContent.trim()),
         figs: d.querySelectorAll('img.fig-img').length,
         calls: d.querySelectorAll('.key-callout').length,
         lightbox: null,
@@ -311,7 +317,7 @@ if (!JSDOM || !IDBFactory) {
       }
       return out;
     }
-    const JSDOM_BASE = { co: 1971, os: 3668, cn: 1220, ds: 1330 };
+    const JSDOM_BASE = { co: 1971, os: 3589, cn: 1220, ds: 1330 };
     for (const sub of SUBS) {
       const a = await render(sub, RAW[sub]);
       check(sub + ' 真实渲染 .anno-line = ' + JSDOM_BASE[sub], a.lines.length, JSDOM_BASE[sub]);
@@ -327,10 +333,10 @@ if (!JSDOM || !IDBFactory) {
       const bp = BAK_DIR + sub + '_notes.before.json';
       if (fs.existsSync(path.join(ROOT, bp))) {
         const b = await render(sub, read(bp));
-        check(sub + ' 双版本 .anno-line 数量一致', b.lines.length, a.lines.length);
+        check(sub + ' 双版本 .anno-line 数量一致', b.no15.length, a.no15.length);
         let first = -1;
-        if (b.lines.length === a.lines.length)
-          for (let i = 0; i < b.lines.length; i++) if (b.lines[i] !== a.lines[i]) { first = i; break; }
+        if (b.no15.length === a.no15.length)
+          for (let i = 0; i < b.lines.length; i++) if (b.no15[i] !== a.no15[i]) { first = i; break; }
         check(sub + ' 双版本逐行文本完全一致（黄框零覆盖 / 批注零错位）', first, -1);
         b.window.close();
       } else {

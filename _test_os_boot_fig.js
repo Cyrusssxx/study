@@ -7,7 +7,7 @@
  * 1.5 是节级小节（无子节）、此前零配图，故补一张「四段接力」内联图：
  *   - 内联 SVG（不是 img 外链）：文字随主题取 var(--*)，亮/暗自适应，缩放不栅格化
  *   - 必须无 tspan（全库测试断言笔记 JSON 无 tspan；SVG 里加粗用 font-weight）
- *   - data-fig="1" 整体不参与行号 → OS 静态 3660 / jsdom 3668 必须零漂移
+ *   - data-fig="1" 整体不参与行号 → OS 静态 3581 / jsdom 3589（1.5 精简后基线）
  */
 const fs = require('fs');
 const path = require('path');
@@ -98,7 +98,7 @@ if (fs.existsSync(path.join(ROOT, BAK))) {
   for (const ch of before.chapters) for (const s of ch.sections || [])
     for (const x of [s].concat(s.subsections || [])) {
       const neu = A.get(x.section.split(' ')[0]) || '';
-      if ((x.html || '') !== neu) { changed++; changedKeys.push(x.section.split(' ')[0]); if (!subseq(x.html || '', neu)) bad++; }
+      if ((x.html || '') !== neu) { changed++; changedKeys.push(x.section.split(' ')[0]); if (!subseq(x.html || '', neu) && x.section.split(' ')[0] !== '1.5') bad++; }
     }
   check('相对 before 只改了 1.5 一个小节', changedKeys, ['1.5']);
   check('本批变化是纯插入（0 删除 / 0 改写）', bad, 0);
@@ -137,6 +137,12 @@ if (!JSDOM || !IDBFactory) {
       const d = dom.window.document;
       return {
         lines: [...d.querySelectorAll('.anno-line')].map(e => e.textContent.trim()),
+        // OS 1.5 已按「精简」重排（110 段 → 41 段，见 tools/slim_os15.py）：
+        // 逐行比对与数量一致性都排除该节，其余小节仍要求零漂移。
+        no15: [...d.querySelectorAll('.anno-line')].filter(e => {
+            const sc = e.closest('.notes-section');
+            return !(sc && sc.dataset.sec.startsWith('1.5 '));
+        }).map(e => e.textContent.trim()),
         figs: d.querySelectorAll('img.fig-img').length,
         bootFigs: d.querySelectorAll('figure.boot-fig').length,
         misLabeled: [...d.querySelectorAll('[data-fig]')].filter(el => el.classList.contains('anno-line')).length,
@@ -145,17 +151,17 @@ if (!JSDOM || !IDBFactory) {
       };
     }
     const a = await render(RAW.os);
-    check('真实渲染 .anno-line = 3668（OS 基线，图块未计入）', a.lines.length, 3668);
+    check('真实渲染 .anno-line = 3589（OS 基线，图块未计入）', a.lines.length, 3589);
     check('真实渲染 fig-img 71 张（未变）', a.figs, 71);
     check('真实渲染 boot-fig 1 张', a.bootFigs, 1);
     check('图块被误标行号 = 0', a.misLabeled, 0);
     check('图块没落进 p/li', a.inP, 0);
     if (fs.existsSync(path.join(ROOT, BAK))) {
       const b = await render(read(BAK));
-      check('双版本 .anno-line 数量一致', b.lines.length, a.lines.length);
+      check('双版本 .anno-line 数量一致', b.no15.length, a.no15.length);
       let first = -1;
-      if (b.lines.length === a.lines.length)
-        for (let k = 0; k < b.lines.length; k++) if (b.lines[k] !== a.lines[k]) { first = k; break; }
+      if (b.no15.length === a.no15.length)
+        for (let k = 0; k < b.no15.length; k++) if (b.no15[k] !== a.no15[k]) { first = k; break; }
       check('双版本逐行文本完全一致（已存行级批注零错位）', first, -1);
       b.window.close();
     } else {

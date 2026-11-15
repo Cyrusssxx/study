@@ -2,7 +2,7 @@
  * 锁精确总量：fig-img 195（co46/os71/cn47/ds31）、黄框 310 未动。
  * CN 由 48 降为 47：2.1.3 的基带编码波形图改为内联 SVG（原 img 外链暗色发白块、
  * 缩放下发虚）。CN 精确量与内联图契约由 _test_cn_code_wave 统管，此处 CN 只保下限。
- * 行号双基线 OS 静态 3660 / jsdom 3668，本批零漂移；before 备份存在时做双版本逐行文本比对。
+ * 行号双基线 OS 静态 3581 / jsdom 3589，本批零漂移；before 备份存在时做双版本逐行文本比对。
  */
 const fs = require('fs');
 const path = require('path');
@@ -99,7 +99,7 @@ if (fs.existsSync(path.join(ROOT, BAK))) {
   for (const ch of before.chapters) for (const s of ch.sections || [])
     for (const x of [s].concat(s.subsections || [])) {
       const neu = A.get(x.section.split(' ')[0]) || '';
-      if ((x.html || '') !== neu) { changed++; if (!subseq(x.html || '', neu)) bad++; }
+      if ((x.html || '') !== neu) { changed++; if (!subseq(x.html || '', neu) && x.section.split(' ')[0] !== '1.5') bad++; }
     }
   // 后续批次（P17 起）会继续在小节里补纯插入块，这里只要求「至少本批那 1 处」，
   // 变化数不再锁死；真正要守的是下一行 bad=0（不许删除/改写既有内容）。
@@ -140,6 +140,12 @@ if (!JSDOM || !IDBFactory) {
       const d = dom.window.document;
       const out = {
         lines: [...d.querySelectorAll('.anno-line')].map(e => e.textContent.trim()),
+        // OS 1.5 已按「精简」重排（110 段 → 41 段，见 tools/slim_os15.py）：
+        // 逐行比对与数量一致性都排除该节，其余小节仍要求零漂移。
+        no15: [...d.querySelectorAll('.anno-line')].filter(e => {
+            const sc = e.closest('.notes-section');
+            return !(sc && sc.dataset.sec.startsWith('1.5 '));
+        }).map(e => e.textContent.trim()),
         figs: d.querySelectorAll('img.fig-img').length,
         misLabeled: [...d.querySelectorAll('[data-fig]')].filter(el => el.classList.contains('anno-line')).length,
         badFig: [...d.querySelectorAll('img.fig-img')]
@@ -155,17 +161,17 @@ if (!JSDOM || !IDBFactory) {
       return out;
     }
     const a = await render(RAW.os);
-    check('真实渲染 .anno-line = 3668（OS 基线）', a.lines.length, 3668);
+    check('真实渲染 .anno-line = 3589（OS 基线）', a.lines.length, 3589);
     check('真实渲染配图 71 张', a.figs, 71);
     check('图块被误标行号 = 0', a.misLabeled, 0);
     check('新图没落进 li', a.badFig, 0);
     check('新图可点击放大', a.lightbox, true);
     if (fs.existsSync(path.join(ROOT, BAK))) {
       const b = await render(read(BAK));
-      check('双版本 .anno-line 数量一致', b.lines.length, a.lines.length);
+      check('双版本 .anno-line 数量一致', b.no15.length, a.no15.length);
       let first = -1;
-      if (b.lines.length === a.lines.length)
-        for (let k = 0; k < b.lines.length; k++) if (b.lines[k] !== a.lines[k]) { first = k; break; }
+      if (b.no15.length === a.no15.length)
+        for (let k = 0; k < b.no15.length; k++) if (b.no15[k] !== a.no15[k]) { first = k; break; }
       check('双版本逐行文本完全一致（行级批注零错位）', first, -1);
       b.window.close();
     } else {

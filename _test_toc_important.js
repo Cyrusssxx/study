@@ -130,21 +130,31 @@ if (guardDone < 4) console.log('SKIP 纯加字段守卫：缺 before 备份（�
 check('notes.html 小节渲染 important + core 双 class',
   NOTES_HTML.includes("s.important ? ' notes-toc-sub-strong' : ''") &&
   NOTES_HTML.includes("s.core ? ' notes-toc-sub-core' : ''"), true);
-check('notes.html 节级汇总 core > important（节自身标记优先）',
-  NOTES_HTML.includes("(sec.core || subs.some(s => s.core)) ? ' notes-toc-sec-core'") &&
-  NOTES_HTML.includes("(sec.important || subs.some(s => s.important)) ? ' notes-toc-sec-strong'"), true);
-check('notes.html 章级汇总阈值 2 / 3',
-  NOTES_HTML.includes('chCore >= 2') && NOTES_HTML.includes('chImp >= 3'), true);
+check('notes.html 节级只按「节自身标记」加重（不因子节连带）',
+  NOTES_HTML.includes("sec.core ? ' notes-toc-sec-core'") &&
+  NOTES_HTML.includes("(sec.important ? ' notes-toc-sec-strong' : '')") &&
+  !NOTES_HTML.includes('subs.some(s => s.core)') &&
+  !NOTES_HTML.includes('subs.some(s => s.important)'), true);
+check('notes.html 章级只在 >=2 个很重点时才加 *（不再按重点数加粗）',
+  NOTES_HTML.includes('chCore >= 2') && !NOTES_HTML.includes('chImp >= 3'), true);
 check('章/节汇总在渲染时现算（数据里不写汇总字段）',
   NOTES_HTML.includes('ch.sections.reduce') && NOTES_HTML.includes('const chItems') &&
   NOTES_HTML.includes('ch.sections.concat(chSubs)'), true);
-check('style.css 三级的 * 星标都用伪元素',
+check('style.css 星标用伪元素（章/节在后，子节在前防 ellipsis 吞掉）',
   CSS.includes("content: '*'") &&
-  ['.notes-toc-ch-core::after', '.notes-toc-sec-core::after', '.notes-toc-sub-core::after']
-    .every(k => CSS.includes(k)), true);
-check('style.css 暗色星标可读', CSS.includes('.dark .notes-toc-sub-core::after'), true);
-check('原有 .notes-toc-sub-strong 规则仍在（重点=加粗主色）',
-  CSS.includes('.notes-toc-sub-strong {') && CSS.includes('.dark .notes-toc-sub-strong {'), true);
+  ['.notes-toc-ch-core::after', '.notes-toc-sec-core::after', '.notes-toc-sub-core::before']
+    .every(k => CSS.includes(k)) &&
+  !CSS.includes('.notes-toc-sub-core::after'), true);
+check('style.css 暗色星标可读', CSS.includes('.dark .notes-toc-sub-core::before { color: #ff7a45; }'), true);
+const subStrongBlock = (CSS.split('.notes-toc-sub-strong {')[1] || '').split('}')[0];
+check('重点子节=主色 400（不再加粗；Windows 中文只有 400/700 两档，600 会合成 Bold）',
+  CSS.includes('.notes-toc-sub-strong {') && /font-weight:\s*400/.test(subStrongBlock) &&
+  !/font-weight:\s*(600|700)/.test(subStrongBlock), true);
+check('很重点子节仍加粗（粗体档只留给 core，醒目度不被稀释）',
+  /\.notes-toc-sec-core,\s*\.notes-toc-sub-core\s*\{[^}]*font-weight:\s*700/.test(CSS), true);
+check('暗色主题重点子节与很重点区分开（蓝 vs 金，不同色相）',
+  CSS.includes('.dark .notes-toc-sub-strong {\n    color: #8fb0d9;') &&
+  CSS.includes('.dark .notes-toc-sub-core { color: #ffc53d; }'), true);
 
 // ---------- 4. jsdom 真实渲染 ----------
 let JSDOM = null, IDBFactory = null, IDBKeyRange = null, VirtualConsole = null;
@@ -183,6 +193,7 @@ if (!JSDOM || !IDBFactory) {
         secStrong: d.querySelectorAll('.notes-toc-sec-strong').length,
         chStrong: d.querySelectorAll('.notes-toc-ch-strong').length,
         subLinks: d.querySelectorAll('.notes-toc-sub[data-sec]').length,
+        secTokens: [...d.querySelectorAll('.notes-toc-sub[data-sec]')].map(e => e.dataset.sec),
         starInText: [...d.querySelectorAll('.notes-toc-sub-core, .notes-toc-sec-core, .notes-toc-ch-core')]
           .some(e => e.textContent.includes('*')),
         window: dom.window, document: d

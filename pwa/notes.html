@@ -631,6 +631,15 @@
             return html;
         }
 
+        // 目录项的属性值必须转义：CN「5.4.4 为什么不用"两次握手"建立连接？」这类节名里
+        // 带 ASCII 双引号，直接拼进 data-sec="…" 会把属性打断，dataset.sec 只剩前半截，
+        // 点击目录时跳到不存在的节（表现为点了没反应）。& 也要先转，避免二次实体化。
+        function escAttr(s) {
+            return String(s == null ? '' : s)
+                .replace(/&/g, '&amp;').replace(/"/g, '&quot;')
+                .replace(/</g, '&lt;').replace(/>/g, '&gt;');
+        }
+
         async function loadNotes() {
             let notes;
             try {
@@ -661,18 +670,18 @@
             const flat = [];          // 扁平化 {ch, sec}，下标即 slot 的 data-i
             let skeleton = '';
             for (const ch of notes.chapters) {
-                // 章/节级重点汇总：不写进数据，按标记现算，避免三处清单不同步。
-                // 节自身也可能被标注（大题锚点只到第 2 级时的落点，如「1.5 操作系统引导」），
+                // 章级很重点汇总：不写进数据，按标记现算，避免三处清单不同步。
+                // 节自身也可能被标（大题锚点只到第 2 级时的落点，如「1.5 操作系统引导」），
                 // 所以汇总时把节一起算进分子，否则这类节在目录里永远不显重点。
                 const chSubs = ch.sections.reduce((a, s) => a.concat(s.subsections || []), []);
                 const chItems = ch.sections.concat(chSubs);
                 const chCore = chItems.filter(s => s.core).length;
-                const chImp = chItems.filter(s => s.important).length;
-                const chCls = chCore >= 2 ? ' notes-toc-ch-core'
-                    : (chImp >= 3 ? ' notes-toc-ch-strong' : '');
+                // 章名默认已是 600。只有「>=2 个很重点」才再加重并加 *；
+                // 原来 >=3 个重点就加重 → 25/26 个章名全是粗体，等于没有区分度。
+                const chCls = chCore >= 2 ? ' notes-toc-ch-core' : '';
                 // 章标题也可点：跳到该章第一个节（data-sec 由下方循环填充，这里先记首节名）
                 const chFirst = (ch.sections[0] && ch.sections[0].section) || '';
-                toc += `<div class="notes-toc-ch${chCls}" data-sec="${chFirst}" title="跳到「${ch.chapter}」">${ch.chapter}</div>`;
+                toc += `<div class="notes-toc-ch${chCls}" data-sec="${escAttr(chFirst)}" title="跳到「${escAttr(ch.chapter)}」">${ch.chapter}</div>`;
                 // 章标题直接进索引（数据在手，不必等 DOM 渲染）
                 noteIndex.push({ text: ch.chapter, path: '章', w: 0, r: 0, order: noteOrder++ });
                 addToInverted(ch.chapter, noteIndex[noteOrder - 1]);
@@ -680,14 +689,17 @@
                 for (const sec of ch.sections) {
                     const subs = sec.subsections || [];
                     const hasSub = subs.length > 0;
-                    // 节自身的标记优先（节级大题锚点 / 无子节的小节），再看子节汇总
-                    const secCls = (sec.core || subs.some(s => s.core)) ? ' notes-toc-sec-core'
-                        : ((sec.important || subs.some(s => s.important)) ? ' notes-toc-sec-strong' : '');
+                    // 节名只在「节自身被标」时加重（大题锚点直接落在节上，如 1.5 操作系统引导）。
+                    // 不再因子节有标记就连带加粗：111 个节里 71 个会被连带，等于节名全粗，
+                    // 而子节自己已经有标记，节名这一层纯属重复。节内重点看展开的子节即可。
+                    const secCls = sec.core ? ' notes-toc-sec-core'
+                        : (sec.important ? ' notes-toc-sec-strong' : '');
                     // 目录：有子节的可点击展开/收起，无子节的点击跳转（事件委托见下方，避免内联onclick引号嵌套bug）
-                    toc += `<a class="notes-toc-sec${secCls}" data-sec="${sec.section}"${hasSub ? ' data-hassub="1"' : ''}>${hasSub ? '<span class="toc-sec-arrow">▾</span>' : ''}${sec.section}</a>`;
+                    // title 兜住被 ellipsis 截断的长名（侧栏仅 190px，「1.1.4 电路交换、报文交换与分组交换」必折）
+                    toc += `<a class="notes-toc-sec${secCls}" data-sec="${escAttr(sec.section)}" title="${escAttr(sec.section)}"${hasSub ? ' data-hassub="1"' : ''}>${hasSub ? '<span class="toc-sec-arrow">▾</span>' : ''}${sec.section}</a>`;
                     if (hasSub) {
                         toc += `<div class="notes-toc-subs">` + subs.map(s =>
-                            `<a class="notes-toc-sub${s.important ? ' notes-toc-sub-strong' : ''}${s.core ? ' notes-toc-sub-core' : ''}" data-sec="${s.section}">${s.section}</a>`
+                            `<a class="notes-toc-sub${s.important ? ' notes-toc-sub-strong' : ''}${s.core ? ' notes-toc-sub-core' : ''}" data-sec="${escAttr(s.section)}" title="${escAttr(s.section)}">${s.section}</a>`
                         ).join('') + `</div>`;
                     }
                     skeleton += `<div class="notes-sec-slot" data-i="${flat.length}"></div>`;
@@ -1268,8 +1280,45 @@
         }
 
         // 已保存批注条：📝 + 文字/贴图 + 改/删（常驻显示在行下方）
+        // 行级批注的「行号自愈」：line 是渲染时数出来的序号，讲义正文一旦增删段落
+        // （比如把一段罗列压成表格、删掉重复表述），后面所有行号整体位移，
+        // 批注就会挂到别的行上、超出行数时直接静默消失（lineEl 找不到就 return）。
+        // 因此给每条批注补一个 anchor（该行归一化文本的前 80 字），加载时优先按 anchor
+        // 重建映射，再把新行号回写，下次直接用新行号。老数据首次加载自动补 anchor。
+        let annoAnchorDirty = false;
+        const annoNorm = el => (el.textContent || '').replace(/\s+/g, ' ').trim();
+
+        function resolveAnnoLine(item) {
+            const byLine = lineEl(item.sec, item.line);
+            const sec = (function () {
+                const s = Array.from(document.querySelectorAll('.notes-section'))
+                    .find(x => x.dataset.sec === item.sec);
+                return s || null;
+            })();
+            // 老批注没有 anchor：用当前行文本补上，落一次库，之后就有锚了
+            if (!item.anchor) {
+                const t = byLine ? annoNorm(byLine) : '';
+                if (t.length >= 6) { item.anchor = t.slice(0, 80); annoAnchorDirty = true; }
+                return byLine;
+            }
+            if (!sec) return byLine;
+            // 行号还准（文本仍以 anchor 开头）→ 不动，省一次全节扫描
+            if (byLine && annoNorm(byLine).startsWith(item.anchor)) return byLine;
+            // 不匹配 → 全节找 anchor 命中的行；多处命中时取离原行号最近的，保持相对位置
+            let best = null, bestD = Infinity;
+            sec.querySelectorAll('.anno-line').forEach(el => {
+                if (!annoNorm(el).startsWith(item.anchor)) return;
+                const d = Math.abs(+el.dataset.line - item.line);
+                if (d < bestD) { best = el; bestD = d; }
+            });
+            if (!best) return byLine;       // anchor 也没了：退回原行号，尽量别丢
+            const nl = +best.dataset.line;
+            if (nl !== item.line) { item.line = nl; annoAnchorDirty = true; }
+            return best;
+        }
+
         function renderAnnoBlock(item) {
-            const line = lineEl(item.sec, item.line);
+            const line = resolveAnnoLine(item);
             if (!line) return;
             const el = document.createElement('div');
             el.className = 'line-anno line-anno-block';
@@ -1327,6 +1376,7 @@
             if (!Array.isArray(items) || !items.length) return;
             annoItems = items.filter(it => it && typeof it.line === 'number');
             annoItems.forEach(renderAnnoBlock);
+            if (annoAnchorDirty) { annoAnchorDirty = false; saveAnnos(); }   // 补 anchor / 纠正行号后落库
         }
 
         // ---------- 划词高亮 ----------
@@ -1561,8 +1611,12 @@
                     let { start, end } = it;
                     // 偏移漂移降级：校验不符则 indexOf 兑底，仍失败静默跳过
                     if (full.slice(start, end) !== it.text) {
-                        const idx = full.indexOf(it.text);
-                        if (idx < 0 || !it.text) continue;
+                        if (!it.text) continue;
+                        // 先在原偏移附近找：改写通常只动局部，远端同文多半是误命中
+                        // （原文只有 full.indexOf → 同一句话在前面别处出现时，高亮会整体挪到前面去）
+                        const near = full.indexOf(it.text, Math.max(0, start - 500));
+                        let idx = (near >= 0 && near <= start + 5000) ? near : full.indexOf(it.text);
+                        if (idx < 0) continue;
                         start = idx; end = idx + it.text.length;
                     }
                     wrapRange(body, start, end, 'note-hl note-hl-' + it.color, { start, color: it.color });
