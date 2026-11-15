@@ -4834,6 +4834,42 @@ h3.algo-h:first-child, h4.algo-h:first-child, h5.algo-h:first-child { margin-top
     border-left-color: var(--primary-dark);
     font-weight: 700;
 }
+/* 大题考点标注：节/小节顶部的「这一节考过哪几年大题」。
+   用 div 而不是 p —— 行号器只数 .notes-body li/p，用 p 会让整节行号后移、
+   已存的行级批注全部错位。tools/mark_zt_ref.py 生成，口径同 bigq_kp_*.json。 */
+.notes-body .zt-ref {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 0 8px;
+    margin: 6px 0 12px;
+    padding: 6px 10px;
+    border-left: 3px solid var(--primary);
+    background: rgba(74, 122, 184, .07);
+    border-radius: 0 6px 6px 0;
+    font-size: .8rem;
+    line-height: 1.7;
+    color: var(--text-light);
+}
+.notes-body .zt-ref b {
+    color: var(--primary-dark);
+    font-weight: 700;
+    margin-right: 2px;
+    letter-spacing: .3px;
+}
+.notes-body .zt-ref-q {
+    color: var(--text);
+    font-variant-numeric: tabular-nums;
+    font-feature-settings: "tnum" 1;
+}
+.dark .notes-body .zt-ref {
+    background: rgba(143, 176, 217, .12);
+    border-left-color: var(--primary-dark);
+}
+.dark .notes-body .zt-ref b {
+    color: #8fb0d9;
+}
+
 .notes-sub-body h4 {
     margin: 14px 0 8px;
     font-size: 0.95rem;
