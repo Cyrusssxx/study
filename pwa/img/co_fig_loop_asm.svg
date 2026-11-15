@@ -1,0 +1,120 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 600" width="800" height="600" font-family="'Segoe UI','Microsoft YaHei',sans-serif">
+  <defs>
+    <marker id="a4" markerWidth="9" markerHeight="9" refX="6.5" refY="3" orient="auto">
+      <path d="M0,0 L6.5,3 L0,6 z" fill="#5a6b7d"/>
+    </marker>
+    <marker id="a4o" markerWidth="9" markerHeight="9" refX="6.5" refY="3" orient="auto">
+      <path d="M0,0 L6.5,3 L0,6 z" fill="#d9822b"/>
+    </marker>
+  </defs>
+  <rect width="800" height="600" fill="#fbfcfe"/>
+
+  <text x="24" y="28" font-size="14.5" font-weight="700" fill="#2c4a6b">三种循环其实是同一个骨架：全部化归为 do-while（后测试）+ 一次前置判断</text>
+  <text x="24" y="48" font-size="10.5" fill="#6b7a8d">左：三种写法各自的 goto 形态（橙色＝回到循环头的回边）　右：右边这段就是 <tspan font-family="Consolas,monospace">for(i=1;i&lt;=n;i++) result+=i;</tspan> 的汇编</text>
+
+  <!-- ===== 块 1：do-while ===== -->
+  <text x="44" y="76" font-size="9.5" font-weight="700" fill="#2c4a6b">① do-while（后测试：至少执行 1 次）</text>
+  <rect x="115" y="82" width="100" height="24" rx="3" fill="#fdf3e5" stroke="#e0b681"/>
+  <text x="165" y="98" text-anchor="middle" font-size="10" fill="#8a6d3b">循环体 body</text>
+  <line x1="165" y1="106" x2="165" y2="112" stroke="#5a6b7d" stroke-width="1.3" marker-end="url(#a4)"/>
+  <path d="M165 114L197 128 165 142 133 128Z" fill="#eef4fb" stroke="#4a7ab8"/>
+  <text x="165" y="132" text-anchor="middle" font-size="10" font-weight="700" fill="#2c4a6b">t?</text>
+  <line x1="165" y1="142" x2="165" y2="160" stroke="#5a6b7d" stroke-width="1.3" marker-end="url(#a4)"/>
+  <text x="172" y="171" font-size="9" fill="#6b7a8d">假 → 退出</text>
+  <path d="M197 128H240V95H217" fill="none" stroke="#d9822b" stroke-width="1.4" marker-end="url(#a4o)"/>
+  <text x="203" y="122" font-size="9" fill="#d9822b">真</text>
+
+  <!-- ===== 块 2：while ===== -->
+  <text x="44" y="192" font-size="9.5" font-weight="700" fill="#2c4a6b">② while（前测试：可能一次都不执行）</text>
+  <path d="M165 198L197 212 165 226 133 212Z" fill="#eef4fb" stroke="#4a7ab8"/>
+  <text x="165" y="216" text-anchor="middle" font-size="10" font-weight="700" fill="#2c4a6b">t?</text>
+  <path d="M133 212H104V244" fill="none" stroke="#5a6b7d" stroke-width="1.3" marker-end="url(#a4)"/>
+  <text x="98" y="238" text-anchor="end" font-size="9" fill="#6b7a8d">假 → 退出</text>
+  <line x1="165" y1="226" x2="165" y2="232" stroke="#5a6b7d" stroke-width="1.3" marker-end="url(#a4)"/>
+  <rect x="115" y="234" width="100" height="24" rx="3" fill="#fdf3e5" stroke="#e0b681"/>
+  <text x="165" y="250" text-anchor="middle" font-size="10" fill="#8a6d3b">循环体 body</text>
+  <path d="M215 246H242V212H199" fill="none" stroke="#d9822b" stroke-width="1.4" marker-end="url(#a4o)"/>
+
+  <!-- ===== 块 3：for ===== -->
+  <text x="44" y="286" font-size="9.5" font-weight="700" fill="#2c4a6b">③ for（= init + while + update）</text>
+  <rect x="115" y="292" width="100" height="22" rx="3" fill="#f4f7fa" stroke="#b9c8d8"/>
+  <text x="165" y="307" text-anchor="middle" font-size="10" fill="#4a5568">i = 1（init）</text>
+  <line x1="165" y1="314" x2="165" y2="320" stroke="#5a6b7d" stroke-width="1.3" marker-end="url(#a4)"/>
+  <path d="M165 322L197 336 165 350 133 336Z" fill="#eef4fb" stroke="#4a7ab8"/>
+  <text x="165" y="340" text-anchor="middle" font-size="10" font-weight="700" fill="#2c4a6b">t?</text>
+  <path d="M133 336H104V366" fill="none" stroke="#5a6b7d" stroke-width="1.3" marker-end="url(#a4)"/>
+  <text x="98" y="360" text-anchor="end" font-size="9" fill="#6b7a8d">假 → 退出</text>
+  <line x1="165" y1="350" x2="165" y2="356" stroke="#5a6b7d" stroke-width="1.3" marker-end="url(#a4)"/>
+  <rect x="115" y="358" width="100" height="24" rx="3" fill="#fdf3e5" stroke="#e0b681"/>
+  <text x="165" y="374" text-anchor="middle" font-size="10" fill="#8a6d3b">循环体 body</text>
+  <path d="M215 370H242V336H199" fill="none" stroke="#d9822b" stroke-width="1.4" marker-end="url(#a4o)"/>
+  <text x="246" y="356" font-size="9" fill="#d9822b">i++</text>
+
+  <!-- ===== 右：汇编 ===== -->
+  <text x="316" y="76" font-size="10" fill="#8b98a8">对应机器级代码（result 在 eax、i 在 edx、n 在 ecx）</text>
+
+  <text x="316" y="98" font-family="Consolas,monospace" font-size="10.5" fill="#2c4a6b">        mov  ecx,[ebp+8]</text>
+  <text x="470" y="98" font-size="9.5" fill="#4f8a64">ecx = n（参数）</text>
+
+  <text x="316" y="117" font-family="Consolas,monospace" font-size="10.5" fill="#2c4a6b">        mov  eax,0</text>
+  <text x="470" y="117" font-size="9.5" fill="#4f8a64">eax = result（兼返回值）</text>
+
+  <text x="316" y="136" font-family="Consolas,monospace" font-size="10.5" fill="#2c4a6b">        mov  edx,1</text>
+  <text x="470" y="136" font-size="9.5" fill="#4f8a64">edx = i</text>
+
+  <text x="316" y="155" font-family="Consolas,monospace" font-size="10.5" fill="#2c4a6b">        cmp  edx,ecx</text>
+  <text x="470" y="155" font-size="9.5" fill="#8b98a8">比较 i 与 n</text>
+
+  <text x="316" y="174" font-family="Consolas,monospace" font-size="10.5" fill="#c2691a">        jg   .L2</text>
+  <text x="470" y="174" font-size="9.5" fill="#c2691a">i &gt; n → 一次都不进（前置判断）</text>
+
+  <text x="316" y="193" font-family="Consolas,monospace" font-size="10.5" fill="#2c4a6b">.L1:    add  eax,edx</text>
+  <text x="470" y="193" font-size="9.5" fill="#4f8a64">result += i</text>
+
+  <text x="316" y="212" font-family="Consolas,monospace" font-size="10.5" fill="#2c4a6b">        add  edx,1</text>
+  <text x="470" y="212" font-size="9.5" fill="#4f8a64">i++</text>
+
+  <text x="316" y="231" font-family="Consolas,monospace" font-size="10.5" fill="#2c4a6b">        cmp  edx,ecx</text>
+
+  <text x="316" y="250" font-family="Consolas,monospace" font-size="10.5" fill="#c2691a">        jle  .L1</text>
+  <text x="470" y="250" font-size="9.5" fill="#c2691a">i ≤ n → 回循环头</text>
+
+  <text x="316" y="269" font-family="Consolas,monospace" font-size="10.5" fill="#2c4a6b">.L2:</text>
+  <text x="470" y="269" font-size="9.5" fill="#8b98a8">循环出口</text>
+
+  <!-- ===== 跳转指令表 ===== -->
+  <text x="316" y="300" font-size="10" fill="#8b98a8">跳转指令怎么选（关键：看变量是有符号还是无符号）</text>
+  <rect x="316" y="308" width="464" height="26" fill="#e6eef8" stroke="#c9d9ec"/>
+  <text x="380" y="325" text-anchor="middle" font-size="10" font-weight="700" fill="#2c4a6b">条件</text>
+  <text x="470" y="325" text-anchor="middle" font-size="10" font-weight="700" fill="#8a6d3b">有符号（int）</text>
+  <text x="580" y="325" text-anchor="middle" font-size="10" font-weight="700" fill="#2f6b48">无符号（unsigned）</text>
+  <text x="690" y="325" text-anchor="middle" font-size="10" font-weight="700" fill="#2c4a6b">含义</text>
+
+  <rect x="316" y="334" width="464" height="24" fill="#fbfcfe" stroke="#dce4ee"/>
+  <text x="380" y="350" text-anchor="middle" font-size="10" fill="#4a5568">i ≤ n</text>
+  <text x="470" y="350" text-anchor="middle" font-size="10.5" font-family="Consolas,monospace" font-weight="700" fill="#c2691a">jle</text>
+  <text x="580" y="350" text-anchor="middle" font-size="10.5" font-family="Consolas,monospace" font-weight="700" fill="#2f8f5b">jbe</text>
+  <text x="690" y="350" text-anchor="middle" font-size="9.5" fill="#8b98a8">≤ 时跳</text>
+
+  <rect x="316" y="358" width="464" height="24" fill="#fbfcfe" stroke="#dce4ee"/>
+  <text x="380" y="374" text-anchor="middle" font-size="10" fill="#4a5568">i &lt; n</text>
+  <text x="470" y="374" text-anchor="middle" font-size="10.5" font-family="Consolas,monospace" font-weight="700" fill="#c2691a">jl</text>
+  <text x="580" y="374" text-anchor="middle" font-size="10.5" font-family="Consolas,monospace" font-weight="700" fill="#2f8f5b">jb</text>
+  <text x="690" y="374" text-anchor="middle" font-size="9.5" fill="#8b98a8">&lt; 时跳</text>
+
+  <rect x="316" y="382" width="464" height="24" fill="#fbfcfe" stroke="#dce4ee"/>
+  <text x="380" y="398" text-anchor="middle" font-size="10" fill="#4a5568">i &gt; n</text>
+  <text x="470" y="398" text-anchor="middle" font-size="10.5" font-family="Consolas,monospace" font-weight="700" fill="#c2691a">jg</text>
+  <text x="580" y="398" text-anchor="middle" font-size="10.5" font-family="Consolas,monospace" font-weight="700" fill="#2f8f5b">ja</text>
+  <text x="690" y="398" text-anchor="middle" font-size="9.5" fill="#8b98a8">&gt; 时跳</text>
+
+  <!-- ===== 底部结论 ===== -->
+  <rect x="24" y="424" width="756" height="164" rx="4" fill="#eef4fb" stroke="#c9d9ec"/>
+  <rect x="24" y="424" width="4" height="158" fill="#4a7ab8"/>
+  <text x="40" y="450" font-size="12" font-weight="700" fill="#2c4a6b">记住这四条，循环题就能拿满</text>
+  <text x="40" y="474" font-size="11" fill="#2c4a6b">① <tspan font-weight="700">while/for 都要先补一次前置判断</tspan>：编译器把「先判断」挪到循环头之前（<tspan font-family="Consolas,monospace">cmp</tspan> + <tspan font-family="Consolas,monospace">jg .L2</tspan>），这样 0 次执行也正确。</text>
+  <text x="40" y="498" font-size="11" fill="#2c4a6b">② <tspan font-weight="700">循环头只有一个标号 .L1，回边只有一条</tspan>（<tspan font-family="Consolas,monospace">jle .L1</tspan>）；do-while 少的就是那第一次前置判断。</text>
+  <text x="40" y="522" font-size="11" fill="#2c4a6b">③ <tspan font-weight="700">int 用 jl/jle/jg/jge，unsigned 用 jb/jbe/ja/jae</tspan>——同一份源码换类型，跳转指令就得换，这是最高频的扣分点。</text>
+  <text x="40" y="546" font-size="10.5" fill="#4a5568">④ 循环变量与 result 若被频繁访问，编译器会把它们放进寄存器（<tspan font-family="Consolas,monospace">eax</tspan> 兼作返回值、<tspan font-family="Consolas,monospace">edx</tspan> 存 i）；只有取地址或被强制留在栈里时才用 <tspan font-family="Consolas,monospace">[ebp-8]</tspan> 这类偏移访问。</text>
+  <text x="40" y="570" font-size="10.5" fill="#4a5568">题干若给的是 <tspan font-family="Consolas,monospace">[ebp-0Ch]</tspan> 而不是寄存器，说明开了优化等级较低或变量被取址，读题时先确认循环变量存哪儿。</text>
+</svg>

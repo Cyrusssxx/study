@@ -1,0 +1,143 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 472" width="800" height="472" font-family="'Segoe UI','Microsoft YaHei',sans-serif">
+  <defs>
+    <marker id="ah2" markerWidth="9" markerHeight="9" refX="6.5" refY="3" orient="auto">
+      <path d="M0,0 L6.5,3 L0,6 z" fill="#5a6b7d"/>
+    </marker>
+  </defs>
+  <rect width="800" height="472" fill="#fbfcfe"/>
+
+  <text x="24" y="28" font-size="14.5" font-weight="700" fill="#2c4a6b">邻接矩阵怎样读：行 = 出度、列 = 入度，A² 数「长度为 2 的路径条数」</text>
+  <text x="24" y="48" font-size="10.5" fill="#6b7a8d">同一张 4 顶点有向图的三件套：图 → A → A²（矩阵乘法累加，不是逻辑或）</text>
+
+  <!-- ========== 左：图 ========== -->
+  <text x="24" y="74" font-size="10" fill="#8b98a8">有向图 G</text>
+
+  <line x1="92.9" y1="118.2" x2="207.1" y2="106.8" stroke="#5a6b7d" stroke-width="1.3" marker-end="url(#ah2)"/>
+  <line x1="79.5" y1="137.4" x2="105.5" y2="237.6" stroke="#5a6b7d" stroke-width="1.3" marker-end="url(#ah2)"/>
+  <line x1="227.5" y1="122.8" x2="242.5" y2="232.2" stroke="#5a6b7d" stroke-width="1.3" marker-end="url(#ah2)"/>
+  <line x1="128" y1="254.3" x2="227" y2="250.7" stroke="#5a6b7d" stroke-width="1.3" marker-end="url(#ah2)"/>
+  <line x1="230.7" y1="239.1" x2="89.3" y2="130.9" stroke="#5a6b7d" stroke-width="1.3" marker-end="url(#ah2)"/>
+
+  <circle cx="75" cy="120" r="18" fill="#eef4fb" stroke="#4a7ab8" stroke-width="1.5"/>
+  <text x="75" y="125" text-anchor="middle" font-size="12.5" font-weight="700" fill="#2c4a6b">1</text>
+  <circle cx="225" cy="105" r="18" fill="#eef4fb" stroke="#4a7ab8" stroke-width="1.5"/>
+  <text x="225" y="110" text-anchor="middle" font-size="12.5" font-weight="700" fill="#2c4a6b">2</text>
+  <circle cx="110" cy="255" r="18" fill="#eef4fb" stroke="#4a7ab8" stroke-width="1.5"/>
+  <text x="110" y="260" text-anchor="middle" font-size="12.5" font-weight="700" fill="#2c4a6b">3</text>
+  <circle cx="245" cy="250" r="18" fill="#eef4fb" stroke="#4a7ab8" stroke-width="1.5"/>
+  <text x="245" y="255" text-anchor="middle" font-size="12.5" font-weight="700" fill="#2c4a6b">4</text>
+
+  <text x="24" y="292" font-size="9.5" fill="#8b98a8">5 条边：1→2、1→3、2→4、3→4、4→1</text>
+
+  <!-- ========== 中：A ========== -->
+  <text x="422" y="74" text-anchor="middle" font-size="10" fill="#8b98a8">邻接矩阵 A（行 i 列 j：i→j 有边记 1）</text>
+
+  <!-- 列标签 -->
+  <text x="348" y="112" text-anchor="middle" font-size="10.5" font-weight="700" fill="#2c4a6b">1</text>
+  <text x="384" y="112" text-anchor="middle" font-size="10.5" font-weight="700" fill="#2c4a6b">2</text>
+  <text x="420" y="112" text-anchor="middle" font-size="10.5" font-weight="700" fill="#2c4a6b">3</text>
+  <text x="456" y="112" text-anchor="middle" font-size="10.5" font-weight="700" fill="#2c4a6b">4</text>
+  <text x="494" y="112" text-anchor="middle" font-size="9.5" font-weight="700" fill="#d9822b">出度</text>
+
+  <!-- 矩阵框 -->
+  <rect x="330" y="120" width="144" height="128" fill="#fbfcfe" stroke="#8fa8c4" stroke-width="1.2"/>
+  <path d="M366 120V248 M402 120V248 M438 120V248 M330 152H474 M330 184H474 M330 216H474"
+        stroke="#c9d9ec" stroke-width="1"/>
+
+  <!-- 行标签 -->
+  <text x="316" y="140" text-anchor="middle" font-size="10.5" font-weight="700" fill="#2c4a6b">1</text>
+  <text x="316" y="172" text-anchor="middle" font-size="10.5" font-weight="700" fill="#2c4a6b">2</text>
+  <text x="316" y="204" text-anchor="middle" font-size="10.5" font-weight="700" fill="#2c4a6b">3</text>
+  <text x="316" y="236" text-anchor="middle" font-size="10.5" font-weight="700" fill="#2c4a6b">4</text>
+
+  <!-- A 的行（浅底：第 1 行） -->
+  <rect x="330" y="120" width="144" height="32" fill="#f2f7fd"/>
+
+  <!-- A 数值 -->
+  <text x="348" y="140" text-anchor="middle" font-size="11.5" fill="#adb8c4">0</text>
+  <text x="384" y="140" text-anchor="middle" font-size="11.5" font-weight="700" fill="#2c4a6b">1</text>
+  <text x="420" y="140" text-anchor="middle" font-size="11.5" font-weight="700" fill="#2c4a6b">1</text>
+  <text x="456" y="140" text-anchor="middle" font-size="11.5" fill="#adb8c4">0</text>
+
+  <text x="348" y="172" text-anchor="middle" font-size="11.5" fill="#adb8c4">0</text>
+  <text x="384" y="172" text-anchor="middle" font-size="11.5" fill="#adb8c4">0</text>
+  <text x="420" y="172" text-anchor="middle" font-size="11.5" fill="#adb8c4">0</text>
+  <text x="456" y="172" text-anchor="middle" font-size="11.5" font-weight="700" fill="#2c4a6b">1</text>
+
+  <text x="348" y="204" text-anchor="middle" font-size="11.5" fill="#adb8c4">0</text>
+  <text x="384" y="204" text-anchor="middle" font-size="11.5" fill="#adb8c4">0</text>
+  <text x="420" y="204" text-anchor="middle" font-size="11.5" fill="#adb8c4">0</text>
+  <text x="456" y="204" text-anchor="middle" font-size="11.5" font-weight="700" fill="#2c4a6b">1</text>
+
+  <text x="348" y="236" text-anchor="middle" font-size="11.5" font-weight="700" fill="#2c4a6b">1</text>
+  <text x="384" y="236" text-anchor="middle" font-size="11.5" fill="#adb8c4">0</text>
+  <text x="420" y="236" text-anchor="middle" font-size="11.5" fill="#adb8c4">0</text>
+  <text x="456" y="236" text-anchor="middle" font-size="11.5" fill="#adb8c4">0</text>
+
+  <!-- 出度列 -->
+  <path d="M474 120V248" stroke="#8fa8c4" stroke-width="1.2"/>
+  <text x="494" y="140" text-anchor="middle" font-size="11.5" font-weight="700" fill="#d9822b">2</text>
+  <text x="494" y="172" text-anchor="middle" font-size="11.5" fill="#c98a4a">1</text>
+  <text x="494" y="204" text-anchor="middle" font-size="11.5" fill="#c98a4a">1</text>
+  <text x="494" y="236" text-anchor="middle" font-size="11.5" fill="#c98a4a">1</text>
+
+  <!-- 入度行 -->
+  <path d="M330 248H474" stroke="#8fa8c4" stroke-width="1.2"/>
+  <text x="316" y="266" text-anchor="middle" font-size="9.5" font-weight="700" fill="#2f8f5b">入度</text>
+  <text x="348" y="266" text-anchor="middle" font-size="11.5" fill="#4f9a72">1</text>
+  <text x="384" y="266" text-anchor="middle" font-size="11.5" fill="#4f9a72">1</text>
+  <text x="420" y="266" text-anchor="middle" font-size="11.5" fill="#4f9a72">1</text>
+  <text x="456" y="266" text-anchor="middle" font-size="11.5" font-weight="700" fill="#2f8f5b">2</text>
+
+  <!-- ========== 右：A² ========== -->
+  <text x="652" y="74" text-anchor="middle" font-size="10" fill="#8b98a8">A²（矩阵乘法：数字 = 路径条数）</text>
+
+  <text x="598" y="112" text-anchor="middle" font-size="10.5" font-weight="700" fill="#2c4a6b">1</text>
+  <text x="634" y="112" text-anchor="middle" font-size="10.5" font-weight="700" fill="#2c4a6b">2</text>
+  <text x="670" y="112" text-anchor="middle" font-size="10.5" font-weight="700" fill="#2c4a6b">3</text>
+  <text x="706" y="112" text-anchor="middle" font-size="10.5" font-weight="700" fill="#2c4a6b">4</text>
+
+  <rect x="580" y="120" width="144" height="128" fill="#fbfcfe" stroke="#8fa8c4" stroke-width="1.2"/>
+  <path d="M616 120V248 M652 120V248 M688 120V248 M580 152H724 M580 184H724 M580 216H724"
+        stroke="#c9d9ec" stroke-width="1"/>
+
+  <text x="566" y="140" text-anchor="middle" font-size="10.5" font-weight="700" fill="#2c4a6b">1</text>
+  <text x="566" y="172" text-anchor="middle" font-size="10.5" font-weight="700" fill="#2c4a6b">2</text>
+  <text x="566" y="204" text-anchor="middle" font-size="10.5" font-weight="700" fill="#2c4a6b">3</text>
+  <text x="566" y="236" text-anchor="middle" font-size="10.5" font-weight="700" fill="#2c4a6b">4</text>
+
+  <!-- 高亮 A²[1][4] -->
+  <rect x="688" y="120" width="36" height="32" fill="#fdf0dc" stroke="#d9822b" stroke-width="1.6"/>
+
+  <text x="598" y="140" text-anchor="middle" font-size="11.5" fill="#adb8c4">0</text>
+  <text x="634" y="140" text-anchor="middle" font-size="11.5" fill="#adb8c4">0</text>
+  <text x="670" y="140" text-anchor="middle" font-size="11.5" fill="#adb8c4">0</text>
+  <text x="706" y="140" text-anchor="middle" font-size="12.5" font-weight="700" fill="#c2691a">2</text>
+
+  <text x="598" y="172" text-anchor="middle" font-size="11.5" font-weight="700" fill="#2c4a6b">1</text>
+  <text x="634" y="172" text-anchor="middle" font-size="11.5" fill="#adb8c4">0</text>
+  <text x="670" y="172" text-anchor="middle" font-size="11.5" fill="#adb8c4">0</text>
+  <text x="706" y="172" text-anchor="middle" font-size="11.5" fill="#adb8c4">0</text>
+
+  <text x="598" y="204" text-anchor="middle" font-size="11.5" font-weight="700" fill="#2c4a6b">1</text>
+  <text x="634" y="204" text-anchor="middle" font-size="11.5" fill="#adb8c4">0</text>
+  <text x="670" y="204" text-anchor="middle" font-size="11.5" fill="#adb8c4">0</text>
+  <text x="706" y="204" text-anchor="middle" font-size="11.5" fill="#adb8c4">0</text>
+
+  <text x="598" y="236" text-anchor="middle" font-size="11.5" fill="#adb8c4">0</text>
+  <text x="634" y="236" text-anchor="middle" font-size="11.5" font-weight="700" fill="#2c4a6b">1</text>
+  <text x="670" y="236" text-anchor="middle" font-size="11.5" font-weight="700" fill="#2c4a6b">1</text>
+  <text x="706" y="236" text-anchor="middle" font-size="11.5" fill="#adb8c4">0</text>
+
+  <text x="580" y="266" font-size="9.5" fill="#c2691a">A²[1][4]=2 → 1→2→4、1→3→4 两条</text>
+
+  <!-- ========== 底部结论 ========== -->
+  <rect x="24" y="300" width="752" height="152" rx="4" fill="#eef4fb" stroke="#c9d9ec"/>
+  <rect x="24" y="300" width="4" height="152" fill="#4a7ab8"/>
+  <text x="40" y="324" font-size="12" font-weight="700" fill="#2c4a6b">三句话读完整张表</text>
+  <text x="40" y="348" font-size="11" fill="#2c4a6b">① <tspan font-weight="700">行 = 出度、列 = 入度</tspan>（有向图）：A[1] 这一行有两个 1 → 1 号发出 2 条边；A 的第 4 列有两个 1 → 4 号收到 2 条边。无向图矩阵对称，行和列和都等于度。</text>
+  <text x="40" y="372" font-size="11" fill="#2c4a6b">② <tspan font-weight="700">A^k[i][j] = 从 i 到 j 长度为 k 的路径条数</tspan>：算 A² 就是普通矩阵乘法（各行乘各列再<tspan font-weight="700">累加</tspan>），不是逻辑或，所以才会出现 2 这种值。</text>
+  <text x="40" y="396" font-size="11" fill="#2c4a6b">③ <tspan font-weight="700">空间 O(n²)，与边数无关</tspan>：稠密图（e 接近 n²）用它省；稀疏图用邻接表 O(n+e) 更省。带权图把 1 换成权值，对角线常存 0 或 ∞ 看约定。</text>
+  <text x="40" y="420" font-size="10.5" fill="#4a5568">易错点：邻接矩阵表示的图是<tspan font-weight="700">唯一</tspan>的（顶点编号定了，矩阵就定了），而邻接表不唯一（链表次序可不同）。</text>
+  <text x="40" y="440" font-size="10.5" fill="#4a5568">题目若问「是否存在长度为 k 的路径」，看 A^k[i][j] 是否为 0 即可；问「有几条」才必须做完整乘法。</text>
+</svg>

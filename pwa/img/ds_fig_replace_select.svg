@@ -1,0 +1,158 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 524" width="800" height="524" font-family="'Segoe UI','Microsoft YaHei',sans-serif">
+  <defs>
+    <marker id="a5" markerWidth="9" markerHeight="9" refX="6.5" refY="3" orient="auto">
+      <path d="M0,0 L6.5,3 L0,6 z" fill="#5a6b7d"/>
+    </marker>
+  </defs>
+  <rect width="800" height="524" fill="#fbfcfe"/>
+
+  <text x="24" y="28" font-size="14.5" font-weight="700" fill="#2c4a6b">置换-选择排序：工作区只有 3 格，却生成了长度 5 和 4 的两段</text>
+  <text x="24" y="48" font-size="10.5" fill="#6b7a8d">FI = 17, 21, 05, 44, 10, 12, 56, 32, 29　工作区 w = 3　每行＝该步<tspan font-weight="700">开始</tspan>时的工作区；灰虚线＝已冻结（小于当前 MINIMAX，本轮不再选它）</text>
+
+  <!-- 段 1 -->
+  <rect x="24" y="60" width="366" height="24" rx="3" fill="#fdf3e5" stroke="#e5c8a2"/>
+  <text x="36" y="76" font-size="10.5" font-weight="700" fill="#8a6d3b">段①：05, 17, 21, 44, 56（5 个记录 &gt; w=3）</text>
+
+  <text x="24" y="98" font-size="9" fill="#adb8c4">步</text>
+  <text x="66" y="98" font-size="9" fill="#adb8c4">工作区 WA（3 格）</text>
+  <text x="212" y="98" font-size="9" fill="#adb8c4">输出</text>
+  <text x="262" y="98" font-size="9" fill="#adb8c4">读入</text>
+
+  <!-- 行模板：左栏 x 66..204（3 格 × 46），右栏 +390 -->
+
+  <!-- 行 0 -->
+  <text x="30" y="154" font-size="9.5" fill="#4a5568">初</text>
+  <rect x="66" y="134" width="46" height="32" fill="#eef4fb" stroke="#4a7ab8"/>
+  <text x="89" y="155" text-anchor="middle" font-size="11" font-weight="700" fill="#2c4a6b">17</text>
+  <rect x="112" y="134" width="46" height="32" fill="#eef4fb" stroke="#4a7ab8"/>
+  <text x="135" y="155" text-anchor="middle" font-size="11" font-weight="700" fill="#2c4a6b">21</text>
+  <rect x="158" y="134" width="46" height="32" fill="#eef4fb" stroke="#4a7ab8"/>
+  <text x="181" y="155" text-anchor="middle" font-size="11" font-weight="700" fill="#2c4a6b">05</text>
+  <text x="212" y="155" font-size="9.5" fill="#8b98a8">—</text>
+  <text x="262" y="155" font-size="9.5" fill="#8b98a8">（已满）</text>
+
+  <!-- 行 1 -->
+  <text x="30" y="198" font-size="9.5" fill="#4a5568">1</text>
+  <rect x="66" y="178" width="46" height="32" fill="#eef4fb" stroke="#4a7ab8"/>
+  <text x="89" y="199" text-anchor="middle" font-size="11" font-weight="700" fill="#2c4a6b">17</text>
+  <rect x="112" y="178" width="46" height="32" fill="#eef4fb" stroke="#4a7ab8"/>
+  <text x="135" y="199" text-anchor="middle" font-size="11" font-weight="700" fill="#2c4a6b">21</text>
+  <rect x="158" y="178" width="46" height="32" fill="#eef4fb" stroke="#4a7ab8"/>
+  <text x="181" y="199" text-anchor="middle" font-size="11" font-weight="700" fill="#2c4a6b">05</text>
+  <text x="212" y="199" font-size="11" font-weight="700" fill="#c2691a">05</text>
+  <text x="262" y="199" font-size="9.5" fill="#4a5568">44</text>
+
+  <!-- 行 2 -->
+  <text x="30" y="242" font-size="9.5" fill="#4a5568">2</text>
+  <rect x="66" y="222" width="46" height="32" fill="#eef4fb" stroke="#4a7ab8"/>
+  <text x="89" y="243" text-anchor="middle" font-size="11" font-weight="700" fill="#2c4a6b">17</text>
+  <rect x="112" y="222" width="46" height="32" fill="#eef4fb" stroke="#4a7ab8"/>
+  <text x="135" y="243" text-anchor="middle" font-size="11" font-weight="700" fill="#2c4a6b">21</text>
+  <rect x="158" y="222" width="46" height="32" fill="#eef4fb" stroke="#4a7ab8"/>
+  <text x="181" y="243" text-anchor="middle" font-size="11" font-weight="700" fill="#2c4a6b">44</text>
+  <text x="212" y="243" font-size="11" font-weight="700" fill="#c2691a">17</text>
+  <text x="262" y="243" font-size="9.5" fill="#4a5568">10</text>
+
+  <!-- 行 3 -->
+  <text x="30" y="286" font-size="9.5" fill="#4a5568">3</text>
+  <rect x="66" y="266" width="46" height="32" fill="#eef4fb" stroke="#4a7ab8"/>
+  <text x="89" y="287" text-anchor="middle" font-size="11" font-weight="700" fill="#2c4a6b">21</text>
+  <rect x="112" y="266" width="46" height="32" fill="#eef4fb" stroke="#4a7ab8"/>
+  <text x="135" y="287" text-anchor="middle" font-size="11" font-weight="700" fill="#2c4a6b">44</text>
+  <rect x="158" y="266" width="46" height="32" fill="#f2f3f5" stroke="#b8c0c8" stroke-dasharray="3 2"/>
+  <text x="181" y="287" text-anchor="middle" font-size="11" fill="#8b98a8">10</text>
+  <text x="212" y="287" font-size="11" font-weight="700" fill="#c2691a">21</text>
+  <text x="262" y="287" font-size="9.5" fill="#4a5568">12</text>
+
+  <!-- 行 4 -->
+  <text x="30" y="330" font-size="9.5" fill="#4a5568">4</text>
+  <rect x="66" y="310" width="46" height="32" fill="#eef4fb" stroke="#4a7ab8"/>
+  <text x="89" y="331" text-anchor="middle" font-size="11" font-weight="700" fill="#2c4a6b">44</text>
+  <rect x="112" y="310" width="46" height="32" fill="#f2f3f5" stroke="#b8c0c8" stroke-dasharray="3 2"/>
+  <text x="135" y="331" text-anchor="middle" font-size="11" fill="#8b98a8">10</text>
+  <rect x="158" y="310" width="46" height="32" fill="#f2f3f5" stroke="#b8c0c8" stroke-dasharray="3 2"/>
+  <text x="181" y="331" text-anchor="middle" font-size="11" fill="#8b98a8">12</text>
+  <text x="212" y="331" font-size="11" font-weight="700" fill="#c2691a">44</text>
+  <text x="262" y="331" font-size="9.5" fill="#4a5568">56</text>
+
+  <!-- 行 5 -->
+  <text x="30" y="374" font-size="9.5" fill="#4a5568">5</text>
+  <rect x="66" y="354" width="46" height="32" fill="#eef4fb" stroke="#4a7ab8"/>
+  <text x="89" y="375" text-anchor="middle" font-size="11" font-weight="700" fill="#2c4a6b">56</text>
+  <rect x="112" y="354" width="46" height="32" fill="#f2f3f5" stroke="#b8c0c8" stroke-dasharray="3 2"/>
+  <text x="135" y="375" text-anchor="middle" font-size="11" fill="#8b98a8">10</text>
+  <rect x="158" y="354" width="46" height="32" fill="#f2f3f5" stroke="#b8c0c8" stroke-dasharray="3 2"/>
+  <text x="181" y="375" text-anchor="middle" font-size="11" fill="#8b98a8">12</text>
+  <text x="212" y="375" font-size="11" font-weight="700" fill="#c2691a">56</text>
+  <text x="262" y="375" font-size="9.5" fill="#4a5568">32</text>
+
+  <text x="66" y="402" font-size="9.5" fill="#c2691a">读入 32 后：10、12、32 全部 &lt; 56，工作区里<tspan font-weight="700">没有 ≥ 56 的记录</tspan> → 段①到此结束</text>
+
+  <!-- 段 2 -->
+  <rect x="414" y="60" width="366" height="24" rx="3" fill="#eaf6ee" stroke="#a8d0b8"/>
+  <text x="426" y="76" font-size="10.5" font-weight="700" fill="#2f6b48">段②：10, 12, 29, 32（4 个记录）</text>
+
+  <text x="414" y="98" font-size="9" fill="#adb8c4">步</text>
+  <text x="456" y="98" font-size="9" fill="#adb8c4">工作区 WA（解冻后重来）</text>
+  <text x="602" y="98" font-size="9" fill="#adb8c4">输出</text>
+  <text x="652" y="98" font-size="9" fill="#adb8c4">读入</text>
+
+  <!-- 行 6 -->
+  <text x="420" y="154" font-size="9.5" fill="#4a5568">6</text>
+  <rect x="456" y="134" width="46" height="32" fill="#eef4fb" stroke="#4a7ab8"/>
+  <text x="479" y="155" text-anchor="middle" font-size="11" font-weight="700" fill="#2c4a6b">10</text>
+  <rect x="502" y="134" width="46" height="32" fill="#eef4fb" stroke="#4a7ab8"/>
+  <text x="525" y="155" text-anchor="middle" font-size="11" font-weight="700" fill="#2c4a6b">12</text>
+  <rect x="548" y="134" width="46" height="32" fill="#eef4fb" stroke="#4a7ab8"/>
+  <text x="571" y="155" text-anchor="middle" font-size="11" font-weight="700" fill="#2c4a6b">32</text>
+  <text x="602" y="155" font-size="11" font-weight="700" fill="#2f8f5b">10</text>
+  <text x="652" y="155" font-size="9.5" fill="#4a5568">29</text>
+
+  <!-- 行 7 -->
+  <text x="420" y="198" font-size="9.5" fill="#4a5568">7</text>
+  <rect x="456" y="178" width="46" height="32" fill="#eef4fb" stroke="#4a7ab8"/>
+  <text x="479" y="199" text-anchor="middle" font-size="11" font-weight="700" fill="#2c4a6b">12</text>
+  <rect x="502" y="178" width="46" height="32" fill="#eef4fb" stroke="#4a7ab8"/>
+  <text x="525" y="199" text-anchor="middle" font-size="11" font-weight="700" fill="#2c4a6b">32</text>
+  <rect x="548" y="178" width="46" height="32" fill="#eef4fb" stroke="#4a7ab8"/>
+  <text x="571" y="199" text-anchor="middle" font-size="11" font-weight="700" fill="#2c4a6b">29</text>
+  <text x="602" y="199" font-size="11" font-weight="700" fill="#2f8f5b">12</text>
+  <text x="652" y="199" font-size="9.5" fill="#8b98a8">FI 空</text>
+
+  <!-- 行 8 -->
+  <text x="420" y="242" font-size="9.5" fill="#4a5568">8</text>
+  <rect x="456" y="222" width="46" height="32" fill="#eef4fb" stroke="#4a7ab8"/>
+  <text x="479" y="243" text-anchor="middle" font-size="11" font-weight="700" fill="#2c4a6b">29</text>
+  <rect x="502" y="222" width="46" height="32" fill="#eef4fb" stroke="#4a7ab8"/>
+  <text x="525" y="243" text-anchor="middle" font-size="11" font-weight="700" fill="#2c4a6b">32</text>
+  <rect x="548" y="222" width="46" height="32" fill="#fbfcfe" stroke="#e2e6ea" stroke-dasharray="3 2"/>
+  <text x="571" y="243" text-anchor="middle" font-size="11" fill="#c8d0d8">—</text>
+  <text x="602" y="243" font-size="11" font-weight="700" fill="#2f8f5b">29</text>
+  <text x="652" y="243" font-size="9.5" fill="#8b98a8">—</text>
+
+  <!-- 行 9 -->
+  <text x="420" y="286" font-size="9.5" fill="#4a5568">9</text>
+  <rect x="456" y="266" width="46" height="32" fill="#eef4fb" stroke="#4a7ab8"/>
+  <text x="479" y="287" text-anchor="middle" font-size="11" font-weight="700" fill="#2c4a6b">32</text>
+  <rect x="502" y="266" width="46" height="32" fill="#fbfcfe" stroke="#e2e6ea" stroke-dasharray="3 2"/>
+  <text x="525" y="287" text-anchor="middle" font-size="11" fill="#c8d0d8">—</text>
+  <rect x="548" y="266" width="46" height="32" fill="#fbfcfe" stroke="#e2e6ea" stroke-dasharray="3 2"/>
+  <text x="571" y="287" text-anchor="middle" font-size="11" fill="#c8d0d8">—</text>
+  <text x="602" y="287" font-size="11" font-weight="700" fill="#2f8f5b">32</text>
+  <text x="652" y="287" font-size="9.5" fill="#8b98a8">—</text>
+  <text x="700" y="287" font-size="9" fill="#2f8f5b">WA 空 → 结束</text>
+
+  <!-- 右栏下方：判据 -->
+  <rect x="414" y="312" width="362" height="76" rx="3" fill="#f4f7fa" stroke="#c9d9ec"/>
+  <text x="426" y="332" font-size="10" font-weight="700" fill="#2c4a6b">段结束的判据只有一条</text>
+  <text x="426" y="352" font-size="10" fill="#4a5568">「工作区里<tspan font-weight="700">不存在</tspan>关键字 ≥ 当前 MINIMAX 的记录」</text>
+  <text x="426" y="372" font-size="10" fill="#8b98a8">不是「WA 满」，也不是「FI 空」——这两条都会判错。</text>
+
+  <!-- 底部结论 -->
+  <rect x="24" y="416" width="752" height="94" rx="4" fill="#eef4fb" stroke="#c9d9ec"/>
+  <rect x="24" y="416" width="4" height="94" fill="#4a7ab8"/>
+  <text x="40" y="438" font-size="11.5" font-weight="700" fill="#2c4a6b">为什么能超过内存：段内之所以有序，靠的是「下一个 MINIMAX 必须 ≥ 上一个」</text>
+  <text x="40" y="460" font-size="10.5" fill="#4a5568">比 MINIMAX 小的记录只是<tspan font-weight="700">冻结</tspan>而不是丢弃，它们留在工作区里等本段结束；段一结束就解冻，接着当新段的起点。</text>
+  <text x="40" y="480" font-size="10.5" fill="#4a5568">所以段长由<tspan font-weight="700">数据的分布</tspan>决定（平均约 2w），基本有序的输入能生成长度远超 w 的段，r 因此大幅下降。</text>
+  <text x="40" y="500" font-size="10.5" fill="#4a5568">选 MINIMAX 用<tspan font-family="Consolas,monospace" font-weight="700">败者树</tspan>，与多路归并同一套工具；段长不等 → 正好交给最佳归并树安排合并顺序。</text>
+</svg>

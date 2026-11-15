@@ -1,0 +1,74 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 486" width="800" height="486" font-family="'Segoe UI','Microsoft YaHei',sans-serif">
+  <defs>
+    <marker id="a3" markerWidth="9" markerHeight="9" refX="6.5" refY="3" orient="auto">
+      <path d="M0,0 L6.5,3 L0,6 z" fill="#5a6b7d"/>
+    </marker>
+    <marker id="a3b" markerWidth="9" markerHeight="9" refX="6.5" refY="3" orient="auto">
+      <path d="M0,0 L6.5,3 L0,6 z" fill="#4a7ab8"/>
+    </marker>
+  </defs>
+  <rect width="800" height="486" fill="#fbfcfe"/>
+
+  <text x="24" y="28" font-size="14.5" font-weight="700" fill="#2c4a6b">一个时钟周期里发生了什么：状态 → 操作 → 状态，三段延迟相加</text>
+  <text x="24" y="48" font-size="10.5" fill="#6b7a8d">绿＝时序元件（受时钟控制、有记忆）；橙＝组合逻辑（无记忆、不受时钟控制）；三段色带与下方波形的上升沿严格对齐</text>
+
+  <!-- ===== 结构 ===== -->
+  <text x="24" y="74" font-size="10" fill="#8b98a8">数据通路抽象</text>
+
+  <rect x="40" y="88" width="78" height="56" rx="4" fill="#eaf6ee" stroke="#8cbfa1"/>
+  <text x="79" y="112" text-anchor="middle" font-size="10.5" font-weight="700" fill="#2f6b48">寄存器</text>
+  <text x="79" y="128" text-anchor="middle" font-size="10.5" font-weight="700" fill="#2f6b48">A</text>
+
+  <line x1="118" y1="116" x2="176" y2="116" stroke="#5a6b7d" stroke-width="1.4" marker-end="url(#a3)"/>
+
+  <rect x="180" y="88" width="380" height="56" rx="4" fill="#fdf3e5" stroke="#e0b681"/>
+  <text x="370" y="110" text-anchor="middle" font-size="10.5" font-weight="700" fill="#8a6d3b">组合逻辑：ALU ／ 加法器 ／ 译码器 ／ MUX</text>
+  <text x="370" y="128" text-anchor="middle" font-size="9.5" fill="#a8814a">无记忆单元、不受时钟控制、无反馈通路</text>
+
+  <line x1="560" y1="116" x2="586" y2="116" stroke="#5a6b7d" stroke-width="1.4" marker-end="url(#a3)"/>
+
+  <rect x="590" y="88" width="78" height="56" rx="4" fill="#eaf6ee" stroke="#8cbfa1"/>
+  <text x="629" y="112" text-anchor="middle" font-size="10.5" font-weight="700" fill="#2f6b48">寄存器</text>
+  <text x="629" y="128" text-anchor="middle" font-size="10.5" font-weight="700" fill="#2f6b48">B</text>
+
+  <!-- 时钟三角（驱动 A 与 B） -->
+  <path d="M76 148v10l6-5z" fill="#4a7ab8"/>
+  <text x="82" y="158" font-size="9" fill="#4a7ab8">clk</text>
+  <path d="M626 148v10l6-5z" fill="#4a7ab8"/>
+  <text x="632" y="158" font-size="9" fill="#4a7ab8">clk</text>
+
+  <!-- ===== 波形 ===== -->
+  <path d="M40 232H80V196H350V232H620V196H700" fill="none" stroke="#4a7ab8" stroke-width="1.6"/>
+  <text x="24" y="220" font-size="9.5" fill="#8b98a8">clk</text>
+
+  <!-- 上升沿竖虚线 -->
+  <line x1="80" y1="196" x2="80" y2="262" stroke="#4a7ab8" stroke-width="1" stroke-dasharray="3 3"/>
+  <line x1="620" y1="196" x2="620" y2="262" stroke="#4a7ab8" stroke-width="1" stroke-dasharray="3 3"/>
+
+  <!-- ===== 三段色带 ===== -->
+  <rect x="80" y="252" width="100" height="20" fill="#dce8f5" stroke="#a9c3e0"/>
+  <rect x="180" y="252" width="380" height="20" fill="#fdeacf" stroke="#e0b681"/>
+  <rect x="560" y="252" width="60" height="20" fill="#d8efdf" stroke="#8cbfa1"/>
+
+  <text x="130" y="266" text-anchor="middle" font-size="9.5" font-weight="700" fill="#2c4a6b">T_clk_to_q</text>
+  <text x="370" y="266" text-anchor="middle" font-size="9.5" font-weight="700" fill="#8a6d3b">T_max（关键路径：所有路径里最长的一条）</text>
+  <text x="590" y="266" text-anchor="middle" font-size="9.5" font-weight="700" fill="#2f6b48">T_setup</text>
+
+  <!-- 周期箭头 -->
+  <path d="M80 292H618" stroke="#4a7ab8" stroke-width="1.2" marker-end="url(#a3b)"/>
+  <path d="M82 292l6 -3.2v6.4z" fill="#4a7ab8"/>
+  <text x="350" y="308" text-anchor="middle" font-size="10.5" font-weight="700" fill="#2c4a6b">最小时钟周期 ≥ T_clk_to_q ＋ T_max ＋ T_setup</text>
+
+  <!-- 阶段说明 -->
+  <text x="80" y="182" font-size="9" fill="#7b8794">沿到输出稳</text>
+  <text x="470" y="182" font-size="9" fill="#7b8794">数据必须在下一个沿之前稳定这么久</text>
+
+  <!-- ===== 结论 ===== -->
+  <rect x="24" y="326" width="752" height="140" rx="4" fill="#eef4fb" stroke="#c9d9ec"/>
+  <rect x="24" y="326" width="4" height="140" fill="#4a7ab8"/>
+  <text x="40" y="350" font-size="12" font-weight="700" fill="#2c4a6b">四处高频考点，全在这一张图里</text>
+  <text x="40" y="374" font-size="11" fill="#2c4a6b">① <tspan font-weight="700">周期由「最长的那条路」决定</tspan>：T_max 是所有源寄存器到目的寄存器路径中最长的一条，短路径跑完快也得等它。</text>
+  <text x="40" y="398" font-size="11" fill="#2c4a6b">② <tspan font-weight="700">提频＝砍 T_max</tspan>：把大段组合逻辑拆成两级、中间插一级流水寄存器，或并行展开、减少级联层数。</text>
+  <text x="40" y="422" font-size="11" fill="#2c4a6b">③ <tspan font-weight="700">组合 vs 时序</tspan>：组合只看当前输入（ALU／MUX／译码器／加法器）；时序必含记忆单元、只在时钟沿更新（寄存器组、PC、状态寄存器）。</text>
+  <text x="40" y="446" font-size="10.5" fill="#4a5568">④ MUX 选 N 路要 <tspan font-family="Consolas,monospace" font-weight="700">⌈log₂N⌉</tspan> 位控制；三态门 <tspan font-family="Consolas,monospace" font-weight="700">EN=0</tspan> 输出高阻，等于把该寄存器从总线上摘下来——总线式数据通路就靠它让多路互斥使用同一条线。</text>
+</svg>
