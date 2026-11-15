@@ -86,6 +86,28 @@ check('只看图显式放出「有图子节」容器',
     css.includes('#notesContent[data-view="fig"] .notes-body > .notes-sub:has(img.fig-img, figure.struct-fig)'), true);
 check('要点视图保留 <b> 重点词', css.includes(':is(b, strong) {\n    font-size: .88rem'), true);
 check('要点视图隐藏无任何重点词的段落', css.includes(':not(:has(b, strong, img, code))'), true);
+// 要点视图「去掉例题」：三条规则都必须挂在 data-view="key" 下，全文/只看图不受影响。
+check('要点视图整块隐藏 .note-example 例题卡',
+    /#notesContent\[data-view="key"\] \.note-example,\s*\n#notesContent\[data-view="key"\] h4:has\(\+ \.note-example\) \{\s*\n\s*display: none;/.test(css), true);
+check('要点视图隐藏例题卡前面紧邻的「经典例题」标题',
+    css.includes('#notesContent[data-view="key"] h4:has(+ .note-example)'), true);
+check('要点视图收掉整列无重点词的 ul/ol 容器',
+    css.includes('#notesContent[data-view="key"] :is(.notes-body, .notes-sub-body) :is(ul, ol):not(:has(li:has(b, strong, img, code)))'), true);
+check('全文视图没有例题隐藏规则',
+    !/#notesContent\[data-view="(?:full|fig)"\][^{]*\.note-example/.test(css), true);
+check('要点视图收起配图本体（img 段 + 内联结构图 + 历史裸 img）',
+    css.includes('#notesContent[data-view="key"] :is(.notes-body, .notes-sub-body) :is(p:has(img.fig-img), figure.struct-fig, img.fig-img)'), true);
+// 7 张历史 PNG 带内联 display:block，外部规则必须 !important 才压得住（真实浏览器实测）。
+check('配图隐藏规则带 !important（覆盖历史内联 display:block）',
+    /:is\(p:has\(img\.fig-img\), figure\.struct-fig, img\.fig-img\) \{\s*\n\s*display: none !important;/.test(css), true);
+check('要点视图保留降权的图题索引行',
+    css.includes('#notesContent[data-view="key"] :is(.notes-body, .notes-sub-body) > p[data-fig="1"]:not(:has(img.fig-img))'), true);
+check('要点视图 h4 降权为 400 字重（避免空标题大片留白）',
+    /#notesContent\[data-view="key"\] :is\(\.notes-body, \.notes-sub-body\) h4 \{\s*\n\s*font-size: \.8rem; font-weight: 400;/.test(css), true);
+check('要点按钮 title 说明例题与配图收起',
+    notesHtml.includes('title="只留加粗重点、黄框、表格与节速览，例题与配图收起"'), true);
+check('视图提示文案说明例题与配图被收起',
+    notesHtml.includes('例题与配图收起（只留一行图题索引）'), true);
 check('视图规则写在样式表顶层（不落在 @media 里）',
     css.indexOf('.notes-view-switch {') > css.lastIndexOf('@media'), true);
 

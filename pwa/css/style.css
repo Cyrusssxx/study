@@ -8878,6 +8878,36 @@ body.fc-toc-open .fc-toc-fab { display: none; }
 #notesContent[data-view="key"] :is(.notes-body, .notes-sub-body) li:not(:has(b, strong, img)) {
     display: none;
 }
+/* 要点视图只留「点」：例题卡（题干/选项/解答步骤）整块去掉，
+ * 连同它前面那个「七、经典例题」标题。两者是相邻兄弟，纯 CSS 即可命中，
+ * 不需要给 HTML 打标、不重跑 fmtNotes，.anno-line 行号与批注零影响。 */
+#notesContent[data-view="key"] .note-example,
+#notesContent[data-view="key"] h4:has(+ .note-example) {
+    display: none;
+}
+/* 整列 li 都没有重点词时，连 ul/ol 容器一起收掉，否则会留下一串空的列表占位。 */
+#notesContent[data-view="key"] :is(.notes-body, .notes-sub-body) :is(ul, ol):not(:has(li:has(b, strong, img, code))) {
+    display: none;
+}
+/* 要点视图是「扫文字」的：配图本体收起（看图请用「只看图」或图集页），
+ * 但图题段留一行小字作索引，仍能看到「这里有一张讲 X 的图」。 */
+/* 早期批次还有 7 张裸 <img class="fig-img"> 直接挂在 .notes-body 下、不包在 <p> 里，
+ * 只写 p:has(img.fig-img) 会漏掉它们，所以选择器里把 img.fig-img 本身也列上。
+ * 这些 PNG 还带内联 style="…display:block…"，内联优先级高于外部规则，
+ * 因此这里必须 !important 才能真正收起；!important 只作用于 key 视图，全文/只看图不受影响。 */
+#notesContent[data-view="key"] :is(.notes-body, .notes-sub-body) :is(p:has(img.fig-img), figure.struct-fig, img.fig-img) {
+    display: none !important;
+}
+#notesContent[data-view="key"] :is(.notes-body, .notes-sub-body) > p[data-fig="1"]:not(:has(img.fig-img)) {
+    font-size: .76rem; color: var(--text-light); margin: 2px 0 6px;
+}
+/* 全文里 h4 是 1rem + 40px 上边距 + 主色竖条；要点里降权成分组标签，
+ * 避免「空标题 + 一大片留白」把关键要点挤到下一屏。字体显式 400（Windows 中文只有 400/700）。 */
+#notesContent[data-view="key"] :is(.notes-body, .notes-sub-body) h4 {
+    font-size: .8rem; font-weight: 400; color: var(--text-light);
+    margin: 12px 0 4px; padding-left: 0;
+}
+#notesContent[data-view="key"] .notes-body h4::before { display: none; }
 
 /* —— 只看图视图 —— */
 #notesContent[data-view="fig"] .notes-section:not(:has(img.fig-img, figure.struct-fig)),

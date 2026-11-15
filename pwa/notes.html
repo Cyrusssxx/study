@@ -85,11 +85,11 @@
         const NOTES_VIEW_HTML =
             `<div class="notes-view-switch" id="notesViewSwitch" role="group" aria-label="笔记视图切换">` +
                 `<button type="button" data-view="full" onclick="setNotesView('full')">全文</button>` +
-                `<button type="button" data-view="key" onclick="setNotesView('key')" title="只留加粗重点、黄框、表格与配图">要点</button>` +
+                `<button type="button" data-view="key" onclick="setNotesView('key')" title="只留加粗重点、黄框、表格与节速览，例题与配图收起">要点</button>` +
                 `<button type="button" data-view="fig" onclick="setNotesView('fig')" title="只留配图与图题">只看图</button>` +
                 `<a class="notes-view-gallery" href="figs.html?subject=${SUBJECT}" title="跨科目浏览全部配图">全部图集 ↗</a>` +
             `</div>` +
-            `<p class="notes-view-hint">要点 = 只留加粗词 / 黄框 / 表格 / 图；只看图 = 只留配图与图题。切换会记住，四科通用。</p>`;
+            `<p class="notes-view-hint">要点 = 只留加粗重点词 / 黄框 / 表格 / 节速览，例题与配图收起（只留一行图题索引）；只看图 = 只留配图与图题。切换会记住，四科通用。</p>`;
         function currentNotesView() {
             try { return localStorage.getItem(NOTES_VIEW_KEY) || 'full'; }
             catch (e) { return 'full'; }
