@@ -117,9 +117,10 @@ for (const s of SUBS) {
   const changed = [...b.keys()].filter(k => b.get(k) !== a.get(k));
   // 1.5 不在本批 before 快照里（该快照已晚于 1.5 精简），故只备案这三处
   const allowed = s === 'os' ? ['3.1.3 基本分页存储管理', '5.3.1 磁盘', '5.3.3 磁盘调度算法']
-    : s === 'cn' ? ['2.1.3 编码与调制'] : [];
+    : s === 'cn' ? ['2.1.3 编码与调制', '4.2.5 地址解析协议（ARP）'] : [];
   // 已备案的「替换类」改动：CN 2.1.3 波形图改内联 SVG；
   // OS 1.5 / 5.3.1 / 5.3.3 正文精简重排（tools/slim_*.py，含写盘前硬校验）。
+  // CN 4.2.5 是纯插入（2021-47 时序图，两段都带 data-fig="1"），不进 REPLACED。
   const REPLACED = ['2.1.3 编码与调制', '1.5 操作系统引导', '5.3.1 磁盘', '5.3.3 磁盘调度算法'];
   check(s + ' 正文 HTML 变化集合 = ' + JSON.stringify(allowed), changed, allowed);
   check(s + ' 所有变化仍是纯插入或已备案替换',
