@@ -1288,6 +1288,44 @@
         let annoAnchorDirty = false;
         const annoNorm = el => (el.textContent || '').replace(/\s+/g, ' ').trim();
 
+        // 旧节名 → 现节名 + 行号搬迁表。
+        // 背景：行级批注按「节名 + 节内行号」定位，节一旦改名（如「5.4 控制单元」被重构拆成
+        // 5.4.1/5.4.2/5.4.3），这批批注就永远找不到宿主，页面上根本不渲染——不是挂错行，
+        // 是整条消失。anchor 自愈救不了它们：节名先失配，压根走不到行匹配那一步。
+        // 所以改名时必须把「旧名 → 新名 + 每个旧行号对应的新行号」登记到这里，加载时一次性搬迁并落库。
+        // 行号只能人工核对（重构后行序全变），核对办法：按批注文字在该节里搜关键词，取语义最近的那一行。
+        // 表里没登记的行（如空内容批注）直接丢弃，避免又挂到一个毫不相干的行上。
+        const SEC_ALIAS = {
+            co: {
+                '5.4 控制单元': {
+                    sec: '5.4 控制器的功能和工作原理',
+                    line: { 13: 31, 35: 4, 14: 37 }
+                },
+                '5.3 指令执行过程': {
+                    sec: '5.2 指令执行过程',
+                    line: { 2: 15 }
+                }
+            },
+            os: {
+                '2.4 死锁': {
+                    sec: '2.5 死锁',
+                    line: { 7: 7 }
+                }
+            }
+        };
+
+        function migrateAnno(item) {
+            const t = (SEC_ALIAS[SUBJECT] || {})[item.sec];
+            if (!t) return item;
+            const nl = t.line[item.line];
+            if (typeof nl !== 'number') return null;   // 未登记该行（如空批注）→ 丢弃
+            item.sec = t.sec;
+            item.line = nl;
+            item.anchor = '';        // anchor 是旧行文本，迁移后必须按新行重算
+            annoAnchorDirty = true;
+            return item;
+        }
+
         function resolveAnnoLine(item) {
             const byLine = lineEl(item.sec, item.line);
             const sec = (function () {
@@ -1374,7 +1412,8 @@
                 items = d.note ? JSON.parse(d.note) : [];
             } catch (e) { return; }
             if (!Array.isArray(items) || !items.length) return;
-            annoItems = items.filter(it => it && typeof it.line === 'number');
+            annoItems = items.filter(it => it && typeof it.line === 'number')
+                .map(migrateAnno).filter(Boolean);
             annoItems.forEach(renderAnnoBlock);
             if (annoAnchorDirty) { annoAnchorDirty = false; saveAnnos(); }   // 补 anchor / 纠正行号后落库
         }
