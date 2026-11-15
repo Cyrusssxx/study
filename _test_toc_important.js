@@ -70,10 +70,13 @@ for (const s of SUBS) {
   const b = new Map(subs(BEFORE[s]).map(x => [x.section, x.html || '']));
   const a = new Map(subs(DOC[s]).map(x => [x.section, x.html || '']));
   const changed = [...b.keys()].filter(k => b.get(k) !== a.get(k));
-  const allowed = s === 'os' ? ['3.1.3 基本分页存储管理'] : [];
+  const allowed = s === 'os' ? ['3.1.3 基本分页存储管理']
+    : s === 'cn' ? ['2.1.3 编码与调制'] : [];
+  // 第十七批：CN 2.1.3 的基带编码波形图由 img 外链改内联 SVG，属「替换」而非纯插入，单独备案。
+  const REPLACED = ['2.1.3 编码与调制'];
   check(s + ' 正文 HTML 变化集合 = ' + JSON.stringify(allowed), changed, allowed);
-  check(s + ' 所有变化仍是纯插入（0 删除 / 0 改写）',
-    changed.every(k => subseq(b.get(k), a.get(k))), true);
+  check(s + ' 所有变化仍是纯插入或已备案替换',
+    changed.every(k => subseq(b.get(k), a.get(k)) || REPLACED.includes(k)), true);
   const beforeImp = subs(BEFORE[s]).filter(x => x.important).length;
   const beforeCore = subs(BEFORE[s]).filter(x => x.core).length;
   check(s + ' before 版本几乎无标记（历史仅 OS 4.2.10 一处）',

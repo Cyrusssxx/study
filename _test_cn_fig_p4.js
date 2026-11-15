@@ -187,7 +187,7 @@ check('全库 fig-img 不少于 137 张（精确总量见 _test_fig_p5）',
 check('全库黄框 raw 计数不少于 234 个（精确总量见 _test_fig_p5）',
   subjects.reduce((n, s) => n + (read('pwa/data/notes/' + s + '_notes.json').match(/class=\\"key-callout\\"/g) || []).length, 0) >= 234, true);
 check('全库黄框可解析条目 ≥233（OS 有 1 个历史内嵌 div 会截断）', allCallouts.length >= 233, true);
-check('内联 struct-fig 仍 11 张（CN）', (cnRaw.match(/struct-fig/g) || []).length, 11);
+check('内联 struct-fig 共 12 张（CN，含 2.1.3 编码波形内联图）', (cnRaw.match(/struct-fig/g) || []).length, 12);
 const refs = [...cnRaw.matchAll(/img\/(cn_fig_[a-z0-9_]+\.(?:svg|png))/g)].map(m => 'img/' + m[1]);
 check('CN 图引用不少于 29 处且全部有磁盘文件',
   refs.length >= 29 && refs.every(r => fs.existsSync(path.join(ROOT, 'pwa', r))), true);

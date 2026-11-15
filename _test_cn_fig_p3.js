@@ -181,8 +181,8 @@ if (!JSDOM || !IDBFactory) {
     check('图块被误标行号 = 0',
       [...d.querySelectorAll('.anno-line')]
         .filter(e => e.hasAttribute('data-fig') || e.closest('[data-fig]')).length, 0);
-    check('内联 struct-fig 仍是 11 张（未被覆盖）',
-      d.querySelectorAll('figure.struct-fig').length, 11);
+    check('内联 struct-fig 共 12 张（含 2.1.3 编码波形内联图）',
+      d.querySelectorAll('figure.struct-fig').length, 12);
     check('新图在 DOM 里都能找到 src',
       ['dll_frame', 'ipv4_header', 'ip_fragment', 'rip_count2inf', 'tcp_zerowin']
         .every(n => !!d.querySelector('img[src*="cn_fig_' + n + '"]')), true);

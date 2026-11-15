@@ -35,7 +35,9 @@ function nodeHtml(prefix) {
 // [图名, 小节前缀, 图前必须出现的知识点锚点]
 const FIGS = [
   ['delay_4',       '1.1.6', '瓶颈原理'],
-  ['encoding_wave', '2.1.3', '也需 2 倍带宽'],
+  // 2.1.3 的编码波形图已改为内联 SVG（原 img 外链暗色下发白块、缩放下发虚），
+  // 用 figure 的 class 当定位串，不再有 img/cn_fig_encoding_wave.svg 引用。
+  ['encoding_wave', '2.1.3', '也需 2 倍带宽', '<figure class="struct-fig wave-fig"'],
   ['csma_ca',       '3.6.3', '实际很少用'],
   ['ppp_frame',     '3.7.2', '7D 5E 等转义规则'],
   ['tcp_fastretx',  '5.3.4', '同时也被用于拥塞控制'],
@@ -47,13 +49,13 @@ check('CN 配图 >= 19 张（第二批下限，精确总量见 _test_cn_fig_p3�
   (notesRaw.match(/fig-img/g) || []).length >= 19, true);
 check('CN 黄框 >= 18 个（第二批下限）',
   (notesRaw.match(/class=\\"key-callout\\"/g) || []).length >= 18, true);
-check('SW 里 CN 图 >= 19 条', (sw.match(/'img\/cn_fig_[^']+'/g) || []).length >= 19, true);
+check('SW 里 CN 图 >= 18 条', (sw.match(/'img\/cn_fig_[^']+'/g) || []).length >= 18, true);
 check('笔记 HTML 里不得出现 SVG 专有的 tspan（黄框要用 b）',
   notesRaw.includes('tspan'), false);
 
-for (const [name, sec, anchorText] of FIGS) {
+for (const [name, sec, anchorText, marker] of FIGS) {
   const h = nodeHtml(sec);
-  const svgName = 'img/cn_fig_' + name + '.svg';
+  const svgName = marker || ('img/cn_fig_' + name + '.svg');
   check(sec + ' 引用了 ' + name, h.includes(svgName), true);
   const iFig = h.indexOf(svgName);
   const iStar = h.indexOf('★');
@@ -69,12 +71,13 @@ for (const [name, sec, anchorText] of FIGS) {
 }
 
 // ---- 图与正文同源 ----
-const enc = read('pwa/img/cn_fig_encoding_wave.svg');
-check('编码波形图用正文约定「高→低 = 1、低→高 = 0」',
-  enc.includes('高→低') && enc.includes('低→高') &&
-  nodeHtml('2.1.3').includes('高→低代表 1'), true);
-check('编码波形图画的比特串与标题一致（0100110）',
-  enc.includes('0 1 0 0 1 1 0'), true);
+// 编码波形图已改为内联 SVG，同源断言直接读讲义 HTML，避免与磁盘文件脱节。
+const enc = nodeHtml('2.1.3');
+check('编码波形图用正文约定「高→低=1、低→高=0」',
+  enc.includes('高→低=1') && enc.includes('低→高=0') &&
+  enc.includes('高→低代表 1'), true);
+check('编码波形图画的比特串与标题一致（0 1 0 0 1 1 0）',
+  enc.includes('比特串 0 1 0 0 1 1 0'), true);
 check('编码波形图明确「码元率是比特率 2 倍」',
   enc.includes('2 倍') && enc.includes('带宽'), true);
 
@@ -112,7 +115,8 @@ check('快重传图例子与正文一致（发 1~5、2 号丢失）',
   fr.includes('2 —— 丢失') && nodeHtml('5.3.4').includes('2 号丢失'), true);
 
 // ---- 所有新图不得含 HTML 标签（SVG 里加粗只能 tspan） ----
-for (const n of ['encoding_wave', 'delay_4', 'csma_ca', 'ppp_frame', 'tcp_fastretx']) {
+// encoding_wave 已改为内联 SVG（不再有独立文件），其 HTML 标签守卫移交 _test_cn_code_wave。
+for (const n of ['delay_4', 'csma_ca', 'ppp_frame', 'tcp_fastretx']) {
   const s = read('pwa/img/cn_fig_' + n + '.svg');
   check('cn_fig_' + n + ' 无 HTML <b>/<br> 标签',
     !/<(b|br|strong|i)\b/.test(s.replace(/<\?xml[^>]*\?>/g, '')), true);
@@ -176,11 +180,15 @@ if (!JSDOM || !IDBFactory) {
     check('图块被误标行号 = 0',
       [...d.querySelectorAll('.anno-line')]
         .filter(e => e.hasAttribute('data-fig') || e.closest('[data-fig]')).length, 0);
-    check('内联 struct-fig 仍是 11 张（未被覆盖）',
-      d.querySelectorAll('figure.struct-fig').length, 11);
-    check('新图在 DOM 里都能找到 src',
-      ['encoding_wave', 'delay_4', 'csma_ca', 'ppp_frame', 'tcp_fastretx']
+    // 第十七批：2.1.3 编码波形图改内联 SVG，struct-fig 由 11 增至 12。
+    check('内联 struct-fig 共 12 张（含 2.1.3 波形图）',
+      d.querySelectorAll('figure.struct-fig').length, 12);
+    check('其余四张外链新图在 DOM 里都能找到 src',
+      ['delay_4', 'csma_ca', 'ppp_frame', 'tcp_fastretx']
         .every(n => !!d.querySelector('img[src*="cn_fig_' + n + '"]')), true);
+    check('编码波形图以 figure 形式渲染（不再是 img）',
+      !!d.querySelector('figure.struct-fig.wave-fig') &&
+      !d.querySelector('img[src*="cn_fig_encoding_wave"]'), true);
 
     console.log('_test_cn_fig_p2: ' + pass + ' passed, ' + fail + ' failed');
     process.exit(fail ? 1 : 0);

@@ -199,10 +199,10 @@ for (const sub of SUBS) {
 }
 
 // ---------- 6. 精确总量 / 三方一致 / 序列化 ----------
-const FIG_N = { co: 46, os: 70, cn: 48, ds: 31 };
+const FIG_N = { co: 46, os: 70, cn: 47, ds: 31 };
 const CALL_N = { co: 74, os: 77, cn: 53, ds: 106 };
 for (const sub of SUBS) {
-  check(sub + ' 配图 >= ' + FIG_N[sub] + ' 张（P15 下限，精确总量见 _test_fig_p16）',
+  check(sub + ' 配图 >= ' + FIG_N[sub] + ' 张（P15 下限，精确总量见 _test_cn_code_wave）',
     (RAW[sub].match(/fig-img/g) || []).length, n => n >= FIG_N[sub]);
   check(sub + ' 黄框 ' + CALL_N[sub] + ' 个（P15 未动，精确）',
     (RAW[sub].match(/class=\\"key-callout\\"/g) || []).length, CALL_N[sub]);
@@ -213,11 +213,11 @@ for (const sub of SUBS) {
   check(sub + ' 图引用 / 文件 / SW 预缓存三方一致',
     refs.every(r => fs.existsSync(path.join(ROOT, 'pwa', r)) && sw.includes("'" + r + "'")), true);
 }
-check('全库 fig-img >= 195 张（精确 196 见 _test_fig_p16）',
-  SUBS.reduce((n, s) => n + (RAW[s].match(/fig-img/g) || []).length, 0), n => n >= 195);
+check('全库 fig-img >= 194 张（精确 195 见 _test_cn_code_wave）',
+  SUBS.reduce((n, s) => n + (RAW[s].match(/fig-img/g) || []).length, 0), n => n >= 194);
 check('全库黄框 310 个（本批未新增）', SUBS.reduce((n, s) => n + (RAW[s].match(/class=\\"key-callout\\"/g) || []).length, 0), 310);
-const STRUCT = { co: 0, ds: 0, cn: 11, os: 14 };
-check('内联 struct-fig 总量未变（CO0/DS0/CN11/OS14）',
+const STRUCT = { co: 0, ds: 0, cn: 12, os: 14 };
+check('内联 struct-fig 总量（CO0/DS0/CN12/OS14；CN 的 12 含 2.1.3 编码波形内联图）',
   Object.entries(STRUCT).every(([s, v]) => (RAW[s].match(/struct-fig/g) || []).length === v), true);
 check('SW DATA_VER 非空且已刷新为本批哈希',
   /quiz408-data-[a-f0-9]{10}/.test(sw), true);
@@ -229,6 +229,8 @@ function subseq(old, neu) {
   return true;
 }
 const BAK_DIR = 'archive/fig_p15_2026-11-13/';
+// 第十七批豁免：CN 2.1.3 的编码波形图由 <img> 外链换成内联 SVG，属替换而非纯插入。
+const REPLACED_KEYS = ['2.1.3'];
 let guardDone = 0, guardBad = 0, changed = 0, changedKeys = [];
 for (const sub of SUBS) {
   const bp = BAK_DIR + sub + '_notes.before.json';
@@ -240,13 +242,17 @@ for (const sub of SUBS) {
   for (const { key, h } of allHtmls(sub)) A.set(key, h);
   for (const [k, old] of B) {
     const neu = A.get(k) || '';
-    if (old !== neu) { changed++; changedKeys.push(k); if (!subseq(old, neu)) guardBad++; }
+    if (old !== neu) {
+      changed++; changedKeys.push(k);
+      // 第十七批：CN 2.1.3 的编码波形图由 img 外链改内联 SVG，是「替换」不是「插入」。
+      if (!subseq(old, neu) && !REPLACED_KEYS.includes(k)) guardBad++;
+    }
   }
   guardDone++;
 }
 if (guardDone === 3) {
   check('OS/CO/CN 三科 before 备份都参与了纯插入校验', guardDone, 3);
-  check('变化的小节全是纯插入（0 删除 / 0 改写，含后续批次）', guardBad, 0);
+  check('变化的小节全是纯插入（0 删除 / 0 改写；已备案替换除外）', guardBad, 0);
   check('变化小节数 >= 9（P15 九个零图小节；后续批次可新增，如图 P16 的 OS 3.1.3）', changed, n => n >= 9);
   const P15_KEYS = ['1.1.2', '1.2.3', '1.2.4', '1.2.4', '2.1.4', '3.7.1', '5.1.1', '6.1.1', '6.4.1'];
   check('P15 的九个小节变化仍在（后续新增不覆盖）',

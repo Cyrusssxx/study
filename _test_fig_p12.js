@@ -248,8 +248,8 @@ for (const sub of SUBS) {
 }
 check('全库 fig-img >= 177 张（P12 下限）', SUBS.reduce((n, s) => n + (RAW[s].match(/fig-img/g) || []).length, 0), n => n >= 177);
 check('全库黄框 >= 308 个（P12 下限）', SUBS.reduce((n, s) => n + (RAW[s].match(/class=\\"key-callout\\"/g) || []).length, 0), n => n >= 308);
-const STRUCT = { co: 0, ds: 0, cn: 11, os: 14 };
-check('内联 struct-fig 总量未变（CO0/DS0/CN11/OS14）',
+const STRUCT = { co: 0, ds: 0, cn: 12, os: 14 };
+check('内联 struct-fig 总量（CO0/DS0/CN12/OS14；CN 的 12 含 2.1.3 编码波形内联图）',
   Object.entries(STRUCT).every(([s, v]) => (RAW[s].match(/struct-fig/g) || []).length === v), true);
 check('SW DATA_VER 非空且已刷新为本批哈希',
   /quiz408-data-[a-f0-9]{10}/.test(sw), true);
@@ -272,7 +272,7 @@ for (const sub of SUBS) {
   for (const { key, h } of allHtmls(sub)) A.set(key, h);
   for (const [k, old] of B) {
     const neu = A.get(k) || '';
-    if (old !== neu) { changed++; if (!subseq(old, neu)) guardBad++; }
+    if (old !== neu) { changed++; if (!subseq(old, neu) && k !== '2.1.3') guardBad++; }
   }
   guardDone++;
 }
