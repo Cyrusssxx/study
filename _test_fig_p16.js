@@ -1,5 +1,5 @@
 /* 2026-11-14 第十六批：OS 3.1.3 补「两级页表地址翻译」自绘图（2020 真题 46）。
- * 锁精确总量：fig-img 195（co46/os71/cn47/ds31）、黄框 310 未动。
+ * 锁精确总量：fig-img 195（co46/os71/cn47/ds31；co 后因 2.2.4 判据图变 47）、黄框 310 未动。
  * CN 由 48 降为 47：2.1.3 的基带编码波形图改为内联 SVG（原 img 外链暗色发白块、
  * 缩放下发虚）。CN 精确量与内联图契约由 _test_cn_code_wave 统管，此处 CN 只保下限。
  * 行号双基线 OS 静态 3405 / jsdom 3409，本批零漂移；before 备份存在时做双版本逐行文本比对。
@@ -32,7 +32,7 @@ function secHtml(sub, num) {
 }
 
 // ---------- 1. 精确总量 / 序列化 / SW ----------
-const FIG_N = { co: 46, os: 71, cn: 47, ds: 31 };
+const FIG_N = { co: 47, os: 71, cn: 47, ds: 31 };
 const CALL_N = { co: 74, os: 77, cn: 53, ds: 106 };
 for (const sub of SUBS) {
   const figN = (RAW[sub].match(/fig-img/g) || []).length;

@@ -272,7 +272,7 @@ for (const sub of SUBS) {
   for (const { key, h } of allHtmls(sub)) A.set(key, h);
   for (const [k, old] of B) {
     const neu = A.get(k) || '';
-    if (old !== neu) { changed++; if (!subseq(old, neu) && k !== '2.1.3' && k !== '1.5' && k !== '5.3.1' && k !== '5.3.3') guardBad++; }
+    if (old !== neu) { changed++; if (!subseq(old, neu) && k !== '2.1.3' && k !== '1.5' && k !== '5.3.1' && k !== '5.3.3' && k !== '2.2.4') guardBad++; }
   }
   guardDone++;
 }
@@ -321,7 +321,7 @@ if (!JSDOM || !IDBFactory) {
         no15: [...d.querySelectorAll('.anno-line')].filter(e => {
             // 已按「精简」重排的节/小节：1.5（节级）、5.3.1（小节级）
             const h = e.closest('.notes-sub') || e.closest('.notes-section');
-            return !(h && /^(1\.5 |5\.3\.1 |5\.3\.3 )/.test(h.dataset.sec));
+            return !(h && (sub === 'co' ? /^(1\.5 |5\.3\.1 |5\.3\.3 |2\.2\.4 )/ : /^(1\.5 |5\.3\.1 |5\.3\.3 )/).test(h.dataset.sec));
         }).map(e => e.textContent.trim()),
         figs: d.querySelectorAll('img.fig-img').length,
         calls: d.querySelectorAll('.key-callout').length,

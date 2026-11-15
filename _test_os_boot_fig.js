@@ -77,7 +77,7 @@ check('boot 系列样式里没有写死颜色',
   /\.boot-fig[\s\S]{0,700}#[0-9a-fA-F]{3,6}/.test(CSS), false);
 
 // ---------- 5. 精确总量 ----------
-const FIG_N = { co: 46, os: 71, cn: 48, ds: 31 };
+const FIG_N = { co: 47, os: 71, cn: 48, ds: 31 };
 for (const s of SUBS)
   check(s + ' 配图 ' + FIG_N[s] + ' 张（fig-img 未变）', (RAW[s].match(/fig-img/g) || []).length, FIG_N[s]);
 const STRUCT = { co: 0, ds: 0, cn: 12, os: 15 };

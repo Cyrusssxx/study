@@ -1,0 +1,79 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 780 642" width="780" height="642" font-family="Microsoft YaHei, PingFang SC, sans-serif">
+  <rect width="780" height="642" fill="#fbfcfe"/>
+  <rect x="0" y="0" width="780" height="36" fill="#4a7ab8"/>
+  <text x="16" y="24" fill="#ffffff" font-size="15" font-weight="700">乘法与除法的溢出判据：无符号看 CF，有符号看 OF</text>
+  <text x="16" y="56" fill="#4a5568" font-size="11">下面所有例子取 n = 4（结果 8 位），真实机器 n = 32 或 64，判据完全相同</text>
+
+  <text x="40" y="82" fill="#2c4a6b" font-size="11.5" font-weight="700">乘积寄存器 [P : Y] 共 2n 位 —— 高 n 位 P 就是「溢出与否的唯一证据」</text>
+  <rect x="40" y="92" width="350" height="40" fill="#dbe7f5" stroke="#4a7ab8"/>
+  <rect x="390" y="92" width="350" height="40" fill="#e9e4f6" stroke="#7a6cb0"/>
+  <text x="215" y="117" text-anchor="middle" fill="#2c4a6b" font-size="12.5" font-weight="700">P　高 n 位（部分积）</text>
+  <text x="565" y="117" text-anchor="middle" fill="#4b3f78" font-size="12.5" font-weight="700">Y　低 n 位（乘数 → 积的低半）</text>
+  <text x="40" y="150" fill="#4a5568" font-size="10.5">① 无符号：高 n 位全 0 = 积能装进 n 位　② 有符号：高 n 位必须等于低 n 位的符号扩展</text>
+
+  <rect x="20" y="164" width="358" height="238" rx="6" fill="#ffffff" stroke="#4a7ab8"/>
+  <rect x="20" y="164" width="358" height="26" rx="6" fill="#4a7ab8"/>
+  <rect x="20" y="178" width="358" height="12" fill="#4a7ab8"/>
+  <text x="32" y="182" fill="#ffffff" font-size="12" font-weight="700">无符号乘法　判据：高 n 位全 0 ？</text>
+  <text x="32" y="208" fill="#2c4a6b" font-size="10.5">高 n 位 = 0 → 不溢出（CF=0）；≠ 0 → 溢出（<tspan font-weight="700">CF=1</tspan>）</text>
+
+  <text x="32" y="234" fill="#2c4a6b" font-size="11.5" font-weight="700">3 × 5 = 15（4 位最大 15，装得下）</text>
+  <rect x="32" y="242" width="64" height="22" fill="#dbe7f5" stroke="#4a7ab8"/>
+  <rect x="96" y="242" width="64" height="22" fill="#e9e4f6" stroke="#7a6cb0"/>
+  <text x="64" y="257" text-anchor="middle" fill="#2c4a6b" font-size="12" font-family="Consolas, monospace">0000</text>
+  <text x="128" y="257" text-anchor="middle" fill="#4b3f78" font-size="12" font-family="Consolas, monospace">1111</text>
+  <text x="172" y="257" fill="#2c4a6b" font-size="10.5">P = 0000 全 0</text>
+  <text x="272" y="257" fill="#059669" font-size="11" font-weight="700">CF = 0 ✓</text>
+
+  <text x="32" y="298" fill="#2c4a6b" font-size="11.5" font-weight="700">3 × 6 = 18（超过 4 位能表示的范围）</text>
+  <rect x="32" y="306" width="64" height="22" fill="#fde8e2" stroke="#d97706"/>
+  <rect x="96" y="306" width="64" height="22" fill="#e9e4f6" stroke="#7a6cb0"/>
+  <text x="64" y="321" text-anchor="middle" fill="#8a3b0f" font-size="12" font-family="Consolas, monospace" font-weight="700">0001</text>
+  <text x="128" y="321" text-anchor="middle" fill="#4b3f78" font-size="12" font-family="Consolas, monospace">0010</text>
+  <text x="172" y="321" fill="#2c4a6b" font-size="10.5">P = 0001 ≠ 0</text>
+  <text x="272" y="321" fill="#b45309" font-size="11" font-weight="700">CF = 1 ✗</text>
+  <text x="32" y="356" fill="#4a5568" font-size="10">低半 1111/0010 只是「积的低 4 位」，高半非 0 说明真正的积 ≥ 16</text>
+  <text x="32" y="378" fill="#4a5568" font-size="10">无符号的溢出标志是 <tspan font-weight="700">CF</tspan>（进位 / 借位），OF 在这里没有意义</text>
+
+  <rect x="402" y="164" width="358" height="238" rx="6" fill="#ffffff" stroke="#7a6cb0"/>
+  <rect x="402" y="164" width="358" height="26" rx="6" fill="#7a6cb0"/>
+  <rect x="402" y="178" width="358" height="12" fill="#7a6cb0"/>
+  <text x="414" y="182" fill="#ffffff" font-size="12" font-weight="700">有符号乘法　判据：高 n 位 = 低 n 位符号扩展？</text>
+  <text x="414" y="208" fill="#2c4a6b" font-size="10.5">低半最高位 0 → 高半应全 0；为 1 → 高半应全 1；不等则 <tspan font-weight="700">OF=1</tspan></text>
+
+  <text x="414" y="234" fill="#2c4a6b" font-size="11.5" font-weight="700">(−2) × 3 = −6（在 −8 ~ 7 之内，装得下）</text>
+  <rect x="414" y="242" width="64" height="22" fill="#dbe7f5" stroke="#4a7ab8"/>
+  <rect x="478" y="242" width="64" height="22" fill="#e9e4f6" stroke="#7a6cb0"/>
+  <text x="446" y="257" text-anchor="middle" fill="#2c4a6b" font-size="12" font-family="Consolas, monospace">1111</text>
+  <text x="510" y="257" text-anchor="middle" fill="#4b3f78" font-size="12" font-family="Consolas, monospace">1010</text>
+  <text x="552" y="257" fill="#2c4a6b" font-size="10.5">首位 1，应扩 1111</text>
+  <text x="694" y="257" fill="#059669" font-size="11" font-weight="700">OF=0 ✓</text>
+
+  <text x="414" y="298" fill="#2c4a6b" font-size="11.5" font-weight="700">(−3) × 5 = −15（小于 −8，装不下）</text>
+  <rect x="414" y="306" width="64" height="22" fill="#fde8e2" stroke="#d97706"/>
+  <rect x="478" y="306" width="64" height="22" fill="#e9e4f6" stroke="#7a6cb0"/>
+  <text x="446" y="321" text-anchor="middle" fill="#8a3b0f" font-size="12" font-family="Consolas, monospace" font-weight="700">1111</text>
+  <text x="510" y="321" text-anchor="middle" fill="#4b3f78" font-size="12" font-family="Consolas, monospace">0001</text>
+  <text x="552" y="321" fill="#2c4a6b" font-size="10.5">首位 0，应扩 0000</text>
+  <text x="694" y="321" fill="#b45309" font-size="11" font-weight="700">OF=1 ✗</text>
+  <text x="414" y="356" fill="#4a5568" font-size="10">补码乘（Booth）右移是<tspan font-weight="700">算术右移</tspan>（高位补符号位）→ 判据落在「符号扩展」</text>
+  <text x="414" y="378" fill="#4a5568" font-size="10">原码 / 无符号乘右移是<tspan font-weight="700">逻辑右移</tspan>（高位补 0）→ 判据是「高 n 位全 0」</text>
+
+  <text x="20" y="428" fill="#2c4a6b" font-size="12" font-weight="700">除法</text>
+  <rect x="20" y="438" width="358" height="66" rx="4" fill="#f0fdf4" stroke="#9cc4b0"/>
+  <text x="32" y="458" fill="#1f5c45" font-size="11.5" font-weight="700">无符号除法：永远不会溢出</text>
+  <text x="32" y="476" fill="#1f5c45" font-size="10.5">商 ≤ 被除数，n 位一定装得下；唯一异常是<tspan font-weight="700">除数为 0</tspan>（除法错中断）</text>
+  <text x="32" y="494" fill="#1f5c45" font-size="10.5">被除数补成 2n 位放 [R:Q]，高位补 0</text>
+
+  <rect x="402" y="438" width="358" height="66" rx="4" fill="#fff7ed" stroke="#f0c48a"/>
+  <text x="414" y="458" fill="#7c2d12" font-size="11.5" font-weight="700">有符号除法：只有一种溢出</text>
+  <text x="414" y="476" fill="#7c2d12" font-size="10.5">−2ⁿ⁻¹ ÷ (−1)：商 +2ⁿ⁻¹ 超出 n 位补码范围 → <tspan font-weight="700">OF=1</tspan></text>
+  <text x="414" y="494" fill="#7c2d12" font-size="10.5">例：(−8) ÷ (−1) = +8 &gt; 7（n=4 时）</text>
+
+  <rect x="20" y="524" width="740" height="98" rx="4" fill="#eef4fb" stroke="#c9d9ec"/>
+  <rect x="20" y="524" width="4" height="98" fill="#4a7ab8"/>
+  <text x="34" y="546" fill="#2c4a6b" font-size="11"><tspan font-weight="700">一句话记牢</tspan>：乘法结果都是 2n 位，<tspan font-weight="700">装不装得下只看高 n 位</tspan>——无符号要求「全 0」（否则 CF=1），有符号要求「等于低半的符号扩展」（否则 OF=1）。</text>
+  <text x="34" y="568" fill="#2c4a6b" font-size="11"><tspan font-weight="700">两个判据不能互换</tspan>，同一个 8 位结果换种解释就换个结论（n=4）：</text>
+  <text x="34" y="588" fill="#2c4a6b" font-size="10.5">　　<tspan font-family="Consolas, monospace" font-weight="700">0000 1001</tspan> → 无符号 9 ≤ 15，CF=0 合法；有符号 9 &gt; 7，OF=1 <tspan font-weight="700">溢出</tspan></text>
+  <text x="34" y="606" fill="#2c4a6b" font-size="10.5">　　<tspan font-family="Consolas, monospace" font-weight="700">1111 1001</tspan> → 无符号 249 &gt; 15，CF=1 溢出；有符号 −7 在 −8~7 内，OF=0 <tspan font-weight="700">合法</tspan></text>
+</svg>
