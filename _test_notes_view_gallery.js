@@ -163,6 +163,25 @@ check('SW APP_PRECACHE 收录 figs.html',
 check('SW DATA_PRECACHE 已含四科讲义（图集离线可用）',
     ['co', 'os', 'ds', 'cn'].every(s => sw.includes("'data/notes/" + s + "_notes.json',")), true);
 check('首页每个科目卡片都有图集入口', indexHtml.includes('href="figs.html?subject=${key}"'), true);
+// 图集页密度优化：同一章的小节并排，清洗被当成图题的整段正文
+check('章内小节包进并排网格容器', figsHtml.includes('<div class="figs-secs">'), true);
+check('并排网格用 auto-fill（隐藏某节自动补位）',
+    /\.figs-secs \{[^}]*grid-template-columns: repeat\(auto-fill, minmax\(272px/s.test(figsHtml), true);
+check('窄屏回落单列', /\.figs-secs \{ grid-template-columns: 1fr/s.test(figsHtml), true);
+check('缩略图高度随图片比例走，不再固定 176px 方框',
+    /\.figs-thumb \{ min-height: 148px/s.test(figsHtml) && !figsHtml.includes('height: 176px'), true);
+check('图题只认 ≤46 字短标题（长正文不再被截成图题）',
+    figsHtml.includes('t.length > 46') && !figsHtml.includes('t.length > 170'), true);
+check('剥掉「图X：/示意图：/表X：」纯前缀并过滤泛词',
+    figsHtml.includes('示意图\\s*[：:]?') && figsHtml.includes('/^(示意图|如下|见图|图示|配图|图|表|说明)$/'), true);
+check('无图题时回退「小节名 · 配图 N」',
+    /function labelOf\(it, secName, idx\)/.test(figsHtml) && figsHtml.includes("const tail = ' · 配图 '"), true);
+// 要点视图可读性：重点词做成清单块 + 表格压紧
+check('要点视图把含 <b> 的段落做成清单块',
+    css.includes('> :is(p, li):not([data-fig="1"]):has(b, strong) {'), true);
+check('要点块有暗色配色', /\.dark #notesContent\[data-view="key"\][^{]*:has\(b, strong\)/s.test(css), true);
+check('要点视图压紧表格行距',
+    css.includes('#notesContent[data-view="key"] :is(.notes-body, .notes-sub-body) table { font-size: .8rem; }'), true);
 
 // ---------- 6. figs.html 真实渲染（jsdom + 本地 fetch stub） ----------
 async function waitFor(fn, ms) {
@@ -208,6 +227,13 @@ async function main() {
     check('每张卡片都有非空图题', cards.every(c => (c.querySelector('figcaption').textContent || '').trim().length > 0), true);
     check('图题统一截到 48 字以内（卡片不被长说明撑爆）',
         cards.every(c => c.querySelector('figcaption').textContent.trim().length <= 48), true);
+    check('每个章都有并排网格容器', doc.querySelectorAll('.figs-secs').length,
+        doc.querySelectorAll('.figs-chapter').length);
+    check('图题不再残留「图：」前缀或「示意图：」这类泛词',
+        cards.every(c => !/^(图[：:]|示意图[：:]?|表[：:]|说明[：:]?)/.test(c.querySelector('figcaption').textContent.trim())), true);
+    check('无图题的卡片回退成「小节名 · 配图 N」而非裸文件名',
+        cards.filter(c => c.querySelector('figcaption').textContent.includes('· 配图 ')).length > 0 &&
+        cards.every(c => !/^配图 · [a-z0-9_]+$/i.test(c.querySelector('figcaption').textContent.trim())), true);
     check('figcaption 的 title 保留完整图题',
         cards.filter(c => c.querySelector('figcaption').textContent.includes('…'))
             .every(c => c.querySelector('figcaption').getAttribute('title').length >=

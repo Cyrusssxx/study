@@ -4800,6 +4800,15 @@ h3.algo-h:first-child, h4.algo-h:first-child, h5.algo-h:first-child { margin-top
     color: var(--primary);
     font-weight: 600;
 }
+/* 目录跟随滚动：当前项加一条主色竖标，滚动时一眼能定位；
+ * 只加 box-shadow，不动字重，避免和 important/core 的三档重点标记混淆。 */
+.notes-toc-sec.active, .notes-toc-sub.active {
+    box-shadow: inset 3px 0 0 var(--primary);
+}
+.dark .notes-toc-sec.active, .dark .notes-toc-sub.active {
+    background: rgba(143, 176, 217, .16);
+    box-shadow: inset 3px 0 0 var(--primary);
+}
 /* 重点小节：主色但不加粗（数量占全部子节的 30%，见文件末尾「目录重点标记」一段）。
    Windows 中文只有 400/700 两档字形，写 600 会被合成成 Bold，想去重只能显式 400。 */
 .notes-toc-sub-strong {
@@ -8908,6 +8917,21 @@ body.fc-toc-open .fc-toc-fab { display: none; }
     margin: 12px 0 4px; padding-left: 0;
 }
 #notesContent[data-view="key"] .notes-body h4::before { display: none; }
+/* 原来只把 <b> 恢复字号、普通文字压成 0，结果一屏漂着一堆互不相连的蓝色词。
+ * 给含重点词的段落一层浅底 + 左细线，每条要点自成一块，扫读时不再散。
+ * 只取直接子 p/li，避免给黄框、表格内部的 <p> 叠底色。 */
+#notesContent[data-view="key"] :is(.notes-body, .notes-sub-body) > :is(p, li):not([data-fig="1"]):has(b, strong) {
+    background: rgba(74, 122, 184, .055);
+    border-left: 2px solid rgba(74, 122, 184, .38);
+    border-radius: 0 4px 4px 0;
+    padding: 3px 9px; margin: 5px 0;
+}
+.dark #notesContent[data-view="key"] :is(.notes-body, .notes-sub-body) > :is(p, li):not([data-fig="1"]):has(b, strong) {
+    background: rgba(143, 176, 217, .10);
+}
+/* 表格是干货要点，但全文行距在要点视图里太占高度：压紧到一屏能扫完 */
+#notesContent[data-view="key"] :is(.notes-body, .notes-sub-body) table { font-size: .8rem; }
+#notesContent[data-view="key"] :is(.notes-body, .notes-sub-body) :is(th, td) { padding: 3px 6px; }
 
 /* —— 只看图视图 —— */
 #notesContent[data-view="fig"] .notes-section:not(:has(img.fig-img, figure.struct-fig)),

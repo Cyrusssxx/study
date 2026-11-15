@@ -882,22 +882,65 @@
 
             // 全量渲染完成后才做的事：这些都要遍历正文 DOM，必须等切片跑完
             function finishNotes() {
-                // 滚动时目录跟随高亮（节+小节均参与，DOM顺序靠后者优先→天然偏向最深可见项）
+                /* 目录跟随滚动：① 高亮当前节/小节 ② 把高亮项带进左侧目录的可视区。
+                 * 目录是 sticky + 内部 overflow-y:auto，正文读到后半本时高亮项往往早就
+                 * 滚出侧栏视野，只切 active 类看起来就是「目录不跟着走」。
+                 * 目录自身被用户手动滚动/拖动时暂停跟随 2.5s，避免抢滚动条。 */
                 const sections = Array.from(contentEl.querySelectorAll('.notes-section, .notes-sub'));
                 const tocLinks = Array.from(document.querySelectorAll('.notes-toc-sec, .notes-toc-sub'));
+                const followBox = document.getElementById('notesToc');
+                const followLayout = document.getElementById('notesLayout');
+                let tocUserScrollUntil = 0;
+                if (followBox) {
+                    const pauseTocFollow = () => { tocUserScrollUntil = Date.now() + 2500; };
+                    followBox.addEventListener('wheel', pauseTocFollow, { passive: true });
+                    followBox.addEventListener('touchmove', pauseTocFollow, { passive: true });
+                    followBox.addEventListener('pointerdown', pauseTocFollow);
+                }
+                function currentTocSection() {
+                    let current = null;
+                    for (const s of sections) {
+                        // 判定线贴顶栏下沿：标题刚被顶栏盖住就切到它（DOM 顺序靠后者=最深子节优先）
+                        if (s.getBoundingClientRect().top <= 90) current = s;
+                    }
+                    return current || sections[0] || null;
+                }
+                function syncTocFollow(activeEl, force) {
+                    if (!activeEl) return;
+                    const sec = activeEl.dataset.sec;
+                    tocLinks.forEach(l => l.classList.toggle('active', l.dataset.sec === sec));
+                    if (!followBox || (!force && Date.now() < tocUserScrollUntil)) return;
+                    if (followLayout && followLayout.classList.contains('notes-toc-collapsed')) return;
+                    let link = followBox.querySelector('.notes-toc-sub.active, .notes-toc-sec.active');
+                    // 当前小节所在分组被折叠时，退回它所属的节，否则永远没有可见项可滚
+                    if (link && link.closest('.notes-toc-subs.collapsed')) {
+                        const parent = activeEl.closest('.notes-section');
+                        link = parent ? followBox.querySelector(
+                            `.notes-toc-sec[data-sec="${CSS.escape(parent.dataset.sec)}"]`) : null;
+                    }
+                    if (!link) return;
+                    const tr = followBox.getBoundingClientRect(), lr = link.getBoundingClientRect();
+                    if (!tr.height || !lr.height) return;
+                    const pad = 18;
+                    if (lr.top < tr.top + pad || lr.bottom > tr.bottom - pad) {
+                        // 只在越界时一次性带回中部：连续滚动时不反复抢滚动条，也不会抖
+                        const delta = lr.top - tr.top - (tr.height - lr.height) / 2;
+                        const max = Math.max(0, followBox.scrollHeight - followBox.clientHeight);
+                        followBox.scrollTop = Math.max(0, Math.min(max, followBox.scrollTop + delta));
+                    }
+                }
                 let ticking = false;
                 window.addEventListener('scroll', () => {
                     if (ticking) return;
                     ticking = true;
                     requestAnimationFrame(() => {
                         ticking = false;
-                        let current = null;
-                        for (const s of sections) {
-                            if (s.getBoundingClientRect().top <= 90) current = s.dataset.sec;
-                        }
-                        if (current) tocLinks.forEach(l => l.classList.toggle('active', l.dataset.sec === current));
+                        syncTocFollow(currentTocSection(), false);
                     });
                 }, { passive: true });
+                // 首屏对齐一次；滚动位置恢复是异步追滚，稍后再校准一次
+                requestAnimationFrame(() => syncTocFollow(currentTocSection(), true));
+                setTimeout(() => syncTocFollow(currentTocSection(), false), 900);
 
                 // 长表格加横向滚动包裹，防止移动端列被压扁
                 contentEl.querySelectorAll('.notes-body table').forEach(t => {

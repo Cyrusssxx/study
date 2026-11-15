@@ -44,25 +44,32 @@
                         background: rgba(var(--card-rgb), 1); margin: 10px 0; }
         .figs-chapter > summary { cursor: pointer; padding: 9px 14px; font-weight: 700;
                                   font-size: .9rem; list-style-position: inside; }
-        .figs-sec { padding: 8px 14px 14px; border-top: 1px solid var(--border); }
-        .figs-sec-head { font-size: .82rem; margin-bottom: 8px; }
+        /* 同一章的小节并排铺开：多数小节只有 1 张图，逐节单列会在右侧留下 3/4 屏空白。 */
+        .figs-secs { display: grid; gap: 12px; padding: 10px 14px 14px;
+                     grid-template-columns: repeat(auto-fill, minmax(272px, 1fr));
+                     align-items: start; }
+        .figs-sec { padding: 10px; border: 1px solid var(--border); border-radius: var(--radius);
+                    background: rgba(var(--card-rgb), 1); }
+        .figs-sec-head { font-size: .82rem; margin-bottom: 8px; line-height: 1.5; }
         .figs-sec-head a { color: var(--primary); text-decoration: none; font-weight: 700; }
         .figs-sec-head a:hover { text-decoration: underline; }
-        .figs-grid { display: grid; gap: 12px;
-                     grid-template-columns: repeat(auto-fill, minmax(238px, 1fr)); }
+        .figs-grid { display: grid; gap: 10px;
+                     grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); }
         .figs-card { margin: 0; background: rgba(var(--card-rgb), 1);
                      border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; }
-        .figs-thumb { height: 176px; display: flex; align-items: center; justify-content: center;
+        /* 高度随图片比例走：宽图不再被塞进固定 176px 的方框里上下留白，方图也不会撑爆卡片。 */
+        .figs-thumb { min-height: 148px; display: flex; align-items: center; justify-content: center;
                       background: #ffffff; padding: 8px; overflow: hidden; }
         .dark .figs-thumb { background: #f7f9fc; }
-        .figs-thumb img { max-width: 100%; max-height: 100%; object-fit: contain;
+        .figs-thumb img { width: 100%; height: auto; max-height: 270px; object-fit: contain;
                           cursor: zoom-in; display: block; }
         .figs-card figcaption { font-size: .75rem; line-height: 1.5; padding: 7px 9px;
                                 color: var(--text-light); border-top: 1px solid var(--border); }
         .figs-empty { padding: 30px 10px; text-align: center; color: var(--text-light); font-size: .86rem; }
         @media (max-width: 620px) {
-            .figs-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
-            .figs-thumb { height: 128px; }
+            .figs-secs { grid-template-columns: 1fr; gap: 8px; padding: 8px; }
+            .figs-grid { grid-template-columns: 1fr; gap: 8px; }
+            .figs-thumb { min-height: 120px; }
             .figs-search { margin-left: 0; flex: 1 1 100%; }
         }
     </style>
@@ -158,10 +165,13 @@
                 const before = h.slice(0, idx);
                 const ps = [...before.matchAll(/<p[^>]*>([\s\S]*?)<\/p>/g)];
                 if (!ps.length) return '';
-                const t = plain(ps[ps.length - 1][1]);
-                if (!t || t.length > 170) return '';
-                if (/^(图\s*\d|图[：:]|示意图|表\s*\d|表[：:])/.test(t)) return t;
-                return t.length <= 46 ? t : '';
+                let t = plain(ps[ps.length - 1][1]);
+                // 旧口径「图：」开头就放行 170 字，结果把整段正文截成图题（卡片下方一大坨）。
+                // 现在一律只认短标题，长段落全部回退成「小节名 · 配图 N」。
+                if (!t || t.length > 46) return '';
+                t = t.replace(/^(?:图\s*\d+(?:[.\-]\d+)*\s*[：:]?|图\s*[：:]|示意图\s*[：:]?|表\s*\d+\s*[：:]?|表\s*[：:])\s*/, '').trim();
+                if (t.length < 2 || /^(示意图|如下|见图|图示|配图|图|表|说明)$/.test(t)) return '';
+                return t;
             }
             function collect(h) {
                 const out = [];
@@ -176,13 +186,14 @@
                 out.sort((a, b) => a.i - b.i);
                 return out;
             }
-            function labelOf(it) {
-                // 图题统一截到 48 字，避免个别「图：…」长说明把卡片撑成半屏；
-                // 完整图题放在 figcaption 的 title 里（鼠标悬停可见）。
+            function labelOf(it, secName, idx) {
+                // caption 已过滤到 ≤46 字的短标题，直接完整显示，不再截断成半句话；
+                // 万一超长仍兜底截到 48 字，完整文本放 title（鼠标悬停可见）。
                 if (it.cap) return it.cap.length > 48 ? it.cap.slice(0, 47) + '…' : it.cap;
-                if (it.inline) return '内联结构图 · 点标题回讲义查看';
-                const f = (it.src.split('/').pop() || '').replace(/\.svg$/i, '').replace(/_/g, ' ');
-                return f ? '配图 · ' + f : '讲义配图';
+                // 无有效图题时用「小节名 · 配图 N」：比裸文件名、泛词「示意图」更能说明这张图讲什么。
+                const base = (secName || '讲义').replace(/\s+/g, ' ').trim();
+                const tail = ' · 配图 ' + (idx + 1);
+                return base.length + tail.length > 48 ? base.slice(0, 48 - tail.length - 1) + '…' + tail : base + tail;
             }
 
             async function loadGroups() {
@@ -218,9 +229,9 @@
                     total += n;
                     const chHtml = g.chapters.map(c => {
                         const secHtml = c.secs.map(s => {
-                            const cards = s.items.map(it => {
-                                const cap = labelOf(it);
-                                // 搜索用完整图题（不是截断后的显示文本），长图题后半段也能搜到
+                            const cards = s.items.map((it, idx) => {
+                                const cap = labelOf(it, s.name, idx);
+                                // 搜索用完整图题 + 节名 + 章名 + 文件名，长图题后半段也能搜到
                                 const hay = ((it.cap || cap) + ' ' + s.name + ' ' + c.chapter + ' ' + it.src).toLowerCase();
                                 return '<figure class="figs-card" data-search="' + esc(hay) + '">' +
                                     '<div class="figs-thumb"><img class="fig-img" loading="lazy" src="' + esc(it.src) +
@@ -233,8 +244,9 @@
                                 esc(s.name) + ' ↗</a></div>' +
                                 '<div class="figs-grid">' + cards + '</div></div>';
                         }).join('');
+                        // 小节块并排放进章级网格：隐藏某节时后面的块会自动补位
                         return '<details class="figs-chapter" open><summary>' + esc(c.chapter) +
-                            '</summary>' + secHtml + '</details>';
+                            '</summary><div class="figs-secs">' + secHtml + '</div></details>';
                     }).join('');
                     return '<section class="figs-subj" data-subj="' + g.subj + '">' +
                         '<h2 class="figs-subj-title">' + esc(g.name) + ' <span>' + n + ' 张</span></h2>' +
