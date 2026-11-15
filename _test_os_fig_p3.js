@@ -164,7 +164,14 @@ if (!JSDOM || !IDBFactory) {
         w.fetch = async () => ({ ok: true, status: 200, json: async () => JSON.parse(notesRaw) });
       }
     });
-    await new Promise(r => setTimeout(r, 4000));
+    // 固定 4000ms 在批量串跑（机器有负载）时会偶发渲染不足（实测掉到 2709 行），
+    // 改成轮询等行号出现，最多 20s；正常情况 1~2s 就够。
+    const dPoll = dom.window.document;
+    const t0 = Date.now();
+    while (dPoll.querySelectorAll('.anno-line').length < 3409 && Date.now() - t0 < 20000) {
+      await new Promise(r => setTimeout(r, 200));
+    }
+    await new Promise(r => setTimeout(r, 300));
     const d = dom.window.document;
     check('真实渲染 .anno-line 总数 = 3409（已存批注不错位）',
       d.querySelectorAll('.anno-line').length, 3409);
