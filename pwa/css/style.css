@@ -3581,9 +3581,27 @@ a.review-chip-all:hover {
 /* 讲义自绘配图（.fig-img）：由 common.js 的全局委托接管点击放大，需给出可点提示 */
 img.fig-img {
     cursor: zoom-in;
-    transition: opacity .15s, transform .15s;
+    transition: opacity .15s, transform .15s, filter .15s;
 }
 img.fig-img:hover { opacity: .92; }
+
+/* 暗色主题下的配图：全库 173 张自绘 SVG 的白底是写死在 SVG 里的（fill="#ffffff"），
+   主题变量管不到；22 张历史 PNG 同样自带白底。与其让它当「未适配的刺眼白块」，
+   不如做成有意为之的纸张卡片：保留白底 + 圆角 + 柔和外阴影 + 整体压 7% 亮度，
+   纯白不再在 #1a1a1a 背景上过曝，同时图内文字仍是深色可读（不反转、不滤镜换色，
+   所以红/绿/橙这些语义色不会被破坏）。 */
+.dark img.fig-img {
+    background: #fff;
+    border-radius: 8px;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, .5), 0 8px 22px rgba(0, 0, 0, .38);
+    filter: brightness(.93);
+}
+.dark img.fig-img:hover { filter: brightness(.97); }
+/* 放大预览里同样按纸张处理，避免点开后突然变回刺眼纯白 */
+.dark .fig-lightbox img {
+    border-radius: 8px;
+    filter: brightness(.95);
+}
 
 /* ===== 图片放大预览 lightbox（当前页，不新开标签页） ===== */
 .fig-lightbox {
