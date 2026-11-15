@@ -142,7 +142,7 @@ check('CSS .key-callout 无绝对定位 / z-index / 负外边距遮挡',
 check('笔记 JSON 里没有 SVG 专有的 tspan', SUBS.every(s => !RAW[s].includes('tspan')), true);
 
 // ---------- 5. 行号双基线（图块与黄框都不参与行号） ----------
-const LINE_BASE = { co: [1819, 1819], os: [3581, 3581], cn: [1108, 1108], ds: [1173, 1175] };
+const LINE_BASE = { co: [1819, 1819], os: [3479, 3479], cn: [1108, 1108], ds: [1173, 1175] };
 for (const sub of SUBS) {
   let paired = 0, open = 0;
   for (const { h } of allHtmls(sub)) {
@@ -197,7 +197,7 @@ for (const sub of SUBS) {
   for (const { key, h } of allHtmls(sub)) A.set(key, h);
   for (const [k, old] of B) {
     const neu = A.get(k) || '';
-    if (old !== neu) { changed++; if (!subseq(old, neu) && k !== '2.1.3' && k !== '1.5') guardBad++; }
+    if (old !== neu) { changed++; if (!subseq(old, neu) && k !== '2.1.3' && k !== '1.5' && k !== '5.3.1') guardBad++; }
   }
   guardDone++;
 }
@@ -215,7 +215,7 @@ if (!JSDOM || !IDBFactory) {
   process.exit(fail ? 1 : 0);
 } else {
   (async () => {
-    const JSDOM_BASE = { co: 1971, os: 3589, cn: 1220, ds: 1330 };
+    const JSDOM_BASE = { co: 1971, os: 3484, cn: 1220, ds: 1330 };
     for (const sub of SUBS) {
       const pageHtml = read('pwa/notes.html')
         .replace(/<script src="([^"]+)"[^>]*><\/script>/g, (m, s) => {

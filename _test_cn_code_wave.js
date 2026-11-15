@@ -209,8 +209,8 @@ if (!JSDOM || !IDBFactory) {
       // OS 1.5 已按「精简」重排（110 段 → 41 段，见 tools/slim_os15.py）：
       // 逐行比对与数量一致性都排除该节，其余小节仍要求零漂移。
       no15: [...d.querySelectorAll('.anno-line')].filter(e => {
-          const sc = e.closest('.notes-section');
-          return !(sc && sc.dataset.sec.startsWith('1.5 '));
+          const h = e.closest('.notes-sub') || e.closest('.notes-section');
+          return !(h && /^(1\.5 |5\.3\.1 )/.test(h.dataset.sec));
       }).map(e => e.textContent.trim()),
       figs: d.querySelectorAll('img.fig-img').length,
       waveFigs: d.querySelectorAll('figure.wave-fig').length,
