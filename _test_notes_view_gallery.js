@@ -61,6 +61,10 @@ check('视图状态存 localStorage 且四科通用', notesHtml.includes("const 
 check('切换条抽成常量（加载失败也保留）', notesHtml.includes('const NOTES_VIEW_HTML ='), true);
 check('加载失败分支也渲染切换条', /暂无考点笔记<\/p>' \+ NOTES_VIEW_HTML/.test(notesHtml), true);
 check('图集入口带当前科目', notesHtml.includes('href="figs.html?subject=${SUBJECT}"'), true);
+check('notes 页图集入口是按钮外观（不是裸文字链接）',
+    /\.notes-view-gallery\s*\{[^}]*border: 1px solid var\(--primary\)[^}]*border-radius: 14px/s.test(css), true);
+check('按钮态入口 hover 有反白过渡',
+    /\.notes-view-gallery:hover\s*\{[^}]*background: var\(--primary\)[^}]*color: #fff/s.test(css), true);
 check('setNotesView 只接受三档，非法值回落全文',
     notesHtml.includes("if (!['full', 'key', 'fig'].includes(mode)) mode = 'full';"), true);
 check('节速览渲染在 .notes-body 之外（不进 .anno-line）',

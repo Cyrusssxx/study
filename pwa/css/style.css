@@ -8836,11 +8836,19 @@ body.fc-toc-open .fc-toc-fab { display: none; }
     background: var(--primary); border-color: var(--primary);
     color: #fff; font-weight: 700;
 }
+/* 图集页入口：与三档切换按钮同一排，做成按钮外观（主色描边，hover 反白） */
 .notes-view-gallery {
-    margin-left: 4px; font-size: .8rem;
+    display: inline-flex; align-items: center;
+    margin-left: 6px; padding: 4px 12px;
+    font: inherit; font-size: .8rem; line-height: 1.45; font-weight: 600;
     color: var(--primary); text-decoration: none;
+    background: rgba(var(--card-rgb), .9);
+    border: 1px solid var(--primary); border-radius: 14px;
+    transition: color .15s, background .15s, border-color .15s;
 }
-.notes-view-gallery:hover { text-decoration: underline; }
+.notes-view-gallery:hover {
+    background: var(--primary); color: #fff; text-decoration: none;
+}
 .notes-view-hint {
     font-size: .76rem; color: var(--text-light);
     margin: 2px 0 6px; line-height: 1.5;
