@@ -224,6 +224,20 @@
             "71.3 文件系统": "4.3 文件系统的实现",
         };
 
+        /* 题目「📖 知识点」跳转的旧名兼容表（与批注迁移解耦）。
+         * 讲义重排后题库里残留过少量旧小节名，按「编号前缀模糊匹配」会落到同号的
+         * 另一节：CN「6.4.2 简单邮件传送协议SMTP」曾跳到「6.4.2 电子邮件格式与MIME」。
+         * 只供 resolveSectionEl / jumpTo / 目标节优先渲染使用，**不参与** loadAnnos
+         * 的 migrateAnno（批注搬迁走另一张 SEC_ALIAS 行号表），避免误迁移用户批注。 */
+        const GOTO_ALIASES = {
+            "6.4.2 简单邮件传送协议SMTP": "6.4.3 SMTP和POP3",
+            "6.4.3 邮局协议POP3和IMAP": "6.4.3 SMTP和POP3",
+            "5.2.x 中断处理流程": "1.3.3 中断和异常的概念"
+        };
+        function resolveSecName(name) {
+            return GOTO_ALIASES[name] || SEC_ALIASES[name] || name;
+        }
+
         // 章节名含 / 等字符，锚点定位统一走 data-sec 属性匹配，不用 id 选择器
         // 支持：1) 精确匹配 2) 别名映射（旧section→新section）3) 编号前缀模糊匹配 4) 关键词兜底
         // 匹配范围含小节(.notes-sub)，节名跳节容器、小节名跳小节容器
@@ -248,7 +262,7 @@
             const tocLinks = Array.from(document.querySelectorAll('.notes-toc-sec, .notes-toc-sub'));
 
             // 0) 别名映射转换（题目旧名 → 笔记新名）
-            const mapped = SEC_ALIASES[name] || name;
+            const mapped = resolveSecName(name);
 
             // 1) 精确匹配（先匹配原名，再匹配映射名）
             let target = sections.find(s => s.dataset.sec === name)
@@ -369,7 +383,7 @@
         // 仅按名称解析出 section/subsection 元素（供细粒度跳转复用 jumpTo 的匹配逻辑）
         function resolveSectionEl(name) {
             const sections = Array.from(document.querySelectorAll('.notes-section, .notes-sub'));
-            const mapped = SEC_ALIASES[name] || name;
+            const mapped = resolveSecName(name);
             let target = sections.find(s => s.dataset.sec === name)
                           || sections.find(s => s.dataset.sec === mapped);
             if (!target) {
@@ -810,6 +824,9 @@
                 }
                 if (name) GOTO = name;   // 解析不出就原样交给 jumpTo 的关键词兜底，不丢目标
             }
+            // 题库/旧链接里的旧小节名先归一到讲义真名：目标节优先渲染用的是
+            // flat 精确匹配，不先归一化就会「目标节没渲染 → 60ms 落位落空」。
+            GOTO = resolveSecName(GOTO);
             const findSecIdx = name => flat.findIndex(t =>
                 t.sec.section === name || (t.sec.subsections || []).some(s => s.section === name));
             const targetIdx = GOTO ? findSecIdx(GOTO) : -1;
@@ -882,6 +899,9 @@
 
             // 全量渲染完成后才做的事：这些都要遍历正文 DOM，必须等切片跑完
             function finishNotes() {
+                // 全文渲染完成：清掉落位阶段可能建立的残缺行索引缓存，
+                // 否则 q= 题干兜底只会搜到当时已渲染的前几节。
+                _bgCache = null;
                 /* 目录跟随滚动：① 高亮当前节/小节 ② 把高亮项带进左侧目录的可视区。
                  * 目录是 sticky + 内部 overflow-y:auto，正文读到后半本时高亮项往往早就
                  * 滚出侧栏视野，只切 active 类看起来就是「目录不跟着走」。

@@ -9623,7 +9623,7 @@
       "explanation": "<p>SMTP和POP3都是基于TCP的协议，提供可靠的邮件通信。</p>",
       "chapter": "第6章 应用层",
       "section": "6.4 电子邮件",
-      "subsection": "6.4.2 简单邮件传送协议SMTP",
+      "subsection": "6.4.3 SMTP和POP3",
       "_pdf_qno": 2,
       "kp_analysis": "<div class=\"kp-sec\"><b>考点</b>邮件协议的传输层底座：SMTP 与 POP3 都基于 <b>TCP</b>（邮件不能丢）。答案 A。</div><div class=\"kp-sec\"><b>易错点</b><span class=\"kp-trap\">邮件全家桶都走 TCP：SMTP 发、POP3/IMAP 收——没有一个是 UDP 的；\"电子邮件用 UDP\"是凭空捏造。</span></div>"
     },
@@ -9641,7 +9641,7 @@
       "explanation": "<p>SMTP服务器使用的熟知端口号是25。</p>",
       "chapter": "第6章 应用层",
       "section": "6.4 电子邮件",
-      "subsection": "6.4.2 简单邮件传送协议SMTP",
+      "subsection": "6.4.3 SMTP和POP3",
       "_pdf_qno": 3,
       "kp_analysis": "<div class=\"kp-sec\"><b>考点</b>SMTP 服务器熟知端口 = <b>25</b>。答案 B。</div><div class=\"kp-sec\"><b>易错点</b><span class=\"kp-trap\">端口三兄弟别混：SMTP 25（发信）、POP3 110（收信）、IMAP 143（收信在线版）；FTP 20/21、HTTP 80、HTTPS 443、DNS 53。</span></div>"
     },
@@ -9659,7 +9659,7 @@
       "explanation": "<p>在基于万维网的电子邮件中，用户浏览器与Hotmail或Gmail的邮件服务器之间的邮件发送或接收使用的是HTTP，而仅在不同邮件服务器之间传送邮件时才使用SMTP。</p>",
       "chapter": "第6章 应用层",
       "section": "6.4 电子邮件",
-      "subsection": "6.4.2 简单邮件传送协议SMTP",
+      "subsection": "6.4.3 SMTP和POP3",
       "_pdf_qno": 4,
       "kp_analysis": "<div class=\"kp-sec\"><b>考点</b>基于万维网的电子邮件（网页版 Gmail）：浏览器 ↔ 邮件服务器之间<b>用 HTTP</b> 收发邮件；只有<b>邮件服务器 ↔ 邮件服务器</b>之间才用 SMTP。答案 A。</div><div class=\"kp-sec\"><b>易错点</b><span class=\"kp-trap\">\"发邮件 = SMTP\"只对邮件客户端成立；网页邮箱的发送/读取全走 HTTP——前提是\"使用浏览器\"。</span></div>"
     },
@@ -9747,7 +9747,7 @@
       "explanation": "<p>根据6.4.1节可知，SMTP用于用户代理向邮件服务器发送邮件，或在邮件服务器之间发送邮件。SMTP只支持传输7比特的ASCII码内容。</p>",
       "chapter": "第6章 应用层",
       "section": "6.4 电子邮件",
-      "subsection": "6.4.2 简单邮件传送协议SMTP",
+      "subsection": "6.4.3 SMTP和POP3",
       "_pdf_qno": 9,
       "kp_analysis": "<div class=\"kp-sec\"><b>考点</b>2013 真题：SMTP = I 只支持 7 位 ASCII ✓、II 服务器间发信 ✓、III 用户代理→服务器 ✓；IV 服务器→用户代理是 POP3/IMAP 的活。答案 A。</div><div class=\"kp-sec\"><b>易错点</b><span class=\"kp-trap\">SMTP 的边界 = \"发\"的全部环节——一旦方向变成\"服务器→用户代理\"就出局；ASCII 限制靠 MIME 扩展解决。</span></div>"
     },
@@ -9765,7 +9765,7 @@
       "explanation": "<p>POP3建立在TCP连接上，使用的是有连接可靠的数据传输服务。</p>",
       "chapter": "第6章 应用层",
       "section": "6.4 电子邮件",
-      "subsection": "6.4.3 邮局协议POP3和IMAP",
+      "subsection": "6.4.3 SMTP和POP3",
       "_pdf_qno": 10,
       "kp_analysis": "<div class=\"kp-sec\"><b>考点</b>2015 真题：POP3 基于 TCP → <b>有连接、可靠</b>的数据传输服务。答案 D。</div><div class=\"kp-sec\"><b>易错点</b><span class=\"kp-trap\">应用层协议的传输服务类型 = 看它踩在 TCP 还是 UDP 上——POP3/SMTP/IMAP/HTTP/FTP 全是 TCP，DNS 是 UDP（可回落 TCP）。</span></div>"
     },
@@ -9783,7 +9783,7 @@
       "explanation": "<p>电子邮件出现得较早，当时的数据传输能力较弱，使用者往往也不需要传输较大的图片、视频等，因此SMTP具有一些目前来看较为老旧的性质，如限制所有邮件报文的体部分只能采用7位ASCI码来表示。在如今的传输过程中，传输了非文本文件时，往往需要将这些多媒体文件重新编码为ASCⅡI码再传输。因此无须转换即可传输的是ASCII文本，答案为选项D。</p>",
       "chapter": "第6章 应用层",
       "section": "6.4 电子邮件",
-      "subsection": "6.4.2 简单邮件传送协议SMTP",
+      "subsection": "6.4.3 SMTP和POP3",
       "_pdf_qno": 11
     },
     {
@@ -9800,7 +9800,7 @@
       "explanation": "<p>POP3用于用户代理从邮件服务器读取邮件，说法I正确。用户代理向邮件服务器发送邮件使用的是SMTP，而非POP3。邮件服务器之间的邮件传输也由SMTP实现，与POP3无关。POP3支持在一条TCP连接中收取多封邮件，无须为每封邮件单独建立连接，说法IV正确。</p>",
       "chapter": "第6章 应用层",
       "section": "6.4 电子邮件",
-      "subsection": "6.4.3 邮局协议POP3和IMAP",
+      "subsection": "6.4.3 SMTP和POP3",
       "_pdf_qno": 12,
       "kp_analysis": "<div class=\"kp-sec\"><b>考点</b>2025 真题：POP3 = I 用户代理读邮件 ✓、IV <b>一条 TCP 连接可收多封邮件</b> ✓；II/III 发送与服务器间传输都是 SMTP 的职责。答案 A。</div><div class=\"kp-sec\"><b>易错点</b><span class=\"kp-trap\">POP3 只做\"拉取\"一件事——连一次收多封是它的效率特性；\"发邮件\"无论从哪到哪都轮不到 POP3。</span></div>"
     },
