@@ -124,7 +124,8 @@
        "html": "<ul>\n<li>链栈：栈顶在链头，头插/头删都 O(1)；常不带头结点，push/pop 直接操作头指针。</li>\n<li>不存在栈满（除非内存耗尽）；多个栈共享空间时用链栈合适。</li>\n</ul>\n<p class=\"paragraph\">典型例子：检验出栈序列 d,c,e,b,a（进栈 a~e）：d 出→c 出→e 进出→b、a 出——合法；c,a,b,d,e：c 出后栈中 a,b（b 在顶），下一个要出 a 非法。</p>\n\n<ul>\n<li>采用链式存储的栈称为链栈。</li>\n<li>优点：①便于动态分配存储空间；②不存在栈满溢出的问题；③多栈共存场景下能更灵活地利用内存。</li>\n<li>通常使用单链表实现链栈，并规定所有操作均在链表表头进行。</li>\n<li>本节约定链栈不带头结点，栈顶指针 Lhead 直接指向栈顶元素。</li>\n</ul>\n<p><code>typedef struct LinkNode { ElemType data; struct LinkNode *next; } LiStack;</code></p>\n<ul>\n<li>栈只在栈顶一端插入删除，对应链表就是表头。</li>\n<li>在表头插入/删除时间复杂度均为 <b>O(1)</b>；若放在表尾（无尾指针时）则需遍历，为 O(n)。</li>\n</ul>\n<table class=\"mc-table\">\n<tr><th>对比项</th><th>顺序栈</th><th>链栈</th></tr>\n<tr><td>存储空间</td><td>预先分配连续空间</td><td>按需动态申请</td></tr>\n<tr><td>是否可能溢出</td><td>可能（栈满）</td><td>不会（除非内存耗尽）</td></tr>\n<tr><td>栈顶指针含义</td><td>int top（下标）</td><td>指针 Lhead</td></tr>\n<tr><td>插入删除时间</td><td>O(1)</td><td>O(1)</td></tr>\n<tr><td>多栈共存</td><td>需共享栈技巧</td><td>天然灵活</td></tr>\n<tr><td>存储密度</td><td>1</td><td>&lt; 1（指针开销）</td></tr>\n</table>\n<p>五、共享栈（顺序栈的空间优化技巧，常与链栈对比出题）</p>\n<ul>\n<li>利用栈底位置相对固定的特性，让两个顺序栈共享同一段一维数组空间，两栈栈底分别置于数组两端，栈顶向中间延伸。</li>\n<li>0 号栈栈顶指针 <code>top0 = -1</code>（空），1 号栈 <code>top1 = MaxSize</code>（空）。</li>\n<li><b>栈满条件：<code>top1 - top0 == 1</code></b>（两栈顶相邻）。</li>\n<li>0 号栈入栈：top0 先加 1 再赋值；1 号栈入栈：top1 先减 1 再赋值；出栈顺序相反。</li>\n<li>存取时间复杂度<b>均为 O(1)</b>，仅当整个数组被占满才溢出，空间利用率更高。</li>\n</ul>\n<p>易错点：①顺序栈 top 的初值不同，入栈出栈写法完全不同——<b>top = -1 指向栈顶元素</b>时入栈 <code>data[++top] = x</code>、出栈 <code>x = data[top--]</code>；<b>top = 0 指向栈顶元素的下一位置</b>时入栈 <code>data[top++] = x</code>、出栈 <code>x = data[--top]</code>，判空判满条件也随之改变，务必按题目设定灵活应对；②链栈\"不存在栈满\"指的是不会因容量固定而溢出；③链栈带头结点时初始化、判空细节不同，本节基于无头结点设计。</p>\n\n<p class=\"paragraph\" data-fig=\"1\"><b>图：链栈与共享栈 · 栈顶在表头时 push/pop 都是 O(1)；共享栈 top0 = −1、top1 = MaxSize，满条件 top1 − top0 == 1</b></p>\n<p class=\"paragraph\" data-fig=\"1\"><img class=\"fig-img\" src=\"img/ds_fig_linkstack.svg\" style=\"max-width:100%;border:1px solid var(--border);border-radius:var(--radius);display:block;margin:8px auto;\"/></p>\n<div class=\"key-callout\"><b>「栈顶」只能是那一个能插入删除的端</b>：链栈放在表头才是 O(1)，若规定在表尾又没尾指针，入栈要先遍历到 O(n)。<b>「不会满」指的是容量</b>：链栈按需申请，不像顺序栈受 MaxSize 限制，但内存耗尽照样失败。<b>共享栈的判满是「相邻」不是「相等」</b>：top1 − top0 == 1 才算占满；初值 top0 = −1、top1 = MaxSize，两栈顶相向而行，只有整个数组被占满才溢出。</div>\n"
       }
      ],
-     "html": "<h4>★ 本节综合考点精炼</h4><ul><li>栈和队列的<b>逻辑结构相同（线性）</b>、存储结构可同可异、<b>运算不同</b>（Q77）；栈 = <b>限制存取点的线性结构</b>（只一端操作，Q78）。</li><li>顺序栈入栈（背初始指针定义）：<code>top=-1</code> → <code>a[++top]=x</code>（先移后存，Q80）；<code>top=1</code>（指向栈顶下一位置）→ <code>data[top++]=x</code>（Q81）；<code>top=n+1</code>（向低地址增长）→ <code>data[--top]=x</code>（Q82）。</li><li><b>共享栈</b>：两个栈共一段空间，<b>节省存储空间、降低上溢可能</b>（Q100）；栈满条件 <code>top2-top1==1</code>（Q101）。</li></ul>"
+     "html": "<h4>★ 本节综合考点精炼</h4><ul><li>栈和队列的<b>逻辑结构相同（线性）</b>、存储结构可同可异、<b>运算不同</b>（Q77）；栈 = <b>限制存取点的线性结构</b>（只一端操作，Q78）。</li><li>顺序栈入栈（背初始指针定义）：<code>top=-1</code> → <code>a[++top]=x</code>（先移后存，Q80）；<code>top=1</code>（指向栈顶下一位置）→ <code>data[top++]=x</code>（Q81）；<code>top=n+1</code>（向低地址增长）→ <code>data[--top]=x</code>（Q82）。</li><li><b>共享栈</b>：两个栈共一段空间，<b>节省存储空间、降低上溢可能</b>（Q100）；栈满条件 <code>top2-top1==1</code>（Q101）。</li></ul>",
+     "important": true
     },
     {
      "section": "3.2 队列",
@@ -375,7 +376,8 @@
        "html": "<ul>\n<li>Adjacent(G,x,y) 判邻接、Neighbors(x) 列邻接点、InsertVertex/DeleteVertex、AddEdge/RemoveEdge、<b>FirstNeighbor / NextNeighbor</b>（遍历算法的基石）、GetEdgeValue 等。</li>\n<li>同一操作在不同存储结构上的实现效率不同：如列邻接点在邻接表 O(degree)、邻接矩阵 O(n)。</li>\n</ul>\n\n<h4>★ 高频真题考点与陷阱</h4>\n<ul>\n<li>邻接矩阵：O(n²)、与边数无关、表示唯一（Q323、Q328）；对角线 0 其余 1 → 完全图（Q324）；无向图零元素 = <b>n²−2e</b>（Q325）。</li>\n<li>对角线以下（或以上）全 0 → <b>必有拓扑序列（可能不唯一）</b>（Q323、Q389 2012）。</li>\n<li>邻接表：O(n+2e)、与顶点和边都有关、表示不唯一（与读边顺序有关，Q328、Q330）；边表结点奇数 → 有向图（Q331）；v 在边表出现次数 = v 的入度（Q332）；最多 <b>n(n−1)</b> 个边表结点（Q333）。</li>\n</ul>"
       }
      ],
-     "html": "<h4>★ 本节综合考点精炼</h4><ul><li><b>邻接表各操作的时间复杂度（为什么）</b>：<ul><li><b>建表 O(n+e)</b>：建立 n 个顶点表结点 + 读 e 条边各插入一次（头插 O(1)）→ 总共 O(n+e)（Q334）；</li><li><b>删除某顶点及其关联边 O(n+e)</b>：既要删顶点表、又要扫它的邻接表删边，还可能扫其它顶点表找入边 → O(n+e)（Q335）；</li><li><b>求某顶点入度 O(n+e)</b>：邻接表只存“出边”，求入度要<b>遍历全部边</b>统计指向该顶点的次数 → O(n+e)（Q336）。</li></ul></li></ul>"
+     "html": "<h4>★ 本节综合考点精炼</h4><ul><li><b>邻接表各操作的时间复杂度（为什么）</b>：<ul><li><b>建表 O(n+e)</b>：建立 n 个顶点表结点 + 读 e 条边各插入一次（头插 O(1)）→ 总共 O(n+e)（Q334）；</li><li><b>删除某顶点及其关联边 O(n+e)</b>：既要删顶点表、又要扫它的邻接表删边，还可能扫其它顶点表找入边 → O(n+e)（Q335）；</li><li><b>求某顶点入度 O(n+e)</b>：邻接表只存“出边”，求入度要<b>遍历全部边</b>统计指向该顶点的次数 → O(n+e)（Q336）。</li></ul></li></ul>",
+     "important": true
     },
     {
      "section": "6.3 图的遍历",
@@ -559,7 +561,8 @@
        "important": true
       }
      ],
-     "html": ""
+     "html": "",
+     "important": true
     },
     {
      "section": "8.4 选择排序",

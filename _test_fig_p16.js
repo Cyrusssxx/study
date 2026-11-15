@@ -101,7 +101,9 @@ if (fs.existsSync(path.join(ROOT, BAK))) {
       const neu = A.get(x.section.split(' ')[0]) || '';
       if ((x.html || '') !== neu) { changed++; if (!subseq(x.html || '', neu)) bad++; }
     }
-  check('OS before 备份参与了纯插入校验', changed, 1);
+  // 后续批次（P17 起）会继续在小节里补纯插入块，这里只要求「至少本批那 1 处」，
+  // 变化数不再锁死；真正要守的是下一行 bad=0（不许删除/改写既有内容）。
+  check('OS before 备份参与了纯插入校验（>=1 处变化）', changed >= 1, true);
   check('本批变化是纯插入（0 删除 / 0 改写）', bad, 0);
 } else {
   console.log('SKIP 纯插入守卫：缺 before 备份（归档不进 git）');

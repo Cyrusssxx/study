@@ -46,8 +46,8 @@ for (const s of SUBS)
 check('全库 fig-img 195 张（精确）',
   SUBS.reduce((n, s) => n + (RAW[s].match(/fig-img/g) || []).length, 0), 195);
 check('cn struct-fig 12 个（含本图）', (RAW.cn.match(/struct-fig/g) || []).length, 12);
-check('全库 struct-fig 26 个（CO0/DS0/CN12/OS14）',
-  SUBS.reduce((n, s) => n + (RAW[s].match(/struct-fig/g) || []).length, 0), 26);
+check('全库 struct-fig 27 个（CO0/DS0/CN12/OS15）',
+  SUBS.reduce((n, s) => n + (RAW[s].match(/struct-fig/g) || []).length, 0), 27);
 check('笔记 JSON 里没有 SVG 专有的 tspan', SUBS.every(s => !RAW[s].includes('tspan')), true);
 for (const s of SUBS)
   check(s + ' 序列化格式未变',

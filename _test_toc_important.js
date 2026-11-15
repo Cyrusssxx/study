@@ -1,9 +1,12 @@
 /* 2026-11-14：讲义目录两档重点标记回归。
- * 数据 important（加粗主色）/ core（加粗 + * 星标），章/节级为渲染时汇总，不写进数据。
+ * 数据 important（加粗主色）/ core（加粗 + * 星标），章级为渲染时汇总，不写进数据。
  * 口径：5×大题真题锚点 + min(题库题量,40)/4 + 1.2×(我的错题/不熟/不会)。
  *   core = score>=20 或 大题>=3 或 (题库>=25 且 薄弱>=8)
  *   important = core 或 score>=9 或 大题>=1 或 题库>=15 或 薄弱>=6
- * 锁精确量：important os24/co24/cn29/ds32，core os10/co7/cn6/ds8。
+ * 2026-11-15 第十八批叠加「大题覆盖兜底」：锚点只写到第 2 级时（os:1.5、cn:4.2 等）
+ * 标记落在「节」上，故节对象也允许 important/core；小节的精确量见下。
+ * 锁精确量：小节 important os25/co25/cn32/ds32，core os10/co7/cn6/ds8；
+ *           节 important os2/co3/cn3/ds3（全部来自 tools/bigq_kp_manual.json 的 2 级锚点）。
  */
 const fs = require('fs');
 const path = require('path');
@@ -24,7 +27,30 @@ for (const s of SUBS) {
 }
 const NOTES_HTML = read('pwa/notes.html');
 const CSS = read('pwa/css/style.css');
-const IMPORTANT = { os: 24, co: 24, cn: 29, ds: 32 };
+// 大题锚点（主表 + 副表）：{ '1.5': ['os', 命中数], ... }
+const ANCHORS = (() => {
+  const out = {};
+  const add = (code, n) => {
+    const [sub, c] = code.split(':');
+    if (!out[c]) out[c] = [sub, 0];
+    out[c][1] += n;
+  };
+  const man = JSON.parse(read('tools/bigq_kp_manual.json'));
+  for (const y of Object.keys(man)) {
+    if (y.startsWith('_')) continue;
+    for (const num of Object.keys(man[y])) add(man[y][num], 1);
+  }
+  if (fs.existsSync(path.join(ROOT, 'tools/bigq_kp_extra.json'))) {
+    const ex = JSON.parse(read('tools/bigq_kp_extra.json'));
+    for (const y of Object.keys(ex)) {
+      if (y.startsWith('_')) continue;
+      for (const num of Object.keys(ex[y])) [].concat(ex[y][num]).forEach(c => add(c, 1));
+    }
+  }
+  return out;
+})();
+const IMPORTANT = { os: 25, co: 25, cn: 32, ds: 32 };
+const SEC_CNT = { os: 2, co: 3, cn: 3, ds: 3 };   // 带 important 的「节」个数（来自 2 级锚点）
 const CORE = { os: 10, co: 7, cn: 6, ds: 8 };
 const SUB_N = { os: 80, co: 102, cn: 108, ds: 91 };
 
@@ -49,9 +75,17 @@ for (const s of SUBS) {
   check(s + ' 重点 ' + IMPORTANT[s] + ' 个', imp.length, IMPORTANT[s]);
   check(s + ' 很重点 ' + CORE[s] + ' 个', core.length, CORE[s]);
   check(s + ' 很重点必同时是重点（加粗 + *）', core.every(x => x.important), true);
-  check(s + ' 标记只加在小节上，未污染章/节对象',
-    DOC[s].chapters.every(ch => !ch.important && !ch.core &&
-      ch.sections.every(sec => !sec.important && !sec.core)), true);
+  check(s + ' 章对象从不带标记（汇总只在渲染时现算）',
+    DOC[s].chapters.every(ch => !ch.important && !ch.core), true);
+  const secImp = DOC[s].chapters.flatMap(ch => ch.sections).filter(sec => sec.important || sec.core);
+  check(s + ' 带标记的节 = ' + SEC_CNT[s] + ' 个', secImp.length, SEC_CNT[s]);
+  check(s + ' 带标记的节全部来自 2 级大题锚点（不靠加权分乱标）',
+    secImp.every(sec => {
+      const code = sec.section.split(' ')[0];
+      if (code.split('.').length !== 2) return false;
+      const m = ANCHORS[code];
+      return !!m && m[0] === s;
+    }), true);
   const expect = s === 'os'
     ? JSON.stringify(DOC[s], null, 1) + '\n'
     : JSON.stringify(DOC[s], null, 1).replace(/\n/g, '\r\n');
@@ -59,7 +93,15 @@ for (const s of SUBS) {
 }
 check('用户点名的 2020 真题 46 对应小节 OS 3.1.3 = 很重点',
   subs(DOC.os).some(x => x.section.startsWith('3.1.3') && x.core && x.important), true);
-check('全库重点 109 个', SUBS.reduce((n, s) => n + IMPORTANT[s], 0), 109);
+check('全库重点小节 114 个', SUBS.reduce((n, s) => n + IMPORTANT[s], 0), 114);
+check('全库重点节 11 个（2 级锚点落点）', SUBS.reduce((n, s) => n + SEC_CNT[s], 0), 11);
+check('每个 2 级锚点都落到了节上（11 个全覆盖）',
+  Object.entries(ANCHORS).filter(([c]) => c.split('.').length === 2)
+    .every(([c, [sub]]) => DOC[sub].chapters.some(ch => ch.sections.some(sec =>
+      sec.section.split(' ')[0] === c && sec.important))), true);
+check('每个 3/4 级锚点都落到了小节上（重点或很重点）',
+  Object.entries(ANCHORS).filter(([c]) => c.split('.').length >= 3)
+    .every(([c, [sub]]) => subs(DOC[sub]).some(x => x.section.split(' ')[0] === c && x.important)), true);
 check('全库很重点 31 个', SUBS.reduce((n, s) => n + CORE[s], 0), 31);
 
 // ---------- 2. 纯加字段守卫：正文 HTML 一个字都没动 ----------
@@ -88,11 +130,14 @@ if (guardDone < 4) console.log('SKIP 纯加字段守卫：缺 before 备份（�
 check('notes.html 小节渲染 important + core 双 class',
   NOTES_HTML.includes("s.important ? ' notes-toc-sub-strong' : ''") &&
   NOTES_HTML.includes("s.core ? ' notes-toc-sub-core' : ''"), true);
-check('notes.html 节级汇总 core > important', NOTES_HTML.includes("subs.some(s => s.core) ? ' notes-toc-sec-core'"), true);
+check('notes.html 节级汇总 core > important（节自身标记优先）',
+  NOTES_HTML.includes("(sec.core || subs.some(s => s.core)) ? ' notes-toc-sec-core'") &&
+  NOTES_HTML.includes("(sec.important || subs.some(s => s.important)) ? ' notes-toc-sec-strong'"), true);
 check('notes.html 章级汇总阈值 2 / 3',
   NOTES_HTML.includes('chCore >= 2') && NOTES_HTML.includes('chImp >= 3'), true);
 check('章/节汇总在渲染时现算（数据里不写汇总字段）',
-  NOTES_HTML.includes('ch.sections.reduce') && NOTES_HTML.includes('const chSubs'), true);
+  NOTES_HTML.includes('ch.sections.reduce') && NOTES_HTML.includes('const chItems') &&
+  NOTES_HTML.includes('ch.sections.concat(chSubs)'), true);
 check('style.css 三级的 * 星标都用伪元素',
   CSS.includes("content: '*'") &&
   ['.notes-toc-ch-core::after', '.notes-toc-sec-core::after', '.notes-toc-sub-core::after']

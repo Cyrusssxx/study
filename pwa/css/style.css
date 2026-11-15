@@ -8732,3 +8732,31 @@ body.fc-toc-open .fc-toc-fab { display: none; }
     font-size: 10px;
     text-anchor: end;
 }
+
+/* ============ OS 1.5 系统启动四段接力（内联 SVG，2021 真题 46 第(1)问） ============
+   该题问「ROM 引导程序 / 磁盘引导程序 / 分区引导程序 / 操作系统初始化程序」的执行顺序，
+   正好是笔记「二、七步链式流程」的四段归并。内联而非外链：配色走 CSS 变量，
+   亮/暗自适应；字号与正文同源，缩放不糊。 */
+.boot-fig .struct-svg text.boot-title {
+    fill: var(--text);
+    font-size: 12.5px;
+    font-weight: 700;
+}
+.boot-fig .struct-svg text.boot-loc {
+    fill: var(--text-light);
+    font-size: 11px;
+}
+.boot-fig .struct-svg text.boot-sub {
+    fill: var(--text-light);
+    font-size: 11px;
+}
+.boot-fig .struct-svg text.boot-key {
+    fill: var(--primary);
+    font-size: 12px;
+    font-weight: 700;
+}
+.boot-fig .struct-svg line.boot-div {
+    stroke: var(--border);
+    stroke-width: 1;
+    stroke-dasharray: 4 4;
+}

@@ -241,8 +241,8 @@ for (const sub of SUBS) {
 }
 check('全库 fig-img ≥ 161 张', SUBS.reduce((n, s) => n + (RAW[s].match(/fig-img/g) || []).length, 0), v => v >= 161);
 check('全库黄框 ≥ 291 个', SUBS.reduce((n, s) => n + (RAW[s].match(/class=\\"key-callout\\"/g) || []).length, 0), v => v >= 291);
-const STRUCT = { co: 0, ds: 0, cn: 12, os: 14 };
-check('内联 struct-fig 总量（CO0/DS0/CN12/OS14；CN 的 12 含 2.1.3 编码波形内联图）',
+const STRUCT = { co: 0, ds: 0, cn: 12, os: 15 };
+check('内联 struct-fig 总量（CO0/DS0/CN12/OS15；CN 的 12 含 2.1.3 波形图、OS 的 15 含 1.5 启动流程图）',
   Object.entries(STRUCT).every(([s, v]) => (RAW[s].match(/struct-fig/g) || []).length === v), true);
 check('SW DATA_VER 已由构建脚本刷新（不等于 P9 值）',
   sw.includes('quiz408-data-') && !sw.includes('quiz408-data-6794194b9a'), true);

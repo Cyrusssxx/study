@@ -661,10 +661,13 @@
             const flat = [];          // 扁平化 {ch, sec}，下标即 slot 的 data-i
             let skeleton = '';
             for (const ch of notes.chapters) {
-                // 章/节级重点汇总：不写进数据，按小节标记现算，避免三处清单不同步。
+                // 章/节级重点汇总：不写进数据，按标记现算，避免三处清单不同步。
+                // 节自身也可能被标注（大题锚点只到第 2 级时的落点，如「1.5 操作系统引导」），
+                // 所以汇总时把节一起算进分子，否则这类节在目录里永远不显重点。
                 const chSubs = ch.sections.reduce((a, s) => a.concat(s.subsections || []), []);
-                const chCore = chSubs.filter(s => s.core).length;
-                const chImp = chSubs.filter(s => s.important).length;
+                const chItems = ch.sections.concat(chSubs);
+                const chCore = chItems.filter(s => s.core).length;
+                const chImp = chItems.filter(s => s.important).length;
                 const chCls = chCore >= 2 ? ' notes-toc-ch-core'
                     : (chImp >= 3 ? ' notes-toc-ch-strong' : '');
                 // 章标题也可点：跳到该章第一个节（data-sec 由下方循环填充，这里先记首节名）
@@ -677,8 +680,9 @@
                 for (const sec of ch.sections) {
                     const subs = sec.subsections || [];
                     const hasSub = subs.length > 0;
-                    const secCls = subs.some(s => s.core) ? ' notes-toc-sec-core'
-                        : (subs.some(s => s.important) ? ' notes-toc-sec-strong' : '');
+                    // 节自身的标记优先（节级大题锚点 / 无子节的小节），再看子节汇总
+                    const secCls = (sec.core || subs.some(s => s.core)) ? ' notes-toc-sec-core'
+                        : ((sec.important || subs.some(s => s.important)) ? ' notes-toc-sec-strong' : '');
                     // 目录：有子节的可点击展开/收起，无子节的点击跳转（事件委托见下方，避免内联onclick引号嵌套bug）
                     toc += `<a class="notes-toc-sec${secCls}" data-sec="${sec.section}"${hasSub ? ' data-hassub="1"' : ''}>${hasSub ? '<span class="toc-sec-arrow">▾</span>' : ''}${sec.section}</a>`;
                     if (hasSub) {
