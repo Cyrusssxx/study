@@ -49,14 +49,22 @@ check('计组笔记仍是 CRLF + 无尾换行（防 json.dump 污染）',
 check('计组配图引用 >= 5 张（后续批次只增不减）',
   (notesRaw.match(/fig-img/g) || []).length >= 5, true);
 check('7.3.3 引用新图 co_fig_io_modes.svg', h733.includes('img/co_fig_io_modes.svg'), true);
-check('图题与图都带 data-fig="1"',
-  (h733.match(/<p class="paragraph" data-fig="1">/g) || []).length, 2);
+// 7.3.3 现在有两张图：co_fig_io_modes（I/O 方式）+ co_fig_dma_phase（DMA 三阶段），
+// 每张图 = 图题段 + img 段 = 2 个 data-fig 段，故期望 4。
+check('图题与图都带 data-fig="1"（7.3.3 两张图 ×2 段）',
+  (h733.match(/<p class="paragraph" data-fig="1">/g) || []).length, 4);
 
 const iDiffEnd = h733.indexOf('⑥从数据传送看');
 const iFig = h733.indexOf('co_fig_io_modes.svg');
 const iQuiz = h733.indexOf('<h4>★ 高频真题考点与陷阱</h4>', iFig);
 check('配图紧跟「DMA 与中断的区别」之后', iFig > iDiffEnd && iDiffEnd > 0, true);
 check('配图在高真题考点列表之前', iQuiz > iFig, true);
+
+// 第三批补的 DMA 三阶段图
+const iDma = h733.indexOf('co_fig_dma_phase.svg');
+check('7.3.3 引用 DMA 三阶段图', iDma > 0, true);
+check('DMA 图也在 ★ 考点之前', iDma > 0 && h733.indexOf('<h4>★ 高频真题考点与陷阱</h4>', iDma) > iDma, true);
+check('DMA 图与 I/O 方式图不重叠（各自独立成块）', Math.abs(iDma - iFig) > 200, true);
 
 check('7.3.1 有黄框', h731.includes('class="key-callout"'), true);
 check('7.3.2 有黄框', h732.includes('class="key-callout"'), true);

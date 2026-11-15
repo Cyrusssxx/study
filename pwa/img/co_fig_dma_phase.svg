@@ -1,0 +1,78 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 436" width="800" height="436" font-family="'Segoe UI','Microsoft YaHei',sans-serif">
+  <defs>
+    <marker id="a6" markerWidth="9" markerHeight="9" refX="6.5" refY="3" orient="auto">
+      <path d="M0,0 L6.5,3 L0,6 z" fill="#5a6b7d"/>
+    </marker>
+  </defs>
+  <rect width="800" height="436" fill="#fbfcfe"/>
+
+  <text x="24" y="28" font-size="14.5" font-weight="700" fill="#2c4a6b">DMA 三阶段：只有首尾要 CPU，中间整块搬运全由硬件自己干</text>
+  <text x="24" y="47" font-size="10.5" fill="#6b7a8d">同一根时间轴上叠加两条泳道 —— 数据传送期间 CPU 与 DMA 是<tspan font-weight="700" fill="#2c4a6b">真正并行</tspan>的，这是 DMA 比中断方式快的根本原因</text>
+
+  <!-- 段分隔 -->
+  <line x1="180" y1="88" x2="180" y2="196" stroke="#b8c4d2" stroke-width="1" stroke-dasharray="4 3"/>
+  <line x1="620" y1="88" x2="620" y2="196" stroke="#b8c4d2" stroke-width="1" stroke-dasharray="4 3"/>
+
+  <text x="120" y="80" text-anchor="middle" font-size="10.5" font-weight="700" fill="#a55a12">① 预处理</text>
+  <text x="400" y="80" text-anchor="middle" font-size="10.5" font-weight="700" fill="#2c4a6b">② 数据传送（块为单位，全程无 CPU 干预）</text>
+  <text x="680" y="80" text-anchor="middle" font-size="10.5" font-weight="700" fill="#a55a12">③ 后处理</text>
+
+  <!-- CPU 泳道 -->
+  <text x="24" y="116" font-size="10.5" font-weight="700" fill="#2c4a6b">CPU</text>
+  <rect x="60" y="100" width="120" height="32" fill="#fdeacf" stroke="#e0b681"/>
+  <text x="120" y="121" text-anchor="middle" font-size="9.5" fill="#8a6d3b">设参数、启动设备</text>
+
+  <rect x="180" y="100" width="440" height="32" fill="#dce8f5" stroke="#a9c3e0"/>
+  <text x="400" y="121" text-anchor="middle" font-size="10" font-weight="700" fill="#2c4a6b">CPU 继续执行原程序（与 DMA 完全并行）</text>
+
+  <rect x="620" y="100" width="120" height="32" fill="#fdeacf" stroke="#e0b681"/>
+  <text x="680" y="121" text-anchor="middle" font-size="9.5" fill="#8a6d3b">中断服务程序</text>
+
+  <!-- DMA 泳道 -->
+  <text x="24" y="170" font-size="10.5" font-weight="700" fill="#2f6b48">DMA</text>
+  <rect x="60" y="154" width="120" height="32" fill="#f0f2f4" stroke="#d4dae0"/>
+  <text x="120" y="175" text-anchor="middle" font-size="9.5" fill="#9aa6b2">空闲</text>
+
+  <rect x="180" y="154" width="440" height="32" fill="#fbd9b3" stroke="#d9a86a"/>
+  <path d="M220 154V186 M260 154V186 M300 154V186 M340 154V186 M380 154V186 M420 154V186 M460 154V186 M500 154V186 M540 154V186 M580 154V186"
+        stroke="#e8c49a" stroke-width="1"/>
+  <text x="400" y="175" text-anchor="middle" font-size="10" font-weight="700" fill="#8a5a20">DMA 逐字搬：主存地址 +1、传送计数 −1</text>
+
+  <rect x="620" y="154" width="120" height="32" fill="#f0f2f4" stroke="#d4dae0"/>
+  <text x="680" y="171" text-anchor="middle" font-size="9" fill="#8a6d3b">发中断请求</text>
+  <text x="680" y="182" text-anchor="middle" font-size="9" fill="#9aa6b2">（已交还总线）</text>
+
+  <text x="60" y="208" font-size="9.5" fill="#8b98a8">总线控制权：CPU 持有 → DMA 申请并接管（块传送期间）→ 结束后交还 CPU</text>
+  <text x="60" y="224" font-size="9.5" fill="#8b98a8">中断只在第 ③ 段起作用：不是每传一个字中断一次，而是<tspan font-weight="700">整块传完才中断一次</tspan> —— 这就是它比中断方式省 CPU 的关键。</text>
+
+  <!-- 三种方式表 -->
+  <text x="24" y="252" font-size="10" fill="#8b98a8">主存与 I/O 的三种争用方式（三者的区别只在「总线怎么让」）</text>
+
+  <rect x="24" y="260" width="752" height="26" fill="#e6eef8" stroke="#c9d9ec"/>
+  <text x="120" y="277" text-anchor="middle" font-size="10" font-weight="700" fill="#2c4a6b">方式</text>
+  <text x="222" y="277" text-anchor="middle" font-size="10" font-weight="700" fill="#2c4a6b">粒度</text>
+  <text x="308" y="277" text-anchor="middle" font-size="10" font-weight="700" fill="#2c4a6b">总线怎么给</text>
+  <text x="600" y="277" text-anchor="middle" font-size="10" font-weight="700" fill="#2c4a6b">评价</text>
+
+  <rect x="24" y="286" width="752" height="24" fill="#fbfcfe" stroke="#dce4ee"/>
+  <text x="120" y="302" text-anchor="middle" font-size="10" fill="#4a5568">停止 CPU 访存</text>
+  <text x="222" y="302" text-anchor="middle" font-size="10" fill="#4a5568">整块</text>
+  <text x="308" y="302" text-anchor="middle" font-size="10" fill="#4a5568">DMA 独占，CPU 暂停访存</text>
+  <text x="600" y="302" text-anchor="middle" font-size="9.5" fill="#8b98a8">逻辑最简单；CPU 基本空转，适合超高速成组传送</text>
+
+  <rect x="24" y="310" width="752" height="24" fill="#fbfcfe" stroke="#dce4ee"/>
+  <text x="120" y="326" text-anchor="middle" font-size="10" fill="#4a5568">周期挪用</text>
+  <text x="222" y="326" text-anchor="middle" font-size="10" fill="#4a5568">单字</text>
+  <text x="308" y="326" text-anchor="middle" font-size="10" fill="#4a5568">每次借一个存储周期，用完即还</text>
+  <text x="600" y="326" text-anchor="middle" font-size="9.5" fill="#8b98a8">兼顾两边效率；但每次都要申请+释放，有开销</text>
+
+  <rect x="24" y="334" width="752" height="24" fill="#fbfcfe" stroke="#dce4ee"/>
+  <text x="120" y="350" text-anchor="middle" font-size="10" fill="#4a5568">交替访存</text>
+  <text x="222" y="350" text-anchor="middle" font-size="10" fill="#4a5568">单字</text>
+  <text x="308" y="350" text-anchor="middle" font-size="10" fill="#4a5568">不申请，周期固定分给两边</text>
+  <text x="600" y="350" text-anchor="middle" font-size="9.5" fill="#8b98a8">速率最高；要求 CPU 周期 &gt; 2×存储周期，硬件复杂</text>
+
+  <text x="24" y="380" font-size="10" fill="#8b98a8">易错：CPU 与 DMA 同时访存会冲突；周期挪用的 ③ 种情况（CPU 不访存 / 正访存 / 同时请求）判据是<tspan font-weight="700">谁先占着总线</tspan>。</text>
+  <text x="24" y="400" font-size="10" fill="#c2691a">效率例题：40MB/s ÷ 1000B = 4 万次/秒；每次首尾花 500 周期 → CPU 仅 2×10⁷ 周期，占 5×10⁸ 的 <tspan font-weight="700">4%</tspan>。</text>
+  <text x="24" y="420" font-size="10" fill="#c2691a">同一外设改用中断方式：处理一次 400 周期（0.8μs），但填满 4B 缓冲只要 0.1μs → 数据早被覆盖，所以高速设备不能用单字中断。</text>
+</svg>

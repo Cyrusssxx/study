@@ -40,11 +40,11 @@ function secHtml(sub, num) {
 const H = secHtml('cn', '2.1.3');
 
 // ---------- 1. 精确总量 / 序列化 ----------
-const FIG_N = { co: 50, os: 71, cn: 48, ds: 35 };
+const FIG_N = { co: 52, os: 71, cn: 48, ds: 35 };
 for (const s of SUBS)
   check(s + ' 配图 ' + FIG_N[s] + ' 张（精确）', (RAW[s].match(/fig-img/g) || []).length, FIG_N[s]);
-check('全库 fig-img 204 张（精确）',
-  SUBS.reduce((n, s) => n + (RAW[s].match(/fig-img/g) || []).length, 0), 204);
+check('全库 fig-img 206 张（精确）',
+  SUBS.reduce((n, s) => n + (RAW[s].match(/fig-img/g) || []).length, 0), 206);
 check('cn struct-fig 12 个（含本图）', (RAW.cn.match(/struct-fig/g) || []).length, 12);
 check('全库 struct-fig 27 个（CO0/DS0/CN12/OS15）',
   SUBS.reduce((n, s) => n + (RAW[s].match(/struct-fig/g) || []).length, 0), 27);
