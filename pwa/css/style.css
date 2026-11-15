@@ -3646,7 +3646,24 @@ img.fig-img:hover { opacity: .92; }
     border-radius: 8px; background: #fff;
     box-shadow: 0 8px 40px rgba(0, 0, 0, .28);
     cursor: inherit; user-select: none; -webkit-user-drag: none;
-    transform-origin: center center; will-change: transform;
+    transform-origin: center center;
+    /* 这里曾经写过 will-change: transform —— 它会把 <img> 提前提升为合成层，
+       缩放时浏览器只按初始尺寸栅格化一次再让 GPU 拉伸，SVG 就被当位图放大而发虚。
+       缩放改由 JS 设内联 width/height 完成（见 lightbox.js），故不再提升图层。 */
+}
+/* 复制/下载的反馈提示 */
+.fig-lb-toast {
+    position: absolute; left: 50%; bottom: 80px;
+    transform: translateX(-50%);
+    padding: 8px 16px; border-radius: 999px;
+    background: rgba(24, 32, 44, .82); color: #fff;
+    font-size: 13px; letter-spacing: .3px;
+    pointer-events: none;
+    animation: figLbToast .2s ease-out;
+}
+@keyframes figLbToast {
+    from { opacity: 0; transform: translate(-50%, 6px); }
+    to   { opacity: 1; transform: translate(-50%, 0); }
 }
 
 @media (max-width: 600px) {
