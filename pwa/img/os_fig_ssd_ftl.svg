@@ -1,0 +1,78 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 500" width="800" height="500" font-family="'Segoe UI','Microsoft YaHei',sans-serif">
+  <defs>
+    <marker id="ss1" markerWidth="9" markerHeight="9" refX="6.5" refY="3" orient="auto">
+      <path d="M0,0 L6.5,3 L0,6 z" fill="#4a7ab8"/>
+    </marker>
+    <marker id="ss2" markerWidth="9" markerHeight="9" refX="6.5" refY="3" orient="auto">
+      <path d="M0,0 L6.5,3 L0,6 z" fill="#d9822b"/>
+    </marker>
+  </defs>
+  <rect width="800" height="500" fill="#fbfcfe"/>
+  <text x="24" y="28" font-size="14.5" font-weight="700" fill="#2c4a6b">SSD：为什么随机读飞快、为什么<tspan font-weight="700" fill="#a55a12">写会磨损</tspan> —— 全看闪存翻译层 FTL</text>
+  <text x="24" y="47" font-size="10.5" fill="#6b7a8d">读/写以页为单位、擦除以块为单位且「先擦后写」；FTL 把逻辑块号翻译成物理页号，顺带管坏块、磨损均衡与垃圾回收</text>
+
+  <!-- 左：结构 -->
+  <text x="24" y="72" font-size="11.5" font-weight="700" fill="#2c4a6b">① 三层结构</text>
+  <rect x="24" y="82" width="228" height="180" rx="4" fill="#ffffff" stroke="#d5e0ee"/>
+  <rect x="38" y="96" width="200" height="32" rx="3" fill="#eef4fb" stroke="#4a7ab8"/>
+  <text x="138" y="117" text-anchor="middle" font-size="10.5" font-weight="700" fill="#2c4a6b">CPU：逻辑块读 / 写请求</text>
+  <line x1="138" y1="128" x2="138" y2="144" stroke="#4a7ab8" stroke-width="1.4" marker-end="url(#ss1)"/>
+  <rect x="38" y="148" width="200" height="60" rx="3" fill="#fdeacf" stroke="#d9822b" stroke-width="1.4"/>
+  <text x="138" y="166" text-anchor="middle" font-size="11" font-weight="700" fill="#a55a12">闪存翻译层 FTL（≈磁盘控制器）</text>
+  <text x="46" y="183" font-size="9.5" fill="#6b7a8d">地址映射：逻辑块号 → 物理页号</text>
+  <text x="46" y="199" font-size="9.5" fill="#6b7a8d">坏块管理 / 磨损均衡 / 垃圾回收</text>
+  <line x1="138" y1="208" x2="138" y2="222" stroke="#4a7ab8" stroke-width="1.4" marker-end="url(#ss1)"/>
+  <rect x="38" y="226" width="200" height="28" rx="3" fill="#eaf6ee" stroke="#2f8f5b"/>
+  <text x="138" y="245" text-anchor="middle" font-size="10.5" font-weight="700" fill="#2f6b48">闪存芯片：B 块 × 每块 P 页</text>
+  <text x="38" y="270" font-size="9.5" fill="#8b98a8">页 512B~4KB；一块含 32~128 页；块 16KB~512KB</text>
+
+  <!-- 中：先擦后写 -->
+  <text x="268" y="72" font-size="11.5" font-weight="700" fill="#2c4a6b">② 「先擦后写」造成写放大</text>
+  <rect x="268" y="82" width="268" height="180" rx="4" fill="#ffffff" stroke="#d5e0ee"/>
+  <text x="278" y="100" font-size="10" fill="#6b7a8d">要改写某块中一个已含有效数据的页：</text>
+  <rect x="278" y="108" width="112" height="30" rx="2" fill="#eef4fb" stroke="#4a7ab8"/>
+  <text x="334" y="127" text-anchor="middle" font-size="9.5" fill="#2c4a6b">原块（含有效页）</text>
+  <line x1="392" y1="123" x2="418" y2="123" stroke="#d9822b" stroke-width="1.4" marker-end="url(#ss2)"/>
+  <rect x="420" y="108" width="106" height="30" rx="2" fill="#eaf6ee" stroke="#2f8f5b"/>
+  <text x="473" y="127" text-anchor="middle" font-size="9.5" fill="#2f6b48">新块（已擦除）</text>
+  <text x="278" y="156" font-size="10" fill="#6b7a8d">① 把原块里<tspan font-weight="700" fill="#2c4a6b">所有有效页</tspan>复制到新块</text>
+  <text x="278" y="174" font-size="10" fill="#6b7a8d">② <tspan font-weight="700" fill="#a55a12">整块擦除</tspan>（擦除单位＝块，比页访问慢一个数量级）</text>
+  <text x="278" y="192" font-size="10" fill="#6b7a8d">③ 目标页写入新块；旧块标记无效待回收</text>
+  <rect x="278" y="202" width="248" height="48" rx="3" fill="#fdeacf" stroke="#d9822b"/>
+  <text x="288" y="220" font-size="10.5" font-weight="700" fill="#a55a12">写放大：实际写入量 ＞ 上层逻辑写入量</text>
+  <text x="288" y="239" font-size="10" fill="#6b7a8d">例：逻辑写 1KB，实际可能搬移并擦写数 KB</text>
+
+  <!-- 右：读写速度 -->
+  <text x="552" y="72" font-size="11.5" font-weight="700" fill="#2c4a6b">③ 速度不均匀</text>
+  <rect x="552" y="82" width="224" height="180" rx="4" fill="#ffffff" stroke="#d5e0ee"/>
+  <text x="562" y="102" font-size="10.5" font-weight="700" fill="#2c4a6b">读 ＞ 顺序写 ＞ 随机写</text>
+  <rect x="562" y="112" width="204" height="20" rx="2" fill="#d7eede" stroke="#2f8f5b"/>
+  <text x="572" y="126" font-size="9.5" fill="#2f6b48">随机读：FTL 一次映射即定位</text>
+  <rect x="562" y="138" width="152" height="20" rx="2" fill="#eaf6ee" stroke="#2f8f5b"/>
+  <text x="572" y="152" font-size="9.5" fill="#2f6b48">顺序写：连续分配、少搬运</text>
+  <rect x="562" y="164" width="96" height="20" rx="2" fill="#fdeacf" stroke="#d9822b"/>
+  <text x="572" y="178" font-size="9.5" fill="#a55a12">随机写：搬块 + 擦</text>
+  <text x="562" y="204" font-size="10" fill="#6b7a8d">HDD 随机读要<tspan font-weight="700" fill="#2c4a6b">寻道 + 旋转延迟</tspan>（ms 级）</text>
+  <text x="562" y="222" font-size="10" fill="#6b7a8d">SSD 无机械部件，两项全消掉</text>
+  <text x="562" y="240" font-size="10" fill="#2f6b48">⇒ 随机 I/O 优势最大；磁盘调度算法对 SSD 意义不大</text>
+
+  <!-- 磨损均衡 -->
+  <text x="24" y="290" font-size="11.5" font-weight="700" fill="#2c4a6b">④ 磨损均衡：把擦写摊到全部物理块（目的是延寿，不是加速）</text>
+  <rect x="24" y="300" width="368" height="88" rx="4" fill="#eef4fb" stroke="#4a7ab8"/>
+  <text x="36" y="320" font-size="10.5" font-weight="700" fill="#2c4a6b">动态磨损均衡</text>
+  <text x="36" y="339" font-size="10" fill="#6b7a8d">写数据时优先挑<tspan font-weight="700" fill="#2c4a6b">擦写次数较少</tspan>的空闲块</text>
+  <text x="36" y="358" font-size="10" fill="#6b7a8d">只分散「新写入」，冷数据长期不动</text>
+  <text x="36" y="378" font-size="10" fill="#8b98a8">效果：避免总写同一区域导致局部迅速磨损</text>
+  <rect x="408" y="300" width="368" height="88" rx="4" fill="#eaf6ee" stroke="#2f8f5b"/>
+  <text x="420" y="320" font-size="10.5" font-weight="700" fill="#2f6b48">静态磨损均衡（更高级）</text>
+  <text x="420" y="339" font-size="10" fill="#6b7a8d">即使没有新写入，也定期<tspan font-weight="700" fill="#2f6b48">迁移高磨损块中的有效数据</tspan></text>
+  <text x="420" y="358" font-size="10" fill="#6b7a8d">高磨损块转以读为主，低磨损块承担更多写入</text>
+  <text x="420" y="378" font-size="10" fill="#8b98a8">效果：连冷数据也参与搬移，寿命由全体块的平均水平决定</text>
+
+  <!-- 底部通式 -->
+  <rect x="24" y="400" width="752" height="84" rx="4" fill="#f3f7fc" stroke="#c9d9ec"/>
+  <text x="36" y="420" font-size="10.5" font-weight="700" fill="#2c4a6b">寿命通式：SSD 理论总写入量 = 容量 × 每块可擦写次数</text>
+  <text x="36" y="439" font-size="10" fill="#6b7a8d">教材例：256GB × 500 次 = 128000GB = 125TB；每天写 10GB 也要三十多年 —— 这是物理层上限</text>
+  <text x="36" y="457" font-size="10" fill="#a55a12">受写放大影响：写放大 3 时约合 42TB 用户数据；若要求 N 年不出故障，需 C × 寿命次数 ≥ D × 365 × N × 写放大</text>
+  <text x="36" y="475" font-size="10" fill="#2f6b48">裸用普通闪存不做磨损均衡：256GB 的盘可能仅因几 MB 局部损坏就报废 ⇒ 磨损不均衡才是提前报废主因</text>
+</svg>

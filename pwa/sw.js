@@ -17,8 +17,8 @@
  *          ② 只改数据不改外壳时，APP_VER 不变 → 外壳零重下；反之亦然；
  *          ③ 懒加载数据既不占首屏，改完也能凭 LAZY_VER 正确失效。
  */
-const APP_VER = 'quiz408-app-6e0d2ffee1';
-const DATA_VER = 'quiz408-data-e47a8b09d8';
+const APP_VER = 'quiz408-app-188ed8058d';
+const DATA_VER = 'quiz408-data-c19e94833a';
 const LAZY_VER = 'quiz408-lazy-68b43b0ddc';
 
 // 应用外壳：保证离线骨架与最新脚本。meta.json 仅几百字节，随外壳一起预缓存。
@@ -34,6 +34,7 @@ const APP_PRECACHE = [
     'daka.html',
     'dati.html',
     'notes.html',
+    'figs.html',
     'map.html',
     'cn_graph.html',
     'code.html',
@@ -117,6 +118,14 @@ const DATA_PRECACHE = [
     'img/co_fig_loop_asm.svg',
     'img/co_fig_dma_phase.svg',
     'img/co_fig_exception_class.svg',
+    'img/os_fig_kernel_arch.svg',
+    'img/os_fig_ssd_ftl.svg',
+    'img/cn_fig_multicast_mac.svg',
+    'img/cn_fig_ipv6_transition.svg',
+    'img/co_fig_flynn.svg',
+    'img/co_fig_segpage.svg',
+    'img/ds_fig_forest_btree.svg',
+    'img/ds_fig_sparse_matrix.svg',
     'img/co_fig_addressing.svg',
     'img/co_fig_cpu_mem_path.svg',
     'img/co_fig_single_bus.svg',

@@ -1,0 +1,72 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 540" width="800" height="540" font-family="'Segoe UI','Microsoft YaHei',sans-serif">
+  <rect width="800" height="540" fill="#fbfcfe"/>
+  <text x="24" y="28" font-size="14.5" font-weight="700" fill="#2c4a6b">操作系统结构：先分两条轴 —— <tspan font-weight="700" fill="#a55a12">「怎么组织」</tspan> 与 <tspan font-weight="700" fill="#2f6b48">「内核做多少」</tspan></text>
+  <text x="24" y="47" font-size="10.5" fill="#6b7a8d">分层法只调用紧邻下层；宏内核把主要服务都放内核态，微内核只留机制在内核、策略交给用户态服务器</text>
+
+  <!-- ① 组织方式 -->
+  <text x="24" y="72" font-size="11.5" font-weight="700" fill="#2c4a6b">① 组织方式：分层法（单向依赖） / 模块化（按功能划模块）</text>
+  <rect x="24" y="82" width="240" height="164" rx="4" fill="#ffffff" stroke="#d5e0ee"/>
+  <rect x="40" y="92" width="208" height="26" rx="3" fill="#eef4fb" stroke="#4a7ab8"/>
+  <text x="144" y="110" text-anchor="middle" font-size="11" fill="#2c4a6b">层 N　用户接口</text>
+  <text x="144" y="132" text-anchor="middle" font-size="12" fill="#4a7ab8">↓</text>
+  <rect x="40" y="136" width="208" height="26" rx="3" fill="#eef4fb" stroke="#4a7ab8"/>
+  <text x="144" y="154" text-anchor="middle" font-size="11" fill="#2c4a6b">层 2　进程管理</text>
+  <text x="144" y="176" text-anchor="middle" font-size="12" fill="#4a7ab8">↓</text>
+  <rect x="40" y="180" width="208" height="26" rx="3" fill="#eef4fb" stroke="#4a7ab8"/>
+  <text x="144" y="198" text-anchor="middle" font-size="11" fill="#2c4a6b">层 1　内存管理</text>
+  <text x="144" y="220" text-anchor="middle" font-size="12" fill="#4a7ab8">↓</text>
+  <rect x="40" y="224" width="208" height="26" rx="3" fill="#dce9f8" stroke="#4a7ab8" stroke-width="1.4"/>
+  <text x="144" y="242" text-anchor="middle" font-size="11" font-weight="700" fill="#2c4a6b">层 0　硬件</text>
+  <text x="264" y="100" font-size="10.5" font-weight="700" fill="#2c4a6b">分层法</text>
+  <text x="264" y="119" font-size="10.5" fill="#6b7a8d">各层仅可调用<tspan font-weight="700" fill="#2c4a6b">紧邻下层</tspan>（单向依赖）</text>
+  <text x="264" y="137" font-size="10.5" fill="#b45c5c">✕ 跨层调用不允许</text>
+  <text x="264" y="156" font-size="10.5" fill="#2f6b48">✓ 自底向上逐层验证、错误定位到层</text>
+  <text x="264" y="174" font-size="10.5" fill="#a55a12">△ 穿越多层，参数传递开销大、效率低</text>
+  <text x="264" y="202" font-size="10.5" font-weight="700" fill="#2c4a6b">模块化（模块-接口法）</text>
+  <text x="264" y="221" font-size="10.5" fill="#6b7a8d">按功能划模块、定义接口，可再细分子模块</text>
+  <text x="264" y="239" font-size="10.5" fill="#2f6b48">内聚性 ↑ / 耦合度 ↓ ⇒ 模块独立性 ↑</text>
+
+  <!-- ② 内核架构 -->
+  <text x="24" y="272" font-size="11.5" font-weight="700" fill="#2c4a6b">② 内核架构：用户态 / 内核态的分界线决定「内核做多少」</text>
+
+  <rect x="20" y="284" width="370" height="196" rx="4" fill="#ffffff" stroke="#4a7ab8"/>
+  <text x="32" y="304" font-size="11.5" font-weight="700" fill="#2c4a6b">宏内核（单内核 / 大内核）</text>
+  <rect x="32" y="314" width="346" height="34" rx="3" fill="#f3f7fc" stroke="#c9d9ec"/>
+  <text x="42" y="336" font-size="10.5" fill="#6b7a8d">用户态：应用程序</text>
+  <line x1="32" y1="358" x2="378" y2="358" stroke="#d9822b" stroke-width="1.6" stroke-dasharray="5 3"/>
+  <text x="205" y="373" text-anchor="middle" font-size="9.5" fill="#a55a12">态边界（直接函数调用，不经切换）</text>
+  <rect x="32" y="380" width="346" height="78" rx="3" fill="#eef4fb" stroke="#4a7ab8"/>
+  <text x="42" y="397" font-size="10.5" font-weight="700" fill="#2c4a6b">内核态：所有服务共享同一地址空间</text>
+  <rect x="42" y="404" width="76" height="20" rx="2" fill="#dce9f8" stroke="#4a7ab8"/>
+  <text x="80" y="418" text-anchor="middle" font-size="9.5" fill="#2c4a6b">文件系统</text>
+  <rect x="124" y="404" width="76" height="20" rx="2" fill="#dce9f8" stroke="#4a7ab8"/>
+  <text x="162" y="418" text-anchor="middle" font-size="9.5" fill="#2c4a6b">设备驱动</text>
+  <rect x="206" y="404" width="76" height="20" rx="2" fill="#dce9f8" stroke="#4a7ab8"/>
+  <text x="244" y="418" text-anchor="middle" font-size="9.5" fill="#2c4a6b">进程管理</text>
+  <rect x="288" y="404" width="78" height="20" rx="2" fill="#dce9f8" stroke="#4a7ab8"/>
+  <text x="327" y="418" text-anchor="middle" font-size="9.5" fill="#2c4a6b">内存管理</text>
+  <text x="42" y="443" font-size="10" fill="#b45c5c">任一模块崩溃 ⇒ 整个系统崩溃（可靠性低）</text>
+  <text x="42" y="455" font-size="10" fill="#2f6b48">优点：模块直接调用，性能高、切换不慢</text>
+
+  <rect x="410" y="284" width="370" height="196" rx="4" fill="#ffffff" stroke="#2f8f5b"/>
+  <text x="422" y="304" font-size="11.5" font-weight="700" fill="#2f6b48">微内核（机制与策略分离）</text>
+  <rect x="422" y="314" width="346" height="94" rx="3" fill="#eaf6ee" stroke="#2f8f5b"/>
+  <text x="432" y="331" font-size="10.5" font-weight="700" fill="#2f6b48">用户态：应用程序 + 一组服务器（进程）</text>
+  <rect x="432" y="338" width="100" height="22" rx="2" fill="#d7eede" stroke="#2f8f5b"/>
+  <text x="482" y="353" text-anchor="middle" font-size="9.5" fill="#2f6b48">文件服务器</text>
+  <rect x="538" y="338" width="104" height="22" rx="2" fill="#d7eede" stroke="#2f8f5b"/>
+  <text x="590" y="353" text-anchor="middle" font-size="9.5" fill="#2f6b48">设备驱动服务器</text>
+  <rect x="648" y="338" width="108" height="22" rx="2" fill="#d7eede" stroke="#2f8f5b"/>
+  <text x="702" y="353" text-anchor="middle" font-size="9.5" fill="#2f6b48">虚存服务器</text>
+  <rect x="432" y="366" width="324" height="32" rx="2" fill="#ffffff" stroke="#c8e2d1"/>
+  <text x="442" y="386" font-size="10" fill="#6b7a8d">客户进程 ⇄ 服务器、服务器 ⇄ 服务器：一律靠<tspan font-weight="700" fill="#2f6b48">消息传递</tspan></text>
+  <line x1="422" y1="412" x2="768" y2="412" stroke="#d9822b" stroke-width="1.6" stroke-dasharray="5 3"/>
+  <text x="595" y="426" text-anchor="middle" font-size="9.5" fill="#a55a12">每次服务请求都要穿越态边界（微内核唯一主要缺点＝性能）</text>
+  <rect x="422" y="432" width="346" height="26" rx="3" fill="#fdeacf" stroke="#d9822b"/>
+  <text x="432" y="449" font-size="10.5" font-weight="700" fill="#a55a12">内核态：极小 —— 与硬件紧密相关 / 进程调度 / 通信支持</text>
+  <text x="422" y="474" font-size="10" fill="#2f6b48">服务器崩溃只挂自己，可重启恢复 ⇒ 可靠、可扩展、易移植</text>
+
+  <rect x="20" y="490" width="760" height="44" rx="4" fill="#f3f7fc" stroke="#c9d9ec"/>
+  <text x="32" y="508" font-size="10.5" fill="#2c4a6b"><tspan font-weight="700">外核</tspan>：把物理资源<tspan font-weight="700">直接暴露</tspan>给用户级系统，内核只负责安全分配与隔离 —— 抽象层最少，但用户级系统负担重。</text>
+  <text x="32" y="526" font-size="10.5" fill="#a55a12"><tspan font-weight="700">一句话判据</tspan>：模块出错会不会拖垮整个内核？会＝宏内核；不会（只重启该服务）＝微内核。别把「可靠性高」安到模块化头上。</text>
+</svg>

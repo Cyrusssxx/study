@@ -1,0 +1,51 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 430" width="800" height="430" font-family="'Segoe UI','Microsoft YaHei',sans-serif">
+  <defs>
+    <marker id="mc1" markerWidth="9" markerHeight="9" refX="6.5" refY="3" orient="auto">
+      <path d="M0,0 L6.5,3 L0,6 z" fill="#4a7ab8"/>
+    </marker>
+  </defs>
+  <rect width="800" height="430" fill="#fbfcfe"/>
+  <text x="24" y="28" font-size="14.5" font-weight="700" fill="#2c4a6b">IP 多播地址 → 以太网多播 MAC：<tspan font-weight="700" fill="#a55a12">只搬低 23 位</tspan></text>
+  <text x="24" y="47" font-size="10.5" fill="#6b7a8d">D 类地址有 28 位可变，而多播 MAC 只留 23 位 ⇒ 高 5 位被丢掉 ⇒ 2⁵ = 32 个 IP 多播地址映射到同一个 MAC</text>
+
+  <!-- IP 多播地址 -->
+  <text x="24" y="76" font-size="11" font-weight="700" fill="#2c4a6b">IPv4 多播地址（D 类，32 bit）</text>
+  <rect x="24" y="86" width="130" height="46" rx="3" fill="#eef4fb" stroke="#4a7ab8"/>
+  <text x="89" y="106" text-anchor="middle" font-size="11" font-weight="700" fill="#2c4a6b">1110</text>
+  <text x="89" y="123" text-anchor="middle" font-size="9.5" fill="#6b7a8d">4 bit 固定前缀</text>
+  <rect x="158" y="86" width="180" height="46" rx="3" fill="#fbeaea" stroke="#b45c5c" stroke-dasharray="4 3"/>
+  <text x="248" y="106" text-anchor="middle" font-size="11" font-weight="700" fill="#b45c5c">高 5 bit　丢弃</text>
+  <text x="248" y="123" text-anchor="middle" font-size="9.5" fill="#8b98a8">28 − 23 = 5，无处可放</text>
+  <rect x="342" y="86" width="434" height="46" rx="3" fill="#dce9f8" stroke="#4a7ab8" stroke-width="1.5"/>
+  <text x="559" y="106" text-anchor="middle" font-size="11" font-weight="700" fill="#2c4a6b">低 23 bit　→　直接复制</text>
+  <text x="559" y="123" text-anchor="middle" font-size="9.5" fill="#6b7a8d">D 类共 28 bit 可变部分中的低 23 位</text>
+
+  <line x1="559" y1="134" x2="559" y2="188" stroke="#4a7ab8" stroke-width="2" marker-end="url(#mc1)"/>
+  <rect x="466" y="150" width="186" height="22" rx="3" fill="#fbfcfe"/>
+  <text x="559" y="165" text-anchor="middle" font-size="10" font-weight="700" fill="#4a7ab8">只复制这 23 位</text>
+
+  <!-- 多播 MAC -->
+  <text x="24" y="216" font-size="11" font-weight="700" fill="#2c4a6b">以太网多播 MAC 地址（48 bit）</text>
+  <rect x="24" y="226" width="250" height="46" rx="3" fill="#eaf6ee" stroke="#2f8f5b"/>
+  <text x="149" y="246" text-anchor="middle" font-size="11" font-weight="700" fill="#2f6b48">01-00-5E</text>
+  <text x="149" y="263" text-anchor="middle" font-size="9.5" fill="#6b7a8d">前 24 bit 固定（IANA 保留）</text>
+  <rect x="278" y="226" width="60" height="46" rx="3" fill="#f3f7fc" stroke="#8b98a8"/>
+  <text x="308" y="246" text-anchor="middle" font-size="11" font-weight="700" fill="#6b7a8d">0</text>
+  <text x="308" y="263" text-anchor="middle" font-size="9.5" fill="#8b98a8">1 bit</text>
+  <rect x="342" y="226" width="434" height="46" rx="3" fill="#d7eede" stroke="#2f8f5b" stroke-width="1.5"/>
+  <text x="559" y="246" text-anchor="middle" font-size="11" font-weight="700" fill="#2f6b48">后 23 bit ← 复制自 IP 多播地址</text>
+  <text x="559" y="263" text-anchor="middle" font-size="9.5" fill="#6b7a8d">实际可用 23 bit（前 25 bit 保持不变）</text>
+
+  <rect x="24" y="286" width="752" height="52" rx="4" fill="#fdeacf" stroke="#d9822b"/>
+  <text x="36" y="306" font-size="11" font-weight="700" fill="#a55a12">映射不是一一对应</text>
+  <text x="36" y="326" font-size="10.5" fill="#6b7a8d">高 5 bit 丢失 ⇒ <tspan font-weight="700" fill="#a55a12">32（2⁵）个不同的 IP 多播地址会映射到同一个多播 MAC</tspan>；主机收到帧后还要在网络层检查目的 IP 多播地址才能决定是否真正接收。</text>
+
+  <rect x="24" y="348" width="368" height="66" rx="4" fill="#f3f7fc" stroke="#c9d9ec"/>
+  <text x="36" y="368" font-size="10.5" font-weight="700" fill="#2c4a6b">范围与判据</text>
+  <text x="36" y="386" font-size="10" fill="#6b7a8d">01-00-5E-00-00-00 ~ 01-00-5E-7F-FF-FF</text>
+  <text x="36" y="403" font-size="10" fill="#6b7a8d">首字节最低位为 1 ⇒ 多播地址（为 0 则单播）</text>
+  <rect x="408" y="348" width="368" height="66" rx="4" fill="#eaf6ee" stroke="#c8e2d1"/>
+  <text x="420" y="368" font-size="10.5" font-weight="700" fill="#2f6b48">为什么只为 UDP</text>
+  <text x="420" y="386" font-size="10" fill="#6b7a8d">多播要把同一报文同时发给多个接收者</text>
+  <text x="420" y="403" font-size="10" fill="#6b7a8d">TCP 是一对一的端到端连接，无法一对多</text>
+</svg>

@@ -40,11 +40,11 @@ function secHtml(sub, num) {
 const H = secHtml('cn', '2.1.3');
 
 // ---------- 1. 精确总量 / 序列化 ----------
-const FIG_N = { co: 52, os: 71, cn: 48, ds: 35 };
+const FIG_N = { co: 54, os: 73, cn: 50, ds: 37 };
 for (const s of SUBS)
   check(s + ' 配图 ' + FIG_N[s] + ' 张（精确）', (RAW[s].match(/fig-img/g) || []).length, FIG_N[s]);
-check('全库 fig-img 206 张（精确）',
-  SUBS.reduce((n, s) => n + (RAW[s].match(/fig-img/g) || []).length, 0), 206);
+check('全库 fig-img 214 张（精确）',
+  SUBS.reduce((n, s) => n + (RAW[s].match(/fig-img/g) || []).length, 0), 214);
 check('cn struct-fig 12 个（含本图）', (RAW.cn.match(/struct-fig/g) || []).length, 12);
 check('全库 struct-fig 27 个（CO0/DS0/CN12/OS15）',
   SUBS.reduce((n, s) => n + (RAW[s].match(/struct-fig/g) || []).length, 0), 27);
@@ -128,7 +128,7 @@ check('SW 三层版本都是有效哈希',
 const refs = [...new Set([...RAW.cn.matchAll(/img\/([a-z0-9_]+_fig_[a-z0-9_]+\.(?:svg|png))/g)].map(m => 'img/' + m[1]))];
 check('CN 仍被引用的图都在磁盘且已预缓存',
   refs.every(r => fs.existsSync(path.join(ROOT, 'pwa', r)) && sw.includes("'" + r + "'")), true);
-check('CN 图引用数 = 48', refs.length, 48);
+check('CN 图引用数 = 50', refs.length, 50);
 
 // ---------- 7. 样式契约（内联图靠 class 上色，不能写死 fill/stroke） ----------
 check('没有在 SVG 里写死 stroke="#…" 颜色', /stroke="#[0-9a-fA-F]{3,6}"/.test(H), false);
@@ -169,7 +169,17 @@ if (fs.existsSync(path.join(ROOT, BAK))) {
   // 4.2.5 后来又插了 2021-47 时序图（纯插入的 data-fig 双段块）：比对前剥掉，
   // 否则本批「只改 2.1.3」的守卫会被后续批次干扰。剥掉后必须与 before 逐字相同。
   const stripWv = h => (h || '').replace(/\n<p class="paragraph" data-fig="1"><b>图：2021-47[\s\S]*?cn_fig_web_visit_seq\.svg[^>]*\/><\/p>/, '');
-  const changed = [...bm.keys()].filter(k => stripWv(stripZt(bm.get(k))) !== stripWv(stripZt(am.get(k))));
+  // 后续批次（第四批）又给 CN 4.5.3 / 4.3.4 各插了一张图，都是纯插入的 data-fig 双段块。
+  // 这两节不参与本批「只改 2.1.3」的守卫，但必须单独过「纯插入」断言。
+  const LATER = ['4.5.3 在局域网上进行硬件多播', '4.3.4 从IPv4向IPv6过渡'];
+  const subseq = (old, neu) => {
+    let i = 0;
+    for (let j = 0; j < neu.length && i < old.length; j++) if (neu[j] === old[i]) i++;
+    return i === old.length;
+  };
+  check('后续两张 CN 图所在小节都是纯插入（before 是 after 的子序列）',
+    LATER.every(k => subseq(stripZt(bm.get(k)), stripZt(am.get(k)))), true);
+  const changed = [...bm.keys()].filter(k => !LATER.includes(k) && stripWv(stripZt(bm.get(k))) !== stripWv(stripZt(am.get(k))));
   check('4.2.5 只多了 2021-47 图块（剥掉后与 before 逐字一致）',
     stripWv(stripZt(am.get('4.2.5 地址解析协议（ARP）'))) === stripZt(bm.get('4.2.5 地址解析协议（ARP）')), true);
   check('本批只改了 1 个小节', changed.length, 1);
@@ -232,7 +242,7 @@ if (!JSDOM || !IDBFactory) {
   }
   const a = await render(RAW.cn);
   check('真实渲染 .anno-line = 1220（CN 基线，零漂移）', a.lines.length, 1220);
-  check('真实渲染 img.fig-img = 48', a.figs, 48);
+  check('真实渲染 img.fig-img = 50', a.figs, 50);
   check('真实渲染出 1 个内联波形图', a.waveFigs, 1);
   check('真实渲染出 5 条波形路径', a.wavePaths, 5);
   check('真实渲染出 7 个比特数字', a.waveBits, 7);
@@ -245,8 +255,9 @@ if (!JSDOM || !IDBFactory) {
     if (b.no15.length === a.no15.length)
       for (let k = 0; k < b.no15.length; k++) if (b.no15[k] !== a.no15[k]) { first = k; break; }
     check('双版本逐行文本完全一致（行级批注零错位）', first, -1);
-    // 2.1.3 旧 PNG 波形图被内联 SVG 顶替（-1），后来 4.2.5 又加 2021-47 时序图（+1）→ 数量持平
-    check('改图后 img.fig-img 净变化 = 0（-1 波形图 +1 时序图）', [b.figs, a.figs], [48, 48]);
+    // 2.1.3 旧 PNG 波形图被内联 SVG 顶替（-1），4.2.5 加 2021-47 时序图（+1）→ 持平在 48；
+    // 第四批又给 4.5.3 / 4.3.4 各加一张（+2）→ 50。两处都走 data-fig 双段块，不占行号。
+    check('改图后 img.fig-img 净变化 = +2（第四批两张 CN 图）', [b.figs, a.figs], [48, 50]);
     b.window.close();
   } else {
     console.log('SKIP 双版本逐行比对：缺 before 备份');

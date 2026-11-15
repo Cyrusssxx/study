@@ -26,10 +26,12 @@ FILES = {
 STAR = '<h4>★ 高频真题考点与陷阱</h4>'
 
 
-def dump(d, crlf):
+def dump(d, crlf, trail_nl):
     s = json.dumps(d, ensure_ascii=False, indent=1)
     if crlf:
         s = s.replace('\n', '\r\n')
+    if trail_nl:
+        s += '\r\n' if crlf else '\n'
     return s.encode('utf-8')
 
 
@@ -39,18 +41,22 @@ def main():
     ap.add_argument('--sec', required=True)
     ap.add_argument('--img', required=True)
     ap.add_argument('--caption', required=True)
-    ap.add_argument('--anchor', default='star', choices=['star', 'last', 'after'],
-                    help='star=插到 ★ 之前（默认）；last=追加到末尾；after=插到 --after-text 之后')
+    ap.add_argument('--anchor', default='star', choices=['star', 'last', 'after', 'before'],
+                    help='star=插到 ★ 之前（默认）；last=追加到末尾；after=插到 --after-text 之后；'
+                         'before=插到 --before-text 之前')
     ap.add_argument('--after-text', default='',
                     help='仅 anchor=after 用：在该子串之后插入（子串必须唯一，且以标签结尾）')
+    ap.add_argument('--before-text', default='',
+                    help='仅 anchor=before 用：在该子串之前插入（子串必须唯一，且以 < 开头）')
     ap.add_argument('--dry', action='store_true')
     a = ap.parse_args()
 
     P = FILES[a.subject]
     raw = io.open(P, 'rb').read()
     crlf = b'\r\n' in raw
+    trail_nl = raw.endswith(b'\n')
     d = json.loads(raw.decode('utf-8'))
-    assert dump(d, crlf) == raw, '序列化不可逆，先查该文件 json 格式'
+    assert dump(d, crlf, trail_nl) == raw, '序列化不可逆，先查该文件 json 格式'
 
     target = None
     for ch in d['chapters']:
@@ -89,12 +95,21 @@ def main():
             '末尾区块疑似仍在未闭合的 <ul> 内，请改用 --anchor after 指定安全锚点'
         t = h.rstrip()
         newh = t + nl + block + h[len(t):]
-    else:
+    elif a.anchor == 'after':
         assert a.after_text, 'anchor=after 必须给 --after-text'
         assert h.count(a.after_text) == 1, '--after-text 不唯一或缺失'
         j = h.index(a.after_text) + len(a.after_text)
         assert h[j:j + 2] in ('', nl[:2]) or h[j] in '>\r\n', '锚点后不是换行/标签边界'
         newh = h[:j] + nl + block + h[j:]
+    else:  # before
+        assert a.before_text, 'anchor=before 必须给 --before-text'
+        assert h.count(a.before_text) == 1, '--before-text 不唯一或缺失'
+        i = h.index(a.before_text)
+        assert h[i] == '<', '--before-text 必须以标签开头，不能落在 <p> 正文内部'
+        assert h[:i].rstrip().endswith(('</p>', '</div>', '</table>', '</ul>', '</ol>',
+                                        '</h4>', '</h3>')), \
+            '插入点前缀不是块级结束标签: %r' % h[:i].rstrip()[-40:]
+        newh = h[:i] + block + h[i:]
 
     cp = lambda x: len(re.findall(r'<p(?! class="paragraph" data-fig)', x))
     assert cp(newh) == cp(h), '非 data-fig <p> 数变了 %d -> %d' % (cp(h), cp(newh))
@@ -105,7 +120,7 @@ def main():
     print('非 data-fig <p> %d | li %d | 「；」 %d | 新长 %d' % (cp(newh), newh.count('<li>'),
                                                        newh.count('；'), len(newh)))
 
-    out = dump(d, crlf)
+    out = dump(d, crlf, trail_nl)
     if a.dry:
         k = newh.index(a.img)
         print('--- DRY ---\n' + newh[max(0, k - 200):k + 40].replace('\r', ''))

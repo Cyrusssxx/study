@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>408 配图图集 - 只看图</title>
+    <link rel="manifest" href="manifest.webmanifest">
+    <meta name="theme-color" content="#4f46e5">
+    <link rel="icon" type="image/png" href="icons/icon-192.png">
+    <link rel="apple-touch-icon" href="icons/icon-192.png">
+    <script>if (localStorage.getItem('darkMode') === '1') document.documentElement.classList.add('dark');</script>
+    <link rel="stylesheet" href="css/style.css">
+    <style>
+        /* ============ 图集页专属版式（不进全局 style.css，避免污染其它页） ============ */
+        .figs-wrap { max-width: 1180px; margin: 0 auto; padding: 16px 16px 64px; }
+        .figs-top { background: rgba(var(--card-rgb), 1); border: 1px solid var(--border);
+                    border-radius: var(--radius); padding: 16px 18px; }
+        .figs-topbar { display: flex; justify-content: space-between; align-items: center;
+                       gap: 10px; flex-wrap: wrap; }
+        .figs-top h1 { font-size: 1.2rem; font-weight: 700; }
+        .figs-top a { font-size: .82rem; color: var(--primary); text-decoration: none; }
+        .figs-top a:hover { text-decoration: underline; }
+        .figs-desc { font-size: .82rem; color: var(--text-light); margin: 6px 0 12px; line-height: 1.65; }
+        .figs-tabs { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; }
+        .figs-tabs button { font: inherit; font-size: .82rem; padding: 5px 13px; cursor: pointer;
+                            border: 1px solid var(--border); border-radius: 15px;
+                            background: rgba(var(--card-rgb), .9); color: var(--text-light); }
+        .figs-tabs button:hover { color: var(--primary); border-color: var(--primary); }
+        .figs-tabs button.active { background: var(--primary); border-color: var(--primary);
+                                   color: #fff; font-weight: 700; }
+        .figs-search { margin-left: auto; min-width: 190px; flex: 0 1 260px;
+                       font: inherit; font-size: .82rem; padding: 6px 11px;
+                       border: 1px solid var(--border); border-radius: 15px;
+                       background: rgba(var(--card-rgb), .9); color: var(--text); }
+        .figs-stat { font-size: .78rem; color: var(--text-light); margin-top: 10px; }
+        [hidden] { display: none !important; }
+
+        .figs-subj { margin-top: 26px; }
+        .figs-subj-title { font-size: 1.02rem; font-weight: 700; color: var(--primary-dark);
+                           margin-bottom: 8px; padding-bottom: 6px;
+                           border-bottom: 1px solid var(--border); }
+        .figs-subj-title span { font-size: .78rem; font-weight: 400; color: var(--text-light); }
+        .figs-chapter { border: 1px solid var(--border); border-radius: var(--radius);
+                        background: rgba(var(--card-rgb), 1); margin: 10px 0; }
+        .figs-chapter > summary { cursor: pointer; padding: 9px 14px; font-weight: 700;
+                                  font-size: .9rem; list-style-position: inside; }
+        .figs-sec { padding: 8px 14px 14px; border-top: 1px solid var(--border); }
+        .figs-sec-head { font-size: .82rem; margin-bottom: 8px; }
+        .figs-sec-head a { color: var(--primary); text-decoration: none; font-weight: 700; }
+        .figs-sec-head a:hover { text-decoration: underline; }
+        .figs-grid { display: grid; gap: 12px;
+                     grid-template-columns: repeat(auto-fill, minmax(238px, 1fr)); }
+        .figs-card { margin: 0; background: rgba(var(--card-rgb), 1);
+                     border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; }
+        .figs-thumb { height: 176px; display: flex; align-items: center; justify-content: center;
+                      background: #ffffff; padding: 8px; overflow: hidden; }
+        .dark .figs-thumb { background: #f7f9fc; }
+        .figs-thumb img { max-width: 100%; max-height: 100%; object-fit: contain;
+                          cursor: zoom-in; display: block; }
+        .figs-card figcaption { font-size: .75rem; line-height: 1.5; padding: 7px 9px;
+                                color: var(--text-light); border-top: 1px solid var(--border); }
+        .figs-empty { padding: 30px 10px; text-align: center; color: var(--text-light); font-size: .86rem; }
+        @media (max-width: 620px) {
+            .figs-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+            .figs-thumb { height: 128px; }
+            .figs-search { margin-left: 0; flex: 1 1 100%; }
+        }
+    </style>
+</head>
+<body>
+    <main class="figs-wrap">
+        <div class="figs-top">
+            <div class="figs-topbar">
+                <h1>🖼 408 配图图集</h1>
+                <div>
+                    <a href="index.html">← 首页</a>
+                    &nbsp;·&nbsp;
+                    <a id="figsBackNotes" href="notes.html">← 返回笔记</a>
+                </div>
+            </div>
+            <p class="figs-desc">把四科讲义里的自绘配图按章节集中起来。点图可放大/拖拽，点小节标题直接跳回讲义原文；也可以在笔记页顶部切到「只看图」。</p>
+            <div class="figs-tabs" id="figsTabs" role="group" aria-label="按科目筛选">
+                <button type="button" data-subj="all">全部</button>
+                <button type="button" data-subj="ds">数据结构</button>
+                <button type="button" data-subj="co">计算机组成原理</button>
+                <button type="button" data-subj="os">操作系统</button>
+                <button type="button" data-subj="cn">计算机网络</button>
+                <input class="figs-search" id="figsSearch" type="search" placeholder="搜图题 / 小节名 / 文件名…" aria-label="搜索配图">
+            </div>
+            <div class="figs-stat" id="figsStat">正在加载四科讲义…</div>
+        </div>
+        <div id="figsBody"></div>
+    </main>
+
+    <script src="js/common.js"></script>
+    <script src="js/lightbox.js"></script>
+    <script>
+        /* 图集页：只读取四科 *_notes.json，抽取讲义里的自绘配图，按「科目 → 章 → 节」聚合。
+         * 两类图都收：① 独立 SVG 文件 <img class="fig-img" src="img/xx.svg">；
+         * ② 早期的内联 <figure class="struct-fig"><svg>…</svg></figure>（转成自带样式的
+         *    data: SVG，这样缩略与点开放大都能正确着色，不必依赖外部 CSS）。 */
+        (function () {
+            const SUBS = [
+                { id: 'ds', name: '数据结构' },
+                { id: 'co', name: '计算机组成原理' },
+                { id: 'os', name: '操作系统' },
+                { id: 'cn', name: '计算机网络' }
+            ];
+            const KEY = 'figs_subject_filter';
+            const params = new URLSearchParams(location.search);
+            const urlSubj = params.get('subject') || '';
+            let ACTIVE = SUBS.some(s => s.id === urlSubj) ? urlSubj
+                : (function () { try { return localStorage.getItem(KEY) || 'all'; } catch (e) { return 'all'; } })();
+            if (!['all'].concat(SUBS.map(s => s.id)).includes(ACTIVE)) ACTIVE = 'all';
+
+            document.getElementById('figsBackNotes').href =
+                'notes.html?subject=' + encodeURIComponent(urlSubj || 'co');
+
+            function esc(s) {
+                return String(s == null ? '' : s)
+                    .replace(/&/g, '&amp;').replace(/"/g, '&quot;')
+                    .replace(/</g, '&lt;').replace(/>/g, '&gt;');
+            }
+            function plain(s) {
+                return String(s || '').replace(/<[^>]+>/g, '')
+                    .replace(/&nbsp;/g, ' ').replace(/&quot;/g, '"')
+                    .replace(/&lt;/g, '<').replace(/&gt;/g, '>')
+                    .replace(/&amp;/g, '&').replace(/\s+/g, ' ').trim();
+            }
+            // 内联结构图在讲义里靠 style.css 的 .struct-svg 规则着色；转成独立图片时
+            // 必须把这几条规则随 SVG 一起带走，否则会退化成默认黑字黑框。
+            const INLINE_CSS = [
+                '.struct-svg{display:block;width:100%;height:auto}',
+                '.struct-svg rect.node{fill:#fff;stroke:#4a90d9;stroke-width:1.5}',
+                '.struct-svg rect.bar{fill:#fff;stroke:#4a90d9;stroke-width:1.2}',
+                '.struct-svg text{fill:#333;font-size:13px;text-anchor:middle}',
+                '.struct-svg text.lbl{fill:#666;font-size:11.5px}',
+                '.struct-svg line,.struct-svg path{stroke:#4a90d9;stroke-width:1.5;fill:none}',
+                '.struct-svg .arrmarker{fill:#4a90d9}',
+                '.struct-svg .wave-grid{stroke:#e0e0e0;stroke-width:1;stroke-dasharray:3 3}',
+                '.struct-svg .wave-line{stroke:#4a90d9;stroke-width:2.2;fill:none}',
+                '.struct-svg text.wave-title{fill:#333;font-size:13px;font-weight:700}',
+                '.struct-svg text.wave-sub{fill:#666;font-size:10.5px}',
+                '.struct-svg text.wave-bit{fill:#4a90d9;font-size:12.5px;font-weight:700}',
+                '.struct-svg text.boot-key{fill:#4a7ab8;font-size:12px;font-weight:700}'
+            ].join('');
+            function inlineToSrc(figHtml) {
+                // 必须只取 <svg>…</svg>：外面那层 <figure> 是 HTML 标签，塞进 data URL
+                // 会让图片文档的根元素不是 <svg>，浏览器直接判为破图。
+                const sm = /<svg[\s\S]*?<\/svg>/.exec(figHtml);
+                if (!sm) return '';
+                const withCss = sm[0].replace(/<svg[^>]*>/, m => m + '<style>' + INLINE_CSS + '</style>');
+                return 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(withCss);
+            }
+            // 图题＝紧邻图片前一段 <p> 的文本；早期批次的图块不带 data-fig 也照样能取到。
+            // 只认短标题（或「图X / 图：」开头），否则会把整段正文当图题。
+            function captionBefore(h, idx) {
+                const before = h.slice(0, idx);
+                const ps = [...before.matchAll(/<p[^>]*>([\s\S]*?)<\/p>/g)];
+                if (!ps.length) return '';
+                const t = plain(ps[ps.length - 1][1]);
+                if (!t || t.length > 170) return '';
+                if (/^(图\s*\d|图[：:]|示意图|表\s*\d|表[：:])/.test(t)) return t;
+                return t.length <= 46 ? t : '';
+            }
+            function collect(h) {
+                const out = [];
+                for (const m of h.matchAll(/<img[^>]*class="fig-img"[^>]*src="([^"]+)"[^>]*>/g)) {
+                    out.push({ i: m.index, src: m[1], cap: captionBefore(h, m.index) });
+                }
+                for (const m of h.matchAll(/<figure class="struct-fig">[\s\S]*?<\/figure>/g)) {
+                    const src = inlineToSrc(m[0]);
+                    if (!src) continue;
+                    out.push({ i: m.index, src, cap: captionBefore(h, m.index), inline: true });
+                }
+                out.sort((a, b) => a.i - b.i);
+                return out;
+            }
+            function labelOf(it) {
+                // 图题统一截到 48 字，避免个别「图：…」长说明把卡片撑成半屏；
+                // 完整图题放在 figcaption 的 title 里（鼠标悬停可见）。
+                if (it.cap) return it.cap.length > 48 ? it.cap.slice(0, 47) + '…' : it.cap;
+                if (it.inline) return '内联结构图 · 点标题回讲义查看';
+                const f = (it.src.split('/').pop() || '').replace(/\.svg$/i, '').replace(/_/g, ' ');
+                return f ? '配图 · ' + f : '讲义配图';
+            }
+
+            async function loadGroups() {
+                const groups = [];
+                for (const sub of SUBS) {
+                    const resp = await fetch('data/notes/' + sub.id + '_notes.json');
+                    if (!resp.ok) throw new Error(sub.id + ' ' + resp.status);
+                    const d = await resp.json();
+                    const chapters = [];
+                    for (const ch of d.chapters || []) {
+                        const secs = [];
+                        // 节本身 + 子节都要扫：图一律落在小节里，个别节级 html 也有图
+                        for (const sec of ch.sections || []) {
+                            for (const x of [sec].concat(sec.subsections || [])) {
+                                const items = collect(x.html || '');
+                                if (!items.length) continue;
+                                const name = x.section || sec.section || '';
+                                const num = (/^\d+(?:\.\d+)*/.exec(name) || [name])[0];
+                                secs.push({ subj: sub.id, name, num, items });
+                            }
+                        }
+                        if (secs.length) chapters.push({ chapter: ch.chapter || '', secs });
+                    }
+                    groups.push({ subj: sub.id, name: sub.name, chapters });
+                }
+                return groups;
+            }
+
+            function render(groups) {
+                let total = 0;
+                const html = groups.map(g => {
+                    const n = g.chapters.reduce((a, c) => a + c.secs.reduce((b, s) => b + s.items.length, 0), 0);
+                    total += n;
+                    const chHtml = g.chapters.map(c => {
+                        const secHtml = c.secs.map(s => {
+                            const cards = s.items.map(it => {
+                                const cap = labelOf(it);
+                                // 搜索用完整图题（不是截断后的显示文本），长图题后半段也能搜到
+                                const hay = ((it.cap || cap) + ' ' + s.name + ' ' + c.chapter + ' ' + it.src).toLowerCase();
+                                return '<figure class="figs-card" data-search="' + esc(hay) + '">' +
+                                    '<div class="figs-thumb"><img class="fig-img" loading="lazy" src="' + esc(it.src) +
+                                    '" alt="' + esc(cap) + '"></div>' +
+                                    '<figcaption title="' + esc(it.cap || cap) + '">' + esc(cap) + '</figcaption></figure>';
+                            }).join('');
+                            return '<div class="figs-sec" data-search="' + esc((s.name + ' ' + c.chapter).toLowerCase()) + '">' +
+                                '<div class="figs-sec-head"><a href="notes.html?subject=' + s.subj +
+                                '&goto=' + encodeURIComponent(s.num) + '" title="跳回讲义该小节">' +
+                                esc(s.name) + ' ↗</a></div>' +
+                                '<div class="figs-grid">' + cards + '</div></div>';
+                        }).join('');
+                        return '<details class="figs-chapter" open><summary>' + esc(c.chapter) +
+                            '</summary>' + secHtml + '</details>';
+                    }).join('');
+                    return '<section class="figs-subj" data-subj="' + g.subj + '">' +
+                        '<h2 class="figs-subj-title">' + esc(g.name) + ' <span>' + n + ' 张</span></h2>' +
+                        chHtml + '</section>';
+                }).join('');
+                document.getElementById('figsBody').innerHTML = html ||
+                    '<p class="figs-empty">没有找到配图。</p>';
+                return total;
+            }
+
+            const tabs = document.getElementById('figsTabs');
+            const search = document.getElementById('figsSearch');
+            const stat = document.getElementById('figsStat');
+            let TOTAL = 0;
+
+            function applyFilter() {
+                const q = (search.value || '').trim().toLowerCase();
+                document.querySelectorAll('.figs-card').forEach(c => {
+                    c.hidden = q ? !c.dataset.search.includes(q) : false;
+                });
+                document.querySelectorAll('.figs-sec').forEach(s => {
+                    s.hidden = !s.querySelector('.figs-card:not([hidden])');
+                });
+                document.querySelectorAll('.figs-chapter').forEach(ch => {
+                    ch.hidden = !ch.querySelector('.figs-sec:not([hidden])');
+                });
+                document.querySelectorAll('.figs-subj').forEach(sj => {
+                    sj.hidden = (ACTIVE !== 'all' && sj.dataset.subj !== ACTIVE) ||
+                        !sj.querySelector('.figs-chapter:not([hidden])');
+                });
+                tabs.querySelectorAll('button[data-subj]').forEach(b => {
+                    b.classList.toggle('active', b.dataset.subj === ACTIVE);
+                });
+                // 祖先（科目分组 / 章 / 节）被 hidden 时卡片自身并没有 hidden 属性，
+                // 必须沿祖先链判断，否则「当前显示」会误报成全库总数。
+                const shown = [...document.querySelectorAll('.figs-card')]
+                    .filter(c => !c.closest('[hidden]')).length;
+                stat.textContent = q || ACTIVE !== 'all'
+                    ? '当前显示 ' + shown + ' / ' + TOTAL + ' 张' + (q ? '（关键词「' + q + '」）' : '')
+                    : '共 ' + TOTAL + ' 张自绘配图（含内联结构图），点图放大、点标题回讲义。';
+                const body = document.getElementById('figsBody');
+                body.querySelectorAll('#figsNoHit').forEach(n => n.remove());
+                if (!document.querySelector('.figs-subj:not([hidden])')) {
+                    body.insertAdjacentHTML('beforeend',
+                        '<p class="figs-empty" id="figsNoHit">没有匹配的配图，换个关键词试试。</p>');
+                }
+            }
+
+            tabs.addEventListener('click', e => {
+                const b = e.target.closest('button[data-subj]');
+                if (!b) return;
+                ACTIVE = b.dataset.subj;
+                try { localStorage.setItem(KEY, ACTIVE); } catch (err) { }
+                applyFilter();
+            });
+            search.addEventListener('input', applyFilter);
+
+            loadGroups().then(groups => {
+                TOTAL = render(groups);
+                applyFilter();
+            }).catch(err => {
+                stat.textContent = '加载失败：' + err.message;
+                document.getElementById('figsBody').innerHTML =
+                    '<p class="figs-empty">讲义数据读取失败，请检查网络或刷新页面。</p>';
+            });
+        })();
+    </script>
+</body>
+</html>

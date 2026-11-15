@@ -75,6 +75,45 @@
         // 笔记批注 / 高亮持久化走现有笔记链路（api() 拦截 IndexedDB）
         const noteApi = (url, opts) => api(url, opts);
 
+        /* ---------- 视图模式：全文 / 要点 / 只看图 ----------
+         * 纯 CSS 过滤（给 #notesContent 挂 data-view），不改写 DOM、不重跑 fmtNotes，
+         * 因此 .anno-line 行号、划词高亮、行级批注都不受影响，切回来原样恢复。
+         * 「要点」把非加粗正文压成 0 字号：只显示 <b> 重点词 + 黄框 + 表格 + 配图。
+         * 状态存 localStorage，四科通用。 */
+        const NOTES_VIEW_KEY = 'notes_view_mode';
+        // 切换条抽成常量：讲义加载失败时也保留，用户仍能切回图集/其它模式。
+        const NOTES_VIEW_HTML =
+            `<div class="notes-view-switch" id="notesViewSwitch" role="group" aria-label="笔记视图切换">` +
+                `<button type="button" data-view="full" onclick="setNotesView('full')">全文</button>` +
+                `<button type="button" data-view="key" onclick="setNotesView('key')" title="只留加粗重点、黄框、表格与配图">要点</button>` +
+                `<button type="button" data-view="fig" onclick="setNotesView('fig')" title="只留配图与图题">只看图</button>` +
+                `<a class="notes-view-gallery" href="figs.html?subject=${SUBJECT}" title="跨科目浏览全部配图">全部图集 ↗</a>` +
+            `</div>` +
+            `<p class="notes-view-hint">要点 = 只留加粗词 / 黄框 / 表格 / 图；只看图 = 只留配图与图题。切换会记住，四科通用。</p>`;
+        function currentNotesView() {
+            try { return localStorage.getItem(NOTES_VIEW_KEY) || 'full'; }
+            catch (e) { return 'full'; }
+        }
+        function syncNotesView() {
+            const mode = ['full', 'key', 'fig'].includes(currentNotesView()) ? currentNotesView() : 'full';
+            const box = document.getElementById('notesContent');
+            if (box) box.setAttribute('data-view', mode);
+            document.querySelectorAll('#notesViewSwitch button[data-view]').forEach(b => {
+                const on = b.getAttribute('data-view') === mode;
+                b.classList.toggle('active', on);
+                b.setAttribute('aria-pressed', on ? 'true' : 'false');
+            });
+        }
+        function setNotesView(mode) {
+            if (!['full', 'key', 'fig'].includes(mode)) mode = 'full';
+            try { localStorage.setItem(NOTES_VIEW_KEY, mode); } catch (e) { }
+            syncNotesView();
+        }
+        // 切换条用内联 onclick，显式挂到 window 才不会被脚本作用域吞掉
+        window.setNotesView = setNotesView;
+        window.syncNotesView = syncNotesView;
+        syncNotesView();
+
         // 左侧目录可收起（状态持久化）
         const notesLayout = document.getElementById('notesLayout');
         /* body 上的状态类：供「页头/文章让位」等跨兄弟元素的选择器使用（.notes-layout 是页头之后的兄弟，选不到） */
@@ -648,12 +687,14 @@
                 notes = await resp.json();
             } catch (e) {
                 document.getElementById('notesHeader').innerHTML =
-                    '<h1>📖 考点笔记</h1><p class="notes-source">该科目暂无考点笔记</p>';
+                    '<h1>📖 考点笔记</h1><p class="notes-source">该科目暂无考点笔记</p>' + NOTES_VIEW_HTML;
+                syncNotesView();
                 return;
             }
             document.getElementById('notesHeader').innerHTML =
-                `<h1>📖 ${notes.title}</h1><p class="notes-source">${notes.source}</p>`;
+                `<h1>📖 ${notes.title}</h1><p class="notes-source">${notes.source}</p>` + NOTES_VIEW_HTML;
             document.title = `${notes.title} - 408刷题`;
+            syncNotesView();
 
             let toc = `<div class="notes-search" id="notesSearchBox" hidden>
                 <input type="search" id="notesSearchInput" placeholder="🔍 搜索考点、章节、批注…" autocomplete="off"
@@ -721,17 +762,23 @@
                 const ch = item.ch, sec = item.sec;
                 const subs = sec.subsections || [];
                 const hasSub = subs.length > 0;
+                // 节级速览（os 的长文字大节）：渲染在标题正下方、.notes-body 之外，
+                // 天然不进 .anno-line，也不受「要点/只看图」过滤影响。
+                const summaryHtml = x => x && x.summary
+                    ? `<div class="notes-sec-summary"><b>本节速览</b>${escAttr(x.summary)}</div>` : '';
                 let h = `
                     <section class="notes-section" data-sec="${sec.section}">
                         <div class="notes-sec-head">
                             <h3 class="notes-sec-title">${sec.section}</h3>
                             <a class="notes-prac-link" href="quiz.html?subject=${SUBJECT}&mode=sequential&chapter=${encodeURIComponent(ch.chapter)}&section=${encodeURIComponent(sec.section)}" target="_blank" rel="noopener noreferrer" title="新窗口打开该节对应的练习题">📝 相关题目</a>
                         </div>
+                        ${summaryHtml(sec)}
                         <div class="notes-body">`;
                 if (hasSub) {
                     h += subs.map(s => `
                         <div class="notes-sub${s.important ? ' notes-sub-strong' : ''}" data-sec="${s.section}">
                             <h4 class="notes-sub-title">${s.section}</h4>
+                            ${summaryHtml(s)}
                             <div class="notes-sub-body">${fmtNotes(s.html)}</div>
                         </div>`).join('');
                 }

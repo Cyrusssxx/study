@@ -8814,3 +8814,79 @@ body.fc-toc-open .fc-toc-fab { display: none; }
     stroke-width: 1;
     stroke-dasharray: 4 4;
 }
+
+/* ==================== 笔记视图：全文 / 要点 / 只看图 ====================
+ * 纯 CSS 过滤：#notesContent 上挂 data-view，不改写正文 DOM、不重跑 fmtNotes，
+ * 所以 .anno-line 行号、划词高亮、行级批注切回「全文」原样恢复。
+ * 「要点」＝普通正文压成 0 字号，只留 <b> 重点词 + 节速览 + 黄框 + 表格 + 配图；
+ * 「只看图」＝隐藏无图的整节/整小节，只留图题段、图片段与内联结构图。 */
+.notes-view-switch {
+    display: flex; align-items: center; gap: 6px;
+    flex-wrap: wrap; margin: 10px 0 2px;
+}
+.notes-view-switch button {
+    font: inherit; font-size: .8rem; line-height: 1.45;
+    padding: 4px 12px; border: 1px solid var(--border);
+    background: rgba(var(--card-rgb), .9); color: var(--text-light);
+    border-radius: 14px; cursor: pointer;
+    transition: color .15s, border-color .15s, background .15s;
+}
+.notes-view-switch button:hover { color: var(--primary); border-color: var(--primary); }
+.notes-view-switch button.active {
+    background: var(--primary); border-color: var(--primary);
+    color: #fff; font-weight: 700;
+}
+.notes-view-gallery {
+    margin-left: 4px; font-size: .8rem;
+    color: var(--primary); text-decoration: none;
+}
+.notes-view-gallery:hover { text-decoration: underline; }
+.notes-view-hint {
+    font-size: .76rem; color: var(--text-light);
+    margin: 2px 0 6px; line-height: 1.5;
+}
+
+/* 节级速览：OS 的长文字大节，一句话抓重点，渲染在 .notes-body 之外 */
+.notes-sec-summary {
+    margin: 8px 0 10px; padding: 9px 12px;
+    background: rgba(74, 144, 217, .07);
+    border-left: 3px solid var(--primary);
+    border-radius: 0 var(--radius) var(--radius) 0;
+    font-size: .86rem; line-height: 1.75; color: var(--text);
+}
+.notes-sec-summary b { color: var(--primary-dark); margin-right: 8px; }
+.dark .notes-sec-summary { background: rgba(143, 176, 217, .12); }
+
+/* —— 要点视图 —— */
+#notesContent[data-view="key"] :is(.notes-body, .notes-sub-body) :is(p, li):not([data-fig="1"]) {
+    font-size: 0; line-height: 0; margin: 1px 0; padding: 0;
+}
+#notesContent[data-view="key"] :is(.notes-body, .notes-sub-body) :is(p, li) :is(b, strong) {
+    font-size: .88rem; line-height: 1.65; font-weight: 700; color: var(--primary-dark);
+}
+#notesContent[data-view="key"] :is(.notes-body, .notes-sub-body) > p:not([data-fig="1"]):not(:has(b, strong, img, code)) {
+    display: none;
+}
+#notesContent[data-view="key"] :is(.notes-body, .notes-sub-body) li:not(:has(b, strong, img)) {
+    display: none;
+}
+
+/* —— 只看图视图 —— */
+#notesContent[data-view="fig"] .notes-section:not(:has(img.fig-img, figure.struct-fig)),
+#notesContent[data-view="fig"] .notes-sub:not(:has(img.fig-img, figure.struct-fig)),
+#notesContent[data-view="fig"] .notes-sec-summary,
+#notesContent[data-view="fig"] :is(.notes-body, .notes-sub-body) > * {
+    display: none;
+}
+/* .notes-sub 自己就是 .notes-body 的直接子元素，会被上一条 `> *` 一起隐藏；
+ * 必须显式放出「里面有图的子节」，否则 1.1.1 这类只有内联结构图的小节整块空白。 */
+#notesContent[data-view="fig"] .notes-body > .notes-sub:has(img.fig-img, figure.struct-fig),
+#notesContent[data-view="fig"] :is(.notes-body, .notes-sub-body) > p[data-fig="1"],
+#notesContent[data-view="fig"] :is(.notes-body, .notes-sub-body) > p:has(> img.fig-img),
+#notesContent[data-view="fig"] :is(.notes-body, .notes-sub-body) > p:has(+ p > img.fig-img),
+#notesContent[data-view="fig"] :is(.notes-body, .notes-sub-body) > figure.struct-fig,
+#notesContent[data-view="fig"] :is(.notes-body, .notes-sub-body) > p:has(+ figure.struct-fig) {
+    display: block;
+}
+#notesContent[data-view="fig"] .notes-section { padding-bottom: 6px; }
+#notesContent[data-view="fig"] :is(.notes-body, .notes-sub-body) > p[data-fig="1"] { margin: 6px 0 2px; }

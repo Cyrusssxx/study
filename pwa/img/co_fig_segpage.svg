@@ -1,0 +1,73 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 460" width="800" height="460" font-family="'Segoe UI','Microsoft YaHei',sans-serif">
+  <defs>
+    <marker id="sp1" markerWidth="9" markerHeight="9" refX="6.5" refY="3" orient="auto">
+      <path d="M0,0 L6.5,3 L0,6 z" fill="#4a7ab8"/>
+    </marker>
+    <marker id="sp2" markerWidth="9" markerHeight="9" refX="6.5" refY="3" orient="auto">
+      <path d="M0,0 L6.5,3 L0,6 z" fill="#d9822b"/>
+    </marker>
+    <marker id="sp3" markerWidth="9" markerHeight="9" refX="6.5" refY="3" orient="auto">
+      <path d="M0,0 L6.5,3 L0,6 z" fill="#2f8f5b"/>
+    </marker>
+  </defs>
+  <rect width="800" height="460" fill="#fbfcfe"/>
+  <text x="24" y="28" font-size="14.5" font-weight="700" fill="#2c4a6b">段页式虚存：虚地址<tspan font-weight="700" fill="#4a7ab8">三段</tspan>，地址变换<tspan font-weight="700" fill="#a55a12">两次查表</tspan></text>
+  <text x="24" y="47" font-size="10.5" fill="#6b7a8d">程序先按逻辑分段、每段再划分固定大小的页；调入调出仍以页为单位 —— 每个程序一张段表、每段一张页表</text>
+
+  <!-- 虚地址三段 -->
+  <text x="24" y="72" font-size="11" font-weight="700" fill="#2c4a6b">虚拟地址结构（顺序不能换，页内地址永远在最低位）</text>
+  <rect x="24" y="82" width="196" height="42" rx="3" fill="#eef4fb" stroke="#4a7ab8"/>
+  <text x="122" y="102" text-anchor="middle" font-size="11.5" font-weight="700" fill="#2c4a6b">段号</text>
+  <text x="122" y="117" text-anchor="middle" font-size="9.5" fill="#6b7a8d">查段表用</text>
+  <rect x="224" y="82" width="240" height="42" rx="3" fill="#fdeacf" stroke="#d9822b"/>
+  <text x="344" y="102" text-anchor="middle" font-size="11.5" font-weight="700" fill="#a55a12">段内页号</text>
+  <text x="344" y="117" text-anchor="middle" font-size="9.5" fill="#6b7a8d">查页表用</text>
+  <rect x="468" y="82" width="308" height="42" rx="3" fill="#eaf6ee" stroke="#2f8f5b"/>
+  <text x="622" y="102" text-anchor="middle" font-size="11.5" font-weight="700" fill="#2f6b48">页内地址（页内偏移）</text>
+  <text x="622" y="117" text-anchor="middle" font-size="9.5" fill="#6b7a8d">原样拼进物理地址</text>
+
+  <!-- 三步变换 -->
+  <text x="24" y="150" font-size="11" font-weight="700" fill="#2c4a6b">地址变换三步（第 ①、② 步各要访存一次）</text>
+
+  <rect x="24" y="160" width="238" height="146" rx="4" fill="#ffffff" stroke="#4a7ab8"/>
+  <text x="34" y="180" font-size="10.5" font-weight="700" fill="#2c4a6b">① 用段号查段表</text>
+  <rect x="36" y="190" width="214" height="58" rx="3" fill="#eef4fb" stroke="#4a7ab8"/>
+  <text x="46" y="207" font-size="9.5" fill="#6b7a8d">段表（每个程序一张）</text>
+  <text x="46" y="225" font-size="10" fill="#2c4a6b">段号 → <tspan font-weight="700" fill="#4a7ab8">该段的页表起始地址</tspan></text>
+  <text x="46" y="241" font-size="9" fill="#8b98a8">段表项还含段长，用于越界检查</text>
+  <text x="34" y="266" font-size="10" fill="#6b7a8d">按段共享与保护 ⇒ 段式的优点保住了</text>
+  <text x="34" y="286" font-size="10" fill="#a55a12">代价：第 1 次访存</text>
+
+  <line x1="262" y1="233" x2="282" y2="233" stroke="#4a7ab8" stroke-width="1.8" marker-end="url(#sp1)"/>
+
+  <rect x="284" y="160" width="238" height="146" rx="4" fill="#ffffff" stroke="#d9822b"/>
+  <text x="294" y="180" font-size="10.5" font-weight="700" fill="#a55a12">② 用段内页号查页表</text>
+  <rect x="296" y="190" width="214" height="58" rx="3" fill="#fdeacf" stroke="#d9822b"/>
+  <text x="306" y="207" font-size="9.5" fill="#6b7a8d">页表（每段一张）</text>
+  <text x="306" y="225" font-size="10" fill="#2c4a6b">段内页号 → <tspan font-weight="700" fill="#a55a12">实页号</tspan></text>
+  <text x="306" y="241" font-size="9" fill="#8b98a8">页表项含装入位、访问位、修改位等</text>
+  <text x="294" y="266" font-size="10" fill="#6b7a8d">页大小固定 ⇒ 无段式那种外部碎片</text>
+  <text x="294" y="286" font-size="10" fill="#a55a12">代价：第 2 次访存（TLB 才能掩盖）</text>
+
+  <line x1="522" y1="233" x2="542" y2="233" stroke="#d9822b" stroke-width="1.8" marker-end="url(#sp2)"/>
+
+  <rect x="544" y="160" width="232" height="146" rx="4" fill="#ffffff" stroke="#2f8f5b"/>
+  <text x="554" y="180" font-size="10.5" font-weight="700" fill="#2f6b48">③ 拼接成物理地址</text>
+  <rect x="556" y="190" width="98" height="40" rx="2" fill="#fdeacf" stroke="#d9822b"/>
+  <text x="605" y="215" text-anchor="middle" font-size="10.5" font-weight="700" fill="#a55a12">实页号</text>
+  <text x="660" y="215" text-anchor="middle" font-size="12" fill="#6b7a8d">＋</text>
+  <rect x="670" y="190" width="94" height="40" rx="2" fill="#eaf6ee" stroke="#2f8f5b"/>
+  <text x="717" y="215" text-anchor="middle" font-size="10.5" font-weight="700" fill="#2f6b48">页内地址</text>
+  <line x1="612" y1="232" x2="612" y2="250" stroke="#2f8f5b" stroke-width="1.6" marker-end="url(#sp3)"/>
+  <rect x="556" y="254" width="208" height="32" rx="3" fill="#d7eede" stroke="#2f8f5b" stroke-width="1.4"/>
+  <text x="660" y="275" text-anchor="middle" font-size="11" font-weight="700" fill="#2f6b48">物理地址</text>
+  <text x="554" y="300" font-size="9.5" fill="#6b7a8d">页内地址直接照抄，不参与任何查表</text>
+
+  <rect x="24" y="320" width="752" height="124" rx="4" fill="#f3f7fc" stroke="#c9d9ec"/>
+  <text x="36" y="340" font-size="10.5" font-weight="700" fill="#2c4a6b">三种方式一眼分</text>
+  <text x="36" y="359" font-size="10" fill="#6b7a8d">页式：虚页号 + 页内偏移　|　页大小固定、表简单、调入方便　|　最后一页有<tspan font-weight="700" fill="#a55a12">内部碎片</tspan>，页无逻辑意义、共享保护不便</text>
+  <text x="36" y="378" font-size="10" fill="#6b7a8d">段式：段号 + 段内地址　|　逻辑独立、便于编译管理与保护共享　|　有<tspan font-weight="700" fill="#a55a12">外部碎片</tspan>、主存分配困难</text>
+  <text x="36" y="397" font-size="10" fill="#2f6b48">段页式：段号 + 段内页号 + 页内地址　|　兼有两者优点（按段共享保护 + 免外部碎片）　|　<tspan font-weight="700" fill="#a55a12">两次查表开销大</tspan></text>
+  <text x="36" y="416" font-size="10" font-weight="700" fill="#a55a12">易错：碎片归属别串 —— 段页式和页式一样只剩内部碎片；表个数是「每程序一张段表、每段一张页表」，不是每段一张段表。</text>
+  <text x="36" y="435" font-size="10" fill="#8b98a8">段号查段表 → 得页表基址 → 段内页号查页表 → 得实页号 → 拼页内地址，比页式多一次访存。</text>
+</svg>

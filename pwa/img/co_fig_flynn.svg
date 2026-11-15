@@ -1,0 +1,88 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 480" width="800" height="480" font-family="'Segoe UI','Microsoft YaHei',sans-serif">
+  <rect width="800" height="480" fill="#fbfcfe"/>
+  <text x="24" y="28" font-size="14.5" font-weight="700" fill="#2c4a6b">Flynn 分类：只看<tspan font-weight="700" fill="#a55a12">两个维度</tspan> —— 指令流单/多 × 数据流单/多</text>
+  <text x="24" y="47" font-size="10.5" fill="#6b7a8d">SIMD 是「一条指令同时算多个数据」（数据级并行）；MIMD 是「各核各有自己的指令流」（线程/任务级并行）</text>
+
+  <text x="238" y="72" text-anchor="middle" font-size="10.5" font-weight="700" fill="#4a7ab8">数据流：单</text>
+  <text x="580" y="72" text-anchor="middle" font-size="10.5" font-weight="700" fill="#4a7ab8">数据流：多</text>
+  <rect x="20" y="84" width="62" height="146" rx="3" fill="#eef4fb" stroke="#c9d9ec"/>
+  <text x="51" y="157" text-anchor="middle" font-size="10" font-weight="700" fill="#2c4a6b">指令流</text>
+  <text x="51" y="174" text-anchor="middle" font-size="10" font-weight="700" fill="#2c4a6b">单</text>
+  <rect x="20" y="240" width="62" height="146" rx="3" fill="#eef4fb" stroke="#c9d9ec"/>
+  <text x="51" y="313" text-anchor="middle" font-size="10" font-weight="700" fill="#2c4a6b">指令流</text>
+  <text x="51" y="330" text-anchor="middle" font-size="10" font-weight="700" fill="#2c4a6b">多</text>
+
+  <!-- SISD -->
+  <rect x="92" y="84" width="326" height="146" rx="4" fill="#ffffff" stroke="#4a7ab8"/>
+  <text x="104" y="103" font-size="11.5" font-weight="700" fill="#2c4a6b">SISD　单指令流单数据流</text>
+  <rect x="106" y="114" width="66" height="26" rx="2" fill="#eef4fb" stroke="#4a7ab8"/>
+  <text x="139" y="131" text-anchor="middle" font-size="9.5" fill="#2c4a6b">控制部件</text>
+  <line x1="172" y1="127" x2="192" y2="127" stroke="#4a7ab8" stroke-width="1.3" marker-end="url(#f1)"/>
+  <rect x="194" y="114" width="66" height="26" rx="2" fill="#eef4fb" stroke="#4a7ab8"/>
+  <text x="227" y="131" text-anchor="middle" font-size="9.5" fill="#2c4a6b">处理部件</text>
+  <line x1="260" y1="127" x2="280" y2="127" stroke="#4a7ab8" stroke-width="1.3" marker-end="url(#f1)"/>
+  <rect x="282" y="114" width="66" height="26" rx="2" fill="#eef4fb" stroke="#4a7ab8"/>
+  <text x="315" y="131" text-anchor="middle" font-size="9.5" fill="#2c4a6b">存储器</text>
+  <text x="104" y="159" font-size="10" fill="#6b7a8d">任一时刻只执行一条指令、处理一份数据</text>
+  <text x="104" y="177" font-size="10" fill="#2f6b48">典型：传统单核 CPU（冯·诺依曼机）</text>
+  <text x="104" y="195" font-size="10" fill="#a55a12">用了指令流水线 / 多模块交叉存储器仍是 SISD</text>
+  <text x="104" y="216" font-size="9.5" fill="#8b98a8">「一个处理器 + 一个存储器」是判据，别被并行部件迷惑</text>
+
+  <!-- SIMD -->
+  <rect x="428" y="84" width="352" height="146" rx="4" fill="#ffffff" stroke="#2f8f5b"/>
+  <text x="440" y="103" font-size="11.5" font-weight="700" fill="#2f6b48">SIMD　单指令流多数据流</text>
+  <rect x="442" y="114" width="72" height="26" rx="2" fill="#eaf6ee" stroke="#2f8f5b"/>
+  <text x="478" y="131" text-anchor="middle" font-size="9.5" fill="#2f6b48">1 个控制部件</text>
+  <text x="442" y="158" font-size="10" fill="#6b7a8d">同一条指令广播给所有处理单元，各自算不同的数据：</text>
+  <rect x="442" y="166" width="66" height="24" rx="2" fill="#d7eede" stroke="#2f8f5b"/>
+  <text x="475" y="182" text-anchor="middle" font-size="9" fill="#2f6b48">PU + 数据 1</text>
+  <rect x="514" y="166" width="66" height="24" rx="2" fill="#d7eede" stroke="#2f8f5b"/>
+  <text x="547" y="182" text-anchor="middle" font-size="9" fill="#2f6b48">PU + 数据 2</text>
+  <rect x="586" y="166" width="66" height="24" rx="2" fill="#d7eede" stroke="#2f8f5b"/>
+  <text x="619" y="182" text-anchor="middle" font-size="9" fill="#2f6b48">PU + 数据 3</text>
+  <rect x="658" y="166" width="110" height="24" rx="2" fill="#d7eede" stroke="#2f8f5b"/>
+  <text x="713" y="182" text-anchor="middle" font-size="9" fill="#2f6b48">… 一条指令算 16 对</text>
+  <text x="440" y="205" font-size="10" fill="#2f6b48">数据级并行：向量机、MMX / SSE、GPU 内部、向量处理器</text>
+  <text x="440" y="222" font-size="10" fill="#a55a12">△ 含条件分支的代码效率显著降低</text>
+
+  <!-- MISD -->
+  <rect x="92" y="240" width="326" height="146" rx="4" fill="#ffffff" stroke="#b45c5c"/>
+  <text x="104" y="259" font-size="11.5" font-weight="700" fill="#b45c5c">MISD　多指令流单数据流</text>
+  <rect x="106" y="272" width="66" height="24" rx="2" fill="#fbeaea" stroke="#b45c5c"/>
+  <text x="139" y="288" text-anchor="middle" font-size="9" fill="#b45c5c">控制部件 1</text>
+  <rect x="106" y="300" width="66" height="24" rx="2" fill="#fbeaea" stroke="#b45c5c"/>
+  <text x="139" y="316" text-anchor="middle" font-size="9" fill="#b45c5c">控制部件 2</text>
+  <rect x="106" y="328" width="66" height="24" rx="2" fill="#fbeaea" stroke="#b45c5c"/>
+  <text x="139" y="344" text-anchor="middle" font-size="9" fill="#b45c5c">控制部件 3</text>
+  <text x="182" y="300" font-size="10" fill="#6b7a8d">多条指令流</text>
+  <text x="182" y="318" font-size="10" fill="#6b7a8d">作用于同一份数据流</text>
+  <rect x="286" y="290" width="110" height="44" rx="2" fill="#fbeaea" stroke="#b45c5c" stroke-dasharray="4 3"/>
+  <text x="341" y="308" text-anchor="middle" font-size="9.5" fill="#b45c5c">单数据流</text>
+  <text x="341" y="324" text-anchor="middle" font-size="9" fill="#8b98a8">理论上存在</text>
+  <text x="104" y="370" font-size="10" font-weight="700" fill="#b45c5c">通用计算机中极为罕见，几乎无实际应用（学术界讨论）</text>
+
+  <!-- MIMD -->
+  <rect x="428" y="240" width="352" height="146" rx="4" fill="#ffffff" stroke="#d9822b"/>
+  <text x="440" y="259" font-size="11.5" font-weight="700" fill="#a55a12">MIMD　多指令流多数据流</text>
+  <rect x="440" y="270" width="160" height="52" rx="3" fill="#fdeacf" stroke="#d9822b"/>
+  <text x="450" y="287" font-size="9.5" font-weight="700" fill="#a55a12">处理单元 1</text>
+  <text x="450" y="304" font-size="9" fill="#6b7a8d">独立指令流 + 独立数据流</text>
+  <text x="450" y="318" font-size="9" fill="#6b7a8d">CU / PU / 私有数据</text>
+  <rect x="608" y="270" width="160" height="52" rx="3" fill="#fdeacf" stroke="#d9822b"/>
+  <text x="618" y="287" font-size="9.5" font-weight="700" fill="#a55a12">处理单元 2</text>
+  <text x="618" y="304" font-size="9" fill="#6b7a8d">独立指令流 + 独立数据流</text>
+  <text x="618" y="318" font-size="9" fill="#6b7a8d">CU / PU / 私有数据</text>
+  <text x="440" y="340" font-size="10" fill="#6b7a8d">主流并行模型：多核 CPU、多处理器系统、集群（线程级 / 任务级并行）</text>
+  <text x="440" y="357" font-size="10" fill="#2f6b48">① 多处理器系统：共享存储、统一全局地址空间、普通访存可达</text>
+  <text x="440" y="374" font-size="10" fill="#a55a12">② 多计算机系统：私有存储器 + 独立地址空间，必须消息传递</text>
+
+  <defs>
+    <marker id="f1" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
+      <path d="M0,0 L6,3 L0,6 z" fill="#4a7ab8"/>
+    </marker>
+  </defs>
+  <rect x="20" y="398" width="760" height="68" rx="4" fill="#f3f7fc" stroke="#c9d9ec"/>
+  <text x="32" y="417" font-size="10.5" fill="#2c4a6b"><tspan font-weight="700">只按两个维度判</tspan>：① SIMD 是「单指令多数据」，不是多指令；② GPU 内部属 SIMD 风格、多核 CPU 属 MIMD；③ MISD 无实用系统。</text>
+  <text x="32" y="436" font-size="10.5" fill="#2c4a6b"><tspan font-weight="700">并行级别</tspan>：SIMD＝数据级（向量加、像素处理）；MIMD＝线程级 / 任务级（并行程度更高、适用更广）。</text>
+  <text x="32" y="455" font-size="10.5" fill="#a55a12"><tspan font-weight="700">最常混的一对</tspan>：SIMD 遇条件分支效率下降；MIMD 两类按「地址空间是否统一 / 要不要消息传递」分。</text>
+</svg>

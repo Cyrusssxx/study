@@ -1,0 +1,68 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 440" width="800" height="440" font-family="'Segoe UI','Microsoft YaHei',sans-serif">
+  <defs>
+    <marker id="v6a" markerWidth="9" markerHeight="9" refX="6.5" refY="3" orient="auto">
+      <path d="M0,0 L6.5,3 L0,6 z" fill="#4a7ab8"/>
+    </marker>
+    <marker id="v6b" markerWidth="9" markerHeight="9" refX="6.5" refY="3" orient="auto">
+      <path d="M0,0 L6.5,3 L0,6 z" fill="#2f8f5b"/>
+    </marker>
+  </defs>
+  <rect width="800" height="440" fill="#fbfcfe"/>
+  <text x="24" y="28" font-size="14.5" font-weight="700" fill="#2c4a6b">IPv4 → IPv6 过渡：<tspan font-weight="700" fill="#4a7ab8">双协议栈</tspan>（靠 DNS 选栈） 与 <tspan font-weight="700" fill="#2f6b48">隧道</tspan>（IPv6 装进 IPv4）</text>
+  <text x="24" y="47" font-size="10.5" fill="#6b7a8d">过渡只能逐步演进，新部署的 IPv6 系统必须向后兼容 —— 能接收、转发 IPv4 数据报并为其选路</text>
+
+  <!-- 左：双协议栈 -->
+  <rect x="20" y="62" width="366" height="258" rx="4" fill="#ffffff" stroke="#4a7ab8"/>
+  <text x="32" y="84" font-size="11.5" font-weight="700" fill="#2c4a6b">① 双协议栈（一台主机装两套栈）</text>
+  <rect x="112" y="96" width="182" height="42" rx="3" fill="#eef4fb" stroke="#4a7ab8" stroke-width="1.4"/>
+  <text x="203" y="114" text-anchor="middle" font-size="10.5" font-weight="700" fill="#2c4a6b">双协议栈主机</text>
+  <text x="203" y="130" text-anchor="middle" font-size="9.5" fill="#6b7a8d">各有 1 个 IPv4 / IPv6 地址</text>
+  <rect x="32" y="96" width="64" height="42" rx="3" fill="#f3f7fc" stroke="#c9d9ec"/>
+  <text x="64" y="122" text-anchor="middle" font-size="10" fill="#6b7a8d">DNS</text>
+  <line x1="96" y1="117" x2="110" y2="117" stroke="#4a7ab8" stroke-width="1.4" marker-end="url(#v6a)"/>
+  <text x="32" y="156" font-size="10" fill="#6b7a8d">DNS 返回哪种地址，就用哪个协议栈：</text>
+  <line x1="160" y1="140" x2="120" y2="176" stroke="#4a7ab8" stroke-width="1.4" marker-end="url(#v6a)"/>
+  <line x1="246" y1="140" x2="286" y2="176" stroke="#2f8f5b" stroke-width="1.4" marker-end="url(#v6b)"/>
+  <rect x="32" y="180" width="146" height="46" rx="3" fill="#eef4fb" stroke="#4a7ab8"/>
+  <text x="105" y="199" text-anchor="middle" font-size="10.5" font-weight="700" fill="#2c4a6b">返回 IPv4 地址</text>
+  <text x="105" y="216" text-anchor="middle" font-size="9.5" fill="#6b7a8d">→ 走 IPv4 协议栈</text>
+  <rect x="198" y="180" width="146" height="46" rx="3" fill="#eaf6ee" stroke="#2f8f5b"/>
+  <text x="271" y="199" text-anchor="middle" font-size="10.5" font-weight="700" fill="#2f6b48">返回 IPv6 地址</text>
+  <text x="271" y="216" text-anchor="middle" font-size="9.5" fill="#6b7a8d">→ 走 IPv6 协议栈</text>
+  <rect x="32" y="238" width="312" height="68" rx="3" fill="#f3f7fc" stroke="#c9d9ec"/>
+  <text x="42" y="256" font-size="10" fill="#6b7a8d">既能与 IPv4 网络通信，也能与 IPv6 网络通信</text>
+  <text x="42" y="275" font-size="10" font-weight="700" fill="#a55a12">易错：双协议栈靠 DNS 返回值决定用哪个栈</text>
+  <text x="42" y="294" font-size="10" fill="#6b7a8d">不是「同时用两个栈发」，也不是靠目的端口判断</text>
+
+  <!-- 右：隧道 -->
+  <rect x="406" y="62" width="374" height="258" rx="4" fill="#ffffff" stroke="#2f8f5b"/>
+  <text x="418" y="84" font-size="11.5" font-weight="700" fill="#2f6b48">② 隧道技术（穿越 IPv4 网络）</text>
+  <rect x="418" y="96" width="86" height="30" rx="3" fill="#eaf6ee" stroke="#2f8f5b"/>
+  <text x="461" y="116" text-anchor="middle" font-size="9.5" fill="#2f6b48">IPv6 网络 A</text>
+  <line x1="504" y1="111" x2="524" y2="111" stroke="#2f8f5b" stroke-width="1.4" marker-end="url(#v6b)"/>
+  <rect x="526" y="96" width="76" height="30" rx="3" fill="#f3f7fc" stroke="#8b98a8"/>
+  <text x="564" y="116" text-anchor="middle" font-size="9.5" fill="#6b7a8d">边界路由器</text>
+  <line x1="602" y1="111" x2="622" y2="111" stroke="#2f8f5b" stroke-width="1.4" marker-end="url(#v6b)"/>
+  <rect x="624" y="96" width="86" height="30" rx="3" fill="#eaf6ee" stroke="#2f8f5b"/>
+  <text x="667" y="116" text-anchor="middle" font-size="9.5" fill="#2f6b48">IPv6 网络 B</text>
+
+  <text x="418" y="152" font-size="10" fill="#6b7a8d">在 IPv4 网络中传输时的封装：</text>
+  <rect x="418" y="162" width="344" height="52" rx="3" fill="#eef4fb" stroke="#4a7ab8" stroke-width="1.4"/>
+  <rect x="426" y="170" width="96" height="36" rx="2" fill="#dce9f8" stroke="#4a7ab8"/>
+  <text x="474" y="186" text-anchor="middle" font-size="10" font-weight="700" fill="#2c4a6b">IPv4 首部</text>
+  <text x="474" y="199" text-anchor="middle" font-size="9" fill="#6b7a8d">外层</text>
+  <rect x="526" y="170" width="228" height="36" rx="2" fill="#d7eede" stroke="#2f8f5b"/>
+  <text x="640" y="186" text-anchor="middle" font-size="10" font-weight="700" fill="#2f6b48">原 IPv6 数据报（整体作为数据部分）</text>
+  <text x="640" y="199" text-anchor="middle" font-size="9" fill="#6b7a8d">内层，原封不动</text>
+  <text x="418" y="234" font-size="10" font-weight="700" fill="#a55a12">易错：是「IPv6 装进 IPv4」，不是反过来</text>
+  <text x="418" y="252" font-size="10" fill="#6b7a8d">离开 IPv4 网络后剥掉 IPv4 首部，把数据部分交回 IPv6 协议处理</text>
+  <text x="418" y="270" font-size="10" fill="#6b7a8d">中间的 IPv4 路由器只看外层 IPv4 首部，不解析 IPv6</text>
+  <text x="418" y="288" font-size="10" fill="#6b7a8d">NAT-PT：地址与协议翻译，已较少使用</text>
+  <text x="418" y="308" font-size="10" fill="#8b98a8">隧道 = 把原分组当普通数据背着走，不改动它</text>
+
+  <rect x="20" y="332" width="760" height="94" rx="4" fill="#f3f7fc" stroke="#c9d9ec"/>
+  <text x="32" y="352" font-size="10.5" font-weight="700" fill="#2c4a6b">两种策略一句话分：双栈是「主机自己有两套栈、按 DNS 选一套」；隧道是「IPv6 分组借 IPv4 网络的道走」。</text>
+  <text x="32" y="371" font-size="10" fill="#6b7a8d">过渡基本原则：只能逐步演进；新部署的 IPv6 系统要能接收、转发 IPv4 数据报并为其选择路由（向后兼容）。</text>
+  <text x="32" y="390" font-size="10" fill="#6b7a8d">顺带辨析（2023 真题选项）：IPv4 首部长度可变（4B 整数倍），IPv6 基本首部长度<tspan font-weight="700" fill="#2c4a6b">固定 40B</tspan> —— 不能说两者都可变。</text>
+  <text x="32" y="409" font-size="10" fill="#2f6b48">IPv6 首部的 Hop Limit（跳数限制）字段等价于 IPv4 的 TTL：作用相同，仅名称变化。</text>
+</svg>
