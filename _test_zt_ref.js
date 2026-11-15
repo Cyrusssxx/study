@@ -92,7 +92,7 @@ console.log('▸ 渲染（行号零漂移）');
 let JSDOM, VirtualConsole, IDBFactory, IDBKeyRange;
 try { ({ JSDOM, VirtualConsole } = require('jsdom')); } catch (e) { }
 try { ({ IDBFactory, IDBKeyRange } = require('fake-indexeddb')); } catch (e) { }
-const LINE_BASE = { co: 1971, os: 3484, cn: 1220, ds: 1330 };
+const LINE_BASE = { co: 1971, os: 3409, cn: 1220, ds: 1330 };
 if (!JSDOM || !IDBFactory) {
   console.log('SKIP 渲染部分：缺 jsdom / fake-indexeddb');
 } else {

@@ -5,7 +5,7 @@
  * 1) 图里的数字必须与正文同源：10000 条 / 100 组 / 每组 100 / 表 50 + 组内 50 = 100 次 / 顺序 5000 次；
  *    R1 两实例一空闲 → 可化简；R1/R2 各一实例 → 不可化简；
  * 2) 图必须在 ★ 真题汇总之前，且紧跟各自知识点（不隔开正文）；
- * 3) 静态可批注行锁死 3660、jsdom 真实 .anno-line 锁死 3668；
+ * 3) 静态可批注行锁死 3405、jsdom 真实 .anno-line 锁死 3409；
  * 4) 笔记 JSON 里黄框只能写 <b>，禁止出现 <tspan>（SVG 专有，HTML 里加粗失效）。
  */
 const fs = require('fs');
@@ -174,7 +174,7 @@ for (const n of ['peterson', 'rag_reduce', 'file_logic', 'disk_format']) {
   check('os_fig_' + n + ' 无外链', !/xlink:href|<script|<image/.test(s), true);
 }
 
-// 行号漂移护栏（静态 3660，两口径必须同值）
+// 行号漂移护栏（静态 3405，两口径必须同值）
 let annoLines = 0, annoOpen = 0;
 for (const c of notes.chapters) {
   for (const s of c.sections || []) {
@@ -191,8 +191,8 @@ for (const c of notes.chapters) {
     }
   }
 }
-check('全库可批注行数锁死 3660（配对口径）', annoLines, 3660);
-check('全库可批注行数锁死 3660（开标签口径）', annoOpen, 3660);
+check('全库可批注行数锁死 3405（配对口径）', annoLines, 3405);
+check('全库可批注行数锁死 3405（开标签口径）', annoOpen, 3405);
 
 console.log((fail === 0 ? 'PASS' : 'FAIL') + ' ' + pass + '/' + (pass + fail));
 process.exit(fail === 0 ? 0 : 1);

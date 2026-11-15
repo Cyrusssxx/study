@@ -5,7 +5,7 @@
  * 1) 图里的数字必须与正文逐字同源：引用串 7,0,1,2,0,3,0,4,2,3,0,3,2 → 10/9/7 与 7/6/4；
  *    Belady 串 1,2,3,4,1,2,5,1,2,3,4,5 → 9 与 10；
  * 2) 图必须在 ★ 真题汇总之前；
- * 3) 静态可批注行锁死 3660、jsdom 真实 .anno-line 锁死 3668。
+ * 3) 静态可批注行锁死 3405、jsdom 真实 .anno-line 锁死 3409。
  */
 const fs = require('fs');
 const path = require('path');
@@ -118,7 +118,7 @@ for (const n of ['page_replace', 'belady', 'clock', 'alloc_policy']) {
     !/<(b|br|strong|i)\b/.test(s.replace(/<\?xml[^>]*\?>/g, '')), true);
 }
 
-// 行号漂移护栏（静态 3660）
+// 行号漂移护栏（静态 3405）
 let annoLines = 0, annoOpen = 0;
 for (const c of notes.chapters) {
   for (const s of c.sections || []) {
@@ -135,8 +135,8 @@ for (const c of notes.chapters) {
     }
   }
 }
-check('全库可批注行数锁死 3660（配对口径）', annoLines, 3660);
-check('全库可批注行数锁死 3660（开标签口径）', annoOpen, 3660);
+check('全库可批注行数锁死 3405（配对口径）', annoLines, 3405);
+check('全库可批注行数锁死 3405（开标签口径）', annoOpen, 3405);
 
 let JSDOM = null, IDBFactory = null, IDBKeyRange = null, VirtualConsole = null;
 try { ({ JSDOM, VirtualConsole } = require('jsdom')); } catch (e) { }
@@ -166,8 +166,8 @@ if (!JSDOM || !IDBFactory) {
     });
     await new Promise(r => setTimeout(r, 4000));
     const d = dom.window.document;
-    check('真实渲染 .anno-line 总数 = 3668（已存批注不错位）',
-      d.querySelectorAll('.anno-line').length, 3668);
+    check('真实渲染 .anno-line 总数 = 3409（已存批注不错位）',
+      d.querySelectorAll('.anno-line').length, 3409);
     check('真实渲染配图不少于 34 张', d.querySelectorAll('img.fig-img').length >= 34, true);
     check('真实渲染黄框不少于 39 个', d.querySelectorAll('.key-callout').length >= 39, true);
     check('图块被误标行号 = 0',

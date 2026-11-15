@@ -5,7 +5,7 @@
  * 1) 图里的数字必须与正文同源：0x03D4→0x354、0x00F1→0x0B1、0x0229→缺页；55MB/15/30/8/6→9MB；
  *    成组链接 201~7999、每组 100、最末组 99、盘块 7900 → 7901~7999 且首号为 0；
  * 2) 图必须在 ★ 真题汇总之前；4.3.2 的图必须紧贴「示意图：」之前（不隔开成组链接正文）；
- * 3) 静态可批注行锁死 3660、jsdom 真实 .anno-line 锁死 3668。
+ * 3) 静态可批注行锁死 3405、jsdom 真实 .anno-line 锁死 3409。
  */
 const fs = require('fs');
 const path = require('path');
@@ -139,7 +139,7 @@ for (const n of ['thread_models', 'va_translate', 'alloc_algo', 'group_link', 'd
     !/<(b|br|strong|i)\b/.test(s.replace(/<\?xml[^>]*\?>/g, '')), true);
 }
 
-// 行号漂移护栏（静态 3660）
+// 行号漂移护栏（静态 3405）
 let annoLines = 0, annoOpen = 0;
 for (const c of notes.chapters) {
   for (const s of c.sections || []) {
@@ -156,8 +156,8 @@ for (const c of notes.chapters) {
     }
   }
 }
-check('全库可批注行数锁死 3660（配对口径）', annoLines, 3660);
-check('全库可批注行数锁死 3660（开标签口径）', annoOpen, 3660);
+check('全库可批注行数锁死 3405（配对口径）', annoLines, 3405);
+check('全库可批注行数锁死 3405（开标签口径）', annoOpen, 3405);
 
 let JSDOM = null, IDBFactory = null, IDBKeyRange = null, VirtualConsole = null;
 try { ({ JSDOM, VirtualConsole } = require('jsdom')); } catch (e) { }
@@ -187,8 +187,8 @@ if (!JSDOM || !IDBFactory) {
     });
     await new Promise(r => setTimeout(r, 4000));
     const d = dom.window.document;
-    check('真实渲染 .anno-line 总数 = 3668（已存批注不错位）',
-      d.querySelectorAll('.anno-line').length, 3668);
+    check('真实渲染 .anno-line 总数 = 3409（已存批注不错位）',
+      d.querySelectorAll('.anno-line').length, 3409);
     check('真实渲染配图不少于 43 张', d.querySelectorAll('img.fig-img').length >= 43, true);
     check('真实渲染黄框不少于 48 个', d.querySelectorAll('.key-callout').length >= 48, true);
     check('图块被误标行号 = 0',

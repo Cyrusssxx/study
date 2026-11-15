@@ -185,7 +185,7 @@ check('CSS .key-callout 无绝对定位 / z-index / 负外边距遮挡',
 check('笔记 JSON 里没有 SVG 专有的 tspan', SUBS.every(s => !RAW[s].includes('tspan')), true);
 
 // ---------- 5. 行号双基线（图块与黄框都不参与行号） ----------
-const LINE_BASE = { co: [1819, 1819], os: [3479, 3479], cn: [1108, 1108], ds: [1173, 1175] };
+const LINE_BASE = { co: [1819, 1819], os: [3405, 3405], cn: [1108, 1108], ds: [1173, 1175] };
 for (const sub of SUBS) {
   let paired = 0, open = 0;
   for (const { h } of allHtmls(sub)) {
@@ -230,7 +230,7 @@ function subseq(old, neu) {
 }
 const BAK_DIR = 'archive/fig_p15_2026-11-13/';
 // 第十七批豁免：CN 2.1.3 的编码波形图由 <img> 外链换成内联 SVG，属替换而非纯插入。
-const REPLACED_KEYS = ['2.1.3', '1.5', '5.3.1'];   // 1.5：OS 引导正文精简重排（tools/slim_os15.py）
+const REPLACED_KEYS = ['2.1.3', '1.5', '5.3.1', '5.3.3'];   // 1.5：OS 引导正文精简重排（tools/slim_os15.py）
 let guardDone = 0, guardBad = 0, changed = 0, changedKeys = [];
 for (const sub of SUBS) {
   const bp = BAK_DIR + sub + '_notes.before.json';
@@ -298,7 +298,7 @@ if (!JSDOM || !IDBFactory) {
         no15: [...d.querySelectorAll('.anno-line')].filter(e => {
             // 已按「精简」重排的节/小节：1.5（节级）、5.3.1（小节级）
             const h = e.closest('.notes-sub') || e.closest('.notes-section');
-            return !(h && /^(1\.5 |5\.3\.1 )/.test(h.dataset.sec));
+            return !(h && /^(1\.5 |5\.3\.1 |5\.3\.3 )/.test(h.dataset.sec));
         }).map(e => e.textContent.trim()),
         figs: d.querySelectorAll('img.fig-img').length,
         calls: d.querySelectorAll('.key-callout').length,
@@ -318,7 +318,7 @@ if (!JSDOM || !IDBFactory) {
       }
       return out;
     }
-    const JSDOM_BASE = { co: 1971, os: 3484, cn: 1220, ds: 1330 };
+    const JSDOM_BASE = { co: 1971, os: 3409, cn: 1220, ds: 1330 };
     for (const sub of SUBS) {
       const a = await render(sub, RAW[sub]);
       check(sub + ' 真实渲染 .anno-line = ' + JSDOM_BASE[sub], a.lines.length, JSDOM_BASE[sub]);

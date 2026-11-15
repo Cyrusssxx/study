@@ -62,6 +62,8 @@ def main():
     ap.add_argument('--sec', default='5.3.1')
     ap.add_argument('--file', default='tools/os531_new.html')
     ap.add_argument('--dry', action='store_true')
+    ap.add_argument('--allow-drop', nargs='*', default=None,
+                    help='允许丢弃的数值（确认为冗余时才用）')
     a = ap.parse_args()
 
     path = os.path.join(NOTES, '%s_notes.json' % a.subject)
@@ -95,10 +97,21 @@ def main():
     print('  可见字数：%d → %d（%+.0f%%）' % (len(o), len(n), (len(n) - len(o)) * 100.0 / max(1, len(o))))
 
     bad = []
-    # ① 硬清单
-    for kw in MUST:
-        if kw not in new_html:
-            bad.append('硬清单缺失：%s' % kw)
+    # ① 硬清单（5.3.1 专用；其它小节靠下面的「数值全保留」自动兜）
+    if a.sec == '5.3.1':
+        for kw in MUST:
+            if kw not in new_html:
+                bad.append('硬清单缺失：%s' % kw)
+    # ①b 数值全保留：旧正文出现过的每个数字都必须还在（含中间步骤/题号/年份）
+    drop = set(a.allow_drop or [])
+    lost = []
+    for tok in sorted(set(re.findall(r'\d+(?:\.\d+)?', txt(old_html)))):
+        if tok in drop:
+            continue
+        if tok not in n:
+            lost.append(tok)
+    if lost:
+        bad.append('数值丢失 %d 个：%s' % (len(lost), ' '.join(lost)))
     # ② 高亮文字必须仍在可见文本里
     for t in load_anno(a.sec, a.subject):
         if re.sub(r'\s+', '', t) not in n:

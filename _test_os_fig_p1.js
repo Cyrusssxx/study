@@ -5,7 +5,7 @@
  * 关键约束：
  * 1) OS 各节末尾也有「★ 高频真题考点与陷阱」，图必须在 ★ 之前；
  * 2) 图里的数字必须与正文示例同源（0 1 0 / 7 4 3 / (3,3,2) / seat=4 / count 0→1）；
- * 3) 新增块一律 data-fig 或 div，静态可批注行锁死 3660、jsdom 真实 .anno-line 锁死 3668。
+ * 3) 新增块一律 data-fig 或 div，静态可批注行锁死 3405、jsdom 真实 .anno-line 锁死 3409。
  */
 const fs = require('fs');
 const path = require('path');
@@ -135,7 +135,7 @@ for (const n of ['pc_buffer', 'rw_count', 'philosopher', 'precedence', 'banker']
     !/<(b|br|strong|i)\b/.test(s.replace(/<\?xml[^>]*\?>/g, '')), true);
 }
 
-// 行号漂移护栏（静态，配对口径 = 开标签口径 = 3660）
+// 行号漂移护栏（静态，配对口径 = 开标签口径 = 3405）
 let annoLines = 0, annoOpen = 0;
 for (const c of notes.chapters) {
   for (const s of c.sections || []) {
@@ -152,12 +152,12 @@ for (const c of notes.chapters) {
     }
   }
 }
-check('全库可批注行数锁死 3660（配对口径）', annoLines, 3660);
-check('全库可批注行数锁死 3660（开标签口径）', annoOpen, 3660);
+check('全库可批注行数锁死 3405（配对口径）', annoLines, 3405);
+check('全库可批注行数锁死 3405（开标签口径）', annoOpen, 3405);
 check('图片引用全部落在 pwa/img 内', [...notesRaw.matchAll(/src=\\"(img\/[^\\"]+)\\"/g)]
   .every(m => fs.existsSync(path.join(ROOT, 'pwa') + '/' + m[1])), true);
 
-// ---- 运行时硬护栏：jsdom 真实渲染 .anno-line 仍是 3668 ----
+// ---- 运行时硬护栏：jsdom 真实渲染 .anno-line 仍是 3409 ----
 let JSDOM = null, IDBFactory = null, IDBKeyRange = null, VirtualConsole = null;
 try { ({ JSDOM, VirtualConsole } = require('jsdom')); } catch (e) { }
 try { ({ IDBFactory, IDBKeyRange } = require('fake-indexeddb')); } catch (e) { }
@@ -186,8 +186,8 @@ if (!JSDOM || !IDBFactory) {
     });
     await new Promise(r => setTimeout(r, 4000));
     const d = dom.window.document;
-    check('真实渲染 .anno-line 总数 = 3668（已存批注不错位）',
-      d.querySelectorAll('.anno-line').length, 3668);
+    check('真实渲染 .anno-line 总数 = 3409（已存批注不错位）',
+      d.querySelectorAll('.anno-line').length, 3409);
     check('真实渲染配图不少于 26 张', d.querySelectorAll('img.fig-img').length >= 26, true);
     check('真实渲染黄框不少于 31 个', d.querySelectorAll('.key-callout').length >= 31, true);
     check('图块被误标行号 = 0',

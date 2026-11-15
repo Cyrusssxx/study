@@ -163,13 +163,16 @@ if (fs.existsSync(path.join(ROOT, BAK))) {
   const B = JSON.parse(read(BAK));
   const mapOf = d => { const m = new Map(); for (const ch of d.chapters) for (const s of ch.sections || []) for (const x of [s].concat(s.subsections || [])) m.set(x.section, x.html || ''); return m; };
   const bm = mapOf(B), am = mapOf(DOC.cn);
-  const changed = [...bm.keys()].filter(k => bm.get(k) !== am.get(k));
+  // before 备份早于「考点标注」批次：那次给 18 个 CN 块首位插了 <div class="zt-ref">
+  // （纯插入、不入行号）。比对前先剥掉，否则会把 18 处无关变化算成本批改动。
+  const stripZt = h => (h || '').replace(/^<div class="zt-ref">[\s\S]*?<\/div>/, '');
+  const changed = [...bm.keys()].filter(k => stripZt(bm.get(k)) !== stripZt(am.get(k)));
   check('本批只改了 1 个小节', changed.length, 1);
   check('改动的小节正是 2.1.3', (changed[0] || '').split(' ')[0], '2.1.3');
   check('小节数量不变（未增删小节）', am.size, bm.size);
   // 旧块被新块整体替换：把新块剥掉后应与旧块逐字相同
-  const stripped = am.get(changed[0]).replace(/\n<p class="paragraph" data-fig="1"><b>图：五种基带编码波形对照[\s\S]*?<\/figure>/, '');
-  const oldClean = bm.get(changed[0]).replace(/\n<p class="paragraph" data-fig="1"><b>图：三种基带编码波形对照[\s\S]*?<\/p>\n<p class="paragraph" data-fig="1"><img class="fig-img" src="img\/cn_fig_encoding_wave\.svg"[^>]*\/><\/p>/, '');
+  const stripped = stripZt(am.get(changed[0])).replace(/\n<p class="paragraph" data-fig="1"><b>图：五种基带编码波形对照[\s\S]*?<\/figure>/, '');
+  const oldClean = stripZt(bm.get(changed[0])).replace(/\n<p class="paragraph" data-fig="1"><b>图：三种基带编码波形对照[\s\S]*?<\/p>\n<p class="paragraph" data-fig="1"><img class="fig-img" src="img\/cn_fig_encoding_wave\.svg"[^>]*\/><\/p>/, '');
   check('除图块外正文逐字未改（0 误伤）', stripped === oldClean, true);
 } else {
   console.log('SKIP before/after 差异守卫：缺归档备份（不进 git）');
@@ -210,7 +213,7 @@ if (!JSDOM || !IDBFactory) {
       // 逐行比对与数量一致性都排除该节，其余小节仍要求零漂移。
       no15: [...d.querySelectorAll('.anno-line')].filter(e => {
           const h = e.closest('.notes-sub') || e.closest('.notes-section');
-          return !(h && /^(1\.5 |5\.3\.1 )/.test(h.dataset.sec));
+          return !(h && /^(1\.5 |5\.3\.1 |5\.3\.3 )/.test(h.dataset.sec));
       }).map(e => e.textContent.trim()),
       figs: d.querySelectorAll('img.fig-img').length,
       waveFigs: d.querySelectorAll('figure.wave-fig').length,

@@ -2,7 +2,7 @@
  * 锁精确总量：fig-img 195（co46/os71/cn47/ds31）、黄框 310 未动。
  * CN 由 48 降为 47：2.1.3 的基带编码波形图改为内联 SVG（原 img 外链暗色发白块、
  * 缩放下发虚）。CN 精确量与内联图契约由 _test_cn_code_wave 统管，此处 CN 只保下限。
- * 行号双基线 OS 静态 3479 / jsdom 3484，本批零漂移；before 备份存在时做双版本逐行文本比对。
+ * 行号双基线 OS 静态 3405 / jsdom 3409，本批零漂移；before 备份存在时做双版本逐行文本比对。
  */
 const fs = require('fs');
 const path = require('path');
@@ -99,7 +99,7 @@ if (fs.existsSync(path.join(ROOT, BAK))) {
   for (const ch of before.chapters) for (const s of ch.sections || [])
     for (const x of [s].concat(s.subsections || [])) {
       const neu = A.get(x.section.split(' ')[0]) || '';
-      if ((x.html || '') !== neu) { changed++; if (!subseq(x.html || '', neu) && x.section.split(' ')[0] !== '1.5' && x.section.split(' ')[0] !== '5.3.1') bad++; }
+      if ((x.html || '') !== neu) { changed++; if (!subseq(x.html || '', neu) && x.section.split(' ')[0] !== '1.5' && x.section.split(' ')[0] !== '5.3.1' && x.section.split(' ')[0] !== '5.3.3') bad++; }
     }
   // 后续批次（P17 起）会继续在小节里补纯插入块，这里只要求「至少本批那 1 处」，
   // 变化数不再锁死；真正要守的是下一行 bad=0（不许删除/改写既有内容）。
@@ -145,7 +145,7 @@ if (!JSDOM || !IDBFactory) {
         no15: [...d.querySelectorAll('.anno-line')].filter(e => {
             // 已按「精简」重排的节/小节：1.5（节级）、5.3.1（小节级）
             const h = e.closest('.notes-sub') || e.closest('.notes-section');
-            return !(h && /^(1\.5 |5\.3\.1 )/.test(h.dataset.sec));
+            return !(h && /^(1\.5 |5\.3\.1 |5\.3\.3 )/.test(h.dataset.sec));
         }).map(e => e.textContent.trim()),
         figs: d.querySelectorAll('img.fig-img').length,
         misLabeled: [...d.querySelectorAll('[data-fig]')].filter(el => el.classList.contains('anno-line')).length,
@@ -162,7 +162,7 @@ if (!JSDOM || !IDBFactory) {
       return out;
     }
     const a = await render(RAW.os);
-    check('真实渲染 .anno-line = 3484（OS 基线）', a.lines.length, 3484);
+    check('真实渲染 .anno-line = 3409（OS 基线）', a.lines.length, 3409);
     check('真实渲染配图 71 张', a.figs, 71);
     check('图块被误标行号 = 0', a.misLabeled, 0);
     check('新图没落进 li', a.badFig, 0);

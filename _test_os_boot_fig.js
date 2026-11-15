@@ -7,7 +7,7 @@
  * 1.5 是节级小节（无子节）、此前零配图，故补一张「四段接力」内联图：
  *   - 内联 SVG（不是 img 外链）：文字随主题取 var(--*)，亮/暗自适应，缩放不栅格化
  *   - 必须无 tspan（全库测试断言笔记 JSON 无 tspan；SVG 里加粗用 font-weight）
- *   - data-fig="1" 整体不参与行号 → OS 静态 3479 / jsdom 3484（1.5 精简后基线）
+ *   - data-fig="1" 整体不参与行号 → OS 静态 3405 / jsdom 3409（1.5 精简后基线）
  */
 const fs = require('fs');
 const path = require('path');
@@ -98,9 +98,11 @@ if (fs.existsSync(path.join(ROOT, BAK))) {
   for (const ch of before.chapters) for (const s of ch.sections || [])
     for (const x of [s].concat(s.subsections || [])) {
       const neu = A.get(x.section.split(' ')[0]) || '';
-      if ((x.html || '') !== neu) { changed++; changedKeys.push(x.section.split(' ')[0]); if (!subseq(x.html || '', neu) && x.section.split(' ')[0] !== '1.5' && x.section.split(' ')[0] !== '5.3.1') bad++; }
+      if ((x.html || '') !== neu) { changed++; changedKeys.push(x.section.split(' ')[0]); if (!subseq(x.html || '', neu) && x.section.split(' ')[0] !== '1.5' && x.section.split(' ')[0] !== '5.3.1' && x.section.split(' ')[0] !== '5.3.3') bad++; }
     }
-  check('相对 before 只改了已备案精简的小节（1.5 / 5.3.1）', changedKeys, ['1.5', '5.3.1']);
+  // before 备份早于「考点标注」批次（那次给 18 个块插了 zt-ref），所以不能要求变化集合恰好相等；
+  // 真正的守卫是 bad（非纯插入的改写数）。
+  check('三个已备案精简的小节都在变化列表里', ['1.5', '5.3.1', '5.3.3'].every(k => changedKeys.includes(k)), true);
   check('本批变化是纯插入（0 删除 / 0 改写）', bad, 0);
 } else {
   console.log('SKIP 纯插入守卫：缺 before 备份（归档不进 git）');
@@ -142,7 +144,7 @@ if (!JSDOM || !IDBFactory) {
         no15: [...d.querySelectorAll('.anno-line')].filter(e => {
             // 已按「精简」重排的节/小节：1.5（节级）、5.3.1（小节级）
             const h = e.closest('.notes-sub') || e.closest('.notes-section');
-            return !(h && /^(1\.5 |5\.3\.1 )/.test(h.dataset.sec));
+            return !(h && /^(1\.5 |5\.3\.1 |5\.3\.3 )/.test(h.dataset.sec));
         }).map(e => e.textContent.trim()),
         figs: d.querySelectorAll('img.fig-img').length,
         bootFigs: d.querySelectorAll('figure.boot-fig').length,
@@ -152,7 +154,7 @@ if (!JSDOM || !IDBFactory) {
       };
     }
     const a = await render(RAW.os);
-    check('真实渲染 .anno-line = 3484（OS 基线，图块未计入）', a.lines.length, 3484);
+    check('真实渲染 .anno-line = 3409（OS 基线，图块未计入）', a.lines.length, 3409);
     check('真实渲染 fig-img 71 张（未变）', a.figs, 71);
     check('真实渲染 boot-fig 1 张', a.bootFigs, 1);
     check('图块被误标行号 = 0', a.misLabeled, 0);
