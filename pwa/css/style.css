@@ -67,14 +67,14 @@ body {
 
 .nav-links {
     display: flex;
-    gap: 16px;
+    gap: 13px;
     overflow-x: auto;
     scrollbar-width: none;
     -webkit-overflow-scrolling: touch;
     flex: 1;
     min-width: 0;
     justify-content: flex-start;   /* 链接组紧跟品牌靠左，不再挤在右端 */
-    margin-left: 26px;
+    margin-left: 18px;
 }
 .nav-links::-webkit-scrollbar { display: none; }
 
@@ -1659,6 +1659,43 @@ body {
     color: var(--text-light);
     font-size: 0.88rem;
     text-align: center;
+}
+
+/* —— 长解析默认折叠（common.js enhanceExplanation 增强，纯展示层）——
+ * 收起态：首屏约 5 行 + 底部渐隐提示还有内容；展开/收起由 .expl-toggle 按钮控制。 */
+.explanation-body.expl-collapsed {
+    max-height: 152px;
+    overflow: hidden;
+    position: relative;
+}
+.explanation-body.expl-collapsed::after {
+    content: '';
+    position: absolute;
+    left: 0; right: 0; bottom: 0;
+    height: 48px;
+    background: linear-gradient(rgba(var(--card-rgb), 0), rgba(var(--card-rgb), var(--ui-alpha)));
+    pointer-events: none;
+}
+.expl-toggle {
+    display: block;
+    margin: -4px auto 12px;
+    padding: 5px 18px;
+    font-size: .82rem;
+    color: var(--primary);
+    background: rgba(74, 122, 184, .08);
+    border: 1px solid rgba(74, 122, 184, .30);
+    border-radius: 999px;
+    cursor: pointer;
+    transition: background .15s;
+}
+.expl-toggle:hover { background: rgba(74, 122, 184, .16); }
+.dark .expl-toggle { background: rgba(143, 176, 217, .12); border-color: rgba(143, 176, 217, .35); color: #8fb0d9; }
+/* 重点前置：长解析里被提到最前的「易错点」段，黄色强调（与站内高亮黄同色系） */
+.explanation-body .expl-key {
+    background: rgba(250, 204, 21, .14);
+    border-left: 3px solid #e8b60f;
+    padding: 4px 8px;
+    border-radius: 0 4px 4px 0;
 }
 
 /* 响应式 */
@@ -8456,7 +8493,7 @@ body.fc-toc-open .fc-toc-fab { display: none; }
 .nav-dd {
     position: relative;
     flex: 0 0 auto;
-    margin-left: 26px;   /* 与原「首页」位置对齐：brand 与链接组的间距 */
+    margin-left: 18px;   /* 与 brand→链接组同一节奏（原 26px，收窄后 1100px 宽度13 项链接不再截断） */
 }
 .nav-dd-sum {
     cursor: pointer;
@@ -8471,6 +8508,8 @@ body.fc-toc-open .fc-toc-fab { display: none; }
 .nav-dd-arrow { display: inline-block; font-size: .7em; transition: transform .15s; }
 .nav-dd[open] .nav-dd-arrow { transform: rotate(180deg); }
 .nav-dd[open] .nav-dd-sum { color: var(--primary); }
+/* 笔记页顶栏「当前视图」状态词：主色加粗，一眼看出现在是 全文/要点/哪看图（syncNotesView 维护） */
+#navViewState { color: var(--primary); font-weight: 600; }
 .nav-dd-menu {
     position: absolute;
     top: calc(100% + 6px);

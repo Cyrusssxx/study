@@ -159,6 +159,14 @@ check('点击按钮也能切换', vw.document.getElementById('notesContent').get
 // ---------- 4b. 顶栏「视图」下拉（形态同「知识点」下拉，共用 setNotesView） ----------
 check('顶栏静态结构：#navViewDd + #navViewState + #navViewMenu',
     ['id="navViewDd"', 'id="navViewState"', 'id="navViewMenu"'].every(x => notesHtml.includes(x)), true);
+check('顶栏摘要不带「视图」前缀（只留当前模式词，2026-11-16 用户要求）',
+    !/<summary class="nav-link nav-dd-sum"[^>]*>\s*视图\s+<span id="navViewState">/.test(notesHtml), true);
+check('当前视图状态词主色加粗（#navViewState）',
+    css.includes('#navViewState { color: var(--primary); font-weight: 600; }'), true);
+check('顶栏间距节奏统一（nav-dd / nav-links 均 18px，链接 gap 13px）',
+    css.includes('margin-left: 18px;   /* 与 brand→链接组同一节奏') &&
+    /\.nav-links \{[^}]*gap: 13px;/s.test(css) &&
+    /\.nav-links \{[^}]*margin-left: 18px;/s.test(css), true);
 check('顶栏菜单三项 onclick 调 setNotesView 并 return false（不跳转）',
     /data-view="full" onclick="setNotesView\('full'\); return false;"/.test(notesHtml) &&
     /data-view="key" onclick="setNotesView\('key'\); return false;"/.test(notesHtml) &&

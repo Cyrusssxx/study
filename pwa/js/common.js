@@ -335,6 +335,70 @@ document.addEventListener('keydown', e => {
     }
 });
 
+/* ============ 解析面板「先重点、后全文」：长解析默认折叠 ============
+ * 做错后自动展开的解析，遇到多段推导的长题会拉得很长（实测最长 789 字）。
+ * 这里做纯展示层增强，不改题目数据、不改各页渲染代码：
+ *  ① 纯文本超过 EXPL_COLLAPSE_LEN 的解析收起为首屏约 5 行 + 底部渐隐 +「展开完整解析」；
+ *  ② 长解析里以「易错点」开头的顶层段落提到最前并加黄色强调（重点前置）；
+ *  ③ 短解析（绝大多数题，中位数约 115 字）原样全显，不受影响。
+ * MutationObserver 监听 .explanation-body 挂载 → quiz/zhenti/exam/wrong/dati 全站生效；
+ * 展开状态按解析正文记忆：面板因切笔记/切题重渲染时不丢，换题自动回到默认折叠。 */
+const EXPL_COLLAPSE_LEN = 260;                 // 纯文本（去空白）超过该字数才折叠
+const EXPL_EXPANDED_MAX = 50;                  // 展开记忆上限（解析正文集合，超出从最旧开始淘汰）
+const _explExpanded = new Set();               // 用户手动展开过的解析（按正文内容记）
+function explKeyOf(body) {
+    return (body.textContent || '').replace(/\s+/g, '');
+}
+function enhanceExplanation(body) {
+    if (!body || body.dataset.explDone) return;
+    body.dataset.explDone = '1';
+    const key = explKeyOf(body);
+    if (key.length <= EXPL_COLLAPSE_LEN) return;   // 短解析：原样全显
+    // 重点前置：顶层「易错点：…」段挪到最前（长解析才有意义，短的不动）
+    const kids = Array.from(body.children);
+    const keyNode = kids.find(el => /^\s*【?易错点[：:]/.test(el.textContent || ''));
+    if (keyNode && keyNode !== kids[0]) {
+        body.insertBefore(keyNode, body.firstChild);
+        keyNode.classList.add('expl-key');
+    }
+    const expanded = _explExpanded.has(key);
+    body.classList.toggle('expl-collapsed', !expanded);
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'expl-toggle';
+    btn.textContent = expanded ? '收起解析 ▴' : '展开完整解析 ▾';
+    btn.addEventListener('click', () => {
+        const collapsed = body.classList.toggle('expl-collapsed');
+        btn.textContent = collapsed ? '展开完整解析 ▾' : '收起解析 ▴';
+        const k = explKeyOf(body);
+        if (collapsed) _explExpanded.delete(k);
+        else {
+            _explExpanded.add(k);
+            if (_explExpanded.size > EXPL_EXPANDED_MAX) _explExpanded.delete(_explExpanded.values().next().value);
+        }
+    });
+    body.insertAdjacentElement('afterend', btn);
+}
+function explScan(root) {
+    const list = (root || document).querySelectorAll('.explanation-body');
+    for (let i = 0; i < list.length; i++) enhanceExplanation(list[i]);
+}
+// 各页用 innerHTML 整块重渲染：监听新增子树，逐批增强（enhanceExplanation 有 dataset 防重入）
+if (window.MutationObserver) {
+    new MutationObserver(muts => {
+        for (const m of muts) {
+            const nodes = m.addedNodes;
+            for (let i = 0; i < nodes.length; i++) {
+                const n = nodes[i];
+                if (n.nodeType !== 1 || !n.querySelector) continue;
+                if (n.classList && n.classList.contains('explanation-body')) enhanceExplanation(n);
+                else explScan(n);
+            }
+        }
+    }).observe(document.documentElement, { childList: true, subtree: true });
+}
+explScan();
+
 // 带 goto/line 跳转参数进入（如刷题📖知识点链接）时不恢复：避免追滚机制与锚点跳转打架
 window.addEventListener('load', () => {
     const _sp = new URLSearchParams(location.search);
