@@ -24,6 +24,14 @@
                     <a href="notes.html?subject=cn">计算机网络</a>
                 </div>
             </details>
+            <details class="nav-dd" id="navViewDd">
+                <summary class="nav-link nav-dd-sum" title="笔记视图：切换 全文 / 要点 / 只看图（与页内切换条同步）">视图 <span id="navViewState">全文</span> <span class="nav-dd-arrow">▾</span></summary>
+                <div class="nav-dd-menu" id="navViewMenu">
+                    <a href="#" data-view="full" onclick="setNotesView('full'); return false;">全文</a>
+                    <a href="#" data-view="key" onclick="setNotesView('key'); return false;">要点</a>
+                    <a href="#" data-view="fig" onclick="setNotesView('fig'); return false;">只看图</a>
+                </div>
+            </details>
             <div class="nav-links">
                 <a href="quiz.html" class="nav-link">刷题</a>
                 <a href="zhenti.html" class="nav-link">真题套卷</a>
@@ -85,11 +93,11 @@
         const NOTES_VIEW_HTML =
             `<div class="notes-view-switch" id="notesViewSwitch" role="group" aria-label="笔记视图切换">` +
                 `<button type="button" data-view="full" onclick="setNotesView('full')">全文</button>` +
-                `<button type="button" data-view="key" onclick="setNotesView('key')" title="只留加粗重点、黄框、表格与节速览，例题与配图收起">要点</button>` +
+                `<button type="button" data-view="key" onclick="setNotesView('key')" title="只留加粗重点、黄框、表格、配图与节速览，例题收起">要点</button>` +
                 `<button type="button" data-view="fig" onclick="setNotesView('fig')" title="只留配图与图题">只看图</button>` +
                 `<a class="notes-view-gallery" href="figs.html?subject=${SUBJECT}" title="跨科目浏览全部配图">全部图集 ↗</a>` +
             `</div>` +
-            `<p class="notes-view-hint">要点 = 只留加粗重点词 / 黄框 / 表格 / 节速览，例题与配图收起（只留一行图题索引）；只看图 = 只留配图与图题。切换会记住，四科通用。</p>`;
+            `<p class="notes-view-hint">要点 = 只留加粗重点词 / 黄框 / 表格 / 配图 / 节速览，例题收起；只看图 = 只留配图与图题。切换会记住，四科通用。</p>`;
         function currentNotesView() {
             try { return localStorage.getItem(NOTES_VIEW_KEY) || 'full'; }
             catch (e) { return 'full'; }
@@ -103,10 +111,18 @@
                 b.classList.toggle('active', on);
                 b.setAttribute('aria-pressed', on ? 'true' : 'false');
             });
+            // 顶栏「视图」下拉（与知识点下拉同形态）：摘要显示当前模式，菜单项标 active
+            const navState = document.getElementById('navViewState');
+            if (navState) navState.textContent = ({ full: '全文', key: '要点', fig: '只看图' })[mode];
+            document.querySelectorAll('#navViewMenu a[data-view]').forEach(a => {
+                a.classList.toggle('active', a.getAttribute('data-view') === mode);
+            });
         }
         function setNotesView(mode) {
             if (!['full', 'key', 'fig'].includes(mode)) mode = 'full';
             try { localStorage.setItem(NOTES_VIEW_KEY, mode); } catch (e) { }
+            const dd = document.getElementById('navViewDd');
+            if (dd) dd.open = false;   // 顶栏下拉选完即收起
             syncNotesView();
         }
         // 切换条用内联 onclick，显式挂到 window 才不会被脚本作用域吞掉

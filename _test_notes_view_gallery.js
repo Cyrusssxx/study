@@ -95,19 +95,22 @@ check('要点视图收掉整列无重点词的 ul/ol 容器',
     css.includes('#notesContent[data-view="key"] :is(.notes-body, .notes-sub-body) :is(ul, ol):not(:has(li:has(b, strong, img, code)))'), true);
 check('全文视图没有例题隐藏规则',
     !/#notesContent\[data-view="(?:full|fig)"\][^{]*\.note-example/.test(css), true);
-check('要点视图收起配图本体（img 段 + 内联结构图 + 历史裸 img）',
-    css.includes('#notesContent[data-view="key"] :is(.notes-body, .notes-sub-body) :is(p:has(img.fig-img), figure.struct-fig, img.fig-img)'), true);
-// 7 张历史 PNG 带内联 display:block，外部规则必须 !important 才压得住（真实浏览器实测）。
-check('配图隐藏规则带 !important（覆盖历史内联 display:block）',
-    /:is\(p:has\(img\.fig-img\), figure\.struct-fig, img\.fig-img\) \{\s*\n\s*display: none !important;/.test(css), true);
-check('要点视图保留降权的图题索引行',
+check('要点视图不再隐藏配图（2026-11-16 起要点也显示图）',
+    !css.includes('#notesContent[data-view="key"] :is(.notes-body, .notes-sub-body) :is(p:has(img.fig-img), figure.struct-fig, img.fig-img)'), true);
+check('配图隐藏 !important 规则已移除（历史内联 display:block 的裸 PNG 也恢复显示）',
+    !/:is\(p:has\(img\.fig-img\), figure\.struct-fig, img\.fig-img\) \{\s*\n\s*display: none !important;/.test(css), true);
+check('要点视图保留图题索引行（图上方一行小字图注）',
     css.includes('#notesContent[data-view="key"] :is(.notes-body, .notes-sub-body) > p[data-fig="1"]:not(:has(img.fig-img))'), true);
+check('图块 data-fig 不参与字号压缩（图题/图片段不被压成 0 字号）',
+    css.includes('#notesContent[data-view="key"] :is(.notes-body, .notes-sub-body) :is(p, li):not([data-fig="1"])'), true);
 check('要点视图 h4 降权为 400 字重（避免空标题大片留白）',
     /#notesContent\[data-view="key"\] :is\(\.notes-body, \.notes-sub-body\) h4 \{\s*\n\s*font-size: \.8rem; font-weight: 400;/.test(css), true);
-check('要点按钮 title 说明例题与配图收起',
-    notesHtml.includes('title="只留加粗重点、黄框、表格与节速览，例题与配图收起"'), true);
-check('视图提示文案说明例题与配图被收起',
-    notesHtml.includes('例题与配图收起（只留一行图题索引）'), true);
+check('要点按钮 title 说明配图保留、例题收起',
+    notesHtml.includes('title="只留加粗重点、黄框、表格、配图与节速览，例题收起"'), true);
+check('视图提示文案说明配图在要点里保留',
+    notesHtml.includes('要点 = 只留加粗重点词 / 黄框 / 表格 / 配图 / 节速览，例题收起'), true);
+check('视图提示不再声称配图被收起',
+    !notesHtml.includes('例题与配图收起'), true);
 check('视图规则写在样式表顶层（不落在 @media 里）',
     css.indexOf('.notes-view-switch {') > css.lastIndexOf('@media'), true);
 
@@ -119,6 +122,13 @@ const vEndMark = '\n        syncNotesView();';
 const vEnd = notesHtml.indexOf(vEndMark, vStart) + vEndMark.length;
 check('能截出视图函数片段', vStart > 0 && vEnd > vStart, true);
 const viewDom = new JSDOM(
+    // 夹具带上顶栏「视图」下拉：syncNotesView/setNotesView 要同步它（摘要文案、active、收起）
+    '<details class="nav-dd" id="navViewDd"><summary class="nav-dd-sum">视图 <span id="navViewState">全文</span></summary>' +
+    '<div class="nav-dd-menu" id="navViewMenu">' +
+    '<a href="#" data-view="full" onclick="setNotesView(\'full\'); return false;">全文</a>' +
+    '<a href="#" data-view="key" onclick="setNotesView(\'key\'); return false;">要点</a>' +
+    '<a href="#" data-view="fig" onclick="setNotesView(\'fig\'); return false;">只看图</a>' +
+    '</div></details>' +
     '<div id="notesHeader"></div><div class="notes-content" id="notesContent"></div>',
     // 用 dangerously：outside-only 下 jsdom 不执行内联 onclick，测不到按钮点击链路
     { url: 'https://x.test/notes.html?subject=os', runScripts: 'dangerously' });
@@ -145,6 +155,32 @@ check('非法视图回落全文', vw.document.getElementById('notesContent').get
 check('按钮 onclick 能调到全局 setNotesView', typeof vw.setNotesView, 'function');
 vw.document.querySelector('button[data-view="fig"]').click();
 check('点击按钮也能切换', vw.document.getElementById('notesContent').getAttribute('data-view'), 'fig');
+
+// ---------- 4b. 顶栏「视图」下拉（形态同「知识点」下拉，共用 setNotesView） ----------
+check('顶栏静态结构：#navViewDd + #navViewState + #navViewMenu',
+    ['id="navViewDd"', 'id="navViewState"', 'id="navViewMenu"'].every(x => notesHtml.includes(x)), true);
+check('顶栏菜单三项 onclick 调 setNotesView 并 return false（不跳转）',
+    /data-view="full" onclick="setNotesView\('full'\); return false;"/.test(notesHtml) &&
+    /data-view="key" onclick="setNotesView\('key'\); return false;"/.test(notesHtml) &&
+    /data-view="fig" onclick="setNotesView\('fig'\); return false;"/.test(notesHtml), true);
+check('顶栏下拉复用 .nav-dd/.nav-dd-menu 类（与知识点下拉同形态）',
+    /<details class="nav-dd" id="navViewDd">[\s\S]*class="nav-dd-menu" id="navViewMenu"/.test(notesHtml), true);
+vw.document.getElementById('navViewDd').open = true;
+vw.__set('key');
+check('切要点：顶栏摘要显示「要点」', vw.document.getElementById('navViewState').textContent, '要点');
+check('切要点：顶栏菜单 active 仅要点',
+    [...vw.document.querySelectorAll('#navViewMenu a')].map(a => a.classList.contains('active')),
+    [false, true, false]);
+check('选完顶栏下拉自动收起', vw.document.getElementById('navViewDd').open, false);
+vw.document.getElementById('navViewDd').open = true;
+vw.__set('fig');
+check('切只看图：顶栏摘要同步为「只看图」', vw.document.getElementById('navViewState').textContent, '只看图');
+check('顶栏菜单 active 跟随只看图',
+    [...vw.document.querySelectorAll('#navViewMenu a')].map(a => a.classList.contains('active')),
+    [false, false, true]);
+check('顶栏菜单项 click 也能切换（委托到同一函数）',
+    (vw.document.querySelector('#navViewMenu a[data-view="key"]').click(),
+     vw.document.getElementById('notesContent').getAttribute('data-view')), 'key');
 
 // ---------- 5. figs.html 静态 ----------
 check('图集页引入 common.js（img.fig-img 委托放大）', figsHtml.includes('<script src="js/common.js"></script>'), true);
