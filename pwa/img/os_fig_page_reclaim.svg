@@ -1,0 +1,52 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 460" width="720" height="460" font-family="Microsoft YaHei, PingFang SC, sans-serif">
+  <rect x="0" y="0" width="720" height="460" fill="#f0f6ff"/>
+  <text x="360" y="28" text-anchor="middle" font-size="16.5" font-weight="700" fill="#2c5282">页面缓冲算法：用两条链表把「换出」变成「挂链」，延迟写回磁盘</text>
+  <text x="360" y="49" text-anchor="middle" font-size="11.5" fill="#5a6b80">换出页不立即写盘 → 先挂到链表；命中则直接取回复用，大幅减少磁盘 I/O</text>
+
+  <!-- 左侧：换出分流 -->
+  <rect x="20" y="70" width="180" height="46" rx="8" fill="#e6f0fb" stroke="#4a90d9"/>
+  <text x="110" y="90" text-anchor="middle" font-size="13" font-weight="700" fill="#2c5282">页面被换出</text>
+  <text x="110" y="108" text-anchor="middle" font-size="10.5" fill="#4a6b8a">判断该页是否被修改</text>
+
+  <!-- 未修改分支 -->
+  <path d="M200 84 L238 84 L238 150 L262 150" fill="none" stroke="#2c9c69" stroke-width="2" marker-end="url(#ag)"/>
+  <text x="222" y="122" font-size="10.5" fill="#2c9c69">未修改</text>
+  <!-- 已修改分支 -->
+  <path d="M200 106 L226 106 L226 320 L262 320" fill="none" stroke="#c98a00" stroke-width="2" marker-end="url(#ao)"/>
+  <text x="206" y="290" font-size="10.5" fill="#c98a00">已修改</text>
+
+  <defs>
+    <marker id="ag" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 Z" fill="#2c9c69"/></marker>
+    <marker id="ao" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 Z" fill="#c98a00"/></marker>
+    <marker id="ab" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 Z" fill="#4a90d9"/></marker>
+  </defs>
+
+  <!-- 空闲页面链表 -->
+  <rect x="264" y="112" width="436" height="86" rx="8" fill="#ffffff" stroke="#2c9c69" stroke-width="1.6"/>
+  <text x="278" y="133" font-size="13" font-weight="700" fill="#1e7a50">① 空闲页面链表（未修改页）</text>
+  <rect x="278" y="144" width="66" height="40" rx="5" fill="#d9f2e6" stroke="#2c9c69"/>
+  <text x="311" y="169" text-anchor="middle" font-size="11" fill="#1e7a50">页框A</text>
+  <rect x="352" y="144" width="66" height="40" rx="5" fill="#d9f2e6" stroke="#2c9c69"/>
+  <text x="385" y="169" text-anchor="middle" font-size="11" fill="#1e7a50">页框B</text>
+  <rect x="426" y="144" width="66" height="40" rx="5" fill="#d9f2e6" stroke="#2c9c69"/>
+  <text x="459" y="169" text-anchor="middle" font-size="11" fill="#1e7a50">页框C</text>
+  <text x="506" y="169" font-size="12" fill="#1e7a50">→ 链尾挂入，数据仍保留</text>
+  <text x="278" y="192" font-size="10.5" fill="#4a6b8a">读入新页从链首取页框；若命中链表中的页，直接取下复用，免读磁盘</text>
+
+  <!-- 修改页面链表 -->
+  <rect x="264" y="282" width="436" height="86" rx="8" fill="#ffffff" stroke="#c98a00" stroke-width="1.6"/>
+  <text x="278" y="303" font-size="13" font-weight="700" fill="#9a6a00">② 修改页面链表（脏页）</text>
+  <rect x="278" y="314" width="66" height="40" rx="5" fill="#fdf0cf" stroke="#c98a00"/>
+  <text x="311" y="339" text-anchor="middle" font-size="11" fill="#9a6a00">脏页X</text>
+  <rect x="352" y="314" width="66" height="40" rx="5" fill="#fdf0cf" stroke="#c98a00"/>
+  <text x="385" y="339" text-anchor="middle" font-size="11" fill="#9a6a00">脏页Y</text>
+  <rect x="426" y="314" width="66" height="40" rx="5" fill="#fdf0cf" stroke="#c98a00"/>
+  <text x="459" y="339" text-anchor="middle" font-size="11" fill="#9a6a00">脏页Z</text>
+  <text x="506" y="339" font-size="12" fill="#9a6a00">→ 积累一批后批量写回</text>
+  <text x="278" y="362" font-size="10.5" fill="#8a6a2a">不逐页写回，攒够数量一次性刷盘，显著降低写回频率</text>
+
+  <!-- 底部结论 -->
+  <rect x="20" y="390" width="680" height="54" rx="8" fill="#2c5282"/>
+  <text x="36" y="413" font-size="12" font-weight="700" fill="#fff">优点：换出不再等于写盘 —— 未修改页挂空闲链表可直接复用（免读），脏页挂修改链表批量写回（少写）。</text>
+  <text x="36" y="434" font-size="12" font-weight="700" fill="#fff">所以用简单的 FIFO 也能获得好性能，且无需特殊硬件；本质是「延迟 + 批量」削减磁盘 I/O。</text>
+</svg>

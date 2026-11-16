@@ -8866,6 +8866,35 @@ body.fc-toc-open .fc-toc-fab { display: none; }
     stroke-dasharray: 4 4;
 }
 
+/* ============ OS 2.2.4 进程切换 vs 线程切换（内联 SVG 对比表） ============
+   三寄存器（PC / SP·FP / CR3）去留对比，核心是 CR3 行：进程切换换页表、
+   同进程线程切换不换。配色走 CSS 变量亮暗自适应；黄/绿徽章用固定亮底+深字，
+   暗色下同样清晰。文字左对齐的 class 显式写 text-anchor:start
+   （.struct-svg text 默认是 middle）。 */
+.struct-fig.ctxsw-fig { overflow-x: auto; }
+.ctxsw-fig .struct-svg { max-width: 720px; min-width: 600px; }
+.ctxsw-fig .struct-svg text.ct-title { fill: var(--text); font-size: 17px; font-weight: 700; }
+.ctxsw-fig .struct-svg text.ct-sub { fill: var(--text-light); font-size: 11.5px; }
+.ctxsw-fig .struct-svg rect.ct-th { fill: var(--primary); }
+.ctxsw-fig .struct-svg text.ct-thtxt { fill: #fff; font-size: 13.5px; font-weight: 700; }
+.ctxsw-fig .struct-svg rect.ct-row { fill: var(--card-bg); stroke: var(--border); }
+.ctxsw-fig .struct-svg rect.ct-keyrow { fill: rgba(255, 193, 7, .10); stroke: #e6b800; stroke-width: 1.6; }
+.ctxsw-fig .struct-svg text.ct-label { fill: var(--text); font-size: 14px; font-weight: 700; text-anchor: start; }
+.ctxsw-fig .struct-svg text.ct-keylabel { fill: #8a6300; font-size: 14px; font-weight: 700; text-anchor: start; }
+.ctxsw-fig .struct-svg text.ct-note { fill: var(--text-light); font-size: 11px; text-anchor: start; }
+.ctxsw-fig .struct-svg text.ct-keynote { fill: #9a7a2a; font-size: 11px; text-anchor: start; }
+.ctxsw-fig .struct-svg rect.ct-badge { fill: rgba(74, 144, 217, .14); }
+.ctxsw-fig .struct-svg text.ct-badgetxt { fill: var(--primary); font-size: 12.5px; font-weight: 700; }
+.ctxsw-fig .struct-svg rect.ct-badgekey { fill: #fde68a; }
+.ctxsw-fig .struct-svg text.ct-badgekeytxt { fill: #7a5600; font-size: 12.5px; font-weight: 700; }
+.ctxsw-fig .struct-svg rect.ct-badgeno { fill: #bbf7d0; }
+.ctxsw-fig .struct-svg text.ct-badgenotxt { fill: #166534; font-size: 13px; font-weight: 700; }
+.ctxsw-fig .struct-svg rect.ct-why { fill: var(--card-bg); stroke: var(--border); }
+.ctxsw-fig .struct-svg text.ct-whytitle { fill: var(--primary); font-size: 11.5px; font-weight: 700; text-anchor: start; }
+.ctxsw-fig .struct-svg text.ct-whytext { fill: var(--text); font-size: 11px; text-anchor: start; }
+.ctxsw-fig .struct-svg rect.ct-concl { fill: var(--primary); }
+.ctxsw-fig .struct-svg text.ct-concltxt { fill: #fff; font-size: 12.5px; font-weight: 700; text-anchor: start; }
+
 /* ==================== 笔记视图：全文 / 要点 / 只看图 ====================
  * 纯 CSS 过滤：#notesContent 上挂 data-view，不改写正文 DOM、不重跑 fmtNotes，
  * 所以 .anno-line 行号、划词高亮、行级批注切回「全文」原样恢复。

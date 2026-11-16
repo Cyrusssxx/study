@@ -193,8 +193,8 @@ if (!JSDOM || !IDBFactory) {
     check('图块被误标行号 = 0',
       [...d.querySelectorAll('.anno-line')]
         .filter(e => e.hasAttribute('data-fig') || e.closest('[data-fig]')).length, 0);
-    check('内联 struct-fig 现在 15 张（含 1.5 系统启动图，未被覆盖）',
-      d.querySelectorAll('figure.struct-fig').length, 15);
+    check('内联 struct-fig 现在 16 张（含 1.5 启动图 + 2.2.4 切换对比图）',
+      d.querySelectorAll('figure.struct-fig').length, 16);
     check('新图在 DOM 里都能找到 src',
       ['pc_buffer', 'rw_count', 'philosopher', 'precedence', 'banker']
         .every(n => !!d.querySelector('img[src*="os_fig_' + n + '"]')), true);

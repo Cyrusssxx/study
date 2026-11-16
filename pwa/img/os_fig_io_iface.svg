@@ -1,0 +1,56 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 440" width="720" height="440" font-family="Microsoft YaHei, PingFang SC, sans-serif">
+  <rect x="0" y="0" width="720" height="440" fill="#f0f6ff"/>
+  <text x="360" y="28" text-anchor="middle" font-size="16.5" font-weight="700" fill="#2c5282">应用程序 I/O 接口：物理设备抽象为三类通用接口</text>
+  <text x="360" y="49" text-anchor="middle" font-size="11.5" fill="#5a6b80">差异由各自驱动程序封装 —— 应用只面对统一接口，新设备即插即用、不改内核</text>
+
+  <!-- 三列 -->
+  <!-- 字符设备 -->
+  <rect x="20" y="70" width="222" height="270" rx="8" fill="#ffffff" stroke="#4a90d9" stroke-width="1.6"/>
+  <rect x="20" y="70" width="222" height="38" rx="8" fill="#4a90d9"/>
+  <text x="131" y="95" text-anchor="middle" font-size="13.5" font-weight="700" fill="#fff">字符设备接口</text>
+  <text x="36" y="132" font-size="11.5" font-weight="700" fill="#2c5282">以「字符」为单位</text>
+  <text x="36" y="154" font-size="11" fill="#4a5568">例：键盘、打印机</text>
+  <text x="36" y="180" font-size="11" fill="#4a5568">速率低 · 不可寻址</text>
+  <text x="36" y="202" font-size="11" fill="#4a5568">中断驱动方式</text>
+  <line x1="36" y1="216" x2="226" y2="216" stroke="#e2e8f0"/>
+  <text x="36" y="238" font-size="11" font-weight="700" fill="#2c6cb0">字符缓冲区</text>
+  <text x="36" y="258" font-size="10.5" fill="#4a5568">get 读 / put 写字符</text>
+  <text x="36" y="280" font-size="10.5" fill="#4a5568">in-control 设备专属指令</text>
+  <text x="36" y="302" font-size="10.5" fill="#4a5568">open / close 实现互斥共享</text>
+  <text x="36" y="328" font-size="10.5" font-weight="700" fill="#805ad5">多为独占设备</text>
+
+  <!-- 块设备 -->
+  <rect x="249" y="70" width="222" height="270" rx="8" fill="#ffffff" stroke="#2c9c69" stroke-width="1.6"/>
+  <rect x="249" y="70" width="222" height="38" rx="8" fill="#2c9c69"/>
+  <text x="360" y="95" text-anchor="middle" font-size="13.5" font-weight="700" fill="#fff">块设备接口</text>
+  <text x="265" y="132" font-size="11.5" font-weight="700" fill="#1e7a50">以「数据块」为单位</text>
+  <text x="265" y="154" font-size="11" fill="#4a5568">例：磁盘</text>
+  <text x="265" y="180" font-size="11" fill="#4a5568">速率高 · 可寻址</text>
+  <text x="265" y="202" font-size="11" fill="#4a5568">DMA 方式</text>
+  <line x1="265" y1="216" x2="455" y2="216" stroke="#e2e8f0"/>
+  <text x="265" y="238" font-size="11" font-weight="700" fill="#1e7a50">抽象命令 → 具体操作</text>
+  <text x="265" y="258" font-size="10.5" fill="#4a5568">open / read / write / close</text>
+  <text x="265" y="280" font-size="10.5" fill="#4a5568">映射为设备能识别的操作</text>
+  <text x="265" y="310" font-size="10.5" fill="#4a5568">（磁盘控制器把命令译为</text>
+  <text x="265" y="328" font-size="10.5" fill="#4a5568">磁道、扇区、读写时序）</text>
+
+  <!-- 网络设备 -->
+  <rect x="478" y="70" width="222" height="270" rx="8" fill="#ffffff" stroke="#c98a00" stroke-width="1.6"/>
+  <rect x="478" y="70" width="222" height="38" rx="8" fill="#c98a00"/>
+  <text x="589" y="95" text-anchor="middle" font-size="13.5" font-weight="700" fill="#fff">网络设备接口</text>
+  <text x="494" y="132" font-size="11.5" font-weight="700" fill="#9a6a00">以「套接字」为单位</text>
+  <text x="494" y="154" font-size="11" fill="#4a5568">例：网卡</text>
+  <text x="494" y="180" font-size="11" fill="#4a5568">介于字符 / 块设备之间</text>
+  <line x1="494" y1="216" x2="684" y2="216" stroke="#e2e8f0"/>
+  <text x="494" y="238" font-size="11" font-weight="700" fill="#9a6a00">套接字（socket）接口</text>
+  <text x="494" y="260" font-size="10.5" fill="#4a5568">建立连接 / 收发报文</text>
+  <text x="494" y="282" font-size="10.5" fill="#4a5568">网络协议栈封装差异</text>
+  <text x="494" y="316" font-size="10.5" font-weight="700" fill="#805ad5">阻塞 / 非阻塞</text>
+  <text x="494" y="334" font-size="10.5" fill="#4a5568">同步 / 异步 I/O</text>
+
+  <!-- 底部：两组易混辨析 -->
+  <rect x="20" y="352" width="680" height="78" rx="8" fill="#2c5282"/>
+  <text x="36" y="375" font-size="12" font-weight="700" fill="#fff">阻塞 / 非阻塞：看「调用者等不等」—— 阻塞挂起等待，非阻塞立即返回、自行轮询重试。</text>
+  <text x="36" y="398" font-size="12" font-weight="700" fill="#fff">同步 / 异步：看「数据搬运由谁完成」—— 同步调用方参与搬运，异步内核搬完后回调 / 信号通知。</text>
+  <text x="36" y="420" font-size="11" fill="#c9d9f0">两组概念相互独立，不要混为一谈（阻塞 ≠ 同步，非阻塞 ≠ 异步）。</text>
+</svg>

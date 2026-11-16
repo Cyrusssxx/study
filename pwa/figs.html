@@ -178,7 +178,9 @@
                 for (const m of h.matchAll(/<img[^>]*class="fig-img"[^>]*src="([^"]+)"[^>]*>/g)) {
                     out.push({ i: m.index, src: m[1], cap: captionBefore(h, m.index) });
                 }
-                for (const m of h.matchAll(/<figure class="struct-fig">[\s\S]*?<\/figure>/g)) {
+                // struct-fig 可能带附加类（boot-fig / ctxsw-fig 等），不能只认精确类名，
+                // 否则这些内联图永远进不了图集页。
+                for (const m of h.matchAll(/<figure class="struct-fig(?:\s[^"]*)?"[^>]*>[\s\S]*?<\/figure>/g)) {
                     const src = inlineToSrc(m[0]);
                     if (!src) continue;
                     out.push({ i: m.index, src, cap: captionBefore(h, m.index), inline: true });

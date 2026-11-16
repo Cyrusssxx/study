@@ -32,7 +32,7 @@ function secHtml(sub, num) {
 }
 
 // ---------- 1. 精确总量 / 序列化 / SW ----------
-const FIG_N = { co: 54, os: 73, cn: 50, ds: 37 };
+const FIG_N = { co: 54, os: 76, cn: 50, ds: 37 };
 const CALL_N = { co: 74, os: 77, cn: 53, ds: 106 };
 for (const sub of SUBS) {
   const figN = (RAW[sub].match(/fig-img/g) || []).length;
@@ -163,7 +163,7 @@ if (!JSDOM || !IDBFactory) {
     }
     const a = await render(RAW.os);
     check('真实渲染 .anno-line = 3409（OS 基线）', a.lines.length, 3409);
-    check('真实渲染配图 73 张', a.figs, 73);
+    check('真实渲染配图 76 张', a.figs, 76);
     check('图块被误标行号 = 0', a.misLabeled, 0);
     check('新图没落进 li', a.badFig, 0);
     check('新图可点击放大', a.lightbox, true);

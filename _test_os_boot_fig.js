@@ -77,10 +77,10 @@ check('boot 系列样式里没有写死颜色',
   /\.boot-fig[\s\S]{0,700}#[0-9a-fA-F]{3,6}/.test(CSS), false);
 
 // ---------- 5. 精确总量 ----------
-const FIG_N = { co: 54, os: 73, cn: 50, ds: 37 };
+const FIG_N = { co: 54, os: 76, cn: 50, ds: 37 };
 for (const s of SUBS)
   check(s + ' 配图 ' + FIG_N[s] + ' 张（fig-img 未变）', (RAW[s].match(/fig-img/g) || []).length, FIG_N[s]);
-const STRUCT = { co: 0, ds: 0, cn: 12, os: 15 };
+const STRUCT = { co: 0, ds: 0, cn: 12, os: 16 };
 for (const s of SUBS)
   check(s + ' 内联 struct-fig = ' + STRUCT[s] + ' 张', (RAW[s].match(/struct-fig/g) || []).length, STRUCT[s]);
 for (const s of SUBS)
@@ -155,7 +155,7 @@ if (!JSDOM || !IDBFactory) {
     }
     const a = await render(RAW.os);
     check('真实渲染 .anno-line = 3409（OS 基线，图块未计入）', a.lines.length, 3409);
-    check('真实渲染 fig-img 73 张（未变）', a.figs, 73);
+    check('真实渲染 fig-img 76 张（新增 3 张 OS 图）', a.figs, 76);
     check('真实渲染 boot-fig 1 张', a.bootFigs, 1);
     check('图块被误标行号 = 0', a.misLabeled, 0);
     check('图块没落进 p/li', a.inP, 0);
