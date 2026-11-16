@@ -32,7 +32,7 @@ function secHtml(sub, num) {
 }
 
 // ---------- 1. 精确总量 / 序列化 / SW ----------
-const FIG_N = { co: 54, os: 76, cn: 50, ds: 37 };
+const FIG_N = { co: 56, os: 76, cn: 51, ds: 39 };
 const CALL_N = { co: 74, os: 77, cn: 53, ds: 106 };
 for (const sub of SUBS) {
   const figN = (RAW[sub].match(/fig-img/g) || []).length;

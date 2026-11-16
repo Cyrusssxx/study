@@ -4,10 +4,10 @@
  *   又提出「有时候只想看图」。本轮做法：
  *   1) 给 OS 12 个长文字大节加 summary 字段（新增字段，不碰任何已有 <p> 正文）；
  *   2) notes.html 上给 #notesContent 挂 data-view，纯 CSS 过滤，DOM 不动 => 行级批注零漂移；
- *   3) figs.html 聚合四科 245 张图（217 独立 SVG + 28 内联结构图），点标题跳回讲义。
+ *   3) figs.html 聚合四科 250 张图（222 独立 SVG + 28 内联结构图），点标题跳回讲义。
  *
  * 硬指标：OS jsdom .anno-line = 3409（本轮不改 html，由其它测试锁）；
- *   图集页卡片精确 245 张，四科各 54 / 76 / 50 / 37 + 内联 0 / 16 / 11 / 0（OS 含 boot/ctxsw 多类 figure）。
+ *   图集页卡片精确 250 张，四科各 56 / 76 / 51 / 39 + 内联 0 / 16 / 11 / 0（OS 含 boot/ctxsw 多类 figure）。
  */
 const fs = require('fs');
 const path = require('path');
@@ -252,8 +252,8 @@ async function main() {
     check('四科 JSON 加载完成并渲染出卡片', ready, true);
     const doc = w.document;
     const cards = [...doc.querySelectorAll('.figs-card')];
-    check('卡片精确 245 张（217 独立 SVG + 28 内联结构图）', cards.length, 245);
-    check('独立 SVG 217 张', cards.filter(c => /^img\//.test(c.querySelector('img').getAttribute('src'))).length, 217);
+    check('卡片精确 250 张（222 独立 SVG + 28 内联结构图）', cards.length, 250);
+    check('独立 SVG 222 张', cards.filter(c => /^img\//.test(c.querySelector('img').getAttribute('src'))).length, 222);
     const inlineCards = cards.filter(c => c.querySelector('img').getAttribute('src').startsWith('data:image/svg+xml'));
     check('内联结构图 28 张（data: SVG，含 boot/ctxsw 多类 figure）', inlineCards.length, 28);
     check('内联 data URL 解码后根元素是 <svg>（不能带 <figure> 外壳，否则破图）',
@@ -284,9 +284,9 @@ async function main() {
                 c.querySelector('figcaption').textContent.length), true);
     check('初始 ?subject=os 只显示 OS 一组',
         [...doc.querySelectorAll('.figs-subj')].filter(x => !x.hidden).map(x => x.dataset.subj).join(','), 'os');
-    check('统计文案带总数', doc.getElementById('figsStat').textContent.includes('245'), true);
-    check('筛选 OS 时「当前显示」只数可见卡片（92，不是全库 245）',
-        /当前显示 92 \/ 245 张/.test(doc.getElementById('figsStat').textContent), true);
+    check('统计文案带总数', doc.getElementById('figsStat').textContent.includes('250'), true);
+    check('筛选 OS 时「当前显示」只数可见卡片（92，不是全库 250）',
+        /当前显示 92 \/ 250 张/.test(doc.getElementById('figsStat').textContent), true);
 
     // 切到「全部」
     doc.querySelector('button[data-subj="all"]').click();
@@ -309,7 +309,7 @@ async function main() {
     search.value = '';
     search.dispatchEvent(new w.Event('input', { bubbles: true }));
     check('清空搜索后提示移除', doc.querySelectorAll('#figsNoHit').length, 0);
-    check('清空搜索后 245 张全回来', doc.querySelectorAll('.figs-card:not([hidden])').length, 245);
+    check('清空搜索后 250 张全回来', doc.querySelectorAll('.figs-card:not([hidden])').length, 250);
 
     console.log((fail ? 'RED' : 'GREEN') + ' _test_notes_view_gallery: ' + pass + ' pass, ' + fail + ' fail');
     process.exit(fail ? 1 : 0);

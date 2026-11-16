@@ -1,0 +1,80 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 600" width="760" height="600" font-family="-apple-system,BlinkMacSystemFont,'Segoe UI','Microsoft YaHei',sans-serif">
+  <defs>
+    <marker id="ar" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#475569"/>
+    </marker>
+    <marker id="arb" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#4338ca"/>
+    </marker>
+  </defs>
+  <rect x="0" y="0" width="760" height="600" fill="#ffffff"/>
+  <text x="24" y="32" font-size="17" font-weight="700" fill="#312e81">指令执行的一般流程 · 取指—译码—执行—中断检测</text>
+  <text x="24" y="54" font-size="12" fill="#64748b">CPU 不断循环「取指令 + 执行指令」，每条指令末尾都要检测中断/异常</text>
+
+  <rect x="130" y="76" width="250" height="46" rx="8" fill="#eef2ff" stroke="#6366f1" stroke-width="1.4"/>
+  <text x="255" y="96" font-size="12.5" font-weight="700" fill="#312e81" text-anchor="middle">① 取指</text>
+  <text x="255" y="113" font-size="11" fill="#4338ca" text-anchor="middle">PC 寻址送 IR，PC += 指令长度</text>
+
+  <line x1="255" y1="122" x2="255" y2="140" stroke="#475569" stroke-width="1.6" marker-end="url(#ar)"/>
+  <rect x="130" y="142" width="250" height="42" rx="8" fill="#eef2ff" stroke="#6366f1" stroke-width="1.4"/>
+  <text x="255" y="168" font-size="12.5" font-weight="700" fill="#312e81" text-anchor="middle">② 译码（识别操作码）</text>
+
+  <line x1="255" y1="184" x2="255" y2="200" stroke="#475569" stroke-width="1.6" marker-end="url(#ar)"/>
+  <polygon points="255,200 340,232 255,264 170,232" fill="#fef9c3" stroke="#ca8a04" stroke-width="1.4"/>
+  <text x="255" y="236" font-size="12" font-weight="700" fill="#854d0e" text-anchor="middle">分支指令？</text>
+
+  <line x1="170" y1="232" x2="132" y2="300" stroke="#475569" stroke-width="1.6" marker-end="url(#ar)"/>
+  <text x="146" y="258" font-size="11" font-weight="700" fill="#c2410c">是</text>
+  <line x1="340" y1="232" x2="382" y2="300" stroke="#475569" stroke-width="1.6" marker-end="url(#ar)"/>
+  <text x="368" y="258" font-size="11" font-weight="700" fill="#4338ca">否</text>
+
+  <rect x="40" y="302" width="190" height="78" rx="8" fill="#fff7ed" stroke="#c2410c" stroke-width="1.4"/>
+  <text x="135" y="324" font-size="12" font-weight="700" fill="#9a3412" text-anchor="middle">③ 分支指令</text>
+  <text x="135" y="344" font-size="11" fill="#9a3412" text-anchor="middle">执行阶段判断条件</text>
+  <text x="135" y="362" font-size="11" fill="#9a3412" text-anchor="middle">满足 → PC = 目标地址</text>
+  <text x="135" y="377" font-size="10.5" fill="#b45309" text-anchor="middle">（PC 改第二次）</text>
+
+  <rect x="280" y="302" width="215" height="78" rx="8" fill="#eef2ff" stroke="#6366f1" stroke-width="1.4"/>
+  <text x="387" y="324" font-size="12" font-weight="700" fill="#312e81" text-anchor="middle">③ 非分支指令</text>
+  <text x="387" y="344" font-size="11" fill="#4338ca" text-anchor="middle">取操作数 → 执行运算</text>
+  <text x="387" y="362" font-size="11" fill="#4338ca" text-anchor="middle">→ 写回结果</text>
+
+  <line x1="135" y1="380" x2="210" y2="400" stroke="#475569" stroke-width="1.6" marker-end="url(#ar)"/>
+  <line x1="387" y1="380" x2="300" y2="400" stroke="#475569" stroke-width="1.6" marker-end="url(#ar)"/>
+
+  <polygon points="255,400 345,432 255,464 165,432" fill="#fef9c3" stroke="#ca8a04" stroke-width="1.4"/>
+  <text x="255" y="436" font-size="11.5" font-weight="700" fill="#854d0e" text-anchor="middle">中断/异常检测</text>
+
+  <path d="M165,432 L28,432 L28,99 L126,99" fill="none" stroke="#4338ca" stroke-width="1.8" marker-end="url(#arb)"/>
+  <text x="95" y="452" font-size="10.5" font-weight="700" fill="#4338ca" text-anchor="middle">未检测到 → 回取指</text>
+
+  <line x1="255" y1="464" x2="255" y2="482" stroke="#475569" stroke-width="1.6" marker-end="url(#ar)"/>
+  <text x="272" y="478" font-size="11" font-weight="700" fill="#b91c1c">是</text>
+  <rect x="110" y="484" width="290" height="54" rx="8" fill="#fef2f2" stroke="#dc2626" stroke-width="1.4"/>
+  <text x="255" y="505" font-size="12" font-weight="700" fill="#991b1b" text-anchor="middle">④ 中断响应：关中断 → 存返回地址 → PC = ISR 入口</text>
+  <text x="255" y="524" font-size="10.5" fill="#b91c1c" text-anchor="middle">执行完才响应，异常不受「开中断 / 当前指令执行完」限制</text>
+
+  <rect x="452" y="96" width="284" height="128" rx="8" fill="#f8fafc" stroke="#94a3b8" stroke-width="1.2"/>
+  <text x="466" y="118" font-size="12" font-weight="700" fill="#312e81">指令 vs 数据，靠阶段区分</text>
+  <text x="466" y="140" font-size="11" fill="#475569">· 时间上：取指阶段取指令</text>
+  <text x="466" y="159" font-size="11" fill="#475569">　执行阶段访存取数据</text>
+  <text x="466" y="178" font-size="11" fill="#475569">· 空间上：取指 → IR</text>
+  <text x="466" y="197" font-size="11" fill="#475569">　取数 → 通用寄存器 / ALU</text>
+  <text x="466" y="216" font-size="11" fill="#64748b">内存本身不区分，由 CPU 定时定位</text>
+
+  <rect x="452" y="240" width="284" height="120" rx="8" fill="#fff7ed" stroke="#f59e0b" stroke-width="1.2"/>
+  <text x="466" y="262" font-size="12" font-weight="700" fill="#9a3412">易错：返回地址存哪个 PC</text>
+  <text x="466" y="286" font-size="11.5" fill="#9a3412">异常 → 当前指令地址</text>
+  <text x="466" y="308" font-size="11.5" fill="#9a3412">中断 → 下一条指令地址</text>
+  <text x="466" y="334" font-size="11" fill="#78350f">取指是公共第一步，固定流程；但</text>
+  <text x="466" y="352" font-size="11" fill="#78350f">取几个字节要看当前指令长度</text>
+
+  <rect x="452" y="376" width="284" height="162" rx="8" fill="#ecfdf5" stroke="#059669" stroke-width="1.2"/>
+  <text x="466" y="398" font-size="12" font-weight="700" fill="#065f46">一句话串起来</text>
+  <text x="466" y="422" font-size="11.5" fill="#065f46">取指不必等操作码控制（固有动作）</text>
+  <text x="466" y="444" font-size="11.5" fill="#065f46">译码后分支/非分支走不同执行路径</text>
+  <text x="466" y="466" font-size="11.5" fill="#065f46">指令末尾统一做中断检测</text>
+  <text x="466" y="492" font-size="11" fill="#047857">无条件转移 PC 改两次：取指 +1</text>
+  <text x="466" y="512" font-size="11" fill="#047857">执行阶段再改为转移目标（Q373）</text>
+  <text x="466" y="532" font-size="11" fill="#047857">空操作取指后 PC 同样 +1（Q379）</text>
+</svg>

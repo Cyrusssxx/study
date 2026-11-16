@@ -1,0 +1,125 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 600" width="760" height="600" font-family="-apple-system,BlinkMacSystemFont,'Segoe UI','Microsoft YaHei',sans-serif">
+  <defs>
+    <marker id="ar" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#475569"/>
+    </marker>
+  </defs>
+  <rect x="0" y="0" width="760" height="600" fill="#ffffff"/>
+  <text x="24" y="32" font-size="17" font-weight="700" fill="#312e81">十字链表 · 有向图的链式存储</text>
+  <text x="24" y="54" font-size="12" fill="#64748b">每条弧一个弧结点，同时挂「入边链 + 出边链」两条链 —— 求入度、出度都方便</text>
+
+  <text x="24" y="88" font-size="12.5" font-weight="700" fill="#312e81">① 示例有向图　A→B，A→C，C→B</text>
+  <line x1="132" y1="150" x2="274" y2="130" stroke="#475569" stroke-width="1.6" marker-end="url(#ar)"/>
+  <line x1="132" y1="160" x2="274" y2="180" stroke="#475569" stroke-width="1.6" marker-end="url(#ar)"/>
+  <line x1="300" y1="185" x2="300" y2="155" stroke="#475569" stroke-width="1.6" marker-end="url(#ar)"/>
+  <circle cx="112" cy="155" r="24" fill="#eef2ff" stroke="#6366f1" stroke-width="1.6"/>
+  <text x="112" y="161" font-size="15" font-weight="700" fill="#312e81" text-anchor="middle">A</text>
+  <circle cx="300" cy="125" r="24" fill="#eef2ff" stroke="#6366f1" stroke-width="1.6"/>
+  <text x="300" y="131" font-size="15" font-weight="700" fill="#312e81" text-anchor="middle">B</text>
+  <circle cx="300" cy="190" r="24" fill="#eef2ff" stroke="#6366f1" stroke-width="1.6"/>
+  <text x="300" y="196" font-size="15" font-weight="700" fill="#312e81" text-anchor="middle">C</text>
+
+  <rect x="452" y="92" width="284" height="24" rx="4" fill="#eef2ff"/>
+  <rect x="458" y="99" width="26" height="10" rx="3" fill="#4338ca"/>
+  <text x="494" y="109" font-size="12" fill="#312e81">出边链：firstout（顶点）→ tlink（弧）</text>
+  <rect x="452" y="122" width="284" height="24" rx="4" fill="#fff7ed"/>
+  <rect x="458" y="129" width="26" height="10" rx="3" fill="#c2410c"/>
+  <text x="494" y="139" font-size="12" fill="#9a3412">入边链：firstin（顶点）→ hlink（弧）</text>
+  <rect x="452" y="154" width="284" height="46" rx="6" fill="#ecfdf5" stroke="#059669" stroke-width="1.2"/>
+  <text x="466" y="174" font-size="12" font-weight="700" fill="#065f46">关键：每条弧只有一个弧结点</text>
+  <text x="466" y="191" font-size="11.5" fill="#065f46">「一结点挂两链」，不是存两份</text>
+
+  <text x="24" y="248" font-size="12.5" font-weight="700" fill="#312e81">② 顶点结点数组　data | firstin | firstout</text>
+  <g font-size="12">
+    <rect x="30" y="262" width="212" height="66" rx="6" fill="#f8fafc" stroke="#94a3b8" stroke-width="1.2"/>
+    <line x1="100" y1="262" x2="100" y2="328" stroke="#cbd5e1"/>
+    <line x1="170" y1="262" x2="170" y2="328" stroke="#cbd5e1"/>
+    <text x="65" y="290" font-size="11" fill="#64748b" text-anchor="middle">data</text>
+    <text x="135" y="290" font-size="11" fill="#64748b" text-anchor="middle">firstin</text>
+    <text x="191" y="290" font-size="11" fill="#64748b" text-anchor="middle">firstout</text>
+    <text x="65" y="314" font-size="15" font-weight="700" fill="#312e81" text-anchor="middle">A</text>
+    <text x="135" y="314" font-size="12" fill="#94a3b8" text-anchor="middle">∧</text>
+    <rect x="176" y="301" width="30" height="18" rx="5" fill="#4338ca"/>
+    <text x="191" y="314" font-size="11" fill="#ffffff" text-anchor="middle">①</text>
+
+    <rect x="274" y="262" width="212" height="66" rx="6" fill="#f8fafc" stroke="#94a3b8" stroke-width="1.2"/>
+    <line x1="344" y1="262" x2="344" y2="328" stroke="#cbd5e1"/>
+    <line x1="414" y1="262" x2="414" y2="328" stroke="#cbd5e1"/>
+    <text x="309" y="290" font-size="11" fill="#64748b" text-anchor="middle">data</text>
+    <text x="379" y="290" font-size="11" fill="#64748b" text-anchor="middle">firstin</text>
+    <text x="435" y="290" font-size="11" fill="#64748b" text-anchor="middle">firstout</text>
+    <text x="309" y="314" font-size="15" font-weight="700" fill="#312e81" text-anchor="middle">B</text>
+    <rect x="350" y="301" width="30" height="18" rx="5" fill="#c2410c"/>
+    <text x="365" y="314" font-size="11" fill="#ffffff" text-anchor="middle">①</text>
+    <text x="435" y="314" font-size="12" fill="#94a3b8" text-anchor="middle">∧</text>
+
+    <rect x="518" y="262" width="212" height="66" rx="6" fill="#f8fafc" stroke="#94a3b8" stroke-width="1.2"/>
+    <line x1="588" y1="262" x2="588" y2="328" stroke="#cbd5e1"/>
+    <line x1="658" y1="262" x2="658" y2="328" stroke="#cbd5e1"/>
+    <text x="553" y="290" font-size="11" fill="#64748b" text-anchor="middle">data</text>
+    <text x="623" y="290" font-size="11" fill="#64748b" text-anchor="middle">firstin</text>
+    <text x="679" y="290" font-size="11" fill="#64748b" text-anchor="middle">firstout</text>
+    <text x="553" y="314" font-size="15" font-weight="700" fill="#312e81" text-anchor="middle">C</text>
+    <rect x="594" y="301" width="30" height="18" rx="5" fill="#c2410c"/>
+    <text x="609" y="314" font-size="11" fill="#ffffff" text-anchor="middle">②</text>
+    <rect x="664" y="301" width="30" height="18" rx="5" fill="#4338ca"/>
+    <text x="679" y="314" font-size="11" fill="#ffffff" text-anchor="middle">③</text>
+  </g>
+
+  <text x="24" y="398" font-size="12.5" font-weight="700" fill="#312e81">③ 弧结点　tailvex | headvex | hlink | tlink | info</text>
+  <g font-size="12" text-anchor="middle">
+    <rect x="130" y="410" width="100" height="26" fill="#e2e8f0"/>
+    <rect x="230" y="410" width="100" height="26" fill="#e2e8f0"/>
+    <rect x="330" y="410" width="100" height="26" fill="#fff7ed"/>
+    <rect x="430" y="410" width="100" height="26" fill="#eef2ff"/>
+    <rect x="530" y="410" width="100" height="26" fill="#e2e8f0"/>
+    <text x="180" y="427" font-size="11" fill="#475569">tailvex</text>
+    <text x="280" y="427" font-size="11" fill="#475569">headvex</text>
+    <text x="380" y="427" font-size="11" fill="#9a3412">hlink</text>
+    <text x="480" y="427" font-size="11" fill="#312e81">tlink</text>
+    <text x="580" y="427" font-size="11" fill="#475569">info</text>
+
+    <g>
+      <rect x="130" y="438" width="500" height="40" rx="4" fill="#ffffff" stroke="#94a3b8"/>
+      <line x1="230" y1="438" x2="230" y2="478" stroke="#cbd5e1"/>
+      <line x1="330" y1="438" x2="330" y2="478" stroke="#cbd5e1"/>
+      <line x1="430" y1="438" x2="430" y2="478" stroke="#cbd5e1"/>
+      <line x1="530" y1="438" x2="530" y2="478" stroke="#cbd5e1"/>
+      <text x="180" y="464" font-size="13" font-weight="700" fill="#312e81">A</text>
+      <text x="280" y="464" font-size="13" font-weight="700" fill="#312e81">B</text>
+      <rect x="348" y="451" width="30" height="18" rx="5" fill="#c2410c"/>
+      <text x="363" y="464" font-size="11" fill="#ffffff">③</text>
+      <rect x="448" y="451" width="30" height="18" rx="5" fill="#4338ca"/>
+      <text x="463" y="464" font-size="11" fill="#ffffff">②</text>
+      <text x="580" y="464" font-size="12" fill="#94a3b8">—</text>
+      <text x="122" y="463" font-size="13" font-weight="700" fill="#64748b" text-anchor="end">①</text>
+    </g>
+    <g>
+      <rect x="130" y="482" width="500" height="40" rx="4" fill="#ffffff" stroke="#94a3b8"/>
+      <line x1="230" y1="482" x2="230" y2="522" stroke="#cbd5e1"/>
+      <line x1="330" y1="482" x2="330" y2="522" stroke="#cbd5e1"/>
+      <line x1="430" y1="482" x2="430" y2="522" stroke="#cbd5e1"/>
+      <line x1="530" y1="482" x2="530" y2="522" stroke="#cbd5e1"/>
+      <text x="180" y="508" font-size="13" font-weight="700" fill="#312e81">A</text>
+      <text x="280" y="508" font-size="13" font-weight="700" fill="#312e81">C</text>
+      <text x="380" y="508" font-size="12" fill="#94a3b8">∧</text>
+      <text x="480" y="508" font-size="12" fill="#94a3b8">∧</text>
+      <text x="580" y="508" font-size="12" fill="#94a3b8">—</text>
+      <text x="122" y="507" font-size="13" font-weight="700" fill="#64748b" text-anchor="end">②</text>
+    </g>
+    <g>
+      <rect x="130" y="526" width="500" height="40" rx="4" fill="#ffffff" stroke="#94a3b8"/>
+      <line x1="230" y1="526" x2="230" y2="566" stroke="#cbd5e1"/>
+      <line x1="330" y1="526" x2="330" y2="566" stroke="#cbd5e1"/>
+      <line x1="430" y1="526" x2="430" y2="566" stroke="#cbd5e1"/>
+      <line x1="530" y1="526" x2="530" y2="566" stroke="#cbd5e1"/>
+      <text x="180" y="552" font-size="13" font-weight="700" fill="#312e81">C</text>
+      <text x="280" y="552" font-size="13" font-weight="700" fill="#312e81">B</text>
+      <text x="380" y="552" font-size="12" fill="#94a3b8">∧</text>
+      <text x="480" y="552" font-size="12" fill="#94a3b8">∧</text>
+      <text x="580" y="552" font-size="12" fill="#94a3b8">—</text>
+      <text x="122" y="551" font-size="13" font-weight="700" fill="#64748b" text-anchor="end">③</text>
+    </g>
+  </g>
+  <text x="640" y="592" font-size="11" fill="#64748b">∧ 表示空指针</text>
+</svg>
