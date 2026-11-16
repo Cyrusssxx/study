@@ -49,10 +49,11 @@ check('计组笔记仍是 CRLF + 无尾换行（防 json.dump 污染）',
 check('计组配图引用 >= 5 张（后续批次只增不减）',
   (notesRaw.match(/fig-img/g) || []).length >= 5, true);
 check('7.3.3 引用新图 co_fig_io_modes.svg', h733.includes('img/co_fig_io_modes.svg'), true);
-// 7.3.3 现在有两张图：co_fig_io_modes（I/O 方式）+ co_fig_dma_phase（DMA 三阶段），
-// 每张图 = 图题段 + img 段 = 2 个 data-fig 段，故期望 4。
-check('图题与图都带 data-fig="1"（7.3.3 两张图 ×2 段）',
-  (h733.match(/<p class="paragraph" data-fig="1">/g) || []).length, 4);
+// 7.3.3 现在有三张图：co_fig_io_modes（I/O 方式）+ co_fig_dma_phase（DMA 三阶段）
+// + co_fig_disk_io_stages（第七批新增，磁盘各阶段 I/O 方式）。
+// 每张图 = 图题段 + img 段 = 2 个 data-fig 段，故期望 6。
+check('图题与图都带 data-fig="1"（7.3.3 三张图 ×2 段）',
+  (h733.match(/<p class="paragraph" data-fig="1">/g) || []).length, 6);
 
 const iDiffEnd = h733.indexOf('⑥从数据传送看');
 const iFig = h733.indexOf('co_fig_io_modes.svg');

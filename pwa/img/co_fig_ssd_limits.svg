@@ -1,0 +1,68 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 680 500" width="680" height="500" font-family="-apple-system,BlinkMacSystemFont,'Segoe UI','Microsoft YaHei',sans-serif">
+  <rect x="0" y="0" width="680" height="500" fill="#ffffff"/>
+  <text x="20" y="28" font-size="16" font-weight="700" fill="#312e81">SSD 的三大限制 · 全部源于闪存「页读块擦」</text>
+  <text x="20" y="48" font-size="12" fill="#64748b">读/写以页为单位，擦除以块为单位 —— 先擦整块、再按序写页、且擦写次数有限</text>
+
+  <!-- 三张限制卡片，浅色填充+彩色细边框 -->
+  <rect x="20" y="66" width="205" height="176" rx="10" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1"/>
+  <rect x="32" y="78" width="26" height="26" rx="13" fill="#dbeafe" stroke="#2563eb" stroke-width="1"/>
+  <text x="45" y="96" font-size="13" font-weight="700" fill="#1e40af" text-anchor="middle">①</text>
+  <text x="32" y="126" font-size="12.5" font-weight="700" fill="#1e3a8a">写前先擦整块</text>
+  <text x="32" y="147" font-size="10.5" fill="#475569">对某页写信息之前，</text>
+  <text x="32" y="163" font-size="10.5" fill="#475569">必须先擦除该页所在</text>
+  <text x="32" y="179" font-size="10.5" fill="#475569">的整个区块（块级擦除，</text>
+  <text x="32" y="195" font-size="10.5" fill="#475569">不能只擦一页）。</text>
+  <rect x="32" y="208" width="181" height="24" rx="5" fill="#dbeafe" stroke="#93c5fd" stroke-width="1"/>
+  <text x="40" y="224" font-size="10" fill="#1e40af">→ 改一页要搬走整块有效页</text>
+
+  <rect x="237" y="66" width="205" height="176" rx="10" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1"/>
+  <rect x="249" y="78" width="26" height="26" rx="13" fill="#d1fae5" stroke="#059669" stroke-width="1"/>
+  <text x="262" y="96" font-size="13" font-weight="700" fill="#065f46" text-anchor="middle">②</text>
+  <text x="249" y="126" font-size="12.5" font-weight="700" fill="#065f46">擦后按序写页</text>
+  <text x="249" y="147" font-size="10.5" fill="#475569">擦除后区块内的页</text>
+  <text x="249" y="163" font-size="10.5" fill="#475569">必须按顺序写入信息，</text>
+  <text x="249" y="179" font-size="10.5" fill="#475569">不能随意挑某一页</text>
+  <text x="249" y="195" font-size="10.5" fill="#475569">重复改写。</text>
+  <rect x="249" y="208" width="181" height="24" rx="5" fill="#d1fae5" stroke="#6ee7b7" stroke-width="1"/>
+  <text x="257" y="224" font-size="10" fill="#065f46">→ 随机写慢、写放大</text>
+
+  <rect x="454" y="66" width="206" height="176" rx="10" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1"/>
+  <rect x="466" y="78" width="26" height="26" rx="13" fill="#fef3c7" stroke="#b45309" stroke-width="1"/>
+  <text x="479" y="96" font-size="13" font-weight="700" fill="#92400e" text-anchor="middle">③</text>
+  <text x="466" y="126" font-size="12.5" font-weight="700" fill="#92400e">擦写次数有限</text>
+  <text x="466" y="147" font-size="10.5" fill="#475569">每块只有有限的擦除 /</text>
+  <text x="466" y="163" font-size="10.5" fill="#475569">编程次数，达到上限后</text>
+  <text x="466" y="179" font-size="10.5" fill="#475569">该块磨损失效（几百至</text>
+  <text x="466" y="195" font-size="10.5" fill="#475569">几千次）。</text>
+  <rect x="466" y="208" width="182" height="24" rx="5" fill="#fef3c7" stroke="#fcd34d" stroke-width="1"/>
+  <text x="474" y="224" font-size="10" fill="#92400e">→ 磨损均衡延长寿命</text>
+
+  <!-- 擦除/写入示意 -->
+  <rect x="20" y="254" width="640" height="96" rx="8" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1"/>
+  <text x="34" y="274" font-size="11.5" font-weight="700" fill="#334155">一个区块（Block）的写入过程</text>
+  <!-- 块外框 -->
+  <rect x="34" y="284" width="612" height="52" rx="4" fill="#ffffff" stroke="#94a3b8" stroke-width="1.2"/>
+  <text x="42" y="314" font-size="10" fill="#64748b">Block</text>
+  <!-- 5 页 -->
+  <rect x="90" y="290" width="106" height="40" rx="3" fill="#e2e8f0" stroke="#94a3b8"/>
+  <text x="143" y="314" font-size="10.5" fill="#475569" text-anchor="middle">页0 已写</text>
+  <rect x="202" y="290" width="106" height="40" rx="3" fill="#e2e8f0" stroke="#94a3b8"/>
+  <text x="255" y="314" font-size="10.5" fill="#475569" text-anchor="middle">页1 已写</text>
+  <rect x="314" y="290" width="106" height="40" rx="3" fill="#dbeafe" stroke="#2563eb" stroke-width="1.5"/>
+  <text x="367" y="314" font-size="10.5" font-weight="700" fill="#1e40af" text-anchor="middle">页2 要改</text>
+  <rect x="426" y="290" width="106" height="40" rx="3" fill="#ffffff" stroke="#cbd5e1" stroke-dasharray="3 2"/>
+  <text x="479" y="314" font-size="10.5" fill="#94a3b8" text-anchor="middle">页3 空</text>
+  <rect x="538" y="290" width="98" height="40" rx="3" fill="#ffffff" stroke="#cbd5e1" stroke-dasharray="3 2"/>
+  <text x="587" y="314" font-size="10.5" fill="#94a3b8" text-anchor="middle">页4 空</text>
+
+  <!-- 一句话 -->
+  <rect x="20" y="362" width="640" height="34" rx="6" fill="#fef3c7" stroke="#fcd34d" stroke-width="1"/>
+  <text x="32" y="384" font-size="11.5" fill="#78350f">一句话：改页2 必须先整块擦除、再把有效页按序重写 —— 实际写入 &gt; 逻辑写入，就是写放大。</text>
+
+  <!-- 易错点：红色 -->
+  <text x="20" y="418" font-size="12" font-weight="700" fill="#b91c1c">易错点</text>
+  <text x="20" y="438" font-size="10.5" fill="#dc2626">① SSD 读写单位是「页」、擦除单位是「块」，不是扇区；SSD 无机械部件，没有寻道与旋转等待。</text>
+  <text x="20" y="456" font-size="10.5" fill="#dc2626">② 三限制里「擦除后按页顺序写」常被漏记；擦完不能跳着写、也不能对同一页反复改写。</text>
+  <text x="20" y="474" font-size="10.5" fill="#dc2626">③ 寿命总写入量 ＝ 容量 × 擦写次数（256GB×500＝125TB），不是容量 × 页数；靠磨损均衡把写摊平。</text>
+  <text x="20" y="492" font-size="10" fill="#dc2626">④ 动态磨损均衡＝写时挑擦写少的空闲块；静态＝空闲时定期迁移，把高磨损块转为以读为主。</text>
+</svg>

@@ -1,0 +1,56 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 680 484" width="680" height="484" font-family="-apple-system,BlinkMacSystemFont,'Segoe UI','Microsoft YaHei',sans-serif">
+  <rect x="0" y="0" width="680" height="484" fill="#ffffff"/>
+  <text x="20" y="28" font-size="16" font-weight="700" fill="#312e81">中断现场保存 · 谁保存、怎么保存、存哪里</text>
+  <text x="20" y="48" font-size="12" fill="#64748b">分界线：断点与状态由硬件自动存，通用寄存器与其余现场由操作系统软件存</text>
+
+  <!-- 表头：浅灰蓝底，非深蓝白字 -->
+  <rect x="20" y="70" width="640" height="34" rx="6" fill="#f1f5f9" stroke="#cbd5e1" stroke-width="1"/>
+  <text x="34" y="92" font-size="11.5" font-weight="700" fill="#334155">保存内容</text>
+  <text x="188" y="92" font-size="11.5" font-weight="700" fill="#334155">责任方</text>
+  <text x="300" y="92" font-size="11.5" font-weight="700" fill="#334155">采用的形式</text>
+  <text x="452" y="92" font-size="11.5" font-weight="700" fill="#334155">保存到哪里</text>
+  <line x1="180" y1="70" x2="180" y2="276" stroke="#e2e8f0"/>
+  <line x1="292" y1="70" x2="292" y2="276" stroke="#e2e8f0"/>
+  <line x1="444" y1="70" x2="444" y2="276" stroke="#e2e8f0"/>
+
+  <!-- 硬件两行：浅蓝卡片 -->
+  <rect x="20" y="108" width="640" height="42" rx="5" fill="#dbeafe" stroke="#93c5fd" stroke-width="1"/>
+  <text x="34" y="134" font-size="11.5" font-weight="700" fill="#1e3a8a">断点（PC）</text>
+  <text x="188" y="134" font-size="11" fill="#1e40af">硬件</text>
+  <text x="300" y="134" font-size="11" fill="#1e40af">中断隐指令（硬件自动）</text>
+  <text x="452" y="134" font-size="11" fill="#1e40af">内核栈 / 特定寄存器</text>
+
+  <rect x="20" y="154" width="640" height="42" rx="5" fill="#dbeafe" stroke="#93c5fd" stroke-width="1"/>
+  <text x="34" y="180" font-size="11.5" font-weight="700" fill="#1e3a8a">状态字（PSW）</text>
+  <text x="188" y="180" font-size="11" fill="#1e40af">硬件</text>
+  <text x="300" y="180" font-size="11" fill="#1e40af">中断隐指令（硬件自动）</text>
+  <text x="452" y="180" font-size="11" fill="#1e40af">内核栈 / 特定寄存器</text>
+
+  <!-- 软件两行：浅绿卡片 -->
+  <rect x="20" y="200" width="640" height="42" rx="5" fill="#d1fae5" stroke="#6ee7b7" stroke-width="1"/>
+  <text x="34" y="226" font-size="11.5" font-weight="700" fill="#065f46">通用寄存器</text>
+  <text x="188" y="226" font-size="11" fill="#047857">操作系统</text>
+  <text x="300" y="226" font-size="11" fill="#047857">软件指令（压栈）</text>
+  <text x="452" y="226" font-size="11" fill="#047857">内核栈</text>
+
+  <rect x="20" y="246" width="640" height="42" rx="5" fill="#d1fae5" stroke="#6ee7b7" stroke-width="1"/>
+  <text x="34" y="272" font-size="11.5" font-weight="700" fill="#065f46">其他现场信息</text>
+  <text x="188" y="272" font-size="11" fill="#047857">操作系统</text>
+  <text x="300" y="272" font-size="11" fill="#047857">软件指令</text>
+  <text x="452" y="272" font-size="11" fill="#047857">PCB 或内核栈</text>
+
+  <!-- 中断隐指令说明块 -->
+  <rect x="20" y="298" width="640" height="54" rx="8" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1"/>
+  <text x="34" y="318" font-size="11.5" font-weight="700" fill="#1e40af">「中断隐指令」不是真的指令</text>
+  <text x="34" y="337" font-size="10.5" fill="#475569">CPU 响应中断时由硬件自动完成：关中断 → 保存断点(PC/PSW) → 引出中断服务程序入口，全程无须软件介入。</text>
+
+  <!-- 一句话：浅黄高亮条 -->
+  <rect x="20" y="362" width="640" height="34" rx="6" fill="#fef3c7" stroke="#fcd34d" stroke-width="1"/>
+  <text x="32" y="384" font-size="11.5" fill="#78350f">一句话：硬件保「回去哪 + 当时状态」，OS 保「干活用的寄存器」——前者进内核栈，后者多存 PCB。</text>
+
+  <!-- 易错点：红色 -->
+  <text x="20" y="418" font-size="12" font-weight="700" fill="#b91c1c">易错点</text>
+  <text x="20" y="438" font-size="10.5" fill="#dc2626">① 断点 / PSW 由硬件存、通用寄存器由 OS 软件压栈，责任方别记反；中断隐指令不属于指令系统。</text>
+  <text x="20" y="456" font-size="10.5" fill="#dc2626">② 异常断点＝当前指令地址（返回后重执），中断断点＝下一条指令地址（返回后接着走）。</text>
+  <text x="20" y="474" font-size="10.5" fill="#dc2626">③ 多级中断要求断点现场入栈才能嵌套；只存 PC 不存 PSW 无法恢复条件码与特权级。</text>
+</svg>

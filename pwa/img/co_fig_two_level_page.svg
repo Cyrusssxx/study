@@ -1,0 +1,63 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 680 496" width="680" height="496" font-family="-apple-system,BlinkMacSystemFont,'Segoe UI','Microsoft YaHei',sans-serif">
+  <rect x="0" y="0" width="680" height="496" fill="#ffffff"/>
+  <text x="20" y="28" font-size="16" font-weight="700" fill="#312e81">两级页表 · 用页目录把「大页表」拆开装</text>
+  <text x="20" y="48" font-size="12" fill="#64748b">虚页号再切成「页目录号 + 页表号」，两级查表；页内偏移始终原样拷到物理地址低位</text>
+
+  <!-- 虚拟地址结构 -->
+  <text x="20" y="74" font-size="12" font-weight="700" fill="#334155">虚拟地址 VA 的划分（例：32 位地址、页 4KB）</text>
+  <rect x="20" y="84" width="180" height="42" rx="5" fill="#dbeafe" stroke="#2563eb" stroke-width="1.2"/>
+  <text x="110" y="102" font-size="11" font-weight="700" fill="#1e40af" text-anchor="middle">页目录号（10 位）</text>
+  <text x="110" y="118" font-size="10" fill="#1e40af" text-anchor="middle">选中第几个页表</text>
+  <rect x="204" y="84" width="180" height="42" rx="5" fill="#d1fae5" stroke="#059669" stroke-width="1.2"/>
+  <text x="294" y="102" font-size="11" font-weight="700" fill="#065f46" text-anchor="middle">页表号（10 位）</text>
+  <text x="294" y="118" font-size="10" fill="#065f46" text-anchor="middle">选中页表内哪项</text>
+  <rect x="388" y="84" width="272" height="42" rx="5" fill="#f1f5f9" stroke="#94a3b8" stroke-width="1.2"/>
+  <text x="524" y="102" font-size="11" font-weight="700" fill="#334155" text-anchor="middle">页内偏移（12 位）</text>
+  <text x="524" y="118" font-size="10" fill="#475569" text-anchor="middle">页 4KB＝2¹²，直接拷贝、不查表</text>
+
+  <!-- 两级查表流程 -->
+  <text x="20" y="154" font-size="12" font-weight="700" fill="#334155">两级查表得到物理页框号（PFN）</text>
+  <rect x="20" y="164" width="196" height="118" rx="8" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1"/>
+  <text x="34" y="184" font-size="11.5" font-weight="700" fill="#1e40af">① 查页目录（常驻主存）</text>
+  <text x="34" y="204" font-size="10.5" fill="#475569">页目录基址寄存器 +</text>
+  <text x="34" y="220" font-size="10.5" fill="#475569">页目录号 → 找到对应</text>
+  <text x="34" y="236" font-size="10.5" fill="#475569">页表在主存的起始地址</text>
+  <rect x="34" y="246" width="168" height="26" rx="5" fill="#dbeafe" stroke="#93c5fd" stroke-width="1"/>
+  <text x="42" y="263" font-size="10" fill="#1e40af">页目录项 = 页表基址</text>
+
+  <text x="228" y="232" font-size="20" fill="#94a3b8">→</text>
+
+  <rect x="250" y="164" width="196" height="118" rx="8" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1"/>
+  <text x="264" y="184" font-size="11.5" font-weight="700" fill="#065f46">② 查页表（第①步找到的那张）</text>
+  <text x="264" y="204" font-size="10.5" fill="#475569">页表基址 + 页表号 →</text>
+  <text x="264" y="220" font-size="10.5" fill="#475569">取页表项 PTE，得到物理</text>
+  <text x="264" y="236" font-size="10.5" fill="#475569">页框号 PFN（有效位=1）</text>
+  <rect x="264" y="246" width="168" height="26" rx="5" fill="#d1fae5" stroke="#6ee7b7" stroke-width="1"/>
+  <text x="272" y="263" font-size="10" fill="#065f46">PTE = PFN + 权限位</text>
+
+  <text x="458" y="232" font-size="20" fill="#94a3b8">→</text>
+
+  <rect x="480" y="164" width="180" height="118" rx="8" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1"/>
+  <text x="494" y="184" font-size="11.5" font-weight="700" fill="#334155">③ 拼接物理地址</text>
+  <text x="494" y="204" font-size="10.5" fill="#475569">PA = PFN ｜ 页内偏移</text>
+  <text x="494" y="224" font-size="10.5" fill="#475569">拿 PA 再查 Cache，</text>
+  <text x="494" y="240" font-size="10.5" fill="#475569">命中取数、未命中访主存</text>
+  <rect x="494" y="246" width="152" height="26" rx="5" fill="#f1f5f9" stroke="#cbd5e1" stroke-width="1"/>
+  <text x="502" y="263" font-size="10" fill="#334155">TLB 缓存①+②结果</text>
+
+  <!-- 为什么要两级 -->
+  <rect x="20" y="298" width="640" height="66" rx="8" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1"/>
+  <text x="34" y="318" font-size="11.5" font-weight="700" fill="#334155">为什么要把页表拆成两级？</text>
+  <text x="34" y="337" font-size="10.5" fill="#475569">单级页表要为每个进程开一张覆盖整个虚存空间的大表，占用主存极大；两级后，<tspan font-weight="700" fill="#1e40af">只把用到的页表调入主存</tspan>，未用的页表项在页目录里标记为「未分配」。</text>
+  <text x="34" y="355" font-size="10.5" fill="#475569">代价：多一次访存（查页目录 + 查页表）；<tspan font-weight="700" fill="#065f46">TLB 命中时这两次访存都被省掉</tspan>，所以平均开销可控。</text>
+
+  <!-- 一句话 -->
+  <rect x="20" y="376" width="640" height="34" rx="6" fill="#fef3c7" stroke="#fcd34d" stroke-width="1"/>
+  <text x="32" y="398" font-size="11.5" fill="#78350f">一句话：页目录号找「哪张页表」，页表号找「哪个页框」，偏移定位「页内哪一字」——三级合起来才是完整 VA。</text>
+
+  <!-- 易错点：红色 -->
+  <text x="20" y="432" font-size="12" font-weight="700" fill="#b91c1c">易错点</text>
+  <text x="20" y="452" font-size="10.5" fill="#dc2626">① 页内偏移位数只由页面大小决定（4KB→12 位），与虚/实地址总位数、分几级页表都无关。</text>
+  <text x="20" y="470" font-size="10.5" fill="#dc2626">② 页目录项存的是「页表基址」，页表项存的才是「物理页框号 PFN」，两级存的东西不同，别混。</text>
+  <text x="20" y="488" font-size="10.5" fill="#dc2626">③ 两级页表访存次数：TLB 命中 0 次额外访存；未命中要查页目录+页表 2 次，缺页还要再访磁盘。</text>
+</svg>
