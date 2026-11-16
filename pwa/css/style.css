@@ -4282,6 +4282,8 @@ h3.algo-h:first-child, h4.algo-h:first-child, h5.algo-h:first-child { margin-top
     background: #1b2635;
     border-color: #3a404b;
 }
+/* 内联结构图点击放大：整张 figure 都可点，给放大手型提示（与 .fig-img 对齐） */
+figure.struct-fig { cursor: zoom-in; }
 .struct-svg {
     display: block;
     width: 100%;

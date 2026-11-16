@@ -22,7 +22,8 @@
     'use strict';
 
     var MIN_SCALE = 0.2, MAX_SCALE = 8;
-    var scale = 1, tx = 0, ty = 0;
+    var INITIAL_SCALE = 1.4;            // 点开图片时默认放大到 140%（矢量图更清晰、细节更易读）
+    var scale = INITIAL_SCALE, tx = 0, ty = 0;
     var baseW = 0, baseH = 0;          // scale = 1 时的基准显示尺寸（由 CSS 适配舞台后量得）
     var box = null, imgEl = null, zoomLabel = null;
 
@@ -129,7 +130,10 @@
         // 位图（22 张历史 PNG）100% 时不允许超过原始像素：宁可显示小一点，
         // 也不要默认就拉伸成糊图；要看大就手动放大（那时模糊是位图物理上限）。
         // SVG 是矢量，随便放大都清晰，保持铺满舞台。
-        var isVector = /\.svg(\?|#|$)/i.test(imgEl.currentSrc || imgEl.src || '');
+        var _src = imgEl.currentSrc || imgEl.src || '';
+        // data:image/svg+xml（讲义内联图放大时序列化出来的）也要按矢量处理，
+        // 否则会被下面的位图封顶逻辑当作位图压到 naturalWidth，放大后发虚。
+        var isVector = /\.svg(\?|#|$)/i.test(_src) || /^data:image\/svg/i.test(_src);
         if (!isVector && w > imgEl.naturalWidth) {
             var k = imgEl.naturalWidth / w;
             w = imgEl.naturalWidth;
@@ -224,18 +228,83 @@
 
     window.openFigLightbox = function (src) {
         build();
-        baseW = 0; baseH = 0; scale = 1; tx = 0; ty = 0;
+        baseW = 0; baseH = 0; scale = INITIAL_SCALE; tx = 0; ty = 0;
         imgEl.style.width = '';
         imgEl.style.height = '';
         imgEl.style.maxWidth = '';
         imgEl.style.maxHeight = '';
         imgEl.style.transform = '';
-        if (zoomLabel) zoomLabel.textContent = '100%';
+        if (zoomLabel) zoomLabel.textContent = Math.round(INITIAL_SCALE * 100) + '%';
         box.classList.add('show');          // 先显示，舞台才有尺寸可量
         document.body.style.overflow = 'hidden';
         imgEl.onload = function () { measureFitted(); apply(); };
         imgEl.src = src;
         if (imgEl.complete && imgEl.naturalWidth) { measureFitted(); apply(); }
+    };
+
+    /* ---------- 讲义内联结构图（figure.struct-fig）点击放大 ----------
+     * 内联 SVG 在讲义里靠 style.css 的 .struct-svg / .ct-* / .boot-* / .wave-*
+     * 规则 + CSS 变量（--text/--primary 等，亮暗不同）着色。放大层是独立 <img>，
+     * 拿不到页面 CSS，所以要把「当前计算后的变量值 + 相关规则」一起注入到 SVG 的
+     * <style> 里再转 data URL —— 这样亮/暗两态颜色都和讲义里一致，且 SVG 是矢量，
+     * 放大任意倍数都清晰（copyImage 也能导出高清 PNG）。
+     */
+    var INLINE_FIG_RULES = [
+        /\.struct-svg/, /\.ct-/, /\.boot-/, /\.wave-/, /\.fig-img/
+    ];
+    function inlineFigureToSrc(fig) {
+        var svg = fig && fig.querySelector && fig.querySelector('svg');
+        if (!svg) return '';
+        // 只取 <svg>…</svg>：外面 <figure> 是 HTML 标签，塞进 data URL 会让根元素非法 → 破图
+        var sm = /<svg[\s\S]*?<\/svg>/.exec(svg.outerHTML || '');
+        if (!sm) return '';
+        var css = '';
+        // 1) 固定亮色变量值：放大层图片底色是白的（CSS .fig-lb-stage img 有 background:#fff），
+        //    若跟随 dark 主题注入浅色 --text / 深色 --card-bg，会出现「白底浅字」看不清。
+        //    统一用讲义亮色配色，图片内部自洽，亮暗两态放大都清晰（与图集页缩略一致）。
+        css += ':root{--text:#333333;--text-light:#666666;--primary:#4a90d9;' +
+            '--primary-dark:#357abd;--card-bg:#ffffff;--bg:#f0f2f5;--border:#e0e0e0;}';
+        // 2) 页面里命中内联图类的 CSS 规则（.struct-svg/.ct-*/.boot-*/.wave-*）
+        //    从 styleSheets 读取，避免维护第二份样式导致亮暗/新增类不同步。
+        try {
+            for (var i = 0; i < document.styleSheets.length; i++) {
+                var sheet = document.styleSheets[i], rules;
+                try { rules = sheet.cssRules; } catch (e) { continue; }
+                if (!rules) continue;
+                for (var j = 0; j < rules.length; j++) {
+                    var r = rules[j];
+                    if (!r.selectorText) continue;
+                    if (INLINE_FIG_RULES.some(function (re) { return re.test(r.selectorText); })) {
+                        // 序列化后外层 <figure> 没了，带 .ctxsw-fig/.boot-fig/.wave-fig
+                        // 祖先前缀的规则会全部失配（如 .ctxsw-fig .struct-svg rect.ct-th）。
+                        // 把祖先前缀剥掉，只留 .struct-svg 起面的部分，让 svg 根（自带
+                        // struct-svg 类）能匹配。cssText 里的 selector 部分同步改写。
+                        var sel = r.selectorText
+                            .replace(/(?:figure\.)?struct-fig(?:\.[a-z-]+)*\s+/g, '')
+                            .replace(/\.(?:ctxsw|boot|wave)-fig\s+/g, '');
+                        if (!sel || !/^\.struct-svg/.test(sel)) continue; // 剥空或非 svg 规则跳过
+                        css += r.cssText.replace(r.selectorText, sel);
+                    }
+                }
+            }
+        } catch (e) { /* 跨域样式表读不到就只用变量 + 内联属性兜底 */ }
+        // 3) 兜底基础样式（jsdom / 样式表跨域时仍可辨色）
+        if (!/struct-svg/.test(css)) {
+            css += ':root{--text:#333;--text-light:#666;--primary:#4a90d9;--border:#ddd;--card-bg:#fff}' +
+                '.struct-svg text{fill:var(--text);text-anchor:middle}' +
+                '.struct-svg rect{fill:var(--card-bg);stroke:var(--primary)}' +
+                '.struct-svg line,.struct-svg path{stroke:var(--primary);fill:none}';
+        }
+        var withCss = sm[0].replace(/<svg[^>]*>/, function (m) { return m + '<style>' + css + '</style>'; });
+        return 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(withCss);
+    }
+
+    /** 点讲义内联结构图放大；返回是否成功接手该点击 */
+    window.openInlineFigLightbox = function (fig) {
+        var src = inlineFigureToSrc(fig);
+        if (!src) return false;
+        window.openFigLightbox(src);
+        return true;
     };
 
     window.closeFigLightbox = close;

@@ -309,6 +309,12 @@ function openImageLightbox(src) {
 
 // 事件委托：题干/解析里的 <img> 点击放大；排除笔记区（已有独立 viewNoteImage）
 document.addEventListener('click', e => {
+    // 讲义里的内联结构图（<figure class="struct-fig"><svg>）：以前点了没反应。
+    // 序列化成自带样式的 data SVG 后走同一个 figLightbox，亮暗配色与讲义里一致。
+    const inlineFig = e.target.closest('figure.struct-fig');
+    if (inlineFig && typeof window.openInlineFigLightbox === 'function') {
+        if (window.openInlineFigLightbox(inlineFig)) { e.preventDefault(); return; }
+    }
     // 讲义里的自绘配图（.fig-img）：此前没有绑定任何点击事件，点了没反应。
     // 统一走带缩放/拖拽/键盘操作的 figLightbox（全站已引入 js/lightbox.js）。
     const fig = e.target.closest('img.fig-img');

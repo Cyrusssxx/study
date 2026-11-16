@@ -74,5 +74,26 @@ check('关闭时清空内联尺寸与基准（下次打开不会串）',
 check('对外仍暴露 window.openFigLightbox', /window\.openFigLightbox = function/.test(js), true);
 check('对外仍暴露 window.closeFigLightbox', /window\.closeFigLightbox = close/.test(js), true);
 
+/* ---------- 6. 初始放大倍数 140% ---------- */
+check('定义初始倍数 INITIAL_SCALE = 1.4', /var INITIAL_SCALE\s*=\s*1\.4/.test(js), true);
+check('打开图片时初始 scale 用 INITIAL_SCALE', /scale = INITIAL_SCALE; tx = 0; ty = 0/.test(js), true);
+check('工具栏初始显示 140%（由 INITIAL_SCALE 计算，不写死）',
+    /zoomLabel\.textContent = Math\.round\(INITIAL_SCALE \* 100\)/.test(js), true);
+check('1:1 重置仍回 100%（按钮语义不变）', /function reset\(\)\s*\{\s*scale = 1;/.test(js), true);
+
+/* ---------- 7. 讲义内联结构图（struct-fig）点击放大 ---------- */
+const commonJs = read('pwa/js/common.js');
+check('暴露内联图放大入口 openInlineFigLightbox', /window\.openInlineFigLightbox\s*=/.test(js), true);
+check('内联放大复用同一个 figLightbox', /window\.openInlineFigLightbox[\s\S]{0,120}window\.openFigLightbox\(src\)/.test(js), true);
+check('只序列化 <svg> 外层（防 data URL 根元素非法破图）',
+    /<svg\[\\s\\S\]\*\?<\\\/svg>/.test(js) || /<svg[\s\S]*?<\/svg>/.test(jsRaw), true);
+check('注入固定亮色变量（放大层白底配深字，亮暗态都自洽可读）', /:root\{--text:#333333[\s\S]{0,120}--primary:#4a90d9/.test(js), true);
+check('读 styleSheets 复用页面 CSS 规则（含 .ct-/.boot-/.wave-）',
+    /document\.styleSheets/.test(js) && /\.ct-/.test(js) && /\.boot-/.test(js), true);
+check('data URL SVG 按矢量处理（不被位图封顶误伤）', /data:image\\\/svg/.test(js) || /data:image\/svg/.test(jsRaw), true);
+check('common.js 委托命中 figure.struct-fig 并调内联放大',
+    /closest\('figure\.struct-fig'\)/.test(commonJs) && /openInlineFigLightbox\(inlineFig\)/.test(commonJs), true);
+check('内联图给 zoom-in 手型提示', /figure\.struct-fig\s*\{\s*cursor:\s*zoom-in/.test(css), true);
+
 console.log('\n' + pass + ' passed, ' + fail + ' failed');
 process.exit(fail ? 1 : 0);
