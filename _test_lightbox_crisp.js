@@ -90,6 +90,8 @@ check('只序列化 <svg> 外层（防 data URL 根元素非法破图）',
 check('注入固定亮色变量（放大层白底配深字，亮暗态都自洽可读）', /:root\{--text:#333333[\s\S]{0,120}--primary:#4a90d9/.test(js), true);
 check('读 styleSheets 复用页面 CSS 规则（含 .ct-/.boot-/.wave-）',
     /document\.styleSheets/.test(js) && /\.ct-/.test(js) && /\.boot-/.test(js), true);
+check('ev-* 新样式图放大也注入着色规则（白名单 + 剥 .ev-fig 祖先前缀）',
+    js.includes('/\\.ev-/') && js.includes('wave|ev'), true);
 check('data URL SVG 按矢量处理（不被位图封顶误伤）', /data:image\\\/svg/.test(js) || /data:image\/svg/.test(jsRaw), true);
 check('common.js 委托命中 figure.struct-fig 并调内联放大',
     /closest\('figure\.struct-fig'\)/.test(commonJs) && /openInlineFigLightbox\(inlineFig\)/.test(commonJs), true);

@@ -229,8 +229,8 @@ for (const sub of SUBS) {
 }
 check('全库 fig-img >= 182 张（P13 下限）', SUBS.reduce((n, s) => n + (RAW[s].match(/fig-img/g) || []).length, 0), n => n >= 182);
 check('全库黄框 310 个', SUBS.reduce((n, s) => n + (RAW[s].match(/class=\\"key-callout\\"/g) || []).length, 0), 310);
-const STRUCT = { co: 0, ds: 0, cn: 12, os: 16 };
-check('内联 struct-fig 总量（CO0/DS0/CN12/OS16；CN 的 12 含 2.1.3 波形图、OS 的 16 含 1.5 启动流程图 + 2.2.4 切换对比图）',
+const STRUCT = { co: 2, ds: 0, cn: 12, os: 19 };
+check('内联 struct-fig 总量（CO2/DS0/CN12/OS19；CN 的 12 含 2.1.3 波形图、OS 的 19 含 1.5 启动流程图 + 2.2.4 切换对比图 + 4.2.2/4.2.8/2.2.6 三张；CO 的 2 为 5.3.4/5.2.3 数据通路图）',
   Object.entries(STRUCT).every(([s, v]) => (RAW[s].match(/struct-fig/g) || []).length === v), true);
 check('SW DATA_VER 非空且已刷新为本批哈希',
   /quiz408-data-[a-f0-9]{10}/.test(sw), true);
@@ -343,7 +343,7 @@ if (!JSDOM || !IDBFactory) {
         check(sub + ' 双版本 .anno-line 数量一致', b.no15.length, a.no15.length);
         let first = -1;
         if (b.no15.length === a.no15.length)
-          for (let i = 0; i < b.lines.length; i++) if (b.no15[i] !== a.no15[i]) { first = i; break; }
+          for (let i = 0; i < b.no15.length; i++) if (b.no15[i] !== a.no15[i]) { first = i; break; }
         check(sub + ' 双版本逐行文本完全一致（黄框零覆盖 / 批注零错位）', first, -1);
         b.window.close();
       } else {

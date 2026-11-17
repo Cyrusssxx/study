@@ -6,7 +6,7 @@
  * 2026-11-15 第十八批叠加「大题覆盖兜底」：锚点只写到第 2 级时（os:1.5、cn:4.2 等）
  * 标记落在「节」上，故节对象也允许 important/core；小节的精确量见下。
  * 锁精确量：小节 important os25/co25/cn32/ds32，core os10/co7/cn6/ds8；
- *           节 important os2/co3/cn3/ds3（全部来自 tools/bigq_kp_manual.json 的 2 级锚点）。
+ *           节 important os4/co3/cn3/ds3（os 4.2/4.3 为 2026-11 考纲强化批次用户点名新增）。
  */
 const fs = require('fs');
 const path = require('path');
@@ -50,7 +50,7 @@ const ANCHORS = (() => {
   return out;
 })();
 const IMPORTANT = { os: 25, co: 25, cn: 32, ds: 32 };
-const SEC_CNT = { os: 2, co: 3, cn: 3, ds: 3 };   // 带 important 的「节」个数（来自 2 级锚点）
+const SEC_CNT = { os: 4, co: 3, cn: 3, ds: 3 };   // 带 important 的「节」个数（os 4.2/4.3 用户点名新增）
 const CORE = { os: 10, co: 7, cn: 6, ds: 8 };
 const SUB_N = { os: 80, co: 102, cn: 108, ds: 91 };
 
@@ -79,10 +79,13 @@ for (const s of SUBS) {
     DOC[s].chapters.every(ch => !ch.important && !ch.core), true);
   const secImp = DOC[s].chapters.flatMap(ch => ch.sections).filter(sec => sec.important || sec.core);
   check(s + ' 带标记的节 = ' + SEC_CNT[s] + ' 个', secImp.length, SEC_CNT[s]);
-  check(s + ' 带标记的节全部来自 2 级大题锚点（不靠加权分乱标）',
+  // 2026-11 考纲强化：os 4.2/4.3 为用户点名新增（数据通路/文件管理目录打重点），不在大题锚点表内
+  const USER_SEC = s === 'os' ? ['4.2', '4.3'] : [];
+  check(s + ' 带标记的节来自 2 级大题锚点或用户点名',
     secImp.every(sec => {
       const code = sec.section.split(' ')[0];
       if (code.split('.').length !== 2) return false;
+      if (USER_SEC.includes(code)) return true;
       const m = ANCHORS[code];
       return !!m && m[0] === s;
     }), true);
@@ -94,7 +97,7 @@ for (const s of SUBS) {
 check('用户点名的 2020 真题 46 对应小节 OS 3.1.3 = 很重点',
   subs(DOC.os).some(x => x.section.startsWith('3.1.3') && x.core && x.important), true);
 check('全库重点小节 114 个', SUBS.reduce((n, s) => n + IMPORTANT[s], 0), 114);
-check('全库重点节 11 个（2 级锚点落点）', SUBS.reduce((n, s) => n + SEC_CNT[s], 0), 11);
+check('全库重点节 13 个（11 个 2 级锚点 + os 4.2/4.3 考纲强化）', SUBS.reduce((n, s) => n + SEC_CNT[s], 0), 13);
 check('每个 2 级锚点都落到了节上（11 个全覆盖）',
   Object.entries(ANCHORS).filter(([c]) => c.split('.').length === 2)
     .every(([c, [sub]]) => DOC[sub].chapters.some(ch => ch.sections.some(sec =>
@@ -116,15 +119,17 @@ for (const s of SUBS) {
   const a = new Map(subs(DOC[s]).map(x => [x.section, stripZt(x.html)]));
   const changed = [...b.keys()].filter(k => b.get(k) !== a.get(k));
   // 1.5 不在本批 before 快照里（该快照已晚于 1.5 精简），故只备案这三处
-  const allowed = s === 'os' ? ['2.2.4 进程切换', '3.1.3 基本分页存储管理', '3.2.6 页框回收',
-                    '4.3.4 文件系统挂载（mounting）', '5.1.4 应用程序I/O接口',
-                    '5.3.1 磁盘', '5.3.3 磁盘调度算法', '5.3.4 固态硬盘']
+  const allowed = s === 'os' ? ['2.1.6 进程的通信', '2.2.4 进程切换', '2.2.6 多处理机调度',
+                    '3.1.3 基本分页存储管理', '3.2.6 页框回收',
+                    '4.2.2 文件控制块和索引节点', '4.2.8 文件共享', '4.3.4 文件系统挂载（mounting）',
+                    '5.1.4 应用程序I/O接口', '5.3.1 磁盘', '5.3.3 磁盘调度算法', '5.3.4 固态硬盘']
     : s === 'cn' ? ['2.1.3 编码与调制', '4.2.5 地址解析协议（ARP）',
                     '4.2.7 网际控制报文协议ICMP', '4.3.4 从IPv4向IPv6过渡', '4.5.3 在局域网上进行硬件多播']
     : s === 'co' ? ['2.2.4 定点数的乘除运算', '3.4.2 固态硬盘（SSD）', '3.6.4 段页式虚拟存储器',
                     '3.6.6 CPU访存全流程与地址结构详解',
                     '4.3.3 循环语句的机器级表示', '4.3.4 过程调用的机器级表示',
-                    '5.2.1 指令执行的一般流程', '5.3.2 数据通路的组成', '5.5.2 异常和中断的分类',
+                    '5.2.1 指令执行的一般流程', '5.2.3 指令周期的基本概念',
+                    '5.3.2 数据通路的组成', '5.3.4 单总线结构的数据通路', '5.5.2 异常和中断的分类',
                     '5.5.3 异常和中断响应过程',
                     '5.7.1 SISD、SIMD、MIMD的基本概念', '7.3.1 程序查询方式', '7.3.3 DMA方式']
     : s === 'ds' ? ['3.4.4 稀疏矩阵', '5.4.2 树、森林与二叉树的转换',

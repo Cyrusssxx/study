@@ -243,14 +243,14 @@
     };
 
     /* ---------- 讲义内联结构图（figure.struct-fig）点击放大 ----------
-     * 内联 SVG 在讲义里靠 style.css 的 .struct-svg / .ct-* / .boot-* / .wave-*
+     * 内联 SVG 在讲义里靠 style.css 的 .struct-svg / .ct-* / .boot-* / .wave-* / .ev-*
      * 规则 + CSS 变量（--text/--primary 等，亮暗不同）着色。放大层是独立 <img>，
      * 拿不到页面 CSS，所以要把「当前计算后的变量值 + 相关规则」一起注入到 SVG 的
      * <style> 里再转 data URL —— 这样亮/暗两态颜色都和讲义里一致，且 SVG 是矢量，
      * 放大任意倍数都清晰（copyImage 也能导出高清 PNG）。
      */
     var INLINE_FIG_RULES = [
-        /\.struct-svg/, /\.ct-/, /\.boot-/, /\.wave-/, /\.fig-img/
+        /\.struct-svg/, /\.ct-/, /\.boot-/, /\.wave-/, /\.ev-/, /\.fig-img/
     ];
     function inlineFigureToSrc(fig) {
         var svg = fig && fig.querySelector && fig.querySelector('svg');
@@ -264,7 +264,7 @@
         //    统一用讲义亮色配色，图片内部自洽，亮暗两态放大都清晰（与图集页缩略一致）。
         css += ':root{--text:#333333;--text-light:#666666;--primary:#4a90d9;' +
             '--primary-dark:#357abd;--card-bg:#ffffff;--bg:#f0f2f5;--border:#e0e0e0;}';
-        // 2) 页面里命中内联图类的 CSS 规则（.struct-svg/.ct-*/.boot-*/.wave-*）
+        // 2) 页面里命中内联图类的 CSS 规则（.struct-svg/.ct-*/.boot-*/.wave-*/.ev-*）
         //    从 styleSheets 读取，避免维护第二份样式导致亮暗/新增类不同步。
         try {
             for (var i = 0; i < document.styleSheets.length; i++) {
@@ -275,13 +275,14 @@
                     var r = rules[j];
                     if (!r.selectorText) continue;
                     if (INLINE_FIG_RULES.some(function (re) { return re.test(r.selectorText); })) {
-                        // 序列化后外层 <figure> 没了，带 .ctxsw-fig/.boot-fig/.wave-fig
-                        // 祖先前缀的规则会全部失配（如 .ctxsw-fig .struct-svg rect.ct-th）。
+                        // 序列化后外层 <figure> 没了，带 .ctxsw-fig/.boot-fig/.wave-fig/.ev-fig
+                        // 祖先前缀的规则会全部失配（如 .ctxsw-fig .struct-svg rect.ct-th、
+                        // .ev-fig .struct-svg rect.ev-warnbox）。
                         // 把祖先前缀剥掉，只留 .struct-svg 起面的部分，让 svg 根（自带
                         // struct-svg 类）能匹配。cssText 里的 selector 部分同步改写。
                         var sel = r.selectorText
                             .replace(/(?:figure\.)?struct-fig(?:\.[a-z-]+)*\s+/g, '')
-                            .replace(/\.(?:ctxsw|boot|wave)-fig\s+/g, '');
+                            .replace(/\.(?:ctxsw|boot|wave|ev)-fig\s+/g, '');
                         if (!sel || !/^\.struct-svg/.test(sel)) continue; // 剥空或非 svg 规则跳过
                         css += r.cssText.replace(r.selectorText, sel);
                     }
