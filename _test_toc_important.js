@@ -155,6 +155,15 @@ if (guardDone < 4) console.log('SKIP 纯加字段守卫：缺 before 备份（�
 check('notes.html 小节渲染 important + core 双 class',
   NOTES_HTML.includes("s.important ? ' notes-toc-sub-strong' : ''") &&
   NOTES_HTML.includes("s.core ? ' notes-toc-sub-core' : ''"), true);
+// 2025 新增考点（OS 2.1.6 信号 / 2.2.6 多处理机调度）目录标绿：纯展示 class + 前缀匹配，不改数据
+check('notes.html 新增考点判定只挂 os 两节且不进 textContent',
+  NOTES_HTML.includes("const NEW_POINT_SECS = { os: ['2.1.6', '2.2.6'] }") &&
+  NOTES_HTML.includes('.some(p => String(sec).startsWith(p))') &&
+  NOTES_HTML.includes("isNewPoint(s.section) ? ' notes-toc-sub-new' : ''") &&
+  !NOTES_HTML.includes('2.1.6 进程的通信 <'), true);
+check('style.css 新增考点标绿（亮/暗色均定义）',
+  CSS.includes('.notes-toc-sub.notes-toc-sub-new { color: #1a8f3c; }') &&
+  CSS.includes('.dark .notes-toc-sub.notes-toc-sub-new { color: #51cf66; }'), true);
 check('notes.html 节级只按「节自身标记」加重（不因子节连带）',
   NOTES_HTML.includes("sec.core ? ' notes-toc-sec-core'") &&
   NOTES_HTML.includes("(sec.important ? ' notes-toc-sec-strong' : '')") &&

@@ -709,6 +709,14 @@
                 .replace(/</g, '&lt;').replace(/>/g, '&gt;');
         }
 
+        // 2025 大纲解析新增考点所在小节（OS：信号 2.1.6、多处理机调度 2.2.6），
+        // 目录标绿以便和「重点/很重点」的蓝色档一眼区分。纯展示层 class，不写进数据，
+        // 不影响行号/批注/搜索索引（只用节号前缀匹配，不进 textContent）。
+        const NEW_POINT_SECS = { os: ['2.1.6', '2.2.6'] };
+        function isNewPoint(sec) {
+            return (NEW_POINT_SECS[SUBJECT] || []).some(p => String(sec).startsWith(p));
+        }
+
         async function loadNotes() {
             let notes;
             try {
@@ -770,7 +778,7 @@
                     toc += `<a class="notes-toc-sec${secCls}" data-sec="${escAttr(sec.section)}" title="${escAttr(sec.section)}"${hasSub ? ' data-hassub="1"' : ''}>${hasSub ? '<span class="toc-sec-arrow">▾</span>' : ''}${sec.section}</a>`;
                     if (hasSub) {
                         toc += `<div class="notes-toc-subs">` + subs.map(s =>
-                            `<a class="notes-toc-sub${s.important ? ' notes-toc-sub-strong' : ''}${s.core ? ' notes-toc-sub-core' : ''}" data-sec="${escAttr(s.section)}" title="${escAttr(s.section)}">${s.section}</a>`
+                            `<a class="notes-toc-sub${s.important ? ' notes-toc-sub-strong' : ''}${s.core ? ' notes-toc-sub-core' : ''}${isNewPoint(s.section) ? ' notes-toc-sub-new' : ''}" data-sec="${escAttr(s.section)}" title="${escAttr(s.section)}">${s.section}</a>`
                         ).join('') + `</div>`;
                     }
                     skeleton += `<div class="notes-sec-slot" data-i="${flat.length}"></div>`;

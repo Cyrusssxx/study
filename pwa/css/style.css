@@ -8789,6 +8789,11 @@ body.fc-toc-open .fc-toc-fab { display: none; }
 .dark .notes-toc-sec-core::after,
 .dark .notes-toc-sub-core::before { color: #ff7a45; }
 
+/* 2025 大纲解析新增考点所在小节（OS 2.1.6 信号 / 2.2.6 多处理机调度）：目录标绿，
+   与「重点/很重点」的蓝色档区分。纯展示 class，不进 textContent，行号/批注/搜索不受影响。 */
+.notes-toc-sub.notes-toc-sub-new { color: #1a8f3c; }
+.dark .notes-toc-sub.notes-toc-sub-new { color: #51cf66; }
+
 /* ============ 基带编码波形（内联 SVG，替代原 img 外链） ============
    原图是 <img src="*.svg"> 且硬编码白底 #ffffff + 深色文字：暗色主题下白块刺眼，
    页面缩放/高 DPR 下外链 SVG 可能被按固有尺寸栅格化再放大而发虚。
