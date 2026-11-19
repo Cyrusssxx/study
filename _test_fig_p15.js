@@ -3,7 +3,7 @@
  * CO 2.1.4 整数转换三种位模式 / CO 1.2.4 层次结构与 ISA 分界线及三类语言翻译程序；
  * CN 6.4.1 邮件六步收发与服务器双重角色 / CN 5.1.1 三层通信范围与端口分用 /
  * CN 6.1.1 C/S 与 P2P / CN 3.7.1 节点交换机与路由器作用域。
- * P15 时点精确总量：fig-img 195（co46/os70/cn48/ds31）、黄框 310（74/77/53/106，本批未动）。
+ * P15 时点精确总量：fig-img 195（co46/os70/cn48/ds31）、黄框 311（74/77/54/106，本批未动）。
  * 后续批次只增不减 → 配图断言降级为下限，精确总量由最新批次测试 _test_fig_p16.js 统管。
  * 行号双基线（本批零漂移）：CO 1810 / OS 3660 / CN 1108 / DS 1173·1175；jsdom 1962 / 3668 / 1220 / 1330。
  */
@@ -200,7 +200,7 @@ for (const sub of SUBS) {
 
 // ---------- 6. 精确总量 / 三方一致 / 序列化 ----------
 const FIG_N = { co: 46, os: 70, cn: 47, ds: 31 };
-const CALL_N = { co: 74, os: 77, cn: 53, ds: 106 };
+const CALL_N = { co: 74, os: 77, cn: 54, ds: 106 };
 for (const sub of SUBS) {
   check(sub + ' 配图 >= ' + FIG_N[sub] + ' 张（P15 下限，精确总量见 _test_cn_code_wave）',
     (RAW[sub].match(/fig-img/g) || []).length, n => n >= FIG_N[sub]);
@@ -215,7 +215,7 @@ for (const sub of SUBS) {
 }
 check('全库 fig-img >= 194 张（精确 195 见 _test_cn_code_wave）',
   SUBS.reduce((n, s) => n + (RAW[s].match(/fig-img/g) || []).length, 0), n => n >= 194);
-check('全库黄框 310 个（本批未新增）', SUBS.reduce((n, s) => n + (RAW[s].match(/class=\\"key-callout\\"/g) || []).length, 0), 310);
+check('全库黄框 311 个（本批未新增）', SUBS.reduce((n, s) => n + (RAW[s].match(/class=\\"key-callout\\"/g) || []).length, 0), 311);
 const STRUCT = { co: 2, ds: 0, cn: 12, os: 19 };
 check('内联 struct-fig 总量（CO2/DS0/CN12/OS19；CN 的 12 含 2.1.3 波形图、OS 的 19 含 1.5 启动流程图 + 2.2.4 切换对比图 + 4.2.2/4.2.8/2.2.6 三张；CO 的 2 为 5.3.4/5.2.3 数据通路图）',
   Object.entries(STRUCT).every(([s, v]) => (RAW[s].match(/struct-fig/g) || []).length === v), true);
@@ -230,7 +230,7 @@ function subseq(old, neu) {
 }
 const BAK_DIR = 'archive/fig_p15_2026-11-13/';
 // 第十七批豁免：CN 2.1.3 的编码波形图由 <img> 外链换成内联 SVG，属替换而非纯插入。
-const REPLACED_KEYS = ['2.1.3', '1.5', '5.3.1', '5.3.3', '2.2.4', '4.3.4', '5.4.3'];   // 1.5：OS 引导正文精简重排；2.2.4：乘除法溢出判据纠错（tools/fix_co224.py）
+const REPLACED_KEYS = ['2.1.3', '1.5', '5.3.1', '5.3.3', '2.2.4', '4.3.4', '5.4.3', '3.5.2', '3.6.2', '5.4.1'];   // 1.5：OS 引导正文精简重排；2.2.4：乘除法溢出判据纠错（tools/fix_co224.py）
 let guardDone = 0, guardBad = 0, changed = 0, changedKeys = [];
 for (const sub of SUBS) {
   const bp = BAK_DIR + sub + '_notes.before.json';
@@ -298,7 +298,7 @@ if (!JSDOM || !IDBFactory) {
         no15: [...d.querySelectorAll('.anno-line')].filter(e => {
             // 已按「精简」重排的节/小节：1.5（节级）、5.3.1（小节级）
             const h = e.closest('.notes-sub') || e.closest('.notes-section');
-            return !(h && (sub === 'co' ? /^(1\.5 |5\.3\.1 |5\.3\.3 |2\.2\.4 |4\.3\.4 |5\.4\.3 )/ : /^(1\.5 |5\.3\.1 |5\.3\.3 )/).test(h.dataset.sec));
+            return !(h && (sub === 'co' ? /^(1\.5 |5\.3\.1 |5\.3\.3 |2\.2\.4 |4\.3\.4 |5\.4\.3 )/ : /^(1\.5 |5\.3\.1 |5\.3\.3 |3\.5\.2 |3\.6\.2 |5\.4\.1 )/).test(h.dataset.sec));
         }).map(e => e.textContent.trim()),
         figs: d.querySelectorAll('img.fig-img').length,
         calls: d.querySelectorAll('.key-callout').length,

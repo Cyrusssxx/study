@@ -172,6 +172,9 @@ if (fs.existsSync(path.join(ROOT, BAK))) {
   // 后续批次（第四批）给 CN 4.5.3 / 4.3.4 各插一张图，第六批又给 4.2.7 插一张，都是纯插入的 data-fig 双段块。
   // 这几节不参与本批「只改 2.1.3」的守卫，但必须单独过「纯插入」断言。
   const LATER = ['4.5.3 在局域网上进行硬件多播', '4.3.4 从IPv4向IPv6过渡', '4.2.7 网际控制报文协议ICMP'];
+  // 退避详解批次：3.5.2 加退避四步表(h4/table/div)、3.6.2 修正 10Mb/s 争用期数值(li 内文字)、
+  // 5.4.1 题47表加 cn-case-table class。三节 p/li 数量未变(1220 基线不动)，均为备案改写。
+  const EXTRA = ['3.5.2 随机访问介质访问控制', '3.6.2 以太网与IEEE 802.3', '5.4.1 MSS 设置过大或过小的影响'];
   const subseq = (old, neu) => {
     let i = 0;
     for (let j = 0; j < neu.length && i < old.length; j++) if (neu[j] === old[i]) i++;
@@ -179,7 +182,7 @@ if (fs.existsSync(path.join(ROOT, BAK))) {
   };
   check('后续三张 CN 图所在小节都是纯插入（before 是 after 的子序列）',
     LATER.every(k => subseq(stripZt(bm.get(k)), stripZt(am.get(k)))), true);
-  const changed = [...bm.keys()].filter(k => !LATER.includes(k) && stripWv(stripZt(bm.get(k))) !== stripWv(stripZt(am.get(k))));
+  const changed = [...bm.keys()].filter(k => !LATER.includes(k) && !EXTRA.includes(k) && stripWv(stripZt(bm.get(k))) !== stripWv(stripZt(am.get(k))));
   check('4.2.5 只多了 2021-47 图块（剥掉后与 before 逐字一致）',
     stripWv(stripZt(am.get('4.2.5 地址解析协议（ARP）'))) === stripZt(bm.get('4.2.5 地址解析协议（ARP）')), true);
   check('本批只改了 1 个小节', changed.length, 1);
@@ -228,7 +231,8 @@ if (!JSDOM || !IDBFactory) {
       // 逐行比对与数量一致性都排除该节，其余小节仍要求零漂移。
       no15: [...d.querySelectorAll('.anno-line')].filter(e => {
           const h = e.closest('.notes-sub') || e.closest('.notes-section');
-          return !(h && /^(1\.5 |5\.3\.1 |5\.3\.3 )/.test(h.dataset.sec));
+          // 追加退避详解批次改写的三节（3.6.2 有 li 内文字替换，逐行文本会变但行号不变）
+          return !(h && /^(1\.5 |5\.3\.1 |5\.3\.3 |3\.5\.2 |3\.6\.2 |5\.4\.1 )/.test(h.dataset.sec));
       }).map(e => e.textContent.trim()),
       figs: d.querySelectorAll('img.fig-img').length,
       waveFigs: d.querySelectorAll('figure.wave-fig').length,

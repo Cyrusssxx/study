@@ -77,7 +77,7 @@ for (const s of SUBS)
 const total = SUBS.reduce((n, s) => n + (RAW[s].match(/fig-img/g) || []).length, 0);
 check('全库 fig-img = 226', total, 226);
 // 黄框计数未动（图块是 p，不是 key-callout）
-const CALL_N = { co: 74, os: 77, cn: 53, ds: 106 };
+const CALL_N = { co: 74, os: 77, cn: 54, ds: 106 };
 for (const s of SUBS)
   check(`${s.toUpperCase()} 黄框 = ${CALL_N[s]}（本批未动）`, (RAW[s].match(/class=\\"key-callout\\"/g) || []).length, CALL_N[s]);
 
@@ -86,7 +86,7 @@ for (const [f] of Object.entries(svgs)) {
   check('SW 预缓存含 ' + f, SW.includes('img/' + f), true);
   check('SVG 文件存在 ' + f, fs.existsSync(path.join(ROOT, 'pwa/img', f + '.svg')), true);
 }
-check('DATA_VER 已重建（250 资源哈希）', SW.includes('quiz408-data-f01c2fb17e'), true);
+check('DATA_VER 已重建（250 资源哈希）', SW.includes('quiz408-data-e05bc81e9e'), true);
 
 // ---------- 5. 序列化格式正确（字节可逆） ----------
 for (const s of ['co', 'cn', 'ds']) {

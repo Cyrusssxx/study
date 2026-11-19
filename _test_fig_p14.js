@@ -1,7 +1,7 @@
 /* 2026-11-13 第十四批（继续 CO / OS / CN 三科）：4 张自绘图，全部落在零图小节，本批不新增黄框。
  * 图：OS 3.2.1 虚拟内存（部分装入＋调入/置换＋容量上限）· OS 2.2.2 进程调度（三部件＋四可以三不可以）·
  *     CO 6.2.1 总线事务（三阶段＋非突发 80ns vs 突发 50ns）· CN 6.4.2 邮件三层结构＋MIME 三个首部＋Base64。
- * P14 下限（精确量由 _test_fig_p15.js 统管）：fig-img 186（co44/os67/cn44/ds31）、黄框 310（74/77/53/106，本批未动）。
+ * P14 下限（精确量由 _test_fig_p15.js 统管）：fig-img 186（co44/os67/cn44/ds31）、黄框 311（74/77/54/106，本批未动）。
  * 行号双基线（本批零漂移）：CO 1810 / OS 3660 / CN 1108 / DS 1173·1175；jsdom 1962 / 3668 / 1220 / 1330。
  */
 const fs = require('fs');
@@ -200,7 +200,7 @@ for (const sub of SUBS) {
 
 // ---------- 6. 精确总量 / 三方一致 / 序列化 ----------
 const FIG_N = { co: 44, os: 67, cn: 44, ds: 31 };
-const CALL_N = { co: 74, os: 77, cn: 53, ds: 106 };
+const CALL_N = { co: 74, os: 77, cn: 54, ds: 106 };
 for (const sub of SUBS) {
   check(sub + ' 配图 >= ' + FIG_N[sub] + ' 张（P14 下限，后续批次会继续加）',
     (RAW[sub].match(/fig-img/g) || []).length, n => n >= FIG_N[sub]);
@@ -214,7 +214,7 @@ for (const sub of SUBS) {
     refs.every(r => fs.existsSync(path.join(ROOT, 'pwa', r)) && sw.includes("'" + r + "'")), true);
 }
 check('全库 fig-img >= 186 张（P14 下限）', SUBS.reduce((n, s) => n + (RAW[s].match(/fig-img/g) || []).length, 0), n => n >= 186);
-check('全库黄框 310 个（本批未新增）', SUBS.reduce((n, s) => n + (RAW[s].match(/class=\\"key-callout\\"/g) || []).length, 0), 310);
+check('全库黄框 311 个（本批未新增）', SUBS.reduce((n, s) => n + (RAW[s].match(/class=\\"key-callout\\"/g) || []).length, 0), 311);
 const STRUCT = { co: 2, ds: 0, cn: 12, os: 19 };
 check('内联 struct-fig 总量（CO2/DS0/CN12/OS19；CN 的 12 含 2.1.3 波形图、OS 的 19 含 1.5 启动流程图 + 2.2.4 切换对比图 + 4.2.2/4.2.8/2.2.6 三张；CO 的 2 为 5.3.4/5.2.3 数据通路图）',
   Object.entries(STRUCT).every(([s, v]) => (RAW[s].match(/struct-fig/g) || []).length === v), true);
@@ -239,7 +239,7 @@ for (const sub of SUBS) {
   for (const { key, h } of allHtmls(sub)) A.set(key, h);
   for (const [k, old] of B) {
     const neu = A.get(k) || '';
-    if (old !== neu) { changed++; changedKeys.push(k); if (!subseq(old, neu) && k !== '2.1.3' && k !== '1.5' && k !== '5.3.1' && k !== '5.3.3' && k !== '2.2.4' && k !== '4.3.4' && k !== '5.4.3') guardBad++; }
+    if (old !== neu) { changed++; changedKeys.push(k); if (!subseq(old, neu) && k !== '2.1.3' && k !== '1.5' && k !== '5.3.1' && k !== '5.3.3' && k !== '2.2.4' && k !== '4.3.4' && k !== '5.4.3' && k !== '3.5.2' && k !== '3.6.2' && k !== '5.4.1') guardBad++; }
   }
   guardDone++;
 }
@@ -290,7 +290,7 @@ if (!JSDOM || !IDBFactory) {
         no15: [...d.querySelectorAll('.anno-line')].filter(e => {
             // 已按「精简」重排的节/小节：1.5（节级）、5.3.1（小节级）
             const h = e.closest('.notes-sub') || e.closest('.notes-section');
-            return !(h && (sub === 'co' ? /^(1\.5 |5\.3\.1 |5\.3\.3 |2\.2\.4 |4\.3\.4 |5\.4\.3 )/ : /^(1\.5 |5\.3\.1 |5\.3\.3 )/).test(h.dataset.sec));
+            return !(h && (sub === 'co' ? /^(1\.5 |5\.3\.1 |5\.3\.3 |2\.2\.4 |4\.3\.4 |5\.4\.3 )/ : /^(1\.5 |5\.3\.1 |5\.3\.3 |3\.5\.2 |3\.6\.2 |5\.4\.1 )/).test(h.dataset.sec));
         }).map(e => e.textContent.trim()),
         figs: d.querySelectorAll('img.fig-img').length,
         calls: d.querySelectorAll('.key-callout').length,

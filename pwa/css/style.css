@@ -4951,6 +4951,17 @@ figure.struct-fig { cursor: zoom-in; }
     white-space: nowrap;
     text-align: center;
 }
+/* 长文本条件列对比表（如 2018 题47 分片推演）：首列允许换行并限宽，避免长条件把推演列挤成竖条。
+   仅命中 .cn-case-table，不影响其余 term 对比表的短首列居中样式。 */
+.notes-sub-body table.cn-case-table { table-layout: fixed; }
+.notes-sub-body table.cn-case-table td:first-child {
+    white-space: normal;
+    text-align: left;
+    width: 46%;
+}
+.notes-sub-body table.cn-case-table th:first-child { width: 46%; }
+.notes-sub-body table.cn-case-table th,
+.notes-sub-body table.cn-case-table td { overflow-wrap: anywhere; }
 
 /* 报文段/帧/IP首部格式格子图（章首「格式总览」小节）：字段名+长度单格居中，像教材结构图 */
 .fmt-fig {

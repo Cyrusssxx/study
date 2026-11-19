@@ -2,7 +2,7 @@
  * 图：CN 4.1.1 异构网络互连分层屏蔽 · CN 1.2.2 协议水平/服务垂直/SAP · CN 3.8.3 共享式以太网带宽 1/N ·
  *     CO 6.1.3 总线带宽乘法链 · CO 4.2.1 相对转移以取指后的 PC 为基准。
  * 判据框：CN 4.1.1 IP 首部三把尺子 · CN 1.2.2 服务的三组分类。
- * 锁精确总量：fig-img 182（co43/os65/cn43/ds31）、黄框 310（74/77/53/106）。
+ * 锁精确总量：fig-img 182（co43/os65/cn43/ds31）、黄框 311（74/77/54/106）。
  * 行号双基线（本批零漂移）：CO 1810 / OS 3660 / CN 1108 / DS 1173·1175；jsdom 1962 / 3668 / 1220 / 1330。
  */
 const fs = require('fs');
@@ -214,7 +214,7 @@ for (const sub of SUBS) {
 
 // ---------- 6. 精确总量 / 三方一致 / 序列化 ----------
 const FIG_N = { co: 43, os: 65, cn: 43, ds: 31 };
-const CALL_N = { co: 74, os: 77, cn: 53, ds: 106 };
+const CALL_N = { co: 74, os: 77, cn: 54, ds: 106 };
 for (const sub of SUBS) {
   check(sub + ' 配图 >= ' + FIG_N[sub] + ' 张（P13 下限，后续批次会继续加）',
     (RAW[sub].match(/fig-img/g) || []).length, n => n >= FIG_N[sub]);
@@ -228,7 +228,7 @@ for (const sub of SUBS) {
     refs.every(r => fs.existsSync(path.join(ROOT, 'pwa', r)) && sw.includes("'" + r + "'")), true);
 }
 check('全库 fig-img >= 182 张（P13 下限）', SUBS.reduce((n, s) => n + (RAW[s].match(/fig-img/g) || []).length, 0), n => n >= 182);
-check('全库黄框 310 个', SUBS.reduce((n, s) => n + (RAW[s].match(/class=\\"key-callout\\"/g) || []).length, 0), 310);
+check('全库黄框 311 个', SUBS.reduce((n, s) => n + (RAW[s].match(/class=\\"key-callout\\"/g) || []).length, 0), 311);
 const STRUCT = { co: 2, ds: 0, cn: 12, os: 19 };
 check('内联 struct-fig 总量（CO2/DS0/CN12/OS19；CN 的 12 含 2.1.3 波形图、OS 的 19 含 1.5 启动流程图 + 2.2.4 切换对比图 + 4.2.2/4.2.8/2.2.6 三张；CO 的 2 为 5.3.4/5.2.3 数据通路图）',
   Object.entries(STRUCT).every(([s, v]) => (RAW[s].match(/struct-fig/g) || []).length === v), true);
@@ -253,7 +253,7 @@ for (const sub of SUBS) {
   for (const { key, h } of allHtmls(sub)) A.set(key, h);
   for (const [k, old] of B) {
     const neu = A.get(k) || '';
-    if (old !== neu) { changed++; changedKeys.push(k); if (!subseq(old, neu) && k !== '2.1.3' && k !== '1.5' && k !== '5.3.1' && k !== '5.3.3' && k !== '2.2.4' && k !== '4.3.4' && k !== '5.4.3') guardBad++; }
+    if (old !== neu) { changed++; changedKeys.push(k); if (!subseq(old, neu) && k !== '2.1.3' && k !== '1.5' && k !== '5.3.1' && k !== '5.3.3' && k !== '2.2.4' && k !== '4.3.4' && k !== '5.4.3' && k !== '3.5.2' && k !== '3.6.2' && k !== '5.4.1') guardBad++; }
   }
   guardDone++;
 }
@@ -304,7 +304,7 @@ if (!JSDOM || !IDBFactory) {
         no15: [...d.querySelectorAll('.anno-line')].filter(e => {
             // 已按「精简」重排的节/小节：1.5（节级）、5.3.1（小节级）
             const h = e.closest('.notes-sub') || e.closest('.notes-section');
-            return !(h && (sub === 'co' ? /^(1\.5 |5\.3\.1 |5\.3\.3 |2\.2\.4 |4\.3\.4 |5\.4\.3 )/ : /^(1\.5 |5\.3\.1 |5\.3\.3 )/).test(h.dataset.sec));
+            return !(h && (sub === 'co' ? /^(1\.5 |5\.3\.1 |5\.3\.3 |2\.2\.4 |4\.3\.4 |5\.4\.3 )/ : /^(1\.5 |5\.3\.1 |5\.3\.3 |3\.5\.2 |3\.6\.2 |5\.4\.1 )/).test(h.dataset.sec));
         }).map(e => e.textContent.trim()),
         figs: d.querySelectorAll('img.fig-img').length,
         calls: d.querySelectorAll('.key-callout').length,
