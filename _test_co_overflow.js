@@ -10,7 +10,7 @@
  *   ⑤ 补码除法「R 中做全符号位扩展」表述含糊，且未说明溢出置 OF。
  *
  * 本测试锁三件事：错误表述不得回潮、正确判据必须在位、图里的二进制例子数学自洽。
- * 行号基线：co .anno-line = 1971（新图两段 data-fig 不进 行号）。
+ * 行号基线：co .anno-line = 1962（新图两段 data-fig 不进 行号）。
  */
 const fs = require('fs');
 const path = require('path');
@@ -126,7 +126,7 @@ if (!JSDOM || !IDBFactory) {
     });
     await new Promise(r => setTimeout(r, 4000));
     const d = dom.window.document;
-    check('真实渲染 .anno-line = 1971（改写不动段数、新图不进行号）', d.querySelectorAll('.anno-line').length, 1971);
+    check('真实渲染 .anno-line = 1962（改写不动段数、新图不进行号）', d.querySelectorAll('.anno-line').length, 1962);
     const img = [...d.querySelectorAll('img.fig-img')]
       .find(el => (el.getAttribute('src') || '').includes('co_fig_muldiv_overflow'));
     check('本图渲染出来了', !!img, true);

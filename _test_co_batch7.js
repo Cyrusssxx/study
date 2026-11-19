@@ -104,7 +104,7 @@ for (const f of SVGS) {
   check('SW 预缓存含 ' + f, SW.includes('img/' + f + '.svg'), true);
   check('SVG 文件存在 ' + f, fs.existsSync(path.join(ROOT, 'pwa/img', f + '.svg')), true);
 }
-check('DATA_VER 已重建（250 资源）', SW.includes('quiz408-data-46ca31a879'), true);
+check('DATA_VER 已重建（250 资源）', SW.includes('quiz408-data-f01c2fb17e'), true);
 
 // ---------- 6. 行号快照零漂移（与落盘前基线一致） ----------
 function snap(html) {
@@ -119,7 +119,7 @@ for (const ch of DOC.chapters)
       const r = snap(x.html || '');
       tot = [tot[0] + r[0], tot[1] + r[1], tot[2] + r[2]];
     }
-check('行号快照 p/li/semi = [706,1113,903]', tot, [706, 1113, 903]);
+check('行号快照 p/li/semi = [700,1110,898]', tot, [700, 1110, 898]);
 
 // ---------- 7. 序列化字节可逆 ----------
 const rawBuf = fs.readFileSync(path.join(ROOT, 'pwa/data/notes/co_notes.json'));

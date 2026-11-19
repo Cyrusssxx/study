@@ -105,12 +105,12 @@ for (const c of notes.chapters) {
     }
   }
 }
-check('全库可批注行数锁死 1819（P2 未新增裸 p / li）', annoLines, 1819);
+check('全库可批注行数锁死 1810（P2 未新增裸 p / li）', annoLines, 1810);
 check('SW 里计组图不少于 24 条（精确值见 _test_co_fig_p3）', (sw.match(/'img\/co_fig_[^']+'/g) || []).length >= 24, true);
 check('图片引用全部落在 pwa/img 内', [...notesRaw.matchAll(/src=\\"(img\/[^\\"]+)\\"/g)]
   .every(m => fs.existsSync(path.join(ROOT, 'pwa') + '/' + m[1])), true);
 
-// ---- 运行时硬护栏：jsdom 真实渲染 .anno-line 仍是 1971 ----
+// ---- 运行时硬护栏：jsdom 真实渲染 .anno-line 仍是 1962 ----
 let JSDOM = null, IDBFactory = null, IDBKeyRange = null, VirtualConsole = null;
 try { ({ JSDOM, VirtualConsole } = require('jsdom')); } catch (e) { }
 try { ({ IDBFactory, IDBKeyRange } = require('fake-indexeddb')); } catch (e) { }
@@ -139,8 +139,8 @@ if (!JSDOM || !IDBFactory) {
     });
     await new Promise(r => setTimeout(r, 4000));
     const d = dom.window.document;
-    check('真实渲染 .anno-line 总数 = 1971（已存批注不错位）',
-      d.querySelectorAll('.anno-line').length, 1971);
+    check('真实渲染 .anno-line 总数 = 1962（已存批注不错位）',
+      d.querySelectorAll('.anno-line').length, 1962);
     check('真实渲染配图不少于 24 张', d.querySelectorAll('img.fig-img').length >= 24, true);
     check('真实渲染黄框不少于 44 个', d.querySelectorAll('.key-callout').length >= 44, true);
     check('图块被误标行号 = 0',

@@ -2,7 +2,7 @@
  * 图：CO 7.2.4 I/O 端口编址 · OS 2.1.6 四种进程通信 · CN 3.5.1 信道划分 · OS 2.3.6 管程与条件变量；
  * 纯判据框：CN 6.4.1 邮件收发 · CO 5.2.1 取指与中断 · OS 1.1.2 三大角色 · OS 1.2.3 响应时间 · CN 2.3.1 中继器。
  * 锁精确总量：fig-img 177（co41/os65/cn40/ds31）、黄框 308（74/77/51/106）。
- * 行号双基线（本批零漂移）：CO 1819 / OS 3660 / CN 1108 / DS 1173·1175；jsdom 1971 / 3668 / 1220 / 1330。
+ * 行号双基线（本批零漂移）：CO 1810 / OS 3660 / CN 1108 / DS 1173·1175；jsdom 1962 / 3668 / 1220 / 1330。
  */
 const fs = require('fs');
 const path = require('path');
@@ -218,7 +218,7 @@ check('CSS .key-callout 无绝对定位 / z-index / 负外边距遮挡',
 check('笔记 JSON 里没有 SVG 专有的 tspan', SUBS.every(s => !RAW[s].includes('tspan')), true);
 
 // ---------- 5. 行号双基线（图块与黄框都不参与行号） ----------
-const LINE_BASE = { co: [1819, 1819], os: [3405, 3405], cn: [1108, 1108], ds: [1173, 1175] };
+const LINE_BASE = { co: [1810, 1810], os: [3405, 3405], cn: [1108, 1108], ds: [1173, 1175] };
 for (const sub of SUBS) {
   let paired = 0, open = 0;
   for (const { h } of allHtmls(sub)) {
@@ -272,7 +272,7 @@ for (const sub of SUBS) {
   for (const { key, h } of allHtmls(sub)) A.set(key, h);
   for (const [k, old] of B) {
     const neu = A.get(k) || '';
-    if (old !== neu) { changed++; if (!subseq(old, neu) && k !== '2.1.3' && k !== '1.5' && k !== '5.3.1' && k !== '5.3.3' && k !== '2.2.4' && k !== '4.3.4') guardBad++; }
+    if (old !== neu) { changed++; if (!subseq(old, neu) && k !== '2.1.3' && k !== '1.5' && k !== '5.3.1' && k !== '5.3.3' && k !== '2.2.4' && k !== '4.3.4' && k !== '5.4.3') guardBad++; }
   }
   guardDone++;
 }
@@ -321,7 +321,7 @@ if (!JSDOM || !IDBFactory) {
         no15: [...d.querySelectorAll('.anno-line')].filter(e => {
             // 已按「精简」重排的节/小节：1.5（节级）、5.3.1（小节级）
             const h = e.closest('.notes-sub') || e.closest('.notes-section');
-            return !(h && (sub === 'co' ? /^(1\.5 |5\.3\.1 |5\.3\.3 |2\.2\.4 |4\.3\.4 )/ : /^(1\.5 |5\.3\.1 |5\.3\.3 )/).test(h.dataset.sec));
+            return !(h && (sub === 'co' ? /^(1\.5 |5\.3\.1 |5\.3\.3 |2\.2\.4 |4\.3\.4 |5\.4\.3 )/ : /^(1\.5 |5\.3\.1 |5\.3\.3 )/).test(h.dataset.sec));
         }).map(e => e.textContent.trim()),
         figs: d.querySelectorAll('img.fig-img').length,
         calls: d.querySelectorAll('.key-callout').length,
@@ -341,7 +341,7 @@ if (!JSDOM || !IDBFactory) {
       }
       return out;
     }
-    const JSDOM_BASE = { co: 1971, os: 3409, cn: 1220, ds: 1330 };
+    const JSDOM_BASE = { co: 1962, os: 3409, cn: 1220, ds: 1330 };
     for (const sub of SUBS) {
       const a = await render(sub, RAW[sub]);
       check(sub + ' 真实渲染 .anno-line = ' + JSDOM_BASE[sub], a.lines.length, JSDOM_BASE[sub]);

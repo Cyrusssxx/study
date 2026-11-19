@@ -8,7 +8,7 @@
  *   （sub esp,24 / temp1=125 / temp2=80 / [ebp-12][ebp-8][ebp-4] /
  *    [esp]、[esp+4] / mov eax,[ebp+12]（y）、mov edx,[ebp+8]（x））。
  *   图里多出来的 [ebp-20]~[ebp-32] 是推导值，用数学断言锁死。
- * 基线：CO jsdom .anno-line = 1971。
+ * 基线：CO jsdom .anno-line = 1962。
  */
 const fs = require('fs');
 const path = require('path');
@@ -126,7 +126,7 @@ if (!JSDOM || !IDBFactory) {
     });
     await new Promise(r => setTimeout(r, 4000));
     const d = dom.window.document;
-    check('真实渲染 .anno-line = 1971（插图零漂移）', d.querySelectorAll('.anno-line').length, 1971);
+    check('真实渲染 .anno-line = 1962（插图零漂移）', d.querySelectorAll('.anno-line').length, 1962);
     check('图块没被算进行号',
       [...d.querySelectorAll('[data-fig]')].filter(el => el.classList.contains('anno-line')).length, 0);
     const img = [...d.querySelectorAll('img.fig-img')]

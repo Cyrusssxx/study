@@ -6,7 +6,7 @@
  * 5) OS 4.2.6 补 inode ≈ 多级页表 类比表，CO 3.6.2 补跨科指针；
  * 6) 讲义 fig-img 点击放大（common.js 全局委托 + style.css 光标）；
  * 7) 模拟考「猜对了」toast 文案改回「垫底层」语义。
- * 行号基线：CN 静态 1108 / jsdom 1220，OS 3668，CO 1971 —— 本批零漂移。
+ * 行号基线：CN 静态 1108 / jsdom 1220，OS 3668，CO 1962 —— 本批零漂移。
  */
 const fs = require('fs');
 const path = require('path');

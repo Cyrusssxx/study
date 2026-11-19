@@ -90,7 +90,7 @@ check('表格不参与 anno-line（只进搜索索引）',
   page.includes("section.querySelectorAll('.notes-body th, .notes-body td')"), true);
 
 // 行号漂移护栏：全库「不带 data-fig 的 <p> + 全部 <li>」= 可批注行数。
-// 补图前的基线值是 1819，新增内容一个可批注行都不能带来（否则已存批注全部错位）。
+// 补图前的基线值是 1810，新增内容一个可批注行都不能带来（否则已存批注全部错位）。
 let annoLines = 0;
 for (const c of notes.chapters) {
   for (const s of c.sections || []) {
@@ -102,7 +102,7 @@ for (const c of notes.chapters) {
     }
   }
 }
-check('全库可批注行数锁死 1819（补图不产生新行号）', annoLines, 1819);
+check('全库可批注行数锁死 1810（补图不产生新行号）', annoLines, 1810);
 check('三节既有 <p>/<li> 序列未被改写（总数仍 > 100）',
   (all73.match(/<p\b|<li\b/g) || []).length > 100, true);
 

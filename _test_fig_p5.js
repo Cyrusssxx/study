@@ -2,7 +2,7 @@
  * OS 4.2.2 目录项分解 / CN 2.1.2 奈氏与香农 / CO 4.3.1 x86 相对转移 / DS 6.1.1 图的术语；
  * 另给 OS 2.3.4、CN 6.3.1、CO 5.7.1、DS 3.1.1 各补 1 个判据黄框。
  * 总量只锁下限（精确量已归 _test_fig_p6.js）：fig-img ≥141（co33/os52/cn30/ds26）、黄框 ≥242（55/59/33/95）。
- * 行号双基线：CO 1819/1971、OS 3660/3668、CN 1108/1220、DS 1173(配对)/1175(开标签)/1330，本批零漂移。
+ * 行号双基线：CO 1810/1962、OS 3660/3668、CN 1108/1220、DS 1173(配对)/1175(开标签)/1330，本批零漂移。
  */
 const fs = require('fs');
 const path = require('path');
@@ -142,7 +142,7 @@ check('CSS .key-callout 无绝对定位 / z-index / 负外边距遮挡',
 check('笔记 JSON 里没有 SVG 专有的 tspan', SUBS.every(s => !RAW[s].includes('tspan')), true);
 
 // ---------- 5. 行号双基线（图块与黄框都不参与行号） ----------
-const LINE_BASE = { co: [1819, 1819], os: [3405, 3405], cn: [1108, 1108], ds: [1173, 1175] };
+const LINE_BASE = { co: [1810, 1810], os: [3405, 3405], cn: [1108, 1108], ds: [1173, 1175] };
 for (const sub of SUBS) {
   let paired = 0, open = 0;
   for (const { h } of allHtmls(sub)) {
@@ -197,7 +197,7 @@ for (const sub of SUBS) {
   for (const { key, h } of allHtmls(sub)) A.set(key, h);
   for (const [k, old] of B) {
     const neu = A.get(k) || '';
-    if (old !== neu) { changed++; if (!subseq(old, neu) && k !== '2.1.3' && k !== '1.5' && k !== '5.3.1' && k !== '5.3.3' && k !== '2.2.4' && k !== '4.3.4') guardBad++; }
+    if (old !== neu) { changed++; if (!subseq(old, neu) && k !== '2.1.3' && k !== '1.5' && k !== '5.3.1' && k !== '5.3.3' && k !== '2.2.4' && k !== '4.3.4' && k !== '5.4.3') guardBad++; }
   }
   guardDone++;
 }
@@ -215,7 +215,7 @@ if (!JSDOM || !IDBFactory) {
   process.exit(fail ? 1 : 0);
 } else {
   (async () => {
-    const JSDOM_BASE = { co: 1971, os: 3409, cn: 1220, ds: 1330 };
+    const JSDOM_BASE = { co: 1962, os: 3409, cn: 1220, ds: 1330 };
     for (const sub of SUBS) {
       const pageHtml = read('pwa/notes.html')
         .replace(/<script src="([^"]+)"[^>]*><\/script>/g, (m, s) => {

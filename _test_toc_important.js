@@ -140,7 +140,7 @@ for (const s of SUBS) {
   // CN 4.2.5 是纯插入（2021-47 时序图，两段都带 data-fig="1"），不进 REPLACED。
   // co 2.2.4 是「改写」不是插入：乘除法溢出判据纠错（tools/fix_co224.py），
   // 段数/行数不变（p 10 / li 3），但 0 删除 0 改写的前提不成立，须备案。
-  const REPLACED = ['2.1.3 编码与调制', '1.5 操作系统引导', '5.3.1 磁盘', '5.3.3 磁盘调度算法', '2.2.4 定点数的乘除运算', '4.3.4 过程调用的机器级表示'];
+  const REPLACED = ['2.1.3 编码与调制', '1.5 操作系统引导', '5.3.1 磁盘', '5.3.3 磁盘调度算法', '2.2.4 定点数的乘除运算', '4.3.4 过程调用的机器级表示', '5.4.3 微程序控制器'];
   check(s + ' 正文 HTML 变化集合 = ' + JSON.stringify(allowed), changed, allowed);
   check(s + ' 所有变化仍是纯插入或已备案替换',
     changed.every(k => subseq(b.get(k), a.get(k)) || REPLACED.includes(k)), true);

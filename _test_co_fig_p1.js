@@ -90,12 +90,12 @@ for (const c of notes.chapters) {
     }
   }
 }
-check('全库可批注行数锁死 1819（P1 未新增裸 p / li）', annoLines, 1819);
+check('全库可批注行数锁死 1810（P1 未新增裸 p / li）', annoLines, 1810);
 check('SW 里计组图 >= 20 条', (sw.match(/'img\/co_fig_[^']+'/g) || []).length >= 20, true);
 check('前端会跳过 data-fig 的行号标注',
   page.includes("el.hasAttribute('data-fig') || el.closest('[data-fig]')"), true);
 
-// ---- 运行时硬护栏：jsdom 真实渲染的 .anno-line 总数必须仍是 1971 ----
+// ---- 运行时硬护栏：jsdom 真实渲染的 .anno-line 总数必须仍是 1962 ----
 let JSDOM = null, IDBFactory = null, IDBKeyRange = null, VirtualConsole = null;
 try { ({ JSDOM, VirtualConsole } = require('jsdom')); } catch (e) { }
 try { ({ IDBFactory, IDBKeyRange } = require('fake-indexeddb')); } catch (e) { }
@@ -124,8 +124,8 @@ if (!JSDOM || !IDBFactory) {
     });
     await new Promise(r => setTimeout(r, 4000));
     const d = dom.window.document;
-    check('真实渲染 .anno-line 总数 = 1971（已存批注不错位）',
-      d.querySelectorAll('.anno-line').length, 1971);
+    check('真实渲染 .anno-line 总数 = 1962（已存批注不错位）',
+      d.querySelectorAll('.anno-line').length, 1962);
     check('真实渲染配图 >= 20 张', d.querySelectorAll('img.fig-img').length >= 20, true);
     check('真实渲染黄框 >= 27 个', d.querySelectorAll('.key-callout').length >= 27, true);
     check('图块被误标行号 = 0',

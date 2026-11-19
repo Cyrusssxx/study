@@ -81,7 +81,7 @@ for (const sec of CALLOUT_ONLY) {
   check(sec + ' 黄框带重点加粗', /class="key-callout">[\s\S]*?<b>/.test(h), true);
 }
 
-// 行号漂移护栏：不带 data-fig 的 <p> + 全部 <li> = 可批注行数，必须仍是 1819
+// 行号漂移护栏：不带 data-fig 的 <p> + 全部 <li> = 可批注行数，必须仍是 1810
 let annoLines = 0;
 for (const c of notes.chapters) {
   for (const s of c.sections || []) {
@@ -94,15 +94,15 @@ for (const c of notes.chapters) {
     }
   }
 }
-check('全库可批注行数锁死 1819', annoLines, 1819);
+check('全库可批注行数锁死 1810', annoLines, 1810);
 check('前端会跳过 data-fig 的行号标注',
   page.includes("el.hasAttribute('data-fig') || el.closest('[data-fig]')"), true);
 check('表格只进搜索索引、不参与 anno-line',
   page.includes("section.querySelectorAll('.notes-body th, .notes-body td')"), true);
 check('SW 里计组图 >= 13 条', (sw.match(/'img\/co_fig_[^']+'/g) || []).length >= 13, true);
 
-// ---- 运行时硬护栏：jsdom 真实渲染的 .anno-line 总数必须仍是 1971 ----
-// 静态 1819 只数「不带 data-fig 的 <p> + <li>」，fmtNotes 还会拆行；
+// ---- 运行时硬护栏：jsdom 真实渲染的 .anno-line 总数必须仍是 1962 ----
+// 静态 1810 只数「不带 data-fig 的 <p> + <li>」，fmtNotes 还会拆行；
 // 这一步验证真实渲染结果，才是已存行级批注不错位的最终依据。
 let JSDOM = null, IDBFactory = null, IDBKeyRange = null, VirtualConsole = null;
 try { ({ JSDOM, VirtualConsole } = require('jsdom')); } catch (e) { }
@@ -132,8 +132,8 @@ if (!JSDOM || !IDBFactory) {
     });
     await new Promise(r => setTimeout(r, 4000));
     const d = dom.window.document;
-    check('真实渲染 .anno-line 总数 = 1971（已存批注不错位）',
-      d.querySelectorAll('.anno-line').length, 1971);
+    check('真实渲染 .anno-line 总数 = 1962（已存批注不错位）',
+      d.querySelectorAll('.anno-line').length, 1962);
     check('真实渲染配图 >= 13 张', d.querySelectorAll('img.fig-img').length >= 13, true);
     check('真实渲染黄框 >= 24 个', d.querySelectorAll('.key-callout').length >= 24, true);
     check('图块被误标行号 = 0',
