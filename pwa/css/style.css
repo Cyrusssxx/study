@@ -3688,6 +3688,39 @@ img.fig-img:hover { opacity: .92; }
        缩放时浏览器只按初始尺寸栅格化一次再让 GPU 拉伸，SVG 就被当位图放大而发虚。
        缩放改由 JS 设内联 width/height 完成（见 lightbox.js），故不再提升图层。 */
 }
+
+/* 图集切图箭头：固定在放大图左右两侧中部（对应红框位），hover 高亮、到边界置灰。
+   相对 .fig-lb-stage 定位（它是 flex:1 且非 positioned，故这里给 stage 补 relative）。 */
+.fig-lb-stage { position: relative; }
+.fig-lb-nav {
+    position: absolute; top: 50%; transform: translateY(-50%);
+    z-index: 2; display: none; place-items: center;
+    width: 42px; height: 60px; padding: 0;
+    border: 1px solid rgba(255, 255, 255, .28); border-radius: 12px;
+    background: rgba(24, 32, 44, .55); color: #fff;
+    font-size: 34px; line-height: 1; cursor: pointer;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, .28);
+    backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
+    transition: background .15s ease, opacity .15s ease, transform .15s ease;
+    -webkit-tap-highlight-color: transparent;
+}
+.fig-lb-nav:hover { background: rgba(24, 32, 44, .82); }
+.fig-lb-nav:active { transform: translateY(-50%) scale(.94); }
+.fig-lb-nav-prev { left: 10px; }
+.fig-lb-nav-next { right: 10px; }
+.fig-lb-nav.disabled { opacity: .32; cursor: default; }
+.fig-lb-nav.disabled:hover { background: rgba(24, 32, 44, .55); }
+/* 图集计数：贴工具条左侧，仅图集模式下由 JS 填内容 */
+.fig-lb-gallery-count {
+    color: rgba(255, 255, 255, .78); font-size: 12px;
+    font-variant-numeric: tabular-nums; padding: 0 8px 0 4px;
+}
+.fig-lb-gallery-count:empty { display: none; }
+@media (max-width: 620px) {
+    .fig-lb-nav { width: 32px; height: 48px; font-size: 26px; }
+    .fig-lb-nav-prev { left: 4px; }
+    .fig-lb-nav-next { right: 4px; }
+}
 /* 复制/下载的反馈提示 */
 .fig-lb-toast {
     position: absolute; left: 50%; bottom: 80px;

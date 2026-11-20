@@ -26,6 +26,9 @@
     var scale = INITIAL_SCALE, tx = 0, ty = 0;
     var baseW = 0, baseH = 0;          // scale = 1 时的基准显示尺寸（由 CSS 适配舞台后量得）
     var box = null, imgEl = null, zoomLabel = null;
+    // 图集导航：从当前页可见配图收集的有序图源列表 + 当前索引（-1 表示不属于图集）
+    var gallery = [], galleryIndex = -1;
+    var navPrev = null, navNext = null, galleryCount = null;
 
     function build() {
         if (box) return box;
@@ -33,8 +36,13 @@
         box.id = 'figLightbox';
         box.className = 'fig-lightbox';
         box.innerHTML =
-            '<div class="fig-lb-stage"><img alt="放大预览"></div>' +
+            '<div class="fig-lb-stage">' +
+            '    <button class="fig-lb-nav fig-lb-nav-prev" data-act="prev" title="上一张（←）" aria-label="上一张">‹</button>' +
+            '    <img alt="放大预览">' +
+            '    <button class="fig-lb-nav fig-lb-nav-next" data-act="next" title="下一张（→）" aria-label="下一张">›</button>' +
+            '</div>' +
             '<div class="fig-lb-bar">' +
+            '    <span class="fig-lb-gallery-count" id="figLbGalleryCount"></span>' +
             '    <button class="fig-lb-btn" data-act="out" title="缩小">➖</button>' +
             '    <span class="fig-lb-zoom" id="figLbZoom">100%</span>' +
             '    <button class="fig-lb-btn" data-act="in" title="放大">➕</button>' +
@@ -44,8 +52,11 @@
             '</div>';
 
         document.body.appendChild(box);
-        imgEl = box.querySelector('img');
+        imgEl = box.querySelector('.fig-lb-stage img');
         zoomLabel = box.querySelector('.fig-lb-zoom');
+        navPrev = box.querySelector('.fig-lb-nav-prev');
+        navNext = box.querySelector('.fig-lb-nav-next');
+        galleryCount = box.querySelector('.fig-lb-gallery-count');
 
         // 工具栏
         box.querySelector('.fig-lb-bar').addEventListener('click', function (e) {
@@ -58,6 +69,10 @@
             else if (act === 'copy') copyImage();
             else if (act === 'close') close();
         });
+
+        // 左右箭头按钮在图集有 ≥2 张、且当前图在列表中才生效（边界到头停住）
+        navPrev.addEventListener('click', function (e) { e.stopPropagation(); gotoGallery(-1); });
+        navNext.addEventListener('click', function (e) { e.stopPropagation(); gotoGallery(1); });
 
         // 滚轮缩放（以光标为中心）
         box.addEventListener('wheel', function (e) {
@@ -73,7 +88,7 @@
         var dragging = false, sx = 0, sy = 0;
         box.addEventListener('mousedown', function (e) {
             if (!box.classList.contains('show')) return;
-            if (e.target.closest('.fig-lb-bar')) return;
+            if (e.target.closest('.fig-lb-bar') || e.target.closest('.fig-lb-nav')) return;
             dragging = true; sx = e.clientX; sy = e.clientY;
             box.classList.add('dragging');
             e.preventDefault();
@@ -163,6 +178,53 @@
         apply();
     }
 
+    /* ---------- 图集导航：从当前页可见配图收集有序图源，左右/方向键切换 ----------
+     * 图源两类：① 独立图 img.fig-img 直接取 src；② 内联 figure.struct-fig 用
+     * inlineFigureToSrc() 序列化（与点击放大时的 src 完全同源，索引才能对上）。
+     * 按文档顺序收集、可见性过滤（jsdom/折叠区 getClientRects 为 0 时跳过）。
+     * 收集不到 ≥2 张、或当前 src 不在列表内 → 不显示箭头，题库单图放大保持原样。
+     */
+    function collectGallery(curSrc) {
+        var list = [];
+        var nodes = document.querySelectorAll('img.fig-img, figure.struct-fig');
+        for (var i = 0; i < nodes.length; i++) {
+            var n = nodes[i];
+            // 可见性：隐藏筛选/折叠区里的图不纳入切图序列
+            if (n.getClientRects && !n.getClientRects().length) continue;
+            var s = '';
+            if (n.tagName === 'IMG') {
+                s = n.src;
+            } else {
+                s = inlineFigureToSrc(n);
+            }
+            if (s) list.push(s);
+        }
+        var idx = curSrc ? list.indexOf(curSrc) : -1;
+        return { list: list, idx: idx };
+    }
+
+    function updateNav() {
+        var usable = gallery.length >= 2 && galleryIndex >= 0;
+        var show = usable ? 'grid' : 'none';   // CSS 默认 none，这里显式 grid（place-items 才生效）
+        navPrev.style.display = show;
+        navNext.style.display = show;
+        if (galleryCount) {
+            galleryCount.textContent = usable ? (galleryIndex + 1) + ' / ' + gallery.length : '';
+        }
+        // 边界：到头停住（不循环），按钮置灰仍可见，给出明确边界反馈
+        navPrev.classList.toggle('disabled', !usable || galleryIndex <= 0);
+        navNext.classList.toggle('disabled', !usable || galleryIndex >= gallery.length - 1);
+    }
+
+    function gotoGallery(delta) {
+        if (gallery.length < 2 || galleryIndex < 0) return;
+        var next = galleryIndex + delta;
+        if (next < 0 || next >= gallery.length) return;   // 边界不循环
+        galleryIndex = next;
+        openSrc(gallery[next]);   // 复用同一套加载/测量逻辑
+        updateNav();
+    }
+
     function close() {
         if (!box) return;
         box.classList.remove('show');
@@ -174,6 +236,8 @@
         imgEl.style.maxHeight = '';
         imgEl.style.transform = '';
         scale = 1; tx = 0; ty = 0; baseW = 0; baseH = 0;
+        gallery = []; galleryIndex = -1;
+        updateNav();
         document.body.style.overflow = '';
     }
 
@@ -228,6 +292,17 @@
 
     window.openFigLightbox = function (src) {
         build();
+        box.classList.add('show');          // 先显示，舞台才有尺寸可量
+        document.body.style.overflow = 'hidden';
+        // 图集导航：打开时收集当前页可见配图并定位；失败则无箭头（单图放大不受影响）
+        var g = collectGallery(src);
+        gallery = g.list;
+        galleryIndex = g.idx;
+        updateNav();
+        openSrc(src);
+    };
+
+    function openSrc(src) {
         baseW = 0; baseH = 0; scale = INITIAL_SCALE; tx = 0; ty = 0;
         imgEl.style.width = '';
         imgEl.style.height = '';
@@ -235,12 +310,10 @@
         imgEl.style.maxHeight = '';
         imgEl.style.transform = '';
         if (zoomLabel) zoomLabel.textContent = Math.round(INITIAL_SCALE * 100) + '%';
-        box.classList.add('show');          // 先显示，舞台才有尺寸可量
-        document.body.style.overflow = 'hidden';
         imgEl.onload = function () { measureFitted(); apply(); };
         imgEl.src = src;
         if (imgEl.complete && imgEl.naturalWidth) { measureFitted(); apply(); }
-    };
+    }
 
     /* ---------- 讲义内联结构图（figure.struct-fig）点击放大 ----------
      * 内联 SVG 在讲义里靠 style.css 的 .struct-svg / .ct-* / .boot-* / .wave-* / .ev-*
@@ -335,5 +408,7 @@
         else if (e.key === '+' || e.key === '=') zoomCenter(1.25);
         else if (e.key === '-' || e.key === '_') zoomCenter(1 / 1.25);
         else if (e.key === '0') reset();
+        else if (e.key === 'ArrowLeft') { e.preventDefault(); gotoGallery(-1); }
+        else if (e.key === 'ArrowRight') { e.preventDefault(); gotoGallery(1); }
     });
 })();
