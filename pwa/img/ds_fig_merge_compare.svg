@@ -1,0 +1,55 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 680 525" width="680" height="525" font-family="-apple-system,BlinkMacSystemFont,'Segoe UI','Microsoft YaHei',sans-serif">
+  <rect x="0" y="0" width="680" height="525" fill="#ffffff"/>
+  <text x="40" y="28" font-size="16" font-weight="700" fill="#312e81">二路归并 · i 指左段，j 指右段</text>
+  <text x="40" y="47" font-size="12" fill="#64748b">同一组数，自底向上合并；每比一次只取走一个元素，剩下的一段整块接上不再比较</text>
+
+  <text x="40" y="76" font-size="13" fill="#1e293b">第 1 趟（两两并，各 1 次比较）</text>
+  <text x="40" y="98" font-size="12" fill="#1e293b">[49|38]→[38, 49]　　[65|97]→[65, 97]　　[76|13]→[13, 76]　　[27|49′]→[27, 49′]</text>
+  <text x="40" y="126" font-size="13" fill="#1e293b">第 2 趟（四四并）</text>
+  <text x="40" y="148" font-size="12" fill="#1e293b">[38, 49] | [65, 97] → 2 次　　[13, 76] | [27, 49′] → 3 次</text>
+  <text x="40" y="176" font-size="13" fill="#1e293b">第 3 趟（最终并）</text>
+  <text x="40" y="198" font-size="12" fill="#1e293b">[38, 49, 65, 97] | [13, 27, 49′, 76] → 7 次　合计 1+1+1+1+2+3+7 = 16 次（上界 n⌈log₂n⌉ = 24）</text>
+
+  <text x="40" y="228" font-size="13" fill="#1e293b">放大最终归并：i 在左段 A，j 在右段 B，每次只比 A[i] 与 B[j]</text>
+  <text x="44" y="252" font-size="11" fill="#64748b">A（i）</text>
+  <text x="44" y="304" font-size="11" fill="#64748b">B（j）</text>
+  <text x="139" y="252" font-size="11" text-anchor="middle" fill="#64748b">i=1</text>
+  <text x="202" y="252" font-size="11" text-anchor="middle" fill="#64748b">2</text>
+  <text x="265" y="252" font-size="11" text-anchor="middle" fill="#64748b">3</text>
+  <text x="328" y="252" font-size="11" text-anchor="middle" fill="#64748b">4</text>
+  <text x="139" y="304" font-size="11" text-anchor="middle" fill="#64748b">j=1</text>
+  <text x="202" y="304" font-size="11" text-anchor="middle" fill="#64748b">2</text>
+  <text x="265" y="304" font-size="11" text-anchor="middle" fill="#64748b">3</text>
+  <text x="328" y="304" font-size="11" text-anchor="middle" fill="#64748b">4</text>
+
+  <rect x="110" y="260" width="58" height="36" rx="6" fill="#eef2ff" stroke="#c7d2fe"/>
+  <text x="139" y="278" font-size="13" font-weight="600" text-anchor="middle" dominant-baseline="central" fill="#1e293b">38</text>
+  <rect x="173" y="260" width="58" height="36" rx="6" fill="#eef2ff" stroke="#c7d2fe"/>
+  <text x="202" y="278" font-size="13" font-weight="600" text-anchor="middle" dominant-baseline="central" fill="#1e293b">49</text>
+  <rect x="236" y="260" width="58" height="36" rx="6" fill="#eef2ff" stroke="#c7d2fe"/>
+  <text x="265" y="278" font-size="13" font-weight="600" text-anchor="middle" dominant-baseline="central" fill="#1e293b">65</text>
+  <rect x="299" y="260" width="58" height="36" rx="6" fill="#eef2ff" stroke="#c7d2fe"/>
+  <text x="328" y="278" font-size="13" font-weight="600" text-anchor="middle" dominant-baseline="central" fill="#1e293b">97</text>
+  <rect x="110" y="312" width="58" height="36" rx="6" fill="#d1fae5" stroke="#10b981"/>
+  <text x="139" y="330" font-size="13" font-weight="600" text-anchor="middle" dominant-baseline="central" fill="#1e293b">13</text>
+  <rect x="173" y="312" width="58" height="36" rx="6" fill="#d1fae5" stroke="#10b981"/>
+  <text x="202" y="330" font-size="13" font-weight="600" text-anchor="middle" dominant-baseline="central" fill="#1e293b">27</text>
+  <rect x="236" y="312" width="58" height="36" rx="6" fill="#d1fae5" stroke="#10b981"/>
+  <text x="265" y="330" font-size="13" font-weight="600" text-anchor="middle" dominant-baseline="central" fill="#1e293b">49′</text>
+  <rect x="299" y="312" width="58" height="36" rx="6" fill="#d1fae5" stroke="#10b981"/>
+  <text x="328" y="330" font-size="13" font-weight="600" text-anchor="middle" dominant-baseline="central" fill="#1e293b">76</text>
+
+  <text x="380" y="270" font-size="12" fill="#1e293b">比一次 → 取走一个，指针右移</text>
+  <text x="380" y="292" font-size="12" fill="#1e293b">相等时取左边 → 稳定</text>
+  <text x="380" y="318" font-size="12" fill="#1e293b">一段用尽 → 另一段整块接上</text>
+  <text x="380" y="340" font-size="12" fill="#1e293b">不再比较，所以不是 m+n 次</text>
+
+  <text x="40" y="370" font-size="12" fill="#1e293b">1) i=1：38 vs 13 → 取 13，j←2</text>
+  <text x="40" y="390" font-size="12" fill="#1e293b">2) 38 vs 27 → 取 27，j←3</text>
+  <text x="40" y="410" font-size="12" fill="#1e293b">3) 38 vs 49′ → 取 38，i←2</text>
+  <text x="40" y="430" font-size="12" fill="#1e293b">4) 49 vs 49′ → 相等取左 49（稳定），i←3</text>
+  <text x="40" y="450" font-size="12" fill="#1e293b">5) 65 vs 49′ → 取 49′，j←4</text>
+  <text x="40" y="470" font-size="12" fill="#1e293b">6) 65 vs 76 → 取 65，i←4</text>
+  <text x="40" y="490" font-size="12" fill="#1e293b">7) 97 vs 76 → 取 76；j 用尽，97 直接接上 → 共 7 次比较</text>
+  <text x="40" y="514" font-size="11" fill="#64748b">两表长 m=n=4：最多 m+n−1=7（本例取满），最少 min(m,n)=4；移动 2n×3 趟 = 2n⌈log₂n⌉ = 48 次，与初态无关</text>
+</svg>

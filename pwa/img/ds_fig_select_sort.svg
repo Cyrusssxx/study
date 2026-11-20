@@ -1,0 +1,58 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 680 500" width="680" height="500" font-family="-apple-system,BlinkMacSystemFont,'Segoe UI','Microsoft YaHei',sans-serif">
+  <rect x="0" y="0" width="680" height="500" fill="#ffffff"/>
+  <text x="40" y="28" font-size="16" font-weight="700" fill="#312e81">简单选择排序 · i 定位，j 扫描，k 记最小</text>
+  <text x="40" y="47" font-size="12" fill="#64748b">同一组数；第 i 趟在 a[i…n] 里选最小，j = i+1…n 逐个比，k 始终指向当前最小</text>
+
+  <text x="69" y="90" font-size="11" text-anchor="middle" fill="#64748b">1</text>
+  <text x="132" y="90" font-size="11" text-anchor="middle" fill="#64748b">2</text>
+  <text x="195" y="90" font-size="11" text-anchor="middle" fill="#64748b">3</text>
+  <text x="258" y="90" font-size="11" text-anchor="middle" fill="#64748b">4</text>
+  <text x="321" y="90" font-size="11" text-anchor="middle" fill="#64748b">5</text>
+  <text x="384" y="90" font-size="11" text-anchor="middle" fill="#64748b">6</text>
+  <text x="447" y="90" font-size="11" text-anchor="middle" fill="#64748b">7</text>
+  <text x="510" y="90" font-size="11" text-anchor="middle" fill="#64748b">8</text>
+
+  <rect x="40" y="98" width="58" height="40" rx="6" fill="#fef3c7" stroke="#f59e0b"/>
+  <text x="69" y="118" font-size="13" font-weight="600" text-anchor="middle" dominant-baseline="central" fill="#1e293b">49</text>
+  <rect x="103" y="98" width="58" height="40" rx="6" fill="#f8fafc" stroke="#cbd5e1"/>
+  <text x="132" y="118" font-size="13" font-weight="600" text-anchor="middle" dominant-baseline="central" fill="#1e293b">38</text>
+  <rect x="166" y="98" width="58" height="40" rx="6" fill="#f8fafc" stroke="#cbd5e1"/>
+  <text x="195" y="118" font-size="13" font-weight="600" text-anchor="middle" dominant-baseline="central" fill="#1e293b">65</text>
+  <rect x="229" y="98" width="58" height="40" rx="6" fill="#f8fafc" stroke="#cbd5e1"/>
+  <text x="258" y="118" font-size="13" font-weight="600" text-anchor="middle" dominant-baseline="central" fill="#1e293b">97</text>
+  <rect x="292" y="98" width="58" height="40" rx="6" fill="#f8fafc" stroke="#cbd5e1"/>
+  <text x="321" y="118" font-size="13" font-weight="600" text-anchor="middle" dominant-baseline="central" fill="#1e293b">76</text>
+  <rect x="355" y="98" width="58" height="40" rx="6" fill="#d1fae5" stroke="#10b981"/>
+  <text x="384" y="118" font-size="13" font-weight="600" text-anchor="middle" dominant-baseline="central" fill="#1e293b">13</text>
+  <rect x="418" y="98" width="58" height="40" rx="6" fill="#f8fafc" stroke="#cbd5e1"/>
+  <text x="447" y="118" font-size="13" font-weight="600" text-anchor="middle" dominant-baseline="central" fill="#1e293b">27</text>
+  <rect x="481" y="98" width="58" height="40" rx="6" fill="#f8fafc" stroke="#cbd5e1"/>
+  <text x="510" y="118" font-size="13" font-weight="600" text-anchor="middle" dominant-baseline="central" fill="#1e293b">49′</text>
+  <text x="69" y="154" font-size="11" text-anchor="middle" fill="#64748b">i=1</text>
+  <text x="384" y="154" font-size="11" text-anchor="middle" fill="#64748b">k=6, 值 13</text>
+  <text x="510" y="154" font-size="11" text-anchor="middle" fill="#64748b">j=8 扫描完</text>
+
+  <text x="40" y="176" font-size="12" fill="#1e293b">j=2: 38&lt;49 → k=2；j=3: 65；j=4: 97；j=5: 76（都不换）</text>
+  <text x="40" y="196" font-size="12" fill="#1e293b">j=6: 13&lt;38 → k=6；j=7: 27；j=8: 49′（都不换）</text>
+  <text x="40" y="218" font-size="12" fill="#1e293b">共比 7 次 → k=6；交换 a[1]=49 与 a[6]=13：temp←49（1），a[1]←13（2），a[6]←49（3）= 3 次移动</text>
+  <text x="40" y="242" font-size="13" fill="#1e293b">结果：[13, 38, 65, 97, 76, 49, 27, 49′]；第 1 位确定，i=2…7 同法</text>
+
+  <text x="40" y="262" font-size="13" fill="#1e293b">逐趟统计（移动按交换的三次赋值算；比较次数与初态完全无关）</text>
+  <text x="44" y="286" font-size="11" fill="#64748b">i</text>
+  <text x="110" y="286" font-size="11" fill="#64748b">比较次数</text>
+  <text x="200" y="286" font-size="11" fill="#64748b">移动次数</text>
+  <text x="280" y="286" font-size="11" fill="#64748b">最小下标 k</text>
+  <text x="400" y="286" font-size="11" fill="#64748b">是否交换</text>
+  <path d="M40 294H630" fill="none" stroke="#cbd5e1" stroke-width="0.5"/>
+
+  <text x="44" y="314" font-size="12" fill="#1e293b">1</text><text x="110" y="314" font-size="12" fill="#1e293b">7</text><text x="200" y="314" font-size="12" fill="#1e293b">3</text><text x="280" y="314" font-size="12" fill="#1e293b">6（13）</text><text x="400" y="314" font-size="12" fill="#1e293b">是</text>
+  <text x="44" y="334" font-size="12" fill="#1e293b">2</text><text x="110" y="334" font-size="12" fill="#1e293b">6</text><text x="200" y="334" font-size="12" fill="#1e293b">3</text><text x="280" y="334" font-size="12" fill="#1e293b">7（27）</text><text x="400" y="334" font-size="12" fill="#1e293b">是</text>
+  <text x="44" y="354" font-size="12" fill="#1e293b">3</text><text x="110" y="354" font-size="12" fill="#1e293b">5</text><text x="200" y="354" font-size="12" fill="#1e293b">3</text><text x="280" y="354" font-size="12" fill="#1e293b">7（38）</text><text x="400" y="354" font-size="12" fill="#1e293b">是</text>
+  <text x="44" y="374" font-size="12" fill="#1e293b">4</text><text x="110" y="374" font-size="12" fill="#1e293b">4</text><text x="200" y="374" font-size="12" fill="#1e293b">3</text><text x="280" y="374" font-size="12" fill="#1e293b">6（49）</text><text x="400" y="374" font-size="12" fill="#1e293b">是</text>
+  <text x="44" y="394" font-size="12" fill="#1e293b">5</text><text x="110" y="394" font-size="12" fill="#1e293b">3</text><text x="200" y="394" font-size="12" fill="#1e293b">3</text><text x="280" y="394" font-size="12" fill="#1e293b">8（49′）</text><text x="400" y="394" font-size="12" fill="#1e293b">是</text>
+  <text x="44" y="414" font-size="12" fill="#1e293b">6</text><text x="110" y="414" font-size="12" fill="#1e293b">2</text><text x="200" y="414" font-size="12" fill="#1e293b">3</text><text x="280" y="414" font-size="12" fill="#1e293b">7（65）</text><text x="400" y="414" font-size="12" fill="#1e293b">是</text>
+  <text x="44" y="434" font-size="12" fill="#1e293b">7</text><text x="110" y="434" font-size="12" fill="#1e293b">1</text><text x="200" y="434" font-size="12" fill="#1e293b">0</text><text x="280" y="434" font-size="12" fill="#1e293b">7（76）</text><text x="400" y="434" font-size="12" fill="#1e293b">否</text>
+  <path d="M40 444H630" fill="none" stroke="#cbd5e1" stroke-width="0.5"/>
+  <text x="44" y="464" font-size="12" fill="#1e293b">合计</text><text x="110" y="464" font-size="12" fill="#1e293b">28</text><text x="200" y="464" font-size="12" fill="#1e293b">18</text>
+  <text x="40" y="488" font-size="11" fill="#64748b">比较恒为 Σ(n−i) = n(n−1)/2 = 28；移动 ≤ 3(n−1) = 21，本例 18（6 次交换）</text>
+</svg>
