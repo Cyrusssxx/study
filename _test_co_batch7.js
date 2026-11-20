@@ -104,7 +104,7 @@ for (const f of SVGS) {
   check('SW 预缓存含 ' + f, SW.includes('img/' + f + '.svg'), true);
   check('SVG 文件存在 ' + f, fs.existsSync(path.join(ROOT, 'pwa/img', f + '.svg')), true);
 }
-check('DATA_VER 已重建（250 资源）', SW.includes('quiz408-data-8fb4d403d3'), true);
+check('DATA_VER 已重建（250 资源）', SW.includes('quiz408-data-e96342467e'), true);
 
 // ---------- 6. 行号快照零漂移（与落盘前基线一致） ----------
 function snap(html) {
