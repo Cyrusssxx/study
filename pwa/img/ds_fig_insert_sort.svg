@@ -1,6 +1,6 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 680 550" width="680" height="550" font-family="-apple-system,BlinkMacSystemFont,'Segoe UI','Microsoft YaHei',sans-serif">
   <rect x="0" y="0" width="680" height="550" fill="#ffffff"/>
-  <text x="40" y="28" font-size="16" font-weight="700" fill="#312e81">直接插入排序 · i 与 j 怎么比</text>
+  <text x="40" y="28" font-size="16" font-weight="700" fill="#312e81"><tspan font-weight="700">直接插入排序 · i 与 j 怎么比</tspan></text>
   <text x="40" y="48" font-size="12" fill="#64748b">A = [49, 38, 65, 97, 76, 13, 27, 49′]；i = 2…8 指向待插入元素，j = i−1 在有序区从右往左比</text>
   <text x="40" y="70" font-size="13" fill="#1e293b">放大 i = 8 这一趟：key = 49′，左边 1–7 位已有序</text>
 

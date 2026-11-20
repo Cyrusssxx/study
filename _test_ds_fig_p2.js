@@ -37,14 +37,17 @@ const FIGS = [
   ['btree_split',   '7.4.1', '根分裂则树高 +1'],
   ['hash_collision','7.5.3', '拉链法查到空链表即失败'],
   ['shell_sort',    '8.2.3', '49 与 49* 可能交换先后'],
+  ['insert_sort',   '8.2.1', '对比记忆：直接插入「基本有序最好」'],
+  ['select_sort',   '8.4.1', '高频判断：「简单选择排序的比较次数与初始状态有关」错误'],
+  ['merge_compare', '8.5.1', '两个「与初始无关」'],
   ['heap_sort',     '8.4.2', '49 下沉与 76 换'],
   ['loser_tree',    '8.7.3', '放心增大归并路数减少 I/O'],
 ];
 
 check('序列化仍是 CRLF + 无尾换行',
   [notesRaw.indexOf('\r\n') > 0, notesRaw.endsWith('\n')], [true, false]);
-check('DS 配图 >= 17 张（第二批下限，精确总量见 _test_ds_fig_p3）',
-  (notesRaw.match(/fig-img/g) || []).length >= 17, true);
+check('DS 配图 >= 20 张（含插入/选择/归并比较图）',
+  (notesRaw.match(/fig-img/g) || []).length >= 20, true);
 check('DS 黄框 >= 85 个（第二批下限）',
   (notesRaw.match(/class=\\"key-callout\\"/g) || []).length >= 85, true);
 check('SW 里 DS 图 >= 17 条', (sw.match(/'img\/ds_fig_[^']+'/g) || []).length >= 17, true);
