@@ -296,7 +296,25 @@
                 '.struct-svg rect{fill:var(--card-bg);stroke:var(--primary)}' +
                 '.struct-svg line,.struct-svg path{stroke:var(--primary);fill:none}';
         }
-        var withCss = sm[0].replace(/<svg[^>]*>/, function (m) { return m + '<style>' + css + '</style>'; });
+        var withCss = sm[0].replace(/<svg[^>]*>/, function (m) {
+            // 内联 SVG 原本只有 viewBox 没有 width/height → 浏览器给 data URL 的默认
+            // naturalWidth≈300，且作为可缩放矢量会被 CSS max-width:94vw 先撑满舞台宽，
+            // measureFitted 于是把「撑满后的尺寸」当基准，再乘 1.4 初始倍率 → 宽图严重
+            // 溢出视口（与带显式 width/height 的独立图观感不一致）。这里把 viewBox 的
+            // 宽高补成 width/height，让 naturalWidth 回到图原始像素、基准与独立图一致。
+            var out = m;
+            if (!/\swidth=/.test(m) || !/\sheight=/.test(m)) {
+                var vb = /viewBox\s*=\s*["']([^"']+)["']/.exec(m);
+                if (vb) {
+                    var p = vb[1].trim().split(/[\s,]+/);
+                    var vw = parseFloat(p[2]), vh = parseFloat(p[3]);
+                    if (vw > 0 && vh > 0) {
+                        out = m.replace(/>$/, ' width="' + vw + '" height="' + vh + '">');
+                    }
+                }
+            }
+            return out + '<style>' + css + '</style>';
+        });
         return 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(withCss);
     }
 
