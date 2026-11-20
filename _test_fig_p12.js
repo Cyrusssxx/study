@@ -248,8 +248,8 @@ for (const sub of SUBS) {
 }
 check('全库 fig-img >= 177 张（P12 下限）', SUBS.reduce((n, s) => n + (RAW[s].match(/fig-img/g) || []).length, 0), n => n >= 177);
 check('全库黄框 >= 308 个（P12 下限）', SUBS.reduce((n, s) => n + (RAW[s].match(/class=\\"key-callout\\"/g) || []).length, 0), n => n >= 308);
-const STRUCT = { co: 2, ds: 0, cn: 12, os: 19 };
-check('内联 struct-fig 总量（CO2/DS0/CN12/OS19；CN 的 12 含 2.1.3 波形图、OS 的 19 含 1.5 启动流程图 + 2.2.4 切换对比图 + 4.2.2/4.2.8/2.2.6 三张；CO 的 2 为 5.3.4/5.2.3 数据通路图）',
+const STRUCT = { co: 2, ds: 0, cn: 12, os: 20 };
+check('内联 struct-fig 总量（CO2/DS0/CN12/OS20；CN 的 12 含 2.1.3 波形图、OS 的 20 含 1.5 启动流程图 + 2.2.4 切换对比图 + 4.2.2/4.2.8/2.2.6 三张；CO 的 2 为 5.3.4/5.2.3 数据通路图）',
   Object.entries(STRUCT).every(([s, v]) => (RAW[s].match(/struct-fig/g) || []).length === v), true);
 check('SW DATA_VER 非空且已刷新为本批哈希',
   /quiz408-data-[a-f0-9]{10}/.test(sw), true);

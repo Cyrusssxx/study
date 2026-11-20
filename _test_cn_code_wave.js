@@ -7,7 +7,7 @@
  *  参与渲染树，任意缩放都是矢量；配色走 CSS 变量，亮/暗自动适配；窄屏改为
  *  横向滚动而不是把 11.5px 字缩成 8px。
  *
- * 本文件统管：CN/全库 fig-img 精确量、struct-fig 精确量(33)、波形路径与比特串的同源
+ * 本文件统管：CN/全库 fig-img 精确量、struct-fig 精确量(34)、波形路径与比特串的同源
  *  断言、资源三方一致性、行号双基线（CN 静态 1108 / jsdom 1220）。
  */
 const fs = require('fs');
@@ -46,8 +46,8 @@ for (const s of SUBS)
 check('全库 fig-img 226 张（精确）',
   SUBS.reduce((n, s) => n + (RAW[s].match(/fig-img/g) || []).length, 0), 226);
 check('cn struct-fig 12 个（含本图）', (RAW.cn.match(/struct-fig/g) || []).length, 12);
-check('全库 struct-fig 33 个（CO2/DS0/CN12/OS19）',
-  SUBS.reduce((n, s) => n + (RAW[s].match(/struct-fig/g) || []).length, 0), 33);
+check('全库 struct-fig 34 个（CO2/DS0/CN12/OS20）',
+  SUBS.reduce((n, s) => n + (RAW[s].match(/struct-fig/g) || []).length, 0), 34);
 check('笔记 JSON 里没有 SVG 专有的 tspan', SUBS.every(s => !RAW[s].includes('tspan')), true);
 for (const s of SUBS)
   check(s + ' 序列化格式未变',

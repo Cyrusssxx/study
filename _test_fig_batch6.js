@@ -86,7 +86,7 @@ for (const [f] of Object.entries(svgs)) {
   check('SW 预缓存含 ' + f, SW.includes('img/' + f), true);
   check('SVG 文件存在 ' + f, fs.existsSync(path.join(ROOT, 'pwa/img', f + '.svg')), true);
 }
-check('DATA_VER 已重建（250 资源哈希）', SW.includes('quiz408-data-af1cc54034'), true);
+check('DATA_VER 已重建（250 资源哈希）', SW.includes('quiz408-data-8fb4d403d3'), true);
 
 // ---------- 5. 序列化格式正确（字节可逆） ----------
 for (const s of ['co', 'cn', 'ds']) {
