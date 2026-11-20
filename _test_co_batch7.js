@@ -96,7 +96,7 @@ check('CO fig-img = 60', (RAW.match(/fig-img/g) || []).length, 60);
 const SUBS = ['co', 'os', 'cn', 'ds'];
 let total = 0;
 for (const s of SUBS) total += (read(`pwa/data/notes/${s}_notes.json`).match(/fig-img/g) || []).length;
-check('全库 fig-img = 226', total, 226);
+check('全库 fig-img = 229', total, 229);
 check('CO 黄框 = 74（本批未动）', (RAW.match(/class=\\"key-callout\\"/g) || []).length, 74);
 
 // ---------- 5. SW 预缓存一致 ----------
@@ -104,7 +104,7 @@ for (const f of SVGS) {
   check('SW 预缓存含 ' + f, SW.includes('img/' + f + '.svg'), true);
   check('SVG 文件存在 ' + f, fs.existsSync(path.join(ROOT, 'pwa/img', f + '.svg')), true);
 }
-check('DATA_VER 已重建（250 资源）', SW.includes('quiz408-data-e96342467e'), true);
+check('DATA_VER 已重建（253 资源）', SW.includes('quiz408-data-9be2c86af2'), true);
 
 // ---------- 6. 行号快照零漂移（与落盘前基线一致） ----------
 function snap(html) {

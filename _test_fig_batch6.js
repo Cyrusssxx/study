@@ -71,11 +71,11 @@ for (const [f, kws] of Object.entries(svgs)) {
 }
 
 // ---------- 3. 图数基线（当前精确量） ----------
-const FIG_N = { co: 60, os: 76, cn: 51, ds: 39 };
+const FIG_N = { co: 60, os: 76, cn: 51, ds: 42 };
 for (const s of SUBS)
   check(`${s.toUpperCase()} fig-img = ${FIG_N[s]}`, (RAW[s].match(/fig-img/g) || []).length, FIG_N[s]);
 const total = SUBS.reduce((n, s) => n + (RAW[s].match(/fig-img/g) || []).length, 0);
-check('全库 fig-img = 226', total, 226);
+check('全库 fig-img = 229', total, 229);
 // 黄框计数未动（图块是 p，不是 key-callout）
 const CALL_N = { co: 74, os: 77, cn: 54, ds: 106 };
 for (const s of SUBS)
@@ -86,7 +86,7 @@ for (const [f] of Object.entries(svgs)) {
   check('SW 预缓存含 ' + f, SW.includes('img/' + f), true);
   check('SVG 文件存在 ' + f, fs.existsSync(path.join(ROOT, 'pwa/img', f + '.svg')), true);
 }
-check('DATA_VER 已重建（250 资源哈希）', SW.includes('quiz408-data-e96342467e'), true);
+check('DATA_VER 已重建（253 资源哈希）', SW.includes('quiz408-data-9be2c86af2'), true);
 
 // ---------- 5. 序列化格式正确（字节可逆） ----------
 for (const s of ['co', 'cn', 'ds']) {
