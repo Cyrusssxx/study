@@ -183,7 +183,8 @@ async function loadMapIndex() {
     if (_mapLoaded) return;
     _mapLoaded = true;
     try {
-        for (const [key, json] of [['co', 'co_map.json'], ['os', 'os_map.json']]) {
+        // OS 思维导图已改为流程图速查页（map.html?subject=os + os_flow.json），不再索引 os_map.json
+        for (const [key, json] of [['co', 'co_map.json']]) {
             const resp = await fetch(`data/${json}`);
             const data = await resp.json();
             const walk = (nodes, path) => {
@@ -1252,10 +1253,10 @@ async function api(url, opts = {}) {
                     .map(a => ({ type: 'algo', chapter: a.chapter, id: a.id, page: a.page, text: a.text.slice(0, 120) }));
             }
 
-            // ---- 思维导图（co/os_map.json，懒加载；命中跳 map.html?subject=xx&goto=节点id） ----
+            // ---- 思维导图（仅 co_map.json；OS 已改为流程图速查页，不再有导图索引）----
             let mapResults = [];
             let mapTotal = 0;
-            const mapSubjects = SUBJECTS[subject] ? (subject === 'co' || subject === 'os' ? [subject] : []) : ['co', 'os'];
+            const mapSubjects = SUBJECTS[subject] ? (subject === 'co' ? [subject] : []) : ['co'];
             if (mapSubjects.length) {
                 await loadMapIndex();
                 const hits = _mapIndex.filter(m => mapSubjects.includes(m.subject) && m.text.includes(kwNorm));

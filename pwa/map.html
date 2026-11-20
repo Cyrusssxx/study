@@ -50,7 +50,7 @@
         <div class="map-header">
             <h1 id="mapTitle">🗺️ 思维导图</h1>
             <p class="notes-source" id="mapSubtitle">加载中...</p>
-            <p class="map-anno-tip">📝 选中文字会弹出工具条：可划词高亮（黄/绿/蓝/粉）或点「📝批注」添加批注（可 Ctrl+V 粘贴截图，与笔记页同款）</p>
+            <p class="map-anno-tip" id="mapAnnoTip">📝 选中文字会弹出工具条：可划词高亮（黄/绿/蓝/粉）或点「📝批注」添加批注（可 Ctrl+V 粘贴截图，与笔记页同款）</p>
         </div>
         <div class="map-toolbar">
             <input class="search-input map-search" id="mapSearch" type="search"
@@ -580,6 +580,7 @@
         function onMapSearch() {
             searchQ = document.getElementById('mapSearch').value.trim().toLowerCase();
             PS.set({ q: searchQ });
+            if (IS_FLOW()) { if (FLOW) renderFlow(); return; }
             matchIds.clear(); forcedOpen.clear();
             if (searchQ) {
                 (function walk(nodes) {
@@ -600,7 +601,100 @@
             renderAll();
         }
 
+        // ==================== OS 流程图专页 ====================
+        // subject=os 时不再渲染思维导图，改渲染从讲义配图精选的流程图（data/os_flow.json）。
+        // 独立图引用讲义图片路径，内联图抽 <figure> 原文注入，二者都走 lightbox 放大委托。
+        const IS_FLOW = () => SUBJECT === 'os';
+        let FLOW = null;
+
+        function flowCardHtml(it) {
+            // 图：独立图用 img.fig-img（自动触发放大委托）；内联图直接注入 figure.struct-fig
+            const fig = it.inline
+                ? it.inline
+                : `<div class="fl-fig"><img class="fig-img" loading="lazy" src="${esc(it.src)}" alt="${esc(it.n)}"></div>`;
+            const jump = it.sec
+                ? `<a class="fl-jump" href="notes.html?subject=os&goto=${encodeURIComponent(it.sec)}" title="跳回讲义该小节">${esc(it.sec)} 节 ↗</a>`
+                : '';
+            const hay = (it.n + ' ' + it.order + ' ' + (it.sec || '') + ' ' + (it.src || '')).toLowerCase();
+            return `<article class="fl-card" data-search="${esc(hay)}">
+                <div class="fl-card-head">
+                    <h4 class="fl-title">${esc(it.n)}</h4>
+                    ${jump}
+                </div>
+                ${fig}
+                <p class="fl-order">${esc(it.order)}</p>
+            </article>`;
+        }
+
+        function renderFlow() {
+            const root = document.getElementById('mapRoot');
+            if (!FLOW) { root.innerHTML = '<div class="map-empty">流程图数据加载失败。</div>'; return; }
+            const q = searchQ.trim().toLowerCase();
+            let shown = 0;
+            const groupsHtml = FLOW.groups.map(g => {
+                const cards = g.items.map(flowCardHtml).join('');
+                return `<section class="fl-group">
+                    <h2 class="fl-group-title">${esc(g.name)}</h2>
+                    <div class="fl-grid">${cards}</div>
+                </section>`;
+            }).join('');
+            root.innerHTML = groupsHtml;
+            // 搜索：纯展示层过滤卡片（不改数据），并隐藏无命中的分组
+            if (q) {
+                root.querySelectorAll('.fl-card').forEach(c => {
+                    if (!c.dataset.search.includes(q)) c.style.display = 'none';
+                    else shown++;
+                });
+                root.querySelectorAll('.fl-group').forEach(g => {
+                    const any = [...g.querySelectorAll('.fl-card')].some(c => c.style.display !== 'none');
+                    g.style.display = any ? '' : 'none';
+                });
+            }
+            // 流程图模式：侧栏导航改为各组锚点
+            const nav = document.getElementById('olNav');
+            if (!q) {
+                nav.innerHTML = FLOW.groups.map((g, i) =>
+                    `<a class="ol-nav-item sub" data-idx="${i}" title="${esc(g.name)}">${esc(g.name)}</a>`).join('');
+                nav.querySelectorAll('.ol-nav-item[data-idx]').forEach(a => {
+                    a.onclick = () => {
+                        const sec = document.querySelectorAll('.fl-group')[+a.dataset.idx];
+                        if (sec) sec.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                        closeOlNav();
+                    };
+                });
+            } else {
+                nav.innerHTML = '';
+            }
+            const hint = document.getElementById('mapSearchHint');
+            if (q) {
+                hint.style.display = '';
+                hint.textContent = `🔍 找到 ${shown} 张流程图`;
+            } else {
+                hint.style.display = 'none';
+            }
+        }
+
+        async function loadFlow() {
+            setMapTitle(FLOW_TITLE_FALLBACK);
+            try {
+                const resp = await fetch('data/os_flow.json');
+                if (!resp.ok) throw new Error(resp.status);
+                FLOW = await resp.json();
+                setMapTitle(FLOW.title || FLOW_TITLE_FALLBACK);
+                document.getElementById('mapSubtitle').textContent = FLOW.subtitle || '';
+                document.getElementById('mapAnnoTip').style.display = 'none';
+                document.getElementById('mapSearch').placeholder = '🔍 搜索流程（如 系统调用、缺页、DMA、置换）…';
+                renderFlow();
+                PS.restoreScroll();
+            } catch (err) {
+                document.getElementById('mapSubtitle').textContent = '流程图加载失败：' + err.message;
+                document.getElementById('mapRoot').innerHTML = '<div class="map-empty">加载失败，请检查网络后刷新。</div>';
+            }
+        }
+        const FLOW_TITLE_FALLBACK = '操作系统 · 流程图速查';
+
         async function loadMap() {
+            if (IS_FLOW()) { return loadFlow(); }
             // 先按科目设好标题（即使 404 也显示对应科目名）
             setMapTitle(subjectName() + '思维导图');
             try {
