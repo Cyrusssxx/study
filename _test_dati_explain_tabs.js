@@ -63,7 +63,7 @@ const HTML = fs.readFileSync(path.join(PWA, 'dati.html'), 'utf8');
         return box && box.dataset.filled === '1';
     }));
     const box = () => doc.querySelector('.dati-abody[data-ans="co_zt2024_44"]');
-    const tabs = () => [...box().querySelectorAll('.dati-explain-tab')];
+    const tabs = () => [...box().querySelectorAll('.explain-switch-btn')];
     const pane = k => box().querySelector(`[data-explain-pane="${k}"]`);
 
     check('分段控件两项', tabs().map(b => b.textContent), ['文字解析', '图片解析']);
@@ -72,12 +72,12 @@ const HTML = fs.readFileSync(path.join(PWA, 'dati.html'), 'utf8');
     check('图片页含 3 张图解', pane('fig').querySelectorAll('img.fig-img').length, 3);
     ok('文字页仍有解析正文', pane('text').textContent.trim().length > 20);
 
-    w.switchDatiExplain('co_zt2024_44', 'text');
+    w.switchExplainPane('co_zt2024_44', 'text');
     check('切文字后高亮', tabs().map(b => b.classList.contains('active')), [true, false]);
     check('切文字后显隐', [pane('text').hidden, pane('fig').hidden], [false, true]);
-    check('选择已记忆', w.localStorage.getItem('datiExplainTab_co_zt2024_44'), 'text');
+    check('选择已记忆', w.localStorage.getItem('explainTab_co_zt2024_44'), 'text');
 
-    w.switchDatiExplain('co_zt2024_44', 'fig');
+    w.switchExplainPane('co_zt2024_44', 'fig');
     check('切回图片后高亮', tabs().map(b => b.classList.contains('active')), [false, true]);
     check('切回图片后显隐', [pane('text').hidden, pane('fig').hidden], [true, false]);
 

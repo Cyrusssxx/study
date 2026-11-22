@@ -866,9 +866,17 @@
                 <div class="explanation-body">${f.an || '<div class="explanation-empty">该题暂无详细解析</div>'}</div>
             </div>`;
         }
+        const body = f.an || '<div class="explanation-empty">暂无解析</div>';
+        // CO2024-44 图解：与大题专项页共用 explain_inline.js 的分页控件，不改真题原解析 f.an。
+        if (f.iid === 'co_zt2024_44' && typeof window.explainTabsHtml === 'function') {
+            return `<div class="explanation-panel">
+                <div class="explanation-title">参考答案与解析</div>
+                ${window.explainTabsHtml(f.iid, body)}
+            </div>`;
+        }
         return `<div class="explanation-panel">
             <div class="explanation-title">参考答案与解析</div>
-            <div class="explanation-body">${f.an || '<div class="explanation-empty">暂无解析</div>'}</div>
+            <div class="explanation-body">${body}</div>
         </div>`;
     }
 
@@ -1818,7 +1826,7 @@
         gotoQ, toggleFq, toggleZtNav, expandZtNav, toggleAnsPop,
         pasteZtNoteImage, saveZtNoteNow, renderZtNoteImages, delZtNoteImage,
         viewZtNoteImage, onZtNoteFilePick, copyZtCard, flushNote,
-        openPaperNote, closePaperNote, savePaperNote,
+        openPaperNote, closePaperNote, savePaperNote, switchExplainPane,
     });
 
     // 本卷备注弹窗：Esc 收起（取消，不保存）。common.js 的下拉 Esc 处理互不影响。

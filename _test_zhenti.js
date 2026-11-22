@@ -132,6 +132,9 @@ async function run() {
   let all47 = true;
   const svgDir = path.join(ROOT, 'pwa/data/zt_svg');
   const svgFiles = new Set(fs.readdirSync(svgDir).map(f => f.replace(/\.svg$/, '')));
+  // *_explain_* 是题干/解析外的补充图解，由 js/explain_inline.js 内联引用，不写 data-svg。
+  const explainSvgFiles = new Set([...svgFiles].filter(n => n.includes('_explain_')));
+  const dataSvgFiles = new Set([...svgFiles].filter(n => !n.includes('_explain_')));
   for (const y of idx.years) {
     const d = JSON.parse(fs.readFileSync(path.join(ROOT, `pwa/data/zt/zt_${y}.json`), 'utf8'));
     totalItems += d.items.length;
@@ -147,7 +150,10 @@ async function run() {
   }
   check('每年 47 题（40 选择 + 7 大题）', all47);
   check('数据总量 846 题、qid 映射 652 条', totalItems === 846 && qidN === 652, `qid=${qidN}`);
-  check(`SVG 引用与文件全匹配（${svgRefs} 引用 / ${svgFiles.size} 文件）`, svgRefs === svgFiles.size);
+  check(`SVG 引用与文件全匹配（${svgRefs} 引用 / ${dataSvgFiles.size} 文件）`, svgRefs === dataSvgFiles.size);
+  const inlineExplainJs = fs.readFileSync(path.join(ROOT, 'pwa/js/explain_inline.js'), 'utf8');
+  check(`补充图解由共享模块引用（${explainSvgFiles.size} 张）`,
+    explainSvgFiles.size > 0 && [...explainSvgFiles].every(n => inlineExplainJs.includes(`${n}.svg`)));
   const zt = JSON.parse(fs.readFileSync(path.join(ROOT, 'pwa/data/zt/zt_2026.json'), 'utf8'));
   check('2026 全卷无 qid 映射（新题用 zt id）', zt.items.every(x => !x.qid));
   check('2026 选择题全部有答案', zt.items.filter(x => x.t === 1).every(x => x.a));
