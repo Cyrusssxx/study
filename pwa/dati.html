@@ -411,6 +411,8 @@
     const noteTimer = {};         // qid -> 防抖定时器，笔记停顿即自动保存
     let favSet = new Set();      // 已收藏的题 id（题库全局，与真题页同一套 key）
     const ansTpl = {};           // 答案 HTML 模板，首次展开时注入
+    // CO2024-44 题目图解：内联在 HTML 里（网络优先刷新，不依赖 dati_zt.json 的懒缓存）
+    const INLINE_EXPLAIN = { co_zt2024_44: `<details class="dati-explain" open style="margin-top:14px;border-top:1px solid var(--border);padding-top:10px"><summary style="cursor:pointer;color:var(--primary);font-weight:600;font-size:.88rem">题目图解（3 张）· 指令执行 / 数值推演 / 机器码</summary><figure class="dati-explain-fig" style="margin:12px 0"><figcaption style="font-size:.8rem;color:var(--text-light);margin-bottom:4px">图 1 · 执行全景：四条指令各在干嘛、寄存器分工、三个易混概念</figcaption><img class="fig-img" src="data/zt_svg/zt_2024_44_explain_1.svg?v=2" alt="图 1 · 执行全景：四条指令各在干嘛、寄存器分工、三个易混概念" loading="lazy" style="display:block;max-width:100%;border:1px solid var(--border);border-radius:6px;cursor:zoom-in"></figure><figure class="dati-explain-fig" style="margin:12px 0"><figcaption style="font-size:.8rem;color:var(--text-light);margin-bottom:4px">图 2 · 数值推演：从 i=5 到地址 / 小端机器数 / sum / 页号 / 跨页</figcaption><img class="fig-img" src="data/zt_svg/zt_2024_44_explain_2.svg?v=2" alt="图 2 · 数值推演：从 i=5 到地址 / 小端机器数 / sum / 页号 / 跨页" loading="lazy" style="display:block;max-width:100%;border:1px solid var(--border);border-radius:6px;cursor:zoom-in"></figure><figure class="dati-explain-fig" style="margin:12px 0"><figcaption style="font-size:.8rem;color:var(--text-light);margin-bottom:4px">图 3 · 机器码：32 位字段拼接、funct3=010 陷阱、short 变体</figcaption><img class="fig-img" src="data/zt_svg/zt_2024_44_explain_3.svg?v=2" alt="图 3 · 机器码：32 位字段拼接、funct3=010 陷阱、short 变体" loading="lazy" style="display:block;max-width:100%;border:1px solid var(--border);border-radius:6px;cursor:zoom-in"></figure></details>` };
     let noteMap = {};            // qid -> {content, images}，dati 题笔记
     let noteOpen = new Set(JSON.parse(localStorage.getItem('datiNoteOpen') || '[]'));  // 展开中的笔记面板 qid
     let ansOpen = new Set(JSON.parse(localStorage.getItem('datiAnsOpen') || '[]'));    // 展开中的答案面板 qid
@@ -533,7 +535,7 @@
         const raw = typeof q.a === 'string' ? q.a : '';
         // 题目图解：dati 独有的补充内容，走独立字段，不写进与真题卷同源的 q.a。
         // 折叠块默认收起，里面是普通 fig-img，沿用全站点击放大 + 左右切图。
-        const extra = typeof q.explainHtml === 'string' ? q.explainHtml : '';
+        const extra = INLINE_EXPLAIN[q.id] || (typeof q.explainHtml === 'string' ? q.explainHtml : '');
         // .dati-abody 本身就是淡底容器，内部只放 title/body，避免「框中框」
         return `<div class="explanation-title">参考答案与解析</div>
                 <div class="explanation-body">${raw || '<div class="explanation-empty">该题暂无详细解析</div>'}</div>${extra}`;
