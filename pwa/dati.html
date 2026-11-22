@@ -531,9 +531,12 @@
                 : '<div class="dati-none">本题暂无答案截图</div>';
         }
         const raw = typeof q.a === 'string' ? q.a : '';
+        // 题目图解：dati 独有的补充内容，走独立字段，不写进与真题卷同源的 q.a。
+        // 折叠块默认收起，里面是普通 fig-img，沿用全站点击放大 + 左右切图。
+        const extra = typeof q.explainHtml === 'string' ? q.explainHtml : '';
         // .dati-abody 本身就是淡底容器，内部只放 title/body，避免「框中框」
         return `<div class="explanation-title">参考答案与解析</div>
-                <div class="explanation-body">${raw || '<div class="explanation-empty">该题暂无详细解析</div>'}</div>`;
+                <div class="explanation-body">${raw || '<div class="explanation-empty">该题暂无详细解析</div>'}</div>${extra}`;
     }
     // 预取下一题用到的外置资源（真题 SVG / 打卡表教材原图），切题时图已就绪
     function prefetchSrcsIn(html) {

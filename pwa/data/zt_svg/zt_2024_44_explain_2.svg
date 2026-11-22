@@ -1,0 +1,50 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 528" width="720" height="528">
+<title>a[i] 地址与数值推演链</title>
+<rect x="0" y="0" width="720" height="528" fill="#ffffff"/>
+<g font-family="Arial,'Microsoft YaHei',sans-serif">
+<text x="24" y="28" font-size="17" font-weight="700" fill="#1f2937">从 i = 5 到全部答案：一条推演链</text>
+<rect x="24" y="40" width="330" height="52" rx="8" fill="#eff6ff" stroke="#3b82f6" stroke-width="1.3"/>
+<text x="38" y="62" font-size="12.5" fill="#1f2937">首地址 DFF0H + 偏移 14H</text>
+<text x="38" y="82" font-family="Consolas,monospace" font-size="13" font-weight="700" fill="#1e3a8a">a[i] 地址 = 0013 E004H</text>
+<rect x="366" y="40" width="330" height="52" rx="8" fill="#ecfdf5" stroke="#10b981" stroke-width="1.3"/>
+<text x="380" y="62" font-size="12.5" fill="#1f2937">低 12 位页内 · 高 20 位页号</text>
+<text x="380" y="82" font-family="Consolas,monospace" font-size="13" font-weight="700" fill="#047857">页号 = 0013EH</text>
+
+<text x="24" y="120" font-size="13.5" font-weight="700" fill="#1f2937">① 小端拼接：低地址放最低位字节</text>
+<text x="24" y="140" font-size="12" fill="#6b7280">地址 E004 起连续 4 个单元</text>
+<rect x="24" y="150" width="126" height="48" rx="6" fill="#f9fafb" stroke="#d1d5db" stroke-width="1"/>
+<text x="87" y="170" font-family="Consolas,monospace" font-size="12" text-anchor="middle" fill="#6b7280">E004</text>
+<text x="87" y="188" font-family="Consolas,monospace" font-size="14" font-weight="700" text-anchor="middle" fill="#1f2937">DC</text>
+<rect x="158" y="150" width="126" height="48" rx="6" fill="#f9fafb" stroke="#d1d5db" stroke-width="1"/>
+<text x="221" y="170" font-family="Consolas,monospace" font-size="12" text-anchor="middle" fill="#6b7280">E005</text>
+<text x="221" y="188" font-family="Consolas,monospace" font-size="14" font-weight="700" text-anchor="middle" fill="#1f2937">EC</text>
+<rect x="292" y="150" width="126" height="48" rx="6" fill="#f9fafb" stroke="#d1d5db" stroke-width="1"/>
+<text x="355" y="170" font-family="Consolas,monospace" font-size="12" text-anchor="middle" fill="#6b7280">E006</text>
+<text x="355" y="188" font-family="Consolas,monospace" font-size="14" font-weight="700" text-anchor="middle" fill="#1f2937">FF</text>
+<rect x="426" y="150" width="126" height="48" rx="6" fill="#f9fafb" stroke="#d1d5db" stroke-width="1"/>
+<text x="489" y="170" font-family="Consolas,monospace" font-size="12" text-anchor="middle" fill="#6b7280">E007</text>
+<text x="489" y="188" font-family="Consolas,monospace" font-size="14" font-weight="700" text-anchor="middle" fill="#1f2937">FF</text>
+<line x1="560" y1="174" x2="592" y2="174" stroke="#6b7280" stroke-width="1.6"/>
+<path d="M592 174 L584 169 L584 179 Z" fill="#6b7280"/>
+<rect x="596" y="150" width="100" height="48" rx="6" fill="#f5f3ff" stroke="#7c3aed" stroke-width="1.3"/>
+<text x="646" y="179" font-size="13" font-weight="700" text-anchor="middle" fill="#5b21b6">拼接</text>
+<text x="24" y="218" font-size="12.5" fill="#6b7280">按字节地址从高到低读出：E007→E004 = FF FF EC DC</text>
+<text x="24" y="240" font-family="Consolas,monospace" font-size="14" font-weight="700" fill="#5b21b6">a[i] 机器数 = FFFF ECDCH</text>
+
+<text x="24" y="276" font-size="13.5" font-weight="700" fill="#1f2937">② 溢出舍位：32 位只保留低 32 位</text>
+<rect x="24" y="288" width="672" height="52" rx="8" fill="#f9fafb" stroke="#e5e7eb" stroke-width="1"/>
+<text x="38" y="310" font-family="Consolas,monospace" font-size="13" fill="#1f2937">0000 1332 + FFFF ECDC = 1 0000 000E</text>
+<text x="38" y="330" font-size="12" fill="#6b7280">最高位进位 1 超出 32 位 → 丢弃</text>
+<rect x="486" y="294" width="202" height="40" rx="6" fill="#ecfdf5" stroke="#10b981" stroke-width="1.3"/>
+<text x="587" y="319" font-family="Consolas,monospace" font-size="12.5" font-weight="700" text-anchor="middle" fill="#047857">sum = 0000 000EH</text>
+
+<text x="24" y="368" font-size="13.5" font-weight="700" fill="#1f2937">③ 跨页判断：4KB 页 = 2¹²，低 12 位是页内地址</text>
+<rect x="24" y="380" width="672" height="48" rx="8" fill="#eff6ff" stroke="#3b82f6" stroke-width="1.3"/>
+<text x="200" y="402" font-family="Consolas,monospace" font-size="14" font-weight="700" text-anchor="middle" fill="#1e3a8a">0 0 1 3 E | 0 0 4</text>
+<text x="200" y="420" font-size="11.5" text-anchor="middle" fill="#2563eb">高 20 位页号=0013E　低 12 位页内=004</text>
+<text x="24" y="450" font-size="12.5" fill="#1f2937">a[0] 落在页 0013D（DFF0），a[5] 落在页 0013E（E004）</text>
+<rect x="24" y="462" width="672" height="54" rx="8" fill="#fef2f2" stroke="#dc2626" stroke-width="1.3"/>
+<text x="40" y="484" font-size="12.5" font-weight="700" fill="#991b1b">数组 a 至少跨 2 页</text>
+<text x="40" y="505" font-family="Consolas,monospace" font-size="11.5" fill="#b91c1c">答案 = E004H · FFFFECDCH · 0000000EH · 页号 0013EH · 2 页</text>
+</g>
+</svg>

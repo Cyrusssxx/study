@@ -965,7 +965,8 @@
          ],
          "oldIds": [
           "dati_co_4_3_06"
-         ]
+         ],
+         "explainHtml": "<details class=\"dati-explain\" style=\"margin-top:14px;border-top:1px solid var(--border);padding-top:10px\"><summary style=\"cursor:pointer;color:var(--primary);font-weight:600;font-size:.88rem\">题目图解（3 张）· 指令执行 / 数值推演 / 机器码</summary><figure class=\"dati-explain-fig\" style=\"margin:12px 0\"><figcaption style=\"font-size:.8rem;color:var(--text-light);margin-bottom:4px\">图 1 · 执行全景：四条指令各在干嘛、寄存器分工、三个易混概念</figcaption><img class=\"fig-img\" src=\"data/zt_svg/zt_2024_44_explain_1.svg\" alt=\"图 1 · 执行全景：四条指令各在干嘛、寄存器分工、三个易混概念\" loading=\"lazy\" style=\"display:block;max-width:100%;border:1px solid var(--border);border-radius:6px;cursor:zoom-in\"></figure><figure class=\"dati-explain-fig\" style=\"margin:12px 0\"><figcaption style=\"font-size:.8rem;color:var(--text-light);margin-bottom:4px\">图 2 · 数值推演：从 i=5 到地址 / 小端机器数 / sum / 页号 / 跨页</figcaption><img class=\"fig-img\" src=\"data/zt_svg/zt_2024_44_explain_2.svg\" alt=\"图 2 · 数值推演：从 i=5 到地址 / 小端机器数 / sum / 页号 / 跨页\" loading=\"lazy\" style=\"display:block;max-width:100%;border:1px solid var(--border);border-radius:6px;cursor:zoom-in\"></figure><figure class=\"dati-explain-fig\" style=\"margin:12px 0\"><figcaption style=\"font-size:.8rem;color:var(--text-light);margin-bottom:4px\">图 3 · 机器码：32 位字段拼接、funct3=010 陷阱、short 变体</figcaption><img class=\"fig-img\" src=\"data/zt_svg/zt_2024_44_explain_3.svg\" alt=\"图 3 · 机器码：32 位字段拼接、funct3=010 陷阱、short 变体\" loading=\"lazy\" style=\"display:block;max-width:100%;border:1px solid var(--border);border-radius:6px;cursor:zoom-in\"></figure></details>"
         },
         {
          "id": "co_zt2023_44",
