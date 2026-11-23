@@ -92,11 +92,11 @@ for (const f of SVGS) {
 }
 
 // ---------- 4. 图数基线 ----------
-check('CO fig-img = 60', (RAW.match(/fig-img/g) || []).length, 60);
+check('CO fig-img = 61', (RAW.match(/fig-img/g) || []).length, 61);
 const SUBS = ['co', 'os', 'cn', 'ds'];
 let total = 0;
 for (const s of SUBS) total += (read(`pwa/data/notes/${s}_notes.json`).match(/fig-img/g) || []).length;
-check('全库 fig-img = 229', total, 229);
+check('全库 fig-img = 230', total, 230);
 check('CO 黄框 = 74（本批未动）', (RAW.match(/class=\\"key-callout\\"/g) || []).length, 74);
 
 // ---------- 5. SW 预缓存一致 ----------

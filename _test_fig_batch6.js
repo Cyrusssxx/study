@@ -71,11 +71,11 @@ for (const [f, kws] of Object.entries(svgs)) {
 }
 
 // ---------- 3. 图数基线（当前精确量） ----------
-const FIG_N = { co: 60, os: 76, cn: 51, ds: 42 };
+const FIG_N = { co: 61, os: 76, cn: 51, ds: 42 };
 for (const s of SUBS)
   check(`${s.toUpperCase()} fig-img = ${FIG_N[s]}`, (RAW[s].match(/fig-img/g) || []).length, FIG_N[s]);
 const total = SUBS.reduce((n, s) => n + (RAW[s].match(/fig-img/g) || []).length, 0);
-check('全库 fig-img = 229', total, 229);
+check('全库 fig-img = 230', total, 230);
 // 黄框计数未动（图块是 p，不是 key-callout）
 const CALL_N = { co: 74, os: 77, cn: 54, ds: 106 };
 for (const s of SUBS)

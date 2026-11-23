@@ -1,0 +1,62 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 464" width="720" height="464" font-family="-apple-system,BlinkMacSystemFont,'Segoe UI','Microsoft YaHei',sans-serif">
+  <defs>
+    <marker id="ar" markerWidth="9" markerHeight="9" refX="7" refY="3" orient="auto">
+      <path d="M0,0 L7,3 L0,6 z" fill="#5a6b7d"/>
+    </marker>
+    <marker id="ag" markerWidth="9" markerHeight="9" refX="7" refY="3" orient="auto">
+      <path d="M0,0 L7,3 L0,6 z" fill="#0f6e56"/>
+    </marker>
+  </defs>
+  <rect width="720" height="464" fill="#ffffff"/>
+
+  <text x="24" y="30" font-size="15" font-weight="700" fill="#2c4a6b">字 / 字节 vs 块 · 数据通路三件套</text>
+  <text x="24" y="50" font-size="11.5" fill="#64748b">I/O 端口 · CPU 通用寄存器 · DMA 控制器 —— 谁在搬，决定一次传多少</text>
+
+  <text x="24" y="76" font-size="12" font-weight="700" fill="#a55a12">① 程序查询 / 中断 · CPU 逐字搬运</text>
+  <rect x="24" y="88" width="180" height="52" rx="8" fill="#e6f1fb" stroke="#4a7ab8" stroke-width="1"/>
+  <text x="114" y="108" text-anchor="middle" font-size="12.5" font-weight="700" fill="#2c4a6b">I/O 接口（端口）</text>
+  <text x="114" y="128" text-anchor="middle" font-size="11" fill="#44546a">数据端口 + 状态端口</text>
+  <line x1="204" y1="114" x2="256" y2="114" stroke="#5a6b7d" stroke-width="1.4" marker-end="url(#ar)"/>
+  <rect x="258" y="88" width="200" height="52" rx="8" fill="#e6f1fb" stroke="#4a7ab8" stroke-width="1"/>
+  <text x="358" y="108" text-anchor="middle" font-size="12.5" font-weight="700" fill="#2c4a6b">CPU 通用寄存器</text>
+  <text x="358" y="128" text-anchor="middle" font-size="11" fill="#44546a">必经中转站 · 逐字</text>
+  <line x1="458" y1="114" x2="510" y2="114" stroke="#5a6b7d" stroke-width="1.4" marker-end="url(#ar)"/>
+  <rect x="512" y="88" width="184" height="52" rx="8" fill="#e6f1fb" stroke="#4a7ab8" stroke-width="1"/>
+  <text x="604" y="108" text-anchor="middle" font-size="12.5" font-weight="700" fill="#2c4a6b">主存</text>
+  <text x="604" y="128" text-anchor="middle" font-size="11" fill="#44546a">按字写入</text>
+  <text x="24" y="158" font-size="11.5" fill="#64748b">单位：字 / 字节 —— 一条指令搬一个，CPU 亲自跑腿（必经通用寄存器）</text>
+
+  <text x="24" y="184" font-size="12" font-weight="700" fill="#0f6e56">② DMA · DMA 控制器接管总线，整块直传</text>
+  <rect x="24" y="196" width="672" height="196" rx="10" fill="#f8fafc" stroke="#cbd5e1" stroke-width="1"/>
+
+  <rect x="40" y="208" width="120" height="44" rx="8" fill="#f1f5f9" stroke="#94a3b8" stroke-width="1"/>
+  <text x="100" y="226" text-anchor="middle" font-size="12.5" font-weight="700" fill="#334155">CPU</text>
+  <text x="100" y="243" text-anchor="middle" font-size="11" fill="#64748b">只管首尾</text>
+
+  <rect x="268" y="206" width="200" height="52" rx="8" fill="#e1f5ee" stroke="#0f6e56" stroke-width="1.4"/>
+  <text x="368" y="226" text-anchor="middle" font-size="12.5" font-weight="700" fill="#0b4d3c">DMA 控制器</text>
+  <text x="368" y="246" text-anchor="middle" font-size="11" fill="#14614e">地址计数器 · 长度计数器 · 控制逻辑</text>
+
+  <rect x="40" y="330" width="190" height="52" rx="8" fill="#e1f5ee" stroke="#0f6e56" stroke-width="1.4"/>
+  <text x="135" y="350" text-anchor="middle" font-size="12.5" font-weight="700" fill="#0b4d3c">I/O 接口（端口）</text>
+  <text x="135" y="370" text-anchor="middle" font-size="11" fill="#14614e">数据缓冲寄存器 · 状态/控制</text>
+
+  <rect x="490" y="330" width="190" height="52" rx="8" fill="#e1f5ee" stroke="#0f6e56" stroke-width="1.4"/>
+  <text x="585" y="350" text-anchor="middle" font-size="12.5" font-weight="700" fill="#0b4d3c">主存</text>
+  <text x="585" y="370" text-anchor="middle" font-size="11" fill="#14614e">连续地址 · 成块写入</text>
+
+  <line x1="230" y1="356" x2="488" y2="356" stroke="#0f6e56" stroke-width="2.2" marker-end="url(#ag)"/>
+  <text x="360" y="346" text-anchor="middle" font-size="11" font-weight="700" fill="#0f6e56">数据总线：直连，不进 CPU</text>
+
+  <line x1="135" y1="330" x2="300" y2="258" stroke="#94a3b8" stroke-width="1.2" stroke-dasharray="4 3" marker-end="url(#ar)"/>
+  <text x="176" y="300" font-size="11" fill="#64748b">DREQ 请求</text>
+
+  <line x1="264" y1="232" x2="166" y2="230" stroke="#94a3b8" stroke-width="1.2" stroke-dasharray="4 3" marker-end="url(#ar)"/>
+  <text x="215" y="220" text-anchor="middle" font-size="11" fill="#64748b">HRQ / HLDA</text>
+
+  <line x1="368" y1="258" x2="368" y2="330" stroke="#94a3b8" stroke-width="1.2" stroke-dasharray="4 3" marker-end="url(#ar)"/>
+  <text x="378" y="300" font-size="11" fill="#64748b">地址线 + 读/写控制</text>
+
+  <text x="24" y="416" font-size="11.5" fill="#2c4a6b">把「块」拆开：512 B ÷ 32 位（4 B）= <tspan font-weight="700">128 次逐字传送</tspan>（2020 周期挪用）</text>
+  <text x="24" y="444" font-size="11.5" font-weight="700" fill="#b91c1c">易错：数据过 CPU 才逐字；DMA 接管总线才成块，块内每周期仍只传一个字</text>
+</svg>
