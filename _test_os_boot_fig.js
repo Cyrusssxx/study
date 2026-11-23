@@ -80,7 +80,7 @@ check('boot 系列样式里没有写死颜色',
 const FIG_N = { co: 60, os: 76, cn: 51, ds: 39 };
 for (const s of SUBS)
   check(s + ' 配图 ' + FIG_N[s] + ' 张（fig-img 未变）', (RAW[s].match(/fig-img/g) || []).length, FIG_N[s]);
-const STRUCT = { co: 2, ds: 0, cn: 12, os: 20 };
+const STRUCT = { co: 2, ds: 0, cn: 13, os: 20 };
 for (const s of SUBS)
   check(s + ' 内联 struct-fig = ' + STRUCT[s] + ' 张', (RAW[s].match(/struct-fig/g) || []).length, STRUCT[s]);
 for (const s of SUBS)
