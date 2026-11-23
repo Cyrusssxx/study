@@ -8025,16 +8025,21 @@ body.fc-toc-open .fc-toc-fab { display: none; }
     .toc-fixed .notes-header {
         margin-left: 262px;
         max-width: 1040px;
-        transition: margin-left .22s ease;
+        transition: margin-left .22s ease, max-width .22s ease;
     }
     .toc-fixed .notes-header {
         margin-left: calc(var(--bleed) + 262px);
     }
+    /* 收起时把目录腾出的 236px（262-26）全部还给正文：只改 margin-left 会让正文
+       整体左移但宽度被 max-width:1040px 卡死，右侧空出一大块（宽屏尤其明显）。
+       1276 = 1040 + 236，左右边缘保持对称回收，页头同步，notes/algo 两页共用本规则。 */
     .toc-fixed .notes-layout.notes-toc-collapsed .notes-content {
         margin-left: 26px;
+        max-width: 1276px;
     }
     body.toc-collapsed .toc-fixed .notes-header {
         margin-left: calc(var(--bleed) + 26px);
+        max-width: 1276px;
     }
     /* 收起/展开箭头：固定（不随滚动跑），贴在目录右缘外侧的中点；收起时随目录移到最左边 */
     .toc-fixed .notes-toc-toggle {
