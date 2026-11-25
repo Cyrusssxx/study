@@ -474,6 +474,23 @@ body {
     color: #dc3545;
     font-weight: 600;
 }
+/* 本场「疑惑」→ 琥珀黄（比不熟的暗金更亮，和永久标记区分开） */
+.mark-btn.mark-doubt {
+    background: rgba(240, 180, 41, 0.22);
+    border-color: #f0b429;
+    color: #8a6100;
+    font-weight: 600;
+}
+/* 成绩单逐题回顾里的疑惑徽章 */
+.badge-doubt {
+    background: #fff3cd;
+    border: 1px solid #f0b429;
+    color: #8a6100;
+    padding: 2px 8px;
+    border-radius: 10px;
+    font-size: 0.75rem;
+    font-weight: 600;
+}
 /* 7 天后重练 → 蓝（时间排期标记，与"掌握程度"的黄/红区分开） */
 .mark-btn.mark-redo {
     background: rgba(55, 138, 221, 0.14);
@@ -1227,6 +1244,19 @@ body {
 
 .num-btn.current.correct { color: #2e7d32; }
 .num-btn.current.wrong { color: #c62828; }
+
+/* 本场「疑惑」：题号整格琥珀黄（考试途中 + 试卷回顾都能切）。
+   错题红底优先 —— :not(.wrong) 让已判错的题保持红色，不被黄覆盖。 */
+.num-btn.doubt:not(.wrong) {
+    border: 1px solid #f0b429;
+    background: #fff3cd;
+    color: #8a6100;
+}
+.num-btn.current.doubt:not(.wrong) {
+    border: 2px solid var(--primary);
+    color: #8a6100;
+    font-weight: 700;
+}
 
 /* 试卷回顾 / 错题重刷：题号右下角标出「本场选了哪个选项」
    答对 = 绿格绿字，答错 = 红格红字，不点进去也能一眼复盘。
@@ -3551,6 +3581,18 @@ a.review-chip-all:hover {
 
 .dark .num-btn.current.correct { color: #81c784; }
 .dark .num-btn.current.wrong { color: #e57373; }
+/* 疑惑黄（错题红仍优先：:not(.wrong)） */
+.dark .num-btn.doubt:not(.wrong) {
+    border-color: #8a6d1f;
+    background: #3b3218;
+    color: #f0c75e;
+}
+.dark .mark-btn.mark-doubt,
+.dark .badge-doubt {
+    background: rgba(240, 180, 41, 0.16);
+    border-color: #8a6d1f;
+    color: #f0c75e;
+}
 
 /* 蓝底徽章/高亮类（#eef5fd 系） */
 .dark .chapter-badge,

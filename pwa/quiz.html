@@ -168,6 +168,7 @@
     const EXAM_ID = _params.get('exam_id') || ''; // 试卷错题重刷/试卷回顾（exam_wrong/exam_review 模式）：来源模拟考卷 id
     let examFilter = _params.get('filter') === 'all' ? 'all' : 'wrong'; // 试卷回顾（exam_review）：错题/全部，默认错题
     let examReviewAll = [];       // exam_review 的整卷题集（错题/全部切换的基准）
+    let examDoubtIds = new Set(); // 试卷回顾：本场标过「疑惑」的题（exam_meta.doubt_ids）
     let _lastExamMeta = null;     // 最近一次试卷元信息（切换筛选后刷新横幅用）
     const FRESH = _params.get('fresh') === '1'; // fresh=1：跳过位置恢复，从第 1 题开始
     let questions = [];
@@ -536,6 +537,7 @@
                 examReviewAll = questions;
                 questions = applyExamFilter(examReviewAll);
             }
+            examDoubtIds = new Set((data.exam_meta && data.exam_meta.doubt_ids) || []);
             renderExamMeta(data.exam_meta);
             // 题头显示「小节 · 节内第几题」：按全库编号顺序给每题算节内序号
             _buildSecOrdinal(data.questions);
@@ -903,6 +905,7 @@
                     </div>
                     <span class="mark-btns">
                         <button class="mark-btn" onclick="copyQuestion(this)" title="一键复制：题干+选项+答案+解析">复制</button>
+                        ${(MODE === 'exam_review' || MODE === 'exam_wrong') && EXAM_ID ? `<button class="mark-btn ${examDoubtIds.has(q.id) ? 'mark-doubt' : ''}" onclick="toggleDoubtReview('${q.id}')" title="${examDoubtIds.has(q.id) ? '取消本场的「疑惑」标记' : '标记为「疑惑」：题号变黄，可随时取消'}">❓ ${examDoubtIds.has(q.id) ? '已疑惑' : '疑惑'}</button>` : ''}
                         <button class="mark-btn ${q.is_unfamiliar ? 'mark-unfamiliar' : ''}" onclick="toggleMark('unfamiliar','${q.id}')" title="${q.is_unfamiliar ? '取消"不熟"标记' : '标记为不熟（黄色）'}">不熟</button>
                         <button class="mark-btn ${q.is_dontknow ? 'mark-dontknow' : ''}" onclick="toggleMark('dontknow','${q.id}')" title="${q.is_dontknow ? '取消"不会"标记' : '标记为不会（红色）'}">不会</button>
                         ${(MODE === 'exam_review' || MODE === 'exam_wrong') && q.exam_user_answer && q.exam_user_answer === q.answer
@@ -1090,6 +1093,7 @@
         const st = answered[q.id];
         let cls = 'num-btn';
         if (st) cls += st.isCorrect === true ? ' correct' : (st.isCorrect === false ? ' wrong' : ' done');
+        if (examDoubtIds.has(q.id)) cls += ' doubt';
         if (i === currentIndex) cls += ' current';
         // 已加入「下次练习池」的题：左上角小圆点（黄=不熟，红=不会），与错题红底不冲突
         if (q.is_unfamiliar) cls += ' unm';
@@ -1588,6 +1592,25 @@
             }
         } catch (e) {
             console.error('标记失败:', e);
+        }
+    }
+
+    // 试卷回顾：切换本场「疑惑」（可反复取消/重标）——只改本场考试记录，不动永久标记池
+    async function toggleDoubtReview(questionId) {
+        if (!EXAM_ID) return;
+        try {
+            const resp = await api('/api/exam/doubt', {
+                method: 'POST', headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({exam_id: Number(EXAM_ID), question_id: questionId})
+            });
+            const d = await resp.json();
+            if (d.error) throw new Error(d.error);
+            examDoubtIds = new Set(d.doubt_ids || []);
+            renderQuestion();
+            renderNumberPanel();
+            showTip(examDoubtIds.has(questionId) ? '❓ 已标疑惑 · 题号变黄' : '已取消疑惑标记');
+        } catch (e) {
+            showTip('操作失败：' + e.message);
         }
     }
 

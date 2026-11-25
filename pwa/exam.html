@@ -203,6 +203,7 @@
     let examId = null;
     let examQuestions = [];
     let examAnswers = {};   // {qid: 'A'}
+    let examDoubts = new Set();  // 本场标了「疑惑」的题（按场次存，不进永久标记池）
     let examIndex = 0;
     let remainingSec = 0;
     let examDurationSec = 0;         // 限时秒数：计时延续显示用
@@ -428,7 +429,7 @@
         if (data.active) {
             const a = data.active;
             if (confirm(`检测到未完成的考试（${MODE_NAMES[a.mode] || a.mode}，${a.remaining_sec > 0 ? '剩余 ' + fmtDur(a.remaining_sec) : '已超时 ' + fmtDur(-a.remaining_sec)}${a.paused ? '，当前为暂停状态' : ''}），是否继续？\n取消将放弃该场考试。`)) {
-                enterExam(a.exam_id, a.questions, a.answers || {}, a.remaining_sec, a.mode, a.duration_sec, a.paused, a.paused_sec || 0);
+                enterExam(a.exam_id, a.questions, a.answers || {}, a.remaining_sec, a.mode, a.duration_sec, a.paused, a.paused_sec || 0, a.doubt_ids || []);
                 return;
             }
             // 放弃：静默废弃——重新组卷时会自动置为abandoned
@@ -436,10 +437,11 @@
         // loadHistory 由页面初始化统一发起（与池子统计并行），这里不再串行等待
     }
 
-    function enterExam(id, questions, answers, remaining, mode, durationSec, paused, pausedSec) {
+    function enterExam(id, questions, answers, remaining, mode, durationSec, paused, pausedSec, doubtIds) {
         examId = id;
         examQuestions = questions;
         examAnswers = answers;
+        examDoubts = new Set(doubtIds || []);
         examIndex = 0;
         remainingSec = remaining;
         examDurationSec = durationSec || remaining;   // 限时秒数：超时后计时按总用时延续显示
@@ -599,6 +601,10 @@
                         <span class="question-number">第 ${examIndex + 1} / ${examQuestions.length} 题</span>
                         ${q.chapter ? `<span class="chapter-badge">${q.chapter}</span>` : ''}
                     </div>
+                    <span class="mark-btns">
+                        <button class="mark-btn ${examDoubts.has(q.id) ? 'mark-doubt' : ''}" onclick="toggleDoubt()"
+                            title="${examDoubts.has(q.id) ? '取消「疑惑」标记' : '标记为「疑惑」：题号变黄，交卷后在试卷回顾里可一眼找到'}">${examDoubts.has(q.id) ? '❓ 已疑惑' : '❓ 疑惑'}</button>
+                    </span>
                 </div>
                 <div class="question-content">${isMulti ? multiTpl : fmtContent(q.content)}</div>
                 ${isMulti ? '<div class="multi-hint">请在题干的每个（ ）下拉框中选择答案，全部选完该题才算作答</div>' : `<div class="options-list">${optionsHtml}</div>`}
@@ -638,6 +644,7 @@
         examQuestions.forEach((q, i) => {
             let cls = 'num-btn';
             if (examAnswers[q.id]) cls += ' done';
+            if (examDoubts.has(q.id)) cls += ' doubt';
             if (i === examIndex) cls += ' current';
             html += `<button class="${cls}" onclick="examGoto(${i})">${i + 1}</button>`;
         });
@@ -668,6 +675,33 @@
         await persistAnswers();
     }
 
+    // 疑惑标记：本场专用，只让题号变黄 + 交卷后回顾可见；不进不熟/不会/练习池
+    async function toggleDoubt() {
+        if (isPaused || !examId) return;
+        const q = examQuestions[examIndex];
+        try {
+            const resp = await api('/api/exam/doubt', {
+                method: 'POST', headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({exam_id: examId, question_id: q.id})
+            });
+            const d = await resp.json();
+            if (d.error) throw new Error(d.error);
+            examDoubts = new Set(d.doubt_ids || []);
+            // 只更新按钮和题号面板，不重渲染题干（避免多空题丢未选完的输入）
+            const on = examDoubts.has(q.id);
+            const btn = document.querySelector('#examQuestionArea .mark-btn');
+            if (btn) {
+                btn.classList.toggle('mark-doubt', on);
+                btn.textContent = on ? '❓ 已疑惑' : '❓ 疑惑';
+                btn.title = on ? '取消「疑惑」标记' : '标记为「疑惑」：题号变黄，交卷后在试卷回顾里可一眼找到';
+            }
+            renderExamNumbers();
+        } catch (e) {
+            console.error('[exam] 疑惑标记失败：', e);
+            alert('疑惑标记保存失败：' + e.message);
+        }
+    }
+
     function examGoto(i) { if (isPaused) return; examIndex = i; renderExamQuestion(); }
     function examPrev() { if (isPaused) return; if (examIndex > 0) { examIndex--; renderExamQuestion(); } }
     function examNext() { if (isPaused) return; if (examIndex < examQuestions.length - 1) { examIndex++; renderExamQuestion(); } }
@@ -695,7 +729,7 @@
         const resp = await api('/api/exam/submit', {
             method: 'POST',
             headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify({exam_id: examId, answers: examAnswers})
+            body: JSON.stringify({exam_id: examId, answers: examAnswers, doubt_ids: [...examDoubts]})
         });
         const result = await resp.json();
         if (result.error) { alert(result.error); backToSetup(); return; }
@@ -795,6 +829,7 @@
                     <header class="review-head">
                         <span class="review-no">第 ${i + 1} 题</span>
                         ${d.chapter ? `<span class="review-chapter">${d.chapter}${d.section ? ' · ' + d.section : ''}</span>` : ''}
+                        ${d.is_doubt ? '<span class="badge-doubt" title="考试时标记为疑惑">❓ 疑惑</span>' : ''}
                         <span class="review-verdict">${d.is_correct ? '✓ 正确' : (user ? '✗ 错误' : '— 未作答')}</span>
                     </header>
                     <div class="review-stem">${fmtContent(d.content)}</div>

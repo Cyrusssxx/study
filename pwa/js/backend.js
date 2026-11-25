@@ -670,7 +670,8 @@ async function api(url, opts = {}) {
                     exam_id: exam.id, mode: exam.mode,
                     score: exam.score, correct_count: exam.correct_count, total_count: exam.total_count,
                     started_at: exam.started_at, submitted_at: exam.submitted_at,
-                    duration_sec: exam.duration_sec, wrong_count: wrongCnt
+                    duration_sec: exam.duration_sec, wrong_count: wrongCnt,
+                    doubt_ids: exam.doubt_ids || []
                 };
             }
             const mixed = mode === 'exam_wrong' || mode === 'exam_review' || isAll;
@@ -1467,6 +1468,7 @@ async function gradeExam(exam, answers) {
             id: qid, number: q.number, content: q.content || '', options: q.options,
             user_answer: ua, correct_answer: q.answer || '', is_correct: ok,
             multi_blank: !!q.multi_blank,
+            is_doubt: (exam.doubt_ids || []).includes(qid),
             explanation: q.explanation || '', chapter: q.chapter || '', section: q.section || ''
         });
         // 错题是否入错题本由组卷时的开关决定（答题记录照常计入统计，时间戳错开保持顺序）
@@ -1906,6 +1908,20 @@ async function examApi(action, body, arg) {
         return jsonResp({ success: true });
     }
 
+    // 「疑惑」标记：按场次存 exam.doubt_ids。考试途中与交卷后的试卷回顾都能切换。
+    // 与永久标记（unfamiliar/dontknow/redo）刻意分开 —— 疑惑只是本场复盘用，不进抽题池。
+    if (action === 'doubt') {
+        if (!body.exam_id || !body.question_id) return jsonResp({ error: '缺少参数' }, 400);
+        const exam = await dbGet('exams', body.exam_id);
+        if (!exam) return jsonResp({ error: '考试不存在' }, 404);
+        const ids = new Set(Array.isArray(exam.doubt_ids) ? exam.doubt_ids : []);
+        if (ids.has(body.question_id)) ids.delete(body.question_id);
+        else ids.add(body.question_id);
+        exam.doubt_ids = [...ids];
+        await dbPut('exams', exam);
+        return jsonResp({ doubt_ids: exam.doubt_ids, is_doubt: ids.has(body.question_id) });
+    }
+
     // 池子统计：模拟考设置页展示"待抽多少题"，让"按真题比例抽"这件事在组卷前可见
     if (action === 'pool') {
         const nowMs = Date.now();
@@ -2036,6 +2052,7 @@ async function examApi(action, body, arg) {
         return jsonResp({ active: {
             exam_id: active.id, mode: active.mode, remaining_sec: remaining,
             duration_sec: active.duration_sec, answers: active.answers || {}, questions,
+            doubt_ids: active.doubt_ids || [],
             paused: !!active.paused_at, paused_sec: pausedSec + pausedNowSec
         }});
     }
@@ -2069,6 +2086,8 @@ async function examApi(action, body, arg) {
         const exam = body.exam_id ? await dbGet('exams', body.exam_id) : null;
         if (!exam) return jsonResp({ error: '考试不存在' }, 404);
         if (exam.status !== 'in_progress') return jsonResp({ error: '该考试已交卷' }, 400);
+        // 交卷兜底：即使中途某次 toggleDoubt 失败，也以答题页最终状态为准
+        if (Array.isArray(body.doubt_ids)) exam.doubt_ids = body.doubt_ids;
         return jsonResp(await gradeExam(exam, body.answers || {}));
     }
 
@@ -2133,6 +2152,7 @@ async function examApi(action, body, arg) {
                 id: qid, number: q.number, content: q.content || '', options: q.options,
                 user_answer: ua, correct_answer: q.answer || '',
                 is_correct: !!ua && ua === (q.answer || ''),
+                is_doubt: (exam.doubt_ids || []).includes(qid),
                 explanation: q.explanation || '', chapter: q.chapter || '', section: q.section || ''
             });
         }
