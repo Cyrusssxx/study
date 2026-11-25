@@ -461,10 +461,17 @@
         full: '完整408模拟', os: '操作系统', co: '计算机组成原理', ds: '数据结构', cn: '计算机网络',
         favorites: '仅收藏题', wrong: '仅错题'
     };
-    // 试卷回顾筛选：错题=最后一次作答不是正确答案的题（与成绩单口径一致）
+    // 试卷回顾筛选：「本次错题」= 本次做错/未作答 ∪ 本场标了疑惑的题。
+    // 标签文案不变，但疑惑题也纳入——回顾里点「疑惑」按钮取消后立刻从列表移除。
+    function isReviewWrong(q) {
+        return !(q.exam_user_answer && q.exam_user_answer === q.answer);
+    }
+    function isReviewKept(q) {
+        return isReviewWrong(q) || examDoubtIds.has(q.id);
+    }
     function applyExamFilter(list) {
         if (MODE !== 'exam_review' || examFilter === 'all') return list;
-        return list.filter(q => !(q.exam_user_answer && q.exam_user_answer === q.answer));
+        return list.filter(isReviewKept);
     }
     function renderExamMeta(meta) {
         _lastExamMeta = meta || null;
@@ -476,9 +483,9 @@
         const mins = meta.duration_sec ? Math.round(meta.duration_sec / 60) : 0;
         let chips = '';
         if (MODE === 'exam_review') {
-            const wrongCnt = examReviewAll.filter(q => !(q.exam_user_answer && q.exam_user_answer === q.answer)).length;
+            const wrongCnt = examReviewAll.filter(isReviewKept).length;
             chips = `
-            <span class="exam-filter-chip${examFilter === 'wrong' ? ' active' : ''}" onclick="setExamFilter('wrong')" title="只看本次做错/未作答的题">本次错题 ${wrongCnt}</span>
+            <span class="exam-filter-chip${examFilter === 'wrong' ? ' active' : ''}" onclick="setExamFilter('wrong')" title="本次做错/未作答的题，以及标了疑惑的题">本次错题 ${wrongCnt}</span>
             <span class="exam-filter-chip${examFilter === 'all' ? ' active' : ''}" onclick="setExamFilter('all')" title="浏览整卷全部题目">全部 ${examReviewAll.length}</span>`;
         }
         el.innerHTML = `
@@ -532,12 +539,13 @@
             const data = await resp.json();
             questions = data.questions;
             quizAllQuestions = data.questions;
-            // 试卷回顾：保留整卷题集，按 错题/全部 筛选（默认错题）
+            // 疑惑集合必须先就位：下面的「本次错题」筛选要把它算进去
+            examDoubtIds = new Set((data.exam_meta && data.exam_meta.doubt_ids) || []);
+            // 试卷回顾：保留整卷题集，按 错题∪疑惑 / 全部 筛选（默认前者）
             if (MODE === 'exam_review') {
                 examReviewAll = questions;
                 questions = applyExamFilter(examReviewAll);
             }
-            examDoubtIds = new Set((data.exam_meta && data.exam_meta.doubt_ids) || []);
             renderExamMeta(data.exam_meta);
             // 题头显示「小节 · 节内第几题」：按全库编号顺序给每题算节内序号
             _buildSecOrdinal(data.questions);
@@ -1595,7 +1603,9 @@
         }
     }
 
-    // 试卷回顾：切换本场「疑惑」（可反复取消/重标）——只改本场考试记录，不动永久标记池
+    // 试卷回顾：切换本场「疑惑」（可反复取消/重标）——只改本场考试记录，不动永久标记池。
+    // 「本次错题」把疑惑也算进去，所以这里要即时重筛：取消疑惑的答对题当场移出列表，
+    // 标疑惑的答对题当场加入；当前题若被移出则落到原位置附近的题。
     async function toggleDoubtReview(questionId) {
         if (!EXAM_ID) return;
         try {
@@ -1606,9 +1616,33 @@
             const d = await resp.json();
             if (d.error) throw new Error(d.error);
             examDoubtIds = new Set(d.doubt_ids || []);
-            renderQuestion();
+            const on = examDoubtIds.has(questionId);
+            const tip = on ? '❓ 已标疑惑 · 题号变黄' : '已取消疑惑标记';
+            flushNoteSave();
+            renderExamMeta(_lastExamMeta);   // chip 计数跟着疑惑变
+            if (MODE === 'exam_review' && examFilter !== 'all') {
+                const cur = questions[currentIndex] ? questions[currentIndex].id : null;
+                questions = applyExamFilter(examReviewAll);
+                totalQuestions = questions.length;
+                if (!questions.length) {
+                    currentIndex = 0;
+                    document.getElementById('questionArea').innerHTML =
+                        '<div class="empty-state"><h3>本场全对 🎉</h3><p>没有错题或疑惑，可点上方「全部」浏览整卷</p></div>';
+                    renderNumberPanel();
+                    showTip(tip);
+                    return;
+                }
+                const pi = cur ? questions.findIndex(q => q.id === cur) : -1;
+                currentIndex = pi >= 0 ? pi : Math.min(currentIndex, questions.length - 1);
+                explanationShown = false;
+                kpShown = hasKpOf(questions[currentIndex]);
+                noteShown = hasNoteOf(questions[currentIndex]);
+                renderQuestion();
+            } else {
+                renderQuestion();
+            }
             renderNumberPanel();
-            showTip(examDoubtIds.has(questionId) ? '❓ 已标疑惑 · 题号变黄' : '已取消疑惑标记');
+            showTip(tip);
         } catch (e) {
             showTip('操作失败：' + e.message);
         }
