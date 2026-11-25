@@ -7,7 +7,9 @@
 (function () {
     // 旧格式是纯文本（不带 HTML 标签），新格式可能含 <strong><em><h1><h2><span class="hl-*"> 等
     // 装载时通过白名单 sanitizer 防御性过滤，避免渲染任意 HTML（XSS）
-    const NOTE_ALLOWED_TAGS = new Set(['B', 'I', 'U', 'STRONG', 'EM', 'H1', 'H2', 'H3', 'P', 'BR', 'DIV', 'SPAN', 'UL', 'OL', 'LI', 'BLOCKQUOTE']);
+    // SUP/SUB：从 PDF/网页粘贴的角标（2¹⁶、log₂N 等）在旧版被当非法标签剥掉，
+    // 只剩平铺数字（216）。上标/下标本身无属性、无 XSS 风险，纳入白名单保留语义。
+    const NOTE_ALLOWED_TAGS = new Set(['B', 'I', 'U', 'STRONG', 'EM', 'SUP', 'SUB', 'H1', 'H2', 'H3', 'P', 'BR', 'DIV', 'SPAN', 'UL', 'OL', 'LI', 'BLOCKQUOTE']);
     const NOTE_ALLOWED_CLASS_RE = /^(hl-|note-hl-)?(yellow|green|blue|pink)$/;
     // class 属性白名单:允许 "hl"、"hl-yellow/note-hl-yellow" 等 token(applyNoteHighlight 手动后备产生 class="hl hl-yellow" 双 token)
     function classAllowed(v) {
@@ -91,7 +93,7 @@
         // 含白名单标签或高亮类才视为富文本；否则走纯文本路径
         // 含 <img 也按 HTML 处理：img 虽会被 sanitize 剥掉（图片走各页图片区），
         // 但绝不能落入纯文本路径把 <img 转义成源码文本显示
-        return /<(b|i|u|strong|em|h[1-3]|p|br|div|span|ul|ol|li|blockquote|img)\b/i.test(s);
+        return /<(b|i|u|strong|em|sup|sub|h[1-3]|p|br|div|span|ul|ol|li|blockquote|img)\b/i.test(s);
     };
 
     window.loadNoteIntoEditor = function (el, raw) {
