@@ -17,7 +17,7 @@ OUT = os.path.join(ROOT, 'archive', '_pdf_probe')
 
 # 试题册每套 8 页；解析册卷三 p26-38、卷五 p50-60
 QPAGES = {3: range(18, 26), 5: range(34, 42)}
-APAGES = {2: range(14, 26), 3: range(26, 39), 5: range(50, 61)}
+APAGES = {2: range(14, 26), 3: range(26, 39), 4: range(39, 50), 5: range(50, 61)}
 
 
 def ocr_pdf(pdf, pages, scale=2.0):
