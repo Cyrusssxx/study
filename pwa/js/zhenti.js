@@ -11,6 +11,13 @@
     const SUBJ_NAME = { ds: '数据结构', co: '计算机组成原理', os: '操作系统', cn: '计算机网络' };
     const SUBJ_ORDER = ['ds', 'co', 'os', 'cn'];
     const LETTERS = ['A', 'B', 'C', 'D'];
+    // 卷标题：真题 = 年份数字，模拟卷 = 形如 mock1 的字符串（index.json 的 mocks 里登记）
+    // 统一成一段文案，供目录/标题/答案速查/备注弹窗复用，避免多处 `${y} 年真题` 拼错。
+    const paperTitle = y => {
+        if (typeof y === 'number') return y + ' 年真题';
+        const m = (state.index && state.index.mocks || []).find(x => x.y === y);
+        return m ? m.label : String(y);
+    };
     const $ = id => document.getElementById(id);
     const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 
@@ -84,7 +91,10 @@
     }
     async function loadYear(y) {
         if (!state.papers[y]) {
-            state.papers[y] = await fetch('data/zt/zt_' + y + '.json').then(r => r.json());
+            // 真题文件名 zt_2024.json；模拟卷登记在 index.mocks 里用独立文件名（zt_mock1.json）
+            const m = (state.index.mocks || []).find(x => x.y === y);
+            const file = m ? m.file : 'zt_' + y + '.json';
+            state.papers[y] = await fetch('data/zt/' + file).then(r => r.json());
         }
         return state.papers[y];
     }
@@ -158,6 +168,15 @@
         if (year === state.year && state.flat.length) {
             return state.flat.filter(f => f.group === 'choice' && state.progress[f.iid]).length;
         }
+        // 模拟卷没有预生成的 iids 列表（未进 build_zt.py），按需从已缓存卷里数完成数；
+        // 切卷瞬间 renderYearList 先于 loadYear 执行，此时卷还没拉取到，返回 0 即可。
+        const cached = state.papers[year];
+        if (cached && cached.items) {
+            return cached.items
+                .filter(it => it.t === 1)
+                .filter(it => state.progress[it.qid || (it.sid + '_zt' + year + '_' + it.i)]).length;
+        }
+        if ((state.index.mocks || []).some(m => m.y === year)) return 0;
         const ids = (state.index.iids || {})[String(year)] || [];
         return ids.filter(id => state.progress[id]).length;
     }
@@ -197,7 +216,7 @@
                 .replace('id="noteToolbar"', 'id="ztPnToolbar"');
             slot.dataset.ready = '1';
         }
-        $('ztPnYear').textContent = state.year + ' 年真题';
+        $('ztPnYear').textContent = paperTitle(state.year);
         loadNoteIntoEditor(ed, paperNoteOf(state.year));
         bindNoteToolbar(ed);
         modal.hidden = false;
@@ -236,15 +255,23 @@
     /* ---------------- 渲染：年份列表 ---------------- */
     function renderYearList() {
         const years = [...state.index.years].reverse();
-        $('yearList').innerHTML = years.map(y => {
+        const row = (y, label, title) => {
             const done = doneCount(y);
             const active = y === state.year;
             // 做题模式不显示各年完成度（属历史记录，退出做题模式后恢复）
             const doneHtml = state.examMode ? '' : `<span class="zt-year-done">${done}/${state.index.choice_total}</span>`;
+            // 模拟卷 y 是字符串，onclick 参数要加引号；真题数字保持原样
+            const arg = typeof y === 'number' ? String(y) : JSON.stringify(y);
             return `<a class="ol-nav-item root${active ? ' zt-year-active' : ''}" data-year="${y}"
-                onclick="switchYear(${y})" title="${y} 年真题（选择 40 + 大题 7）">
-                ${y} 年真题${doneHtml}</a>`;
-        }).join('');
+                onclick="switchYear(${arg})" title="${title}">
+                ${label}${doneHtml}</a>`;
+        };
+        const realHtml = years.map(y => row(y, y + ' 年真题', `${y} 年真题（选择 40 + 大题 7）`)).join('');
+        const mocks = state.index.mocks || [];
+        const mockHtml = mocks.map(m => row(m.y, m.label, `${m.label}（选择 40 + 大题 7）`)).join('');
+        $('yearList').innerHTML =
+            `<details class="zt-year-group" open><summary class="ol-nav-sec">历年真题 <span class="zt-year-grp-n">${years.length}</span></summary>${realHtml}</details>`
+            + (mockHtml ? `<details class="zt-year-group" open><summary class="ol-nav-sec">模拟试卷 <span class="zt-year-grp-n">${mocks.length}</span></summary>${mockHtml}</details>` : '');
     }
 
     /* ---------------- 渲染：套卷 ---------------- */
@@ -264,7 +291,7 @@
             : `已做 ${doneCount(year)}/${state.index.choice_total}`;
         // 本卷备注：保存后以横幅显示在整份试卷最上方（工具栏之前）
         let html = `${paperNoteBarHtml()}<div class="zt-toolbar">
-            <div class="zt-title">${year} 年真题套卷<span class="zt-sub">选择题 ${state.index.choice_total} · 大题 ${state.index.big_total}</span></div>
+            <div class="zt-title">${paperTitle(year)}套卷<span class="zt-sub">选择题 ${state.index.choice_total} · 大题 ${state.index.big_total}</span></div>
             <div class="zt-tools">
                 <span class="zt-progress" id="ztProgress">${progTxt}</span>
                 ${state.examMode ? '<button class="zt-btn zt-btn-primary" onclick="checkPending()">对答案</button>' : ''}
@@ -442,16 +469,20 @@
      *   ② 未映射的真题选择题（2025/2026 卷居多）—— data/zt_kp.json（iid → html）。
      * 做题模式下整块隐藏：考点分析写明答案，露出来等于泄题。 */
     function kpBtnHtml(f) {
-        if (state.examMode || f.group !== 'choice') return '';
+        if (state.examMode) return '';
+        // 选择题一律可开（走题库/zt_kp.json，含异步回填）；大题仅在卷自带 kp 时给入口
+        if (f.group !== 'choice' && !(f.kp || state.kpCache[f.iid])) return '';
         const closed = state.kpClosed.has(f.iid);
         return `<button class="btn-explanation${closed ? '' : ' active'}" data-toggle="kp" onclick="toggleKpZt('${f.iid}')"
             title="考点定位 + 本题判定链 + 易错点（默认常驻，可收起）">考点分析 ${closed ? '▾' : '▴'}</button>`;
     }
 
-    // 三道数据来源合成一道：本地覆盖 → 题库 → zt_kp.json
+    // 四道数据来源合成一道：本地覆盖 → 卷自带（模拟卷 item.kp）→ 题库 → zt_kp.json
     function kpTextOf(iid) {
         const c = state.kpCache[iid];
         if (typeof c === 'string') return c;
+        const f = state.flat.find(x => x.iid === iid);
+        if (f && f.kp) return f.kp;          // 模拟卷逐题自带的考点分析
         if (BANK_KP[iid]) return BANK_KP[iid];
         if (ZT_KP[iid]) return ZT_KP[iid];
         return null;
@@ -463,7 +494,8 @@
     }
 
     function kpPanelHtml(f) {
-        if (state.examMode || f.group !== 'choice') return '';
+        if (state.examMode) return '';
+        if (f.group !== 'choice' && !(f.kp || state.kpCache[f.iid])) return '';
         if (state.kpClosed.has(f.iid)) return '';     // 用户自己收起的
         return kpBodyHtml(f);
     }
@@ -1773,7 +1805,7 @@
         el.className = 'zt-ans-pop';
         el.innerHTML = `<div class="zt-ans-mask" onclick="toggleAnsPop()"></div>
             <div class="zt-ans-panel">
-                <div class="zt-ans-head">${state.year} 年选择题答案速查<span class="zt-ans-close" onclick="toggleAnsPop()">×</span></div>
+                <div class="zt-ans-head">${paperTitle(state.year)} · 选择题答案速查<span class="zt-ans-close" onclick="toggleAnsPop()">×</span></div>
                 <div class="zt-ans-grid">${cells}</div>
             </div>`;
         document.body.appendChild(el);
@@ -1801,9 +1833,11 @@
             $('ztMain').innerHTML = '<div class="loading">加载中…</div>';
             await loadNoteAlias();
             await Promise.all([loadIndex(), loadStores(), loadDaka(), loadKpTable(), loadZtKp()]);
-            const remembered = +(localStorage.getItem('zhentiYear') || 0);
-            state.year = (remembered && state.index.years.includes(remembered))
-                ? remembered : state.index.years[state.index.years.length - 1];
+            const rememberedRaw = localStorage.getItem('zhentiYear') || '';
+            const remembered = /^\d+$/.test(rememberedRaw) ? +rememberedRaw : rememberedRaw;
+            const known = state.index.years.includes(remembered)
+                || (state.index.mocks || []).some(m => m.y === remembered);
+            state.year = known ? remembered : state.index.years[state.index.years.length - 1];
             if (state.navCollapsed) $('ztNav').classList.add('collapsed');
             if (typeof syncTocBodyClass === 'function') syncTocBodyClass(state.navCollapsed);
             renderYearList();

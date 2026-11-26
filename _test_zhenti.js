@@ -220,7 +220,9 @@ async function run() {
     years = w.document.querySelectorAll('#yearList .ol-nav-item').length;
     if (years) break;
   }
-  check('年份列表渲染（2009-2026 共 18 年）', years === 18, `实际 ${years}`);
+  // 18 年真题 + 模拟卷分组（现为模拟卷（一）1 项）
+  check('年份列表渲染（2009-2026 共 18 年 + 模拟卷）',
+    years === 18 + (idx.mocks || []).length, `实际 ${years}`);
 
   const d = w.document;
   await sleep(300);

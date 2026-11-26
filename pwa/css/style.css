@@ -6498,6 +6498,36 @@ a.chapter-badge-link:hover {
     margin: 8px 0 4px;
 }
 
+/* 套卷目录分组：历年真题 / 模拟试卷 两个折叠大目录 */
+.zt-year-group > summary.ol-nav-sec {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 6px 8px;
+    margin: 4px 0 2px;
+    font-weight: 700;
+    color: var(--primary);
+    font-size: .88rem;
+    cursor: pointer;
+    list-style: none;
+    border-bottom: 1px solid var(--border, rgba(0,0,0,.08));
+    user-select: none;
+}
+.zt-year-group > summary.ol-nav-sec::-webkit-details-marker { display: none; }
+.zt-year-group > summary.ol-nav-sec::before {
+    content: '▸';
+    display: inline-block;
+    margin-right: 6px;
+    transition: transform .15s ease;
+}
+.zt-year-group[open] > summary.ol-nav-sec::before { transform: rotate(90deg); }
+.zt-year-grp-n {
+    margin-left: auto;
+    font-size: .76rem;
+    font-weight: 400;
+    color: var(--text-light);
+}
+
 .ol-nav-item {
     display: block;
     padding: 5px 8px;

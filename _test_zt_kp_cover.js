@@ -87,12 +87,13 @@ const ZT = fs.readFileSync(path.join(ROOT, 'pwa/js/zhenti.js'), 'utf8');
 check('ensureBank 顺手收下 kp_analysis（BANK_KP）',
   /if \(q\.kp_analysis\) BANK_KP\[q\.id\] = q\.kp_analysis/.test(ZT), true);
 check('loadZtKp 拉 data/zt_kp.json', /fetch\('data\/zt_kp\.json'\)/.test(ZT), true);
-check('kpTextOf 三级取数：kpCache → BANK_KP → ZT_KP',
-  /function kpTextOf\(iid\)/.test(ZT) && /if \(BANK_KP\[iid\]\) return BANK_KP\[iid\]/.test(ZT)
+check('kpTextOf 四级取数：kpCache → 卷自带kp → BANK_KP → ZT_KP',
+  /function kpTextOf\(iid\)/.test(ZT) && /if \(f && f\.kp\) return f\.kp/.test(ZT)
+  && /if \(BANK_KP\[iid\]\) return BANK_KP\[iid\]/.test(ZT)
   && /if \(ZT_KP\[iid\]\) return ZT_KP\[iid\]/.test(ZT), true);
-check('常驻面板默认展开（只按 kpClosed 收起）',
+check('常驻面板默认展开（只按 kpClosed 收起；大题仅卷自带 kp 才给入口）',
   /if \(state\.kpClosed\.has\(f\.iid\)\) return ''/.test(ZT)
-  && /if \(state\.examMode \|\| f\.group !== 'choice'\) return ''/.test(ZT), true);
+  && /if \(f\.group !== 'choice' && !\(f\.kp \|\| state\.kpCache\[f\.iid\]\)\) return ''/.test(ZT), true);
 check('init 时并行加载 zt_kp.json', /loadKpTable\(\), loadZtKp\(\)/.test(ZT), true);
 const SW = fs.readFileSync(path.join(ROOT, 'pwa/sw.js'), 'utf8');
 check('sw.js 把 data/zt_kp.json 纳入 DATA_PRECACHE',

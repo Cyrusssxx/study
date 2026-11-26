@@ -798,5 +798,13 @@
   ]
  },
  "choice_total": 40,
- "big_total": 7
+ "big_total": 7,
+ "mocks": [
+  {
+   "y": "mock1",
+   "label": "模拟卷（一）",
+   "file": "zt_mock1.json",
+   "n": 47
+  }
+ ]
 }
