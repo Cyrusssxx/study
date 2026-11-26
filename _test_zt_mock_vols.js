@@ -32,5 +32,16 @@ for (const [y, label, paperY] of [['mock3', '模拟卷（三）', '模拟三'], 
   check(`${label} 题图文件存在`, figs.every(f => fs.existsSync(path.join(ROOT, 'pwa/data/zt_img', f))), true);
   check(`${label} 题图无整题截图残留`, d.items.every(i => !i.q.includes('img-container')), true);
 }
+
+// 2026-11-26：mock1/3/5 曾有 21 道选择题选项为空（截图清 o 或 OCR 把选项挤进题干），页面只剩 A/B/C/D 空框。
+for (const [y, label] of [['mock1', '模拟卷（一）'], ['mock3', '模拟卷（三）'], ['mock5', '模拟卷（五）'], ['mock1019', '模拟卷（1019）']]) {
+  const d = J(`pwa/data/zt/zt_${y}.json`);
+  const choices = d.items.filter(i => i.t === 1);
+  check(`${label} 40道选择题选项均为4项非空`,
+    choices.filter(i => i.o && i.o.length === 4 && i.o.every(x => String(x).trim())).length, 40);
+  // 题干里不得残留挤成一行的 A./B./D. 选项文字
+  const inline = choices.filter(i => /A[.．]\s*\S{1,250}?B[.．]/.test(i.q.replace(/<[^>]+>/g, '')) && /D[.．]/.test(i.q));
+  check(`${label} 题干无挤行选项残留`, inline.map(i => i.i), []);
+}
 console.log(`\n结果: ${pass} / ${pass + fail}，${fail ? '有失败' : '全部通过'}`);
 process.exit(fail ? 1 : 0);

@@ -536,7 +536,12 @@
    "a": "C",
    "sid": "os",
    "q": "<p>信息在外存空间中的排列也会影响存取等待时间。考虑几条逻辑记录 A、B、C、⋯、J，它们被存放于磁盘上，每个磁道存放 10 条记录，安排如表 1 所示。</p>\n<p style=\"text-align:center\">表 1　每个磁道存放 10 条记录</p>\n<table class=\"table td-initial\"><thead><tr><th>物理块</th><th>1</th><th>2</th><th>3</th><th>4</th><th>5</th><th>6</th><th>7</th><th>8</th><th>9</th><th>10</th></tr></thead><tbody><tr><td>逻辑记录</td><td>A</td><td>B</td><td>C</td><td>D</td><td>E</td><td>F</td><td>G</td><td>H</td><td>I</td><td>J</td></tr></tbody></table>\n<p>假定要经常顺序处理这些记录，磁道旋转用时为 20 ms/转，处理程序读出每条记录后花 4 ms 进行处理。考虑对信息的分布进行优化，如表 2 所示。相比之前的信息分布，优化后的时间缩短了（　）。</p>\n<p style=\"text-align:center\">表 2　优化后磁道存放的 10 条记录</p>\n<table class=\"table td-initial\"><thead><tr><th>物理块</th><th>1</th><th>2</th><th>3</th><th>4</th><th>5</th><th>6</th><th>7</th><th>8</th><th>9</th><th>10</th></tr></thead><tbody><tr><td>逻辑记录</td><td>A</td><td>H</td><td>E</td><td>B</td><td>I</td><td>F</td><td>C</td><td>J</td><td>G</td><td>D</td></tr></tbody></table>",
-   "o": [],
+   "o": [
+    "60 ms",
+    "104 ms",
+    "144 ms",
+    "204 ms"
+   ],
    "an": "<div class=\"analysis-content\">本题考查磁盘的性能分析。 磁盘旋转用时为20ms/转，每个磁道存放10条记录，故读出一条记录的时间为20ms+10=2ms。 1）对于第一种记录分布的情况，读出并处理记录A需要6ms，此时读/写磁头已转到记录D 的开始处，因此为了读出记录B，必须8条记录（从记录D到记录B）。后续8条记录的 读取及处理与此相同，但最后一条记录的读取与处理只需6ms。于是，处理10条记录的 总时间为9x(2+4+16)ms+(2+4)ms=204ms。 2）对于第二种记录分布的情况，读出并处理记录A后，读/写磁头刚好转到记录B的开始处， 因此立即就可读出并处理，后续记录的读取与处理的情况相同，共转了2.7圈。最后一条 记录的读取与处理只需6ms。于是，处理10条记录的总时间为20msx2.7+6ms=60ms。 综上所述，信息分布优化后，处理时间缩短了204ms-60ms=144ms。</div>",
    "qid": null,
    "kp": "<div class=\"kp-sec\"><b>考点</b>磁盘信息分布与处理时间（图题）。磁盘每转20ms、每道10条记录，读一条2ms、处理4ms。第一种分布读A+处理6ms后磁头已到D，读B需跳过8条：总时间=9×(2+4+16)+(2+4)=204ms；优化分布使读完即到下一记录开始处，共转2.7圈：20×2.7+6=60ms。缩短204-60=144ms。答案C。</div><div class=\"kp-sec\"><b>易错点</b><span class=\"kp-trap\">①考虑旋转延迟时漏计处理时间；②优化后仍按原分布顺序计算；③把「优化后总时间60ms」与「缩短量144ms」混淆。</span></div>"
@@ -548,7 +553,12 @@
    "a": "C",
    "sid": "cn",
    "q": "<p>如下图所示，网络采用数据报交换方式，每个数据报在到达路由器时均根据“该路由器到目的主机的当前最小路径时延”进行独立路由选择（当存在多条路径的时延相等时，优先选择经过路由器 B 的路径）。忽略路由器处理时延及主机 C 到路由器 A 的传输时延。</p>\n<div class=\"svg-wrapper\"><div class=\"svg-container\" style=\"height:auto;width:100%\"><img class=\"fig-img\" src=\"data/zt_img/zt_mock1_33.png\" alt=\"网络拓扑：C—A，A 到 B/D，B、D 到 S 及各链路时延\" style=\"display:block;max-width:100%;border:1px solid var(--border);border-radius:6px;cursor:zoom-in\"></div></div>\n<p>主机 C 在时刻 𝑡 = 0, 1, 2 ms 依次向目的主机 S 发送三个等长数据报 P1、P2、P3。已知链路 A→D 的时延在 𝑡∈[2, 6] ms 期间由 5 ms 变为 4 ms，链路 B→S 的时延在 𝑡∈[4, 8] ms 期间由 5 ms 变为 30 ms，其余各条链路时延保持恒定。则 S 接收到这三个数据报的先后顺序是（　）。</p>",
-   "o": [],
+   "o": [
+    "P1、P2、P3",
+    "P1、P3、P2",
+    "P3、P1、P2",
+    "P2、P3、P1"
+   ],
    "an": "<div class=\"analysis-content\">本题考查数据报的动态路由选择。 主机C在t=0,1,2ms依次发送P1，P2,P3，各路由器均依据数据报到达时刻的实时链路时延选 择最小延迟路径（时延相等时优先选择经过B的路径）。具体分析如下：当Pi在1=0ms到达 A时，A→B→S时延为5+5=10ms，A→D-S时延为5+5=10ms，依规则选择经过B的路 径；于1=5ms到达B时，因tE[4,8]ms，B一S时延已变为30ms，故改选B-D一S，抵达时 刻为0+5+12+5=22ms：P2在t=1ms到达A，选路逻辑同P1，于t=6ms到达B时B→S仍 为30ms,改走B→D→S，抵达时刻为1+5+12+5=23ms;P在t=2ms到达A,因1E[2,6]ms， A→D时延已变为4ms，此时A→D→S时延为4+5=9ms，优于A--B一S的10ms，故选择经 过D的路径，抵达时刻为2+4+5=1lms。因此S接收到的先后顺序为P一Pi一P2。</div>",
    "qid": null,
    "kp": "<div class=\"kp-sec\"><b>考点</b>数据报的动态路由选择（图题）。各路由器按数据报到达时刻的实时链路时延选最小路径（时延相等优先经B）。逐跳推算：P₃在t=2ms时A→D时延已降为4ms而走D，最早到达（11ms）；P₁、P₂在t=0、1ms到达A时经B/D同为10ms而走B，后续因B→S变30ms改走B→D→S，分别22ms、23ms到达。故S收到顺序P₃→P₁→P₂。答案C。</div><div class=\"kp-sec\"><b>易错点</b><span class=\"kp-trap\">①用固定最短路径而不按到达时刻的实时时延选路；②时延相等时「优先经B」的规则用错；③逐跳到达时刻累加算错。</span></div>"
