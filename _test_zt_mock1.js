@@ -71,9 +71,13 @@ const sleep = ms => new Promise(r => setTimeout(r, ms));
   check('模拟卷目录项 onclick 可调用',
     mockLink && mockLink.getAttribute('onclick') === "switchYear('mock1')", true);
 
-  // 切到模拟卷（一）
+  // 回归：切换年份时分组折叠状态必须保持（不能每次都重新展开）
+  const mockDetails = doc.querySelector('#yearList details[data-grp="mock"]');
+  if (mockDetails) mockDetails.open = false;
   w.switchYear('mock1');
   await sleep(700);
+  const mockAfter = doc.querySelector('#yearList details[data-grp="mock"]');
+  check('切换年份后模拟分组折叠状态保持', mockAfter && mockAfter.open === false, true);
 
   const cards = doc.querySelectorAll('#ztMain .question-card');
   check('47 题全渲染', cards.length, 47);
@@ -96,10 +100,12 @@ const sleep = ms => new Promise(r => setTimeout(r, ms));
   const bigKpBtns = bigCards.filter(c => c.querySelector('[data-toggle="kp"]')).length;
   check('7 道大题都有考点按钮', bigKpBtns, 7);
 
-  // 图题 img src
+  // 图题 img src：只有题33/44/47有真实图形，其余含图题已文字化（表格/代码/矩阵）
   const imgs = Array.from(doc.querySelectorAll('#ztMain .question-content img')).map(i => i.getAttribute('src'));
-  check('图题数=8', imgs.length, 8);
+  check('图题数=3（33 拓扑/44 数据通路/47 网络拓扑）', imgs.length, 3);
   check('图 src 全指 zt_mock1_*.png', imgs.every(s => /^data\/zt_img\/zt_mock1_\d+\.png$/.test(s)), true);
+  check('题图均可放大（class=fig-img）',
+    Array.from(doc.querySelectorAll('#ztMain .question-content img')).every(i => i.classList.contains('fig-img')), true);
 
   // 做题模式隐藏考点
   w.toggleExamMode();

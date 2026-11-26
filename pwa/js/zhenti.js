@@ -254,6 +254,13 @@
 
     /* ---------------- 渲染：年份列表 ---------------- */
     function renderYearList() {
+        // 切年份会重建整份目录；先记住两个分组的折叠状态，重建后恢复，
+        // 避免每次点击目录都把用户收起的「历年真题 / 模拟试卷」重新展开。
+        const prevOpen = {};
+        document.querySelectorAll('#yearList details.zt-year-group').forEach(d => {
+            if (d.dataset.grp) prevOpen[d.dataset.grp] = d.open;
+        });
+        const openAttr = key => (prevOpen[key] === false ? '' : ' open');
         const years = [...state.index.years].reverse();
         const row = (y, label, title) => {
             const done = doneCount(y);
@@ -271,8 +278,8 @@
         const mocks = state.index.mocks || [];
         const mockHtml = mocks.map(m => row(m.y, m.label, `${m.label}（选择 40 + 大题 7）`)).join('');
         $('yearList').innerHTML =
-            `<details class="zt-year-group" open><summary class="ol-nav-sec">历年真题 <span class="zt-year-grp-n">${years.length}</span></summary>${realHtml}</details>`
-            + (mockHtml ? `<details class="zt-year-group" open><summary class="ol-nav-sec">模拟试卷 <span class="zt-year-grp-n">${mocks.length}</span></summary>${mockHtml}</details>` : '');
+            `<details class="zt-year-group" data-grp="real"${openAttr('real')}><summary class="ol-nav-sec">历年真题 <span class="zt-year-grp-n">${years.length}</span></summary>${realHtml}</details>`
+            + (mockHtml ? `<details class="zt-year-group" data-grp="mock"${openAttr('mock')}><summary class="ol-nav-sec">模拟试卷 <span class="zt-year-grp-n">${mocks.length}</span></summary>${mockHtml}</details>` : '');
     }
 
     /* ---------------- 渲染：套卷 ---------------- */
