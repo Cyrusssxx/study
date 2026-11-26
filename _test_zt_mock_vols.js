@@ -1,4 +1,4 @@
-// 模拟卷（三）/（五）数据回归（2026-11-26）
+// 模拟卷（三）/（五）/（1019）数据回归（2026-11-26）
 // 校验 index 登记、47题、考点分析、答案、科目归属、题图存在、目录项可点击。
 // 用法：NODE_PATH=<workspace>/node_modules node _test_zt_mock_vols.js
 const fs = require('fs');
@@ -14,11 +14,11 @@ const J = f => JSON.parse(fs.readFileSync(path.join(ROOT, f), 'utf8'));
 const INDEX = J('pwa/data/zt/index.json');
 const ZT = fs.readFileSync(path.join(ROOT, 'pwa/js/zhenti.js'), 'utf8');
 
-check('模拟卷目录三项（一/三/五）', (INDEX.mocks || []).map(m => m.y), ['mock1', 'mock3', 'mock5']);
+check('模拟卷目录四项（一/三/五/1019）', (INDEX.mocks || []).map(m => m.y), ['mock1', 'mock3', 'mock5', 'mock1019']);
 check('目录项 onclick 用单引号包裹字符串年份',
   /typeof y === 'number' \? String\(y\) : "'" \+ String\(y\)/.test(ZT), true);
 
-for (const [y, label, paperY] of [['mock3', '模拟卷（三）', '模拟三'], ['mock5', '模拟卷（五）', '模拟五']]) {
+for (const [y, label, paperY] of [['mock3', '模拟卷（三）', '模拟三'], ['mock5', '模拟卷（五）', '模拟五'], ['mock1019', '模拟卷（1019）', '模考1019']]) {
   const d = J(`pwa/data/zt/zt_${y}.json`);
   check(`${label} 47题`, d.items.length, 47);
   check(`${label} 数据内卷标识`, d.y, paperY);
