@@ -19,7 +19,7 @@
  */
 const APP_VER = 'quiz408-app-53e7350003';
 const DATA_VER = 'quiz408-data-07b8170421';
-const LAZY_VER = 'quiz408-lazy-ad62fed022';
+const LAZY_VER = 'quiz408-lazy-e49872e0d7';
 
 // 应用外壳：保证离线骨架与最新脚本。meta.json 仅几百字节，随外壳一起预缓存。
 const APP_PRECACHE = [
