@@ -67,6 +67,9 @@ const sleep = ms => new Promise(r => setTimeout(r, ms));
   check('第二组=模拟试卷', /模拟试卷/.test(groups[1] || ''), true);
   const mockLink = doc.querySelector('#yearList a[data-year="mock1"]');
   check('模拟卷（一）在目录里', !!mockLink && /模拟卷（一）/.test(mockLink.textContent), true);
+  // 回归：字符串年份的 onclick 必须完整带单引号，双引号会截断 onclick="..." 属性导致点击无效
+  check('模拟卷目录项 onclick 可调用',
+    mockLink && mockLink.getAttribute('onclick') === "switchYear('mock1')", true);
 
   // 切到模拟卷（一）
   w.switchYear('mock1');

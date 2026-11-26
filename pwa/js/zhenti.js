@@ -260,8 +260,9 @@
             const active = y === state.year;
             // 做题模式不显示各年完成度（属历史记录，退出做题模式后恢复）
             const doneHtml = state.examMode ? '' : `<span class="zt-year-done">${done}/${state.index.choice_total}</span>`;
-            // 模拟卷 y 是字符串，onclick 参数要加引号；真题数字保持原样
-            const arg = typeof y === 'number' ? String(y) : JSON.stringify(y);
+            // 模拟卷 y 是字符串，onclick 参数要加引号；必须用单引号——
+            // 双引号（JSON.stringify）会截断 onclick="..." 属性本身，点击变成 switchYear( 报错。
+            const arg = typeof y === 'number' ? String(y) : "'" + String(y).replace(/'/g, "\\'") + "'";
             return `<a class="ol-nav-item root${active ? ' zt-year-active' : ''}" data-year="${y}"
                 onclick="switchYear(${arg})" title="${title}">
                 ${label}${doneHtml}</a>`;
