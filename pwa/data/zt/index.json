@@ -823,6 +823,12 @@
    "label": "模拟卷（1019）",
    "file": "zt_mock1019.json",
    "n": 47
+  },
+  {
+   "y": "mock2",
+   "label": "模拟卷（二）",
+   "file": "zt_mock2.json",
+   "n": 47
   }
  ]
 }
