@@ -453,11 +453,13 @@
 
     /* ---------------- 不熟 / 不会 / 考点分析（与刷题页同一套接口与样式） ---------------- */
     function markBtnsHtml(f) {
-        // 大题一律可标：它没有题库映射（合成 id 形如 os_zt2015_45），但「不熟/不会」写的是
-        // IndexedDB 的 unfamiliar/dontknow store，键就用本页 iid（前缀是科目，后端只校验前缀）；
-        // 本页 loadStores() 直接 dbAll 这两个表，所以标记能存能读，只在本页闭环使用。
-        // 选择题仍要求有映射：未映射的选择题在错题本/抽题池里查不到，标了也无处回收。
-        if (!f.mapped && f.group !== 'big') return '';
+        // 2026-11-26 用户要求模拟卷（1019 等）也能标「不熟/不会」：全部取消映射门槛。
+        // 「不熟/不会」写 IndexedDB 的 unfamiliar/dontknow store，键用本页 iid
+        // （合成 id 形如 os_zt2015_45 / ds_ztmock1019_1，前缀是科目，后端只校验前缀）；
+        // 本页 loadStores() 直接 dbAll 这两个表，所以标记能存能读，题号栏也能标黄/标红。
+        // 【先不进抽题池】合成 id 在题库里查不到：/api/marks 会过滤掉（getQuestionById 为空），
+        // /api/exam/pool 统计也用 isBankQid 排除；所以这些标记只在本页闭环，不参与模拟考组卷。
+        // 真正会入池的「加入错题池」按钮（poolBtnHtml）仍要求映射，此处不动。
         const un = state.unfamSet.has(f.iid), dk = state.dontknowSet.has(f.iid);
         return `<span class="mark-btns">
             <button class="mark-btn ${un ? 'mark-unfamiliar' : ''}" onclick="toggleMarkZt('unfamiliar','${f.iid}')"

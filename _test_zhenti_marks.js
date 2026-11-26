@@ -3,7 +3,8 @@
 // 需求：套卷里每道题也能像刷题页那样标记「不熟 / 不会」；考点分析常驻显示。
 //
 // 关键约束（本测试锁定）：
-//   ① 「不熟 / 不会」：映射题与**大题**都有（标记写 IndexedDB，按本页 iid 存）
+//   ① 「不熟 / 不会」：所有题都有（映射题/无映射选择题/大题），2026-11-26 起模拟卷选择题也接入；
+//      标记写 IndexedDB，按本页 iid 存；合成 id 不进抽题池（isBankQid 排除）
 //   ② 考点分析「常驻」（2026-11-11 用户要求）：选择题默认展开、不再要求先收藏，
 //      按钮只用于收起；收起状态按题存 localStorage('zhentiKpClosed')
 //   ③ 考点分析含「答案 X」，**做题模式（examMode）下必须整块隐藏**
@@ -101,11 +102,11 @@ const OS_BANK = {
   console.log('--- 一、卡片渲染 ---');
   check('套卷渲染出三张卡（含 1 道大题）', !!c1 && !!c2 && !!c3, true);
 
-  console.log('\n--- 二、不熟 / 不会：只有映射题才有 ---');
+  console.log('\n--- 二、不熟 / 不会：所有题都有（含模拟卷/无映射选择题） ---');
   const marks1 = c1 ? c1.querySelectorAll('.mark-btn').length : -1;
   const marks2 = c2 ? c2.querySelectorAll('.mark-btn').length : -1;
   check('映射题有 2 个标记按钮（不熟/不会）', marks1, 2);
-  check('无映射的选择题不显示标记按钮', marks2, 0);
+  check('无映射的选择题也显示标记按钮（模拟卷 1019 等）', marks2, 2);
   // 大题（综合题）一律有标记：它没有题库映射，但标记写的是本页的 unfamiliar/dontknow 表
   check('大题有 2 个标记按钮（不熟/不会）',
     c3 ? c3.querySelectorAll('.mark-btn').length : -1, 2);

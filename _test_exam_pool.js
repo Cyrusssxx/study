@@ -176,6 +176,13 @@ const DAY = 86400000;
   check('不会 2 题', pool.dontknow, 2);
   check('不会池里未做的 1 题（cn_0008；cn_0002 做过不算）', pool.dontknow_undone, 1);
 
+  // 2026-11-26：模拟卷合成 id（ds_ztmock1019_1 这种）标了不熟/不会，但先不进抽题池。
+  // 池子统计的 isBankQid 要把它排除，否则「不熟 N 题」会虚高、与 /api/marks 实际条数对不上。
+  check('isBankQid 正则覆盖 _ztmockNNNN_', /_zt\(\?:\\d\{4\}\|mock\\d\+\)_/.test(BACKEND_SRC), true);
+  await put('unfamiliar', [{ question_id: 'cn_ztmock1019_1', subject: 'cn', added_at: fmt(Date.now()) }]);
+  const poolWithMock = await w.api('/api/exam/pool').then(r => r.json());
+  check('模拟卷合成 id 不计入不熟池统计', poolWithMock.unfamiliar, 1);
+
   console.log('\n--- 四、7 天后重练：加入 / 取消 ---');
   const r1 = await w.api('/api/mark/redo/cn_0007', { method: 'POST' }).then(r => r.json());
   check('加入成功', r1.is_redo, true);
