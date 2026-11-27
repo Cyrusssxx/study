@@ -175,7 +175,7 @@ if (!JSDOM || !IDBFactory) {
     check('图块被误标行号 = 0',
       [...d.querySelectorAll('.anno-line')]
         .filter(e => e.hasAttribute('data-fig') || e.closest('[data-fig]')).length, 0);
-    check('内联 struct-fig 现在 19 张（含 1.5 启动图 + 2.2.4 切换对比图 + 4.2.2/4.2.8/2.2.6 三张）', d.querySelectorAll('figure.struct-fig').length, 19);
+    check('内联 struct-fig 现在 21 张（含 1.5 启动图 + 2.2.4 切换对比图 + 4.2.2/4.2.8/2.2.6 三张）', d.querySelectorAll('figure.struct-fig').length, 21);
     check('新图在 DOM 里都能找到 src',
       ['sched_metric', 'sched_gantt', 'srtn_rr', 'mlfq']
         .every(n => !!d.querySelector('img[src*="os_fig_' + n + '"]')), true);
