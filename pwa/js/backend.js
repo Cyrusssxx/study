@@ -1930,21 +1930,39 @@ async function examApi(action, body, arg) {
         const wrongMap = new Map();
         for (const w of await dbAll('wrong')) wrongMap.set(w.question_id, w);
         const favs = await dbAll('favorites');
+        // 可组卷判定（与 getQuestionById 的解析结果对齐，但**不加载题库**）：
+        //   ① id 必须是四科题库题号 `^(?:co|ds|os|cn)_\d+$` —— 真题套卷合成 id
+        //      （os_zt2015_45）、模拟卷合成 id（ds_ztmock1019_1）、旧代码题
+        //      （ds_code_2017）都不在四科题库，组不进卷；
+        //   ② 不在 meta.json 的 excluded_ids 缺陷名单里（loadQuestions 会过滤它们）。
+        // 首屏性能护栏：只能用 id 正则 + meta（几百字节），绝不能 fetch 2.9MB 题库。
+        const meta = await getTotals();
+        const excludedSet = new Set((meta && meta.excluded_ids) || []);
+        const isDrawableQid = qid => /^(?:co|ds|os|cn)_\d+$/.test(String(qid || ''))
+            && !excludedSet.has(String(qid || ''));
         // 与 splitTiers 完全同口径：没做过 / 做过且错题未解决 / 做过且答对
+        // （raw 三档 = 收藏全量；drawable 三档 = 真实可组卷，设置页第 1 格用它）
         let fresh = 0, wrongish = 0, correct = 0;
+        let drawable = 0, dFresh = 0, dWrongish = 0, dCorrect = 0;
         for (const f of favs) {
             const p = progMap.get(f.question_id);
-            if (!p) { fresh++; continue; }
             const w = wrongMap.get(f.question_id);
+            if (isDrawableQid(f.question_id)) {
+                drawable++;
+                if (!p) dFresh++;
+                else if (w && !w.is_resolved) dWrongish++;
+                else dCorrect++;
+            }
+            if (!p) { fresh++; continue; }
             if (w && !w.is_resolved) wrongish++; else correct++;
         }
         // 不熟 / 不会：标记总数（永久保留）+ 其中还没做过的 + 仍在抽题池的。
         // 标记之后答对过的题不再被抽，但标记仍在，所以三者可以不同。
-        // 统计口径只算「题库里存在的题」：真题套卷里的合成 id（`os_zt2015_45` 这种，
-        // 大题没有题库映射）和模拟卷合成 id（`ds_ztmock1019_1` 这种，2026-11-26 起
-        // 模拟卷选择题也能标不熟/不会）只在本页用来标记 + 题号标色，题库里查不到，
-        // 也不参与抽题，算进来会让「不熟 N 题」与不熟列表里的实际条数对不上。
-        const isBankQid = qid => !/_zt(?:\d{4}|mock\d+)_/.test(String(qid || ''));
+        // 统计口径只算「真实可组卷的题」（isDrawableQid，与收藏格同口径）：
+        // 真题套卷合成 id（`os_zt2015_45`）、模拟卷合成 id（`ds_ztmock1019_1`）、
+        // 旧代码题（`ds_code_2017`）和 excluded 缺陷题题库里查不到，也不参与抽题，
+        // 算进来会让「不熟 N 题」与实际能抽到的条数对不上。
+        const isBankQid = isDrawableQid;
         const unfamRows = (await dbAll('unfamiliar')).filter(r => isBankQid(r.question_id));
         const dkRows = (await dbAll('dontknow')).filter(r => isBankQid(r.question_id));
         const unfam = unfamRows.length;
@@ -1992,6 +2010,11 @@ async function examApi(action, body, arg) {
         for (const qid of masteredIds) examPoolSet.delete(qid);
         return jsonResp({
             favorites_total: favs.length,
+            favorites_drawable: drawable,        // 真实可组卷：题库题号且非缺陷题（设置页第 1 格用它）
+            favorites_drawable_fresh: dFresh,    // 可组卷里从没做过的（真·待抽新题）
+            favorites_drawable_wrongish: dWrongish,
+            favorites_drawable_correct: dCorrect,
+            favorites_undrawable: favs.length - drawable,  // 真题套卷/模拟卷合成 id、旧代码题、缺陷题
             favorites_fresh: fresh,        // 待抽：收藏池里从没做过的（最高优先级的新题）
             favorites_wrongish: wrongish,  // 做过且错题本仍挂着未解决（排在答对之前）
             favorites_correct: correct,    // 做过且答对（优先级最低，但不是不抽）

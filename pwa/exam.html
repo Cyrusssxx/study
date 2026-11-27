@@ -62,23 +62,29 @@
                 <p>限时作答，交卷统一评分</p>
             </div>
 
-            <!-- 池子统计：组卷前先看清"现在有多少题可抽" -->
+            <!-- 池子统计：组卷前先看清"现在有多少题可抽"。
+                 口径：第 1 格只数收藏且真实可组卷；后 3 格是全库口径（含没收藏的题），
+                 所以它们的数字可能比收藏数还大 —— 每格右下角的范围标签就是干这个的。 -->
             <div class="exam-pool-bar" id="examPoolBar">
                 <div class="pool-cell">
                     <b id="psFav">--</b>
-                    <span id="psFavSub">收藏题</span>
+                    <span id="psFavSub">可组卷收藏</span>
+                    <u class="pool-scope">仅收藏</u>
                 </div>
                 <div class="pool-cell">
                     <b id="psExam">--</b>
                     <span id="psExamSub">模拟考做过</span>
+                    <u class="pool-scope">全库 · 含未收藏</u>
                 </div>
                 <div class="pool-cell">
                     <b id="psUnfam">--</b>
                     <span id="psUnfamSub">不熟题</span>
+                    <u class="pool-scope">全库 · 含未收藏</u>
                 </div>
                 <div class="pool-cell">
                     <b id="psDk">--</b>
                     <span id="psDkSub">不会题</span>
+                    <u class="pool-scope">全库 · 含未收藏</u>
                 </div>
             </div>
 
@@ -283,8 +289,16 @@
                         : mode === 'unfamiliar' ? (d.marks || []).filter(m => m.active !== false)
                             : (d.wrong_questions || []);
                     const n = rows.length;
+                    // 对账：/api/favorites 只返回能解析进题库的题（= 可组卷），
+                    // 全量收藏数在 _poolStats 里 —— 两者之差就是组不进卷的合成/缺陷题。
+                    const favTotal = (_poolStats && _poolStats.favorites_total != null)
+                        ? _poolStats.favorites_total : n;
+                    const favUnd = favTotal - n;
                     if (!n) {
-                        sourceText.textContent = mode === 'favorites' ? '还没有收藏题'
+                        sourceText.textContent = mode === 'favorites'
+                            ? (favTotal > 0
+                                ? `收藏 ${favTotal} 题，但都组不进卷（真题套卷/旧代码题，不在四科题库）`
+                                : '还没有收藏题')
                             : mode === 'unfamiliar' ? ((d.total || 0) > n
                                 ? '标记的题都答对过了，已移出抽题池（标记仍保留，试卷回顾里可见）'
                                 : '还没有标记「不熟/不会」的题（刷题/试卷回顾时点 🟡不熟 即可加入）')
@@ -301,7 +315,9 @@
                             .map(k => `${names[k]} ${bySub[k]}`)
                             .join(' · ');
                         sourceText.textContent = mode === 'favorites'
-                            ? `收藏 ${n} 题（${detail}）· 新题优先，错题合计 < 1/3，模拟考答对的退出抽题`
+                            ? (favUnd > 0
+                                ? `收藏 ${favTotal} 题 · 可组卷 ${n} 题（${detail}）· ${favUnd} 题真题套卷/旧代码题组不进卷 · 新题优先，错题合计 < 1/3`
+                                : `收藏 ${n} 题（${detail}）· 新题优先，错题合计 < 1/3，模拟考答对的退出抽题`)
                             : mode === 'unfamiliar'
                                 ? `可抽 ${n} 题（${detail}）· 标记共 ${d.total || n} 题 · 按真题比例抽，优先没做过`
                                 : `错题 ${n} 题（${detail}）· 按真题比例抽，优先没做过`;
@@ -986,6 +1002,10 @@
             if (d.error) return;
             _poolStats = d;
             renderPoolStats(d);
+            // 收藏模式的「题目来源」行要等统计到手才能写「收藏共 X · 可组卷 Y」对账
+            // （初始化时 onModeChange 跑得比统计早，拿到的只有收藏列表、看不到全量）
+            const sel0 = document.getElementById('examMode');
+            if (sel0 && sel0.value === 'favorites') onModeChange();
         } catch (e) {
             // 统计失败不挡组卷，但要把原因写进 tooltip（否则用户只看到两个破折号）
             const bar = document.getElementById('examPoolBar');
@@ -995,10 +1015,15 @@
 
     function renderPoolStats(d) {
         const set = (id, v) => { const el = document.getElementById(id); if (el) el.textContent = v; };
-        // 第 1 格：收藏池总量 + 「待抽 / 已做」拆开写，让 1312 = 1 + 1311 一眼自洽
+        // 第 1 格：只显示「真实可组卷」的收藏 —— 真题套卷/模拟卷合成 id、旧代码题、
+        // 缺陷题组不进卷，画成大数字只会让人以为"待抽 69 却一道也抽不出"。
+        // 对账关系写进 tooltip：收藏共 X = 可组卷 Y + 不可组卷 Z。
+        const favDraw = d.favorites_drawable != null ? d.favorites_drawable : d.favorites_total;
+        const favDrawFresh = d.favorites_drawable_fresh != null ? d.favorites_drawable_fresh : d.favorites_fresh;
+        set('psFav', favDraw);
         // （"已做"含模拟考作答 —— 交卷时每题都写了 progress，所以模拟考做过的必然不在待抽里）
-        set('psFav', d.favorites_total);
-        set('psFavSub', `待抽 ${d.favorites_fresh} · 已做 ${d.favorites_total - d.favorites_fresh}`);
+        set('psFavSub', `待抽 ${favDrawFresh} · 已做 ${favDraw - favDrawFresh}`);
+        // 后 3 格是全库口径（含没收藏的题），范围标签在 HTML 的 .pool-scope 里
         set('psExam', d.exam_answered);
         set('psExamSub', `模拟考做过 · ${d.exam_sessions} 场`);
         set('psUnfam', d.unfamiliar);
@@ -1007,15 +1032,18 @@
         set('psDkSub', `不会 · 未做 ${d.dontknow_undone} · 可抽 ${d.dontknow_active != null ? d.dontknow_active : d.dontknow}`);
         const bar = document.getElementById('examPoolBar');
         if (bar) {
-            bar.title = `【收藏池】共 ${d.favorites_total} 题`
-                + `\n  待抽（从没做过）${d.favorites_fresh}`
-                + `｜做过的对题 ${d.favorites_correct}`
-                + `｜做过的错题 ${d.favorites_wrongish}`
+            const und = d.favorites_undrawable != null ? d.favorites_undrawable
+                : (d.favorites_total - favDraw);
+            bar.title = `【收藏池 · 仅收藏】收藏共 ${d.favorites_total} 题 ＝ 可组卷 ${favDraw} ＋ 不可组卷 ${und}`
+                + `\n  不可组卷 = 真题套卷/模拟卷合成 id、旧代码题、缺陷题（不在四科题库，组不进卷）`
+                + `\n  可组卷里：待抽（从没做过）${favDrawFresh}`
+                + `｜做过的对题 ${d.favorites_drawable_correct != null ? d.favorites_drawable_correct : d.favorites_correct}`
+                + `｜做过的错题 ${d.favorites_drawable_wrongish != null ? d.favorites_drawable_wrongish : d.favorites_wrongish}`
                 + `\n  抽题顺序：新题 → 做过的对题 → 错题；错题合计 < 全场 1/3，错题太少时会被对题顶掉`
                 + `\n  注：模拟考交卷会写作答记录，所以模拟考做过的题已经算在"已做"里，不在待抽中`
-                + `\n【模拟考】${d.exam_sessions} 场，做过 ${d.exam_answered} 题（去重）`
+                + `\n【模拟考 · 全库】${d.exam_sessions} 场，做过 ${d.exam_answered} 题（去重，含没收藏的）`
                 + `｜其中仍错 ${d.exam_wrong}｜到期错题 ${d.due_wrong}`
-                + `\n【标记】不熟 ${d.unfamiliar}（未做 ${d.unfamiliar_undone} · 可抽 ${d.unfamiliar_active != null ? d.unfamiliar_active : d.unfamiliar}）`
+                + `\n【标记 · 全库】不熟 ${d.unfamiliar}（未做 ${d.unfamiliar_undone} · 可抽 ${d.unfamiliar_active != null ? d.unfamiliar_active : d.unfamiliar}）`
                 + `｜不会 ${d.dontknow}（未做 ${d.dontknow_undone} · 可抽 ${d.dontknow_active != null ? d.dontknow_active : d.dontknow}）`
                 + `\n  注：标记永久保留供试卷回顾复盘；答对过的题只是不再被抽到`
                 + `\n【模拟考错题池】可抽 ${d.exam_pool_total != null ? d.exam_pool_total : d.exam_wrong} 题`

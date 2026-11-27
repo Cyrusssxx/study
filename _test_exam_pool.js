@@ -73,6 +73,9 @@ const DAY = 86400000;
         let obj;
         if (u.includes('data/notes/') || u.includes('_map.json') || u.includes('algo_notes')) obj = { chapters: [], sections: [] };
         else if (/data\/cn\.json/.test(u)) obj = JSON.parse(JSON.stringify(FIXTURE));
+        // meta.json 带 excluded_ids（真实数据里是 ['ds_0633']），用 cn_0009 模拟缺陷题：
+        // id 是题库题号（正则能过），但进了缺陷名单 → 组不进卷、不进第 1 格
+        else if (u.includes('data/meta.json')) obj = { subjects: {}, ds_daka: 0, excluded_ids: ['cn_0009'] };
         else if (/data\/[a-z_0-9]+\.json/.test(u)) obj = { subject: 'x', questions: [] };
         else obj = { questions: [], chapters: [], sections: [], subjects: {}, total: 0 };
         return { ok: true, status: 200, json: async () => obj };
@@ -167,6 +170,13 @@ const DAY = 86400000;
   check('做过的对题 1 题（cn_0002）', pool.favorites_correct, 1);
   check('三层之和 = 收藏总数',
     pool.favorites_fresh + pool.favorites_wrongish + pool.favorites_correct, pool.favorites_total);
+  // 可组卷口径（2026-11-27 抽题池显示优化）：第 1 格的大数字用它，不是 raw 总量
+  check('可组卷收藏 6（fixture 全是题库题号、无缺陷题）', pool.favorites_drawable, 6);
+  check('可组卷待抽 3', pool.favorites_drawable_fresh, 3);
+  check('可组卷三档之和 = 可组卷总数',
+    pool.favorites_drawable_fresh + pool.favorites_drawable_wrongish + pool.favorites_drawable_correct,
+    pool.favorites_drawable);
+  check('不可组卷 0', pool.favorites_undrawable, 0);
   check('到期错题 1 题', pool.due_wrong, 1);
   check('重练池：已到期 1 / 待到期 1', [pool.redo_due, pool.redo_pending], [1, 1]);
   check('本用例没造模拟考会话 → exam_answered 0', pool.exam_answered, 0);
@@ -177,8 +187,10 @@ const DAY = 86400000;
   check('不会池里未做的 1 题（cn_0008；cn_0002 做过不算）', pool.dontknow_undone, 1);
 
   // 2026-11-26：模拟卷合成 id（ds_ztmock1019_1 这种）标了不熟/不会，但先不进抽题池。
-  // 池子统计的 isBankQid 要把它排除，否则「不熟 N 题」会虚高、与 /api/marks 实际条数对不上。
-  check('isBankQid 正则覆盖 _ztmockNNNN_', /_zt\(\?:\\d\{4\}\|mock\\d\+\)_/.test(BACKEND_SRC), true);
+  // 2026-11-27 起口径升级为 isDrawableQid = 四科题库题号正则 + meta.excluded_ids
+  // （同时排除真题套卷/模拟卷合成 id、旧代码题 ds_code_*、excluded 缺陷题，且不加载题库）。
+  check('可组卷正则 = 四科题库题号', BACKEND_SRC.includes('(?:co|ds|os|cn)_\\d+$'), true);
+  check('缺陷题名单来自 meta.excluded_ids', BACKEND_SRC.includes('excluded_ids'), true);
   await put('unfamiliar', [{ question_id: 'cn_ztmock1019_1', subject: 'cn', added_at: fmt(Date.now()) }]);
   const poolWithMock = await w.api('/api/exam/pool').then(r => r.json());
   check('模拟卷合成 id 不计入不熟池统计', poolWithMock.unfamiliar, 1);
@@ -239,15 +251,21 @@ const DAY = 86400000;
     check(`设置页有 #${id}`, !!w.document.getElementById(id), true);
   }
   check('统计条 4 格', w.document.querySelectorAll('#examPoolBar .pool-cell').length, 4);
-  // 第 1 格是收藏池总量（副标写待抽），第 2 格是模拟考做过 —— 两者口径不同，别混
+  // 第 1 格是「可组卷收藏」（副标写待抽），第 2 格是模拟考做过 —— 口径不同，别混
   w.renderPoolStats(pool);
-  check('第 1 格显示收藏池总量', w.document.getElementById('psFav').textContent, String(pool.favorites_total));
+  check('第 1 格显示可组卷收藏数（不是 raw 总量）', w.document.getElementById('psFav').textContent, String(pool.favorites_drawable));
   check('第 1 格副标把「待抽 / 已做」拆开写', /待抽 \d+ · 已做 \d+/.test(w.document.getElementById('psFavSub').textContent), true);
   check('第 2 格显示模拟考做过题数', w.document.getElementById('psExam').textContent, String(pool.exam_answered));
   check('第 2 格副标点出场数', /模拟考做过 · \d+ 场/.test(w.document.getElementById('psExamSub').textContent), true);
   check('不熟副标带未做数', /不熟 · 未做 \d+/.test(w.document.getElementById('psUnfamSub').textContent), true);
   check('不会副标带未做数', /不会 · 未做 \d+/.test(w.document.getElementById('psDkSub').textContent), true);
-  check('tooltip 分区块说明口径', /【收藏池】[\s\S]*【模拟考】[\s\S]*【标记】/.test(w.document.getElementById('examPoolBar').title), true);
+  // 范围标签：回答"为什么没收藏的题也在池子里显示"——后 3 格是全库口径
+  check('4 格都带范围标签', w.document.querySelectorAll('#examPoolBar .pool-scope').length, 4);
+  check('第 1 格标「仅收藏」，后 3 格标「全库 · 含未收藏」',
+    [...w.document.querySelectorAll('#examPoolBar .pool-scope')].map(e => e.textContent),
+    ['仅收藏', '全库 · 含未收藏', '全库 · 含未收藏', '全库 · 含未收藏']);
+  check('tooltip 分区块说明口径', /【收藏池[\s\S]*【模拟考[\s\S]*【标记/.test(w.document.getElementById('examPoolBar').title), true);
+  check('tooltip 写明收藏总数 = 可组卷 + 不可组卷', /＝ 可组卷 \d+ ＋ 不可组卷 \d+/.test(w.document.getElementById('examPoolBar').title), true);
   check('清除记录有二次确认', /再确认一次/.test(EXAM_SRC), true);
   check('二次确认列出会话数', /即将删除 \$\{total\} 场会话/.test(EXAM_SRC), true);
   check('quiz 有 toggleRedo', /async function toggleRedo\(questionId\)/.test(QUIZ_SRC), true);
@@ -474,6 +492,24 @@ const DAY = 86400000;
   const rev = await w.api('/api/questions/cn?mode=exam_review&exam_id=101&page=1&per_page=9999').then(r => r.json());
   const rq = (rev.questions || []).find(q => q.id === 'cn_0008');
   check('试卷回顾仍带出 is_dontknow（用户报的「不显示了」）', !!(rq && rq.is_dontknow), true);
+
+  console.log('\n--- 十六、可组卷口径：缺陷题不进第 1 格，来源行写对账 ---');
+  // cn_0009 是题库题号（正则能过）但进了 meta.excluded_ids（mock 里模拟真实数据的 ds_0633）：
+  // 收藏总数要 +1，可组卷数不动、可组卷待抽也不动 —— 用户看到的第 1 格永远是"真抽得出的"。
+  await put('favorites', [{ question_id: 'cn_0009', subject: 'cn', added_at: fmt(Date.now()) }]);
+  const poolX = await w.api('/api/exam/pool').then(r => r.json());
+  check('收藏总数含缺陷题', poolX.favorites_total, 7);
+  check('可组卷不含缺陷题', poolX.favorites_drawable, 6);
+  check('不可组卷 = 1', poolX.favorites_undrawable, 1);
+  check('raw 待抽 +1（缺陷题从没做过）', poolX.favorites_fresh, 4);
+  check('可组卷待抽不变（缺陷题抽不出，别显示成待抽）', poolX.favorites_drawable_fresh, 3);
+
+  // 来源行对账：/api/favorites 只回能解析的 6 题，全量 7 题来自 _poolStats —— 两者差 = 组不进卷
+  await w.loadPoolStats();          // 刷新统计缓存（真实页面在首屏就完成这一步）
+  await w.onModeChange();           // 再渲染来源行
+  const srcTxt = w.document.getElementById('sourceText').textContent;
+  check('收藏来源行写「收藏 7 · 可组卷 6」对账', /收藏 7 题 · 可组卷 6 题/.test(srcTxt), true);
+  check('来源行点明差额原因（组不进卷）', /组不进卷/.test(srcTxt), true);
 
   dom.window.close();
   console.log(`\n结果: ${pass} / ${pass + fail}` + (fail ? `，${fail} 项失败` : '，全部通过'));

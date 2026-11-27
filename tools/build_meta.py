@@ -26,11 +26,32 @@ def _total(fname):
     return d.get('total', len(d.get('questions', [])))
 
 
+def _excluded_ids():
+    """数据缺陷题（excluded: true）的 id 列表。
+
+    loadQuestions 会把它们过滤掉（组不进卷、刷题不出现），但模拟考设置页的
+    池子统计**不能**为了数一个"可组卷"去加载 2.9MB 题库（首屏性能护栏）。
+    把名单抽进 meta.json（几百字节），pool 端点即可用 id 正则 + 本名单
+    精确判定可组卷，与 getQuestionById 的解析结果保持一致。
+    """
+    ids = []
+    for k in ('os', 'co', 'ds', 'cn'):
+        p = os.path.join(DATA, f'{k}.json')
+        if not os.path.exists(p):
+            continue
+        d = json.load(open(p, encoding='utf-8'))
+        for q in d.get('questions', []):
+            if q.get('excluded'):
+                ids.append(q['id'])
+    return ids
+
+
 def main():
     subjects = {k: {'total': _total(f'{k}.json')} for k in ('os', 'co', 'ds', 'cn')}
     meta = {
         'subjects': subjects,
         'ds_daka': _total('ds_daka.json'),
+        'excluded_ids': _excluded_ids(),
     }
     out = os.path.join(DATA, 'meta.json')
     with open(out, 'w', encoding='utf-8') as f:
@@ -39,6 +60,7 @@ def main():
     for k, v in subjects.items():
         print(f'        {k}: {v["total"]} 题')
     print(f'        ds_daka: {meta["ds_daka"]} 题')
+    print(f'        excluded_ids: {meta["excluded_ids"]}')
 
 
 if __name__ == '__main__':

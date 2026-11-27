@@ -2458,6 +2458,9 @@ mark {
     box-shadow: var(--shadow);
     padding: 12px 10px;
     text-align: center;
+    /* 纵向 flex + 标签 margin-top:auto：某格副标换行变高时，范围标签仍底对齐 */
+    display: flex;
+    flex-direction: column;
 }
 
 .pool-cell b {
@@ -2475,6 +2478,23 @@ mark {
     font-size: 0.74rem;
     line-height: 1.45;
     color: var(--text-light);
+}
+
+/* 范围标签：写清这一格数的是「仅收藏」还是「全库（含未收藏）」——
+   后三格是全库口径，数字比收藏数大是正常的，别再当成 bug */
+.pool-scope {
+    display: inline-block;
+    margin-top: auto;      /* 副标换行变高时标签仍沉底（配合 .pool-cell 的 flex 列） */
+    padding: 6px 7px 3px;
+    font-size: 0.62rem;
+    font-style: normal;
+    line-height: 1;
+    text-decoration: none;
+    color: var(--text-light);
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    opacity: 0.85;
+    align-self: center;
 }
 
 @media (max-width: 640px) {
