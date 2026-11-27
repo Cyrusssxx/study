@@ -1862,23 +1862,32 @@ async function examApi(action, body, arg) {
         }
 
         // ---- 4. 还差就跨科从全题库补（只发生在池子极小的情况）----
-        // 模拟考模式兜底时同样排除「答对过」「冷却中」的题 —— 否则会从全库把刚排除的题又捞回来。
+        // 常规候选仍排除「答对过」「冷却中」的题 —— 否则会从全库把刚排除的题又捞回来。
+        // 2026-11-27 用户要求：最后实在没题抽时，把「没满 7 天冷却」的题也算上。
+        // 冷却题单独放一组，只在常规候选也补不满时才放行；常规题够时冷却照旧生效。
         if (short > 0) {
-            const rest = [];
+            const rest = [], cooled = [];
             for (const k of EXAM_SUBJECT_ORDER) {
                 const data = await loadQuestions(k);
                 for (const q of data.questions) {
                     if (!q.answer || pickedIds.has(q.id)) continue;
-                    // 与池内规则保持一致：排除「模拟考答对且没标猜对了」的题；
-                    // 以及「刚加入错题池、还在 7 天冷却」的题（否则会从全库把它又捞回来）
+                    // 「模拟考答对且没标猜对了」的题始终排除 —— 冷却放宽不等于答对题回锅
                     if (isExamMode && examRightSet.has(q.id) && !guessedSet.has(q.id)) continue;
-                    if (isExamMode && ztCooling.has(q.id)) continue;
+                    if (isExamMode && ztCooling.has(q.id)) { cooled.push(q); continue; }
                     rest.push(q);
                 }
             }
             for (const q of shuffled(rest).slice(0, short)) {
                 picked.push(q);
                 pickedIds.add(q.id);
+            }
+            // 常规题也凑不满 → 才用冷却中的题兜底（只剩这一条路时出现）
+            short = total - picked.length;
+            if (short > 0 && cooled.length) {
+                for (const q of shuffled(cooled).slice(0, short)) {
+                    picked.push(q);
+                    pickedIds.add(q.id);
+                }
             }
         }
         if (!picked.length) return jsonResp({ error: '题库为空，无法组卷' }, 400);

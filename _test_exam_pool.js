@@ -465,6 +465,14 @@ const DAY = 86400000;
   const gCool = await gen('favorites', 6);
   check('冷却期内收藏池组卷不含该题', (gCool.questions || []).map(q => q.id).includes('cn_0003'), false);
   check('其余收藏题照常抽出', (gCool.questions || []).length, 6);
+  // 2026-11-27 用户要求：池子抽空、常规题也补不满时，才把冷却中的题算上。
+  // 把题量提到 7（题库只有 8 道，其中 cn_0009 是 excluded 缺陷题、cn_0003 冷却），
+  // 常规候选 6 道 < 7 → 冷却题兜底进卷。
+  const gDry = await gen('favorites', 7);
+  check('抽空兜底：冷却题被算上', (gDry.questions || []).map(q => q.id).includes('cn_0003'), true);
+  check('抽空兜底：组满请求题量', (gDry.questions || []).length, 7);
+  // 兜底不得把「模拟考答对过」的题也放回来 —— 冷却放宽 ≠ 答对题回锅
+  check('兜底仍排除缺陷题 cn_0009', (gDry.questions || []).map(q => q.id).includes('cn_0009'), false);
 
   // 到期后自动回到抽题（改成昨天到期）
   await put('redo', [{ question_id: 'cn_0003', subject: 'cn', kind: 'ztwrong', added_at: fmt(Date.now()), due_at: Date.now() - DAY }]);
