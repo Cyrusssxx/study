@@ -206,10 +206,30 @@ function fixture(k, n) {
   // 池子只剩 45 道错题 → 剩余 25 个位置只能靠错题，此时预算不足会兜底
   check('池子只剩错题时仍凑满题量', c.wrong, 25);
 
-  console.log('\n--- 七、源码口径守卫 ---');
+  console.log('\n--- 七、没题抽：错题不设 1/3 上限，且按做错时间从早到晚 ---');
+  await seed({ fresh: 0, correct: 0, wrong: 60 });
+  {
+    const rows = (await w.dbAll('wrong')).filter(r => String(r.question_id).startsWith('cn_'));
+    // 题号越大 = 越早做错；60 道全错，没有任何新题/对题可抽
+    const p2 = x => String(x).padStart(2, '0');
+    for (const r of rows) {
+      const n = Number(String(r.question_id).split('_')[1]);
+      const d = new Date(2026, 7, 1 + (60 - n), 10, 0, 0);
+      r.last_wrong_at = `${d.getFullYear()}-${p2(d.getMonth() + 1)}-${p2(d.getDate())} 10:00:00`;
+    }
+    await clear('wrong'); await put('wrong', rows);
+  }
+  g = await gen('cn', 10);
+  const ids7 = (g.questions || []).map(q => q.id);
+  check('池里只剩错题仍凑满 10 道（不受 1/3 限制）', ids7.length, 10);
+  check('按最后做错时间升序（cn_0060 先抽）', ids7[0], 'cn_0060');
+  check('10 道全来自错题档', (await classify(ids7)).wrong, 10);
+
+  console.log('\n--- 八、源码口径守卫 ---');
   const BACKEND = fs.readFileSync(path.join(ROOT, 'pwa/js/backend.js'), 'utf8');
   check('无 dueCap 插队帽子', /dueCap/.test(BACKEND), false);
   check('错题预算 floor(total/3)', /Math\.floor\(total \/ 3\)/.test(BACKEND), true);
+  check('没题抽时错题上限解除', /if \(nonWrong < total\) wrongLimit = Infinity;/.test(BACKEND), true);
   check('三档填充顺序固定', /for \(const tier of \['fresh', 'correct', 'wrong'\]\)/.test(BACKEND), true);
   check('专项池不套预算（Infinity）', /: Infinity;/.test(BACKEND), true);
 

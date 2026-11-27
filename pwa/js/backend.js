@@ -1725,15 +1725,17 @@ async function examApi(action, body, arg) {
         }
 
         // 模拟考（收藏 / 整卷 / 单科）三档：新题 → 做过的对题 → 错题。
-        //   2026-11-13 用户口径：错题合计必须**严格小于 1/3**，且**新题占比必须最大**。
-        //   旧实现是「到期错题(≤1/3) → 做过的错题 → 没做过 → 做过的对题」，到期错题超帽后
-        //   被 pop 回「做过的错题」层，而该层整层排在「没做过」之前 —— 帽子形同虚设，
-        //   实测 40 题里错题 40 道（100%）、新题 0 道。现在改成新题绝对优先，
-        //   错题只在前两档填不满配额时才补，且受全局预算约束（见下面 wrongCap）。
-        //   到期错题不再是「插队者」，只决定错题档内部的先后（逾期越久越靠前）。
+        //   2026-11-13 用户口径：还有新题/对题可抽时，错题合计**严格小于 1/3**，且新题占比最大。
+        //   2026-11-27 用户补充：没题抽（非错题凑不满一场）时解除 1/3 上限，错题按
+        //   **最后做错时间从早到晚**抽 —— 之前做错的先抽，不再让「7 天到期排序」插队。
         function wrongishOf(qid) {
             const w = wrongMap.get(qid);
             return !!(w && !w.is_resolved);
+        }
+        function wrongTimeOf(qid) {
+            const w = wrongMap.get(qid);
+            // 没有做错时间的老数据排最后，不让它冒充「最早做错」插队
+            return String((w && w.last_wrong_at) || '') || '9999-99-99 99:99:99';
         }
         function splitTiers(pool) {
             const fresh = [], correct = [], wrong = [];
@@ -1759,11 +1761,13 @@ async function examApi(action, body, arg) {
             // 新题：按题号稳定排序，保证每场抽到的顺序一致（不是随机）
             fresh.sort(byId);
             correct.sort(byAnswered);
-            // 错题：到期错题（逾期越久）在前，其余按最早做过
+            // 错题：最后做错时间升序（之前做错的先抽）；同刻才用到期排名/最早作答/题号兜底
             wrong.sort((a, b) => {
+                const ta = wrongTimeOf(a.id), tb = wrongTimeOf(b.id);
+                if (ta !== tb) return ta < tb ? -1 : 1;
                 const ra = dueRank.has(a.id) ? dueRank.get(a.id) : Infinity;
                 const rb = dueRank.has(b.id) ? dueRank.get(b.id) : Infinity;
-                return (ra - rb) || byAnswered(a, b);
+                return (ra - rb) || byAnswered(a, b) || byId(a, b);
             });
             return { fresh, correct, wrong };
         }
@@ -1790,7 +1794,7 @@ async function examApi(action, body, arg) {
         }
 
         // 抽题分两条路：
-        //   模拟考（收藏 / 整卷 / 单科）→ 三档 新题 → 做过的对题 → 错题，错题合计严格 < 1/3；
+        //   模拟考（收藏 / 整卷 / 单科）→ 三档 新题 → 做过的对题 → 错题，有非错题时错题 < 1/3；
         //   专项池（错题 / 不熟 / 模拟考错题）→ 池内本就全是错题类，沿用原三层优先级，不套预算。
         const wrongCap = isExamMode ? Math.floor(total / 3) : Infinity;   // 40 题 → 13 题（< 1/3）
         let wrongUsed = 0;
@@ -1803,6 +1807,14 @@ async function examApi(action, body, arg) {
                 ? splitTiers(poolBySub[k])
                 : { fresh: [], correct: [], wrong: prioritize(poolBySub[k]) };
         }
+        // 没题抽：新题 + 做过的对题凑不满一场 → 错题不设上限，直接按 last_wrong_at 升序补足。
+        // 只在真的凑不满时放宽；常规场次仍严格 < 1/3，避免错题又占满整场。
+        let wrongLimit = wrongCap;
+        if (isExamMode) {
+            const nonWrong = EXAM_SUBJECT_ORDER.reduce((n, k) =>
+                n + tierOf[k].fresh.length + tierOf[k].correct.length, 0);
+            if (nonWrong < total) wrongLimit = Infinity;
+        }
 
         // ---- 2. 按真题各科题量抽：三档依次填，新题永远先吃配额 ----
         for (const tier of ['fresh', 'correct', 'wrong']) {
@@ -1812,7 +1824,7 @@ async function examApi(action, body, arg) {
                 let remain = Math.min(quota, poolBySub[k].length) - cnt[k];
                 if (remain <= 0) continue;
                 let list = tierOf[k][tier];
-                if (tier === 'wrong' && isExamMode) list = list.slice(0, Math.max(0, wrongCap - wrongUsed));
+                if (tier === 'wrong' && isExamMode) list = list.slice(0, Math.max(0, wrongLimit - wrongUsed));
                 for (const q of list) {
                     if (remain <= 0) break;
                     if (pickedIds.has(q.id)) continue;
@@ -1823,8 +1835,8 @@ async function examApi(action, body, arg) {
         }
         let short = total - picked.length;
 
-        // ---- 3. 某科池子不够 → 跨科补。顺序不变：新题 → 对题 → 错题（预算内），
-        //         只有前两档也空了才允许错题超预算，避免凑不满题量。
+        // ---- 3. 某科池子不够 → 跨科补。顺序不变：新题 → 对题 → 错题（上限内），
+        //         没题抽时 wrongLimit 已是 Infinity，这里补进来的错题同样按做错时间升序。
         if (short > 0 && isExamMode) {
             const rest = { fresh: [], correct: [], wrong: [] };
             for (const k of EXAM_SUBJECT_ORDER) {
@@ -1845,8 +1857,8 @@ async function examApi(action, body, arg) {
             fill(rest.fresh, short);
             if (short > 0) fill(rest.correct, short);
             if (short > 0) {
-                wrongUsed += fill(rest.wrong, Math.max(0, wrongCap - wrongUsed));
-                if (short > 0) fill(rest.wrong, short);      // 兜底：错题超预算
+                wrongUsed += fill(rest.wrong, Math.max(0, wrongLimit - wrongUsed));
+                if (short > 0) fill(rest.wrong, short);      // 兜底：没题抽时错题超上限
             }
         } else if (short > 0) {
             // 专项池：与旧行为一致，整池按三层优先级补（随机已在 prioritize 内做过）
@@ -1877,18 +1889,39 @@ async function examApi(action, body, arg) {
                     rest.push(q);
                 }
             }
-            for (const q of shuffled(rest).slice(0, short)) {
-                picked.push(q);
-                pickedIds.add(q.id);
+            // 常规候选仍按三档走：新题 → 对题 → 错题；错题按最后做错时间升序。
+            const restTiers = splitTiers(rest);
+            // 冷却题已单独放行，不能再过 splitTiers（会被 ztCooling 再滤一次），
+            // 这里按同一口径手工分档、排序。
+            const cooledTiers = { fresh: [], correct: [], wrong: [] };
+            for (const q of cooled) {
+                if (wrongishOf(q.id)) cooledTiers.wrong.push(q);
+                else if (!progMap.has(q.id)) cooledTiers.fresh.push(q);
+                else cooledTiers.correct.push(q);
             }
-            // 常规题也凑不满 → 才用冷却中的题兜底（只剩这一条路时出现）
-            short = total - picked.length;
-            if (short > 0 && cooled.length) {
-                for (const q of shuffled(cooled).slice(0, short)) {
-                    picked.push(q);
-                    pickedIds.add(q.id);
+            const byIdLocal = (a, b) => (a.id < b.id ? -1 : a.id > b.id ? 1 : 0);
+            const byWrongAt = (a, b) => {
+                const ta = wrongTimeOf(a.id), tb = wrongTimeOf(b.id);
+                if (ta !== tb) return ta < tb ? -1 : 1;
+                return byIdLocal(a, b);
+            };
+            const fillFrom = tiers => {
+                for (const tier of ['fresh', 'correct']) {
+                    for (const q of shuffled(tiers[tier])) {
+                        if (short <= 0) return;
+                        if (pickedIds.has(q.id)) continue;
+                        picked.push(q); pickedIds.add(q.id); short--;
+                    }
                 }
-            }
+                for (const q of tiers.wrong.slice().sort(byWrongAt)) {
+                    if (short <= 0) return;
+                    if (pickedIds.has(q.id)) continue;
+                    picked.push(q); pickedIds.add(q.id); short--;
+                }
+            };
+            fillFrom(restTiers);
+            // 常规题也凑不满 → 才用冷却中的题兜底（只剩这一条路时出现）
+            if (short > 0) fillFrom(cooledTiers);
         }
         if (!picked.length) return jsonResp({ error: '题库为空，无法组卷' }, 400);
         const duration = parseInt(body.duration_sec || 0, 10) || picked.length * 90;   // 默认每题 1.5 分钟（40 题 = 60 分钟）

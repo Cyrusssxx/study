@@ -17,7 +17,7 @@
  *          ② 只改数据不改外壳时，APP_VER 不变 → 外壳零重下；反之亦然；
  *          ③ 懒加载数据既不占首屏，改完也能凭 LAZY_VER 正确失效。
  */
-const APP_VER = 'quiz408-app-1e573f7603';
+const APP_VER = 'quiz408-app-edcd661b0f';
 const DATA_VER = 'quiz408-data-1e6bfc56d0';
 const LAZY_VER = 'quiz408-lazy-2838cbb610';
 

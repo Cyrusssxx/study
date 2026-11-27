@@ -16,10 +16,9 @@ function ok(name, cond, extra) {
 }
 
 // ---- 从 backend.js 抽出 wrongishOf + splitTiers（依赖 progMap / wrongMap / dueRank 等外层局部变量）----
-const mWrong = BACKEND.match(/function wrongishOf\(qid\) \{[\s\S]*?\n        \}\n/);
-const mSplit = BACKEND.match(/function splitTiers\(pool\) \{[\s\S]*?\n        \}\n/);
-if (!mWrong || !mSplit) {
-  console.log('FAIL 抽不到 wrongishOf / splitTiers');
+const mBlock = BACKEND.match(/function wrongishOf\(qid\) \{[\s\S]*?\n        \}\n\s*function wrongTimeOf\(qid\) \{[\s\S]*?\n        \}\n[\s\S]*?function splitTiers\(pool\) \{[\s\S]*?\n        \}\n/);
+if (!mBlock) {
+  console.log('FAIL 抽不到 wrongishOf / wrongTimeOf / splitTiers');
   process.exit(1);
 }
 
@@ -34,7 +33,7 @@ function makeSplit(progRows, opts) {
     guessedSet: new Set(o.guessedSet || []),
   };
   vm.createContext(ctx);
-  vm.runInContext(mWrong[0] + mSplit[0] + '\nthis.f = splitTiers;', ctx);
+  vm.runInContext(mBlock[0] + '\nthis.f = splitTiers;', ctx);
   return ctx.f;
 }
 
@@ -126,14 +125,34 @@ const ids = arr => arr.map(x => x.id);
   ok('三档无重复', new Set(all).size === all.length, all.join(','));
 }
 
-// 场景 8：源码口径守卫
+// 场景 8：错题按「最后做错时间」升序，不受 dueRank 反压
+{
+  const split = makeSplit([
+    { question_id: 'lateWrong', answered_at: '2026-01-01 09:00:00', is_correct: false },
+    { question_id: 'earlyWrong', answered_at: '2026-01-10 09:00:00', is_correct: false },
+  ], {
+    wrongRows: [
+      { question_id: 'lateWrong', is_resolved: 0, last_wrong_at: '2026-01-10 10:00:00' },
+      { question_id: 'earlyWrong', is_resolved: 0, last_wrong_at: '2026-01-01 10:00:00' },
+    ],
+    dueRank: [['lateWrong', 0], ['earlyWrong', 1]],
+  });
+  const t = split([Q('lateWrong'), Q('earlyWrong')]);
+  ok('之前做错的先抽（earlyWrong → lateWrong）', ids(t.wrong).join(',') === 'earlyWrong,lateWrong',
+    ids(t.wrong).join(','));
+}
+
+// 场景 9：源码口径守卫
 {
   ok('已无 dueCap 帽子逻辑（旧插队实现）', !/dueCap/.test(BACKEND));
   ok('已无 prioritizeByTime（旧时间队列）', !/prioritizeByTime/.test(BACKEND));
   ok('三档顺序写死在主循环', /for \(const tier of \['fresh', 'correct', 'wrong'\]\)/.test(BACKEND));
   ok('错题预算 = floor(total/3)', /const wrongCap = isExamMode \? Math\.floor\(total \/ 3\) : Infinity;/.test(BACKEND));
+  ok('没题抽时错题上限解除', /if \(nonWrong < total\) wrongLimit = Infinity;/.test(BACKEND));
+  ok('主循环用放宽后的 wrongLimit', /wrongLimit - wrongUsed/.test(BACKEND));
   ok('专项池仍用三层优先级', /function prioritize\(pool\)/.test(BACKEND));
-  ok('第三轮跨科补题仍是兜底随机（不改）', /for \(const q of shuffled\(rest\)\.slice\(0, short\)\)/.test(BACKEND));
+  ok('全库兜底按三档填、错题按做错时间排序',
+    /for \(const q of tiers\.wrong\.slice\(\)\.sort\(byWrongAt\)\)/.test(BACKEND));
 }
 
 // ---- examDueWrongIds 行为验证（未改动，保留原护栏）----
