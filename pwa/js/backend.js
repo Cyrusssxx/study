@@ -2000,13 +2000,13 @@ async function examApi(action, body, arg) {
         // 「模拟考错题」池 = 模拟考仍错的题 ∪ 「7 天后重练 / 猜对了」标记题。
         // 标记题做对一次置 mastered：**留在池子里**（可回看）但不再抽。
         let redoPending = 0, redoDue = 0, guessedCnt = 0, markedMastered = 0, examMarked = 0, ztMarked = 0;
-        const markedIds = new Set(), masteredIds = new Set();
+        const markedIds = new Set(), masteredIds = new Set(), guessedIds = new Set();
         try {
             for (const r of await dbAll('redo')) {
                 if (r.mastered) { markedMastered++; masteredIds.add(r.question_id); continue; }
                 if (r.kind === 'examwrong') { examMarked++; markedIds.add(r.question_id); continue; }
                 if (r.kind === 'ztwrong') { ztMarked++; markedIds.add(r.question_id); continue; }
-                if (r.kind === 'guessed') { guessedCnt++; markedIds.add(r.question_id); continue; }
+                if (r.kind === 'guessed') { guessedCnt++; guessedIds.add(r.question_id); markedIds.add(r.question_id); continue; }
                 // 「7 天后重练」未到期：只统计排期，不算进池子可抽数（与 examWrongPoolQids 同口径）
                 if ((r.due_at || 0) > nowMs) { redoPending++; continue; }
                 markedIds.add(r.question_id);
@@ -2017,6 +2017,30 @@ async function examApi(action, body, arg) {
         const examPoolSet = new Set(examWrongIds);
         for (const qid of markedIds) examPoolSet.add(qid);
         for (const qid of masteredIds) examPoolSet.delete(qid);
+        // 收藏池按「模拟考抽过 / 没抽过 × 做对 / 做错」拆分（2026-11-27 用户口径）：
+        // 这正是决定「哪些题还能被抽到」的维度 —— 模拟考答对（且没标猜对了）的题排除。
+        // 优先级与 splitTiers 完全一致：错题未解决 → 仍在池（模拟考答对也拦不住）；
+        // 其次模拟考答对 → 排除；再没做过 → 新题；其余 → 做过的对题。
+        // 全程只读 exams/progress/wrong/redo（examCorrectQids(false) 用已落库的 right_ids），
+        // 不加载题库 —— 首屏性能护栏照旧。
+        let examRightIds = new Set();
+        try { examRightIds = new Set(await examCorrectQids(false)); } catch (e) { /* 取不到就不排除 */ }
+        let favSeen = 0, favSeenRight = 0, favSeenWrong = 0, favUnseen = 0;
+        let favAvailFresh = 0, favAvailCorrect = 0, favAvailWrongish = 0, favBlocked = 0;
+        for (const f of favs) {
+            if (!isDrawableQid(f.question_id)) continue;
+            const qid = f.question_id;
+            const right = examRightIds.has(qid);
+            if (examQidSet.has(qid)) { favSeen++; if (right) favSeenRight++; else favSeenWrong++; }
+            else favUnseen++;
+            const p = progMap.get(qid);
+            const w = wrongMap.get(qid);
+            if (w && !w.is_resolved) favAvailWrongish++;
+            else if (right && !guessedIds.has(qid)) favBlocked++;
+            else if (!p) favAvailFresh++;
+            else favAvailCorrect++;
+        }
+        const favAvailable = favAvailFresh + favAvailCorrect + favAvailWrongish;
         return jsonResp({
             favorites_total: favs.length,
             favorites_drawable: drawable,        // 真实可组卷：题库题号且非缺陷题（设置页第 1 格用它）
@@ -2027,6 +2051,16 @@ async function examApi(action, body, arg) {
             favorites_fresh: fresh,        // 待抽：收藏池里从没做过的（最高优先级的新题）
             favorites_wrongish: wrongish,  // 做过且错题本仍挂着未解决（排在答对之前）
             favorites_correct: correct,    // 做过且答对（优先级最低，但不是不抽）
+            // 「模拟考抽过 / 没抽过 × 做对 / 做错」口径（仅可组卷收藏，设置页第 1 格用它）
+            favorites_exam_seen: favSeen,          // 模拟考抽过（含答对/答错）
+            favorites_exam_seen_right: favSeenRight,   // 抽过且最后一场答对
+            favorites_exam_seen_wrong: favSeenWrong,   // 抽过且最后一场答错
+            favorites_exam_unseen: favUnseen,      // 从没进过模拟考卷面
+            favorites_available: favAvailable,    // 真实可抽 = 新题 + 对题 + 错题（扣掉答对排除）
+            favorites_available_fresh: favAvailFresh,
+            favorites_available_correct: favAvailCorrect,
+            favorites_available_wrongish: favAvailWrongish,
+            favorites_blocked: favBlocked,        // 模拟考答对、错题已解决 → 排除
             exam_answered: examQidSet.size,   // 模拟考做过的去重题数（历次卷面并集）
             exam_sessions: examRows.length,   // 已交卷场数
             unfamiliar: unfam,

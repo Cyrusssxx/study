@@ -177,6 +177,15 @@ const DAY = 86400000;
     pool.favorites_drawable_fresh + pool.favorites_drawable_wrongish + pool.favorites_drawable_correct,
     pool.favorites_drawable);
   check('不可组卷 0', pool.favorites_undrawable, 0);
+  // 「模拟考抽过/没抽过 × 做对/做错」口径（2026-11-27 界面显示）：
+  // 尚无模拟考会话 → 抽过 0、没抽过 6、无排除、可抽 = 可组卷 6
+  check('模拟考抽过 0（还没造考试记录）', pool.favorites_exam_seen, 0);
+  check('模拟考没抽过 = 可组卷 6', pool.favorites_exam_unseen, 6);
+  check('答对排除 0', pool.favorites_blocked, 0);
+  check('真实可抽 = 可组卷 6', pool.favorites_available, pool.favorites_drawable);
+  check('可抽三档之和 = 可抽',
+    pool.favorites_available_fresh + pool.favorites_available_correct + pool.favorites_available_wrongish,
+    pool.favorites_available);
   check('到期错题 1 题', pool.due_wrong, 1);
   check('重练池：已到期 1 / 待到期 1', [pool.redo_due, pool.redo_pending], [1, 1]);
   check('本用例没造模拟考会话 → exam_answered 0', pool.exam_answered, 0);
@@ -251,10 +260,10 @@ const DAY = 86400000;
     check(`设置页有 #${id}`, !!w.document.getElementById(id), true);
   }
   check('统计条 4 格', w.document.querySelectorAll('#examPoolBar .pool-cell').length, 4);
-  // 第 1 格是「可组卷收藏」（副标写待抽），第 2 格是模拟考做过 —— 口径不同，别混
+  // 第 1 格是「真实可抽」（按模拟考抽过/做对做错算），第 2 格是模拟考做过 —— 口径不同，别混
   w.renderPoolStats(pool);
-  check('第 1 格显示可组卷收藏数（不是 raw 总量）', w.document.getElementById('psFav').textContent, String(pool.favorites_drawable));
-  check('第 1 格副标把「待抽 / 已做」拆开写', /待抽 \d+ · 已做 \d+/.test(w.document.getElementById('psFavSub').textContent), true);
+  check('第 1 格显示真实可抽数（不是 raw 总量）', w.document.getElementById('psFav').textContent, String(pool.favorites_available));
+  check('第 1 格副标按新题/对题/错题三档写', /新题 \d+ · 对题 \d+ · 错题 \d+/.test(w.document.getElementById('psFavSub').textContent), true);
   check('第 2 格显示模拟考做过题数', w.document.getElementById('psExam').textContent, String(pool.exam_answered));
   check('第 2 格副标点出场数', /模拟考做过 · \d+ 场/.test(w.document.getElementById('psExamSub').textContent), true);
   check('不熟副标带未做数', /不熟 · 未做 \d+/.test(w.document.getElementById('psUnfamSub').textContent), true);
@@ -516,8 +525,34 @@ const DAY = 86400000;
   await w.loadPoolStats();          // 刷新统计缓存（真实页面在首屏就完成这一步）
   await w.onModeChange();           // 再渲染来源行
   const srcTxt = w.document.getElementById('sourceText').textContent;
-  check('收藏来源行写「收藏 7 · 可组卷 6」对账', /收藏 7 题 · 可组卷 6 题/.test(srcTxt), true);
+  check('收藏来源行写「收藏 7 · 可组卷 6 · 可抽 N」对账', /收藏 7 题 · 可组卷 6 题 · 可抽 \d+ 题/.test(srcTxt), true);
   check('来源行点明差额原因（组不进卷）', /组不进卷/.test(srcTxt), true);
+
+  console.log('\n--- 十七、收藏池「模拟考抽过 × 做对/做错」口径 ---');
+  // 造一场模拟考：cn_0002（收藏·做过的对题）答对、cn_0003（收藏·未解决错题）答错。
+  // 口径：抽过 2（对 1 / 错 1）；cn_0002 错题已了结 + 答对 → 排除；
+  // cn_0003 错题未解决 → 答对也拦不住，仍在可抽池（splitTiers 错题优先）。
+  await put('exams', [{
+    id: 777, mode: 'full', question_ids: ['cn_0002', 'cn_0003'],
+    right_ids: ['cn_0002'], wrong_ids: ['cn_0003'],
+    answers: { cn_0002: 'A', cn_0003: 'B' }, total_count: 2, correct_count: 1,
+    score: 2, duration_sec: 3600, status: 'submitted',
+    started_at: '2026-11-27 10:00:00', submitted_at: '2026-11-27 10:50:00'
+  }]);
+  const poolSeen = await w.api('/api/exam/pool').then(r => r.json());
+  check('模拟考抽过 2 题', poolSeen.favorites_exam_seen, 2);
+  check('抽过且做对 1 题（cn_0002）', poolSeen.favorites_exam_seen_right, 1);
+  check('抽过且做错 1 题（cn_0003）', poolSeen.favorites_exam_seen_wrong, 1);
+  check('没抽过 = 可组卷 - 抽过', poolSeen.favorites_exam_unseen, poolSeen.favorites_drawable - 2);
+  check('答对排除 1 题（cn_0002）', poolSeen.favorites_blocked, 1);
+  check('可抽 = 可组卷 - 排除', poolSeen.favorites_available, poolSeen.favorites_drawable - 1);
+  check('未解决错题答对了仍留在可抽池',
+    poolSeen.favorites_available_wrongish >= 2, true);
+  // 界面三处一致：第 1 格 / tooltip / 来源行都走 favorites_available
+  w.renderPoolStats(poolSeen);
+  check('第 1 格随排除数更新', w.document.getElementById('psFav').textContent, String(poolSeen.favorites_available));
+  check('tooltip 写出抽过题数', /抽过 2 题/.test(w.document.getElementById('examPoolBar').title), true);
+  check('tooltip 写出答对排除数', /排除 1 题/.test(w.document.getElementById('examPoolBar').title), true);
 
   dom.window.close();
   console.log(`\n结果: ${pass} / ${pass + fail}` + (fail ? `，${fail} 项失败` : '，全部通过'));
