@@ -7,8 +7,9 @@
  * 交互：
  *   鼠标滚轮      以光标位置为中心缩放
  *   底部胶囊条    ➖ 缩小 / 百分比 / ➕ 放大 / 1:1 重置 / 📋 复制高清图 / ✕ 关闭
- *   拖拽          放大后可拖动查看
- *   双击图片      重置为 1:1
+ *   单击图片      关闭预览（延迟 240ms 判定，给双击留窗口；拖拽过则不算点击）
+ *   拖拽          放大后可拖动查看（拖动不会误关）
+ *   双击图片      重置为 1:1（取消待执行的关闭）
  *   键盘          Esc 关闭 / + - 缩放 / 0 重置
  *
  * ★ 缩放用「内联 width/height」而不是 transform: scale()：
@@ -26,6 +27,8 @@
     var scale = INITIAL_SCALE, tx = 0, ty = 0;
     var baseW = 0, baseH = 0;          // scale = 1 时的基准显示尺寸（由 CSS 适配舞台后量得）
     var box = null, imgEl = null, zoomLabel = null;
+    var clickCloseTimer = null;        // 单击关闭的短延迟：区分单击关闭与双击重置
+    var suppressClickClose = false;    // 拖拽平移后置位，吞掉 mouseup 尾随的 click
     // 图集导航：从当前页可见配图收集的有序图源列表 + 当前索引（-1 表示不属于图集）
     var gallery = [], galleryIndex = -1;
     var navPrev = null, navNext = null, galleryCount = null;
@@ -85,18 +88,23 @@
         }, { passive: false });
 
         // 拖拽平移
-        var dragging = false, sx = 0, sy = 0;
+        var dragging = false, sx = 0, sy = 0, dragDist = 0;
         box.addEventListener('mousedown', function (e) {
             if (!box.classList.contains('show')) return;
             if (e.target.closest('.fig-lb-bar') || e.target.closest('.fig-lb-nav')) return;
-            dragging = true; sx = e.clientX; sy = e.clientY;
+            dragging = true; sx = e.clientX; sy = e.clientY; dragDist = 0;
+            suppressClickClose = false;   // 新的一次按下，重置拖拽标记
             box.classList.add('dragging');
             e.preventDefault();
         });
         window.addEventListener('mousemove', function (e) {
             if (!dragging) return;
-            tx += e.clientX - sx; ty += e.clientY - sy;
+            var dx = e.clientX - sx, dy = e.clientY - sy;
+            dragDist += Math.abs(dx) + Math.abs(dy);   // 本次按下累计位移，与已有平移量无关
+            tx += dx; ty += dy;
             sx = e.clientX; sy = e.clientY;
+            // 真的移动过（阈值 3px）才是拖拽，mouseup 后尾随的 click 不能当成「点图关闭」
+            if (dragDist > 3) suppressClickClose = true;
             apply();
         });
         window.addEventListener('mouseup', function () {
@@ -104,8 +112,20 @@
             if (box) box.classList.remove('dragging');
         });
 
-        // 双击重置
-        imgEl.addEventListener('dblclick', reset);
+        // 单击图片关闭（短延迟，给双击重置留判定窗口）
+        imgEl.addEventListener('click', function (e) {
+            if (suppressClickClose) { suppressClickClose = false; return; }
+            e.stopPropagation();
+            if (clickCloseTimer) clearTimeout(clickCloseTimer);
+            clickCloseTimer = setTimeout(function () { clickCloseTimer = null; close(); }, 240);
+        });
+
+        // 双击重置：取消待执行的单击关闭，只做 1:1 复位
+        imgEl.addEventListener('dblclick', function (e) {
+            if (clickCloseTimer) { clearTimeout(clickCloseTimer); clickCloseTimer = null; }
+            e.stopPropagation();
+            reset();
+        });
 
         // 点击空白处关闭（不含图片与工具栏）
         box.addEventListener('click', function (e) {
@@ -227,6 +247,8 @@
 
     function close() {
         if (!box) return;
+        if (clickCloseTimer) { clearTimeout(clickCloseTimer); clickCloseTimer = null; }
+        suppressClickClose = false;
         box.classList.remove('show');
         imgEl.onload = null;
         imgEl.src = '';
@@ -303,6 +325,9 @@
     };
 
     function openSrc(src) {
+        // 图集切图可能发生在单击关闭的 240ms 判定窗口内，清掉旧定时器避免切完就误关
+        if (clickCloseTimer) { clearTimeout(clickCloseTimer); clickCloseTimer = null; }
+        suppressClickClose = false;
         baseW = 0; baseH = 0; scale = INITIAL_SCALE; tx = 0; ty = 0;
         imgEl.style.width = '';
         imgEl.style.height = '';

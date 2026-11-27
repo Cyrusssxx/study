@@ -68,6 +68,15 @@ check('复制与下载都有可见反馈（toast）', /fig-lb-toast/.test(js) &&
 check('滚轮缩放仍在', /addEventListener\('wheel'/.test(js), true);
 check('拖拽平移仍在', /mousemove/.test(js) && /dragging/.test(js), true);
 check('双击重置仍在', /dblclick/.test(js), true);
+check('单击图片走短延迟关闭（区分双击）',
+    /addEventListener\('click'[\s\S]{0,260}clickCloseTimer\s*=\s*setTimeout[\s\S]{0,120}close\(\)/.test(js)
+        && /close\(\); \}, 240\)/.test(js), true);
+check('双击取消待执行的单击关闭',
+    /dblclick[\s\S]{0,220}clearTimeout\(clickCloseTimer\)/.test(js), true);
+check('拖拽位移超阈值抑制尾随 click 关闭',
+    /dragDist\s*\+=\s*Math\.abs\(dx\)/.test(js) && /if \(dragDist > 3\) suppressClickClose = true/.test(js), true);
+check('close / openSrc 都清理关闭定时器（切图不误关）',
+    (js.match(/clearTimeout\(clickCloseTimer\)/g) || []).length >= 3, true);
 check('Esc / +- / 0 键盘仍在', /e\.key === 'Escape'/.test(js) && /e\.key === '0'/.test(js), true);
 check('关闭时清空内联尺寸与基准（下次打开不会串）',
     /imgEl\.src = ''[\s\S]{0,300}baseW = 0; baseH = 0;/.test(js), true);
