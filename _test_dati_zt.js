@@ -100,6 +100,17 @@ ok('label 为「年份后两位-卷面题号」', QS.every(q => q.label === `${S
     ok('打卡表版本答案含讲义解法', daka.every(q => q.a.includes('sol-wrap') || q.a.includes('code-brute')));
     ok('打卡表版本题干不是真题卷原题（已被讲义替代）',
         daka.every(q => !q.q.startsWith('<p>')));
+
+    // 2026-41：题面已经给了 BTNode 定义，答案代码不再重复写结构体；
+    // 讲义首解是 O(h) 最优解，AI 自生成的暴力解只在 ds_code.brute 里留档、不进页面。
+    const q2641 = QS.find(q => q.id === 'ds_zt2026_41');
+    ok('2026-41 答案代码不重复结构体定义', !/typedef\s+struct\s+BTNode/.test(q2641.a));
+    ok('2026-41 首解是 O(h) 最优解', q2641.a.includes('最优解 · 沿 BST 搜索路径下溯'));
+    ok('2026-41 页面不显示 AI 自生成暴力解', !q2641.a.includes('code-brute') && !q2641.a.includes('自生成'));
+
+    // 手工补的题目图解不在上游 zt 数据里，重建必须继承，不能静默丢字段
+    ok('重建保留 co_zt2024_44 手工题目图解',
+        !!QS.find(q => q.id === 'co_zt2024_44').explainHtml);
 }
 {
     // 迁移表：旧 dati_* id → zhenti iid，必须覆盖备份里已有的已练记录

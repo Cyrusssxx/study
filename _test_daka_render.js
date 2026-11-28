@@ -42,6 +42,11 @@ const isLectureCard = q => codeBySource.has(q.source) && !hasFig(q);
 
 console.log('题目总数', data.questions.length);
 
+// 2026-41 用户指定「必做」；打卡表徽章靠 priority=0 渲染为必做样式。
+const q2641 = data.questions.find(q => q.id === 'ds_daka_2026_41');
+assert(q2641 && q2641.priority === 0 && q2641.priority_label === '必做',
+    'ds_daka_2026_41 标记为必做');
+
 // 1. 数据侧：文字字段已全部下线（讲义型卡片允许保留题干 content，答案一律走讲义）
 assert(data.questions.every(q => !('answer' in q) && (isLectureCard(q) || !('content' in q))),
     'ds_daka.json 已无 answer 字段，且非讲义卡片无 content');

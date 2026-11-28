@@ -189,6 +189,17 @@ def build():
     code = read_json('data/ds_code.json')
     extra = read_json('data/ds_code_extra.json')
 
+    # 手工补的 explainHtml（如 co_zt2024_44 的 3 张题目图解）不在上游 zt 数据里。
+    # 重建必须从旧产物继承，否则会被静默冲掉。
+    prev_explain = {}
+    if os.path.exists(os.path.join(DATA, 'dati_zt.json')):
+        for s in (read_json('data/dati_zt.json').get('subjects') or []):
+            for ch in (s.get('chapters') or []):
+                for sec in (ch.get('sections') or []):
+                    for q in (sec.get('questions') or []):
+                        if q.get('explainHtml'):
+                            prev_explain[q['id']] = q['explainHtml']
+
     # 旧 dati_* → 规范键；顺手记下它原来的章/节，便于「按章节」浏览延续旧口径
     old_info = {}
     for s in old['subjects']:
@@ -254,12 +265,15 @@ def build():
                 ch_name, sec_name = '真题综合（未分章）', '第 %d 题' % num
 
             svgs = sorted(set(re.findall(r'data-svg="([^"]+)"', q_html + a_html)))
-            items.append({
+            item = {
                 'iid': iid, 'spec': spec, 'sid': sid, 'year': y, 'num': num,
                 'score': it.get('s'), 'variant': variant,
                 'q': q_html, 'a': a_html, 'svgs': svgs,
                 'old_ids': old_ids, 'ch': ch_name, 'sec': sec_name,
-            })
+            }
+            if iid in prev_explain:
+                item['explainHtml'] = prev_explain[iid]
+            items.append(item)
 
     if len(items) != sum(idx['counts'].values()) - 40 * len(years):
         # 只作提示：每年 40 道选择题是固定口径
@@ -288,7 +302,7 @@ def build():
                 qs.sort(key=lambda x: (-x['year'], x['num']))
                 questions = []
                 for x in qs:
-                    questions.append({
+                    qout = {
                         'id': x['iid'],
                         'num': x['num'],
                         'year': x['year'],
@@ -301,7 +315,10 @@ def build():
                         'a': x['a'],
                         'svgs': x['svgs'],
                         'oldIds': x['old_ids'],
-                    })
+                    }
+                    if x.get('explainHtml'):
+                        qout['explainHtml'] = x['explainHtml']
+                    questions.append(qout)
                 sections.append({'name': sec_name, 'questions': questions})
             sections.sort(key=lambda s: s['name'])
             chapters.append({'name': ch_name, 'sections': sections})
