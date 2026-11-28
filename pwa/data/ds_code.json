@@ -1040,35 +1040,19 @@
       "module": "408代码真题",
       "source": "良师408解析 2026-41",
       "content": "【2026-41】二叉搜索树采用二叉链表存储，类型定义如下：\n<pre class=\"code-block\">typedef struct BSTNode {\n    int data;\n    struct BSTNode *left, *right;\n} BSTNode;\ntypedef BSTNode BTNode;</pre>\n给定一棵非空二叉搜索树 T（root 是指向 T 中根结点的指针）和整数 k，请设计一个尽可能高效的算法 void SearchX(BTNode *root, int k)，查找关键字值与 k 的差值的绝对值最小的所有结点，输出差值的绝对值和结点的关键字值。\n要求：(1) 描述算法的基本思想；(2) 根据设计思想，采用 C 或 C++ 语言描述算法，关键之处给出注释。",
-      "answer_full": "(1) 基本思想：利用 BST 左子树<根<右子树的有序性，与 k 差值最小的结点一定在“沿根向下搜索 k 的路径”上（路径外结点落在某段区间内部，其与 k 的差比区间端点更大）。故从根开始，根据 k 与当前结点值的大小关系向左/右移动（类二分查找），仅遍历搜索路径上的结点，实时计算 |data-k|，维护最小差值 minDiff 与对应关键字列表：差值更小则更新并重置列表，相等则加入列表；若结点值等于 k（差值为 0，最小可能值）立即终止。\n时间复杂度 O(h)（h 为树高，平衡树 h=log n，最坏 h=n），空间复杂度 O(1)。\n(2) C 代码：\n<pre class=\"code-block\">void SearchX(BTNode *root, int k) {             // 输出与k差值最小的结点\n    int minDiff = INT_MAX, idx = 0;\n    int res[2];                                 // 差值最小的关键字（路径上至多2个）\n    BTNode *p = root;\n    while (p != NULL) {\n        int d = abs(p->data - k);               // 当前差值\n        if (d < minDiff) { minDiff = d; idx = 0; res[idx++] = p->data; }\n        else if (d == minDiff) res[idx++] = p->data;   // 并列最小，加入列表\n        if (p->data == k) break;                // 差值为0，最小，提前终止\n        p = (k < p->data) ? p->left : p->right; // 沿搜索路径走\n    }\n    printf(\"min diff = %d: \", minDiff);\n    for (int i = 0; i < idx; i++) printf(\"%d \", res[i]);\n    printf(\"\\n\");\n}</pre>\n(3) 说明：路径上可能出现两个并列最小的结点（k 落在两结点值中间，如树中 3 与 5、k=4 时两者差值均为 1），都要输出。",
-      "analysis": "考点：BST 有序性（左<根<右）、类二分搜索路径遍历、最接近值查找。易错点：与 k 差值最小的结点一定在搜索路径上，不要全树遍历（会丢掉 O(h) 的得分点）；结点值等于 k（差 0）时提前终止；并列最小的结点可能有两个，都要输出；h=log n 只在平衡时成立，最坏退化为链 O(n)。",
+      "answer_full": "(1) 基本思想：不利用二叉搜索树的有序性，对整棵树做两遍遍历。第一遍枚举每个结点，计算它与 k 的差值的绝对值，求出最小差值 minDiff；第二遍再枚举一次，输出所有差值等于 minDiff 的结点关键字，最后输出差值本身。用两遍法是因为事先不知道有多少结点并列最小，避免在答案里定义数组大小。时间复杂度 O(n)，空间复杂度 O(h)（递归栈，h 为树高）。\n(2) C 代码：\n<pre class=\"code-block\">int minDiff;                        // 全局：当前最小差值（第一遍求出，第二遍据此输出）\n\n// 第一遍：遍历整棵树，求 |data-k| 的最小值\nvoid findMin(BTNode *p, int k)\n{\n    if (p == NULL) return;                  // 空子树：直接返回\n    int d = (p->data > k) ? p->data - k : k - p->data;  // 当前结点与 k 的差值绝对值\n    if (d < minDiff) minDiff = d;           // 差值更小：更新最小值\n    findMin(p->left, k);                    // 继续枚举左子树\n    findMin(p->right, k);                   // 继续枚举右子树\n}\n\n// 第二遍：再遍历整棵树，输出所有差值等于 minDiff 的结点\nvoid outputBest(BTNode *p, int k)\n{\n    if (p == NULL) return;                  // 空子树：直接返回\n    int d = (p->data > k) ? p->data - k : k - p->data;  // 当前差值\n    if (d == minDiff) printf(\"%d \", p->data);  // 并列最小：输出该结点关键字\n    outputBest(p->left, k);                 // 继续枚举左子树\n    outputBest(p->right, k);                // 继续枚举右子树\n}\n\nvoid SearchX(BTNode *root, int k)           // 题目给定接口\n{\n    minDiff = 0x7fffffff;                   // 初始化为最大整数\n    findMin(root, k);                       // 第一遍：求最小差值\n    printf(\"%d\\n\", minDiff);               // 先输出差值的绝对值\n    outputBest(root, k);                    // 第二遍：输出所有并列最小结点\n}</pre>\n(3) 说明：题面已给出结点类型定义，答案代码不重复写出结构体；并列最小的结点可能有两个，都要输出。",
+      "analysis": "考点：树的递归遍历、差值绝对值计算、两遍法输出并列结果。易错点：①并列最小的结点可能有两个（k 落在两结点值之间），必须全部输出；②本解不利用 BST 有序性，属枚举法，时间复杂度 O(n)，只拿暴力解的分；③题面已给出类型定义，答案代码不要重复写结构体；④求差前先比较大小再相减，避免溢出。",
       "weblink": "https://noobdream.com/post/406519/",
-      "brute": {
-        "method": "枚举法",
-        "idea": "1. 用递归遍历枚举二叉搜索树中的每一个结点（先序、中序、后序均可）。<br>2. 对枚举到的每个结点，计算它与 k 的差值绝对值 d = abs(root->data - k)。<br>3. 若 d 比当前记录的最小差值小，则更新最小差值，并清空已有答案、把该结点记为答案。<br>4. 若 d 与最小差值相等，说明存在并列，也把该结点加入答案。<br>5. 遍历完整棵树后，输出最小差值以及所有答案结点的关键字值。",
-        "code": "int minGap = 0x7fffffff;                      // 全局最小差值\nBTNode* ans[MAXSIZE];\nint cnt = 0;\n\nvoid SearchX(BTNode *root, int k)\n{\n    if (root == NULL) return;\n    int d = abs(root->data - k);                 // 计算与 k 的差值\n    if (d < minGap)                              // 发现更小的差值，重新记录\n    {\n        minGap = d;\n        cnt = 0;\n        ans[cnt++] = root;\n    }\n    else if (d == minGap)                        // 差值并列，一并记录\n        ans[cnt++] = root;\n    SearchX(root->left, k);                      // 枚举左子树\n    SearchX(root->right, k);                     // 枚举右子树\n}",
-        "source": "AI 生成（讲义未收录该题）"
-      },
       "solutions": {
         "list": [
           {
             "tag": "解法1",
-            "kind": "最优解",
-            "name": "沿 BST 搜索路径下溯（O(h)），利用有序性只下探一侧",
+            "kind": "暴力解",
+            "name": "遍历整棵 BST，两遍法输出最小差值与并列结点",
             "analysis": "",
-            "thought": "利用二叉搜索树的有序性：走到某结点 p 时，若 K<p->data，则 p 右子树中所有结点的值都比 p->data 更远离 K（差值更大），与 K 差值最小的结点只可能在当前结点或左子树中，因此只需下探左子树；反之 K>p->data 只需下探右子树。每步比较一次，沿途记录最小差值；遇到差值更小的结点清空重记，差值并列的追加记录。这个性质保证「与 K 差值最小的结点一定在搜索路径上」，不需要遍历整棵树。",
-            "code": "int minDiff = INT_MAX;   // 当前已找到的最小差值\nint best[3], cnt = 0;    // 并列最小的结点值（最坏情形是 K 两侧各一个，共 2 个）\n\nvoid findMinDiff(BTNode *p, int K)\n{\n    while (p) {\n        int d = (p->data > K) ? p->data - K : K - p->data;\n        if (d < minDiff) {          // 更小差值：清空重记\n            minDiff = d; cnt = 0; best[cnt++] = p->data;\n        } else if (d == minDiff) {  // 并列最小：追加输出\n            if (cnt < 2) best[cnt++] = p->data;\n        }\n        if (d == 0) return;         // 恰好等于 K：差 0 已最优，提前终止\n        if (K < p->data) p = p->left;   // 只可能在其左子树\n        else p = p->right;              // 只可能在其右子树\n    }\n}\n\nvoid SearchX(BTNode *root, int k)    // 调用入口\n{\n    findMinDiff(root, k);\n     printf(\"%d\\n\", minDiff);            // 输出差值的绝对值\n    for (int i = 0; i < cnt; i++) printf(\"%d \", best[i]);  // 输出全部并列最小结点值\n}",
-            "complexity": "时间复杂度：O(h)（h 为树高，每层最多访问 1 个结点；最坏退化单链时 O(n)）   空间复杂度：O(1)（仅几个变量）",
-            "note": ""
-          },
-          {
-            "tag": "解法2",
-            "kind": "保底解",
-            "name": "中序遍历递增序列 + 差值单谷提前终止（O(n)）",
-            "analysis": "",
-            "thought": "BST 的中序遍历序列是递增序列，结点值随遍历单调增大，则 |结点值-K| 的差值先递减、达到最小值、后递增（单谷）。中序遍历过程中记录当前最小差值：遇更小差值清空重记、遇并列差值追加；一旦差值开始回升（比当前最小值大），说明后续结点的差值只会更大，用标志位提前终止递归。该解法不依赖「搜索路径」性质，思路直白，但最坏需遍历整棵树。",
-            "code": "int minDiff = INT_MAX;   // 当前最小差值\nint best[3], cnt = 0;    // 并列最小的全部结点值\nint stop = 0;            // 提前终止标志\n\nvoid InOrder(BTNode *p, int K)\n{\n    if (p == NULL || stop) return;              // 空结点或已提前终止\n    InOrder(p->left, K);\n    int d = (p->data > K) ? p->data - K : K - p->data;\n    if (d < minDiff) {            // 更小：清空重记\n        minDiff = d; cnt = 0; best[cnt++] = p->data;\n    } else if (d == minDiff) {    // 并列：追加\n        if (cnt < 2) best[cnt++] = p->data;\n    } else stop = 1;              // 差值回升：后续更大，终止\n    InOrder(p->right, K);\n}\n\nvoid SearchX(BTNode *root, int k)    // 调用入口\n{\n    InOrder(root, k);\n     printf(\"%d\\n\", minDiff);            // 输出差值的绝对值\n    for (int i = 0; i < cnt; i++) printf(\"%d \", best[i]);\n}                                               // 输出全部并列最小结点值",
-            "complexity": "时间复杂度：O(n)（最坏需遍历整棵树）   空间复杂度：O(h)（递归栈，h 为树高）",
+            "thought": "不利用二叉搜索树的有序性，对整棵树做两次遍历。第一遍枚举每个结点，计算 |data-k|，维护全局最小差值 minDiff；第二遍再枚举一次，凡差值等于 minDiff 就输出其关键字。用两遍法是因为事先不知道有多少结点并列最小，避免在答案里定义数组大小。",
+            "code": "int minDiff;                        // 全局：当前最小差值（第一遍求出，第二遍据此输出）\n\n// 第一遍：遍历整棵树，求 |data-k| 的最小值\nvoid findMin(BTNode *p, int k)\n{\n    if (p == NULL) return;                  // 空子树：直接返回\n    int d = (p->data > k) ? p->data - k : k - p->data;  // 当前结点与 k 的差值绝对值\n    if (d < minDiff) minDiff = d;           // 差值更小：更新最小值\n    findMin(p->left, k);                    // 继续枚举左子树\n    findMin(p->right, k);                   // 继续枚举右子树\n}\n\n// 第二遍：再遍历整棵树，输出所有差值等于 minDiff 的结点\nvoid outputBest(BTNode *p, int k)\n{\n    if (p == NULL) return;                  // 空子树：直接返回\n    int d = (p->data > k) ? p->data - k : k - p->data;  // 当前差值\n    if (d == minDiff) printf(\"%d \", p->data);  // 并列最小：输出该结点关键字\n    outputBest(p->left, k);                 // 继续枚举左子树\n    outputBest(p->right, k);                // 继续枚举右子树\n}\n\nvoid SearchX(BTNode *root, int k)           // 题目给定接口\n{\n    minDiff = 0x7fffffff;                   // 初始化为最大整数\n    findMin(root, k);                       // 第一遍：求最小差值\n    printf(\"%d\\n\", minDiff);               // 先输出差值的绝对值\n    outputBest(root, k);                    // 第二遍：输出所有并列最小结点\n}",
+            "complexity": "时间复杂度：O(n)（两遍各访问 n 个结点）   空间复杂度：O(h)（递归栈，h 为树高）",
             "note": ""
           }
         ]
