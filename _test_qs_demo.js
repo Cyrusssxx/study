@@ -7,7 +7,7 @@ try { ({ JSDOM } = require('jsdom')); } catch (e) { }
 if (!JSDOM) { console.log('跳过：需要 jsdom'); process.exit(0); }
 
 const ROOT = __dirname;
-const SRC = fs.readFileSync(path.resolve(ROOT, 'pwa/algo.html'), 'utf8');
+const SRC = fs.readFileSync(path.resolve(ROOT, 'pwa/js/sort_demo.js'), 'utf8');
 let pass = 0, fail = 0;
 function check(name, got, want) {
   const ok = JSON.stringify(got) === JSON.stringify(want);

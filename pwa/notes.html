@@ -71,6 +71,7 @@
     <script src="js/lightbox.js"></script>
     <script src="js/backend.js"></script>
     <script src="js/note_richtext.js"></script>
+    <script src="js/sort_demo.js"></script>
     <script>
         // PWA 版：客户端 fetch 笔记 JSON 渲染（Flask 版为服务端 Jinja 渲染的镜像）
         const _params = new URLSearchParams(location.search);
@@ -824,6 +825,8 @@
                         </div>
                     </section>`;
                 slot.innerHTML = h;
+                // 排序可视化演示：数据里预置容器，分片渲染后就地初始化（只作用于本节）
+                if (typeof initQsDemos === 'function') initQsDemos(slot);
                 // 就地索引这一节（含行号标注）：成本随分片摊平，finishNotes 不必再整页遍历
                 const secEl = slot.querySelector('.notes-section');
                 if (secEl) indexSection(secEl);

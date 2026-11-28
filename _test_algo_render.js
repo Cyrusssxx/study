@@ -42,6 +42,8 @@ const dataUrl = path.join(NODE_ROOT, 'pwa/data/algo_notes.json');
 const fetch = async () => ({ ok: true, json: async () => JSON.parse(fs.readFileSync(dataUrl, 'utf8')) });
 const IntersectionObserver = function () { this.observe = () => {}; };
 
+// 播放器已抽到共享脚本：先把引擎注入同一作用域，再跑主脚本
+eval(fs.readFileSync(path.join(NODE_ROOT, 'pwa/js/sort_demo.js'), 'utf8'));
 eval(main.replace(/initAlgoAnnoIfReady\(\);\s*$/, 'globalThis.__p = loadAlgo();'));
 globalThis.__p.catch(e => console.log('loadAlgo 抛错:', e.stack));
 globalThis.__p.then(() => run());

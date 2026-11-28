@@ -7,9 +7,11 @@ if (!JSDOM) { console.log('跳过'); process.exit(0); }
 
 const SRC = fs.readFileSync(path.resolve(__dirname, 'pwa/algo.html'), 'utf8');
 const DATA = fs.readFileSync(path.resolve(__dirname, 'pwa/data/algo_notes.json'), 'utf8');
+const ENGINE = fs.readFileSync(path.resolve(__dirname, 'pwa/js/sort_demo.js'), 'utf8');
+const SRC_INLINE = SRC.replace('<script src="js/sort_demo.js"></script>', '<script>' + ENGINE + '</script>');
 
 (async () => {
-  const dom = new JSDOM(SRC, {
+  const dom = new JSDOM(SRC_INLINE, {
     url: 'http://localhost/algo.html', runScripts: 'dangerously',
     beforeParse(w) {
       w.fetch = (url) => Promise.resolve({ ok: true, status: 200, json: () => Promise.resolve(JSON.parse(DATA)) });

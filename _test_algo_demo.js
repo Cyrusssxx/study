@@ -8,7 +8,7 @@ const path = require('path');
 const { JSDOM } = require('jsdom');
 
 const ROOT = __dirname;
-const SRC = fs.readFileSync(path.join(ROOT, 'pwa/algo.html'), 'utf8');
+const SRC = fs.readFileSync(path.join(ROOT, 'pwa/js/sort_demo.js'), 'utf8');
 const CSS = fs.readFileSync(path.join(ROOT, 'pwa/css/style.css'), 'utf8');
 
 let pass = 0, fail = 0;
